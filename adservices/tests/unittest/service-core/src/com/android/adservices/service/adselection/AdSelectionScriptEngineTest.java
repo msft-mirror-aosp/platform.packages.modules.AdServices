@@ -183,12 +183,11 @@ public class AdSelectionScriptEngineTest {
         final List<AdWithBid> result =
                 generateBids(
                         "function generateBid(ad, auction_signals, per_buyer_signals,"
-                                + " trusted_bidding_signals, contextual_signals, user_signals,"
+                                + " trusted_bidding_signals, contextual_signals,"
                                 + " custom_audience_signals) { \n"
                                 + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
                                 + "}",
                         ads,
-                        AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
@@ -207,12 +206,11 @@ public class AdSelectionScriptEngineTest {
         final List<AdWithBid> result =
                 generateBids(
                         "function generateBid(ad, auction_signals, per_buyer_signals,"
-                                + " trusted_bidding_signals, contextual_signals, user_signals,"
+                                + " trusted_bidding_signals, contextual_signals,"
                                 + " custom_audience_signals) { \n"
                                 + "  return {'status': 1, 'ad': ad, 'bid': ad.metadata.result };\n"
                                 + "}",
                         ads,
-                        AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
@@ -233,13 +231,12 @@ public class AdSelectionScriptEngineTest {
                         // The response for the second add doesn't include the bid so we cannot
                         // parse and AdWithBid
                         "function generateBid(ad, auction_signals, per_buyer_signals,"
-                                + " trusted_bidding_signals, contextual_signals, user_signals,"
+                                + " trusted_bidding_signals, contextual_signals,"
                                 + " custom_audience_signals) { \n"
                                 + " if (ad.metadata.result > 2) return {'status': 0, 'ad': ad };\n"
                                 + " else return {'status': 0, 'ad': ad, 'bid': 10 };\n"
                                 + "}",
                         ads,
-                        AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
@@ -339,7 +336,6 @@ public class AdSelectionScriptEngineTest {
             AdSelectionSignals perBuyerSignals,
             AdSelectionSignals trustedBiddingSignals,
             AdSelectionSignals contextualSignals,
-            AdSelectionSignals userSignals,
             CustomAudienceSignals customAudienceSignals)
             throws Exception {
         return waitForFuture(
@@ -352,7 +348,6 @@ public class AdSelectionScriptEngineTest {
                             perBuyerSignals,
                             trustedBiddingSignals,
                             contextualSignals,
-                            userSignals,
                             customAudienceSignals);
                 });
     }

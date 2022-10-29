@@ -24,6 +24,7 @@ import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
+import com.android.adservices.service.measurement.AsyncRegistrationQueueJobService;
 import com.android.adservices.service.measurement.DeleteExpiredJobService;
 import com.android.adservices.service.measurement.DeleteUninstalledJobService;
 import com.android.adservices.service.measurement.attribution.AttributionJobService;
@@ -65,6 +66,7 @@ public class BackgroundJobsManager {
             EventFallbackReportingJobService.scheduleIfNeeded(context, false);
             DeleteExpiredJobService.scheduleIfNeeded(context, false);
             DeleteUninstalledJobService.scheduleIfNeeded(context, false);
+            AsyncRegistrationQueueJobService.scheduleIfNeeded(context, false);
         }
     }
 
@@ -86,6 +88,7 @@ public class BackgroundJobsManager {
         jobScheduler.cancel(AdServicesConfig.MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID);
         jobScheduler.cancel(AdServicesConfig.MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID);
         jobScheduler.cancel(AdServicesConfig.MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID);
+        jobScheduler.cancel(AdServicesConfig.ASYNC_REGISTRATION_QUEUE_JOB_ID);
 
         jobScheduler.cancel(AdServicesConfig.FLEDGE_BACKGROUND_FETCH_JOB_ID);
 

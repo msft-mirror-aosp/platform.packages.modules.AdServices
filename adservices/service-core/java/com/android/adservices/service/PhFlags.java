@@ -295,6 +295,12 @@ public final class PhFlags implements Flags {
     static final String KEY_REGISTRATION_JOB_QUEUE_INTERVAL_MS =
             "key_registration_job_queue_interval_ms";
 
+    // Feature Flags
+    static final String KEY_ENABLE_TOPIC_CONTRIBUTORS_CHECK = "enable_topic_contributors_check";
+
+    // Database Schema Version Flags
+    static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_3 = "enable_database_schema_version_3";
+
     private static final PhFlags sSingleton = new PhFlags();
 
     /** Returns the singleton instance of the PhFlags. */
@@ -1217,16 +1223,15 @@ public final class PhFlags implements Flags {
     // APPSETID Killswitch.
     @Override
     public boolean getAppSetIdKillSwitch() {
-        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        // Ignore Global Killswitch for appsetid.
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
-        return getGlobalKillSwitch()
-                || SystemProperties.getBoolean(
-                        getSystemPropertyName(KEY_APPSETID_KILL_SWITCH),
-                        /* defaultValue */ DeviceConfig.getBoolean(
-                                DeviceConfig.NAMESPACE_ADSERVICES,
-                                /* flagName */ KEY_APPSETID_KILL_SWITCH,
-                                /* defaultValue */ APPSETID_KILL_SWITCH));
+        return SystemProperties.getBoolean(
+                getSystemPropertyName(KEY_APPSETID_KILL_SWITCH),
+                /* defaultValue */ DeviceConfig.getBoolean(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_APPSETID_KILL_SWITCH,
+                        /* defaultValue */ APPSETID_KILL_SWITCH));
     }
 
     // TOPICS Killswitches
@@ -1611,6 +1616,22 @@ public final class PhFlags implements Flags {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S,
                 /* defaultValue */ FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S);
+    }
+
+    @Override
+    public boolean getEnableTopicContributorsCheck() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ENABLE_TOPIC_CONTRIBUTORS_CHECK,
+                /* defaultValue */ ENABLE_TOPIC_CONTRIBUTORS_CHECK);
+    }
+
+    @Override
+    public boolean getEnableDatabaseSchemaVersion3() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ENABLE_DATABASE_SCHEMA_VERSION_3,
+                /* defaultValue */ ENABLE_DATABASE_SCHEMA_VERSION_3);
     }
 
     @Override

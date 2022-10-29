@@ -52,7 +52,7 @@ public final class EnrollmentTest {
 
     @Test
     public void testMaybeGetEnrollmentId_enrollmentDataNull() {
-        when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(eq(REGISTRATION_URI.toString())))
+        when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(eq(REGISTRATION_URI)))
                 .thenReturn(null);
         assertEquals(
                 Optional.empty(),
@@ -61,7 +61,7 @@ public final class EnrollmentTest {
 
     @Test
     public void testMaybeGetEnrollmentId_enrollmentDataNonNull() {
-        when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(eq(REGISTRATION_URI.toString())))
+        when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(eq(REGISTRATION_URI)))
                 .thenReturn(ENROLLMENT);
         assertEquals(
                 Optional.of(ENROLLMENT.getEnrollmentId()),
@@ -87,7 +87,7 @@ public final class EnrollmentTest {
     @Test
     public void testMaybeGetReportingOrigin_attributionReportingUrlEmpty() {
         EnrollmentData enrollment = new EnrollmentData.Builder().build();
-        when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(eq(ENROLLMENT_ID)))
+        when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(eq(Uri.parse(ENROLLMENT_ID))))
                 .thenReturn(enrollment);
         assertEquals(
                 Optional.empty(),

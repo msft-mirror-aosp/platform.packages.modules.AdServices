@@ -24,8 +24,10 @@ import android.net.Uri;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
+import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Validation;
+import com.android.adservices.service.measurement.util.Web;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -63,16 +65,13 @@ public class Trigger {
     private String mFilters;
     private @Nullable UnsignedLong mDebugKey;
 
-    @IntDef(value = {
-            Status.PENDING,
-            Status.IGNORED,
-            Status.ATTRIBUTED,
-    })
+    @IntDef(value = {Status.PENDING, Status.IGNORED, Status.ATTRIBUTED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
     public @interface Status {
         int PENDING = 0;
         int IGNORED = 1;
         int ATTRIBUTED = 2;
+        int MARKED_TO_DELETE = 3;
     }
 
     private Trigger() {
@@ -344,6 +343,20 @@ public class Trigger {
         }
 
         return eventTriggers;
+    }
+
+    /**
+     * Returns a {@code Uri} with scheme and (1) public suffix + 1 in case of a web destination, or
+     * (2) the Android package name in case of an app destination. Returns null if extracting the
+     * public suffix + 1 fails.
+     */
+    public @Nullable Uri getAttributionDestinationBaseUri() {
+        if (mDestinationType == EventSurfaceType.APP) {
+            return BaseUriExtractor.getBaseUri(mAttributionDestination);
+        } else {
+            Optional<Uri> uri = Web.topPrivateDomainAndScheme(mAttributionDestination);
+            return uri.orElse(null);
+        }
     }
 
     /**

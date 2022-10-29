@@ -19,6 +19,7 @@ package com.android.adservices.service.measurement;
 import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_DELETE_EXPIRED_JOB_ID;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -46,6 +47,7 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
@@ -231,6 +233,21 @@ public class DeleteExpiredJobServiceTest {
                     verify(mMockJobScheduler, times(1))
                             .getPendingJob(eq(MEASUREMENT_DELETE_EXPIRED_JOB_ID));
                 });
+    }
+
+    @Test
+    public void testSchedule_jobInfoIsPersisted() {
+        // Setup
+        final JobScheduler jobScheduler = mock(JobScheduler.class);
+        final ArgumentCaptor<JobInfo> captor = ArgumentCaptor.forClass(JobInfo.class);
+
+        // Execute
+        DeleteExpiredJobService.schedule(mock(Context.class), jobScheduler);
+
+        // Validate
+        verify(jobScheduler, times(1)).schedule(captor.capture());
+        assertNotNull(captor.getValue());
+        assertTrue(captor.getValue().isPersisted());
     }
 
     private void runWithMocks(TestUtils.RunnableWithThrow execute) throws Exception {

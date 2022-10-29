@@ -975,8 +975,7 @@ public interface Flags extends Dumpable {
 
     /** Gets the state of the global and appSetId kill switch. */
     default boolean getAppSetIdKillSwitch() {
-        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch() || APPSETID_KILL_SWITCH;
+        return APPSETID_KILL_SWITCH;
     }
 
     // TOPICS Killswitches
@@ -1333,5 +1332,28 @@ public interface Flags extends Dumpable {
         return getGlobalKillSwitch()
                 || getMeasurementKillSwitch()
                 || MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
+    }
+
+    /**
+     * A feature flag to enable the feature of handling topics without any contributors. Note that
+     * in an epoch, an app is a contributor to a topic if the app has called Topics API in this
+     * epoch and is classified to the topic.
+     *
+     * <p>Default value is false, which means the feature is disabled by default and needs to be
+     * ramped up.
+     */
+    boolean ENABLE_TOPIC_CONTRIBUTORS_CHECK = false;
+
+    /** @return if to enable topic contributors check. */
+    default boolean getEnableTopicContributorsCheck() {
+        return ENABLE_TOPIC_CONTRIBUTORS_CHECK;
+    }
+
+    /** Whether to enable database schema version 3 */
+    boolean ENABLE_DATABASE_SCHEMA_VERSION_3 = false;
+
+    /** @return if to enable database schema version 3. */
+    default boolean getEnableDatabaseSchemaVersion3() {
+        return ENABLE_DATABASE_SCHEMA_VERSION_3;
     }
 }

@@ -104,4 +104,9 @@ public class AdServicesLoggerImpl implements AdServicesLogger {
             UpdateCustomAudienceProcessReportedStats stats) {
         mStatsdAdServicesLogger.logUpdateCustomAudienceProcessReportedStats(stats);
     }
+
+    @Override
+    public void logGetTopicsReportedStats(GetTopicsReportedStats stats) {
+        mStatsdAdServicesLogger.logGetTopicsReportedStats(stats);
+    }
 }

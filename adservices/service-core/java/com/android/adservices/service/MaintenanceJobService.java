@@ -116,7 +116,8 @@ public final class MaintenanceJobService extends JobService {
         return false;
     }
 
-    private static void schedule(
+    @VisibleForTesting
+    static void schedule(
             Context context,
             @NonNull JobScheduler jobScheduler,
             long maintenanceJobPeriodMs,
@@ -126,6 +127,7 @@ public final class MaintenanceJobService extends JobService {
                                 MAINTENANCE_JOB_ID,
                                 new ComponentName(context, MaintenanceJobService.class))
                         .setRequiresCharging(true)
+                        .setPersisted(true)
                         .setPeriodic(maintenanceJobPeriodMs, maintenanceJobFlexMs)
                         .build();
 

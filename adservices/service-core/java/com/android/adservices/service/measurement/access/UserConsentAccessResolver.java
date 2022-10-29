@@ -36,7 +36,7 @@ public class UserConsentAccessResolver implements IAccessResolver {
 
     @Override
     public boolean isAllowed(@NonNull Context context) {
-        AdServicesApiConsent userConsent = mConsentManager.getConsent(context.getPackageManager());
+        AdServicesApiConsent userConsent = mConsentManager.getConsent();
         return userConsent.isGiven();
     }
 

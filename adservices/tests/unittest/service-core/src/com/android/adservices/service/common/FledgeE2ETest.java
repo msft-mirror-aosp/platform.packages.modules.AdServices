@@ -275,11 +275,11 @@ public class FledgeE2ETest {
 
     @Test
     public void testFledgeFlowSuccessWithDevOverrides() throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
-        doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any(), any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+        doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
         doReturn(false)
                 .when(mConsentManagerMock)
-                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any(), any());
+                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(SELLER_REPORTING_PATH);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH);
@@ -321,7 +321,7 @@ public class FledgeE2ETest {
                         + "}";
         String biddingLogicJs =
                 "function generateBid(ad, auction_signals, per_buyer_signals,"
-                        + " trusted_bidding_signals, contextual_signals, user_signals,"
+                        + " trusted_bidding_signals, contextual_signals,"
                         + " custom_audience_signals) { \n"
                         + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
                         + "}\n"
@@ -434,12 +434,12 @@ public class FledgeE2ETest {
     @Test
     public void testFledgeFlowSuccessWithDevOverridesWithRevokedUserConsentForApp()
             throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         // Allow the first calls to succeed so that we can verify the rest of the flow works
-        when(mConsentManagerMock.isFledgeConsentRevokedForApp(any(), any()))
+        when(mConsentManagerMock.isFledgeConsentRevokedForApp(any()))
                 .thenReturn(false)
                 .thenReturn(true);
-        when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(any(), any()))
+        when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(any()))
                 .thenReturn(false)
                 .thenReturn(true);
 
@@ -483,7 +483,7 @@ public class FledgeE2ETest {
                         + "}";
         String biddingLogicJs =
                 "function generateBid(ad, auction_signals, per_buyer_signals,"
-                        + " trusted_bidding_signals, contextual_signals, user_signals,"
+                        + " trusted_bidding_signals, contextual_signals,"
                         + " custom_audience_signals) { \n"
                         + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
                         + "}\n"
@@ -591,11 +591,11 @@ public class FledgeE2ETest {
 
     @Test
     public void testFledgeFlowFailsWithMismatchedPackageNames() throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
-        doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any(), any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+        doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
         doReturn(false)
                 .when(mConsentManagerMock)
-                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any(), any());
+                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
 
         String otherPackageName = CommonFixture.TEST_PACKAGE_NAME + "different_package";
 
@@ -681,7 +681,7 @@ public class FledgeE2ETest {
                         + "}";
         String biddingLogicJs =
                 "function generateBid(ad, auction_signals, per_buyer_signals,"
-                        + " trusted_bidding_signals, contextual_signals, user_signals,"
+                        + " trusted_bidding_signals, contextual_signals,"
                         + " custom_audience_signals) { \n"
                         + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
                         + "}\n"
@@ -789,11 +789,11 @@ public class FledgeE2ETest {
 
     @Test
     public void testFledgeFlowSuccessWithOneCAWithNegativeBidsWithDevOverrides() throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
-        doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any(), any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+        doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
         doReturn(false)
                 .when(mConsentManagerMock)
-                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any(), any());
+                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(SELLER_REPORTING_PATH);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH);
@@ -835,7 +835,7 @@ public class FledgeE2ETest {
                         + "}";
         String biddingLogicJs =
                 "function generateBid(ad, auction_signals, per_buyer_signals,"
-                        + " trusted_bidding_signals, contextual_signals, user_signals,"
+                        + " trusted_bidding_signals, contextual_signals,"
                         + " custom_audience_signals) { \n"
                         + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
                         + "}\n"
@@ -953,11 +953,11 @@ public class FledgeE2ETest {
 
     @Test
     public void testFledgeFlowFailsWithBothCANegativeBidsWithDevOverrides() throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
-        doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any(), any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+        doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
         doReturn(false)
                 .when(mConsentManagerMock)
-                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any(), any());
+                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
 
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
@@ -991,7 +991,7 @@ public class FledgeE2ETest {
                         + "}";
         String biddingLogicJs =
                 "function generateBid(ad, auction_signals, per_buyer_signals,"
-                        + " trusted_bidding_signals, contextual_signals, user_signals,"
+                        + " trusted_bidding_signals, contextual_signals,"
                         + " custom_audience_signals) { \n"
                         + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
                         + "}\n"
@@ -1092,10 +1092,10 @@ public class FledgeE2ETest {
 
     @Test
     public void testFledgeFlowSuccessWithMockServer() throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         doReturn(false)
                 .when(mConsentManagerMock)
-                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any(), any());
+                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(SELLER_REPORTING_PATH);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH);
@@ -1137,7 +1137,7 @@ public class FledgeE2ETest {
                         + "}";
         String biddingLogicJs =
                 "function generateBid(ad, auction_signals, per_buyer_signals,"
-                        + " trusted_bidding_signals, contextual_signals, user_signals,"
+                        + " trusted_bidding_signals, contextual_signals,"
                         + " custom_audience_signals) { \n"
                         + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
                         + "}\n"
@@ -1247,9 +1247,9 @@ public class FledgeE2ETest {
 
     @Test
     public void testFledgeFlowSuccessWithRevokedUserConsentForApp() throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         // Allow the first join call to succeed so that we can verify the rest of the flow works
-        when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(any(), any()))
+        when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(any()))
                 .thenReturn(false)
                 .thenReturn(true);
 
@@ -1293,7 +1293,7 @@ public class FledgeE2ETest {
                         + "}";
         String biddingLogicJs =
                 "function generateBid(ad, auction_signals, per_buyer_signals,"
-                        + " trusted_bidding_signals, contextual_signals, user_signals,"
+                        + " trusted_bidding_signals, contextual_signals,"
                         + " custom_audience_signals) { \n"
                         + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
                         + "}\n"
@@ -1400,10 +1400,10 @@ public class FledgeE2ETest {
 
     @Test
     public void testFledgeFlowSuccessWithRevokedUserConsentForFledge() throws Exception {
-        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent();
         doReturn(true)
                 .when(mConsentManagerMock)
-                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any(), any());
+                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
 
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
@@ -1482,10 +1482,10 @@ public class FledgeE2ETest {
 
     @Test
     public void testFledgeFlowSuccessWithOneCAWithNegativeBidsWithMockServer() throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         doReturn(false)
                 .when(mConsentManagerMock)
-                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any(), any());
+                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(SELLER_REPORTING_PATH);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH);
@@ -1527,7 +1527,7 @@ public class FledgeE2ETest {
                         + "}";
         String biddingLogicJs =
                 "function generateBid(ad, auction_signals, per_buyer_signals,"
-                        + " trusted_bidding_signals, contextual_signals, user_signals,"
+                        + " trusted_bidding_signals, contextual_signals,"
                         + " custom_audience_signals) { \n"
                         + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
                         + "}\n"
@@ -1637,10 +1637,10 @@ public class FledgeE2ETest {
 
     @Test
     public void testFledgeFlowFailsWithOnlyCANegativeBidsWithMockServer() throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         doReturn(false)
                 .when(mConsentManagerMock)
-                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any(), any());
+                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(SELLER_REPORTING_PATH);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH);
@@ -1682,7 +1682,7 @@ public class FledgeE2ETest {
                         + "}";
         String biddingLogicJs =
                 "function generateBid(ad, auction_signals, per_buyer_signals,"
-                        + " trusted_bidding_signals, contextual_signals, user_signals,"
+                        + " trusted_bidding_signals, contextual_signals,"
                         + " custom_audience_signals) { \n"
                         + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
                         + "}\n"

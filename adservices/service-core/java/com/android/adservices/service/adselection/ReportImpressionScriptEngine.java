@@ -67,7 +67,8 @@ public class ReportImpressionScriptEngine {
     public static final String PER_BUYER_SIGNALS_ARG_NAME = "per_buyer_signals";
     public static final String SIGNALS_FOR_BUYER_ARG_NAME = "signals_for_buyer";
     public static final String CONTEXTUAL_SIGNALS_ARG_NAME = "contextual_signals";
-    public static final String CUSTOM_AUDIENCE_SIGNALS_ARG_NAME = "custom_audience_signals";
+    public static final String CUSTOM_AUDIENCE_REPORTING_SIGNALS_ARG_NAME =
+            "custom_audience_reporting_signals";
     public static final String AD_SELECTION_CONFIG_ARG_NAME = "ad_selection_config";
     public static final String BID_ARG_NAME = "bid";
     public static final String RENDER_URI_ARG_NAME = "render_uri";
@@ -171,8 +172,9 @@ public class ReportImpressionScriptEngine {
                         .add(jsonArg(SIGNALS_FOR_BUYER_ARG_NAME, signalsForBuyer.toString()))
                         .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals.toString()))
                         .add(
-                                CustomAudienceBiddingSignalsArgument.asScriptArgument(
-                                        CUSTOM_AUDIENCE_SIGNALS_ARG_NAME, customAudienceSignals))
+                                CustomAudienceReportingSignalsArgument.asScriptArgument(
+                                        CUSTOM_AUDIENCE_REPORTING_SIGNALS_ARG_NAME,
+                                        customAudienceSignals))
                         .build();
 
         return transform(

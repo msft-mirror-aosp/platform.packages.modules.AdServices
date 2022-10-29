@@ -145,7 +145,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
     private static final String BUYER_2_BIDDING_LOGIC_JS =
             "function generateBid(ad, auction_signals, per_buyer_signals,"
-                    + " trusted_bidding_signals, contextual_signals, user_signals,"
+                    + " trusted_bidding_signals, contextual_signals,"
                     + " custom_audience_signals) { \n"
                     + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
                     + "}\n"
@@ -161,7 +161,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
     private static final String BUYER_1_BIDDING_LOGIC_JS =
             "function generateBid(ad, auction_signals, per_buyer_signals,"
-                    + " trusted_bidding_signals, contextual_signals, user_signals,"
+                    + " trusted_bidding_signals, contextual_signals,"
                     + " custom_audience_signals) { \n"
                     + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
                     + "}\n"
@@ -1030,7 +1030,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         String jsWaitMoreThanAllowedForBiddingPerCa = insertJsWait(5000);
         String readBidFromAdMetadataWithDelayJs =
                 "function generateBid(ad, auction_signals, per_buyer_signals,"
-                        + " trusted_bidding_signals, contextual_signals, user_signals,"
+                        + " trusted_bidding_signals, contextual_signals,"
                         + " custom_audience_signals) { \n"
                         + jsWaitMoreThanAllowedForBiddingPerCa
                         + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"

@@ -88,13 +88,18 @@ public final class AggregateFallbackReportingJobService extends JobService {
     /** Schedules {@link AggregateFallbackReportingJobService} */
     @VisibleForTesting
     static void schedule(Context context, JobScheduler jobScheduler) {
-        final JobInfo job = new JobInfo.Builder(
-                AdServicesConfig.MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID,
-                new ComponentName(context, AggregateFallbackReportingJobService.class))
-                .setRequiresDeviceIdle(true)
-                .setRequiresBatteryNotLow(true)
-                .setPeriodic(AdServicesConfig.getMeasurementAggregateFallbackReportingJobPeriodMs())
-                .build();
+        final JobInfo job =
+                new JobInfo.Builder(
+                                AdServicesConfig.MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID,
+                                new ComponentName(
+                                        context, AggregateFallbackReportingJobService.class))
+                        .setRequiresDeviceIdle(true)
+                        .setRequiresBatteryNotLow(true)
+                        .setPeriodic(
+                                AdServicesConfig
+                                        .getMeasurementAggregateFallbackReportingJobPeriodMs())
+                        .setPersisted(true)
+                        .build();
         jobScheduler.schedule(job);
     }
 
