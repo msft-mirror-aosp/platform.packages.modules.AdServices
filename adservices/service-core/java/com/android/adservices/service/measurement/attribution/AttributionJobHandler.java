@@ -31,6 +31,7 @@ import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.EventTrigger;
+import com.android.adservices.service.measurement.FilterData;
 import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SystemHealthParams;
@@ -38,7 +39,6 @@ import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateAttributionData;
-import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 import com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution;
 import com.android.adservices.service.measurement.aggregation.AggregatePayloadGenerator;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
@@ -402,8 +402,8 @@ class AttributionJobHandler {
             return true;
         }
         try {
-            AggregateFilterData sourceFiltersData = source.parseAggregateFilterData();
-            AggregateFilterData triggerFiltersData = extractFilterMap(triggerFilters);
+            FilterData sourceFiltersData = source.parseFilterData();
+            FilterData triggerFiltersData = extractFilterMap(triggerFilters);
             return Filter.isFilterMatch(sourceFiltersData, triggerFiltersData, true);
         } catch (JSONException e) {
             // If JSON is malformed, we shall consider as not matched.
@@ -414,7 +414,7 @@ class AttributionJobHandler {
 
     private Optional<EventTrigger> findFirstMatchingEventTrigger(Source source, Trigger trigger) {
         try {
-            AggregateFilterData sourceFiltersData = source.parseAggregateFilterData();
+            FilterData sourceFiltersData = source.parseFilterData();
             List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
             return eventTriggers.stream()
                     .filter(
@@ -429,7 +429,7 @@ class AttributionJobHandler {
     }
 
     private boolean doEventLevelFiltersMatch(
-            AggregateFilterData sourceFiltersData, EventTrigger eventTrigger) {
+            FilterData sourceFiltersData, EventTrigger eventTrigger) {
         if (eventTrigger.getFilterData().isPresent()
                 && !Filter.isFilterMatch(
                         sourceFiltersData, eventTrigger.getFilterData().get(), true)) {
@@ -445,10 +445,10 @@ class AttributionJobHandler {
         return true;
     }
 
-    private AggregateFilterData extractFilterMap(String object) throws JSONException {
+    private FilterData extractFilterMap(String object) throws JSONException {
         JSONObject sourceFilterObject = new JSONObject(object);
-        return new AggregateFilterData.Builder()
-                .buildAggregateFilterData(sourceFilterObject)
+        return new FilterData.Builder()
+                .buildFilterData(sourceFilterObject)
                 .build();
     }
 

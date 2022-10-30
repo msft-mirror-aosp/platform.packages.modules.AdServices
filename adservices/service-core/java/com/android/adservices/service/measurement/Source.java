@@ -22,7 +22,6 @@ import android.annotation.Nullable;
 import android.net.Uri;
 
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
-import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 import com.android.adservices.service.measurement.noising.ImpressionNoiseParams;
 import com.android.adservices.service.measurement.noising.ImpressionNoiseUtil;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -85,7 +84,7 @@ public class Source {
     private long mInstallCooldownWindow;
     private @Nullable UnsignedLong mDebugKey;
     private boolean mIsInstallAttributed;
-    private String mAggregateFilterData;
+    private String mFilterData;
     private String mAggregateSource;
     private int mAggregateContributions;
     private AggregatableAttributionSource mAggregatableAttributionSource;
@@ -321,7 +320,7 @@ public class Source {
                 && Objects.equals(mDedupKeys, source.mDedupKeys)
                 && Objects.equals(mRegistrant, source.mRegistrant)
                 && mAttributionMode == source.mAttributionMode
-                && Objects.equals(mAggregateFilterData, source.mAggregateFilterData)
+                && Objects.equals(mFilterData, source.mFilterData)
                 && Objects.equals(mAggregateSource, source.mAggregateSource)
                 && mAggregateContributions == source.mAggregateContributions
                 && Objects.equals(
@@ -344,7 +343,7 @@ public class Source {
                 mEventId,
                 mSourceType,
                 mDedupKeys,
-                mAggregateFilterData,
+                mFilterData,
                 mAggregateSource,
                 mAggregateContributions,
                 mAggregatableAttributionSource,
@@ -554,8 +553,8 @@ public class Source {
      * }
      * }
      */
-    public String getAggregateFilterData() {
-        return mAggregateFilterData;
+    public String getFilterData() {
+        return mFilterData;
     }
 
     /**
@@ -616,19 +615,19 @@ public class Source {
      * Generates AggregatableFilterData from aggregate filter string in Source, including an entry
      * for source type.
      */
-    public AggregateFilterData parseAggregateFilterData() throws JSONException {
-        AggregateFilterData aggregateFilterData;
-        if (mAggregateFilterData == null || mAggregateFilterData.isEmpty()) {
-            aggregateFilterData = new AggregateFilterData.Builder().build();
+    public FilterData parseFilterData() throws JSONException {
+        FilterData filterData;
+        if (mFilterData == null || mFilterData.isEmpty()) {
+            filterData = new FilterData.Builder().build();
         } else {
-            aggregateFilterData =
-                    new AggregateFilterData.Builder()
-                            .buildAggregateFilterData(new JSONObject(mAggregateFilterData))
+            filterData =
+                    new FilterData.Builder()
+                            .buildFilterData(new JSONObject(mFilterData))
                             .build();
         }
-        aggregateFilterData.getAttributionFilterMap().put("source_type",
+        filterData.getAttributionFilterMap().put("source_type",
                 Collections.singletonList(mSourceType.getValue()));
-        return aggregateFilterData;
+        return filterData;
     }
 
     /**
@@ -653,7 +652,7 @@ public class Source {
         AggregatableAttributionSource.Builder aggregatableAttributionSourceBuilder =
                 new AggregatableAttributionSource.Builder()
                         .setAggregatableSource(aggregateSourceMap);
-        aggregatableAttributionSourceBuilder.setAggregateFilterData(parseAggregateFilterData());
+        aggregatableAttributionSourceBuilder.setFilterData(parseFilterData());
         return Optional.of(aggregatableAttributionSourceBuilder.build());
     }
 
@@ -845,9 +844,9 @@ public class Source {
             return this;
         }
 
-        /** See {@link Source#getAggregateFilterData()}. */
-        public Builder setAggregateFilterData(@Nullable String aggregateFilterData) {
-            mBuilding.mAggregateFilterData = aggregateFilterData;
+        /** See {@link Source#getFilterData()}. */
+        public Builder setFilterData(@Nullable String filterData) {
+            mBuilding.mFilterData = filterData;
             return this;
         }
 

@@ -17,7 +17,6 @@
 package com.android.adservices.service.measurement;
 
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
-import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import java.util.Objects;
@@ -28,8 +27,8 @@ public class EventTrigger {
     private UnsignedLong mTriggerData;
     private long mTriggerPriority;
     private UnsignedLong mDedupKey;
-    private Optional<AggregateFilterData> mFilter;
-    private Optional<AggregateFilterData> mNotFilter;
+    private Optional<FilterData> mFilter;
+    private Optional<FilterData> mNotFilter;
 
     private EventTrigger() {
         mFilter = Optional.empty();
@@ -70,12 +69,12 @@ public class EventTrigger {
     }
 
     /** Filters that should match with source's. */
-    public Optional<AggregateFilterData> getFilterData() {
+    public Optional<FilterData> getFilterData() {
         return mFilter;
     }
 
     /** Filters that should not match with source's. */
-    public Optional<AggregateFilterData> getNotFilterData() {
+    public Optional<FilterData> getNotFilterData() {
         return mNotFilter;
     }
 
@@ -106,13 +105,13 @@ public class EventTrigger {
         }
 
         /** See {@link EventTrigger#getFilterData()}. */
-        public EventTrigger.Builder setFilter(AggregateFilterData filterData) {
+        public EventTrigger.Builder setFilter(FilterData filterData) {
             mBuilding.mFilter = Optional.ofNullable(filterData);
             return this;
         }
 
         /** See {@link EventTrigger#getNotFilterData()} ()}. */
-        public EventTrigger.Builder setNotFilter(AggregateFilterData notFilterData) {
+        public EventTrigger.Builder setNotFilter(FilterData notFilterData) {
             mBuilding.mNotFilter = Optional.ofNullable(notFilterData);
             return this;
         }
