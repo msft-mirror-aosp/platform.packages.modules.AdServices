@@ -27,6 +27,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
@@ -45,6 +46,7 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
@@ -57,6 +59,8 @@ import java.util.concurrent.TimeUnit;
 @SuppressWarnings("ConstantConditions")
 public class EpochJobServiceTest {
     private static final int BINDER_CONNECTION_TIMEOUT_MS = 5_000;
+    private static final long EPOCH_JOB_PERIOD_MS = 10_000L;
+    private static final long EPOCH_JOB_FLEX_MS = 1_000L;
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final JobScheduler JOB_SCHEDULER = CONTEXT.getSystemService(JobScheduler.class);
     private static final Flags TEST_FLAGS = FlagsFactory.getFlagsForTest();
@@ -72,6 +76,7 @@ public class EpochJobServiceTest {
     @Mock AppUpdateManager mMockAppUpdateManager;
     @Mock JobParameters mMockJobParameters;
     @Mock Flags mMockFlags;
+    @Mock JobScheduler mMockJobScheduler;
 
     @Before
     public void setup() {
@@ -139,7 +144,7 @@ public class EpochJobServiceTest {
     }
 
     @Test
-    public void testOnStartJob_killSwitchOn() throws InterruptedException {
+    public void testOnStartJob_killSwitchOn() {
         // Killswitch is on.
         doReturn(true).when(mMockFlags).getTopicsKillSwitch();
 
@@ -154,7 +159,8 @@ public class EpochJobServiceTest {
                                 TOPICS_EPOCH_JOB_ID,
                                 new ComponentName(CONTEXT, EpochJobService.class))
                         .setRequiresCharging(true)
-                        .setPeriodic(/* epochJobPeriodMs */ 10000, /* epochJobFlexMs */ 1000)
+                        .setPeriodic(EPOCH_JOB_PERIOD_MS, EPOCH_JOB_FLEX_MS)
+                        .setPersisted(true)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
         assertNotNull(JOB_SCHEDULER.getPendingJob(TOPICS_EPOCH_JOB_ID));
@@ -267,5 +273,17 @@ public class EpochJobServiceTest {
         // The first invocation of scheduleIfNeeded() schedules the job.
         assertThat(EpochJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isFalse();
         assertThat(JOB_SCHEDULER.getPendingJob(TOPICS_EPOCH_JOB_ID)).isNull();
+    }
+
+    @Test
+    public void testSchedule_jobInfoIsPersisted() {
+        final ArgumentCaptor<JobInfo> argumentCaptor = ArgumentCaptor.forClass(JobInfo.class);
+
+        EpochJobService.schedule(
+                CONTEXT, mMockJobScheduler, EPOCH_JOB_PERIOD_MS, EPOCH_JOB_FLEX_MS);
+
+        verify(mMockJobScheduler, times(1)).schedule(argumentCaptor.capture());
+        assertThat(argumentCaptor.getValue()).isNotNull();
+        assertThat(argumentCaptor.getValue().isPersisted()).isTrue();
     }
 }

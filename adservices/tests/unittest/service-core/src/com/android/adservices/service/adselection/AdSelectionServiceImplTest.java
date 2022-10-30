@@ -72,6 +72,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
@@ -80,6 +81,7 @@ import com.android.adservices.data.adselection.DBAdSelectionOverride;
 import com.android.adservices.data.adselection.DBBuyerDecisionLogic;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -181,7 +183,10 @@ public class AdSelectionServiceImplTest {
 
     @Spy
     FledgeAuthorizationFilter mFledgeAuthorizationFilterSpy =
-            FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLoggerMock);
+            new FledgeAuthorizationFilter(
+                    CONTEXT.getPackageManager(),
+                    new EnrollmentDao(CONTEXT, DbTestUtil.getDbHelperForTest()),
+                    mAdServicesLoggerMock);
 
     private Flags mFlags = new FlagsWithEnrollmentCheckEnabledSwitch(false);
 
@@ -260,7 +265,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionSuccess() throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -361,7 +366,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionWithRevokedUserConsentSuccess() throws Exception {
-        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent();
 
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -447,7 +452,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionFailsWhenReportResultTakesTooLong() throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -544,7 +549,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionFailsWhenReportWinTakesTooLong() throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -641,7 +646,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionFailsWhenOverallJSTimesOut() throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -744,7 +749,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionFailsWhenJSFetchTakesTooLong() throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -842,7 +847,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionFailsWithInvalidAdSelectionId() throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -935,7 +940,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionBadSellerJavascriptFailsWithInternalError() throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -1027,7 +1032,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionBadBuyerJavascriptFailsWithInternalError() throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -1120,7 +1125,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionUseDevOverrideForSellerJS() throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -1234,7 +1239,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testOverrideAdSelectionConfigRemoteInfoSuccess() throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
                         DevContext.builder()
@@ -1283,7 +1288,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testOverrideAdSelectionConfigRemoteInfoWithRevokedUserConsentSuccess()
             throws Exception {
-        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent();
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
@@ -1333,7 +1338,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testOverrideAdSelectionConfigRemoteInfoFailsWithDevOptionsDisabled() {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
@@ -1379,7 +1384,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testRemoveAdSelectionConfigRemoteInfoOverrideSuccess() throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
                         DevContext.builder()
@@ -1440,7 +1445,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testRemoveAdSelectionConfigRemoteInfoOverrideWithRevokedUserConsentSuccess()
             throws Exception {
-        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent();
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
@@ -1503,7 +1508,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testRemoveAdSelectionConfigRemoteInfoOverrideFailsWithDevOptionsDisabled() {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
@@ -1559,7 +1564,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testRemoveAdSelectionConfigRemoteInfoOverrideDoesNotDeleteWithIncorrectPackageName()
             throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         String incorrectPackageName = "com.google.ppapi.test.incorrect";
 
         when(mDevContextFilter.createDevContext())
@@ -1622,7 +1627,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testResetAllAdSelectionConfigRemoteOverridesDoesNotDeleteWithIncorrectPackageName()
             throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         String incorrectPackageName = "com.google.ppapi.test.incorrect";
 
         when(mDevContextFilter.createDevContext())
@@ -1728,7 +1733,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testResetAllAdSelectionConfigRemoteOverridesSuccess() throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
                         DevContext.builder()
@@ -1833,7 +1838,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testResetAllAdSelectionConfigRemoteOverridesWithRevokedUserConsentSuccess()
             throws Exception {
-        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent();
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
@@ -1940,7 +1945,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testResetAllAdSelectionConfigRemoteOverridesFailsWithDevOptionsDisabled() {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
@@ -2067,7 +2072,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionForegroundCheckEnabledFails_throwsException() throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
@@ -2118,7 +2123,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionForegroundCheckDisabled_acceptBackgroundApp() throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
@@ -2173,7 +2178,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testOverrideAdSelectionForegroundCheckEnabledFails_throwsException()
             throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
@@ -2229,9 +2234,9 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testOverrideAdSelectionForegroundCheckDisabled_acceptBackgroundApp()
             throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
@@ -2279,7 +2284,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testRemoveOverrideForegroundCheckEnabledFails_throwsException() throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
@@ -2329,7 +2334,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testRemoveOverrideForegroundCheckDisabled_acceptBackgroundApp() throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
@@ -2373,7 +2378,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testResetAllOverridesForegroundCheckEnabledFails_throwsException()
             throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
@@ -2421,7 +2426,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testResetAllOverridesForegroundCheckDisabled_acceptBackgroundApp()
             throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
@@ -2461,7 +2466,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionFailsWithInvalidPackageName() throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         String otherPackageName = CommonFixture.TEST_PACKAGE_NAME + "incorrectPackage";
 
@@ -2554,7 +2559,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionFailsWhenAppCannotUsePPApi() throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
                 .when(mFledgeAllowListsFilterSpy)
                 .assertAppCanUsePpapi(
@@ -2655,7 +2660,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionFailsWhenAdTechFailsEnrollmentCheck() throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         // Reset flags to perform enrollment check
         mFlags = new FlagsWithEnrollmentCheckEnabledSwitch(true);
@@ -2755,7 +2760,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionSucceedsWhenAdTechPassesEnrollmentCheck() throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         // Reset flags to perform enrollment check
         mFlags = new FlagsWithEnrollmentCheckEnabledSwitch(true);
@@ -2913,7 +2918,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testAdSelectionConfigInvalidSellerAndSellerUris() throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -3004,7 +3009,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionSuccessThrottledSubsequentCallFailure() throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -3153,7 +3158,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionDoestNotReportWhenUrisDoNotMatchDomain() throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         // Instantiate a server with different domain from buyer and seller for reporting
         MockWebServer reportingServer = new MockWebServer();
@@ -3252,7 +3257,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionOnlyReportsBuyerWhenSellerReportingUriDoesNotMatchDomain()
             throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -3356,7 +3361,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionOnlyReportsSellerWhenBuyerReportingUriDoesNotMatchDomain()
             throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
 

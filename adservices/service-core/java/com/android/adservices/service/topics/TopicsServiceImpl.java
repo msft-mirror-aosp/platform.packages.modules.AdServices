@@ -269,7 +269,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
             return false;
         }
 
-        AdServicesApiConsent userConsent = mConsentManager.getConsent(mContext.getPackageManager());
+        AdServicesApiConsent userConsent = mConsentManager.getConsent();
         if (!userConsent.isGiven()) {
             invokeCallbackWithStatus(
                     callback, STATUS_USER_CONSENT_REVOKED, "User consent revoked.");

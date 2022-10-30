@@ -74,7 +74,7 @@ public class EnqueueAsyncRegistration {
                             /* mOsDestination */ null,
                             registrant,
                             /* verifiedDestination */ null,
-                            getPublisher(registrationRequest),
+                            registrant,
                             registrationRequest.getRegistrationType()
                                             == RegistrationRequest.REGISTER_SOURCE
                                     ? AsyncRegistration.RegistrationType.APP_SOURCE
@@ -86,7 +86,7 @@ public class EnqueueAsyncRegistration {
                             requestTime,
                             /* mRetryCount */ 0,
                             System.currentTimeMillis(),
-                            /* mRedirect */ true,
+                            AsyncRegistration.RedirectType.ANY,
                             registrationRequest.isAdIdPermissionGranted(),
                             dao);
                 });
@@ -131,7 +131,7 @@ public class EnqueueAsyncRegistration {
                                 requestTime,
                                 /* mRetryCount */ 0,
                                 System.currentTimeMillis(),
-                                /* mRedirect */ false,
+                                AsyncRegistration.RedirectType.NONE,
                                 webSourceParams.isDebugKeyAllowed(),
                                 dao);
                     }
@@ -177,7 +177,7 @@ public class EnqueueAsyncRegistration {
                                 requestTime,
                                 /* mRetryCount */ 0,
                                 System.currentTimeMillis(),
-                                /* mRedirect */ false,
+                                AsyncRegistration.RedirectType.NONE,
                                 webTriggerParams.isDebugKeyAllowed(),
                                 dao);
                     }
@@ -198,7 +198,7 @@ public class EnqueueAsyncRegistration {
             long mRequestTime,
             long mRetryCount,
             long mLastProcessingTime,
-            boolean redirect,
+            @AsyncRegistration.RedirectType int redirectType,
             boolean debugKeyAllowed,
             @NonNull IMeasurementDao dao)
             throws DatastoreException {
@@ -217,7 +217,7 @@ public class EnqueueAsyncRegistration {
                         .setRequestTime(mRequestTime)
                         .setRetryCount(mRetryCount)
                         .setLastProcessingTime(mLastProcessingTime)
-                        .setRedirect(redirect)
+                        .setRedirectType(redirectType)
                         .setDebugKeyAllowed(debugKeyAllowed)
                         .build();
 
@@ -227,9 +227,5 @@ public class EnqueueAsyncRegistration {
     @VisibleForTesting
     static Source.SourceType getSourceType(InputEvent inputEvent) {
         return inputEvent == null ? Source.SourceType.EVENT : Source.SourceType.NAVIGATION;
-    }
-
-    private static Uri getPublisher(RegistrationRequest request) {
-        return Uri.parse(ANDROID_APP_SCHEME + "://" + request.getPackageName());
     }
 }

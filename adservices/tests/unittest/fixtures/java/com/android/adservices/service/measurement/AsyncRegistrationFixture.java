@@ -33,7 +33,8 @@ public class AsyncRegistrationFixture {
                 .setVerifiedDestination(ValidAsyncRegistrationParams.VERIFIED_DESTINATION)
                 .setRegistrant(ValidAsyncRegistrationParams.REGISTRANT)
                 .setTopOrigin(ValidAsyncRegistrationParams.TOP_ORIGIN)
-                .setRedirect(ValidAsyncRegistrationParams.REDIRECT)
+                .setRedirectType(ValidAsyncRegistrationParams.REDIRECT_TYPE)
+                .setRedirectCount(ValidAsyncRegistrationParams.REDIRECT_COUNT)
                 .setSourceType(ValidAsyncRegistrationParams.SOURCE_TYPE)
                 .setRequestTime(System.currentTimeMillis())
                 .setRetryCount(ValidAsyncRegistrationParams.RETRY_COUNT)
@@ -52,7 +53,8 @@ public class AsyncRegistrationFixture {
         public static final Uri VERIFIED_DESTINATION = Uri.parse("android-app://com.example");
         public static final Uri REGISTRANT = Uri.parse("android-app://com.example");
         public static final Uri TOP_ORIGIN = Uri.parse("android-app://com.example");
-        public static final boolean REDIRECT = true;
+        public static final @AsyncRegistration.RedirectType int REDIRECT_TYPE = 1;
+        public static final int REDIRECT_COUNT = 0;
         public static final boolean DEBUG_KEY_ALLOWED = true;
         public static final AsyncRegistration.RegistrationType TYPE =
                 AsyncRegistration.RegistrationType.APP_SOURCE;

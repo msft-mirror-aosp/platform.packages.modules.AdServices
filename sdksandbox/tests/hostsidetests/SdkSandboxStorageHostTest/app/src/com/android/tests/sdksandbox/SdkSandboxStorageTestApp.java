@@ -126,25 +126,23 @@ public class SdkSandboxStorageTestApp {
         final StorageStats finalAppStats = stats.queryStatsForUid(UUID_DEFAULT, uid);
         final StorageStats finalUserStats = stats.queryStatsForUser(UUID_DEFAULT, user);
 
-        // Verify the space used with a 5% error margin
         long deltaAppSize = 2 * sizeInBytes;
         long deltaCacheSize = sizeInBytes;
-        long errorMarginSize = sizeInBytes / 20; // 0.5 MB
 
         // Assert app size is same
         final long appSizeAppStats = finalAppStats.getDataBytes() - initialAppStats.getDataBytes();
         final long appSizeUserStats =
                 finalUserStats.getDataBytes() - initialUserStats.getDataBytes();
-        assertMostlyEquals(deltaAppSize, appSizeAppStats, errorMarginSize);
-        assertMostlyEquals(deltaAppSize, appSizeUserStats, errorMarginSize);
+        assertMostlyEquals(deltaAppSize, appSizeAppStats);
+        assertMostlyEquals(deltaAppSize, appSizeUserStats);
 
         // Assert cache size is same
         final long cacheSizeAppStats =
                 finalAppStats.getCacheBytes() - initialAppStats.getCacheBytes();
         final long cacheSizeUserStats =
                 finalUserStats.getCacheBytes() - initialUserStats.getCacheBytes();
-        assertMostlyEquals(deltaCacheSize, cacheSizeAppStats, errorMarginSize);
-        assertMostlyEquals(deltaCacheSize, cacheSizeUserStats, errorMarginSize);
+        assertMostlyEquals(deltaCacheSize, cacheSizeAppStats);
+        assertMostlyEquals(deltaCacheSize, cacheSizeUserStats);
     }
 
     private static void assertDirIsNotAccessible(String path) {
@@ -159,8 +157,9 @@ public class SdkSandboxStorageTestApp {
         assertThat(new File(path).canExecute()).isFalse();
     }
 
-    private static void assertMostlyEquals(long expected, long actual, long delta) {
-        if (Math.abs(expected - actual) > delta) {
+    private static void assertMostlyEquals(long expected, long actual) {
+        final long errorMarginSize = expected / 20; // 5%
+        if (Math.abs(expected - actual) > errorMarginSize) {
             throw new AssertionFailedError("Expected roughly " + expected + " but was " + actual);
         }
     }

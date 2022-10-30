@@ -36,6 +36,7 @@ import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.common.BackgroundJobsManager;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -68,9 +69,11 @@ public class NotificationActivityUiAutomatorTest {
                 ExtendedMockito.mockitoSession()
                         .spyStatic(PhFlags.class)
                         .spyStatic(BackgroundJobsManager.class)
+                        .spyStatic(FlagsFactory.class)
                         .strictness(Strictness.WARN)
                         .initMocks(this)
                         .startMocking();
+        ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
         ExtendedMockito.doNothing()
                 .when(() -> BackgroundJobsManager.scheduleAllBackgroundJobs(any(Context.class)));
         mPhFlags = spy(PhFlags.getInstance());

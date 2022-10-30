@@ -111,8 +111,7 @@ public class ConsentNotificationTrigger {
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
 
         if (!notificationManager.areNotificationsEnabled()) {
-            ConsentManager.getInstance(context)
-                    .recordNotificationDisplayed(context.getPackageManager());
+            ConsentManager.getInstance(context).recordNotificationDisplayed();
             // TODO(b/242001860): add logging
             return;
         }
@@ -127,8 +126,7 @@ public class ConsentNotificationTrigger {
                 getConsentNotificationBuilder(context, isEuDevice);
 
         notificationManager.notify(NOTIFICATION_ID, consentNotificationBuilder.build());
-        ConsentManager.getInstance(context)
-                .recordNotificationDisplayed(context.getPackageManager());
+        ConsentManager.getInstance(context).recordNotificationDisplayed();
     }
 
     private static void createNotificationChannel(@NonNull Context context) {

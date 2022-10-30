@@ -39,6 +39,7 @@ import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.MeasurementHttpClient;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.util.AsyncFetchStatus;
+import com.android.adservices.service.measurement.util.AsyncRedirect;
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Web;
@@ -68,8 +69,6 @@ import java.util.concurrent.TimeUnit;
  * @hide
  */
 public class AsyncSourceFetcher {
-
-
 
     private final String mDefaultAndroidAppScheme = "android-app";
     private final String mDefaultAndroidAppUriPrefix = mDefaultAndroidAppScheme + "://";
@@ -303,12 +302,10 @@ public class AsyncSourceFetcher {
     public Optional<Source> fetchSource(
             @NonNull AsyncRegistration asyncRegistration,
             @NonNull AsyncFetchStatus asyncFetchStatus,
-            List<Uri> redirects) {
+            AsyncRedirect asyncRedirect) {
         List<Source> out = new ArrayList<>();
         fetchSource(
-                asyncRegistration.getType() == AsyncRegistration.RegistrationType.WEB_SOURCE
-                        ? asyncRegistration.getTopOrigin()
-                        : getPublisher(asyncRegistration),
+                asyncRegistration.getTopOrigin(),
                 asyncRegistration.getRegistrationUri(),
                 asyncRegistration.getOsDestination(),
                 asyncRegistration.getWebDestination(),
@@ -317,8 +314,9 @@ public class AsyncSourceFetcher {
                 asyncRegistration.getType() == AsyncRegistration.RegistrationType.WEB_SOURCE,
                 asyncRegistration.getSourceType(),
                 out,
-                asyncRegistration.getRedirect(),
-                redirects,
+                asyncRegistration.shouldProcessRedirects(),
+                asyncRegistration.getRedirectType(),
+                asyncRedirect,
                 asyncRegistration.getType() == AsyncRegistration.RegistrationType.WEB_SOURCE,
                 asyncRegistration.getDebugKeyAllowed(),
                 asyncFetchStatus,
@@ -341,7 +339,8 @@ public class AsyncSourceFetcher {
             @NonNull Source.SourceType sourceType,
             @NonNull List<Source> sourceOut,
             boolean shouldProcessRedirects,
-            @NonNull List<Uri> registrationsOut,
+            @AsyncRegistration.RedirectType int redirectType,
+            @NonNull AsyncRedirect asyncRedirect,
             boolean isWebSource,
             boolean isAllowDebugKey,
             @Nullable AsyncFetchStatus asyncFetchStatus,
@@ -414,7 +413,11 @@ public class AsyncSourceFetcher {
                 return;
             }
             if (shouldProcessRedirects) {
-                registrationsOut.addAll(FetcherUtil.parseRedirects(headers));
+                AsyncRedirect redirectsAndType = FetcherUtil.parseRedirects(headers, redirectType);
+                asyncRedirect.addToRedirects(redirectsAndType.getRedirects());
+                asyncRedirect.setRedirectType(redirectsAndType.getRedirectType());
+            } else {
+                asyncRedirect.setRedirectType(redirectType);
             }
         } catch (IOException e) {
             asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.NETWORK_ERROR);
@@ -449,10 +452,6 @@ public class AsyncSourceFetcher {
             }
         }
         return true;
-    }
-
-    private Uri getPublisher(AsyncRegistration request) {
-        return Uri.parse(mDefaultAndroidAppUriPrefix + request.getRegistrant());
     }
 
     private interface SourceHeaderContract {

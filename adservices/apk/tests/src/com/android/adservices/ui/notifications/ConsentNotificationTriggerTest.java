@@ -27,7 +27,6 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Context;
-import android.content.pm.PackageManager;
 
 import androidx.core.app.NotificationManagerCompat;
 import androidx.test.core.app.ApplicationProvider;
@@ -41,6 +40,7 @@ import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -77,10 +77,12 @@ public class ConsentNotificationTriggerTest {
         MockitoAnnotations.initMocks(this);
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
+                        .spyStatic(FlagsFactory.class)
                         .strictness(Strictness.WARN)
                         .initMocks(this)
                         .startMocking();
         try {
+            ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
             mNotificationManager = mContext.getSystemService(NotificationManager.class);
             final String expectedTitle =
                     mContext.getString(R.string.notificationUI_notification_title_eu);
@@ -143,7 +145,7 @@ public class ConsentNotificationTriggerTest {
             Thread.sleep(1000); // wait 1s to make sure that Notification is displayed.
 
             verify(mConsentManager).enable(any(Context.class));
-            verify(mConsentManager).recordNotificationDisplayed(any(PackageManager.class));
+            verify(mConsentManager).recordNotificationDisplayed();
             verifyNoMoreInteractions(mConsentManager);
             assertThat(mNotificationManager.getActiveNotifications()).hasLength(1);
             final Notification notification =
@@ -197,7 +199,7 @@ public class ConsentNotificationTriggerTest {
 
             ConsentNotificationTrigger.showConsentNotification(mContext, true);
 
-            verify(mConsentManager).recordNotificationDisplayed(any(PackageManager.class));
+            verify(mConsentManager).recordNotificationDisplayed();
             verifyNoMoreInteractions(mConsentManager);
         } finally {
             mStaticMockSession.finishMocking();

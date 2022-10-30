@@ -136,7 +136,7 @@ public class AttributionJobHandlerTest {
         AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
         attributionService.performPendingAttributions();
         verify(mMeasurementDao).getTrigger(trigger.getId());
-        verify(mMeasurementDao, never()).updateTriggerStatus(any());
+        verify(mMeasurementDao, never()).updateTriggerStatus(any(), anyInt());
         verify(mMeasurementDao, never()).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
@@ -151,9 +151,9 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(new ArrayList<>());
         AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
         attributionService.performPendingAttributions();
-        ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
-        verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        assertEquals(Trigger.Status.IGNORED, triggerArg.getValue().getStatus());
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())), eq(Trigger.Status.IGNORED));
         verify(mMeasurementDao, never()).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
@@ -191,9 +191,9 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
         AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
         attributionService.performPendingAttributions();
-        ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
-        verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        assertEquals(Trigger.Status.IGNORED, triggerArg.getValue().getStatus());
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())), eq(Trigger.Status.IGNORED));
         verify(mMeasurementDao, never()).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
@@ -215,9 +215,9 @@ public class AttributionJobHandlerTest {
         AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
         attributionService.performPendingAttributions();
         verify(mMeasurementDao).getAttributionsPerRateLimitWindow(source, trigger);
-        ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
-        verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        assertEquals(Trigger.Status.IGNORED, triggerArg.getValue().getStatus());
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())), eq(Trigger.Status.IGNORED));
         verify(mMeasurementDao, never()).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
@@ -239,11 +239,12 @@ public class AttributionJobHandlerTest {
                 any(), any(), any(), anyLong(), anyLong())).thenReturn(10);
         AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
         attributionService.performPendingAttributions();
-        verify(mMeasurementDao).countDistinctEnrollmentsPerPublisherXDestinationInAttribution(
-                any(), any(), any(), anyLong(), anyLong());
-        ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
-        verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        assertEquals(Trigger.Status.IGNORED, triggerArg.getValue().getStatus());
+        verify(mMeasurementDao)
+                .countDistinctEnrollmentsPerPublisherXDestinationInAttribution(
+                        any(), any(), any(), anyLong(), anyLong());
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())), eq(Trigger.Status.IGNORED));
         verify(mMeasurementDao, never()).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
@@ -277,9 +278,9 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
         AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
         attributionService.performPendingAttributions();
-        ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
-        verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        assertEquals(Trigger.Status.IGNORED, triggerArg.getValue().getStatus());
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())), eq(Trigger.Status.IGNORED));
         verify(mMeasurementDao, never()).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
@@ -329,9 +330,9 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
         AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
         attributionService.performPendingAttributions();
-        ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
-        verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        assertEquals(Trigger.Status.IGNORED, triggerArg.getValue().getStatus());
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())), eq(Trigger.Status.IGNORED));
         verify(mMeasurementDao, never()).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
@@ -353,9 +354,10 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
         AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
         attributionService.performPendingAttributions();
-        ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
-        verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())),
+                        eq(Trigger.Status.ATTRIBUTED));
         ArgumentCaptor<Source> sourceArg = ArgumentCaptor.forClass(Source.class);
         verify(mMeasurementDao).updateSourceDedupKeys(sourceArg.capture());
         assertEquals(
@@ -385,16 +387,20 @@ public class AttributionJobHandlerTest {
                         .setStatus(Trigger.Status.PENDING)
                         .setEventTriggers(eventTriggers)
                         .build();
-        Source source1 = SourceFixture.getValidSourceBuilder()
-                .setPriority(100L)
-                .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
-                .setEventTime(1L)
-                .build();
-        Source source2 = SourceFixture.getValidSourceBuilder()
-                .setPriority(200L)
-                .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
-                .setEventTime(2L)
-                .build();
+        Source source1 =
+                SourceFixture.getValidSourceBuilder()
+                        .setId("source1")
+                        .setPriority(100L)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setEventTime(1L)
+                        .build();
+        Source source2 =
+                SourceFixture.getValidSourceBuilder()
+                        .setId("source2")
+                        .setPriority(200L)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setEventTime(2L)
+                        .build();
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
         when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
@@ -406,11 +412,13 @@ public class AttributionJobHandlerTest {
         AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
         attributionService.performPendingAttributions();
         trigger.setStatus(Trigger.Status.ATTRIBUTED);
-        verify(mMeasurementDao).updateSourceStatus(matchingSourceList, Source.Status.IGNORED);
+        verify(mMeasurementDao)
+                .updateSourceStatus(eq(List.of(source1.getId())), eq(Source.Status.IGNORED));
         assertEquals(1, matchingSourceList.size());
-        ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
-        verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())),
+                        eq(Trigger.Status.ATTRIBUTED));
         ArgumentCaptor<Source> sourceArg = ArgumentCaptor.forClass(Source.class);
         verify(mMeasurementDao).updateSourceDedupKeys(sourceArg.capture());
         assertEquals(
@@ -478,9 +486,10 @@ public class AttributionJobHandlerTest {
         AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
         attributionService.performPendingAttributions();
         verify(mMeasurementDao).deleteEventReport(eventReport1);
-        ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
-        verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())),
+                        eq(Trigger.Status.ATTRIBUTED));
         verify(mMeasurementDao).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
@@ -512,7 +521,7 @@ public class AttributionJobHandlerTest {
         verify(mMeasurementDao).getTrigger(anyString());
         verify(mMeasurementDao).getMatchingActiveSources(any());
         verify(mMeasurementDao).getAttributionsPerRateLimitWindow(any(), any());
-        verify(mMeasurementDao, never()).updateTriggerStatus(any());
+        verify(mMeasurementDao, never()).updateTriggerStatus(any(), anyInt());
         verify(mMeasurementDao, never()).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction).rollback();
@@ -568,13 +577,7 @@ public class AttributionJobHandlerTest {
         AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
         assertTrue(attributionService.performPendingAttributions());
         // Verify trigger status updates.
-        ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
-        verify(mMeasurementDao, times(2)).updateTriggerStatus(triggerArg.capture());
-        List<Trigger> statusArgs = triggerArg.getAllValues();
-        for (int i = 0; i < statusArgs.size(); i++) {
-            assertEquals(Trigger.Status.ATTRIBUTED, statusArgs.get(i).getStatus());
-            assertEquals(triggers.get(i).getId(), statusArgs.get(i).getId());
-        }
+        verify(mMeasurementDao, times(2)).updateTriggerStatus(any(), eq(Trigger.Status.ATTRIBUTED));
         // Verify source dedup key updates.
         ArgumentCaptor<Source> sourceArg = ArgumentCaptor.forClass(Source.class);
         verify(mMeasurementDao, times(2))
@@ -603,6 +606,7 @@ public class AttributionJobHandlerTest {
         long eventTime = System.currentTimeMillis();
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
+                        .setId("trigger1")
                         .setStatus(Trigger.Status.PENDING)
                         .setTriggerTime(eventTime + TimeUnit.DAYS.toMillis(5))
                         .setEventTriggers(
@@ -615,20 +619,24 @@ public class AttributionJobHandlerTest {
                                         + "]\n")
                         .build();
         // Lower priority and older priority source.
-        Source source1 = SourceFixture.getValidSourceBuilder()
-                .setEventId(new UnsignedLong(1L))
-                .setPriority(100L)
-                .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
-                .setInstallAttributed(true)
-                .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(10))
-                .setEventTime(eventTime - TimeUnit.DAYS.toMillis(2))
-                .build();
-        Source source2 = SourceFixture.getValidSourceBuilder()
-                .setEventId(new UnsignedLong(2L))
-                .setPriority(200L)
-                .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
-                .setEventTime(eventTime)
-                .build();
+        Source source1 =
+                SourceFixture.getValidSourceBuilder()
+                        .setId("source1")
+                        .setEventId(new UnsignedLong(1L))
+                        .setPriority(100L)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setInstallAttributed(true)
+                        .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(10))
+                        .setEventTime(eventTime - TimeUnit.DAYS.toMillis(2))
+                        .build();
+        Source source2 =
+                SourceFixture.getValidSourceBuilder()
+                        .setId("source2")
+                        .setEventId(new UnsignedLong(2L))
+                        .setPriority(200L)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setEventTime(eventTime)
+                        .build();
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
         when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
@@ -640,12 +648,14 @@ public class AttributionJobHandlerTest {
         AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
         attributionService.performPendingAttributions();
         trigger.setStatus(Trigger.Status.ATTRIBUTED);
-        verify(mMeasurementDao).updateSourceStatus(matchingSourceList, Source.Status.IGNORED);
+        verify(mMeasurementDao)
+                .updateSourceStatus(eq(List.of(source2.getId())), eq(Source.Status.IGNORED));
         assertEquals(1, matchingSourceList.size());
         assertEquals(source2.getEventId(), matchingSourceList.get(0).getEventId());
-        ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
-        verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())),
+                        eq(Trigger.Status.ATTRIBUTED));
         ArgumentCaptor<Source> sourceArg = ArgumentCaptor.forClass(Source.class);
         verify(mMeasurementDao).updateSourceDedupKeys(sourceArg.capture());
         assertEquals(source1.getEventId(), sourceArg.getValue().getEventId());
@@ -657,9 +667,11 @@ public class AttributionJobHandlerTest {
 
     @Test
     public void shouldNotAttributeToOldInstallAttributedSource() throws DatastoreException {
+        // Setup
         long eventTime = System.currentTimeMillis();
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
+                        .setId("trigger1")
                         .setStatus(Trigger.Status.PENDING)
                         .setTriggerTime(eventTime + TimeUnit.DAYS.toMillis(10))
                         .setEventTriggers(
@@ -672,20 +684,24 @@ public class AttributionJobHandlerTest {
                                         + "]\n")
                         .build();
         // Lower Priority. Install cooldown Window passed.
-        Source source1 = SourceFixture.getValidSourceBuilder()
-                .setEventId(new UnsignedLong(1L))
-                .setPriority(100L)
-                .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
-                .setInstallAttributed(true)
-                .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(3))
-                .setEventTime(eventTime - TimeUnit.DAYS.toMillis(2))
-                .build();
-        Source source2 = SourceFixture.getValidSourceBuilder()
-                .setEventId(new UnsignedLong(2L))
-                .setPriority(200L)
-                .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
-                .setEventTime(eventTime)
-                .build();
+        Source source1 =
+                SourceFixture.getValidSourceBuilder()
+                        .setId("source1")
+                        .setEventId(new UnsignedLong(1L))
+                        .setPriority(100L)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setInstallAttributed(true)
+                        .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(3))
+                        .setEventTime(eventTime - TimeUnit.DAYS.toMillis(2))
+                        .build();
+        Source source2 =
+                SourceFixture.getValidSourceBuilder()
+                        .setId("source2")
+                        .setEventId(new UnsignedLong(2L))
+                        .setPriority(200L)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setEventTime(eventTime)
+                        .build();
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
         when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
@@ -695,14 +711,19 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
         AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
+        // Execution
         attributionService.performPendingAttributions();
         trigger.setStatus(Trigger.Status.ATTRIBUTED);
-        verify(mMeasurementDao).updateSourceStatus(matchingSourceList, Source.Status.IGNORED);
+
+        // Assertion
+        verify(mMeasurementDao)
+                .updateSourceStatus(eq(List.of(source1.getId())), eq(Source.Status.IGNORED));
         assertEquals(1, matchingSourceList.size());
         assertEquals(source1.getEventId(), matchingSourceList.get(0).getEventId());
-        ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
-        verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())),
+                        eq(Trigger.Status.ATTRIBUTED));
         ArgumentCaptor<Source> sourceArg = ArgumentCaptor.forClass(Source.class);
         verify(mMeasurementDao).updateSourceDedupKeys(sourceArg.capture());
         assertEquals(source2.getEventId(), sourceArg.getValue().getEventId());
@@ -740,9 +761,9 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
         AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
         attributionService.performPendingAttributions();
-        ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
-        verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        assertEquals(Trigger.Status.IGNORED, triggerArg.getValue().getStatus());
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())), eq(Trigger.Status.IGNORED));
         verify(mMeasurementDao, never()).updateSourceDedupKeys(any());
         verify(mMeasurementDao, never()).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
@@ -777,9 +798,9 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
         AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
         attributionService.performPendingAttributions();
-        ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
-        verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        assertEquals(Trigger.Status.IGNORED, triggerArg.getValue().getStatus());
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())), eq(Trigger.Status.IGNORED));
         verify(mMeasurementDao, never()).updateSourceDedupKeys(any());
         verify(mMeasurementDao, never()).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
@@ -957,9 +978,9 @@ public class AttributionJobHandlerTest {
         attributionService.performPendingAttributions();
 
         // Assertions
-        ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
-        verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        assertEquals(Trigger.Status.IGNORED, triggerArg.getValue().getStatus());
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())), eq(Trigger.Status.IGNORED));
         verify(mMeasurementDao, never()).updateSourceDedupKeys(any());
         verify(mMeasurementDao, never()).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
@@ -1011,9 +1032,10 @@ public class AttributionJobHandlerTest {
         attributionService.performPendingAttributions();
 
         // Assertions
-        ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
-        verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())),
+                        eq(Trigger.Status.ATTRIBUTED));
         ArgumentCaptor<Source> sourceArg = ArgumentCaptor.forClass(Source.class);
         verify(mMeasurementDao).updateSourceDedupKeys(sourceArg.capture());
         assertEquals(
@@ -1071,16 +1093,16 @@ public class AttributionJobHandlerTest {
         attributionService.performPendingAttributions();
 
         // Assertions
-        ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
-        verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())),
+                        eq(Trigger.Status.ATTRIBUTED));
         ArgumentCaptor<Source> sourceArg = ArgumentCaptor.forClass(Source.class);
         verify(mMeasurementDao).updateSourceDedupKeys(sourceArg.capture());
         assertEquals(
                 sourceArg.getValue().getDedupKeys(),
                 Collections.singletonList(new UnsignedLong(1L)));
         assertEquals(sourceArg.getValue().getDebugKey(), SOURCE_DEBUG_KEY);
-        assertEquals(triggerArg.getValue().getDebugKey(), TRIGGER_DEBUG_KEY);
         verify(mMeasurementDao).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
@@ -1132,9 +1154,10 @@ public class AttributionJobHandlerTest {
         attributionService.performPendingAttributions();
 
         // Assertions
-        ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
-        verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())),
+                        eq(Trigger.Status.ATTRIBUTED));
         ArgumentCaptor<Source> sourceArg = ArgumentCaptor.forClass(Source.class);
         verify(mMeasurementDao).updateSourceDedupKeys(sourceArg.capture());
         assertEquals(
@@ -1192,11 +1215,11 @@ public class AttributionJobHandlerTest {
         attributionService.performPendingAttributions();
 
         // Assertions
-        ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
-        verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())),
+                        eq(Trigger.Status.ATTRIBUTED));
         ArgumentCaptor<Source> sourceArg = ArgumentCaptor.forClass(Source.class);
-        assertEquals(triggerArg.getValue().getDebugKey(), TRIGGER_DEBUG_KEY);
         verify(mMeasurementDao).updateSourceDedupKeys(sourceArg.capture());
         assertEquals(
                 sourceArg.getValue().getDedupKeys(),
@@ -1251,9 +1274,10 @@ public class AttributionJobHandlerTest {
         attributionService.performPendingAttributions();
 
         // Assertions
-        ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
-        verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())),
+                        eq(Trigger.Status.ATTRIBUTED));
         ArgumentCaptor<Source> sourceArg = ArgumentCaptor.forClass(Source.class);
         verify(mMeasurementDao).updateSourceDedupKeys(sourceArg.capture());
         assertEquals(
@@ -1335,9 +1359,10 @@ public class AttributionJobHandlerTest {
         attributionService.performPendingAttributions();
 
         // Assertions
-        ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
-        verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())),
+                        eq(Trigger.Status.ATTRIBUTED));
         verify(mMeasurementDao).updateSourceDedupKeys(source);
         verify(mMeasurementDao).insertEventReport(eq(expectedEventReport));
         verify(mTransaction, times(2)).begin();
@@ -1415,9 +1440,10 @@ public class AttributionJobHandlerTest {
         attributionService.performPendingAttributions();
 
         // Assertions
-        ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
-        verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())),
+                        eq(Trigger.Status.ATTRIBUTED));
         verify(mMeasurementDao).updateSourceDedupKeys(source);
         verify(mMeasurementDao).insertEventReport(eq(expectedEventReport));
         verify(mTransaction, times(2)).begin();
@@ -1498,9 +1524,10 @@ public class AttributionJobHandlerTest {
         attributionService.performPendingAttributions();
 
         // Assertions
-        ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
-        verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())),
+                        eq(Trigger.Status.ATTRIBUTED));
         verify(mMeasurementDao).updateSourceDedupKeys(source);
         verify(mMeasurementDao).insertEventReport(eq(expectedEventReport));
         verify(mTransaction, times(2)).begin();
@@ -1568,9 +1595,10 @@ public class AttributionJobHandlerTest {
         attributionService.performPendingAttributions();
 
         // Assertions
-        ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
-        verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())),
+                        eq(Trigger.Status.ATTRIBUTED));
         verify(mMeasurementDao, never()).insertEventReport(any());
         verify(mMeasurementDao).insertAggregateReport(any());
         verify(mTransaction, times(2)).begin();
@@ -1636,9 +1664,10 @@ public class AttributionJobHandlerTest {
         attributionService.performPendingAttributions();
 
         // Assertions
-        ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
-        verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())),
+                        eq(Trigger.Status.ATTRIBUTED));
         verify(mMeasurementDao, never()).insertAggregateReport(any());
         verify(mMeasurementDao).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
@@ -1704,9 +1733,10 @@ public class AttributionJobHandlerTest {
         attributionService.performPendingAttributions();
 
         // Assertion
-        ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
-        verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())),
+                        eq(Trigger.Status.ATTRIBUTED));
         verify(mMeasurementDao).insertAggregateReport(any());
         verify(mMeasurementDao, never()).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
@@ -1772,9 +1802,9 @@ public class AttributionJobHandlerTest {
         attributionService.performPendingAttributions();
 
         // Assertion
-        ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
-        verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        assertEquals(Trigger.Status.IGNORED, triggerArg.getValue().getStatus());
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())), eq(Trigger.Status.IGNORED));
         verify(mMeasurementDao, never()).insertAggregateReport(any());
         verify(mMeasurementDao, never()).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
@@ -1840,9 +1870,10 @@ public class AttributionJobHandlerTest {
         attributionService.performPendingAttributions();
 
         // Assertion
-        ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
-        verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())),
+                        eq(Trigger.Status.ATTRIBUTED));
         verify(mMeasurementDao).insertAggregateReport(any());
         verify(mMeasurementDao).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
