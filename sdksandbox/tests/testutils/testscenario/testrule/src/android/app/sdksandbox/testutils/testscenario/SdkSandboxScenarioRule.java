@@ -32,10 +32,12 @@ import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallback;
 import android.app.sdksandbox.testutils.WaitableCountDownLatch;
 import android.content.Context;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.text.TextUtils;
 import android.view.SurfaceView;
 import android.view.View;
 
+import androidx.annotation.Nullable;
 import androidx.lifecycle.Lifecycle;
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -59,9 +61,15 @@ public final class SdkSandboxScenarioRule implements TestRule {
     private static final int TEST_TIMEOUT_S = 60;
     private final String mSdkName;
     private ISdkSandboxTestExecutor mTestExecutor;
+    private @Nullable IBinder mBinder;
 
     public SdkSandboxScenarioRule(String sdkName) {
+        this(sdkName, null);
+    }
+
+    public SdkSandboxScenarioRule(String sdkName, IBinder customInterface) {
         mSdkName = sdkName;
+        mBinder = customInterface;
     }
 
     @Override
@@ -123,10 +131,12 @@ public final class SdkSandboxScenarioRule implements TestRule {
         assertThat(true).isTrue();
     }
 
-    private static SandboxedSdk getLoadedSdk(SdkSandboxManager mSdkSandboxManager, String sdkName)
+    private SandboxedSdk getLoadedSdk(SdkSandboxManager mSdkSandboxManager, String sdkName)
             throws Exception {
+        final Bundle loadParams = new Bundle(1);
+        loadParams.putBinder(ISdkSandboxTestExecutor.TEST_AUTHOR_DEFINED_BINDER, mBinder);
         final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
-        mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
+        mSdkSandboxManager.loadSdk(sdkName, loadParams, Runnable::run, callback);
         if (!callback.isLoadSdkSuccessful()) {
             Assume.assumeTrue(
                     "Skipping test because Sdk Sandbox is disabled",
