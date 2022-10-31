@@ -17,6 +17,7 @@
 package com.android.adservices.data.enrollment;
 
 import android.adservices.common.AdTechIdentifier;
+import android.net.Uri;
 
 import com.android.adservices.service.enrollment.EnrollmentData;
 
@@ -39,7 +40,7 @@ public interface IEnrollmentDao {
      * @param url could be source registration url or trigger registration url.
      * @return the EnrollmentData; Null in case of SQL failure.
      */
-    EnrollmentData getEnrollmentDataFromMeasurementUrl(String url);
+    EnrollmentData getEnrollmentDataFromMeasurementUrl(Uri url);
 
     /**
      * Returns the {@link EnrollmentData} with FLEDGE response-based registration URLs that match

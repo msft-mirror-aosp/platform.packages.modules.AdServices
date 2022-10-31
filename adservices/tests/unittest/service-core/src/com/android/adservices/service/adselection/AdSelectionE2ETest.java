@@ -72,6 +72,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.LogUtil;
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.DBAdSelectionOverride;
@@ -81,6 +82,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdServicesHttpsClient;
@@ -149,7 +151,7 @@ public class AdSelectionE2ETest {
 
     private static final String READ_BID_FROM_AD_METADATA_JS =
             "function generateBid(ad, auction_signals, per_buyer_signals,"
-                    + " trusted_bidding_signals, contextual_signals, user_signals,"
+                    + " trusted_bidding_signals, contextual_signals,"
                     + " custom_audience_signals) { \n"
                     + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
                     + "}";
@@ -203,7 +205,10 @@ public class AdSelectionE2ETest {
 
     @Spy
     FledgeAuthorizationFilter mFledgeAuthorizationFilterSpy =
-            FledgeAuthorizationFilter.create(mContext, mAdServicesLoggerMock);
+            new FledgeAuthorizationFilter(
+                    mContext.getPackageManager(),
+                    new EnrollmentDao(mContext, DbTestUtil.getDbHelperForTest()),
+                    mAdServicesLoggerMock);
 
     @Mock private ConsentManager mConsentManagerMock;
     private MockitoSession mStaticMockSession = null;
@@ -1283,7 +1288,7 @@ public class AdSelectionE2ETest {
                 insertJsWait(2 * mFlags.getAdSelectionBiddingTimeoutPerCaMs());
         String readBidFromAdMetadataWithDelayJs =
                 "function generateBid(ad, auction_signals, per_buyer_signals,"
-                        + " trusted_bidding_signals, contextual_signals, user_signals,"
+                        + " trusted_bidding_signals, contextual_signals,"
                         + " custom_audience_signals) { \n"
                         + jsWaitMoreThanAllowedForBiddingPerCa
                         + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"

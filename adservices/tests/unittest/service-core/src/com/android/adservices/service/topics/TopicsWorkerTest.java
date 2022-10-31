@@ -19,6 +19,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.only;
 import static org.mockito.Mockito.spy;
@@ -42,6 +43,7 @@ import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.stats.AdServicesLogger;
 
 import com.google.common.collect.ImmutableList;
 
@@ -51,6 +53,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -72,6 +75,7 @@ public class TopicsWorkerTest {
 
     @Mock private EpochManager mMockEpochManager;
     @Mock private Flags mMockFlags;
+    @Mock AdServicesLogger mLogger;
 
     @Before
     public void setup() {
@@ -80,11 +84,12 @@ public class TopicsWorkerTest {
         // Clean DB before each test
         DbTestUtil.deleteTable(TopicsTables.ReturnedTopicContract.TABLE);
         DbTestUtil.deleteTable(TopicsTables.BlockedTopicsContract.TABLE);
+        DbTestUtil.deleteTable(TopicsTables.TopicContributorsContract.TABLE);
 
         DbHelper dbHelper = DbTestUtil.getDbHelperForTest();
         mTopicsDao = new TopicsDao(dbHelper);
         mAppUpdateManager = new AppUpdateManager(mTopicsDao, new Random(), mMockFlags);
-        mCacheManager = new CacheManager(mMockEpochManager, mTopicsDao, mMockFlags);
+        mCacheManager = new CacheManager(mMockEpochManager, mTopicsDao, mMockFlags, mLogger);
         mBlockedTopicsManager = new BlockedTopicsManager(mTopicsDao);
         mTopicsWorker =
                 new TopicsWorker(
@@ -541,7 +546,8 @@ public class TopicsWorkerTest {
         final String app = "app";
         final String sdk = "sdk";
 
-        List<String> tableExclusionList = List.of(TopicsTables.BlockedTopicsContract.TABLE);
+        ArrayList<String> tableExclusionList = new ArrayList<>();
+        tableExclusionList.add(TopicsTables.BlockedTopicsContract.TABLE);
 
         Topic topic1 =
                 Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
@@ -563,6 +569,7 @@ public class TopicsWorkerTest {
         mTopicsDao.recordBlockedTopic(topic1);
 
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(epochId);
+        when(mMockEpochManager.supportsTopicContributorFeature()).thenReturn(true);
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
 
         // Real Cache Manager requires loading cache before getTopics() being called.
@@ -601,7 +608,7 @@ public class TopicsWorkerTest {
         mTopicsWorker.clearAllTopicsData(tableExclusionList);
         assertThat(mTopicsDao.retrieveAllBlockedTopics()).isNotEmpty();
 
-        mTopicsWorker.clearAllTopicsData(Collections.emptyList());
+        mTopicsWorker.clearAllTopicsData(new ArrayList<>());
         assertThat(mTopicsDao.retrieveAllBlockedTopics()).isEmpty();
 
         GetTopicsResult emptyGetTopicsResult =
@@ -614,6 +621,35 @@ public class TopicsWorkerTest {
 
         assertThat(mTopicsWorker.getTopics(app, sdk)).isEqualTo(emptyGetTopicsResult);
         assertThat(mTopicsWorker.getTopics(app, /* sdk */ "")).isEqualTo(emptyGetTopicsResult);
+    }
+
+    @Test
+    public void testClearAllTopicsData_topicContributorsTable() {
+        final long epochId = 1;
+        final int topicId = 1;
+        final String app = "app";
+        Map<Integer, Set<String>> topicContributorsMap = Map.of(topicId, Set.of(app));
+        mTopicsDao.persistTopicContributors(epochId, topicContributorsMap);
+
+        // To test feature flag is off
+        when(mMockEpochManager.supportsTopicContributorFeature()).thenReturn(false);
+        mTopicsWorker.clearAllTopicsData(/* tables to exclude */ new ArrayList<>());
+        // TopicContributors table should remain the same
+        assertThat(mTopicsDao.retrieveTopicToContributorsMap(epochId))
+                .isEqualTo(topicContributorsMap);
+
+        // To test feature flag is on
+        when(mMockEpochManager.supportsTopicContributorFeature()).thenReturn(true);
+        mTopicsWorker.clearAllTopicsData(/* tables to exclude */ new ArrayList<>());
+        // TopicContributors table be cleared.
+        assertThat(mTopicsDao.retrieveTopicToContributorsMap(epochId)).isEmpty();
+    }
+
+    @Test
+    public void testClearAllTopicsData_ImmutableList() {
+        assertThrows(
+                ClassCastException.class,
+                () -> mTopicsWorker.clearAllTopicsData((ArrayList<String>) List.of("anyString")));
     }
 
     @Test

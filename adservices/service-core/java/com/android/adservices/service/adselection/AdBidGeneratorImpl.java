@@ -173,7 +173,6 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
             return FluentFuture.from(Futures.immediateFuture(null));
         }
 
-        AdSelectionSignals userSignals = buildUserSignals(customAudience);
         CustomAudienceSignals customAudienceSignals =
                 CustomAudienceSignals.buildFromCustomAudience(customAudience);
 
@@ -195,7 +194,6 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                                     buyerSignals,
                                     contextualSignals,
                                     customAudienceSignals,
-                                    userSignals,
                                     adSelectionSignals);
                         },
                         mLightweightExecutorService);
@@ -304,19 +302,6 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
     }
 
     /**
-     * @return user information with respect to the custom audience will be available to
-     *     generateBid(). This could include language, demographic information, information about
-     *     custom audience such as time in list, number of impressions, last N winning impression
-     *     timestamp etc.
-     */
-    @NonNull
-    public AdSelectionSignals buildUserSignals(@Nullable DBCustomAudience customAudience) {
-        // TODO: implement how to build user_signals with respect to customAudience.
-        LogUtil.v("Building Custom Audience User Signals %s", customAudience.getName());
-        return AdSelectionSignals.EMPTY;
-    }
-
-    /**
      * @return the {@link AdWithBid} with the best bid per CustomAudience.
      */
     @NonNull
@@ -327,7 +312,6 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
             @NonNull AdSelectionSignals buyerSignals,
             @NonNull AdSelectionSignals contextualSignals,
             @NonNull CustomAudienceSignals customAudienceSignals,
-            @NonNull AdSelectionSignals userSignals,
             @NonNull AdSelectionSignals adSelectionSignals) {
         FluentFuture<AdSelectionSignals> trustedBiddingSignals =
                 getTrustedBiddingSignals(
@@ -354,7 +338,6 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                                     buyerSignals,
                                     biddingSignals,
                                     contextualSignals,
-                                    userSignals,
                                     customAudienceSignals);
                         },
                         mLightweightExecutorService)

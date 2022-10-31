@@ -35,6 +35,9 @@ public class SystemHealthParams {
     /** Max number of sources per publisher. */
     public static final long MAX_SOURCES_PER_PUBLISHER = 1024L;
 
+    /** Max number of redirects per registration. */
+    public static final int MAX_REDIRECTS_PER_REGISTRATION = 5;
+
     /** Delay for attribution job triggering. */
     public static final long ATTRIBUTION_JOB_TRIGGERING_DELAY_MS = TimeUnit.MINUTES.toMillis(2);
 

@@ -129,10 +129,15 @@ public interface IMeasurementDao {
             @EventSurfaceType int publisherType, Uri destination, String enrollmentId,
             long windowStartTime, long windowEndTime) throws DatastoreException;
 
-     /**
+    /**
      * Updates the {@link Trigger.Status} value for the provided {@link Trigger}.
+     *
+     * @param triggerIds trigger to update
+     * @param status status to apply
+     * @throws DatastoreException database transaction related issues
      */
-    void updateTriggerStatus(Trigger trigger) throws DatastoreException;
+    void updateTriggerStatus(@NonNull List<String> triggerIds, @Trigger.Status int status)
+            throws DatastoreException;
 
     /**
      * Add an entry to the Source datastore.
@@ -149,10 +154,10 @@ public interface IMeasurementDao {
     /**
      * Updates the {@link Source.Status} value for the provided list of {@link Source}
      *
-     * @param sources list of sources.
-     * @param status  value to be set
+     * @param sourceIds list of sources.
+     * @param status value to be set
      */
-    void updateSourceStatus(List<Source> sources, @Source.Status int status)
+    void updateSourceStatus(@NonNull List<String> sourceIds, @Source.Status int status)
             throws DatastoreException;
 
     /**
@@ -160,14 +165,14 @@ public interface IMeasurementDao {
      *
      * @param source the {@link Source} object.
      */
-    void updateSourceDedupKeys(Source source) throws DatastoreException;
+    void updateSourceDedupKeys(@NonNull Source source) throws DatastoreException;
 
     /**
      * Updates the value of aggregate contributions for the corresponding {@link Source}
      *
      * @param source the {@link Source} object.
      */
-    void updateSourceAggregateContributions(Source source) throws DatastoreException;
+    void updateSourceAggregateContributions(@NonNull Source source) throws DatastoreException;
 
     /**
      * Returns list of all the reports associated with the {@link Source}.
@@ -199,15 +204,19 @@ public interface IMeasurementDao {
      * Change the status of an event report to DELIVERED
      *
      * @param eventReportId the id of the event report to be updated
+     * @param status status of the event report
      */
-    void markEventReportDelivered(String eventReportId) throws DatastoreException;
+    void markEventReportStatus(String eventReportId, @EventReport.Status int status)
+            throws DatastoreException;
 
     /**
      * Change the status of an aggregate report to DELIVERED
      *
      * @param aggregateReportId the id of the event report to be updated
+     * @param status new status to set
      */
-    void markAggregateReportDelivered(String aggregateReportId) throws DatastoreException;
+    void markAggregateReportStatus(String aggregateReportId, @AggregateReport.Status int status)
+            throws DatastoreException;
 
     /**
      * Saves the {@link EventReport} to datastore.
@@ -249,32 +258,8 @@ public interface IMeasurementDao {
      */
     void deleteAppRecords(Uri uri) throws DatastoreException;
 
-    /**
-     * Deletes all expired records in measurement tables.
-     */
+    /** Deletes all expired records in measurement tables. */
     void deleteExpiredRecords() throws DatastoreException;
-
-    /**
-     * Deletes all measurement data owned by a registrant and optionally providing an origin uri
-     * and/or a range of dates.
-     *
-     * @param registrant who owns the data
-     * @param start time for deletion range. Set to Instant.MIN to delete everything up to the end
-     * @param end time for deletion range. Set to Instant.MAX to delete everything after the start
-     * @param origins list of origins which should be used for matching
-     * @param domains list of domains which should be used for matching
-     * @param matchBehavior {@link DeletionRequest.MatchBehavior} to be used for matching
-     * @param deletionMode {@link DeletionRequest.DeletionMode} for selecting data to be deleted
-     */
-    void deleteMeasurementData(
-            @NonNull Uri registrant,
-            @NonNull Instant start,
-            @NonNull Instant end,
-            @NonNull List<Uri> origins,
-            @NonNull List<Uri> domains,
-            @DeletionRequest.MatchBehavior int matchBehavior,
-            @DeletionRequest.DeletionMode int deletionMode)
-            throws DatastoreException;
 
     /**
      * Mark relevant source as install attributed.
@@ -335,6 +320,22 @@ public interface IMeasurementDao {
     void deleteAllMeasurementData(List<String> tablesToExclude) throws DatastoreException;
 
     /**
+     * Delete records from source table that match provided source IDs.
+     *
+     * @param sourceIds source IDs to match
+     * @throws DatastoreException database transaction issues
+     */
+    void deleteSources(@NonNull List<String> sourceIds) throws DatastoreException;
+
+    /**
+     * Delete records from source table that match provided trigger IDs.
+     *
+     * @param triggerIds trigger IDs to match
+     * @throws DatastoreException database transaction issues
+     */
+    void deleteTriggers(@NonNull List<String> triggerIds) throws DatastoreException;
+
+    /**
      * Insert a record into the Async Registration Table.
      *
      * @param asyncRegistration a {@link AsyncRegistration} to insert into the Async Registration
@@ -377,19 +378,82 @@ public interface IMeasurementDao {
     void deleteAppRecordsNotPresent(List<Uri> uriList) throws DatastoreException;
 
     /**
-     * Fetches matching aggregate reports with the provided trigger IDs.
+     * Fetches aggregate reports that match either given source or trigger IDs. If A1 is set of
+     * aggregate reports that match any of sourceIds and A2 is set of aggregate reports that match
+     * any of triggerIds, then we delete (A1 U A2).
      *
-     * @param triggerIds triggers that match with aggregate reports
+     * @param sourceIds sources to be matched with aggregate reports
+     * @param triggerIds triggers to be matched with aggregate reports
      */
-    List<AggregateReport> fetchMatchingAggregateReports(@NonNull List<String> triggerIds)
+    List<AggregateReport> fetchMatchingAggregateReports(
+            @NonNull List<String> sourceIds, @NonNull List<String> triggerIds)
             throws DatastoreException;
 
     /**
-     * Fetches matching event reports with the provided parameters. It returns a union of event
-     * reports that match with any of the source IDs or the trigger IDs.
+     * Fetches event reports that match either given source or trigger IDs. If A1 is set of event
+     * reports that match any of sourceIds and A2 is set of event reports that match any of
+     * triggerIds, then we delete (A1 U A2).
      *
-     * @param triggerIds triggers that should match with event reports
+     * @param sourceIds sources to be matched with event reports
+     * @param triggerIds triggers to be matched with event reports
      */
-    List<EventReport> fetchMatchingEventReports(@NonNull List<String> triggerIds)
+    List<EventReport> fetchMatchingEventReports(
+            @NonNull List<String> sourceIds, @NonNull List<String> triggerIds)
+            throws DatastoreException;
+
+    /**
+     * Returns list of sources matching registrant, publishers and also in the provided time frame.
+     * It matches registrant and time range (start & end) irrespective of the {@code matchBehavior}.
+     * In the resulting set, if matchBehavior is {@link
+     * android.adservices.measurement.DeletionRequest.MatchBehavior#MATCH_BEHAVIOR_DELETE}, then it
+     * matches origins and domains. In case of {@link
+     * android.adservices.measurement.DeletionRequest.MatchBehavior#MATCH_BEHAVIOR_PRESERVE}, it
+     * returns the records that don't match origins or domain.
+     *
+     * @param registrant registrant to match
+     * @param start event time should be after this instant (inclusive)
+     * @param end event time should be after this instant (inclusive)
+     * @param origins publisher site match
+     * @param domains publisher top level domain matches
+     * @param matchBehavior indicates whether to return matching or inversely matching (everything
+     *     except matching) data
+     * @return list of source IDs
+     * @throws DatastoreException database transaction level issues
+     */
+    List<String> fetchMatchingSources(
+            @NonNull Uri registrant,
+            @NonNull Instant start,
+            @NonNull Instant end,
+            @NonNull List<Uri> origins,
+            @NonNull List<Uri> domains,
+            @DeletionRequest.MatchBehavior int matchBehavior)
+            throws DatastoreException;
+
+    /**
+     * Returns list of triggers matching registrant, publishers and also in the provided time frame.
+     * It matches registrant and time range (start & end) irrespective of the {@code matchBehavior}.
+     * In the resulting set, if matchBehavior is {@link
+     * android.adservices.measurement.DeletionRequest.MatchBehavior#MATCH_BEHAVIOR_DELETE}, then it
+     * matches origins and domains. In case of {@link
+     * android.adservices.measurement.DeletionRequest.MatchBehavior#MATCH_BEHAVIOR_PRESERVE}, it
+     * returns the records that don't match origins or domain.
+     *
+     * @param registrant registrant to match
+     * @param start trigger time should be after this instant (inclusive)
+     * @param end trigger time should be after this instant (inclusive)
+     * @param origins destination site match
+     * @param domains destination top level domain matches
+     * @param matchBehavior indicates whether to return matching or inversely matching (everything
+     *     except matching) data
+     * @return list of trigger IDs
+     * @throws DatastoreException database transaction level issues
+     */
+    List<String> fetchMatchingTriggers(
+            @NonNull Uri registrant,
+            @NonNull Instant start,
+            @NonNull Instant end,
+            @NonNull List<Uri> origins,
+            @NonNull List<Uri> domains,
+            @DeletionRequest.MatchBehavior int matchBehavior)
             throws DatastoreException;
 }

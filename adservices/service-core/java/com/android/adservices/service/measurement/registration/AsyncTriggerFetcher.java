@@ -34,6 +34,7 @@ import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.MeasurementHttpClient;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.util.AsyncFetchStatus;
+import com.android.adservices.service.measurement.util.AsyncRedirect;
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -62,7 +63,6 @@ import java.util.Optional;
  */
 public class AsyncTriggerFetcher {
 
-    private static final String ANDROID_APP_SCHEME = "android-app";
     private final MeasurementHttpClient mNetworkConnection = new MeasurementHttpClient();
     private final EnrollmentDao mEnrollmentDao;
     private final Flags mFlags;
@@ -167,7 +167,8 @@ public class AsyncTriggerFetcher {
             Uri registrant,
             long triggerTime,
             boolean shouldProcessRedirects,
-            @NonNull List<Uri> registrationsOut,
+            @AsyncRegistration.RedirectType int redirectType,
+            @NonNull AsyncRedirect asyncRedirect,
             @NonNull List<Trigger> triggerOut,
             boolean isWebSource,
             boolean isAllowDebugKey,
@@ -238,7 +239,11 @@ public class AsyncTriggerFetcher {
                 return;
             }
             if (shouldProcessRedirects) {
-                registrationsOut.addAll(FetcherUtil.parseRedirects(headers));
+                AsyncRedirect redirectsAndType = FetcherUtil.parseRedirects(headers, redirectType);
+                asyncRedirect.addToRedirects(redirectsAndType.getRedirects());
+                asyncRedirect.setRedirectType(redirectsAndType.getRedirectType());
+            } else {
+                asyncRedirect.setRedirectType(redirectType);
             }
         } catch (IOException e) {
             LogUtil.d(e, "Failed to get registration response");
@@ -257,17 +262,16 @@ public class AsyncTriggerFetcher {
     public Optional<Trigger> fetchTrigger(
             @NonNull AsyncRegistration asyncRegistration,
             @NonNull AsyncFetchStatus asyncFetchStatus,
-            List<Uri> redirects) {
+            AsyncRedirect asyncRedirect) {
         List<Trigger> out = new ArrayList<>();
         fetchTrigger(
-                asyncRegistration.getType() == AsyncRegistration.RegistrationType.WEB_TRIGGER
-                        ? asyncRegistration.getTopOrigin()
-                        : getAttributionDestination(asyncRegistration),
+                asyncRegistration.getTopOrigin(),
                 asyncRegistration.getRegistrationUri(),
                 asyncRegistration.getRegistrant(),
                 asyncRegistration.getRequestTime(),
-                asyncRegistration.getRedirect(),
-                redirects,
+                asyncRegistration.shouldProcessRedirects(),
+                asyncRegistration.getRedirectType(),
+                asyncRedirect,
                 out,
                 asyncRegistration.getType() == AsyncRegistration.RegistrationType.WEB_TRIGGER,
                 asyncRegistration.getDebugKeyAllowed(),
@@ -408,11 +412,6 @@ public class AsyncTriggerFetcher {
             }
         }
         return true;
-    }
-
-    @VisibleForTesting
-    static Uri getAttributionDestination(AsyncRegistration request) {
-        return Uri.parse(ANDROID_APP_SCHEME + "://" + request.getRegistrant());
     }
 
     private interface TriggerHeaderContract {

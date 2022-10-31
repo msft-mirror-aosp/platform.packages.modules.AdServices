@@ -16,24 +16,19 @@
 
 package com.android.sdksandbox.cts.app;
 
-import static android.app.sdksandbox.SdkSandboxManager.EXTRA_DISPLAY_ID;
-import static android.app.sdksandbox.SdkSandboxManager.EXTRA_HEIGHT_IN_PIXELS;
-import static android.app.sdksandbox.SdkSandboxManager.EXTRA_HOST_TOKEN;
-import static android.app.sdksandbox.SdkSandboxManager.EXTRA_WIDTH_IN_PIXELS;
-
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
-import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallback;
-import android.os.Binder;
 import android.os.Bundle;
 import android.os.Process;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
+
+import com.android.sdksandbox.cts.provider.dataisolationtest.IDataIsolationTestSdkApi;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -54,7 +49,7 @@ public class SdkSandboxDataIsolationTestApp {
     private static final String CURRENT_USER_ID =
             String.valueOf(Process.myUserHandle().getUserId(Process.myUid()));
 
-    private static final String SDK_NAME = "com.android.sdksandbox.cts.provider";
+    private static final String SDK_NAME = "com.android.sdksandbox.cts.provider.dataisolationtest";
 
     private static final String BUNDLE_KEY_PHASE_NAME = "phase-name";
 
@@ -65,6 +60,8 @@ public class SdkSandboxDataIsolationTestApp {
 
     private SdkSandboxManager mSdkSandboxManager;
 
+    private IDataIsolationTestSdkApi mSdk;
+
     @Rule public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(TestActivity.class);
 
     @Before
@@ -74,26 +71,6 @@ public class SdkSandboxDataIsolationTestApp {
                 ApplicationProvider.getApplicationContext()
                         .getSystemService(SdkSandboxManager.class);
         assertThat(mSdkSandboxManager).isNotNull();
-    }
-
-    // Run a phase of the test inside the SDK loaded for this app
-    private void runPhaseInsideSdk(String phaseName) {
-        runPhaseInsideSdk(phaseName, new Bundle());
-    }
-
-    // Run a phase of the test inside the SDK loaded for this app
-    // TODO(b/242678799): We want to use interface provided by loadSdk to perform the communication
-    // i.e. use the correct approach
-    private void runPhaseInsideSdk(String phaseName, Bundle params) {
-        params.putString(BUNDLE_KEY_PHASE_NAME, phaseName);
-        params.putInt(EXTRA_WIDTH_IN_PIXELS, 500);
-        params.putInt(EXTRA_HEIGHT_IN_PIXELS, 500);
-        params.putInt(EXTRA_DISPLAY_ID, 0);
-        params.putBinder(EXTRA_HOST_TOKEN, new Binder());
-        final FakeRequestSurfacePackageCallback callback = new FakeRequestSurfacePackageCallback();
-
-        mSdkSandboxManager.requestSurfacePackage(SDK_NAME, params, Runnable::run, callback);
-        assertThat(callback.isRequestSurfacePackageSuccessful()).isTrue();
     }
 
     @Test
@@ -110,13 +87,16 @@ public class SdkSandboxDataIsolationTestApp {
     @Test
     public void testSdkSandboxDataIsolation_SandboxCanAccessItsDirectory() throws Exception {
         loadSdk();
-        runPhaseInsideSdk("testSdkSandboxDataIsolation_SandboxCanAccessItsDirectory");
+        mSdk.testSdkSandboxDataIsolation_SandboxCanAccessItsDirectory();
     }
 
     private void loadSdk() {
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
+
+        // Store the returned SDK interface so that we can interact with it later.
+        mSdk = IDataIsolationTestSdkApi.Stub.asInterface(callback.getSandboxedSdk().getInterface());
     }
 
     private static void assertFileAccessIsDenied(String path) {

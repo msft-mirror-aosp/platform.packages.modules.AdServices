@@ -1208,7 +1208,7 @@ public final class MeasurementServiceImplTest {
             ExtendedMockito.doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
             ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any()));
             MeasurementImpl measurementImpl =
-                    new MeasurementImpl(mMockContext, null, null, null, null, null);
+                    new MeasurementImpl(mMockContext, null, null, null, null);
             when(mMockFlags.getPpapiAppAllowList()).thenReturn("*");
             CountDownLatch countDownLatch = new CountDownLatch(1);
             final AtomicInteger resultWrapper = new AtomicInteger();
@@ -1264,7 +1264,7 @@ public final class MeasurementServiceImplTest {
 
             ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any()));
             MeasurementImpl measurementImpl =
-                    new MeasurementImpl(mMockContext, null, null, null, null, null);
+                    new MeasurementImpl(mMockContext, null, null, null, null);
             when(mMockFlags.getPpapiAppAllowList()).thenReturn("*");
             CountDownLatch countDownLatch = new CountDownLatch(1);
             final AtomicInteger resultWrapper = new AtomicInteger();
