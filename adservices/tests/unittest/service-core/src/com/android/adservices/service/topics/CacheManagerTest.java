@@ -84,18 +84,10 @@ public final class CacheManagerTest {
         DbTestUtil.deleteTable(TopicsTables.UsageHistoryContract.TABLE);
         DbTestUtil.deleteTable(TopicsTables.AppUsageHistoryContract.TABLE);
         DbTestUtil.deleteTable(TopicsTables.BlockedTopicsContract.TABLE);
+        DbTestUtil.deleteTable(TopicsTables.TopicContributorsContract.TABLE);
 
         DbHelper dbHelper = DbTestUtil.getDbHelperForTest();
         mTopicsDao = new TopicsDao(dbHelper);
-
-        // Erase all existing data.
-        DbTestUtil.deleteTable(TopicsTables.TaxonomyContract.TABLE);
-        DbTestUtil.deleteTable(TopicsTables.AppClassificationTopicsContract.TABLE);
-        DbTestUtil.deleteTable(TopicsTables.CallerCanLearnTopicsContract.TABLE);
-        DbTestUtil.deleteTable(TopicsTables.TopTopicsContract.TABLE);
-        DbTestUtil.deleteTable(TopicsTables.ReturnedTopicContract.TABLE);
-        DbTestUtil.deleteTable(TopicsTables.UsageHistoryContract.TABLE);
-        DbTestUtil.deleteTable(TopicsTables.AppUsageHistoryContract.TABLE);
     }
 
     @Test

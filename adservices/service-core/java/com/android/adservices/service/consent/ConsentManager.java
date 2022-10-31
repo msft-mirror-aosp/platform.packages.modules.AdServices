@@ -26,8 +26,6 @@ import android.annotation.NonNull;
 import android.app.job.JobScheduler;
 import android.content.Context;
 
-
-
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.common.BooleanFileDatastore;
 import com.android.adservices.data.consent.AppConsentDao;
@@ -47,17 +45,17 @@ import com.android.adservices.service.topics.TopicsWorker;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
-
 /**
  * Manager to handle user's consent.
  *
- * <p> For Beta the consent is given for all {@link AdServicesApiType} or for none. </p>
+ * <p>For Beta the consent is given for all {@link AdServicesApiType} or for none.
  */
 public class ConsentManager {
     private static final String ERROR_MESSAGE_DATASTORE_EXCEPTION_WHILE_GET_CONTENT =
@@ -260,12 +258,14 @@ public class ConsentManager {
 
     /** Wipes out all the data gathered by Topics API but blocked topics. */
     public void resetTopics() {
-        mTopicsWorker.clearAllTopicsData(List.of(TopicsTables.BlockedTopicsContract.TABLE));
+        ArrayList<String> tablesToBlock = new ArrayList<>();
+        tablesToBlock.add(TopicsTables.BlockedTopicsContract.TABLE);
+        mTopicsWorker.clearAllTopicsData(tablesToBlock);
     }
 
     /** Wipes out all the data gathered by Topics API. */
     public void resetTopicsAndBlockedTopics() {
-        mTopicsWorker.clearAllTopicsData(List.of());
+        mTopicsWorker.clearAllTopicsData(new ArrayList<>());
     }
 
     /**
@@ -447,8 +447,7 @@ public class ConsentManager {
         }
     }
 
-    private void setConsent(AdServicesApiConsent state)
-            throws IOException {
+    private void setConsent(AdServicesApiConsent state) throws IOException {
         mDatastore.put(CONSENT_KEY, state.isGiven());
     }
 
