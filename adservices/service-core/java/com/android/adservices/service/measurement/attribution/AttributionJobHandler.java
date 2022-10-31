@@ -182,6 +182,10 @@ class AttributionJobHandler {
                     long randomTime = (long) ((Math.random()
                             * (AGGREGATE_MAX_REPORT_DELAY - AGGREGATE_MIN_REPORT_DELAY))
                             + AGGREGATE_MIN_REPORT_DELAY);
+                    int debugReportStatus = AggregateReport.DebugReportStatus.NONE;
+                    if (source.getDebugKey() != null || trigger.getDebugKey() != null) {
+                        debugReportStatus = AggregateReport.DebugReportStatus.PENDING;
+                    }
                     AggregateReport aggregateReport =
                             new AggregateReport.Builder()
                                     // TODO: b/254855494 unused field, incorrect value; cleanup
@@ -200,6 +204,7 @@ class AttributionJobHandler {
                                                     .setContributions(contributions.get())
                                                     .build())
                                     .setStatus(AggregateReport.Status.PENDING)
+                                    .setDebugReportStatus(debugReportStatus)
                                     .setApiVersion(API_VERSION)
                                     .setSourceDebugKey(source.getDebugKey())
                                     .setTriggerDebugKey(trigger.getDebugKey())
