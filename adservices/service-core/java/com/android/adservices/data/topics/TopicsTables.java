@@ -177,7 +177,6 @@ public final class TopicsTables {
      * The returned topic for the app or for the sdk. Note: for App usages directly without any SDK,
      * the SDK Name is set to empty string.
      */
-    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
     public interface ReturnedTopicContract {
         String TABLE = TOPICS_TABLE_PREFIX + "returned_topics";
         String ID = "_id";
