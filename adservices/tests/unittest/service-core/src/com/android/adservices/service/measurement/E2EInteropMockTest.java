@@ -101,8 +101,15 @@ public class E2EInteropMockTest extends E2EMockTest {
             Assert.assertTrue(
                     "measurementDao.insertSource failed",
                     sDatastoreManager.runInTransaction(
-                            measurementDao ->
-                                    measurementDao.insertSource(source)));
+                            measurementDao -> {
+                                if (AsyncRegistrationQueueRunner.isSourceAllowedToInsert(
+                                        source,
+                                        source.getPublisher(),
+                                        EventSurfaceType.WEB,
+                                        measurementDao)) {
+                                    measurementDao.insertSource(source);
+                                }
+                            }));
         }
     }
 
