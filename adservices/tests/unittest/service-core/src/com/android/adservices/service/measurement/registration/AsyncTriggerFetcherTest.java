@@ -179,7 +179,7 @@ public final class AsyncTriggerFetcherTest {
                 .thenReturn(
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
-                                List.of("{" + "'event_trigger_data':" + EVENT_TRIGGERS_1 + "}")));
+                                List.of("{" + "\"event_trigger_data\":" + EVENT_TRIGGERS_1 + "}")));
         doReturn(5000L).when(mFlags).getMaxResponseBasedRegistrationPayloadSizeBytes();
 
         AsyncRedirect asyncRedirect = new AsyncRedirect();
@@ -379,7 +379,7 @@ public final class AsyncTriggerFetcherTest {
                 .thenReturn(
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
-                                List.of("{" + "'event_trigger_data':" + tooManyEntries + "}")));
+                                List.of("{" + "\"event_trigger_data\":" + tooManyEntries + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -709,7 +709,33 @@ public final class AsyncTriggerFetcherTest {
     }
 
     @Test
-    public void testTriggerRequest_eventTriggerData__filters_tooManyFilters() throws Exception {
+    public void testTriggerRequest_eventTriggerData_filters_invalidJson() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String filters =
+                "{\"product\":[\"1234\",\"2345\"], \"\"\":[\"id\"]}";
+        String eventTriggerData =
+                "[{\"trigger_data\":\"2\",\"priority\":\"101\"," + "\"filters\":" + filters + "}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{" + "\"event_trigger_data\":" + eventTriggerData + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_eventTriggerData_filters_tooManyFilters() throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         StringBuilder filters = new StringBuilder("{");
         filters.append(
@@ -725,7 +751,7 @@ public final class AsyncTriggerFetcherTest {
                 .thenReturn(
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
-                                List.of("{" + "'event_trigger_data':" + eventTriggerData + "}")));
+                                List.of("{" + "\"event_trigger_data\":" + eventTriggerData + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -739,7 +765,7 @@ public final class AsyncTriggerFetcherTest {
     }
 
     @Test
-    public void testTriggerRequest_eventTriggerData__filters_keyTooLong() throws Exception {
+    public void testTriggerRequest_eventTriggerData_filters_keyTooLong() throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         String filters =
                 "{\"product\":[\"1234\",\"2345\"], \"" + LONG_FILTER_STRING + "\":[\"id\"]}";
@@ -751,7 +777,7 @@ public final class AsyncTriggerFetcherTest {
                 .thenReturn(
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
-                                List.of("{" + "'event_trigger_data':" + eventTriggerData + "}")));
+                                List.of("{" + "\"event_trigger_data\":" + eventTriggerData + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -765,7 +791,7 @@ public final class AsyncTriggerFetcherTest {
     }
 
     @Test
-    public void testTriggerRequest_eventTriggerData__filters_tooManyValues() throws Exception {
+    public void testTriggerRequest_eventTriggerData_filters_tooManyValues() throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         StringBuilder filters =
                 new StringBuilder(
@@ -785,7 +811,7 @@ public final class AsyncTriggerFetcherTest {
                 .thenReturn(
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
-                                List.of("{" + "'event_trigger_data':" + eventTriggerData + "}")));
+                                List.of("{" + "\"event_trigger_data\":" + eventTriggerData + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -799,7 +825,7 @@ public final class AsyncTriggerFetcherTest {
     }
 
     @Test
-    public void testTriggerRequest_eventTriggerData__filters_valueTooLong() throws Exception {
+    public void testTriggerRequest_eventTriggerData_filters_valueTooLong() throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         String filters =
                 "{\"product\":[\"1234\",\"" + LONG_FILTER_STRING + "\"], \"ctid\":[\"id\"]}";
@@ -811,7 +837,7 @@ public final class AsyncTriggerFetcherTest {
                 .thenReturn(
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
-                                List.of("{" + "'event_trigger_data':" + eventTriggerData + "}")));
+                                List.of("{" + "\"event_trigger_data\":" + eventTriggerData + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -825,7 +851,36 @@ public final class AsyncTriggerFetcherTest {
     }
 
     @Test
-    public void testTriggerRequest_eventTriggerData__notFilters_tooManyFilters() throws Exception {
+    public void testTriggerRequest_eventTriggerData_notFilters_invalidJson() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String notFilters =
+                "{\"product\":[\"1234\",\"2345\"], \"\"\":[\"id\"]}";
+        String eventTriggerData =
+                "[{\"trigger_data\":\"2\",\"priority\":\"101\","
+                        + "\"not_filters\":"
+                        + notFilters
+                        + "}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{" + "\"event_trigger_data\":" + eventTriggerData + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_eventTriggerData_notFilters_tooManyFilters() throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         StringBuilder notFilters = new StringBuilder("{");
         notFilters.append(
@@ -844,7 +899,7 @@ public final class AsyncTriggerFetcherTest {
                 .thenReturn(
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
-                                List.of("{" + "'event_trigger_data':" + eventTriggerData + "}")));
+                                List.of("{" + "\"event_trigger_data\":" + eventTriggerData + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -858,7 +913,7 @@ public final class AsyncTriggerFetcherTest {
     }
 
     @Test
-    public void testTriggerRequest_eventTriggerData__notFilters_keyTooLong() throws Exception {
+    public void testTriggerRequest_eventTriggerData_notFilters_keyTooLong() throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         String notFilters =
                 "{\"product\":[\"1234\",\"2345\"], \"" + LONG_FILTER_STRING + "\":[\"id\"]}";
@@ -873,7 +928,7 @@ public final class AsyncTriggerFetcherTest {
                 .thenReturn(
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
-                                List.of("{" + "'event_trigger_data':" + eventTriggerData + "}")));
+                                List.of("{" + "\"event_trigger_data\":" + eventTriggerData + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -887,7 +942,7 @@ public final class AsyncTriggerFetcherTest {
     }
 
     @Test
-    public void testTriggerRequest_eventTriggerData__notFilters_tooManyValues() throws Exception {
+    public void testTriggerRequest_eventTriggerData_notFilters_tooManyValues() throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         StringBuilder notFilters =
                 new StringBuilder(
@@ -910,7 +965,7 @@ public final class AsyncTriggerFetcherTest {
                 .thenReturn(
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
-                                List.of("{" + "'event_trigger_data':" + eventTriggerData + "}")));
+                                List.of("{" + "\"event_trigger_data\":" + eventTriggerData + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -924,7 +979,7 @@ public final class AsyncTriggerFetcherTest {
     }
 
     @Test
-    public void testTriggerRequest_eventTriggerData__notFilters_valueTooLong() throws Exception {
+    public void testTriggerRequest_eventTriggerData_notFilters_valueTooLong() throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         String notFilters =
                 "{\"product\":[\"1234\",\"" + LONG_FILTER_STRING + "\"], \"ctid\":[\"id\"]}";
@@ -939,7 +994,271 @@ public final class AsyncTriggerFetcherTest {
                 .thenReturn(
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
-                                List.of("{" + "'event_trigger_data':" + eventTriggerData + "}")));
+                                List.of("{" + "\"event_trigger_data\":" + eventTriggerData + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_filters_invalidJson() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String filters =
+                "{\"product\":[\"1234\",\"2345\"], \"\"\":[\"id\"]}";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{" + "\"filters\":" + filters + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_filters_tooManyFilters() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        StringBuilder filters = new StringBuilder("{");
+        filters.append(
+                IntStream.range(0, MAX_ATTRIBUTION_FILTERS + 1)
+                        .mapToObj(i -> "\"filter-string-" + i + "\": [\"filter-value\"]")
+                        .collect(Collectors.joining(",")));
+        filters.append("}");
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{" + "\"filters\":" + filters + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_filters_keyTooLong() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String filters =
+                "{\"product\":[\"1234\",\"2345\"], \"" + LONG_FILTER_STRING + "\":[\"id\"]}";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{" + "\"filters\":" + filters + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_filters_tooManyValues() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        StringBuilder filters =
+                new StringBuilder(
+                        "{"
+                                + "\"filter-string-1\": [\"filter-value-1\"],"
+                                + "\"filter-string-2\": [");
+        filters.append(
+                IntStream.range(0, MAX_VALUES_PER_ATTRIBUTION_FILTER + 1)
+                        .mapToObj(i -> "\"filter-value-" + i + "\"")
+                        .collect(Collectors.joining(",")));
+        filters.append("]}");
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{" + "\"filters\":" + filters + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_filters_valueTooLong() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String filters =
+                "{\"product\":[\"1234\",\"" + LONG_FILTER_STRING + "\"], \"ctid\":[\"id\"]}";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{" + "\"filters\":" + filters + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_notFilters_invalidJson() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String notFilters =
+                "{\"product\":[\"1234\",\"2345\"], \"\"\":[\"id\"]}";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{" + "\"not_filters\":" + notFilters + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_notFilters_tooManyFilters() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        StringBuilder notFilters = new StringBuilder("{");
+        notFilters.append(
+                IntStream.range(0, MAX_ATTRIBUTION_FILTERS + 1)
+                        .mapToObj(i -> "\"filter-string-" + i + "\": [\"filter-value\"]")
+                        .collect(Collectors.joining(",")));
+        notFilters.append("}");
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{" + "\"not_filters\":" + notFilters + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_notFilters_keyTooLong() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String notFilters =
+                "{\"product\":[\"1234\",\"2345\"], \"" + LONG_FILTER_STRING + "\":[\"id\"]}";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{" + "\"not_filters\":" + notFilters + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_notFilters_tooManyValues() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        StringBuilder notFilters =
+                new StringBuilder(
+                        "{"
+                                + "\"filter-string-1\": [\"filter-value-1\"],"
+                                + "\"filter-string-2\": [");
+        notFilters.append(
+                IntStream.range(0, MAX_VALUES_PER_ATTRIBUTION_FILTER + 1)
+                        .mapToObj(i -> "\"filter-value-" + i + "\"")
+                        .collect(Collectors.joining(",")));
+        notFilters.append("]}");
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{" + "\"not_filters\":" + notFilters + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_notFilters_valueTooLong() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String notFilters =
+                "{\"product\":[\"1234\",\"" + LONG_FILTER_STRING + "\"], \"ctid\":[\"id\"]}";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{" + "\"not_filters\":" + notFilters + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -962,7 +1281,7 @@ public final class AsyncTriggerFetcherTest {
                 .thenReturn(
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
-                                List.of("{" + "'event_trigger_data':" + EVENT_TRIGGERS_1 + "}")));
+                                List.of("{" + "\"event_trigger_data\":" + EVENT_TRIGGERS_1 + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -986,11 +1305,11 @@ public final class AsyncTriggerFetcherTest {
                 "Attribution-Reporting-Register-Trigger",
                 List.of(
                         "{"
-                                + "'event_trigger_data': "
+                                + "\"event_trigger_data\": "
                                 + EVENT_TRIGGERS_1
-                                + ", 'debug_key': '"
+                                + ", \"debug_key\": \""
                                 + DEBUG_KEY
-                                + "'"
+                                + "\""
                                 + "}"));
         when(mUrlConnection.getHeaderFields()).thenReturn(headersRequest);
         AsyncRedirect asyncRedirect = new AsyncRedirect();
@@ -1145,11 +1464,11 @@ public final class AsyncTriggerFetcherTest {
                 "Attribution-Reporting-Register-Trigger",
                 List.of(
                         "{"
-                                + "'event_trigger_data': "
+                                + "\"event_trigger_data\": "
                                 + EVENT_TRIGGERS_1
-                                + ", 'debug_key': '"
+                                + ", \"debug_key\": \""
                                 + DEBUG_KEY
-                                + "'"
+                                + "\""
                                 + "}"));
         when(mUrlConnection.getHeaderFields()).thenReturn(headersRequest);
         AsyncRedirect asyncRedirect = new AsyncRedirect();
@@ -1212,7 +1531,7 @@ public final class AsyncTriggerFetcherTest {
                 .thenReturn(
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
-                                List.of("{" + "'event_trigger_data':" + EVENT_TRIGGERS_1 + "}")));
+                                List.of("{" + "\"event_trigger_data\":" + EVENT_TRIGGERS_1 + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -1235,7 +1554,7 @@ public final class AsyncTriggerFetcherTest {
                 .thenReturn(
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
-                                List.of("{" + "'event_trigger_data': " + "[{}]" + "}")));
+                                List.of("{" + "\"event_trigger_data\": " + "[{}]" + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
@@ -1277,7 +1596,7 @@ public final class AsyncTriggerFetcherTest {
         Map<String, List<String>> headersFirstRequest = new HashMap<>();
         headersFirstRequest.put(
                 "Attribution-Reporting-Register-Trigger",
-                List.of("{" + "'event_trigger_data':" + EVENT_TRIGGERS_1 + "}"));
+                List.of("{" + "\"event_trigger_data\":" + EVENT_TRIGGERS_1 + "}"));
         headersFirstRequest.put("Attribution-Reporting-Redirect", List.of(DEFAULT_REDIRECT));
         when(mUrlConnection.getHeaderFields()).thenReturn(headersFirstRequest);
         AsyncRedirect asyncRedirect = new AsyncRedirect();
@@ -1308,7 +1627,7 @@ public final class AsyncTriggerFetcherTest {
                 .thenReturn(
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
-                                List.of("{" + "'event_trigger_data':" + EVENT_TRIGGERS_1 + "}")));
+                                List.of("{" + "\"event_trigger_data\":" + EVENT_TRIGGERS_1 + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -1338,7 +1657,7 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of(
                                         "{"
-                                                + "'aggregatable_trigger_data': "
+                                                + "\"aggregatable_trigger_data\": "
                                                 + aggregatable_trigger_data
                                                 + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
@@ -1381,7 +1700,7 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of(
                                         "{"
-                                                + "'aggregatable_trigger_data': "
+                                                + "\"aggregatable_trigger_data\": "
                                                 + tooManyKeys
                                                 + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
@@ -1408,7 +1727,7 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of(
                                         "{"
-                                                + "'aggregatable_values': "
+                                                + "\"aggregatable_values\": "
                                                 + aggregatable_values
                                                 + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
@@ -1441,7 +1760,7 @@ public final class AsyncTriggerFetcherTest {
                 .thenReturn(
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
-                                List.of("{" + "'aggregatable_values': " + tooManyKeys + "}")));
+                                List.of("{" + "\"aggregatable_values\": " + tooManyKeys + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -1469,7 +1788,7 @@ public final class AsyncTriggerFetcherTest {
                 .thenReturn(
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
-                                List.of("{" + "'filters': " + filters + "}")));
+                                List.of("{" + "\"filters\": " + filters + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -1497,11 +1816,11 @@ public final class AsyncTriggerFetcherTest {
                 "Attribution-Reporting-Register-Trigger",
                 List.of(
                         "{"
-                                + "'event_trigger_data': "
+                                + "\"event_trigger_data\": "
                                 + EVENT_TRIGGERS_1
-                                + ", 'debug_key': '"
+                                + ", \"debug_key\": \""
                                 + DEBUG_KEY
-                                + "'"
+                                + "\""
                                 + "}"));
         when(mUrlConnection1.getHeaderFields()).thenReturn(headersRequest);
         AsyncRedirect asyncRedirect = new AsyncRedirect();
@@ -1543,13 +1862,13 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of(
                                         "{"
-                                                + "'event_trigger_data': "
+                                                + "\"event_trigger_data\": "
                                                 + EVENT_TRIGGERS_1
-                                                + ", 'filters': "
+                                                + ", \"filters\": "
                                                 + filters
-                                                + ", 'aggregatable_values': "
+                                                + ", \"aggregatable_values\": "
                                                 + aggregatableValues
-                                                + ", 'aggregatable_trigger_data': "
+                                                + ", \"aggregatable_trigger_data\": "
                                                 + aggregatableTriggerData
                                                 + "}")));
 
@@ -1583,7 +1902,7 @@ public final class AsyncTriggerFetcherTest {
                 .thenReturn(
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
-                                List.of("{" + "'event_trigger_data': " + EVENT_TRIGGERS_1 + "}"),
+                                List.of("{" + "\"event_trigger_data\": " + EVENT_TRIGGERS_1 + "}"),
                                 "Attribution-Reporting-Redirect",
                                 List.of(LIST_TYPE_REDIRECT_URI),
                                 "Location",
@@ -1622,7 +1941,7 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of(
                                         "{"
-                                                + "'aggregatable_trigger_data': "
+                                                + "\"aggregatable_trigger_data\": "
                                                 + aggregatable_trigger_data
                                                 + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
@@ -1654,7 +1973,7 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of(
                                         "{"
-                                                + "'aggregatable_trigger_data': "
+                                                + "\"aggregatable_trigger_data\": "
                                                 + tooManyEntries
                                                 + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
@@ -1686,7 +2005,7 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of(
                                         "{"
-                                                + "'aggregatable_trigger_data': "
+                                                + "\"aggregatable_trigger_data\": "
                                                 + aggregatable_trigger_data
                                                 + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
@@ -1720,7 +2039,7 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of(
                                         "{"
-                                                + "'aggregatable_trigger_data': "
+                                                + "\"aggregatable_trigger_data\": "
                                                 + aggregatable_trigger_data
                                                 + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
@@ -1752,7 +2071,7 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of(
                                         "{"
-                                                + "'aggregatable_trigger_data': "
+                                                + "\"aggregatable_trigger_data\": "
                                                 + aggregatable_trigger_data
                                                 + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
@@ -1792,7 +2111,7 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of(
                                         "{"
-                                                + "'aggregatable_trigger_data': "
+                                                + "\"aggregatable_trigger_data\": "
                                                 + aggregatable_trigger_data
                                                 + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
@@ -1826,7 +2145,7 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of(
                                         "{"
-                                                + "'aggregatable_trigger_data': "
+                                                + "\"aggregatable_trigger_data\": "
                                                 + aggregatable_trigger_data
                                                 + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
@@ -1864,7 +2183,7 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of(
                                         "{"
-                                                + "'aggregatable_trigger_data': "
+                                                + "\"aggregatable_trigger_data\": "
                                                 + aggregatable_trigger_data
                                                 + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
@@ -1897,7 +2216,7 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of(
                                         "{"
-                                                + "'aggregatable_trigger_data': "
+                                                + "\"aggregatable_trigger_data\": "
                                                 + aggregatable_trigger_data
                                                 + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
@@ -1939,7 +2258,7 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of(
                                         "{"
-                                                + "'aggregatable_trigger_data': "
+                                                + "\"aggregatable_trigger_data\": "
                                                 + aggregatable_trigger_data
                                                 + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
@@ -1972,7 +2291,7 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of(
                                         "{"
-                                                + "'aggregatable_trigger_data': "
+                                                + "\"aggregatable_trigger_data\": "
                                                 + aggregatable_trigger_data
                                                 + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
@@ -2010,7 +2329,7 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of(
                                         "{"
-                                                + "'aggregatable_trigger_data': "
+                                                + "\"aggregatable_trigger_data\": "
                                                 + aggregatable_trigger_data
                                                 + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
@@ -2044,7 +2363,7 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of(
                                         "{"
-                                                + "'aggregatable_trigger_data': "
+                                                + "\"aggregatable_trigger_data\": "
                                                 + aggregatable_trigger_data
                                                 + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
@@ -2086,7 +2405,7 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of(
                                         "{"
-                                                + "'aggregatable_trigger_data': "
+                                                + "\"aggregatable_trigger_data\": "
                                                 + aggregatable_trigger_data
                                                 + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
@@ -2120,7 +2439,7 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of(
                                         "{"
-                                                + "'aggregatable_trigger_data': "
+                                                + "\"aggregatable_trigger_data\": "
                                                 + aggregatable_trigger_data
                                                 + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
@@ -2145,7 +2464,7 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of(
                                         "{"
-                                                + "'aggregatable_values': "
+                                                + "\"aggregatable_values\": "
                                                 + aggregatable_values
                                                 + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
@@ -2172,7 +2491,7 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of(
                                         "{"
-                                                + "'aggregatable_values': "
+                                                + "\"aggregatable_values\": "
                                                 + aggregatable_values
                                                 + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
@@ -2200,7 +2519,7 @@ public final class AsyncTriggerFetcherTest {
                 .thenReturn(
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
-                                List.of("{" + "'aggregatable_values': " + tooManyKeys + "}")));
+                                List.of("{" + "\"aggregatable_values\": " + tooManyKeys + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -2224,7 +2543,7 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of(
                                         "{"
-                                                + "'aggregatable_values': "
+                                                + "\"aggregatable_values\": "
                                                 + aggregatable_values
                                                 + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
@@ -2250,11 +2569,11 @@ public final class AsyncTriggerFetcherTest {
                 "Attribution-Reporting-Register-Trigger",
                 List.of(
                         "{"
-                                + "'event_trigger_data': "
+                                + "\"event_trigger_data\": "
                                 + EVENT_TRIGGERS_1
-                                + ", 'debug_key': '"
+                                + ", \"debug_key\": \""
                                 + DEBUG_KEY
-                                + "'"
+                                + "\""
                                 + "}"));
         when(mUrlConnection1.getHeaderFields()).thenReturn(headersRequest);
         AsyncRedirect asyncRedirect = new AsyncRedirect();
@@ -2287,7 +2606,7 @@ public final class AsyncTriggerFetcherTest {
                 .thenReturn(
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
-                                List.of("{" + "'event_trigger_data':" + EVENT_TRIGGERS_1 + "}")));
+                                List.of("{" + "\"event_trigger_data\":" + EVENT_TRIGGERS_1 + "}")));
         doReturn(5L).when(mFlags).getMaxResponseBasedRegistrationPayloadSizeBytes();
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
@@ -2463,7 +2782,7 @@ public final class AsyncTriggerFetcherTest {
     private static Map<String, List<String>> getDefaultHeaders() {
         Map<String, List<String>> headers = new HashMap<>();
         headers.put("Attribution-Reporting-Register-Trigger",
-                List.of("{" + "'event_trigger_data':" + EVENT_TRIGGERS_1 + "}"));
+                List.of("{" + "\"event_trigger_data\":" + EVENT_TRIGGERS_1 + "}"));
         return headers;
     }
 

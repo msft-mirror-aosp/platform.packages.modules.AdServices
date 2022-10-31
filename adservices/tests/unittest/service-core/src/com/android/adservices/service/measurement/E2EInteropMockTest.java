@@ -215,6 +215,9 @@ public class E2EInteropMockTest extends E2EMockTest {
             if (!json.isNull("filters")) {
                 triggerBuilder.setFilters(json.getString("filters"));
             }
+            if (!json.isNull("not_filters")) {
+                triggerBuilder.setNotFilters(json.getString("not_filters"));
+            }
             if (!json.isNull("debug_key")) {
                 triggerBuilder.setDebugKey(new UnsignedLong(json.getString("debug_key")));
             }
