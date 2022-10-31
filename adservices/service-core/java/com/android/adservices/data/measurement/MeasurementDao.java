@@ -766,13 +766,15 @@ class MeasurementDao implements IMeasurementDao {
                         Locale.ENGLISH,
                         "SELECT COUNT(DISTINCT %1$s) FROM %2$s "
                                 + "WHERE %3$s AND %4$s = ? AND %5$s = ? AND %1$s != ? "
-                                + "AND %6$s > ? AND %6$s <= ?",
+                                + "AND %6$s > ? AND %6$s <= ?"
+                                + "AND %7$s > ?",
                         destinationColumn,
                         MeasurementTables.SourceContract.TABLE,
                         getPublisherWhereStatement(publisher, publisherType),
                         MeasurementTables.SourceContract.ENROLLMENT_ID,
                         MeasurementTables.SourceContract.STATUS,
-                        MeasurementTables.SourceContract.EVENT_TIME);
+                        MeasurementTables.SourceContract.EVENT_TIME,
+                        MeasurementTables.SourceContract.EXPIRY_TIME);
         return (int) DatabaseUtils.longForQuery(
                 mSQLTransaction.getDatabase(),
                 query,
@@ -781,6 +783,7 @@ class MeasurementDao implements IMeasurementDao {
                         String.valueOf(Source.Status.ACTIVE),
                         excludedDestination.toString(),
                         String.valueOf(windowStartTime),
+                        String.valueOf(windowEndTime),
                         String.valueOf(windowEndTime) });
     }
 
@@ -793,13 +796,15 @@ class MeasurementDao implements IMeasurementDao {
                         Locale.ENGLISH,
                         "SELECT COUNT(DISTINCT %1$s) FROM %2$s "
                                 + "WHERE %3$s AND (%4$s = ? OR %5$s = ?) AND %1s != ? "
-                                + "AND %6$s > ? AND %6$s <= ?",
+                                + "AND %6$s > ? AND %6$s <= ?"
+                                + "AND %7$s > ?",
                         MeasurementTables.SourceContract.ENROLLMENT_ID,
                         MeasurementTables.SourceContract.TABLE,
                         getPublisherWhereStatement(publisher, publisherType),
                         MeasurementTables.SourceContract.APP_DESTINATION,
                         MeasurementTables.SourceContract.WEB_DESTINATION,
-                        MeasurementTables.SourceContract.EVENT_TIME);
+                        MeasurementTables.SourceContract.EVENT_TIME,
+                        MeasurementTables.SourceContract.EXPIRY_TIME);
         return (int)
                 DatabaseUtils.longForQuery(
                         mSQLTransaction.getDatabase(),
@@ -809,6 +814,7 @@ class MeasurementDao implements IMeasurementDao {
                             destination.toString(),
                             excludedEnrollmentId,
                             String.valueOf(windowStartTime),
+                            String.valueOf(windowEndTime),
                             String.valueOf(windowEndTime)
                         });
     }
