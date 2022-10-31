@@ -166,7 +166,7 @@ public class E2EInteropMockTest extends E2EMockTest {
                 sourceBuilder.setDebugKey(new UnsignedLong(json.getString("debug_key")));
             }
             if (!json.isNull("filter_data")) {
-                sourceBuilder.setAggregateFilterData(json.getJSONObject("filter_data").toString());
+                sourceBuilder.setFilterData(json.getJSONObject("filter_data").toString());
             }
             sourceBuilder.setWebDestination(Web.topPrivateDomainAndScheme(
                     Uri.parse(json.getString("destination"))).get());

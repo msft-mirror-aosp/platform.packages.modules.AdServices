@@ -242,7 +242,7 @@ public class DbState {
                 .setInstallAttributed(sJSON.optBoolean("installAttributed", false))
                 .setAttributionMode(
                         sJSON.optInt("attribution_mode", Source.AttributionMode.TRUTHFULLY))
-                .setAggregateFilterData(sJSON.optString("aggregateFilterData", null))
+                .setFilterData(sJSON.optString("filterData", null))
                 .build();
     }
 

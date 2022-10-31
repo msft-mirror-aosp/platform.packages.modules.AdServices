@@ -18,7 +18,6 @@ package com.android.adservices.service.measurement;
 
 import static org.junit.Assert.*;
 
-import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONException;
@@ -82,12 +81,12 @@ public class EventTriggerTest {
                         .setTriggerData(new UnsignedLong(101L))
                         .setDedupKey(new UnsignedLong(1001L))
                         .setFilter(
-                                new AggregateFilterData.Builder()
-                                        .buildAggregateFilterData(sFilterData1)
+                                new FilterData.Builder()
+                                        .buildFilterData(sFilterData1)
                                         .build())
                         .setNotFilter(
-                                new AggregateFilterData.Builder()
-                                        .buildAggregateFilterData(sNotFilterData1)
+                                new FilterData.Builder()
+                                        .buildFilterData(sNotFilterData1)
                                         .build())
                         .build();
         EventTrigger eventTrigger2 =
@@ -96,12 +95,12 @@ public class EventTriggerTest {
                         .setTriggerData(new UnsignedLong(101L))
                         .setDedupKey(new UnsignedLong(1001L))
                         .setFilter(
-                                new AggregateFilterData.Builder()
-                                        .buildAggregateFilterData(sFilterData1)
+                                new FilterData.Builder()
+                                        .buildFilterData(sFilterData1)
                                         .build())
                         .setNotFilter(
-                                new AggregateFilterData.Builder()
-                                        .buildAggregateFilterData(sNotFilterData1)
+                                new FilterData.Builder()
+                                        .buildFilterData(sNotFilterData1)
                                         .build())
                         .build();
 
@@ -122,27 +121,27 @@ public class EventTriggerTest {
         assertNotEquals(
                 new EventTrigger.Builder()
                         .setFilter(
-                                new AggregateFilterData.Builder()
-                                        .buildAggregateFilterData(sFilterData1)
+                                new FilterData.Builder()
+                                        .buildFilterData(sFilterData1)
                                         .build())
                         .build(),
                 new EventTrigger.Builder()
                         .setFilter(
-                                new AggregateFilterData.Builder()
-                                        .buildAggregateFilterData(sFilterData2)
+                                new FilterData.Builder()
+                                        .buildFilterData(sFilterData2)
                                         .build())
                         .build());
         assertNotEquals(
                 new EventTrigger.Builder()
                         .setNotFilter(
-                                new AggregateFilterData.Builder()
-                                        .buildAggregateFilterData(sNotFilterData1)
+                                new FilterData.Builder()
+                                        .buildFilterData(sNotFilterData1)
                                         .build())
                         .build(),
                 new EventTrigger.Builder()
                         .setNotFilter(
-                                new AggregateFilterData.Builder()
-                                        .buildAggregateFilterData(sNotFilterData2)
+                                new FilterData.Builder()
+                                        .buildFilterData(sNotFilterData2)
                                         .build())
                         .build());
     }
@@ -167,12 +166,12 @@ public class EventTriggerTest {
                         .setTriggerData(new UnsignedLong(101L))
                         .setDedupKey(new UnsignedLong(1001L))
                         .setFilter(
-                                new AggregateFilterData.Builder()
-                                        .buildAggregateFilterData(sFilterData1)
+                                new FilterData.Builder()
+                                        .buildFilterData(sFilterData1)
                                         .build())
                         .setNotFilter(
-                                new AggregateFilterData.Builder()
-                                        .buildAggregateFilterData(sNotFilterData1)
+                                new FilterData.Builder()
+                                        .buildFilterData(sNotFilterData1)
                                         .build())
                         .build();
         Set<EventTrigger> eventTriggerSet1 = Set.of(eventTrigger1);
@@ -188,12 +187,12 @@ public class EventTriggerTest {
                 .setTriggerData(new UnsignedLong(101L))
                 .setDedupKey(new UnsignedLong(1001L))
                 .setFilter(
-                        new AggregateFilterData.Builder()
-                                .buildAggregateFilterData(sFilterData1)
+                        new FilterData.Builder()
+                                .buildFilterData(sFilterData1)
                                 .build())
                 .setNotFilter(
-                        new AggregateFilterData.Builder()
-                                .buildAggregateFilterData(sNotFilterData1)
+                        new FilterData.Builder()
+                                .buildFilterData(sNotFilterData1)
                                 .build())
                 .build();
     }

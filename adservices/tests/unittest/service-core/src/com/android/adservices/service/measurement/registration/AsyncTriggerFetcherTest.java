@@ -133,7 +133,9 @@ public final class AsyncTriggerFetcherTest {
             new WebTriggerParams.Builder(REGISTRATION_URI_2).setDebugKeyAllowed(false).build();
     private static final Context CONTEXT =
             InstrumentationRegistry.getInstrumentation().getContext();
+
     AsyncTriggerFetcher mFetcher;
+
     @Mock HttpsURLConnection mUrlConnection;
     @Mock HttpsURLConnection mUrlConnection1;
     @Mock EnrollmentDao mEnrollmentDao;
@@ -1485,12 +1487,6 @@ public final class AsyncTriggerFetcherTest {
     @Test
     public void fetchWebTriggers_basic_success() throws IOException, JSONException {
         // Setup
-        TriggerRegistration expectedResult1 =
-                new TriggerRegistration.Builder()
-                        .setEventTriggers(new JSONArray(EVENT_TRIGGERS_1).toString())
-                        .setEnrollmentId(ENROLLMENT_ID)
-                        .setDebugKey(DEBUG_KEY)
-                        .build();
         WebTriggerRegistrationRequest request =
                 buildWebTriggerRegistrationRequest(
                         Arrays.asList(TRIGGER_REGISTRATION_1), TOP_ORIGIN);
@@ -1517,7 +1513,7 @@ public final class AsyncTriggerFetcherTest {
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
-        assertEquals(expectedResult1.getEventTriggers(), result.getEventTriggers());
+        assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.getEventTriggers());
         verify(mUrlConnection1).setRequestMethod("POST");
     }
 
@@ -1556,14 +1552,7 @@ public final class AsyncTriggerFetcherTest {
                                                 + ", 'aggregatable_trigger_data': "
                                                 + aggregatableTriggerData
                                                 + "}")));
-        TriggerRegistration expectedResult =
-                new TriggerRegistration.Builder()
-                        .setEventTriggers(new JSONArray(EVENT_TRIGGERS_1).toString())
-                        .setEnrollmentId(ENROLLMENT_ID)
-                        .setFilters(new JSONObject(filters).toString())
-                        .setAggregateTriggerData(new JSONArray(aggregatableTriggerData).toString())
-                        .setAggregateValues(new JSONObject(aggregatableValues).toString())
-                        .build();
+
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -1573,10 +1562,11 @@ public final class AsyncTriggerFetcherTest {
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
-        assertEquals(expectedResult.getEventTriggers(), result.getEventTriggers());
-        assertEquals(expectedResult.getAggregateTriggerData(), result.getAggregateTriggerData());
-        assertEquals(expectedResult.getAggregateValues(), result.getAggregateValues());
-        assertEquals(expectedResult.getFilters(), result.getFilters());
+        assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.getEventTriggers());
+        assertEquals(new JSONArray(aggregatableTriggerData).toString(),
+                result.getAggregateTriggerData());
+        assertEquals(new JSONObject(aggregatableValues).toString(), result.getAggregateValues());
+        assertEquals(new JSONObject(filters).toString(), result.getFilters());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -1598,11 +1588,7 @@ public final class AsyncTriggerFetcherTest {
                                 List.of(LIST_TYPE_REDIRECT_URI),
                                 "Location",
                                 List.of(LOCATION_TYPE_REDIRECT_URI)));
-        TriggerRegistration expectedResult =
-                new TriggerRegistration.Builder()
-                        .setEventTriggers(new JSONArray(EVENT_TRIGGERS_1).toString())
-                        .setEnrollmentId(ENROLLMENT_ID)
-                        .build();
+
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -1614,7 +1600,7 @@ public final class AsyncTriggerFetcherTest {
         Trigger result = fetch.get();
         assertEquals(AsyncRegistration.RedirectType.NONE, asyncRedirect.getRedirectType());
         assertEquals(0, asyncRedirect.getRedirects().size());
-        assertEquals(expectedResult.getEventTriggers(), result.getEventTriggers());
+        assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.getEventTriggers());
         verify(mUrlConnection).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
     }
@@ -2254,11 +2240,6 @@ public final class AsyncTriggerFetcherTest {
     @Test
     public void fetchWebTriggerSuccessWithoutAdIdPermission() throws IOException, JSONException {
         // Setup
-        TriggerRegistration expectedResult1 =
-                new TriggerRegistration.Builder()
-                        .setEventTriggers(new JSONArray(EVENT_TRIGGERS_1).toString())
-                        .setEnrollmentId(ENROLLMENT_ID)
-                        .build();
         WebTriggerRegistrationRequest request =
                 buildWebTriggerRegistrationRequest(
                         Arrays.asList(TRIGGER_REGISTRATION_1, TRIGGER_REGISTRATION_2), TOP_ORIGIN);
@@ -2285,8 +2266,8 @@ public final class AsyncTriggerFetcherTest {
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
         assertEquals(TOP_ORIGIN, result.getAttributionDestination().toString());
-        assertEquals(expectedResult1.getEnrollmentId(), result.getEnrollmentId());
-        assertEquals(expectedResult1.getEventTriggers(), result.getEventTriggers());
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.getEventTriggers());
         verify(mUrlConnection1).setRequestMethod("POST");
     }
     @Test
