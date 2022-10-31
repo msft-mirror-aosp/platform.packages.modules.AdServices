@@ -22,6 +22,7 @@ import static com.android.adservices.service.topics.classifier.CommonClassifierH
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
+import static org.mockito.Mockito.verify;
 
 import android.content.Context;
 
@@ -29,6 +30,8 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockRandom;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.EpochComputationGetTopTopicsStats;
 
 import com.google.android.libraries.mobiledatadownload.file.SynchronousFileStorage;
 import com.google.common.collect.ImmutableList;
@@ -37,6 +40,7 @@ import com.google.mobiledatadownload.ClientConfigProto.ClientFile;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -83,6 +87,7 @@ public class CommonClassifierHelperTest {
 
     @Mock SynchronousFileStorage mMockFileStorage;
     @Mock Map<String, ClientFile> mMockDownloadedFiles;
+    @Mock AdServicesLogger mLogger;
 
     @Before
     public void setUp() {
@@ -133,6 +138,8 @@ public class CommonClassifierHelperTest {
 
     @Test
     public void testGetTopTopics_legalInput() {
+        ArgumentCaptor<EpochComputationGetTopTopicsStats> argument =
+                ArgumentCaptor.forClass(EpochComputationGetTopTopicsStats.class);
         // construction the appTopics map so that when sorting by the number of occurrences,
         // the order of topics are:
         // topic1, topic2, topic3, topic4, topic5, ...,
@@ -151,7 +158,8 @@ public class CommonClassifierHelperTest {
                         testLabels,
                         new Random(),
                         /* numberOfTopTopics = */ 5,
-                        /* numberOfRandomTopics = */ 1);
+                        /* numberOfRandomTopics = */ 1,
+                        mLogger);
 
         assertThat(testResponse.get(0)).isEqualTo(getTestTopic(1));
         assertThat(testResponse.get(1)).isEqualTo(getTestTopic(2));
@@ -161,10 +169,23 @@ public class CommonClassifierHelperTest {
         // Check the random topic is not empty
         // The random topic is at the end
         assertThat(testResponse.get(5)).isNotNull();
+
+        verify(mLogger).logEpochComputationGetTopTopicsStats(argument.capture());
+        assertThat(argument.getValue())
+                .isEqualTo(
+                        EpochComputationGetTopTopicsStats.builder()
+                                .setTopTopicCount(5)
+                                .setPaddedRandomTopicsCount(0)
+                                .setAppsConsideredCount(-1)
+                                .setSdksConsideredCount(-1)
+                                .build());
     }
 
     @Test
     public void testGetTopTopics_largeTopTopicsInput() {
+        ArgumentCaptor<EpochComputationGetTopTopicsStats> argument =
+                ArgumentCaptor.forClass(EpochComputationGetTopTopicsStats.class);
+
         Map<String, List<Topic>> appTopics = new HashMap<>();
         appTopics.put("app1", getTestTopics(Arrays.asList(1, 2, 3, 4, 5)));
 
@@ -176,10 +197,20 @@ public class CommonClassifierHelperTest {
                         testLabels,
                         new Random(),
                         /* numberOfTopTopics = */ 15,
-                        /* numberOfRandomTopics = */ 1);
+                        /* numberOfRandomTopics = */ 1,
+                        mLogger);
 
         // The response body should contain 11 topics.
         assertThat(testResponse.size()).isEqualTo(16);
+        verify(mLogger).logEpochComputationGetTopTopicsStats(argument.capture());
+        assertThat(argument.getValue())
+                .isEqualTo(
+                        EpochComputationGetTopTopicsStats.builder()
+                                .setTopTopicCount(15)
+                                .setPaddedRandomTopicsCount(10)
+                                .setAppsConsideredCount(-1)
+                                .setSdksConsideredCount(-1)
+                                .build());
     }
 
     @Test
@@ -196,7 +227,8 @@ public class CommonClassifierHelperTest {
                                 testLabels,
                                 new Random(),
                                 /* numberOfTopTopics = */ 0,
-                                /* numberOfRandomTopics = */ 1));
+                                /* numberOfRandomTopics = */ 1,
+                                mLogger));
     }
 
     @Test
@@ -212,7 +244,8 @@ public class CommonClassifierHelperTest {
                                 testLabels,
                                 new Random(),
                                 /* numberOfTopTopics = */ 3,
-                                /* numberOfRandomTopics = */ 0));
+                                /* numberOfRandomTopics = */ 0,
+                                mLogger));
     }
 
     @Test
@@ -229,7 +262,8 @@ public class CommonClassifierHelperTest {
                                 testLabels,
                                 new Random(),
                                 /* numberOfTopTopics = */ -5,
-                                /* numberOfRandomTopics = */ 1));
+                                /* numberOfRandomTopics = */ 1,
+                                mLogger));
     }
 
     @Test
@@ -247,7 +281,8 @@ public class CommonClassifierHelperTest {
                                 testLabels,
                                 new Random(),
                                 /* numberOfTopTopics = */ 3,
-                                /* numberOfRandomTopics = */ -1));
+                                /* numberOfRandomTopics = */ -1,
+                                mLogger));
     }
 
     @Test
@@ -261,7 +296,8 @@ public class CommonClassifierHelperTest {
                         testLabels,
                         new Random(),
                         /* numberOfTopTopics = */ 5,
-                        /* numberOfRandomTopics = */ 1);
+                        /* numberOfRandomTopics = */ 1,
+                        mLogger);
 
         // The response body should be empty.
         assertThat(testResponse).isEmpty();
@@ -269,6 +305,8 @@ public class CommonClassifierHelperTest {
 
     @Test
     public void testGetTopTopics_emptyTopicInEachApp() {
+        ArgumentCaptor<EpochComputationGetTopTopicsStats> argument =
+                ArgumentCaptor.forClass(EpochComputationGetTopTopicsStats.class);
         Map<String, List<Topic>> appTopics = new HashMap<>();
 
         // app1 and app2 do not have any classification topics.
@@ -283,10 +321,20 @@ public class CommonClassifierHelperTest {
                         testLabels,
                         new Random(),
                         /* numberOfTopTopics = */ 5,
-                        /* numberOfRandomTopics = */ 1);
+                        /* numberOfRandomTopics = */ 1,
+                        mLogger);
 
         // The response body should be empty
         assertThat(testResponse).isEmpty();
+        verify(mLogger).logEpochComputationGetTopTopicsStats(argument.capture());
+        assertThat(argument.getValue())
+                .isEqualTo(
+                        EpochComputationGetTopTopicsStats.builder()
+                                .setTopTopicCount(0)
+                                .setPaddedRandomTopicsCount(0)
+                                .setAppsConsideredCount(-1)
+                                .setSdksConsideredCount(-1)
+                                .build());
     }
 
     @Test
@@ -312,7 +360,8 @@ public class CommonClassifierHelperTest {
                         testLabels,
                         mockRandom,
                         /* numberOfTopTopics = */ 5,
-                        /* numberOfRandomTopics = */ 1);
+                        /* numberOfRandomTopics = */ 1,
+                        mLogger);
 
         // The response body should contain 5 topics + 1 random topic.
         assertThat(testResponse.size()).isEqualTo(6);
@@ -335,7 +384,8 @@ public class CommonClassifierHelperTest {
                         productionLabels,
                         new MockRandom(new long[] {50, 100, 300}),
                         /* numberOfTopTopics = */ 5,
-                        /* numberOfRandomTopics = */ 1);
+                        /* numberOfRandomTopics = */ 1,
+                        mLogger);
 
         // The response body should contain 5 topics + 1 random topic.
         assertThat(productionResponse.size()).isEqualTo(6);
@@ -372,7 +422,8 @@ public class CommonClassifierHelperTest {
                         testLabels,
                         mockRandom,
                         /* numberOfTopTopics = */ 5,
-                        /* numberOfRandomTopics = */ 7);
+                        /* numberOfRandomTopics = */ 7,
+                        mLogger);
 
         // The response body should contain 5 topics + 7 random topic.
         assertThat(testResponse.size()).isEqualTo(12);
@@ -406,6 +457,8 @@ public class CommonClassifierHelperTest {
 
     @Test
     public void testGetTopTopics_selectDuplicateRandomTopic() {
+        ArgumentCaptor<EpochComputationGetTopTopicsStats> argument =
+                ArgumentCaptor.forClass(EpochComputationGetTopTopicsStats.class);
         // In this test, in order to make test result to be deterministic so CommonClassifierHelper
         // has to be mocked to get a random topic. However, real CommonClassifierHelper need to
         // be tested as well. Therefore, real methods will be called for the other top topics.
@@ -430,7 +483,8 @@ public class CommonClassifierHelperTest {
                         testLabels,
                         mockRandom,
                         /* numberOfTopTopics = */ 5,
-                        /* numberOfRandomTopics = */ 1);
+                        /* numberOfRandomTopics = */ 1,
+                        mLogger);
 
         // The response body should contain 5 topics + 1 random topic
         assertThat(testResponse.size()).isEqualTo(6);
@@ -443,6 +497,15 @@ public class CommonClassifierHelperTest {
         // we should select the one corresponding to the sixth index
         // in the MockRandom array topicId, i.e. random = 1, topicId = 10002
         assertThat(testResponse.get(5)).isEqualTo(getTestTopic(10002));
+        verify(mLogger).logEpochComputationGetTopTopicsStats(argument.capture());
+        assertThat(argument.getValue())
+                .isEqualTo(
+                        EpochComputationGetTopTopicsStats.builder()
+                                .setTopTopicCount(5)
+                                .setPaddedRandomTopicsCount(0)
+                                .setAppsConsideredCount(-1)
+                                .setSdksConsideredCount(-1)
+                                .build());
     }
 
     @Test
