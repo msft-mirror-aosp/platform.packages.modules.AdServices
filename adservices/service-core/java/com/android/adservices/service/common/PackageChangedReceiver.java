@@ -152,9 +152,10 @@ public class PackageChangedReceiver extends BroadcastReceiver {
             return;
         }
 
-        LogUtil.d("Deleting topics data for package: " + packageUri.toString());
+        LogUtil.d(
+                "Handling App Uninstallation in Topics API for package: " + packageUri.toString());
         sBackgroundExecutor.execute(
-                () -> TopicsWorker.getInstance(context).deletePackageData(packageUri));
+                () -> TopicsWorker.getInstance(context).handleAppUninstallation(packageUri));
     }
 
     @VisibleForTesting
