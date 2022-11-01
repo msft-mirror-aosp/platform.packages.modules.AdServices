@@ -952,38 +952,101 @@ public class TopicsDao {
             return;
         }
 
-        db.beginTransaction();
+        for (Pair<String, String> tableAndColumnNamePair : tableNamesAndColumnNamePairs) {
+            String tableName = tableAndColumnNamePair.first;
+            String columnNameToDeleteFrom = tableAndColumnNamePair.second;
 
-        try {
-            for (Pair<String, String> tableAndColumnNamePair : tableNamesAndColumnNamePairs) {
-                String tableName = tableAndColumnNamePair.first;
-                String columnNameToDeleteFrom = tableAndColumnNamePair.second;
+            // Construct the "IN" part of SQL Query
+            StringBuilder whereClauseBuilder = new StringBuilder();
+            whereClauseBuilder.append("(?");
+            for (int i = 0; i < valuesToDelete.size() - 1; i++) {
+                whereClauseBuilder.append(",?");
+            }
+            whereClauseBuilder.append(')');
 
-                // Construct the "IN" part of SQL Query
-                StringBuilder whereClauseBuilder = new StringBuilder();
-                whereClauseBuilder.append("(?");
-                for (int i = 0; i < valuesToDelete.size() - 1; i++) {
-                    whereClauseBuilder.append(",?");
-                }
-                whereClauseBuilder.append(')');
+            String whereClause = columnNameToDeleteFrom + " IN " + whereClauseBuilder;
+            String[] whereArgs = valuesToDelete.toArray(new String[0]);
 
-                String whereClause = columnNameToDeleteFrom + " IN " + whereClauseBuilder;
-                String[] whereArgs = valuesToDelete.toArray(new String[0]);
+            try {
+                db.delete(tableName, whereClause, whereArgs);
+            } catch (SQLException e) {
+                LogUtil.e(
+                        e,
+                        String.format(
+                                "Failed to delete %s in table %s.", valuesToDelete, tableName));
+            }
+        }
+    }
 
-                try {
-                    db.delete(tableName, whereClause, whereArgs);
-                } catch (SQLException e) {
-                    LogUtil.e(
-                            e,
-                            String.format(
-                                    "Failed to delete %s in table %s.", valuesToDelete, tableName));
-                }
+    /**
+     * Delete an entry from tables if the value in the column of this entry exists in the given
+     * values.
+     *
+     * <p>Similar to deleteEntriesFromTableByColumn but only delete entries that satisfy the equal
+     * condition.
+     *
+     * @param tableNamesAndColumnNamePairs the tables and corresponding column names to remove
+     *     entries from
+     * @param valuesToDelete a {@link List} of values to delete if the entry has such value in
+     *     {@code columnNameToDeleteFrom}
+     * @param equalConditionColumnName the column name of the equal condition
+     * @param equalConditionColumnValue the value in {@code equalConditionColumnName} of the equal
+     *     condition
+     * @param isStringEqualConditionColumnValue whether the value of {@code
+     *     equalConditionColumnValue} is a string
+     */
+    public void deleteEntriesFromTableByColumnWithEqualCondition(
+            @NonNull List<Pair<String, String>> tableNamesAndColumnNamePairs,
+            @NonNull List<String> valuesToDelete,
+            @NonNull String equalConditionColumnName,
+            @NonNull String equalConditionColumnValue,
+            boolean isStringEqualConditionColumnValue) {
+        Objects.requireNonNull(tableNamesAndColumnNamePairs);
+        Objects.requireNonNull(valuesToDelete);
+        Objects.requireNonNull(equalConditionColumnName);
+        Objects.requireNonNull(equalConditionColumnValue);
+
+        SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
+        // If valuesToDelete is empty, do nothing.
+        if (db == null || valuesToDelete.isEmpty()) {
+            return;
+        }
+
+        for (Pair<String, String> tableAndColumnNamePair : tableNamesAndColumnNamePairs) {
+            String tableName = tableAndColumnNamePair.first;
+            String columnNameToDeleteFrom = tableAndColumnNamePair.second;
+
+            // Construct the "IN" part of SQL Query
+            StringBuilder whereClauseBuilder = new StringBuilder();
+            whereClauseBuilder.append("(?");
+            for (int i = 0; i < valuesToDelete.size() - 1; i++) {
+                whereClauseBuilder.append(",?");
+            }
+            whereClauseBuilder.append(')');
+
+            // Add equal condition to sql query. If the value is a string, bound it with single
+            // quotes.
+            String whereClause =
+                    columnNameToDeleteFrom
+                            + " IN "
+                            + whereClauseBuilder
+                            + " AND "
+                            + equalConditionColumnName
+                            + " = ";
+            if (isStringEqualConditionColumnValue) {
+                whereClause += "'" + equalConditionColumnValue + "'";
+            } else {
+                whereClause += equalConditionColumnValue;
             }
 
-            // Mark the transaction successful.
-            db.setTransactionSuccessful();
-        } finally {
-            db.endTransaction();
+            try {
+                db.delete(tableName, whereClause, valuesToDelete.toArray(new String[0]));
+            } catch (SQLException e) {
+                LogUtil.e(
+                        e,
+                        String.format(
+                                "Failed to delete %s in table %s.", valuesToDelete, tableName));
+            }
         }
     }
 
@@ -1145,7 +1208,7 @@ public class TopicsDao {
     }
 
     /** Check whether TopContributors Table is supported in current database. */
-    public boolean supportsTopContributorsTable() {
-        return mDbHelper.supportsTopContributorsTable();
+    public boolean supportsTopicContributorsTable() {
+        return mDbHelper.supportsTopicContributorsTable();
     }
 }
