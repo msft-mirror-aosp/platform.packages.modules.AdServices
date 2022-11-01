@@ -47,7 +47,6 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -76,12 +75,14 @@ public class AsyncSourceFetcher {
     private final EnrollmentDao mEnrollmentDao;
     private final Flags mFlags;
     private final AdServicesLogger mLogger;
+
     public AsyncSourceFetcher(Context context) {
         this(
                 EnrollmentDao.getInstance(context),
                 FlagsFactory.getFlags(),
                 AdServicesLoggerImpl.getInstance());
     }
+
     @VisibleForTesting
     public AsyncSourceFetcher(EnrollmentDao enrollmentDao, Flags flags, AdServicesLogger logger) {
         mEnrollmentDao = enrollmentDao;
@@ -249,7 +250,7 @@ public class AsyncSourceFetcher {
             }
             if (!json.isNull(SourceHeaderContract.AGGREGATION_KEYS)) {
                 if (!areValidAggregationKeys(
-                        json.getJSONArray(SourceHeaderContract.AGGREGATION_KEYS))) {
+                        json.getJSONObject(SourceHeaderContract.AGGREGATION_KEYS))) {
                     return false;
                 }
                 result.setAggregateSource(json.getString(SourceHeaderContract.AGGREGATION_KEYS));
@@ -287,12 +288,14 @@ public class AsyncSourceFetcher {
         }
         return value;
     }
+
     /** Provided a testing hook. */
     @NonNull
     @VisibleForTesting
     public URLConnection openUrl(@NonNull URL url) throws IOException {
         return mNetworkConnection.setup(url);
     }
+
     /**
      * Fetch a source type registration.
      *
@@ -427,25 +430,19 @@ public class AsyncSourceFetcher {
         }
     }
 
-    private boolean areValidAggregationKeys(JSONArray aggregationKeys) {
+    private boolean areValidAggregationKeys(JSONObject aggregationKeys) {
         if (aggregationKeys.length() > MAX_AGGREGATE_KEYS_PER_REGISTRATION) {
             LogUtil.d(
                     "Aggregation-keys have more entries than permitted. %s",
                     aggregationKeys.length());
             return false;
         }
-        for (int i = 0; i < aggregationKeys.length(); i++) {
-            JSONObject keyObj = aggregationKeys.optJSONObject(i);
-            if (keyObj == null) {
-                LogUtil.d("SourceFetcher: aggregation key failed to parse.");
-                return false;
-            }
-            String id = keyObj.optString("id");
+        for (String id : aggregationKeys.keySet()) {
             if (!FetcherUtil.isValidAggregateKeyId(id)) {
                 LogUtil.d("SourceFetcher: aggregation key ID is invalid. %s", id);
                 return false;
             }
-            String keyPiece = keyObj.optString("key_piece");
+            String keyPiece = aggregationKeys.optString(id);
             if (!FetcherUtil.isValidAggregateKeyPiece(keyPiece)) {
                 LogUtil.d("SourceFetcher: aggregation key-piece is invalid. %s", keyPiece);
                 return false;
