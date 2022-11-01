@@ -75,6 +75,7 @@ public class EventReportingJobHandlerTest {
 
     EventReportingJobHandler mEventReportingJobHandler;
     EventReportingJobHandler mSpyEventReportingJobHandler;
+    EventReportingJobHandler mSpyDebugEventReportingJobHandler;
 
     class FakeDatasoreManager extends DatastoreManager {
         @Override
@@ -94,6 +95,10 @@ public class EventReportingJobHandlerTest {
         when(mEnrollmentDao.getEnrollmentData(any())).thenReturn(ENROLLMENT);
         mEventReportingJobHandler = new EventReportingJobHandler(mEnrollmentDao, mDatastoreManager);
         mSpyEventReportingJobHandler = Mockito.spy(mEventReportingJobHandler);
+        mSpyDebugEventReportingJobHandler =
+                Mockito.spy(
+                        new EventReportingJobHandler(mEnrollmentDao, mDatastoreManager)
+                                .setDebugReport(true));
     }
 
     @Test
@@ -131,6 +136,44 @@ public class EventReportingJobHandlerTest {
                 mSpyEventReportingJobHandler.performReport(eventReport.getId()));
 
         verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
+        verify(mTransaction, times(2)).begin();
+        verify(mTransaction, times(2)).end();
+    }
+
+    @Test
+    public void testSendReportForPendingDebugReportSuccess()
+            throws DatastoreException, IOException, JSONException {
+        EventReport eventReport =
+                new EventReport.Builder()
+                        .setId("eventReportId")
+                        .setSourceEventId(new UnsignedLong(1234L))
+                        .setStatus(EventReport.Status.PENDING)
+                        .setDebugReportStatus(EventReport.DebugReportStatus.PENDING)
+                        .setSourceDebugKey(SOURCE_DEBUG_KEY)
+                        .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
+                        .build();
+        JSONObject eventReportPayload =
+                new EventReportPayload.Builder()
+                        .setReportId(eventReport.getId())
+                        .setSourceEventId(eventReport.getSourceEventId())
+                        .build()
+                        .toJson();
+
+        when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyDebugEventReportingJobHandler)
+                .makeHttpPostRequest(Mockito.any(), Mockito.any());
+        doReturn(eventReportPayload)
+                .when(mSpyDebugEventReportingJobHandler)
+                .createReportJsonPayload(Mockito.any());
+
+        doNothing().when(mMeasurementDao).markEventDebugReportDelivered(eventReport.getId());
+
+        Assert.assertEquals(
+                AdServicesStatusUtils.STATUS_SUCCESS,
+                mSpyDebugEventReportingJobHandler.performReport(eventReport.getId()));
+
+        verify(mMeasurementDao, times(1)).markEventDebugReportDelivered(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }

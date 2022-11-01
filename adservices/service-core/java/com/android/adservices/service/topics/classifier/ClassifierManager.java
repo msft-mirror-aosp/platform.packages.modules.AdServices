@@ -26,6 +26,7 @@ import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.Flags.ClassifierType;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.topics.PackageManagerUtil;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -71,11 +72,13 @@ public class ClassifierManager implements Classifier {
                                                         new Preprocessor(context),
                                                         new PackageManagerUtil(context),
                                                         new Random(),
-                                                        ModelManager.getInstance(context))),
+                                                        ModelManager.getInstance(context),
+                                                        AdServicesLoggerImpl.getInstance())),
                                 Suppliers.memoize(
                                         () ->
                                                 new PrecomputedClassifier(
-                                                        ModelManager.getInstance(context))));
+                                                        ModelManager.getInstance(context),
+                                                        AdServicesLoggerImpl.getInstance())));
             }
         }
         return sSingleton;
