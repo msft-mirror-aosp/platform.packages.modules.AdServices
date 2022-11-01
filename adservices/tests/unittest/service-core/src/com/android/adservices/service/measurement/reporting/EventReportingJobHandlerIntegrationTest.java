@@ -40,6 +40,7 @@ import java.util.Objects;
 /** Integration tests for {@link EventReportingJobHandler} */
 @RunWith(Parameterized.class)
 public class EventReportingJobHandlerIntegrationTest extends AbstractDbIntegrationTest {
+
     private static final EnrollmentData ENROLLMENT = new EnrollmentData.Builder()
             .setAttributionReportingUrl(List.of("https://ad-tech.com"))
             .build();

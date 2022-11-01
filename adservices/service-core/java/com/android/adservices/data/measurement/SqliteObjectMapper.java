@@ -51,6 +51,10 @@ public class SqliteObjectMapper {
                 builder::setTriggerPriority);
         setIntColumn(cursor, MeasurementTables.EventReportContract.STATUS,
                 builder::setStatus);
+        setIntColumn(
+                cursor,
+                MeasurementTables.EventReportContract.DEBUG_REPORT_STATUS,
+                builder::setDebugReportStatus);
         setUnsignedLongColumn(cursor, MeasurementTables.EventReportContract.TRIGGER_DATA,
                 builder::setTriggerData);
         setUnsignedLongColumn(cursor, MeasurementTables.EventReportContract.TRIGGER_DEDUP_KEY,
@@ -132,7 +136,7 @@ public class SqliteObjectMapper {
         setBooleanColumn(cursor, MeasurementTables.SourceContract.IS_INSTALL_ATTRIBUTED,
                 builder::setInstallAttributed);
         setTextColumn(cursor, MeasurementTables.SourceContract.FILTER_DATA,
-                builder::setAggregateFilterData);
+                builder::setFilterData);
         setTextColumn(cursor, MeasurementTables.SourceContract.AGGREGATE_SOURCE,
                 builder::setAggregateSource);
         setIntColumn(cursor, MeasurementTables.SourceContract.AGGREGATE_CONTRIBUTIONS,
@@ -194,6 +198,10 @@ public class SqliteObjectMapper {
                 builder::setDebugCleartextPayload);
         setIntColumn(cursor, MeasurementTables.AggregateReport.STATUS,
                 builder::setStatus);
+        setIntColumn(
+                cursor,
+                MeasurementTables.AggregateReport.DEBUG_REPORT_STATUS,
+                builder::setDebugReportStatus);
         setTextColumn(cursor, MeasurementTables.AggregateReport.API_VERSION,
                 builder::setApiVersion);
         setUnsignedLongColumn(

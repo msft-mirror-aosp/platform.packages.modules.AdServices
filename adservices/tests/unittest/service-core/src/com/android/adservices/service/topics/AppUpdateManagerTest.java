@@ -65,7 +65,7 @@ public class AppUpdateManagerTest {
     private static final String TAG = "AppInstallationInfoManagerTest";
 
     private final Context mContext = spy(ApplicationProvider.getApplicationContext());
-    private final DbHelper mDbHelper = DbTestUtil.getDbHelperForTest();
+    private final DbHelper mDbHelper = spy(DbTestUtil.getDbHelperForTest());
 
     private AppUpdateManager mAppUpdateManager;
     private TopicsDao mTopicsDao;
@@ -89,6 +89,7 @@ public class AppUpdateManagerTest {
         DbTestUtil.deleteTable(TopicsTables.ReturnedTopicContract.TABLE);
         DbTestUtil.deleteTable(TopicsTables.UsageHistoryContract.TABLE);
         DbTestUtil.deleteTable(TopicsTables.AppUsageHistoryContract.TABLE);
+        DbTestUtil.deleteTable(TopicsTables.TopicContributorsContract.TABLE);
 
         mAppUpdateManager = new AppUpdateManager(mTopicsDao, new Random(), mMockFlags);
     }
@@ -376,16 +377,43 @@ public class AppUpdateManagerTest {
     }
 
     @Test
-    public void testDeleteAppDataFromTableByApp_nullUninstalledAppName() {
+    public void testDeleteAppDataFromTableByApps_nullUninstalledAppName() {
         assertThrows(
                 NullPointerException.class,
                 () -> mAppUpdateManager.deleteAppDataFromTableByApps(null));
     }
 
     @Test
-    public void testDeleteAppDataFromTableByApp_nonExistingUninstalledAppName() {
+    public void testDeleteAppDataFromTableByApps_nonExistingUninstalledAppName() {
         // To test it won't throw by calling the method with non-existing application name
         mAppUpdateManager.deleteAppDataFromTableByApps(List.of("app"));
+    }
+
+    @Test
+    public void testDeleteAppDataFromTableByApps_topicContributorsTable() {
+        final long epoch1 = 1L;
+
+        final String app = "app";
+        final int topicId = 1;
+
+        Map<Integer, Set<String>> topicContributorsMap = Map.of(topicId, Set.of(app));
+        mTopicsDao.persistTopicContributors(epoch1, topicContributorsMap);
+
+        // Enable Database Version 3
+        when(mDbHelper.supportsTopContributorsTable()).thenReturn(true);
+
+        // Feature flag is Off
+        when(mMockFlags.getEnableTopicContributorsCheck()).thenReturn(false);
+        mAppUpdateManager.deleteAppDataFromTableByApps(List.of(app));
+        // Table should not be cleared
+        assertThat(mTopicsDao.retrieveTopicToContributorsMap(epoch1))
+                .isEqualTo(topicContributorsMap);
+
+        // Feature flag is On
+        when(mMockFlags.getEnableTopicContributorsCheck()).thenReturn(true);
+        mAppUpdateManager.deleteAppDataFromTableByApps(List.of(app));
+        // Table should be cleared
+        assertThat(mTopicsDao.retrieveTopicToContributorsMap(epoch1)).isEmpty();
     }
 
     @Test
@@ -833,5 +861,27 @@ public class AppUpdateManagerTest {
                         Map.of(
                                 /* epochId */ 2L,
                                 Map.of(appOnlyCaller, topic, appSdkCaller, topic)));
+    }
+
+    @Test
+    public void testSupportsTopicContributorFeature() {
+        // Both on
+        when(mDbHelper.supportsTopContributorsTable()).thenReturn(true);
+        when(mMockFlags.getEnableTopicContributorsCheck()).thenReturn(true);
+        assertThat(mAppUpdateManager.supportsTopicContributorFeature()).isTrue();
+
+        // On and Off
+        when(mDbHelper.supportsTopContributorsTable()).thenReturn(true);
+        when(mMockFlags.getEnableTopicContributorsCheck()).thenReturn(false);
+        assertThat(mAppUpdateManager.supportsTopicContributorFeature()).isFalse();
+
+        when(mDbHelper.supportsTopContributorsTable()).thenReturn(false);
+        when(mMockFlags.getEnableTopicContributorsCheck()).thenReturn(true);
+        assertThat(mAppUpdateManager.supportsTopicContributorFeature()).isFalse();
+
+        // Both off
+        when(mDbHelper.supportsTopContributorsTable()).thenReturn(false);
+        when(mMockFlags.getEnableTopicContributorsCheck()).thenReturn(false);
+        assertThat(mAppUpdateManager.supportsTopicContributorFeature()).isFalse();
     }
 }

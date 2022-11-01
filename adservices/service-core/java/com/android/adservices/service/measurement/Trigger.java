@@ -22,7 +22,6 @@ import android.annotation.Nullable;
 import android.net.Uri;
 
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
-import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -269,14 +268,14 @@ public class Trigger {
                             .setKey(bigInteger)
                             .setSourceKeys(sourceKeySet);
             if (jsonObject.has("filters") && !jsonObject.isNull("filters")) {
-                AggregateFilterData filters = new AggregateFilterData.Builder()
-                        .buildAggregateFilterData(jsonObject.getJSONObject("filters")).build();
+                FilterData filters = new FilterData.Builder()
+                        .buildFilterData(jsonObject.getJSONObject("filters")).build();
                 builder.setFilter(filters);
             }
             if (jsonObject.has("not_filters")
                     && !jsonObject.isNull("not_filters")) {
-                AggregateFilterData notFilters = new AggregateFilterData.Builder()
-                        .buildAggregateFilterData(
+                FilterData notFilters = new FilterData.Builder()
+                        .buildFilterData(
                                 jsonObject.getJSONObject("not_filters")).build();
                 builder.setNotFilter(notFilters);
             }
@@ -321,9 +320,9 @@ public class Trigger {
             }
 
             if (!eventTriggersJsonString.isNull(EventTriggerContract.FILTERS)) {
-                AggregateFilterData filters =
-                        new AggregateFilterData.Builder()
-                                .buildAggregateFilterData(
+                FilterData filters =
+                        new FilterData.Builder()
+                                .buildFilterData(
                                         eventTriggersJsonString.getJSONObject(
                                                 EventTriggerContract.FILTERS))
                                 .build();
@@ -331,9 +330,9 @@ public class Trigger {
             }
 
             if (!eventTriggersJsonString.isNull(EventTriggerContract.NOT_FILTERS)) {
-                AggregateFilterData notFilters =
-                        new AggregateFilterData.Builder()
-                                .buildAggregateFilterData(
+                FilterData notFilters =
+                        new FilterData.Builder()
+                                .buildFilterData(
                                         eventTriggersJsonString.getJSONObject(
                                                 EventTriggerContract.NOT_FILTERS))
                                 .build();

@@ -264,7 +264,6 @@ public final class TopicsTables {
                     + ")";
 
     /** Table to store all blocked {@link Topic}s. Blocked topics are controlled by user. */
-    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
     public interface BlockedTopicsContract {
         String TABLE = TOPICS_TABLE_PREFIX + "blocked";
         String ID = "_id";

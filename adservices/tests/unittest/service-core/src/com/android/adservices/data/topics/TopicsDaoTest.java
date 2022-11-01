@@ -31,6 +31,7 @@ import com.android.adservices.data.DbTestUtil;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 import java.util.Arrays;
@@ -713,8 +714,12 @@ public final class TopicsDaoTest {
                                 /* current Epoch ID */ 3, /* look back Epochs */ 3))
                 .isEmpty();
 
-        mTopicsDao.deleteAllTopicsTables(Collections.emptyList());
+        mTopicsDao.deleteAllTopicsTables(/* tablesToExclude */ Collections.emptyList());
         assertThat(mTopicsDao.retrieveAllBlockedTopics()).isEmpty();
+
+        mTopicsDao.persistTopicContributors(epochId1, Map.of(topic1.getTopic(), Set.of(app1)));
+        mTopicsDao.deleteAllTopicsTables(/* tablesToExclude */ Collections.emptyList());
+        assertThat(mTopicsDao.retrieveTopicToContributorsMap(epochId1)).isEmpty();
     }
 
     @Test
@@ -749,8 +754,10 @@ public final class TopicsDaoTest {
 
         // Erase Data for app1, app2
         mTopicsDao.deleteFromTableByColumn(
-                TopicsTables.AppClassificationTopicsContract.TABLE,
-                TopicsTables.AppClassificationTopicsContract.APP,
+                List.of(
+                        Pair.create(
+                                TopicsTables.AppClassificationTopicsContract.TABLE,
+                                TopicsTables.AppClassificationTopicsContract.APP)),
                 List.of(app1, app2));
 
         expectedTopicsMap.remove(app1);
@@ -766,8 +773,10 @@ public final class TopicsDaoTest {
         mTopicsDao.persistReturnedAppTopicsMap(epochId, returnedAppSdkTopics);
 
         mTopicsDao.deleteFromTableByColumn(
-                TopicsTables.ReturnedTopicContract.TABLE,
-                TopicsTables.ReturnedTopicContract.APP,
+                List.of(
+                        Pair.create(
+                                TopicsTables.ReturnedTopicContract.TABLE,
+                                TopicsTables.ReturnedTopicContract.APP)),
                 List.of(app1, app2));
 
         assertThat(mTopicsDao.retrieveReturnedTopics(epochId, /* numberOfLookBackEpochs */ 1))
@@ -780,8 +789,10 @@ public final class TopicsDaoTest {
                 epochId2, Map.of(topic1.getTopic(), Set.of(app1, app2)));
 
         mTopicsDao.deleteFromTableByColumn(
-                TopicsTables.TopicContributorsContract.TABLE,
-                TopicsTables.TopicContributorsContract.EPOCH_ID,
+                List.of(
+                        Pair.create(
+                                TopicsTables.TopicContributorsContract.TABLE,
+                                TopicsTables.TopicContributorsContract.EPOCH_ID)),
                 List.of(String.valueOf(epochId), String.valueOf(epochId2)));
 
         assertThat(mTopicsDao.retrieveTopicToContributorsMap(epochId)).isEmpty();
@@ -794,22 +805,15 @@ public final class TopicsDaoTest {
                 NullPointerException.class,
                 () ->
                         mTopicsDao.deleteFromTableByColumn(
-                                /* tableName */ null,
-                                TopicsTables.AppClassificationTopicsContract.APP,
-                                List.of("app ")));
+                                /* tableNamesAndColumnNamePairs */ null, List.of("app ")));
         assertThrows(
                 NullPointerException.class,
                 () ->
                         mTopicsDao.deleteFromTableByColumn(
-                                TopicsTables.AppClassificationTopicsContract.TABLE,
-                                /* appColumnName */ null,
-                                List.of("app ")));
-        assertThrows(
-                NullPointerException.class,
-                () ->
-                        mTopicsDao.deleteFromTableByColumn(
-                                TopicsTables.AppClassificationTopicsContract.TABLE,
-                                TopicsTables.AppClassificationTopicsContract.APP,
+                                List.of(
+                                        Pair.create(
+                                                TopicsTables.AppClassificationTopicsContract.TABLE,
+                                                TopicsTables.AppClassificationTopicsContract.APP)),
                                 /* app */ null));
     }
 
@@ -842,16 +846,20 @@ public final class TopicsDaoTest {
 
         // To Test a table that doesn't have "app" column
         mTopicsDao.deleteFromTableByColumn(
-                TopicsTables.TaxonomyContract.TABLE,
-                TopicsTables.AppClassificationTopicsContract.APP,
+                List.of(
+                        Pair.create(
+                                TopicsTables.TaxonomyContract.TABLE,
+                                TopicsTables.AppClassificationTopicsContract.APP)),
                 List.of(app1));
         // Nothing will happen as no satisfied entry to delete
         assertThat(topicsMapFromDb1).isEqualTo(expectedTopicsMap1);
 
         // To Test table with wrong app column name
         mTopicsDao.deleteFromTableByColumn(
-                TopicsTables.AppClassificationTopicsContract.TABLE,
-                "wrong app column name",
+                List.of(
+                        Pair.create(
+                                TopicsTables.AppClassificationTopicsContract.TABLE,
+                                "wrong app column name")),
                 List.of(app1));
         // Nothing will happen as no satisfied entry to delete
         assertThat(topicsMapFromDb1).isEqualTo(expectedTopicsMap1);
@@ -869,8 +877,10 @@ public final class TopicsDaoTest {
 
         // Test passing in an empty list
         mTopicsDao.deleteFromTableByColumn(
-                TopicsTables.AppClassificationTopicsContract.TABLE,
-                TopicsTables.AppClassificationTopicsContract.APP,
+                List.of(
+                        Pair.create(
+                                TopicsTables.AppClassificationTopicsContract.TABLE,
+                                TopicsTables.AppClassificationTopicsContract.APP)),
                 List.of());
 
         assertThat(mTopicsDao.retrieveAppClassificationTopics(epochId1))
@@ -880,7 +890,8 @@ public final class TopicsDaoTest {
     @Test
     public void testDeleteFromTableByColumn_nonExistingTable() {
         // Test the process doesn't throw with non-existing table
-        mTopicsDao.deleteFromTableByColumn("Some Table", "Some Column", List.of());
+        mTopicsDao.deleteFromTableByColumn(
+                List.of(Pair.create("Some Table", "Some Column")), List.of());
     }
 
     @Test
@@ -954,5 +965,17 @@ public final class TopicsDaoTest {
         mTopicsDao.persistTopicContributors(epochId, Map.of());
 
         assertThat(mTopicsDao.retrieveTopicToContributorsMap(epochId)).isEmpty();
+    }
+
+    @Test
+    public void testSupportsTopContributorsTable() {
+        DbHelper dbHelper = Mockito.mock(DbHelper.class);
+        TopicsDao topicsDao = new TopicsDao(dbHelper);
+
+        Mockito.when(dbHelper.supportsTopContributorsTable()).thenReturn(false);
+        assertThat(topicsDao.supportsTopContributorsTable()).isFalse();
+
+        Mockito.when(dbHelper.supportsTopContributorsTable()).thenReturn(true);
+        assertThat(topicsDao.supportsTopContributorsTable()).isTrue();
     }
 }

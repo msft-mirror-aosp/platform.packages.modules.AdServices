@@ -162,7 +162,7 @@ public class AsyncSourceFetcher {
                 LogUtil.d("Source filter-data is invalid.");
                 return false;
             }
-            result.setAggregateFilterData(
+            result.setFilterData(
                     json.getJSONObject(SourceHeaderContract.FILTER_DATA).toString());
         }
         if (!json.isNull(SourceHeaderContract.DESTINATION)) {

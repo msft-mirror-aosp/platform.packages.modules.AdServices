@@ -19,7 +19,6 @@ package com.android.adservices.service.measurement;
 import android.net.Uri;
 
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
-import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
@@ -104,8 +103,8 @@ public final class TriggerFixture {
         public static final UnsignedLong DEBUG_KEY = new UnsignedLong(27836L);
 
         public static final AggregatableAttributionTrigger buildAggregatableAttributionTrigger() {
-            final AggregateFilterData filter =
-                    new AggregateFilterData.Builder()
+            final FilterData filter =
+                    new FilterData.Builder()
                             .setAttributionFilterMap(
                                     Map.of(
                                             "product",
