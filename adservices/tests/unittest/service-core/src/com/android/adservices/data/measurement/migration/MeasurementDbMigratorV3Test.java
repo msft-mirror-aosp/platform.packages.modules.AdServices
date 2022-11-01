@@ -75,9 +75,9 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
                         db, MeasurementTables.AsyncRegistrationContract.TABLE, 16));
         assertTrue(
                 doesTableExistAndColumnCountMatch(
-                        db, MeasurementTables.EventReportContract.TABLE, 16));
+                        db, MeasurementTables.EventReportContract.TABLE, 17));
         assertTrue(
-                doesTableExistAndColumnCountMatch(db, MeasurementTables.AggregateReport.TABLE, 13));
+                doesTableExistAndColumnCountMatch(db, MeasurementTables.AggregateReport.TABLE, 14));
         assertTrue(
                 doesTableExistAndColumnCountMatch(
                         db, MeasurementTables.AttributionContract.TABLE, 10));

@@ -17,6 +17,10 @@
 package com.android.adservices.service.topics.classifier;
 
 import static com.android.adservices.service.Flags.CLASSIFIER_NUMBER_OF_TOP_LABELS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__ON_DEVICE_CLASSIFIER;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_SUCCESS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -31,11 +35,14 @@ import android.provider.DeviceConfig;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.EpochComputationClassifierStats;
 import com.android.adservices.service.topics.AppInfo;
 import com.android.adservices.service.topics.PackageManagerUtil;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import com.google.android.libraries.mobiledatadownload.file.SynchronousFileStorage;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.mobiledatadownload.ClientConfigProto.ClientFile;
@@ -43,6 +50,7 @@ import com.google.mobiledatadownload.ClientConfigProto.ClientFile;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -75,6 +83,7 @@ public class OnDeviceClassifierTest {
     @Mock private ModelManager mModelManager;
     @Mock Map<String, ClientFile> mMockDownloadedFiles;
     private OnDeviceClassifier mOnDeviceClassifier;
+    @Mock AdServicesLogger mLogger;
 
     @Before
     public void setUp() throws IOException {
@@ -92,7 +101,7 @@ public class OnDeviceClassifierTest {
         sPreprocessor = new Preprocessor(sContext);
         mOnDeviceClassifier =
                 new OnDeviceClassifier(
-                        sPreprocessor, mPackageManagerUtil, new Random(), mModelManager);
+                        sPreprocessor, mPackageManagerUtil, new Random(), mModelManager, mLogger);
     }
 
     @Test
@@ -109,7 +118,7 @@ public class OnDeviceClassifierTest {
         sPreprocessor = new Preprocessor(sContext);
         mOnDeviceClassifier =
                 new OnDeviceClassifier(
-                        sPreprocessor, mPackageManagerUtil, new Random(), mModelManager);
+                        sPreprocessor, mPackageManagerUtil, new Random(), mModelManager, mLogger);
 
         String appPackage1 = "com.example.adservices.samples.topics.sampleapp1";
         ImmutableSet<String> appPackages = ImmutableSet.of(appPackage1);
@@ -123,6 +132,8 @@ public class OnDeviceClassifierTest {
 
     @Test
     public void testClassify_packageManagerError_returnsDefaultClassifications() {
+        ArgumentCaptor<EpochComputationClassifierStats> argument =
+                ArgumentCaptor.forClass(EpochComputationClassifierStats.class);
         String appPackage1 = "com.example.adservices.samples.topics.sampleapp1";
         ImmutableSet<String> appPackages = ImmutableSet.of(appPackage1);
         // If fetch from PackageManagerUtil fails, we will use empty strings as descriptions.
@@ -138,6 +149,22 @@ public class OnDeviceClassifierTest {
         // Check all the returned labels for default empty string descriptions.
         assertThat(classifications.get(appPackage1))
                 .isEqualTo(createTopics(Arrays.asList(10230, 10253, 10227)));
+
+        // Verify logged atom.
+        verify(mLogger).logEpochComputationClassifierStats(argument.capture());
+        assertThat(argument.getValue())
+                .isEqualTo(
+                        EpochComputationClassifierStats.builder()
+                                .setTopicIds(ImmutableList.of(10230, 10253, 10227))
+                                .setBuildId(8)
+                                .setAssetVersion("2")
+                                .setClassifierType(
+                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__ON_DEVICE_CLASSIFIER)
+                                .setOnDeviceClassifierStatus(
+                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_SUCCESS)
+                                .setPrecomputedClassifierStatus(
+                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED)
+                                .build());
     }
 
     @Test
@@ -180,6 +207,8 @@ public class OnDeviceClassifierTest {
 
     @Test
     public void testClassify_successfulClassifications() {
+        ArgumentCaptor<EpochComputationClassifierStats> argument =
+                ArgumentCaptor.forClass(EpochComputationClassifierStats.class);
         // Check getClassification for sample descriptions.
         String appPackage1 = "com.example.adservices.samples.topics.sampleapp1";
         String appPackage2 = "com.example.adservices.samples.topics.sampleapp2";
@@ -215,10 +244,44 @@ public class OnDeviceClassifierTest {
         // Expected top 10: 10227, 10225, 10235, 10230, 10238, 10253, 10247, 10254, 10234, 10229
         assertThat(classifications.get(appPackage2))
                 .containsAtLeastElementsIn(createTopics(Arrays.asList(10227)));
+
+        // Verify logged atom.
+        verify(mLogger, times(2)).logEpochComputationClassifierStats(argument.capture());
+        assertThat(argument.getAllValues()).hasSize(2);
+        // Log for appPackage1.
+        assertThat(argument.getAllValues().get(0))
+                .isEqualTo(
+                        EpochComputationClassifierStats.builder()
+                                .setTopicIds(ImmutableList.of(10253, 10230, 10237))
+                                .setBuildId(8)
+                                .setAssetVersion("2")
+                                .setClassifierType(
+                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__ON_DEVICE_CLASSIFIER)
+                                .setOnDeviceClassifierStatus(
+                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_SUCCESS)
+                                .setPrecomputedClassifierStatus(
+                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED)
+                                .build());
+        // Log for appPackage2.
+        assertThat(argument.getAllValues().get(1))
+                .isEqualTo(
+                        EpochComputationClassifierStats.builder()
+                                .setTopicIds(ImmutableList.of(10230, 10227, 10238))
+                                .setBuildId(8)
+                                .setAssetVersion("2")
+                                .setClassifierType(
+                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__ON_DEVICE_CLASSIFIER)
+                                .setOnDeviceClassifierStatus(
+                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_SUCCESS)
+                                .setPrecomputedClassifierStatus(
+                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED)
+                                .build());
     }
 
     @Test
     public void testClassify_successfulClassifications_overrideNumberOfTopLabels() {
+        ArgumentCaptor<EpochComputationClassifierStats> argument =
+                ArgumentCaptor.forClass(EpochComputationClassifierStats.class);
         // Check getClassification for sample descriptions.
         String appPackage1 = "com.example.adservices.samples.topics.sampleapp1";
         ImmutableMap<String, AppInfo> appInfoMap =
@@ -228,7 +291,7 @@ public class OnDeviceClassifierTest {
         ImmutableSet<String> appPackages = ImmutableSet.of(appPackage1);
         when(mPackageManagerUtil.getAppInformation(eq(appPackages))).thenReturn(appInfoMap);
         // Override classifierNumberOfTopLabels.
-        int overrideNumberOfTopLabels = 2;
+        int overrideNumberOfTopLabels = 0;
         setClassifierNumberOfTopLabels(overrideNumberOfTopLabels);
 
         ImmutableMap<String, List<Topic>> classifications =
@@ -238,6 +301,21 @@ public class OnDeviceClassifierTest {
         assertThat(classifications).hasSize(1);
         // Verify size of the labels returned is equal to the override value.
         assertThat(classifications.get(appPackage1)).hasSize(overrideNumberOfTopLabels);
+        // Verify logged atom.
+        verify(mLogger).logEpochComputationClassifierStats(argument.capture());
+        assertThat(argument.getValue())
+                .isEqualTo(
+                        EpochComputationClassifierStats.builder()
+                                .setTopicIds(ImmutableList.of())
+                                .setBuildId(8)
+                                .setAssetVersion("2")
+                                .setClassifierType(
+                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__ON_DEVICE_CLASSIFIER)
+                                .setOnDeviceClassifierStatus(
+                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_FAILURE)
+                                .setPrecomputedClassifierStatus(
+                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED)
+                                .build());
     }
 
     @Test

@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement.aggregation;
 
+import com.android.adservices.service.measurement.FilterData;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -48,12 +50,12 @@ public final class AggregatePayloadGeneratorTest {
                 Collections.singletonList("electronics.megastore"));
         sourceFilterMap.put("product", Arrays.asList("1234", "234"));
         sourceFilterMap.put("ctid", Collections.singletonList("id"));
-        AggregateFilterData sourceFilter =  new AggregateFilterData.Builder()
+        FilterData sourceFilter =  new FilterData.Builder()
                 .setAttributionFilterMap(sourceFilterMap).build();
         AggregatableAttributionSource attributionSource =
                 new AggregatableAttributionSource.Builder()
                         .setAggregatableSource(aggregatableSource)
-                        .setAggregateFilterData(sourceFilter).build();
+                        .setFilterData(sourceFilter).build();
 
         // Build AggregatableAttributionTrigger.
         List<AggregateTriggerData> triggerDataList = new ArrayList<>();
@@ -67,9 +69,9 @@ public final class AggregatePayloadGeneratorTest {
                 new AggregateTriggerData.Builder()
                         .setKey(BigInteger.valueOf(1024L))
                         .setSourceKeys(new HashSet<>(Collections.singletonList("campaignCounts")))
-                        .setFilter(new AggregateFilterData.Builder()
+                        .setFilter(new FilterData.Builder()
                                 .setAttributionFilterMap(triggerDataFilter1).build())
-                        .setNotFilter(new AggregateFilterData.Builder()
+                        .setNotFilter(new FilterData.Builder()
                                 .setAttributionFilterMap(triggerDataNotFilter1).build()).build());
         // Apply this key_piece to "geoValue".
         triggerDataList.add(
@@ -113,12 +115,12 @@ public final class AggregatePayloadGeneratorTest {
                 Collections.singletonList("electronics.megastore"));
         sourceFilterMap.put("product", Arrays.asList("1234", "234"));
         sourceFilterMap.put("ctid", Collections.singletonList("id"));
-        AggregateFilterData sourceFilter =  new AggregateFilterData.Builder()
+        FilterData sourceFilter =  new FilterData.Builder()
                 .setAttributionFilterMap(sourceFilterMap).build();
         AggregatableAttributionSource attributionSource =
                 new AggregatableAttributionSource.Builder()
                         .setAggregatableSource(aggregatableSource)
-                        .setAggregateFilterData(sourceFilter).build();
+                        .setFilterData(sourceFilter).build();
         // Build AggregatableAttributionTrigger.
         List<AggregateTriggerData> triggerDataList = new ArrayList<>();
         // Apply this key_piece to "campaignCounts".
@@ -131,9 +133,9 @@ public final class AggregatePayloadGeneratorTest {
                 new AggregateTriggerData.Builder()
                         .setKey(BigInteger.valueOf(1024L))
                         .setSourceKeys(new HashSet<>(Collections.singletonList("campaignCounts")))
-                        .setFilter(new AggregateFilterData.Builder()
+                        .setFilter(new FilterData.Builder()
                                 .setAttributionFilterMap(triggerDataFilter1).build())
-                        .setNotFilter(new AggregateFilterData.Builder()
+                        .setNotFilter(new FilterData.Builder()
                                 .setAttributionFilterMap(triggerDataNotFilter1).build())
                         .build());
         // Apply this key_piece to "geoValue".
@@ -181,12 +183,12 @@ public final class AggregatePayloadGeneratorTest {
                 Collections.singletonList("electronics.megastore"));
         sourceFilterMap.put("product", Arrays.asList("1234", "234"));
         sourceFilterMap.put("ctid", Collections.singletonList("id"));
-        AggregateFilterData sourceFilter =  new AggregateFilterData.Builder()
+        FilterData sourceFilter =  new FilterData.Builder()
                 .setAttributionFilterMap(sourceFilterMap).build();
         AggregatableAttributionSource attributionSource =
                 new AggregatableAttributionSource.Builder()
                         .setAggregatableSource(aggregatableSource)
-                        .setAggregateFilterData(sourceFilter).build();
+                        .setFilterData(sourceFilter).build();
         // Build AggregatableAttributionTrigger.
         List<AggregateTriggerData> triggerDataList = new ArrayList<>();
         // Apply this key_piece to "campaignCounts".
@@ -199,9 +201,9 @@ public final class AggregatePayloadGeneratorTest {
                 new AggregateTriggerData.Builder()
                         .setKey(BigInteger.valueOf(1024L))
                         .setSourceKeys(new HashSet<>(Collections.singletonList("campaignCounts")))
-                        .setFilter(new AggregateFilterData.Builder()
+                        .setFilter(new FilterData.Builder()
                                 .setAttributionFilterMap(triggerDataFilter1).build())
-                        .setNotFilter(new AggregateFilterData.Builder()
+                        .setNotFilter(new FilterData.Builder()
                                 .setAttributionFilterMap(triggerDataNotFilter1).build())
                         .build());
         // Apply this key_piece to "geoValue".
@@ -223,7 +225,7 @@ public final class AggregatePayloadGeneratorTest {
                 new AggregateTriggerData.Builder()
                         .setKey(BigInteger.valueOf(200L))
                         .setSourceKeys(new HashSet<>(Arrays.asList("campaignCounts", "geoValue")))
-                        .setFilter(new AggregateFilterData.Builder()
+                        .setFilter(new FilterData.Builder()
                                 .setAttributionFilterMap(triggerDataFilter2).build())
                         .build());
 
@@ -259,12 +261,12 @@ public final class AggregatePayloadGeneratorTest {
         sourceFilterMap.put("conversion_subdomain",
                 Collections.singletonList("electronics.megastore"));
         sourceFilterMap.put("product", Arrays.asList("1234", "234"));
-        AggregateFilterData sourceFilter =  new AggregateFilterData.Builder()
+        FilterData sourceFilter =  new FilterData.Builder()
                 .setAttributionFilterMap(sourceFilterMap).build();
         AggregatableAttributionSource attributionSource =
                 new AggregatableAttributionSource.Builder()
                         .setAggregatableSource(aggregatableSource)
-                        .setAggregateFilterData(sourceFilter).build();
+                        .setFilterData(sourceFilter).build();
 
         // Build AggregatableAttributionTrigger.
         List<AggregateTriggerData> triggerDataList = new ArrayList<>();
@@ -276,7 +278,7 @@ public final class AggregatePayloadGeneratorTest {
                 new AggregateTriggerData.Builder()
                         .setKey(BigInteger.valueOf(2L).shiftLeft(63))
                         .setSourceKeys(new HashSet<>(Collections.singletonList("campaignCounts")))
-                        .setFilter(new AggregateFilterData.Builder()
+                        .setFilter(new FilterData.Builder()
                                 .setAttributionFilterMap(triggerDataFilter1).build()).build());
 
         Map<String, Integer> values = new HashMap<>();
@@ -308,12 +310,12 @@ public final class AggregatePayloadGeneratorTest {
         sourceFilterMap.put("conversion_subdomain",
                 Collections.singletonList("electronics.megastore"));
         sourceFilterMap.put("product", Arrays.asList("1234", "234"));
-        AggregateFilterData sourceFilter =  new AggregateFilterData.Builder()
+        FilterData sourceFilter =  new FilterData.Builder()
                 .setAttributionFilterMap(sourceFilterMap).build();
         AggregatableAttributionSource attributionSource =
                 new AggregatableAttributionSource.Builder()
                         .setAggregatableSource(aggregatableSource)
-                        .setAggregateFilterData(sourceFilter).build();
+                        .setFilterData(sourceFilter).build();
 
         // Build AggregatableAttributionTrigger.
         List<AggregateTriggerData> triggerDataList = new ArrayList<>();
@@ -325,7 +327,7 @@ public final class AggregatePayloadGeneratorTest {
                 new AggregateTriggerData.Builder()
                         .setKey(BigInteger.valueOf(2L).shiftLeft(63).add(BigInteger.valueOf(4L)))
                         .setSourceKeys(new HashSet<>(Collections.singletonList("campaignCounts")))
-                        .setFilter(new AggregateFilterData.Builder()
+                        .setFilter(new FilterData.Builder()
                                 .setAttributionFilterMap(triggerDataFilter1).build()).build());
 
         Map<String, Integer> values = new HashMap<>();

@@ -242,7 +242,7 @@ public class DbState {
                 .setInstallAttributed(sJSON.optBoolean("installAttributed", false))
                 .setAttributionMode(
                         sJSON.optInt("attribution_mode", Source.AttributionMode.TRUTHFULLY))
-                .setAggregateFilterData(sJSON.optString("aggregateFilterData", null))
+                .setFilterData(sJSON.optString("filterData", null))
                 .build();
     }
 
@@ -259,6 +259,7 @@ public class DbState {
                 .setStatus(tJSON.getInt("status"))
                 .setRegistrant(Uri.parse(tJSON.getString("registrant")))
                 .setFilters(tJSON.optString("filters", null))
+                .setNotFilters(tJSON.optString("not_filters", null))
                 .build();
     }
 

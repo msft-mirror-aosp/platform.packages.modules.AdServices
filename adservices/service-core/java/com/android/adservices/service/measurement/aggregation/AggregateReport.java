@@ -45,6 +45,7 @@ public class AggregateReport {
     private String mDebugCleartextPayload;
     private AggregateAttributionData mAggregateAttributionData;
     private @Status int mStatus;
+    private @DebugReportStatus int mDebugReportStatus;
     private String mApiVersion;
     @Nullable private UnsignedLong mSourceDebugKey;
     @Nullable private UnsignedLong mTriggerDebugKey;
@@ -59,6 +60,19 @@ public class AggregateReport {
         int MARKED_TO_DELETE = 2;
     }
 
+    @IntDef(
+            value = {
+                DebugReportStatus.NONE,
+                DebugReportStatus.PENDING,
+                DebugReportStatus.DELIVERED,
+            })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface DebugReportStatus {
+        int NONE = 0;
+        int PENDING = 1;
+        int DELIVERED = 2;
+    }
+
     private AggregateReport() {
         mId = null;
         mPublisher = null;
@@ -69,6 +83,7 @@ public class AggregateReport {
         mDebugCleartextPayload = null;
         mAggregateAttributionData = null;
         mStatus = AggregateReport.Status.PENDING;
+        mDebugReportStatus = AggregateReport.DebugReportStatus.NONE;
         mSourceDebugKey = null;
         mTriggerDebugKey = null;
     }
@@ -88,6 +103,7 @@ public class AggregateReport {
                 && Objects.equals(
                         mAggregateAttributionData, aggregateReport.mAggregateAttributionData)
                 && mStatus == aggregateReport.mStatus
+                && mDebugReportStatus == aggregateReport.mDebugReportStatus
                 && Objects.equals(mApiVersion, aggregateReport.mApiVersion)
                 && Objects.equals(mSourceDebugKey, aggregateReport.mSourceDebugKey)
                 && Objects.equals(mTriggerDebugKey, aggregateReport.mTriggerDebugKey)
@@ -107,6 +123,7 @@ public class AggregateReport {
                 mDebugCleartextPayload,
                 mAggregateAttributionData,
                 mStatus,
+                mDebugReportStatus,
                 mSourceDebugKey,
                 mTriggerDebugKey,
                 mSourceId,
@@ -186,6 +203,11 @@ public class AggregateReport {
      */
     public @Status int getStatus() {
         return mStatus;
+    }
+
+    /** Current {@link DebugReportStatus} of the report. */
+    public @DebugReportStatus int getDebugReportStatus() {
+        return mDebugReportStatus;
     }
 
     /**
@@ -312,6 +334,11 @@ public class AggregateReport {
          */
         public Builder setStatus(@Status int status) {
             mAttributionReport.mStatus = status;
+            return this;
+        }
+        /** See {@link AggregateReport#getDebugReportStatus()} */
+        public Builder setDebugReportStatus(@DebugReportStatus int debugReportStatus) {
+            mAttributionReport.mDebugReportStatus = debugReportStatus;
             return this;
         }
 

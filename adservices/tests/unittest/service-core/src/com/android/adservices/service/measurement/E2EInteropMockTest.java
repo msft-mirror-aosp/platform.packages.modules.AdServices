@@ -101,8 +101,15 @@ public class E2EInteropMockTest extends E2EMockTest {
             Assert.assertTrue(
                     "measurementDao.insertSource failed",
                     sDatastoreManager.runInTransaction(
-                            measurementDao ->
-                                    measurementDao.insertSource(source)));
+                            measurementDao -> {
+                                if (AsyncRegistrationQueueRunner.isSourceAllowedToInsert(
+                                        source,
+                                        source.getPublisher(),
+                                        EventSurfaceType.WEB,
+                                        measurementDao)) {
+                                    measurementDao.insertSource(source);
+                                }
+                            }));
         }
     }
 
@@ -166,7 +173,7 @@ public class E2EInteropMockTest extends E2EMockTest {
                 sourceBuilder.setDebugKey(new UnsignedLong(json.getString("debug_key")));
             }
             if (!json.isNull("filter_data")) {
-                sourceBuilder.setAggregateFilterData(json.getJSONObject("filter_data").toString());
+                sourceBuilder.setFilterData(json.getJSONObject("filter_data").toString());
             }
             sourceBuilder.setWebDestination(Web.topPrivateDomainAndScheme(
                     Uri.parse(json.getString("destination"))).get());
@@ -207,6 +214,9 @@ public class E2EInteropMockTest extends E2EMockTest {
             }
             if (!json.isNull("filters")) {
                 triggerBuilder.setFilters(json.getString("filters"));
+            }
+            if (!json.isNull("not_filters")) {
+                triggerBuilder.setNotFilters(json.getString("not_filters"));
             }
             if (!json.isNull("debug_key")) {
                 triggerBuilder.setDebugKey(new UnsignedLong(json.getString("debug_key")));

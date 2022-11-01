@@ -47,7 +47,8 @@ public final class AggregateReportFixture {
                 .setSourceDebugKey(ValidAggregateReportParams.SOURCE_DEBUG_KEY)
                 .setTriggerDebugKey(ValidAggregateReportParams.TRIGGER_DEBUG_KEY)
                 .setDebugCleartextPayload(ValidAggregateReportParams.getDebugPayload())
-                .setStatus(EventReport.Status.PENDING);
+                .setStatus(EventReport.Status.PENDING)
+                .setDebugReportStatus(EventReport.DebugReportStatus.PENDING);
     }
 
     public static AggregateReport getValidAggregateReport() {

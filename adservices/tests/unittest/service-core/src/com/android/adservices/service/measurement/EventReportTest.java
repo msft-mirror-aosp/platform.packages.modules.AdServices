@@ -89,6 +89,7 @@ public final class EventReportTest {
         assertEquals(new UnsignedLong(3L), eventReport.getTriggerDedupKey());
         assertEquals(2000L, eventReport.getReportTime());
         assertEquals(EventReport.Status.PENDING, eventReport.getStatus());
+        assertEquals(EventReport.DebugReportStatus.PENDING, eventReport.getDebugReportStatus());
         assertEquals(Source.SourceType.NAVIGATION, eventReport.getSourceType());
         assertEquals(SOURCE_DEBUG_KEY, eventReport.getSourceDebugKey());
         assertEquals(TRIGGER_DEBUG_KEY, eventReport.getTriggerDebugKey());
@@ -109,6 +110,7 @@ public final class EventReportTest {
         assertEquals(new UnsignedLong(3L), eventReport.getTriggerDedupKey());
         assertEquals(2000L, eventReport.getReportTime());
         assertEquals(EventReport.Status.PENDING, eventReport.getStatus());
+        assertEquals(EventReport.DebugReportStatus.PENDING, eventReport.getDebugReportStatus());
         assertEquals(Source.SourceType.NAVIGATION, eventReport.getSourceType());
         assertEquals(SOURCE_DEBUG_KEY, eventReport.getSourceDebugKey());
         assertNull(eventReport.getTriggerDebugKey());
@@ -129,6 +131,7 @@ public final class EventReportTest {
         assertEquals(new UnsignedLong(3L), eventReport.getTriggerDedupKey());
         assertEquals(2000L, eventReport.getReportTime());
         assertEquals(EventReport.Status.PENDING, eventReport.getStatus());
+        assertEquals(EventReport.DebugReportStatus.PENDING, eventReport.getDebugReportStatus());
         assertEquals(Source.SourceType.NAVIGATION, eventReport.getSourceType());
         assertNull(eventReport.getSourceDebugKey());
         assertEquals(TRIGGER_DEBUG_KEY, eventReport.getTriggerDebugKey());
@@ -149,6 +152,7 @@ public final class EventReportTest {
         assertNull(eventReport.getTriggerDedupKey());
         assertEquals(0L, eventReport.getReportTime());
         assertEquals(EventReport.Status.PENDING, eventReport.getStatus());
+        assertEquals(EventReport.DebugReportStatus.NONE, eventReport.getDebugReportStatus());
         assertNull(eventReport.getSourceType());
         assertNull(eventReport.getSourceDebugKey());
         assertNull(eventReport.getTriggerDebugKey());
@@ -514,6 +518,7 @@ public final class EventReportTest {
                         .setTriggerDedupKey(new UnsignedLong(3L))
                         .setReportTime(2000L)
                         .setStatus(EventReport.Status.PENDING)
+                        .setStatus(EventReport.DebugReportStatus.PENDING)
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .build();
         final Set<EventReport> eventReportSet1 = Set.of(eventReport1);
@@ -564,6 +569,7 @@ public final class EventReportTest {
                 .setTriggerDedupKey(new UnsignedLong(3L))
                 .setReportTime(2000L)
                 .setStatus(EventReport.Status.PENDING)
+                .setDebugReportStatus(EventReport.DebugReportStatus.PENDING)
                 .setSourceType(Source.SourceType.NAVIGATION)
                 .setSourceDebugKey(SOURCE_DEBUG_KEY)
                 .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
@@ -584,6 +590,7 @@ public final class EventReportTest {
                 .setTriggerDedupKey(new UnsignedLong(3L))
                 .setReportTime(2000L)
                 .setStatus(EventReport.Status.PENDING)
+                .setDebugReportStatus(EventReport.DebugReportStatus.PENDING)
                 .setSourceType(Source.SourceType.NAVIGATION)
                 .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
                 .setSourceId(SOURCE_ID)
@@ -603,6 +610,7 @@ public final class EventReportTest {
                 .setTriggerDedupKey(new UnsignedLong(3L))
                 .setReportTime(2000L)
                 .setStatus(EventReport.Status.PENDING)
+                .setDebugReportStatus(EventReport.DebugReportStatus.PENDING)
                 .setSourceType(Source.SourceType.NAVIGATION)
                 .setSourceDebugKey(SOURCE_DEBUG_KEY)
                 .setSourceId(SOURCE_ID)

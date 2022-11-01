@@ -36,6 +36,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import android.app.job.JobScheduler;
 import android.content.Context;
@@ -93,6 +94,7 @@ import org.mockito.Spy;
 import org.mockito.quality.Strictness;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -809,16 +811,24 @@ public class ConsentManagerTest {
     @Test
     public void testTopicsProxyCalls() {
         Topic topic = Topic.create(1, 1, 1);
-        List<String> tablesToBlock = List.of(TopicsTables.BlockedTopicsContract.TABLE);
-        ConsentManager consentManager =
-                new ConsentManager(
-                        mContextSpy,
+        ArrayList<String> tablesToBlock = new ArrayList<>();
+        tablesToBlock.add(TopicsTables.BlockedTopicsContract.TABLE);
+
+        TopicsWorker topicsWorker =
+                spy(
                         new TopicsWorker(
                                 mMockEpochManager,
                                 mCacheManager,
                                 mBlockedTopicsManager,
                                 mAppUpdateManager,
-                                mMockFlags),
+                                mMockFlags));
+        // Enable TopicContributors feature
+        when(mMockEpochManager.supportsTopicContributorFeature()).thenReturn(true);
+
+        ConsentManager consentManager =
+                new ConsentManager(
+                        mContextSpy,
+                        topicsWorker,
                         mAppConsentDao,
                         mEnrollmentDao,
                         mMeasurementImpl,
@@ -827,7 +837,8 @@ public class ConsentManagerTest {
                         mMockFlags);
         doNothing().when(mBlockedTopicsManager).blockTopic(any());
         doNothing().when(mBlockedTopicsManager).unblockTopic(any());
-        doNothing().when(mCacheManager).clearAllTopicsData(any());
+        // The actual usage is to invoke clearAllTopicsData() from TopicsWorker
+        doNothing().when(topicsWorker).clearAllTopicsData(any());
 
         consentManager.revokeConsentForTopic(topic);
         consentManager.restoreConsentForTopic(topic);
@@ -835,7 +846,7 @@ public class ConsentManagerTest {
 
         verify(mBlockedTopicsManager).blockTopic(topic);
         verify(mBlockedTopicsManager).unblockTopic(topic);
-        verify(mCacheManager).clearAllTopicsData(tablesToBlock);
+        verify(topicsWorker).clearAllTopicsData(tablesToBlock);
     }
 
     @Test
