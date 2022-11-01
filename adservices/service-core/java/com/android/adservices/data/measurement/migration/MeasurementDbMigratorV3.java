@@ -98,6 +98,10 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
                 "ALTER TABLE %1$s ADD %2$s INTEGER",
                 MeasurementTables.AggregateReport.TABLE,
                 MeasurementTables.AggregateReport.DEBUG_REPORT_STATUS),
+        String.format(
+                "ALTER TABLE %1$s ADD %2$s TEXT",
+                MeasurementTables.TriggerContract.TABLE,
+                MeasurementTables.TriggerContract.NOT_FILTERS),
 
         // SQLite does not support ALTER TABLE statement with foreign keys
         String.format(

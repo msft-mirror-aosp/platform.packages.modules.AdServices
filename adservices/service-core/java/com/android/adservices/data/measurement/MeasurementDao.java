@@ -104,6 +104,7 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.TriggerContract.AGGREGATE_VALUES,
                 trigger.getAggregateValues());
         values.put(MeasurementTables.TriggerContract.FILTERS, trigger.getFilters());
+        values.put(MeasurementTables.TriggerContract.NOT_FILTERS, trigger.getNotFilters());
         values.put(MeasurementTables.TriggerContract.DEBUG_KEY,
                 getNullableUnsignedLong(trigger.getDebugKey()));
         long rowId = mSQLTransaction.getDatabase()

@@ -1627,7 +1627,7 @@ public final class AsyncSourceFetcherTest {
                                             + "  \"priority\": \"123\",\n"
                                             + "  \"expiry\": \"456789\",\n"
                                             + "  \"source_event_id\":"
-                                            + " \"987654321\",'aggregation_keys': "
+                                            + " \"987654321\",\"aggregation_keys\": "
                                                 + tooManyKeys)));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
@@ -1661,7 +1661,7 @@ public final class AsyncSourceFetcherTest {
                                             + "  \"priority\": \"123\",\n"
                                             + "  \"expiry\": \"456789\",\n"
                                             + "  \"source_event_id\":"
-                                            + " \"987654321\",'aggregation_keys': "
+                                            + " \"987654321\",\"aggregation_keys\": "
                                                 + tooManyKeys)));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
