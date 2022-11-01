@@ -153,7 +153,7 @@ public class DbHelper extends SQLiteOpenHelper {
      * Check whether TopContributors Table is supported in current database. TopContributors is
      * introduced in Version 3.
      */
-    public boolean supportsTopContributorsTable() {
+    public boolean supportsTopicContributorsTable() {
         return mDbVersion >= DATABASE_VERSION_V3;
     }
 
