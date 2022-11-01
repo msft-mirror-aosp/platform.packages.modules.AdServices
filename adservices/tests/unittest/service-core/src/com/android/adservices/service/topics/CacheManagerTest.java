@@ -38,7 +38,6 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.GetTopicsReportedStats;
 
-import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -105,9 +104,9 @@ public final class CacheManagerTest {
                 .logGetTopicsReportedStats(
                         eq(
                                 GetTopicsReportedStats.builder()
-                                        .setTopicIds(ImmutableList.of())
                                         .setFilteredBlockedTopicCount(0)
                                         .setDuplicateTopicCount(0)
+                                        .setTopicIdsCount(0)
                                         .build()));
     }
 
@@ -237,9 +236,9 @@ public final class CacheManagerTest {
         assertThat(argument.getAllValues().get(0))
                 .isEqualTo(
                         GetTopicsReportedStats.builder()
-                                .setTopicIds(ImmutableList.of())
                                 .setFilteredBlockedTopicCount(0)
                                 .setDuplicateTopicCount(0)
+                                .setTopicIdsCount(0)
                                 .build());
     }
 
@@ -376,9 +375,9 @@ public final class CacheManagerTest {
         assertThat(argument.getAllValues().get(0))
                 .isEqualTo(
                         GetTopicsReportedStats.builder()
-                                .setTopicIds(ImmutableList.of())
                                 .setFilteredBlockedTopicCount(0)
                                 .setDuplicateTopicCount(0)
+                                .setTopicIdsCount(0)
                                 .build());
     }
 
@@ -452,20 +451,19 @@ public final class CacheManagerTest {
         assertThat(argument.getAllValues()).hasSize(3);
         // Should return topic1, topic2 and topic3, but topic2 is blocked - so only topic1 and
         // topic3 are expected.
-        assertThat(argument.getAllValues().get(0).getTopicIds())
-                .containsExactly(topic1.getTopic(), topic3.getTopic());
         assertThat(argument.getAllValues().get(0).getFilteredBlockedTopicCount()).isEqualTo(1);
         assertThat(argument.getAllValues().get(0).getDuplicateTopicCount()).isEqualTo(0);
+        assertThat(argument.getAllValues().get(0).getTopicIdsCount()).isEqualTo(2);
         // Should return topic1 and topic2, but topic2 is blocked 2 times - so only topic1 is
         // expected.
-        assertThat(argument.getAllValues().get(1).getTopicIds()).containsExactly(topic1.getTopic());
         assertThat(argument.getAllValues().get(1).getFilteredBlockedTopicCount()).isEqualTo(2);
         assertThat(argument.getAllValues().get(1).getDuplicateTopicCount()).isEqualTo(0);
+        assertThat(argument.getAllValues().get(1).getTopicIdsCount()).isEqualTo(1);
         // Should return topic1 and topic2, but topic2 is blocked - so only topic1 is expected.
         // topic1 is deduplicated.
-        assertThat(argument.getAllValues().get(2).getTopicIds()).containsExactly(topic1.getTopic());
         assertThat(argument.getAllValues().get(2).getFilteredBlockedTopicCount()).isEqualTo(1);
         assertThat(argument.getAllValues().get(2).getDuplicateTopicCount()).isEqualTo(1);
+        assertThat(argument.getAllValues().get(2).getTopicIdsCount()).isEqualTo(1);
     }
 
     @Test
@@ -636,9 +634,9 @@ public final class CacheManagerTest {
         assertThat(argument.getAllValues().get(0))
                 .isEqualTo(
                         GetTopicsReportedStats.builder()
-                                .setTopicIds(ImmutableList.of(topic1.getTopic()))
                                 .setFilteredBlockedTopicCount(0)
                                 .setDuplicateTopicCount(0)
+                                .setTopicIdsCount(1)
                                 .build());
     }
 
@@ -662,9 +660,9 @@ public final class CacheManagerTest {
                 .logGetTopicsReportedStats(
                         eq(
                                 GetTopicsReportedStats.builder()
-                                        .setTopicIds(ImmutableList.of())
                                         .setFilteredBlockedTopicCount(0)
                                         .setDuplicateTopicCount(0)
+                                        .setTopicIdsCount(0)
                                         .build()));
     }
 
