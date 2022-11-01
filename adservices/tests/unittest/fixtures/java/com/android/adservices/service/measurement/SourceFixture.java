@@ -20,7 +20,6 @@ import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
-import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONArray;
@@ -64,7 +63,7 @@ public final class SourceFixture {
                 .setInstallCooldownWindow(ValidSourceParams.INSTALL_COOLDOWN_WINDOW)
                 .setAttributionMode(ValidSourceParams.ATTRIBUTION_MODE)
                 .setAggregateSource(ValidSourceParams.buildAggregateSource())
-                .setAggregateFilterData(ValidSourceParams.buildAggregateFilterData())
+                .setFilterData(ValidSourceParams.buildFilterData())
                 .build();
     }
 
@@ -101,7 +100,7 @@ public final class SourceFixture {
             return null;
         }
 
-        public static final String buildAggregateFilterData() {
+        public static final String buildFilterData() {
             try {
                 JSONObject filterData = new JSONObject();
                 filterData.put("conversion_subdomain",
@@ -117,8 +116,8 @@ public final class SourceFixture {
         public static final AggregatableAttributionSource buildAggregatableAttributionSource() {
             return new AggregatableAttributionSource.Builder()
                     .setAggregatableSource(Map.of("5", new BigInteger("345")))
-                    .setAggregateFilterData(
-                            new AggregateFilterData.Builder()
+                    .setFilterData(
+                            new FilterData.Builder()
                                     .setAttributionFilterMap(
                                             Map.of(
                                                     "product", List.of("1234", "4321"),

@@ -2524,7 +2524,7 @@
             "status": 0,
             "registrant": "android-app://com.example.abc",
             "attribution_mode": 1,
-            "aggregateFilterData": {
+            "filterData": {
               "key1": ["val1"]
             }
           }
@@ -2568,7 +2568,7 @@
             "status": 0,
             "registrant": "android-app://com.example.abc",
             "attribution_mode": 1,
-            "aggregateFilterData": {
+            "filterData": {
               "key1": ["val1"]
             }
           }
@@ -2645,7 +2645,7 @@
             "status": 0,
             "registrant": "android-app://com.example.abc",
             "attribution_mode": 1,
-            "aggregateFilterData": {
+            "filterData": {
               "key_11": ["value_11_x", "value_12_x"],
               "key_21": ["value_21", "value_22"]
             }
@@ -2690,7 +2690,7 @@
             "status": 0,
             "registrant": "android-app://com.example.abc",
             "attribution_mode": 1,
-            "aggregateFilterData": {
+            "filterData": {
               "key_11": ["value_11_x", "value_12_x"],
               "key_21": ["value_21", "value_22"]
             }
@@ -2738,7 +2738,7 @@
             "status": 0,
             "registrant": "android-app://com.example.abc",
             "attribution_mode": 1,
-            "aggregateFilterData": {
+            "filterData": {
               "key1": ["val1"]
             }
           }
@@ -2791,7 +2791,7 @@
             "status": 0,
             "registrant": "android-app://com.example.abc",
             "attribution_mode": 1,
-            "aggregateFilterData": {
+            "filterData": {
               "key1": ["val1"]
             }
           }
@@ -2877,7 +2877,7 @@
             "status": 0,
             "registrant": "android-app://com.example.abc",
             "attribution_mode": 1,
-            "aggregateFilterData": {
+            "filterData": {
               "key1": ["val1"]
             }
           }
@@ -2926,7 +2926,7 @@
             "status": 0,
             "registrant": "android-app://com.example.abc",
             "attribution_mode": 1,
-            "aggregateFilterData": {
+            "filterData": {
               "key1": ["val1"]
             }
           }
@@ -3009,7 +3009,7 @@
             "status": 0,
             "registrant": "android-app://com.example.abc",
             "attribution_mode": 1,
-            "aggregateFilterData": {
+            "filterData": {
               "key1": ["val1"],
               "source_type": ["navigation"]
             }
@@ -3067,7 +3067,7 @@
             "status": 0,
             "registrant": "android-app://com.example.abc",
             "attribution_mode": 1,
-            "aggregateFilterData": {
+            "filterData": {
               "key1": ["val1"],
               "source_type": ["navigation"]
             }
@@ -3157,7 +3157,7 @@
             "status": 0,
             "registrant": "android-app://com.example.abc",
             "attribution_mode": 1,
-            "aggregateFilterData": {
+            "filterData": {
               "key1": ["val1"]
             }
           }
@@ -3217,7 +3217,7 @@
             "status": 0,
             "registrant": "android-app://com.example.abc",
             "attribution_mode": 1,
-            "aggregateFilterData": {
+            "filterData": {
               "key1": ["val1"]
             }
           }

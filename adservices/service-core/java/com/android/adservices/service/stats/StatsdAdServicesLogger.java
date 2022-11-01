@@ -18,6 +18,7 @@ package com.android.adservices.service.stats;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_GET_TOPICS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.BACKGROUND_FETCH_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BIDDING_PER_CA_PROCESS_REPORTED;
@@ -192,5 +193,27 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 stats.getTopicIds().stream().mapToInt(Integer::intValue).toArray(),
                 stats.getDuplicateTopicCount(),
                 stats.getFilteredBlockedTopicCount());
+    }
+
+    @Override
+    public void logEpochComputationGetTopTopicsStats(EpochComputationGetTopTopicsStats stats) {
+        AdServicesStatsLog.write(
+                AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED,
+                stats.getTopTopicCount(),
+                stats.getPaddedRandomTopicsCount(),
+                stats.getAppsConsideredCount(),
+                stats.getSdksConsideredCount());
+    }
+
+    @Override
+    public void logEpochComputationClassifierStats(EpochComputationClassifierStats stats) {
+        AdServicesStatsLog.write(
+                AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED,
+                stats.getTopicIds().stream().mapToInt(Integer::intValue).toArray(),
+                stats.getBuildId(),
+                stats.getAssetVersion(),
+                stats.getClassifierType(),
+                stats.getOnDeviceClassifierStatus(),
+                stats.getPrecomputedClassifierStatus());
     }
 }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.measurement.aggregation;
+package com.android.adservices.service.measurement;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -30,20 +30,20 @@ import java.util.Objects;
 /**
  * POJO for AggregatableAttributionFilterData.
  */
-public class AggregateFilterData {
+public class FilterData {
 
     private Map<String, List<String>> mAttributionFilterMap;
 
-    AggregateFilterData() {
+    FilterData() {
         mAttributionFilterMap = new HashMap<>();
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof AggregateFilterData)) {
+        if (!(obj instanceof FilterData)) {
             return false;
         }
-        AggregateFilterData attributionFilterData = (AggregateFilterData) obj;
+        FilterData attributionFilterData = (FilterData) obj;
         return Objects.equals(mAttributionFilterMap, attributionFilterData.mAttributionFilterMap);
     }
 
@@ -60,17 +60,17 @@ public class AggregateFilterData {
     }
 
     /**
-     * Builder for {@link AggregateFilterData}.
+     * Builder for {@link FilterData}.
      */
     public static final class Builder {
-        private final AggregateFilterData mBuilding;
+        private final FilterData mBuilding;
 
         public Builder() {
-            mBuilding = new AggregateFilterData();
+            mBuilding = new FilterData();
         }
 
         /**
-         * See {@link AggregateFilterData#getAttributionFilterMap()}.
+         * See {@link FilterData#getAttributionFilterMap()}.
          */
         public Builder setAttributionFilterMap(Map<String, List<String>> attributionFilterMap) {
             mBuilding.mAttributionFilterMap = attributionFilterMap;
@@ -78,27 +78,27 @@ public class AggregateFilterData {
         }
 
         /**
-         * Builds AggregateFilterData from JSONObject.
+         * Builds FilterData from JSONObject.
          */
-        public Builder buildAggregateFilterData(JSONObject jsonObject)
+        public Builder buildFilterData(JSONObject jsonObject)
                 throws JSONException {
-            Map<String, List<String>> aggregateFilterData = new HashMap<>();
+            Map<String, List<String>> filterData = new HashMap<>();
             for (String key : jsonObject.keySet()) {
                 JSONArray jsonArray = jsonObject.getJSONArray(key);
                 List<String> filterDataList = new ArrayList<>();
                 for (int i = 0; i < jsonArray.length(); i++) {
                     filterDataList.add(jsonArray.getString(i));
                 }
-                aggregateFilterData.put(key, filterDataList);
+                filterData.put(key, filterDataList);
             }
-            mBuilding.mAttributionFilterMap = aggregateFilterData;
+            mBuilding.mAttributionFilterMap = filterData;
             return this;
         }
 
         /**
-         * Build the {@link AggregateFilterData}.
+         * Build the {@link FilterData}.
          */
-        public AggregateFilterData build() {
+        public FilterData build() {
             return mBuilding;
         }
     }

@@ -26,7 +26,6 @@ import static org.junit.Assert.assertTrue;
 import android.net.Uri;
 
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
-import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
@@ -474,12 +473,12 @@ public class TriggerTest {
                         .setTriggerData(new UnsignedLong(2L))
                         .setDedupKey(new UnsignedLong(2L))
                         .setFilter(
-                                new AggregateFilterData.Builder()
-                                        .buildAggregateFilterData(filters1)
+                                new FilterData.Builder()
+                                        .buildFilterData(filters1)
                                         .build())
                         .setNotFilter(
-                                new AggregateFilterData.Builder()
-                                        .buildAggregateFilterData(notFilters1)
+                                new FilterData.Builder()
+                                        .buildFilterData(notFilters1)
                                         .build())
                         .build();
         EventTrigger eventTrigger2 =
@@ -488,8 +487,8 @@ public class TriggerTest {
                         .setTriggerData(new UnsignedLong(3L))
                         .setDedupKey(new UnsignedLong(3L))
                         .setNotFilter(
-                                new AggregateFilterData.Builder()
-                                        .buildAggregateFilterData(notFilters2)
+                                new FilterData.Builder()
+                                        .buildFilterData(notFilters2)
                                         .build())
                         .build();
 

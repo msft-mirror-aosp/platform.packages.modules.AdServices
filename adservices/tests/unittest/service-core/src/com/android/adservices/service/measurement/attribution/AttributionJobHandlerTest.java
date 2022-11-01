@@ -843,7 +843,7 @@ public class AttributionJobHandlerTest {
                         .setAggregateSource(
                                 "[{\"id\" : \"campaignCounts\", \"key_piece\" : \"0x159\"},"
                                         + "{\"id\" : \"geoValue\", \"key_piece\" : \"0x5\"}]")
-                        .setAggregateFilterData("{\"product\":[\"1234\",\"2345\"]}")
+                        .setFilterData("{\"product\":[\"1234\",\"2345\"]}")
                         .build();
         AggregateReport expectedAggregateReport =
                 new AggregateReport.Builder()
@@ -917,7 +917,7 @@ public class AttributionJobHandlerTest {
                 .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                 .setAggregateSource("[{\"id\" : \"campaignCounts\", \"key_piece\" : \"0x159\"},"
                         + "{\"id\" : \"geoValue\", \"key_piece\" : \"0x5\"}]")
-                .setAggregateFilterData("{\"product\":[\"1234\",\"2345\"]}")
+                .setFilterData("{\"product\":[\"1234\",\"2345\"]}")
                 .setAggregateContributions(65536 - 32768 - 1644 + 1)
                 .build();
         when(mMeasurementDao.getPendingTriggerIds())
@@ -958,7 +958,7 @@ public class AttributionJobHandlerTest {
         Source source =
                 SourceFixture.getValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
-                        .setAggregateFilterData(
+                        .setFilterData(
                                 "{\n"
                                         + "  \"key_1\": [\"value_1_x\", \"value_2_x\"],\n"
                                         + "  \"key_2\": [\"value_1_x\", \"value_2_x\"]\n"
@@ -1012,7 +1012,7 @@ public class AttributionJobHandlerTest {
         Source source =
                 SourceFixture.getValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
-                        .setAggregateFilterData(
+                        .setFilterData(
                                 "{\n"
                                         + "  \"key_1\": [\"value_11\", \"value_12_x\"],\n"
                                         + "  \"key_2\": [\"value_21_x\", \"value_22\"]\n"
@@ -1072,7 +1072,7 @@ public class AttributionJobHandlerTest {
         Source source =
                 SourceFixture.getValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
-                        .setAggregateFilterData(
+                        .setFilterData(
                                 "{\n"
                                         + "  \"key_1\": [\"value_11\", \"value_12_x\"],\n"
                                         + "  \"key_2\": [\"value_21_x\", \"value_22\"]\n"
@@ -1133,7 +1133,7 @@ public class AttributionJobHandlerTest {
         Source source =
                 SourceFixture.getValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
-                        .setAggregateFilterData(
+                        .setFilterData(
                                 "{\n"
                                         + "  \"key_1\": [\"value_11\", \"value_12_x\"],\n"
                                         + "  \"key_2\": [\"value_21_x\", \"value_22\"]\n"
@@ -1195,7 +1195,7 @@ public class AttributionJobHandlerTest {
         Source source =
                 SourceFixture.getValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
-                        .setAggregateFilterData(
+                        .setFilterData(
                                 "{\n"
                                         + "  \"key_1\": [\"value_11\", \"value_12_x\"],\n"
                                         + "  \"key_2\": [\"value_21_x\", \"value_22\"]\n"
@@ -1254,7 +1254,7 @@ public class AttributionJobHandlerTest {
         Source source =
                 SourceFixture.getValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
-                        .setAggregateFilterData(
+                        .setFilterData(
                                 "{\n"
                                         + "  \"key_1x\": [\"value_11_x\", \"value_12_x\"],\n"
                                         + "  \"key_2x\": [\"value_21_x\", \"value_22_x\"]\n"
@@ -1320,7 +1320,7 @@ public class AttributionJobHandlerTest {
         Source source =
                 SourceFixture.getValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
-                        .setAggregateFilterData(
+                        .setFilterData(
                                 "{\n"
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
@@ -1401,7 +1401,7 @@ public class AttributionJobHandlerTest {
         Source source =
                 SourceFixture.getValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
-                        .setAggregateFilterData(
+                        .setFilterData(
                                 "{\n"
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
@@ -1484,7 +1484,7 @@ public class AttributionJobHandlerTest {
         Source source =
                 SourceFixture.getValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
-                        .setAggregateFilterData(
+                        .setFilterData(
                                 "{\n"
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
@@ -1568,7 +1568,7 @@ public class AttributionJobHandlerTest {
         Source source =
                 SourceFixture.getValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
-                        .setAggregateFilterData(
+                        .setFilterData(
                                 "{\n"
                                         + "  \"key_1\": [\"value_1_y\", \"value_2_y\"],\n"
                                         + "  \"key_2\": [\"value_1_y\", \"value_2_y\"]\n"
@@ -1576,7 +1576,7 @@ public class AttributionJobHandlerTest {
                         .setAggregateSource(
                                 "[{\"id\" : \"campaignCounts\", \"key_piece\" : \"0x159\"},"
                                         + "{\"id\" : \"geoValue\", \"key_piece\" : \"0x5\"}]")
-                        .setAggregateFilterData(
+                        .setFilterData(
                                 "{\"product\":[\"1234\",\"2345\"], \"key_1\": "
                                         + "[\"value_1_y\", \"value_2_y\"]}")
                         .setId("sourceId")
@@ -1636,7 +1636,7 @@ public class AttributionJobHandlerTest {
                         .setAggregateSource(
                                 "[{\"id\" : \"campaignCounts\", \"key_piece\" : \"0x159\"},"
                                         + "{\"id\" : \"geoValue\", \"key_piece\" : \"0x5\"}]")
-                        .setAggregateFilterData(
+                        .setFilterData(
                                 "{\n"
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
@@ -1705,7 +1705,7 @@ public class AttributionJobHandlerTest {
                         .setAggregateSource(
                                 "[{\"id\" : \"campaignCounts\", \"key_piece\" : \"0x159\"},"
                                         + "{\"id\" : \"geoValue\", \"key_piece\" : \"0x5\"}]")
-                        .setAggregateFilterData(
+                        .setFilterData(
                                 "{\n"
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
@@ -1774,7 +1774,7 @@ public class AttributionJobHandlerTest {
                         .setAggregateSource(
                                 "[{\"id\" : \"campaignCounts\", \"key_piece\" : \"0x159\"},"
                                         + "{\"id\" : \"geoValue\", \"key_piece\" : \"0x5\"}]")
-                        .setAggregateFilterData(
+                        .setFilterData(
                                 "{\n"
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
@@ -1842,7 +1842,7 @@ public class AttributionJobHandlerTest {
                         .setAggregateSource(
                                 "[{\"id\" : \"campaignCounts\", \"key_piece\" : \"0x159\"},"
                                         + "{\"id\" : \"geoValue\", \"key_piece\" : \"0x5\"}]")
-                        .setAggregateFilterData(
+                        .setFilterData(
                                 "{\n"
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
