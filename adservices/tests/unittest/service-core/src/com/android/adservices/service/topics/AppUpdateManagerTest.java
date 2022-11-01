@@ -1111,7 +1111,7 @@ public class AppUpdateManagerTest {
 
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(1);
         mAppUpdateManager.handleTopTopicsWithoutContributors(
-                /* only handle past epochs */ epochId2, List.of(app1));
+                /* only handle past epochs */ epochId2, app1);
 
         // Only observe current epoch per the setup of this test
         // Topic3 should be removed from returnedTopics
@@ -1180,7 +1180,7 @@ public class AppUpdateManagerTest {
         appUpdateManager.handleAppUninstallationInRealTime(Uri.parse(app), epochId);
 
         verify(appUpdateManager).convertUriToAppName(Uri.parse(app));
-        verify(appUpdateManager).handleTopTopicsWithoutContributors(epochId, List.of(app));
+        verify(appUpdateManager).handleTopTopicsWithoutContributors(epochId, app);
         verify(appUpdateManager).deleteAppDataFromTableByApps(List.of(app));
     }
 
@@ -1201,7 +1201,7 @@ public class AppUpdateManagerTest {
         appUpdateManager.handleAppUninstallationInRealTime(Uri.parse(app), epochId);
 
         verify(appUpdateManager).convertUriToAppName(Uri.parse(app));
-        verify(appUpdateManager, never()).handleTopTopicsWithoutContributors(epochId, List.of(app));
+        verify(appUpdateManager, never()).handleTopTopicsWithoutContributors(epochId, app);
         verify(appUpdateManager).deleteAppDataFromTableByApps(List.of(app));
     }
 
