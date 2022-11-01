@@ -144,7 +144,7 @@ public class AppUpdateManager {
 
         try {
             if (supportsTopicContributorFeature()) {
-                handleTopTopicsWithoutContributors(currentEpochId, List.of(packageName));
+                handleTopTopicsWithoutContributors(currentEpochId, packageName);
             }
 
             deleteAppDataFromTableByApps(List.of(packageName));
@@ -485,11 +485,10 @@ public class AppUpdateManager {
      * numberOfLookBackEpochs epochs.
      *
      * @param currentEpochId the id of epoch when the method gets invoked
-     * @param uninstalledApps newly uninstalled apps
+     * @param uninstalledApp the newly uninstalled app
      */
     @VisibleForTesting
-    void handleTopTopicsWithoutContributors(
-            long currentEpochId, @NonNull List<String> uninstalledApps) {
+    void handleTopTopicsWithoutContributors(long currentEpochId, @NonNull String uninstalledApp) {
         // This check is on epoch basis for past epochs to look back
         for (long epochId = currentEpochId - 1;
                 epochId >= currentEpochId - mFlags.getTopicsNumberOfLookBackEpochs()
@@ -501,49 +500,45 @@ public class AppUpdateManager {
             Map<Integer, Set<String>> topTopicsToContributorsMap =
                     mTopicsDao.retrieveTopicToContributorsMap(epochId);
 
-            for (String uninstalledApp : uninstalledApps) {
-                List<Topic> classifiedTopics =
-                        appClassificationTopics.getOrDefault(uninstalledApp, new ArrayList<>());
-                // Collect all top topics to delete to make only one Db Update
-                List<String> topTopicsToDelete =
-                        classifiedTopics.stream()
-                                .filter(
-                                        classifiedTopic ->
-                                                topTopics.contains(classifiedTopic)
-                                                        && topTopicsToContributorsMap.containsKey(
-                                                                classifiedTopic.getTopic())
-                                                        // Filter out the topic that has ONLY
-                                                        // the uninstalled app as a contributor
-                                                        && topTopicsToContributorsMap
-                                                                        .get(
-                                                                                classifiedTopic
-                                                                                        .getTopic())
-                                                                        .size()
-                                                                == 1
-                                                        && topTopicsToContributorsMap
-                                                                .get(classifiedTopic.getTopic())
-                                                                .contains(uninstalledApp))
-                                .map(Topic::getTopic)
-                                .map(String::valueOf)
-                                .collect(Collectors.toList());
+            List<Topic> classifiedTopics =
+                    appClassificationTopics.getOrDefault(uninstalledApp, new ArrayList<>());
+            // Collect all top topics to delete to make only one Db Update
+            List<String> topTopicsToDelete =
+                    classifiedTopics.stream()
+                            .filter(
+                                    classifiedTopic ->
+                                            topTopics.contains(classifiedTopic)
+                                                    && topTopicsToContributorsMap.containsKey(
+                                                            classifiedTopic.getTopic())
+                                                    // Filter out the topic that has ONLY
+                                                    // the uninstalled app as a contributor
+                                                    && topTopicsToContributorsMap
+                                                                    .get(classifiedTopic.getTopic())
+                                                                    .size()
+                                                            == 1
+                                                    && topTopicsToContributorsMap
+                                                            .get(classifiedTopic.getTopic())
+                                                            .contains(uninstalledApp))
+                            .map(Topic::getTopic)
+                            .map(String::valueOf)
+                            .collect(Collectors.toList());
 
-                if (!topTopicsToDelete.isEmpty()) {
-                    LogUtil.v(
-                            "Topics %s will not have contributors at epoch %d. Delete them in"
-                                    + " epoch %d",
-                            topTopicsToDelete, epochId, epochId);
-                }
-
-                mTopicsDao.deleteEntriesFromTableByColumnWithEqualCondition(
-                        List.of(
-                                Pair.create(
-                                        TopicsTables.ReturnedTopicContract.TABLE,
-                                        TopicsTables.ReturnedTopicContract.TOPIC)),
-                        topTopicsToDelete,
-                        TopicsTables.ReturnedTopicContract.EPOCH_ID,
-                        String.valueOf(epochId),
-                        /* isStringEqualConditionColumnValue */ false);
+            if (!topTopicsToDelete.isEmpty()) {
+                LogUtil.v(
+                        "Topics %s will not have contributors at epoch %d. Delete them in"
+                                + " epoch %d",
+                        topTopicsToDelete, epochId, epochId);
             }
+
+            mTopicsDao.deleteEntriesFromTableByColumnWithEqualCondition(
+                    List.of(
+                            Pair.create(
+                                    TopicsTables.ReturnedTopicContract.TABLE,
+                                    TopicsTables.ReturnedTopicContract.TOPIC)),
+                    topTopicsToDelete,
+                    TopicsTables.ReturnedTopicContract.EPOCH_ID,
+                    String.valueOf(epochId),
+                    /* isStringEqualConditionColumnValue */ false);
         }
     }
 
@@ -675,7 +670,7 @@ public class AppUpdateManager {
             @NonNull Set<String> newlyUninstalledApps, long currentEpochId) {
         for (String app : newlyUninstalledApps) {
             if (supportsTopicContributorFeature()) {
-                handleTopTopicsWithoutContributors(currentEpochId, List.of(app));
+                handleTopTopicsWithoutContributors(currentEpochId, app);
             }
 
             deleteAppDataFromTableByApps(List.of(app));
