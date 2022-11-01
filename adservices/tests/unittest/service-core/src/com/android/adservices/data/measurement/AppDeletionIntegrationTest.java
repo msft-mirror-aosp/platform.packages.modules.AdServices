@@ -18,6 +18,8 @@ package com.android.adservices.data.measurement;
 
 import android.net.Uri;
 
+import com.android.adservices.data.DbTestUtil;
+
 import org.json.JSONException;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -49,9 +51,7 @@ public class AppDeletionIntegrationTest extends AbstractDbIntegrationTest {
     }
 
     public void runActionToTest() {
-        DatastoreManagerFactory
-                .getDatastoreManager(sContext)
-                .runInTransaction(
-                        (dao) -> dao.deleteAppRecords(mUri));
+        new SQLDatastoreManager(DbTestUtil.getDbHelperForTest())
+                .runInTransaction((dao) -> dao.deleteAppRecords(mUri));
     }
 }

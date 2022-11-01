@@ -50,17 +50,6 @@ import java.util.Set;
 
 /** A class to manage Epoch computation. */
 public class EpochManager implements Dumpable {
-    // TODO(b/223915674): make this configurable.
-    // The Top Topics will have 6 topics.
-    // The first 5 topics are the Top Topics derived by ML, and the 6th is a random topic from
-    // taxonomy.
-    // The index starts from 0.
-    private static final int RANDOM_TOPIC_INDEX = 5;
-
-    // TODO(b/223916172): make this configurable.
-    // The number of top Topics not including the random one.
-    private static final int NUM_TOP_TOPICS_NOT_INCLUDING_RANDOM_ONE = 5;
-
     // The tables to do garbage collection for old epochs
     // and its corresponding epoch_id column name.
     // Pair<Table Name, Column Name>
@@ -85,6 +74,28 @@ public class EpochManager implements Dumpable {
                         TopicsTables.AppUsageHistoryContract.TABLE,
                         TopicsTables.AppUsageHistoryContract.EPOCH_ID)
             };
+
+    /**
+     * The string to annotate that the topic is a padded topic in {@code TopicContributors} table.
+     * After the computation of {@code TopicContributors} table, if there is a top topic without
+     * contributors, it must be a padded topic. Persist {@code Entry{Topic,
+     * PADDED_TOP_TOPICS_STRING}} into {@code TopicContributors} table.
+     *
+     * <p>The reason to persist {@code Entry{Topic, PADDED_TOP_TOPICS_STRING}} is because topics
+     * need to be assigned to newly installed app. Moreover, non-random top topics without
+     * contributors, due to app uninstallations, are filtered out as candidate topics to assign
+     * with. Generally, a padded topic should have no contributors, but it should NOT be filtered
+     * out as a non-random top topics without contributors. Based on these facts, {@code
+     * Entry{Topic, PADDED_TOP_TOPICS_STRING}} is persisted to annotate that do NOT remove this
+     * padded topic though it has no contributors.
+     *
+     * <p>Put a "!" at last to avoid a spoof app to name itself with {@code
+     * PADDED_TOP_TOPICS_STRING}. Refer to
+     * https://developer.android.com/studio/build/configure-app-module, application name can only
+     * contain [a-zA-Z0-9_].
+     */
+    @VisibleForTesting
+    public static final String PADDED_TOP_TOPICS_STRING = "no_contributors_due_to_padding!";
 
     private static EpochManager sSingleton;
 
@@ -138,6 +149,7 @@ public class EpochManager implements Dumpable {
         }
 
         // This cross db and java boundaries multiple times, so we need to have a db transaction.
+        LogUtil.d("Start of Epoch Computation");
         db.beginTransaction();
 
         long currentEpochId = getCurrentEpochId();
@@ -201,6 +213,17 @@ public class EpochManager implements Dumpable {
             // Then save Top Topics into DB
             mTopicsDao.persistTopTopics(currentEpochId, topTopics);
 
+            // Compute TopicToContributors mapping for top topics. In an epoch, an app is a
+            // contributor to a topic if the app has called Topics API in this epoch and is
+            // classified to the topic.
+            // Do this only when feature is enabled.
+            if (supportsTopicContributorFeature()) {
+                Map<Integer, Set<String>> topTopicsToContributorsMap =
+                        computeTopTopicsToContributorsMap(appClassificationTopicsMap, topTopics);
+                // Then save Topic Contributors into DB
+                mTopicsDao.persistTopicContributors(currentEpochId, topTopicsToContributorsMap);
+            }
+
             // Step 6: Assign topics to apps and SDK from the global top topics.
             // Currently, hard-code the taxonomyVersion and the modelVersion.
             // Return returnedAppSdkTopics = Map<Pair<App, Sdk>, Topic>
@@ -218,6 +241,7 @@ public class EpochManager implements Dumpable {
             db.setTransactionSuccessful();
         } finally {
             db.endTransaction();
+            LogUtil.d("End of Epoch Computation");
         }
     }
 
@@ -412,14 +436,16 @@ public class EpochManager implements Dumpable {
                                 + mFlags.getTopicsNumberOfRandomTopics());
         int random = mRandom.nextInt(100);
 
+        // First random topic would be after numberOfTopTopics.
+        int randomTopicIndex = mFlags.getTopicsNumberOfTopTopics();
         // For 5%, get the random topic.
         if (random < mFlags.getTopicsPercentageForRandomTopic()) {
             // The random topic is the last one on the list.
-            return topTopics.get(RANDOM_TOPIC_INDEX);
+            return topTopics.get(randomTopicIndex);
         }
 
-        // For 95%, pick randomly one out of 5 top topics.
-        return topTopics.get(random % NUM_TOP_TOPICS_NOT_INCLUDING_RANDOM_ONE);
+        // For 95%, pick randomly one out of first n top topics.
+        return topTopics.get(random % randomTopicIndex);
     }
 
     // To garbage collect data for old epochs.
@@ -433,6 +459,56 @@ public class EpochManager implements Dumpable {
             mTopicsDao.deleteDataOfOldEpochs(
                     tableColumnPair.first, tableColumnPair.second, epochToDeleteFrom);
         }
+
+        // Handle TopicContributors Table if feature flag is ON
+        if (supportsTopicContributorFeature()) {
+            mTopicsDao.deleteDataOfOldEpochs(
+                    TopicsTables.TopicContributorsContract.TABLE,
+                    TopicsTables.TopicContributorsContract.EPOCH_ID,
+                    epochToDeleteFrom);
+        }
+    }
+
+    // Compute the mapping of topic to its contributor apps. In an epoch, an app is a contributor to
+    // a topic if the app has called Topics API in this epoch and is classified to the topic. Only
+    // computed for top topics.
+    @VisibleForTesting
+    Map<Integer, Set<String>> computeTopTopicsToContributorsMap(
+            @NonNull Map<String, List<Topic>> appClassificationTopicsMap,
+            @NonNull List<Topic> topTopics) {
+        Map<Integer, Set<String>> topicToContributorMap = new HashMap<>();
+
+        for (Map.Entry<String, List<Topic>> appTopics : appClassificationTopicsMap.entrySet()) {
+            String app = appTopics.getKey();
+
+            for (Topic topic : appTopics.getValue()) {
+                // Only compute for top topics.
+                if (topTopics.contains(topic)) {
+                    int topicId = topic.getTopic();
+                    topicToContributorMap.putIfAbsent(topicId, new HashSet<>());
+                    topicToContributorMap.get(topicId).add(app);
+                }
+            }
+        }
+
+        // At last, check whether there is any top topics without contributors. If so, annotate it
+        // with PADDED_TOP_TOPICS_STRING in the map. See PADDED_TOP_TOPICS_STRING for more details.
+        for (int i = 0; i < mFlags.getTopicsNumberOfTopTopics(); i++) {
+            Topic topTopic = topTopics.get(i);
+            topicToContributorMap.putIfAbsent(
+                    topTopic.getTopic(), Set.of(PADDED_TOP_TOPICS_STRING));
+        }
+
+        return topicToContributorMap;
+    }
+
+    /**
+     * Check whether TopContributors Feature is enabled. It's enabled only when TopicCOntributors
+     * table is supported and the feature flag is on.
+     */
+    public boolean supportsTopicContributorFeature() {
+        return mFlags.getEnableTopicContributorsCheck()
+                && mTopicsDao.supportsTopContributorsTable();
     }
 
     @Override

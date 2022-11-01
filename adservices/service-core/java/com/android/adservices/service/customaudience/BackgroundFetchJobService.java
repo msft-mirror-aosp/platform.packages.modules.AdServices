@@ -52,9 +52,7 @@ public class BackgroundFetchJobService extends JobService {
         }
 
         if (FlagsFactory.getFlags().getFledgeCustomAudienceServiceKillSwitch()
-                || !ConsentManager.getInstance(this)
-                        .getConsent(this.getPackageManager())
-                        .isGiven()) {
+                || !ConsentManager.getInstance(this).getConsent().isGiven()) {
             LogUtil.d("FLEDGE Custom Audience API is disabled ; skipping and cancelling job");
             return skipAndCancelBackgroundJob(params);
         }

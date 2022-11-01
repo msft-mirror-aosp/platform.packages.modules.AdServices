@@ -47,7 +47,8 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Način sudjelovanja"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Uključivanje beta verzije aplikacijama omogućuje ispitivanje novih, privatnijih načina za prikazivanje oglasa. Beta verziju uvijek možete isključiti u postavkama privatnosti."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Ne, hvala"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"U redu"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Uključi"</string>
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"Više"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Hvala na sudjelovanju."</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Dio ste Androidove beta verzije privatnosti za oglase. Uključen je Privacy Sandbox za vaš uređaj.\n\nMožete saznati više ili isključiti beta verziju u postavkama privatnosti."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Odlučili ste da nećete sudjelovati"</string>
@@ -79,8 +80,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Trenutačno nema nijednog interesa za prikaz"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Androidova beta verzija privatnosti za oglase pruža nove značajke koje aplikacije mogu upotrijebiti za prikazivanje oglasa koji bi vas mogli zanimati. Ta tehnologija ne upotrebljava identifikatore uređaja.\n\nAndroid može procijeniti vrstu oglasa koji bi vas mogli zanimati i privremeno spremiti te interese na vaš uređaj. To aplikacijama omogućuje prikazivanje relevantnih oglasa, bez praćenja aktivnosti na web-lokacijama i u aplikacijama drugih razvojnih programera."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Nemate nijedan blokirani interes"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Aplikacije mogu procijeniti vaše interese i privremeno ih spremiti s Androidom. Kasnije vam neka druga aplikacija može prikazati oglas na temelju tih interesa.\n\nAko blokirate aplikaciju, neće više procjenjivati interese. Neće se dodati na popis aplikacija dok je ne deblokirate. Interesi koje je aplikacija već procijenila će se izbrisati, no i dalje vam se mogu prikazivati neki povezani oglasi."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Aplikacije koje ste blokirali"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Poništi interese koje procjenjuju aplikacije"</string>
@@ -88,7 +88,27 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Androidova beta verzija privatnosti za oglase pruža nove značajke koje aplikacije mogu upotrijebiti za prikazivanje oglasa koji bi vas mogli zanimati. Ta tehnologija ne upotrebljava identifikatore uređaja.\n\nAplikacije mogu procijeniti vrstu oglasa koji bi vas mogli zanimati i privremeno spremiti te interese na vaš uređaj. To aplikacijama omogućuje prikazivanje relevantnih oglasa, bez praćenja aktivnosti na web-lokacijama i u aplikacijama drugih razvojnih programera."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Nemate nijednu blokiranu aplikaciju"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Nemate nijedan blokirani interes"</string>
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Odustani"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Želite li isključiti Privacy Sandbox?"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Ako se predomislite ili želite saznati više Androidovoj beta verziji privatnosti oglasa, idite na postavke privatnosti"</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Isključi"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Želite li blokirati temu <xliff:g id="TOPIC">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"Taj će se interes blokirati i više se neće dodavati na vaš popis, osim ako ga dodate sami. I dalje vam se mogu prikazivati neki povezani oglasi."</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Blokiraj"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"Tema <xliff:g id="TOPIC">%1$s</xliff:g> je deblokirana"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android može ponovo dodati taj interes na vaš popis, no on se možda neće odmah pojaviti"</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"U redu"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Želite li poništiti sve svoje interese?"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Poništi"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Želite li blokirati aplikaciju <xliff:g id="APP">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Ta aplikacija neće procjenjivati interese za Privacy Sandbox i neće se više dodavati na vaš popis, osim ako je deblokirate.\n\nInteresi koje je aplikacija već procijenila izbrisat će se, no i dalje biste mogli vidjeti neke povezane oglase."</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Aplikacija <xliff:g id="APP">%1$s</xliff:g> je deblokirana"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Ta aplikacija može ponovo procijeniti vaše interese, no možda se neće odmah pojaviti na vašem popisu. Možda će biti potrebno neko vrijeme da se počnu prikazivati povezani oglasi."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Želite li poništiti interese koje su generirale aplikacije?"</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"Umjetnost i zabava"</string>
     <string name="topic10002" msgid="1226367977754287428">"Gluma i kazalište"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime i manga"</string>

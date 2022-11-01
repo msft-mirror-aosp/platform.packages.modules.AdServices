@@ -47,7 +47,8 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Cara menyertai"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Tindakan menghidupkan beta membolehkan apl menguji cara baharu yang lebih peribadi ini untuk memaparkan iklan kepada anda. Anda boleh mematikan beta pada bila-bila masa dalam tetapan privasi anda."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Tidak perlu"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"Ya, saya akan sertai"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Hidupkan"</string>
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"Lagi"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Terima kasih kerana mengambil bahagian"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Anda merupakan sebahagian daripada beta privasi iklan Android. Kotak Pasir Privasi telah dihidupkan untuk peranti anda.\n\nAnda boleh mengetahui lebih lanjut atau mematikan beta pada bila-bila masa dalam tetapan privasi anda."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Anda telah memilih untuk tidak mengambil bahagian"</string>
@@ -79,8 +80,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Tiada minat untuk ditunjukkan sekarang"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Kotak Pasir Privasi"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Beta privasi iklan Android menyediakan ciri baharu yang boleh digunakan oleh apl untuk memaparkan iklan yang mungkin anda suka kepada anda. Teknologi ini tidak menggunakan pengecam peranti.\n\nAndroid boleh menganggarkan jenis iklan yang mungkin anda minati dan menyimpan minat ini pada peranti anda buat sementara waktu. Hal ini membolehkan apl memaparkan iklan yang berkaitan kepada anda tanpa menjejaki aktiviti anda merentas laman web dan apl daripada pembangun lain."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Anda tidak mempunyai minat yang disekat"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Apl boleh menganggarkan minat anda dan menyimpan minat ini dengan Android buat sementara waktu. Kemudian, apl lain boleh memaparkan iklan berdasarkan minat ini kepada anda.\n\nJika anda menyekat apl, apl itu tidak akan menganggarkan minat lagi. Apl tersebut tidak akan ditambahkan pada senarai apl ini lagi melainkan anda menyahsekat apl. Minat yang telah dianggarkan oleh apl akan dipadamkan, tetapi anda mungkin masih melihat beberapa iklan yang berkaitan."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Apl yang telah anda sekat"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Tetapkan semula minat yang dianggarkan oleh apl"</string>
@@ -88,7 +88,27 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Kotak Pasir Privasi"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Beta privasi iklan Android menyediakan ciri baharu yang boleh digunakan oleh apl untuk memaparkan iklan yang mungkin anda suka kepada anda. Teknologi ini tidak menggunakan pengecam peranti.\n\nApl boleh menganggarkan jenis iklan yang mungkin anda minati dan menyimpan minat ini pada peranti anda buat sementara waktu. Hal ini membolehkan apl memaparkan iklan yang berkaitan kepada anda tanpa menjejaki aktiviti anda merentas laman web dan apl daripada pembangun lain."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Anda tidak mempunyai apl yang disekat"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Anda tidak mempunyai minat yang disekat"</string>
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Batal"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Matikan Kotak Pasir Privasi?"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Jika anda berubah fikiran atau ingin mengetahui lebih lanjut tentang beta privasi iklan Android, pergi ke tetapan privasi anda"</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Matikan"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Sekat <xliff:g id="TOPIC">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"Minat ini akan disekat dan tidak akan ditambahkan pada senarai anda semula melainkan anda menambahkan minat itu semula. Anda mungkin masih akan melihat sesetengah iklan yang berkaitan."</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Sekat"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"<xliff:g id="TOPIC">%1$s</xliff:g> dinyahsekat"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android mungkin menambahkan minat ini pada senarai anda semula tetapi minat ini mungkin tidak akan muncul dengan serta-merta"</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Tetapkan semula semua minat anda?"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Tetapkan semula"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Sekat <xliff:g id="APP">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Apl ini tidak akan menganggarkan minat untuk Kotak Pasir Privasi dan tidak akan ditambahkan pada senarai anda semula melainkan anda menyahsekat apl tersebut.\n\nMinat yang telah dianggarkan oleh apl ini akan dipadamkan tetapi anda mungkin masih akan melihat sesetengah iklan yang berkaitan."</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> dinyahsekat"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Apl ini boleh menganggarkan minat untuk anda semula tetapi minat tersebut mungkin tidak akan muncul pada senarai anda dengan serta-merta. Sedikit masa mungkin diperlukan untuk anda melihat iklan yang berkaitan."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Tetapkan semula minat yang dijana oleh apl?"</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"Seni &amp; Hiburan"</string>
     <string name="topic10002" msgid="1226367977754287428">"Lakonan &amp; Teater"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime &amp; Manga"</string>

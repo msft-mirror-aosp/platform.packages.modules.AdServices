@@ -47,7 +47,8 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"प्रोग्राम में शामिल होने का तरीका"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"बीटा प्रोग्राम को चालू करने का मतलब है कि आपके डिवाइस में मौजूद ऐप्लिकेशन, विज्ञापन दिखाने के लिए ज़्यादा निजता वाले इन नए तरीकों को आज़मा सकते हैं. निजता सेटिंग में जाकर, बीटा प्रोग्राम को कभी भी बंद किया जा सकता है."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"रहने दें"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"हां, मुझे शामिल होना है"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"चालू करें"</string>
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"ज़्यादा देखें"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"इसमें हिस्सा लेने के लिए धन्यवाद"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"अब आप Android प्राइवसी सैंडबॉक्स के बीटा प्रोग्राम का हिस्सा हैं. आपके डिवाइस के लिए, प्राइवसी सैंडबॉक्स का बीटा प्रोग्राम चालू है.\n\nबीटा प्रोग्राम को कभी भी बंद करने या इसके बारे में ज़्यादा जानने के लिए निजता सेटिंग में जाएं."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"आपने इस प्रोग्राम में शामिल न होने का विकल्प चुना है"</string>
@@ -79,8 +80,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"इस समय दिखाने के लिए कोई भी दिलचस्पी नहीं है."</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"प्राइवसी सैंडबॉक्स"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android के विज्ञापनों से जुड़ी निजता नीति के बीटा प्रोग्राम से आपको नई सुविधाएं मिलती हैं. आपके डिवाइस में मौजूद ऐप्लिकेशन, इन सुविधाओं का इस्तेमाल करके आपकी पसंद के मुताबिक विज्ञापन दिखा सकते हैं. ये टेक्नोलॉजी, डिवाइस के आइडेंटिफ़ायर का इस्तेमाल नहीं करती हैं.\n\nAndroid, इस बात का अनुमान लगा सकता है कि आपको किस तरह के विज्ञापन पसंद आएंगे. साथ ही, यह आपके डिवाइस में कुछ समय के लिए आपकी दिलचस्पियों को सेव कर सकता है. इससे ऐप्लिकेशन को, आपके काम के विज्ञापन दिखाने की अनुमति मिलती है. ऐसा, दूसरे डेवलपर के ऐप्लिकेशन और वेबसाइटों पर आपकी गतिविधियों को ट्रैक किए बिना हो सकता है."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"आपकी कोई भी दिलचस्पी ब्लॉक नहीं की गई"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"ऐप्लिकेशन, आपकी दिलचस्पियों का अनुमान लगा सकते हैं. साथ ही, ये Android में कुछ समय के लिए आपकी दिलचस्पियों को सेव कर सकते हैं. इसके बाद, कोई दूसरा ऐप्लिकेशन, आपकी दिलचस्पी के आधार पर विज्ञापन दिखा सकता है.\n\nअगर कोई ऐप्लिकेशन ब्लॉक किया जाता है, तो वह आपकी दिलचस्पी का अनुमान नहीं लगा पाएगा. दिलचस्पी का अनुमान लगाने वाले ऐप्लिकेशन की सूची में किसी ऐप्लिकेशन को वापस तब तक नहीं जोड़ा जाएगा, जब तक आप उसे अनब्लॉक न कर दें. ऐप्लिकेशन ने आपकी जिन दिलचस्पियों का अनुमान लगया था उन्हें मिटा दिया जाएगा. हालांकि, आपको अब भी इनसे जुड़े कुछ विज्ञापन दिख सकते हैं."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"ऐसे ऐप्लिकेशन जिन्हें आपने ब्लॉक किया है"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"ऐप्लिकेशन की अनुमान लगाई गई दिलचस्पियां रीसेट करें"</string>
@@ -88,7 +88,27 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"प्राइवसी सैंडबॉक्स"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android के विज्ञापनों से जुड़ी निजता नीति के बीटा प्रोग्राम से आपको नई सुविधाएं मिलती हैं. आपके डिवाइस में मौजूद ऐप्लिकेशन, इन सुविधाओं का इस्तेमाल करके आपकी पसंद के मुताबिक विज्ञापन दिखा सकते हैं. ये टेक्नोलॉजी, डिवाइस के आइडेंटिफ़ायर का इस्तेमाल नहीं करती हैं.\n\nऐप्लिकेशन, इस बात का अनुमान लगा सकते हैं कि आपको किस तरह के विज्ञापन पसंद आएंगे. साथ ही, ये आपके डिवाइस में कुछ समय के लिए आपकी दिलचस्पियों को सेव कर सकते हैं. इससे ऐप्लिकेशन को, आपके काम के विज्ञापन दिखाने की अनुमति मिलती है. ऐसा, दूसरे डेवलपर के ऐप्लिकेशन और वेबसाइटों पर आपकी गतिविधियों को ट्रैक किए बिना हो सकता है."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"आपका कोई भी ऐप्लिकेशन ब्लॉक नहीं किया गया है"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"आपकी कोई भी दिलचस्पी ब्लॉक नहीं की गई"</string>
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"रद्द करें"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"क्या आपको प्राइवसी सैंडबॉक्स को बंद करना है?"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"अगर आपको इसमें बदलाव करना है या Android पर विज्ञापनों से जुड़ी निजता नीति के बीटा वर्शन के बारे में ज़्यादा जानना है, तो निजता सेटिंग पर जाएं"</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"बंद करें"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"क्या आपको <xliff:g id="TOPIC">%1$s</xliff:g> को ब्लॉक करना है?"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"आपकी दिलचस्पी के इस विषय को ब्लॉक कर दिया जाएगा. साथ ही, इसे तब तक आपकी सूची में वापस नहीं जोड़ा जाएगा, जब तक इसे फिर से नहीं जोड़ा जाता. आपको अब भी अपनी दिलचस्पी से मिलते-जुलते विज्ञापन दिख सकते हैं."</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"ब्लॉक करें"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"<xliff:g id="TOPIC">%1$s</xliff:g> को अनब्लॉक कर दिया गया है"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android, आपकी दिलचस्पी से जुड़े इस विषय को सूची में फिर से जोड़ सकता है. हालांकि, ऐसा हो सकता है कि यह सूची में तुरंत न दिखे"</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"ठीक है"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"क्या आपको अपनी दिलचस्पी के सभी विषय रीसेट करने हैं?"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"रीसेट करें"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"क्या आपको <xliff:g id="APP">%1$s</xliff:g> को ब्लॉक करना है?"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"यह ऐप्लिकेशन प्राइवसी सैंडबॉक्स के लिए, आपकी दिलचस्पियों का अनुमान नहीं लगाएगा और जब तक इसे अनब्लॉक नहीं किया जाता, तब तक इसे आपकी सूची में वापस नहीं जोड़ा जाएगा.\n\nऐप्लिकेशन ने आपकी जिन दिलचस्पियों का अनुमान लगाया था उन्हें मिटा दिया जाएगा. हालांकि, आपको अब भी इनसे जुड़े कुछ विज्ञापन दिख सकते हैं."</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> को अनब्लॉक कर दिया गया है"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"यह ऐप्लिकेशन फिर से आपकी दिलचस्पियों का अनुमान लगा सकता है. हालांकि, ऐसा हो सकता है कि ये आपकी सूची में तुरंत न दिखें. इससे जुड़े विज्ञापन दिखने में कुछ समय लग सकता है."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"क्या आपको ऐप्लिकेशन की अनुमान लगाई गई दिलचस्पियां रीसेट करनी हैं?"</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"कला और मनोरंजन"</string>
     <string name="topic10002" msgid="1226367977754287428">"अभिनय और थिएटर"</string>
     <string name="topic10003" msgid="6949890838957814881">"ऐनमे और मंगा"</string>

@@ -47,7 +47,8 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Necə iştirak etmək olar"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Beta versiyasını aktiv etmək tətbiqlərə sizə reklam göstərmək üçün bu yeni, daha məxfi üsulları sınamağa imkan verir. İstənilən vaxt məxfilik ayarlarınızda beta versiyasını deaktiv edə bilərsiniz."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Xeyr"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"Bəli, qoşulacağam"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Aktiv edin"</string>
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"Ardı"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"İştirak etdiyiniz üçün təşəkkür edirik"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Android\'in reklam məxfiliyi beta versiyasına qoşulmusunuz. Məxfilik Sendboksu cihazınız üçün aktiv edilib.\n\nİstənilən vaxt məxfilik ayarlarınızda daha çox öyrənə və ya beta versiyasını deaktiv edə bilərsiniz."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"İştirak etməməyi seçmisiniz"</string>
@@ -79,8 +80,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Hazırda göstəriləcək maraq yoxdur"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Məxfilik Sendboksu"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android\'in reklam məxfiliyi beta versiyası bəyəndiyiniz reklamları göstərmək üçün tətbiqlərin istifadə edə biləcəyi yeni funksiyalar təqdim edir. Bu texnologiyalar cihaz identifikatorlarından istifadə etmir.\n\nAndroid sizi maraqlandıra biləcək reklam növlərini təxmin edə və maraqlarınızı müvəqqəti olaraq cihazınızda saxlaya bilər. Bu, tətbiqlərə vebsaytlar və digər tərtibatçıların tətbiqlərində fəaliyyətinizi izləmədən sizə müvafiq reklamlar göstərməyə imkan verir."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Bloklanmış maraqlarınız yoxdur"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Tətbiqlər maraqlarınızı təxmin edilə və onları Android\'də müvəqqəti saxlaya bilər. Daha sonra fərqli tətbiq sizə bu maraqlara əsaslanan reklam göstərə bilər.\n\nTətbiqi bloklasanız, başqa maraqları təxmin etməyəcək. Onu blokdan çıxarmasanız, yenidən bu tətbiq siyahısına əlavə edilməyəcək. Tətbiq tərəfindən artıq təxmin edilən maraqlar silinəcək, lakin siz hələ də bəzi əlaqəli reklamları görə bilərsiniz."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Blok etdiyiniz tətbiqlər"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Tətbiqlər tərəfindən təxmin edilən maraqları sıfırlayın"</string>
@@ -88,7 +88,27 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Məxfilik Sendboksu"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android\'in reklam məxfiliyi beta versiyası bəyəndiyiniz reklamları göstərmək üçün tətbiqlərin istifadə edə biləcəyi yeni funksiyalar təqdim edir. Bu texnologiyalar cihaz identifikatorlarından istifadə etmir.\n\nTətbiqlər sizi maraqlandıra biləcək reklam növlərini təxmin edə və maraqlarınızı müvəqqəti olaraq cihazınızda saxlaya bilər. Bu, tətbiqlərə vebsaytlar və digər tərtibatçıların tətbiqlərində fəaliyyətinizi izləmədən sizə müvafiq reklamlar göstərməyə imkan verir."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Bloklanmış tətbiqləriniz yoxdur"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Bloklanmış maraqlarınız yoxdur"</string>
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Ləğv edin"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Məxfilik Sendboksu deaktiv edilsin?"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Fikrinizi dəyişsəniz və ya Android\'in reklam məxfiliyi beta versiyası haqqında ətraflı öyrənmək istəyirsinizsə, məxfilik ayarlarınıza keçin"</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Deaktiv edin"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"<xliff:g id="TOPIC">%1$s</xliff:g> blok edilsin?"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"Bu maraq bloklanacaq və onu geri əlavə etməyincə yenidən siyahınıza əlavə edilməyəcək. Hələ də bəzi əlaqəli reklamları görə bilərsiniz."</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Blok edin"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"<xliff:g id="TOPIC">%1$s</xliff:g> blokdan çıxarılıb"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android bu marağı yenidən siyahınıza əlavə edə bilər, lakin o, dərhal görünməyə bilər"</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Bütün maraqlarınız sıfırlansın?"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Sıfırlayın"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g> blok edilsin?"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Bu tətbiq Məxfilik Sendboksu üçün maraqları təxmin etməyəcək və onu blokdan çıxarmayınca yenidən siyahınıza əlavə edilməyəcək.\n\nBu tətbiq tərəfindən artıq təxmin edilən maraqlar silinəcək, lakin siz hələ də bəzi əlaqəli reklamları görə bilərsiniz."</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> blokdan çıxarılıb"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Bu tətbiq maraqlarınızı yenidən qiymətləndirə bilər, lakin o, dərhal siyahınızda görünməyə bilər. Əlaqədar reklamları görmək bir qədər çəkə bilər."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Tətbiqlər tərəfindən yaradılan maraqlar sıfırlansın?"</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"İncəsənət &amp; Əyləncə"</string>
     <string name="topic10002" msgid="1226367977754287428">"Aktyorluq &amp; Teatr"</string>
     <string name="topic10003" msgid="6949890838957814881">"Animasiya &amp; Manqa"</string>
