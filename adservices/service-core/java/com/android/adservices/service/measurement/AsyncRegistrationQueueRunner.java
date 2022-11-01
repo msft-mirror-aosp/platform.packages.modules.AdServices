@@ -191,13 +191,13 @@ public class AsyncRegistrationQueueRunner {
                                 insertSourcesFromTransaction(source, dao);
                             }
                             Uri osDestination =
-                                    asyncRegistration.getType()
-                                                    == AsyncRegistration.RegistrationType.WEB_SOURCE
+                                    asyncRegistration.getRedirectType()
+                                                    != AsyncRegistration.RedirectType.ANY
                                             ? asyncRegistration.getOsDestination()
                                             : source.getAppDestination();
                             Uri webDestination =
-                                    asyncRegistration.getType()
-                                                    == AsyncRegistration.RegistrationType.WEB_SOURCE
+                                    asyncRegistration.getRedirectType()
+                                                    != AsyncRegistration.RedirectType.ANY
                                             ? asyncRegistration.getWebDestination()
                                             : source.getWebDestination();
                             if (asyncRegistration.shouldProcessRedirects()) {
