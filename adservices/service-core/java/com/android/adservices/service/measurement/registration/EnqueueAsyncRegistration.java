@@ -41,6 +41,7 @@ import java.util.UUID;
 
 /** Class containing static functions for enqueueing AsyncRegistrations */
 public class EnqueueAsyncRegistration {
+    private static final String ANDROID_APP_SCHEME = "android-app";
 
     /**
      * Inserts an App Source or Trigger Registration request into the Async Registration Queue
@@ -73,7 +74,7 @@ public class EnqueueAsyncRegistration {
                             /* mOsDestination */ null,
                             registrant,
                             /* verifiedDestination */ null,
-                            registrationRequest.getTopOriginUri(),
+                            registrant,
                             registrationRequest.getRegistrationType()
                                             == RegistrationRequest.REGISTER_SOURCE
                                     ? AsyncRegistration.RegistrationType.APP_SOURCE
@@ -85,7 +86,7 @@ public class EnqueueAsyncRegistration {
                             requestTime,
                             /* mRetryCount */ 0,
                             System.currentTimeMillis(),
-                            /* mRedirect */ true,
+                            AsyncRegistration.RedirectType.ANY,
                             registrationRequest.isAdIdPermissionGranted(),
                             dao);
                 });
@@ -130,7 +131,7 @@ public class EnqueueAsyncRegistration {
                                 requestTime,
                                 /* mRetryCount */ 0,
                                 System.currentTimeMillis(),
-                                /* mRedirect */ false,
+                                AsyncRegistration.RedirectType.NONE,
                                 webSourceParams.isDebugKeyAllowed(),
                                 dao);
                     }
@@ -176,7 +177,7 @@ public class EnqueueAsyncRegistration {
                                 requestTime,
                                 /* mRetryCount */ 0,
                                 System.currentTimeMillis(),
-                                /* mRedirect */ false,
+                                AsyncRegistration.RedirectType.NONE,
                                 webTriggerParams.isDebugKeyAllowed(),
                                 dao);
                     }
@@ -197,7 +198,7 @@ public class EnqueueAsyncRegistration {
             long mRequestTime,
             long mRetryCount,
             long mLastProcessingTime,
-            boolean redirect,
+            @AsyncRegistration.RedirectType int redirectType,
             boolean debugKeyAllowed,
             @NonNull IMeasurementDao dao)
             throws DatastoreException {
@@ -216,7 +217,7 @@ public class EnqueueAsyncRegistration {
                         .setRequestTime(mRequestTime)
                         .setRetryCount(mRetryCount)
                         .setLastProcessingTime(mLastProcessingTime)
-                        .setRedirect(redirect)
+                        .setRedirectType(redirectType)
                         .setDebugKeyAllowed(debugKeyAllowed)
                         .build();
 

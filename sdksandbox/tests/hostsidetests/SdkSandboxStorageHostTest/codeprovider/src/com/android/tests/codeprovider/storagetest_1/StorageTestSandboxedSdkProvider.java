@@ -16,135 +16,22 @@
 
 package com.android.tests.codeprovider.storagetest_1;
 
-import static com.google.common.truth.Truth.assertThat;
 
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.Context;
-import android.content.SharedPreferences;
-import android.os.Binder;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.View;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class StorageTestSandboxedSdkProvider extends SandboxedSdkProvider {
-    private static final String TAG = "SdkSandboxStorageTestProvider";
-    private static final String BUNDLE_KEY_PHASE_NAME = "phase-name";
-
     @Override
     public SandboxedSdk onLoadSdk(Bundle params) {
-        return new SandboxedSdk(new Binder());
+        return new SandboxedSdk(new StorageTestSdk1ApiImpl(getContext()));
     }
 
     @Override
     public View getView(Context windowContext, Bundle params, int width, int height) {
-        try {
-            handlePhase(params);
-        } catch (Throwable e) {
-            Log.e(TAG, e.getMessage(), e);
-            throw new RuntimeException();
-        }
         return null;
-    }
-
-    private void handlePhase(Bundle params) throws Exception {
-        String phaseName = params.getString(BUNDLE_KEY_PHASE_NAME, "");
-        Log.i(TAG, "Handling phase: " + phaseName);
-        switch (phaseName) {
-            case "testSdkDataPackageDirectory_SharedStorageIsUsable":
-                testSdkDataPackageDirectory_SharedStorageIsUsable();
-                break;
-            case "testSdkDataSubDirectory_PerSdkStorageIsUsable":
-                testSdkDataSubDirectory_PerSdkStorageIsUsable();
-                break;
-            case "testSdkDataIsAttributedToApp":
-                testSdkDataIsAttributedToApp();
-                break;
-            case "testSharedPreferences_BulkSyncReceived":
-                testSharedPreferences_BulkSyncReceived();
-                break;
-            case "testSharedPreferences_UpdateReceived":
-                testSharedPreferences_UpdateReceived();
-                break;
-            case "testSharedPreferences_UpdateNotReceived":
-                testSharedPreferences_UpdateNotReceived();
-                break;
-            default:
-        }
-    }
-
-    private void testSdkDataPackageDirectory_SharedStorageIsUsable() throws Exception {
-        String sharedPath = getSharedStoragePath();
-        // Read the file
-        String input = Files.readAllLines(Paths.get(sharedPath, "readme.txt")).get(0);
-
-        // Create a dir
-        Files.createDirectory(Paths.get(sharedPath, "dir"));
-        // Write to a file
-        Path filepath = Paths.get(sharedPath, "dir", "file");
-        Files.createFile(filepath);
-        Files.write(filepath, input.getBytes());
-    }
-
-    private void testSdkDataSubDirectory_PerSdkStorageIsUsable() throws Exception {
-        String sdkDataPath = getContext().getDataDir().toString();
-        // Read the file
-        String input = Files.readAllLines(Paths.get(sdkDataPath, "readme.txt")).get(0);
-
-        // Create a dir
-        Files.createDirectory(Paths.get(sdkDataPath, "dir"));
-        // Write to a file
-        Path filepath = Paths.get(sdkDataPath, "dir", "file");
-        Files.createFile(filepath);
-        Files.write(filepath, input.getBytes());
-    }
-
-    private void testSdkDataIsAttributedToApp() throws Exception {
-        final byte[] buffer = new byte[1000000];
-        String sharedPath = getSharedStoragePath();
-        String sharedCachePath = getSharedStorageCachePath();
-
-        Files.createDirectory(Paths.get(sharedPath, "attribution"));
-        Path filepath = Paths.get(sharedPath, "attribution", "file");
-        Files.createFile(filepath);
-        Files.write(filepath, buffer);
-
-        Files.createDirectory(Paths.get(sharedCachePath, "attribution"));
-        Path cacheFilepath = Paths.get(sharedCachePath, "attribution", "file");
-        Files.createFile(cacheFilepath);
-        Files.write(cacheFilepath, buffer);
-    }
-
-    private void testSharedPreferences_BulkSyncReceived() throws Exception {
-        SharedPreferences pref = getClientSharedPreferences();
-        assertThat(pref.getString("hello", "")).isEqualTo("world");
-    }
-
-    private void testSharedPreferences_UpdateReceived() throws Exception {
-        SharedPreferences pref = getClientSharedPreferences();
-        assertThat(pref.getString("hello", "")).isEqualTo("update");
-    }
-
-    private void testSharedPreferences_UpdateNotReceived() throws Exception {
-        SharedPreferences pref = getClientSharedPreferences();
-        assertThat(pref.getString("hello", "")).isNotEqualTo("update");
-    }
-
-    // TODO(b/237410689): Replace with real getClientSharedPreferences
-    private SharedPreferences getClientSharedPreferences() throws Exception {
-        return PreferenceManager.getDefaultSharedPreferences(getContext().getApplicationContext());
-    }
-
-    private String getSharedStoragePath() {
-        return getContext().getApplicationContext().getDataDir().toString();
-    }
-
-    private String getSharedStorageCachePath() {
-        return getContext().getApplicationContext().getCacheDir().toString();
     }
 }

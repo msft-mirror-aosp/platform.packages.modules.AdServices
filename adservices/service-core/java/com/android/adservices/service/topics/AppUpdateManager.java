@@ -34,6 +34,7 @@ import com.android.internal.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -117,10 +118,17 @@ public class AppUpdateManager {
      * @param apps a {@link List} of applications to wipe data for
      */
     public void deleteAppDataFromTableByApps(@NonNull List<String> apps) {
-        for (Pair<String, String> tableColumnNamePair : TABLE_INFO_TO_ERASE_APP_DATA) {
-            mTopicsDao.deleteAppFromTable(
-                    tableColumnNamePair.first, tableColumnNamePair.second, apps);
+        List<Pair<String, String>> tableToEraseData =
+                Arrays.stream(TABLE_INFO_TO_ERASE_APP_DATA).collect(Collectors.toList());
+        if (supportsTopicContributorFeature()) {
+            tableToEraseData.add(
+                    Pair.create(
+                            TopicsTables.TopicContributorsContract.TABLE,
+                            TopicsTables.TopicContributorsContract.APP));
         }
+
+        mTopicsDao.deleteFromTableByColumn(
+                /* tableNamesAndColumnNamePairs */ tableToEraseData, /* valuesToDelete */ apps);
 
         LogUtil.v("Have deleted data for application " + apps);
     }
@@ -312,6 +320,16 @@ public class AppUpdateManager {
 
         // Regular top topics start from index 0
         return topTopics.get(mRandom.nextInt(numberOfTopTopics));
+    }
+
+    /**
+     * Check whether TopContributors Feature is enabled. It's enabled only when TopicCOntributors
+     * table is supported and the feature flag is on.
+     */
+    @VisibleForTesting
+    boolean supportsTopicContributorFeature() {
+        return mFlags.getEnableTopicContributorsCheck()
+                && mTopicsDao.supportsTopContributorsTable();
     }
 
     // An app will be regarded as an unhandled uninstalled app if it has an entry in any epoch of

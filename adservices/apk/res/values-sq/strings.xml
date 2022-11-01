@@ -47,8 +47,8 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Si të marrësh pjesë"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Aktivizimi i versionit beta i lejon aplikacionet të testojnë këto mënyra të reja më private për të të shfaqur reklama. Mund ta çaktivizosh versionin beta në çdo kohë te cilësimet e privatësisë."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Jo, faleminderit"</string>
-    <!-- no translation found for notificationUI_right_control_button_text_eu (8484787286437052150) -->
-    <skip />
+    <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Aktivizo"</string>
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"Më shumë"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Faleminderit për pjesëmarrjen"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Je pjesë e versionit beta të Android për privatësinë e reklamave. Privacy Sandbox është aktivizuar për pajisjen tënde.\n\nMund të mësosh më shumë ose mund ta çaktivizosh versionin beta në çdo kohë te cilësimet e privatësisë."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Ke zgjedhur të mos marrësh pjesë"</string>
@@ -80,8 +80,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Nuk ka interesa për të shfaqur për momentin"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Versioni beta i Android për privatësinë e reklamave ofron veçori të reja që aplikacionet mund t\'i përdorin për të të shfaqur reklama që mund të të pëlqejnë. Këto teknologji nuk përdorin identifikuesit e pajisjes.\n\nAndroid mund të përllogarisë llojet e reklamave që mund të të interesojnë dhe t\'i ruajë këta interesa përkohësisht në pajisjen tënde. Kjo i lejon aplikacionet që të të shfaqin reklama të përshtatshme, pa e monitoruar aktivitetin tënd nëpër sajtet e uebit dhe aplikacionet nga zhvilluesit e tjerë."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Nuk ke asnjë interes të bllokuar"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Aplikacionet mund t\'i përllogarisin interesat e tu dhe t\'i ruajnë ata përkohësisht me Android. Më vonë, një aplikacion tjetër mund të të shfaqë një reklamë bazuar në këta interesa.\n\nNëse e bllokon një aplikacion, ai nuk do të përllogarisë më interesa. Ai nuk do të shtohet më në këtë listë aplikacionesh, përveçse nëse e zhbllokon ti. Interesat e përllogaritur tashmë nga aplikacioni do të fshihen, por mund të shikosh përsëri disa reklama në lidhje me to."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Aplikacionet që ke bllokuar"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Rivendos interesat e përllogaritur nga aplikacionet"</string>
@@ -89,7 +88,27 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Versioni beta i Android për privatësinë e reklamave ofron veçori të reja që aplikacionet mund t\'i përdorin për të të shfaqur reklama që mund të të pëlqejnë. Këto teknologji nuk përdorin identifikuesit e pajisjes.\n\nAplikacionet mund të përllogarisin llojet e reklamave që mund të të interesojnë dhe t\'i ruajnë këta interesa përkohësisht në pajisjen tënde. Kjo i lejon aplikacionet që të të shfaqin reklama të përshtatshme, pa e monitoruar aktivitetin tënd nëpër sajtet e uebit dhe aplikacionet nga zhvilluesit e tjerë."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Nuk ke asnjë aplikacion të bllokuar"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Nuk ke asnjë interes të bllokuar"</string>
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Anulo"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Të çaktivizohet Privacy Sandbox?"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Nëse ndryshon mendje ose dëshiron të mësosh më shumë rreth versionit beta të Android për privatësinë e reklamave, shko te cilësimet e tua të privatësisë"</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Çaktivizo"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Të bllokohet <xliff:g id="TOPIC">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"Ky interes do të bllokohet dhe nuk do të shtohet përsëri në listën tënde nëse ti nuk e shton përsëri. Mund të shohësh ende disa reklama të ngjashme."</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Blloko"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"<xliff:g id="TOPIC">%1$s</xliff:g> është e zhbllokuar"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android mund ta shtojë këtë interes përsëri te lista jote por mund të mos shfaqet menjëherë"</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"Në rregull"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Të rivendosen të gjitha interesat e tua?"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Rivendos"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Të bllokohet <xliff:g id="APP">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Ky aplikacion nuk do të përllogarisë interesat për Privacy Sandbox dhe nuk do të shtohet përsëri në listën tënde nëse nuk e zhbllokon.\n\nInteresat e përllogaritura tashmë nga ky aplikacion do të fshihen por ti mund të shikosh ende disa reklama në lidhje me të."</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> është i zhbllokuar"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Ky aplikacion mund të përllogarisë përsëri interesat për ty, por mund të mos shfaqet menjëherë në listën tënde. Mund të duhet pak kohë përpara se të shikosh reklama të ngjashme."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Të rivendosen interesat e gjeneruara nga aplikacionet?"</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"Arte dhe argëtim"</string>
     <string name="topic10002" msgid="1226367977754287428">"Aktrim dhe teatër"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime dhe manga"</string>

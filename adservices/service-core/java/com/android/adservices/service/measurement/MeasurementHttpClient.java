@@ -64,6 +64,9 @@ public class MeasurementHttpClient {
         urlConnection.setConnectTimeout(flags.getMeasurementNetworkConnectTimeoutMs());
         urlConnection.setReadTimeout(flags.getMeasurementNetworkReadTimeoutMs());
 
+        // Overriding default headers to avoid leaking information
+        urlConnection.setRequestProperty("User-Agent", "");
+
         return urlConnection;
     }
 

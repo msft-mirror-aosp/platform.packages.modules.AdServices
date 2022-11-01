@@ -47,8 +47,8 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Come partecipare"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Se attivi il programma beta consenti alle app di testare queste nuove modalità più private di mostrarti gli annunci. Puoi disattivare il programma beta in qualsiasi momento dalle impostazioni di privacy."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"No, grazie"</string>
-    <!-- no translation found for notificationUI_right_control_button_text_eu (8484787286437052150) -->
-    <skip />
+    <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Attiva"</string>
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"Altro"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Grazie per aver scelto di partecipare"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Fai parte del programma beta di Android sulla privacy per gli annunci. Privacy Sandbox è attivato per il tuo dispositivo.\n\nSe vuoi saperne di più o vuoi disattivare il programma beta, vai alle impostazioni della privacy in qualsiasi momento."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Hai deciso di non partecipare"</string>
@@ -80,8 +80,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Al momento non ci sono interessi da mostrare"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Il programma beta di Android sulla privacy per gli annunci offre nuove funzionalità che le app possono utilizzare per mostrarti annunci che potrebbero piacerti. Queste tecnologie non usano identificatori dei dispositivi.\n\nAndroid può stimare i tipi di annunci che potrebbero interessarti e salvare temporaneamente questi interessi sul dispositivo. Ciò consente alle app di mostrarti annunci pertinenti, senza tracciare l\'attività su siti web e app di altri sviluppatori."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Non ci sono interessi bloccati"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Le app possono stimare i tuoi interessi e salvarli temporaneamente sul dispositivo Android. Successivamente, un\'altra app può mostrarti un annuncio basato su questi interessi.\n\nSe blocchi un\'app, questa non stimerà più i tuoi interessi. Non verrà più aggiunta a questo elenco di app a meno che non la sblocchi. Gli interessi già stimati dall\'app verranno eliminati, ma potresti comunque vedere alcuni annunci correlati."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"App che hai bloccato"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Reimposta gli interessi stimati dalle app"</string>
@@ -89,7 +88,27 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Il programma beta di Android sulla privacy per gli annunci offre nuove funzionalità che le app possono utilizzare per mostrarti annunci che potrebbero piacerti. Queste tecnologie non usano identificatori dei dispositivi.\n\nLe app possono stimare i tipi di annunci che potrebbero interessarti e salvare temporaneamente questi interessi sul dispositivo. Ciò consente alle app di mostrarti annunci pertinenti, senza tracciare l\'attività su siti web e app di altri sviluppatori."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Non ci sono app bloccate"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Non ci sono interessi bloccati"</string>
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Annulla"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Vuoi disattivare Privacy Sandbox?"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Se cambi idea o se vuoi scoprire di più sul programma Privacy annunci di Android (beta), vai alle impostazioni della privacy"</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Disattiva"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Vuoi bloccare <xliff:g id="TOPIC">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"Questo interesse verrà bloccato non verrà aggiunto nuovamente all\'elenco finché non lo aggiungerai di nuovo. Potresti comunque vedere alcuni annunci correlati."</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Blocca"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"L\'argomento <xliff:g id="TOPIC">%1$s</xliff:g> è sbloccato"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android potrebbe aggiungere di nuovo al tuo elenco questo interesse, che potrebbe non essere visualizzato subito"</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Vuoi reimpostare tutti i tuoi interessi?"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Reimposta"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Vuoi bloccare <xliff:g id="APP">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Questa app non stimerà gli interessi per Privacy Sandbox e non verrà aggiunta nuovamente all\'elenco finché non la sblocchi.\n\nGli interessi già stimati dall\'app verranno eliminati, ma potresti comunque vedere alcuni annunci correlati."</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"L\'app <xliff:g id="APP">%1$s</xliff:g> è sbloccata"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Questa app può stimare di nuovo gli interessi per te, ma gli interessi potrebbero non essere visualizzati subito nell\'elenco. Potrebbe occorrere un po\' di tempo affinché tu possa vedere gli annunci correlati."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Vuoi reimpostare gli interessi generati dalle app?"</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"Arte e spettacoli"</string>
     <string name="topic10002" msgid="1226367977754287428">"Recitazione e teatro"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime e manga"</string>

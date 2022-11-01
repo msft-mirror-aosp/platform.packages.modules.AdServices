@@ -47,8 +47,8 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Svona tekurðu þátt"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Ef kveikt er á betaútgáfunni geta forrit prófað þessar nýju, lokaðri leiðir til að birta þér auglýsingar. Þú getur slökkt á betaútgáfunni hvenær sem er í persónuverndarstillingunum."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Nei, takk"</string>
-    <!-- no translation found for notificationUI_right_control_button_text_eu (8484787286437052150) -->
-    <skip />
+    <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Kveikja"</string>
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"Meira"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Takk fyrir að taka þátt"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Þú tekur þátt í betaútgáfu persónuverndar Android-auglýsinga. Kveikt er á Privacy Sandbox fyrir tækið þitt.\n\nÞú getur kynnt þér betaútgáfuna nánar eða slökkt á henni hvenær sem er í persónuverndarstillingunum þínum."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Þú valdir að taka ekki þátt"</string>
@@ -80,8 +80,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Engin áhugasvið til að sýna sem stendur"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Betaútgáfa persónuverndar Android-auglýsinga býður upp á nýja eiginleika sem forrit geta notað til að birta þér auglýsingar sem gætu höfðað til þín. Þessi tækni notar ekki auðkenni tækja.\n\nAndroid getur áætlað hvernig auglýsingar gætu höfðað til þín og vistað áhugasviðin tímabundið í tækinu þínu. Þetta gerir forritum kleift að birta þér viðeigandi auglýsingar án þess að rekja virkni þína á vefsvæðum eða í forritum annarra þróunaraðila."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Þú hefur ekki sett nein áhugasvið á bannlista"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Forrit geta áætlað áhugasviðin þín og vistað þau tímabundið með Android. Síðar gæti annað forrit birt þér auglýsingu í samræmi við þessi áhugasvið.\n\nEf þú lokar á forrit getur það ekki áætlað áhugasviðin þín lengur. Því verður ekki bætt við forritalistann aftur nema þú takir það af bannlista. Áhugasviðunum sem forrit hefur nú þegar áætlað verður eytt en þú gætir áfram fengið einhverjar tengdar auglýsingar."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Forrit sem þú hefur lokað á"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Endurstilla áhugasvið sem forrit hafa áætlað"</string>
@@ -89,7 +88,27 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Betaútgáfa persónuverndar Android-auglýsinga býður upp á nýja eiginleika sem forrit geta notað til að birta þér auglýsingar sem gætu höfðað til þín. Þessi tækni notar ekki auðkenni tækja.\n\nForrit geta áætlað hvernig auglýsingar gætu höfðað til þín og vistað áhugasviðin tímabundið í tækinu þínu. Þetta gerir forritum kleift að birta þér viðeigandi auglýsingar án þess að rekja virkni þína á vefsvæðum eða í forritum annarra þróunaraðila."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Þú hefur ekki sett nein forrit á bannlista"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Þú hefur ekki sett nein áhugasvið á bannlista"</string>
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Hætta við"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Slökkva á Privacy Sandbox?"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Ef þú skiptir um skoðun eða vilt kynna þér betaútgáfu persónuverndar Android-auglýsinga nánar skaltu fara í persónuverndarstillingarnar þínar"</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Slökkva"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Viltu setja <xliff:g id="TOPIC">%1$s</xliff:g> á bannlista?"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"Þetta áhugasvið verður sett á bannlista og verður ekki bætt við listann þinn aftur nema þú bætir því aftur við. Þú gætir áfram séð tengdar auglýsingar."</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Setja á bannlista"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"<xliff:g id="TOPIC">%1$s</xliff:g> er ekki lengur á bannlista"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android gæti bætt þessu áhugasviði aftur við listann en það birtist hugsanlega ekki strax"</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"Í lagi"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Endurstilla öll áhugasvið?"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Endurstilla"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Viltu setja <xliff:g id="APP">%1$s</xliff:g> á bannlista?"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Þetta forrit mun ekki áætla áhugasviðin þín fyrir Privacy Sandbox og verður ekki bætt við listann þinn aftur nema þú takir það af bannlista.\n\nÁhugasviðum sem þetta forrit hefur áætlað verður eytt en þú gætir áfram séð tengdar auglýsingar."</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> er ekki lengur á bannlista"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Þetta forrit getur áætlað áhugasviðin þín aftur en þau birtast hugsanlega ekki á listanum strax. Nokkur tími getur liðið þar til þú sérð tengdar auglýsingar."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Endurstilla áhugasvið sem forrit hafa áætlað?"</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"Listir og afþreying"</string>
     <string name="topic10002" msgid="1226367977754287428">"Leiklist og leikhús"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime og manga"</string>

@@ -19,7 +19,6 @@ package com.android.adservices.service.measurement;
 import android.net.Uri;
 
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
-import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
@@ -52,6 +51,7 @@ public final class TriggerFixture {
                 .setAggregateTriggerData(ValidTriggerParams.AGGREGATE_TRIGGER_DATA)
                 .setAggregateValues(ValidTriggerParams.AGGREGATE_VALUES)
                 .setFilters(ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING)
+                .setNotFilters(ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING)
                 .build();
     }
 
@@ -66,6 +66,9 @@ public final class TriggerFixture {
                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                         + "}\n";
+
+        public static final String TOP_LEVEL_NOT_FILTERS_JSON_STRING =
+                "{\"geo\": [], \"source_type\": [\"event\"]}";
 
         public static final String EVENT_TRIGGERS =
                 "[\n"
@@ -104,8 +107,8 @@ public final class TriggerFixture {
         public static final UnsignedLong DEBUG_KEY = new UnsignedLong(27836L);
 
         public static final AggregatableAttributionTrigger buildAggregatableAttributionTrigger() {
-            final AggregateFilterData filter =
-                    new AggregateFilterData.Builder()
+            final FilterData filter =
+                    new FilterData.Builder()
                             .setAttributionFilterMap(
                                     Map.of(
                                             "product",

@@ -52,6 +52,7 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"הפעלת תוכנית הבטא מאפשרת לאפליקציות לבדוק איך להציג לך מודעות בדרכים חדשות ופרטיות יותר. אפשר להשבית את תוכנית הבטא בכל שלב בהגדרות הפרטיות."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"לא תודה"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"הפעלה"</string>
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"עוד"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"תודה על השתתפותך"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"‏הצטרפת לתוכנית הבטא של פרטיות במודעות ב-Android. ארגז החול לפרטיות מופעל במכשיר.\n\nאפשר לקרוא מידע נוסף או להשבית את תוכנית הבטא בכל שלב בהגדרות הפרטיות."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"בחרת שלא להשתתף"</string>
@@ -83,8 +84,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"אין כרגע תחומי עניין להצגה"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"ארגז חול לפרטיות"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"‏תוכנית הבטא של פרטיות במודעות ב-Android מספקת תכונות חדשות שמאפשרות לאפליקציות להציג לך מודעות שעשויות להיות רלוונטיות עבורך. בטכנולוגיות האלה לא נעשה שימוש במזהי המכשיר.\n\nמערכת Android יכולה להעריך אילו סוגי מודעות עשויים לעניין אותך, ולשמור את תחומי העניין האלה באופן זמני על המכשיר. באופן הזה, האפליקציות יכולות להציג לך מודעות רלוונטיות בלי לעקוב אחרי הפעילות שלך באתרים ובאפליקציות של מפתחים אחרים."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"לא חסמת אף תחום עניין"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"‏האפליקציות יכולות להעריך את תחומי העניין שלך ולשמור אותם באופן זמני באמצעות Android. בהמשך, אפליקציות אחרות יוכלו להציג לך מודעות על סמך תחומי העניין האלה.\n\nאם בחרת לחסום אפליקציה מסוימת, היא לא תוכל להעריך את תחומי העניין שלך יותר. האפליקציה הזו לא תתווסף שוב לרשימת האפליקציות אלא אם החסימה תבוטל. כל תחומי העניין שהאפליקציה כבר העריכה יימחקו, אך יכול להיות שעדיין יוצגו לך כמה מודעות קשורות."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"אפליקציות שחסמת"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"איפוס הנתונים שהוערכו על ידי האפליקציות"</string>
@@ -92,7 +92,25 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"ארגז חול לפרטיות"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"‏תוכנית הבטא של פרטיות במודעות ב-Android מספקת תכונות חדשות שמאפשרות לאפליקציות להציג לך מודעות שעשויות להיות רלוונטיות עבורך. בטכנולוגיות האלה לא נעשה שימוש במזהי המכשיר.\n\nהאפליקציות יכולות להעריך אילו סוגי מודעות עשויים לעניין אותך, ולשמור את תחומי העניין האלה באופן זמני על המכשיר. באופן הזה, האפליקציות יכולות להציג לך מודעות רלוונטיות בלי לעקוב אחרי הפעילות שלך באתרים ובאפליקציות של מפתחים אחרים."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"לא חסמת אף אפליקציה"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"לא חסמת אף תחום עניין"</string>
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"ביטול"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"להשבית את ארגז החול לפרטיות?"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"‏אם שינית את דעתך או שברצונך לקבל מידע נוסף על תוכנית הבטא של \'פרטיות בפרסום\' ב-Android, אפשר להיכנס אל הגדרות הפרטיות"</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"השבתה"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"לחסום את <xliff:g id="TOPIC">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"תחום העניין הזה ייחסם ולא יתווסף שוב לרשימה שלך, אלא אם הוספת אותו בחזרה. ייתכן שעדיין יוצגו כמה מודעות קשורות."</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"חסימה"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"בוטלה החסימה של <xliff:g id="TOPIC">%1$s</xliff:g>"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"‏ייתכן ש-Android יוסיף שוב את תחום העניין הזה לרשימה שלך, אך יכול להיות שהוא לא יופיע מיד"</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"אישור"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"לאפס את כל תחומי העניין?"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"הרשימה תימחק ותחומי עניין חדשים יוערכו בהמשך. ייתכן שעדיין יוצגו כמה מודעות שקשורות לתחומי עניין שנמחקו."</string>
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"איפוס"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"לחסום את <xliff:g id="APP">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"האפליקציה הזו לא תעריך את תחומי העניין לארגז החול לפרטיות ולא תתווסף שוב לרשימה שלך, אלא אם ביטלת את החסימה שלה.\n\nכל תחומי העניין שהאפליקציה כבר העריכה יימחקו, אך יכול להיות שעדיין יוצגו לך כמה מודעות קשורות."</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"בוטלה החסימה של <xliff:g id="APP">%1$s</xliff:g>"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"האפליקציה הזו יכולה להעריך את תחומי העניין בשבילך שוב, אך יכול להיות שהם לא יופיעו ברשימה שלך מיד. הצגת כל המודעות הקשורות עשויה לקחת הרבה זמן."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"לאפס את תחומי העניין שנוצרו על ידי האפליקציות?"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"תחומי עניין שהוערכו על ידי האפליקציות ברשימה שלך יימחקו מארגז החול לפרטיות, והאפליקציות יעריכו תחומי עניין חדשים בהמשך. ייתכן שעדיין יוצגו כמה מודעות קשורות."</string>
     <string name="topic10001" msgid="1636806320891333775">"אומנות ובידור"</string>
     <string name="topic10002" msgid="1226367977754287428">"משחק ותיאטרון"</string>
     <string name="topic10003" msgid="6949890838957814881">"אנימה ומנגה"</string>

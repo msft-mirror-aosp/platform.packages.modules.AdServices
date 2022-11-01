@@ -47,8 +47,8 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Kā piedalīties"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Ieslēdzot beta versiju, lietotnēm tiek atļauts testēt šos jaunos reklāmu rādīšanas veidus, kas nodrošina lielāku konfidencialitāti. Savos konfidencialitātes iestatījumos varat jebkurā laikā izslēgt beta versiju."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Nē, paldies"</string>
-    <!-- no translation found for notificationUI_right_control_button_text_eu (8484787286437052150) -->
-    <skip />
+    <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Ieslēgt"</string>
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"Vairāk"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Pateicamies par dalību!"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Jūs piedalāties Android reklāmu konfidencialitātes beta programmā. Jūsu ierīcē ir ieslēgta konfidencialitātes smilškaste.\n\nKonfidencialitātes iestatījumos jebkurā laikā varat uzzināt vairāk vai izslēgt beta versiju."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Izvēlējāties nepiedalīties"</string>
@@ -80,8 +80,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Pašlaik nav parādāmu interešu"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Konfidencialitātes smilškaste"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android reklāmu konfidencialitātes beta programma ietver jaunas funkcijas, ko lietotnes var izmantot, lai rādītu reklāmas, kas jums varētu interesēt. Šīs tehnoloģijas neizmanto ierīču identifikatorus.\n\nOperētājsistēma Android var aptuveni noteikt, kādas reklāmas jūs varētu interesēt, un šīs intereses var īslaicīgi saglabāt jūsu ierīcē. Tādējādi lietotnes var rādīt jums atbilstošas reklāmas, neizsekojot jūsu darbības tīmekļa vietnēs un citu izstrādātāju lietotnēs."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Jums nav bloķētu interešu"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Lietotnēs var tikt aptuveni noteiktas jūsu intereses, un tās īslaicīgi var tikt saglabātas Android ierīcē. Vēlāk cita lietotne var jums rādīt uz šīm interesēm balstītu reklāmu.\n\nJa kādu lietotni bloķēsiet, tā vairs nevarēs noteikt jūsu intereses. Tā netiks pievienota šim lietotņu sarakstam, līdz to neatbloķēsiet. Intereses, kas lietotnē jau tika noteiktas, tiks dzēstas, taču jums joprojām var tikt rādītas dažas atbilstošas reklāmas."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Bloķētās lietotnes"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Atiestatīt lietotnēs noteiktās intereses"</string>
@@ -89,7 +88,27 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Konfidencialitātes smilškaste"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android reklāmu konfidencialitātes beta programma ietver jaunas funkcijas, ko lietotnes var izmantot, lai rādītu reklāmas, kas jums varētu interesēt. Šīs tehnoloģijas neizmanto ierīču identifikatorus.\n\nLietotnes var aptuveni noteikt, kādas reklāmas jūs varētu interesēt, un šīs intereses var īslaicīgi saglabāt jūsu ierīcē. Tādējādi lietotnes var rādīt jums atbilstošas reklāmas, neizsekojot jūsu darbības tīmekļa vietnēs un citu izstrādātāju lietotnēs."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Nav bloķēta neviena lietotne"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Jums nav bloķētu interešu"</string>
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Atcelt"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Vai izslēgt konfidencialitātes smilškasti?"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Ja pārdomājat vai vēlaties uzzināt vairāk par Android reklāmu konfidencialitātes beta programmu, dodieties uz konfidencialitātes iestatījumiem."</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Izslēgt"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Vai bloķēt tēmu “<xliff:g id="TOPIC">%1$s</xliff:g>”?"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"Šī interešu kategorija tiks bloķēta un netiks atkal pievienota jūsu sarakstam, ja vien pats to nedarīsiet. Iespējams, tik un tā redzēsiet dažas saistītas reklāmas."</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Bloķēt"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"Tēma “<xliff:g id="TOPIC">%1$s</xliff:g>” ir atbloķēta"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android var atkal pievienot šo interešu kategoriju sarakstam, taču, iespējams, tā netiks rādīta uzreiz."</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"Labi"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Vai atiestatīt visas intereses?"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Atiestatīt"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Vai bloķēt lietotni <xliff:g id="APP">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Šī lietotne nenoteiks intereses konfidencialitātes smilškastei un netiks atkal pievienota jūsu sarakstam, kamēr to neatbloķēsiet.\n\nŠīs lietotnes līdz šim noteiktās intereses tiks dzēstas, taču, iespējams, tik un tā redzēsiet dažas saistītas reklāmas."</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Lietotne <xliff:g id="APP">%1$s</xliff:g> ir atbloķēta"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Šī lietotne atkal var noteikt intereses, taču, iespējams, tā netiks uzreiz rādīta sarakstā. Var paiet kāds laiks, līdz tiks rādītas saistītas reklāmas."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Vai atiestatīt intereses, ko veidojušas lietotnes?"</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"Māksla un izklaide"</string>
     <string name="topic10002" msgid="1226367977754287428">"Aktiermāksla un teātris"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime un manga"</string>

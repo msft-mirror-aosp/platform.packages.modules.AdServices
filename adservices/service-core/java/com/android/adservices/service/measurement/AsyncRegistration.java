@@ -16,12 +16,18 @@
 
 package com.android.adservices.service.measurement;
 
+import static com.android.adservices.service.measurement.SystemHealthParams.MAX_REDIRECTS_PER_REGISTRATION;
+
+import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.net.Uri;
 
 import androidx.annotation.Nullable;
 
 import com.android.adservices.service.measurement.util.Validation;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 /** POJO for AsyncRegistration. */
 public class AsyncRegistration {
@@ -40,7 +46,8 @@ public class AsyncRegistration {
     private final Uri mRegistrationUri;
     private final Uri mVerifiedDestination;
     private final Uri mTopOrigin;
-    private final boolean mRedirect;
+    @RedirectType private int mRedirectType;
+    private final int mRedirectCount;
     private final Uri mRegistrant;
     private final Source.SourceType mSourceType;
     private long mRequestTime;
@@ -48,6 +55,18 @@ public class AsyncRegistration {
     private long mLastProcessingTime;
     private final RegistrationType mType;
     private final boolean mDebugKeyAllowed;
+
+    @IntDef(value = {
+            RedirectType.NONE,
+            RedirectType.ANY,
+            RedirectType.DAISY_CHAIN,
+    })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface RedirectType {
+        int NONE = 0;
+        int ANY = 1;
+        int DAISY_CHAIN = 2;
+    }
 
     public AsyncRegistration(@NonNull AsyncRegistration.Builder builder) {
         mId = builder.mId;
@@ -57,7 +76,8 @@ public class AsyncRegistration {
         mRegistrationUri = builder.mRegistrationUri;
         mVerifiedDestination = builder.mVerifiedDestination;
         mTopOrigin = builder.mTopOrigin;
-        mRedirect = builder.mRedirect;
+        mRedirectType = builder.mRedirectType;
+        mRedirectCount = builder.mRedirectCount;
         mRegistrant = builder.mRegistrant;
         mSourceType = builder.mSourceType;
         mRequestTime = builder.mRequestTime;
@@ -114,9 +134,17 @@ public class AsyncRegistration {
         return mEnrollmentId;
     }
 
-    /** Determines whether redirects of a {@link Source} or {@link Trigger} will be serviced. */
-    public boolean getRedirect() {
-        return mRedirect;
+    /** Determines the type of redirects of a {@link Source} or {@link Trigger}, as well as the
+     * states, None and Completed. */
+    @RedirectType
+    public int getRedirectType() {
+        return mRedirectType;
+    }
+
+    /** Determines the count of remaining redirects to observe when fetching a {@link Source} or
+     * {@link Trigger}, provided the {@link RedirectType} is not None or Compeleted */
+    public int getRedirectCount() {
+        return mRedirectCount;
     }
 
     /** Determines whether the input event was a click or view. */
@@ -154,6 +182,27 @@ public class AsyncRegistration {
         ++mRetryCount;
     }
 
+    /** Indicates whether the registration runner should process redirects for this registration. */
+    public boolean shouldProcessRedirects() {
+        if (mRedirectType == RedirectType.NONE) {
+            return false;
+        }
+        return mRedirectType == RedirectType.ANY || mRedirectCount < MAX_REDIRECTS_PER_REGISTRATION;
+    }
+
+    /** Gets the next expected redirect count for this registration. */
+    public int getNextRedirectCount() {
+        if (mRedirectType == AsyncRegistration.RedirectType.NONE) {
+            return 0;
+        // Redirect type is being set for the first time for this registration-sequence.
+        } else if (mRedirectType == AsyncRegistration.RedirectType.ANY) {
+            return 1;
+        // This registration-sequence already has an assigned redirect type.
+        } else {
+            return mRedirectCount + 1;
+        }
+    }
+
     /** Builder for {@link AsyncRegistration}. */
     public static class Builder {
         private String mId;
@@ -163,7 +212,8 @@ public class AsyncRegistration {
         private Uri mRegistrationUri;
         private Uri mVerifiedDestination;
         private Uri mTopOrigin;
-        private boolean mRedirect = true;
+        private @RedirectType int mRedirectType = RedirectType.ANY;
+        private int mRedirectCount = 0;
         private Uri mRegistrant;
         private Source.SourceType mSourceType;
         private long mRequestTime;
@@ -219,16 +269,22 @@ public class AsyncRegistration {
 
         /** See {@link AsyncRegistration#getTopOrigin()}. */
         @NonNull
-        public Builder setTopOrigin(@NonNull Uri topOrigin) {
-            Validation.validateNonNull(topOrigin);
+        public Builder setTopOrigin(@Nullable Uri topOrigin) {
             mTopOrigin = topOrigin;
             return this;
         }
 
-        /** See {@link AsyncRegistration#getRedirect()}. */
+        /** See {@link AsyncRegistration#getRedirectType()}. */
         @NonNull
-        public Builder setRedirect(boolean redirect) {
-            mRedirect = redirect;
+        public Builder setRedirectType(@RedirectType int redirectType) {
+            mRedirectType = redirectType;
+            return this;
+        }
+
+        /** See {@link AsyncRegistration#getRedirectCount()}. */
+        @NonNull
+        public Builder setRedirectCount(int redirectCount) {
+            mRedirectCount = redirectCount;
             return this;
         }
 

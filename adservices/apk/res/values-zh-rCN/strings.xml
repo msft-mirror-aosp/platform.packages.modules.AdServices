@@ -47,8 +47,8 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"参与方式"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"开启 Beta 版会允许应用测试这些更注重保护隐私的新方式以向您展示广告。您随时可在隐私设置中关闭 Beta 版。"</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"不用了"</string>
-    <!-- no translation found for notificationUI_right_control_button_text_eu (8484787286437052150) -->
-    <skip />
+    <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"开启"</string>
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"更多"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"感谢您的加入"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"您已加入 Android 广告隐私权 Beta 版测试计划。我们已为您的设备开启 Privacy Sandbox。\n\n您随时可在隐私设置中了解详情或关闭 Beta 版。"</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"您已选择不加入"</string>
@@ -80,8 +80,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"目前没有可显示的感兴趣主题"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android 广告隐私权 Beta 版提供了新功能，以便应用向您展示您可能会喜欢的广告。这些技术不使用标识符。\n\nAndroid 可推测您可能会对哪些类型的广告感兴趣，并将这些兴趣暂时存储在您的设备上。这样一来，应用不必追踪您在其他开发者的网站和应用上的活动便能向您展示与您相关的广告。"</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"您未屏蔽任何兴趣"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"应用可推测您的兴趣并将这些兴趣暂时存储在 Android 上。之后，另一个应用可基于这些兴趣向您展示广告。\n\n如果您屏蔽了某个应用，它便不会再推测您的兴趣。除非您取消屏蔽该应用，否则它不会再添加到这个应用列表中。该应用已推测出的兴趣将被删除，但您可能仍会看到一些与您相关的广告。"</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"您屏蔽的应用"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"重置应用推测出的兴趣"</string>
@@ -89,7 +88,27 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android 广告隐私权 Beta 版提供了新功能，以便应用向您展示您可能会喜欢的广告。这些技术不使用标识符。\n\n应用可推测您可能会对哪些类型的广告感兴趣，并将这些兴趣暂时存储在您的设备上。这样一来，应用不必追踪您在其他开发者的网站和应用上的活动便能向您展示与您相关的广告。"</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"您未屏蔽任何应用"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"您未屏蔽任何兴趣"</string>
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"取消"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"要关闭 Privacy Sandbox 吗？"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"如果您改变了主意，或者想要详细了解 Android 广告隐私权 Beta 版，请前往您的隐私设置"</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"关闭"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"要屏蔽<xliff:g id="TOPIC">%1$s</xliff:g>吗？"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"此感兴趣主题将被屏蔽，并且不会再次添加到您的列表中，除非您重新添加此主题。您可能仍会看到一些相关广告。"</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"屏蔽"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"已取消屏蔽<xliff:g id="TOPIC">%1$s</xliff:g>"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android 可能还会将此感兴趣主题再次添加到您的列表中，但该主题可能不会立即显示"</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"确定"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"要重置所有感兴趣主题吗？"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"重置"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"要屏蔽“<xliff:g id="APP">%1$s</xliff:g>”吗？"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"启用 Privacy Sandbox 后，此应用将不会预测您的感兴趣主题，也不会将这些主题再次添加到您的列表中，除非您取消屏蔽该应用。\n\n此应用已预测的感兴趣主题将被删除，但您仍可能会看到一些相关广告。"</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"已取消屏蔽<xliff:g id="APP">%1$s</xliff:g>"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"此应用可能会再次推测您感兴趣的主题，但这些主题可能不会立即在您的列表中显示。您可能需要过段时间才能看到相关广告。"</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"要重置应用生成的感兴趣主题吗？"</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"艺术与娱乐"</string>
     <string name="topic10002" msgid="1226367977754287428">"演出与剧场"</string>
     <string name="topic10003" msgid="6949890838957814881">"动漫与日本漫画"</string>

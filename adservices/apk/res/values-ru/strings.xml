@@ -47,8 +47,8 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Как принять участие"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Если вы примете участие в бета-тестировании, приложения смогут опробовать новые варианты показа рекламы с более высоким уровнем конфиденциальности. Отказаться от участия можно в любой момент в настройках конфиденциальности."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Нет"</string>
-    <!-- no translation found for notificationUI_right_control_button_text_eu (8484787286437052150) -->
-    <skip />
+    <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Включить"</string>
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"Ещё"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Благодарим за участие в тестировании"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Вы участвуете в бета-тестировании функции конфиденциального просмотра рекламы в Android. На вашем устройстве включены технологии Privacy Sandbox.\n\nЧтобы ознакомиться с информацией о бета-тестировании или отказаться от участия в нем, перейдите в настройки конфиденциальности."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Вы отказались от участия в программе"</string>
@@ -80,8 +80,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Пока интересов нет."</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"В бета-версии функции конфиденциального просмотра рекламы в Android приложениям предоставлены новые возможности для демонстрации объявлений. При этом не требуется применять идентификаторы устройств.\n\nAndroid сможет определять, реклама на какие темы может вас заинтересовать, и временно хранить эти сведения на вашем устройстве. Так приложения будут показывать релевантные объявления без отслеживания ваших действий на сайтах и в продуктах других разработчиков."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Нет заблокированных интересов"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Приложения могут собирать информацию о ваших интересах и временно хранить ее в Android. Другое приложение может воспользоваться этими данными и показать вам подходящую рекламу.\n\nЕсли вы не хотите, чтобы приложение анализировало ваши интересы, заблокируйте его. Оно не появится в списке, пока вы не снимете блокировку. Собранная информация об интересах будет удалена, но объявления, подобранные на ее основе, иногда могут появляться."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Заблокированные приложения"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Сбросить интересы по данным приложений"</string>
@@ -89,7 +88,25 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"В бета-версии функции конфиденциального просмотра рекламы в Android приложениям предоставлены новые возможности для демонстрации объявлений. При этом не требуется применять идентификаторы устройств.\n\nПриложения смогут определять, реклама на какие темы может вас заинтересовать, и временно хранить эти сведения на вашем устройстве. Так приложения будут показывать релевантные объявления без отслеживания ваших действий на сайтах и в продуктах других разработчиков."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Нет заблокированных приложений"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Нет заблокированных интересов"</string>
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Отмена"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Отключить технологии Privacy Sandbox?"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Если вы захотите включить их снова или узнать больше о бета-тестировании программы \"Конфиденциальность при просмотре рекламы в Android\", перейдите в настройки конфиденциальности."</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Отключить"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Заблокировать тему \"<xliff:g id="TOPIC">%1$s</xliff:g>\"?"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"Эта тема будет заблокирована и не появится в списке, пока вы не добавите ее снова. Иногда вы ещё сможете видеть связанную с ней рекламу."</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Заблокировать"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"Тема \"<xliff:g id="TOPIC">%1$s</xliff:g>\" разблокирована"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android сможет снова добавить эту тему в список. Вероятно, она появится не сразу."</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"ОК"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Сбросить все интересы?"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"Из списка будут удалены все интересы, а со временем в нем появятся новые. Иногда вы всё ещё будете видеть связанную со старыми интересами рекламу."</string>
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Сбросить"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Заблокировать приложение \"<xliff:g id="APP">%1$s</xliff:g>\"?"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Это приложение не будет определять ваши интересы для технологий Privacy Sandbox и появляться в вашем списке, пока вы не разблокируете его.\n\nОпределенные ранее интересы будут удалены, но вы ещё сможете видеть рекламу, подобранную на их основе."</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Приложение \"<xliff:g id="APP">%1$s</xliff:g>\" разблокировано"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Это приложение снова сможет определять ваши интересы. Вероятно, вы увидите их в списке не сразу. Реклама, подобранная на их основе, начнет появляться через некоторое время."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Сбросить интересы, сгенерированные приложениями?"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"Выявленные ранее интересы будут удалены из Privacy Sandbox, а приложения начнут определять их заново. Иногда вы всё ещё будете видеть связанную со старыми интересами рекламу."</string>
     <string name="topic10001" msgid="1636806320891333775">"Искусство и развлечения"</string>
     <string name="topic10002" msgid="1226367977754287428">"Актерское искусство и театр"</string>
     <string name="topic10003" msgid="6949890838957814881">"Аниме и манга"</string>

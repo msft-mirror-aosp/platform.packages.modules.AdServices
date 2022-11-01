@@ -15,48 +15,28 @@
  */
 package android.adservices.topics;
 
+
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 
 import androidx.test.filters.SmallTest;
 
 import org.junit.Test;
 
-/** Unit tests for {@link android.adservices.topics.GetTopicsRequest} */
+/**
+ * Unit tests for {@link android.adservices.topics.GetTopicsRequest}
+ */
 @SmallTest
 public final class GetTopicsRequestTest {
     private static final String SOME_SDK_NAME = "SomeSDKName";
 
     @Test
-    public void testCreate() {
-        GetTopicsRequest request = GetTopicsRequest.create();
-        assertNull(request.getAdsSdkName());
-    }
-
-    @Test
-    public void testCreateWithAdsSdkName_nullSdkName() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> {
-                    GetTopicsRequest.createWithAdsSdkName(/* adsSdkName */ null);
-                });
-    }
-
-    @Test
-    public void testCreateWithAdsSdkName_nonNullSdkName() {
-        GetTopicsRequest request =
-                GetTopicsRequest.createWithAdsSdkName(/* adsSdkName */ SOME_SDK_NAME);
-        assertThat(request.getAdsSdkName()).isEqualTo(SOME_SDK_NAME);
-    }
-
-    @Test
-    public void testBuilder() {
+    public void testBuilder_notSettingSdkName() {
         GetTopicsRequest request = new GetTopicsRequest.Builder().build();
-        assertNull(request.getAdsSdkName());
+        assertThat(request.getAdsSdkName()).isEmpty();
         // RecordObservation default value is true
-        assertThat(request.isRecordObservation()).isTrue();
+        assertThat(request.shouldRecordObservation()).isTrue();
     }
 
     @Test
@@ -76,7 +56,7 @@ public final class GetTopicsRequestTest {
                         .build();
         assertThat(request.getAdsSdkName()).isEqualTo(SOME_SDK_NAME);
         // RecordObservation default value is true
-        assertThat(request.isRecordObservation()).isTrue();
+        assertThat(request.shouldRecordObservation()).isTrue();
     }
 
     @Test
@@ -84,17 +64,17 @@ public final class GetTopicsRequestTest {
         GetTopicsRequest request =
                 new GetTopicsRequest.Builder()
                         .setAdsSdkName(/* adsSdkName */ SOME_SDK_NAME)
-                        .setRecordObservation(false)
+                        .setShouldRecordObservation(false)
                         .build();
         assertThat(request.getAdsSdkName()).isEqualTo(SOME_SDK_NAME);
-        assertThat(request.isRecordObservation()).isFalse();
+        assertThat(request.shouldRecordObservation()).isFalse();
     }
 
     @Test
     public void testBuilder_recordObservationFalse() {
         GetTopicsRequest request =
-                new GetTopicsRequest.Builder().setRecordObservation(false).build();
-        assertNull(request.getAdsSdkName());
-        assertThat(request.isRecordObservation()).isFalse();
+                new GetTopicsRequest.Builder().setShouldRecordObservation(false).build();
+        assertThat(request.getAdsSdkName()).isEmpty();
+        assertThat(request.shouldRecordObservation()).isFalse();
     }
 }

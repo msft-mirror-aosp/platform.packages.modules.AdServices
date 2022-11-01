@@ -55,7 +55,7 @@ public class TopicsService extends Service {
         super.onCreate();
 
         if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
-            LogUtil.e("Topics API is disabled");
+            LogUtil.e("onCreate(): Topics API is disabled");
             return;
         }
 
@@ -93,13 +93,13 @@ public class TopicsService extends Service {
     }
 
     private boolean hasUserConsent() {
-        return ConsentManager.getInstance(this).getConsent(this.getPackageManager()).isGiven();
+        return ConsentManager.getInstance(this).getConsent().isGiven();
     }
 
     @Override
     public IBinder onBind(Intent intent) {
         if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
-            LogUtil.e("Topics API is disabled");
+            LogUtil.e("onBind(): Topics API is disabled, return nullBinding.");
             // Return null so that clients can not bind to the service.
             return null;
         }

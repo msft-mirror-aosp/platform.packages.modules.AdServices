@@ -16,22 +16,70 @@
 
 package com.android.adservices.data;
 
+import static com.android.adservices.data.DbHelper.CURRENT_DATABASE_VERSION;
+import static com.android.adservices.data.DbHelper.DATABASE_VERSION_V3;
 import static com.android.adservices.data.DbTestUtil.doesIndexExist;
 import static com.android.adservices.data.DbTestUtil.doesTableExistAndColumnCountMatch;
+import static com.android.adservices.data.DbTestUtil.getDatabaseNameForTest;
 
+import static com.google.common.truth.Truth.assertThat;
+
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import org.junit.Assert;
-import org.junit.Test;
+import com.android.adservices.data.topics.migration.TopicDbMigratorV3;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
+import org.mockito.MockitoSession;
+import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.quality.Strictness;
+
+import java.util.List;
+
+@RunWith(MockitoJUnitRunner.class)
 public class DbHelperTest {
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
+
+    private MockitoSession mStaticMockSession;
+
+    @Mock private Flags mMockFlags;
+
+    @Before
+    public void setup() {
+        MockitoAnnotations.initMocks(this);
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(FlagsFactory.class)
+                        .strictness(Strictness.WARN)
+                        .startMocking();
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+    }
+
+    @After
+    public void teardown() {
+        mStaticMockSession.finishMocking();
+    }
 
     @Test
     public void testOnCreate() {
@@ -45,11 +93,11 @@ public class DbHelperTest {
         assertTrue(doesTableExistAndColumnCountMatch(db, "topics_usage_history", 3));
         assertTrue(doesTableExistAndColumnCountMatch(db, "topics_app_usage_history", 3));
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_source", 22));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_trigger", 12));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_async_registration_contract", 15));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_event_report", 14));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_attribution", 8));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_aggregate_report", 11));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_trigger", 13));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_async_registration_contract", 16));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_event_report", 17));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_attribution", 10));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_aggregate_report", 14));
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_aggregate_encryption_key", 4));
         assertTrue(doesTableExistAndColumnCountMatch(db, "enrollment_data", 8));
         assertTrue(doesIndexExist(db, "idx_msmt_source_ad_ei_et"));
@@ -76,5 +124,57 @@ public class DbHelperTest {
 
         // Verify database does not exist anymore
         Assert.assertEquals(-1, dbHelper.getDbFileSize());
+    }
+
+    @Test
+    public void onOpen_appliesForeignKeyConstraint() {
+        // dbHelper.onOpen gets called implicitly
+        SQLiteDatabase db = DbTestUtil.getDbHelperForTest().safeGetReadableDatabase();
+        try (Cursor cursor = db.rawQuery("PRAGMA foreign_keys", null)) {
+            cursor.moveToNext();
+            assertEquals(1, cursor.getLong(0));
+        }
+    }
+
+    @Test
+    public void testOnUpgrade_topicsV3Migration() {
+        DbHelper dbHelper = spy(DbTestUtil.getDbHelperForTest());
+        SQLiteDatabase db = mock(SQLiteDatabase.class);
+
+        // Do not actually perform queries but verify the invocation.
+        TopicDbMigratorV3 topicDbMigratorV3 = Mockito.spy(new TopicDbMigratorV3());
+        Mockito.doNothing().when(topicDbMigratorV3).performMigration(db);
+
+        // Ignore Measurement Migrators
+        doReturn(List.of()).when(dbHelper).getOrderedDbMigrators();
+        doReturn(List.of(topicDbMigratorV3)).when(dbHelper).topicsGetOrderedDbMigrators();
+
+        // Negative case - target version 3 is not in (oldVersion, newVersion]
+        dbHelper.onUpgrade(db, /* oldVersion */ 1, /* new Version */ 2);
+        Mockito.verify(topicDbMigratorV3, Mockito.never()).performMigration(db);
+
+        // Positive case - target version 3 is in (oldVersion, newVersion]
+        dbHelper.onUpgrade(db, /* oldVersion */ 1, /* new Version */ 3);
+        Mockito.verify(topicDbMigratorV3).performMigration(db);
+    }
+
+    @Test
+    public void testSupportsTopContributorsTable() {
+        DbHelper dbHelperV2 = new DbHelper(sContext, getDatabaseNameForTest(), /* dbVersion*/ 2);
+        assertThat(dbHelperV2.supportsTopContributorsTable()).isFalse();
+
+        DbHelper dbHelperV3 = new DbHelper(sContext, getDatabaseNameForTest(), /* dbVersion*/ 3);
+        assertThat(dbHelperV3.supportsTopContributorsTable()).isTrue();
+    }
+
+    @Test
+    public void testGetDatabaseVersionToCreate() {
+        // Test feature flag is off
+        when(mMockFlags.getEnableDatabaseSchemaVersion3()).thenReturn(false);
+        assertThat(DbHelper.getDatabaseVersionToCreate()).isEqualTo(CURRENT_DATABASE_VERSION);
+
+        // Test feature flag is on
+        when(mMockFlags.getEnableDatabaseSchemaVersion3()).thenReturn(true);
+        assertThat(DbHelper.getDatabaseVersionToCreate()).isEqualTo(DATABASE_VERSION_V3);
     }
 }

@@ -47,8 +47,8 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Deelnamevereisten"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Als je de bèta aanzet, kunnen apps deze nieuwe, meer privacyvriendelijke manieren testen om jou advertenties te laten zien. Je kunt de bèta altijd uitzetten in de privacyinstellingen."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Nee"</string>
-    <!-- no translation found for notificationUI_right_control_button_text_eu (8484787286437052150) -->
-    <skip />
+    <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Aanzetten"</string>
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"Meer"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Bedankt voor je deelname"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Je doet mee aan de Android-bèta voor advertentieprivacy. De Privacy Sandbox staat aan voor je apparaat.\n\nIn de privacyinstellingen vind je meer informatie. Ook kun je de bèta daar op elk gewenst moment uitzetten."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Je hebt ervoor gekozen om niet mee te doen"</string>
@@ -80,8 +80,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Geen interesses om momenteel te tonen"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"De Android-bèta voor advertentieprivacy biedt nieuwe functies waarmee apps je advertenties kunnen laten zien die je misschien interessant vindt. Deze technologieën gebruiken geen apparaat-ID\'s.\n\nAndroid kan inschatten wat voor advertenties interessant voor jou zouden zijn en deze interesses tijdelijk op je apparaat opslaan. Zo kunnen apps relevante advertenties laten zien zonder je activiteit op websites en in apps van andere ontwikkelaars te tracken."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Je hebt geen interesses geblokkeerd"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Apps kunnen een inschatting maken van je interesses en die tijdelijk opslaan via Android. Later kan een andere app je een advertentie laten zien op basis van deze interesses.\n\nAls je een app blokkeert, maakt deze geen inschattingen van interesses meer. De app wordt niet meer aan deze lijst toegevoegd, tenzij je de blokkering opheft. Interesses die al door de app zijn geschat, worden verwijderd, maar je kunt nog wel een aantal gerelateerde advertenties te zien krijgen."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Apps die je hebt geblokkeerd"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Interesses die zijn geschat door apps resetten"</string>
@@ -89,7 +88,27 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"De Android-bèta voor advertentieprivacy biedt nieuwe functies waarmee apps je advertenties kunnen laten zien die je misschien interessant vindt. Deze technologieën gebruiken geen apparaat-ID\'s.\n\nApps kunnen inschatten wat voor advertenties interessant voor jou zouden zijn en deze interesses tijdelijk op je apparaat opslaan. Zo kunnen apps relevante advertenties laten zien zonder je activiteit op websites en in apps van andere ontwikkelaars te tracken."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Je hebt geen apps geblokkeerd"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Je hebt geen interesses geblokkeerd"</string>
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Annuleren"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Privacy Sandbox uitzetten?"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Als je van gedachten verandert of meer informatie over de bèta voor advertentieprivacy van Android wilt, ga je naar je privacyinstellingen"</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Uitzetten"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"<xliff:g id="TOPIC">%1$s</xliff:g> blokkeren?"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"Deze interesse wordt geblokkeerd en wordt niet weer aan je lijst toegevoegd, tenzij je deze zelf weer toevoegt. Je ziet misschien nog wel bepaalde gerelateerde advertenties."</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Blokkeren"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"<xliff:g id="TOPIC">%1$s</xliff:g> wordt niet meer geblokkeerd"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android kan deze interesse weer aan je lijst toevoegen, maar deze wordt misschien niet meteen getoond"</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Al je interesses resetten?"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Resetten"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g> blokkeren?"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Deze app schat geen interesses voor de Privacy Sandbox en wordt niet weer aan je lijst toegevoegd, tenzij je de app niet meer blokkeert.\n\nInteresses die deze app al heeft geschat, worden verwijderd. Je ziet misschien nog wel bepaalde gerelateerde advertenties."</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> wordt niet meer geblokkeerd"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Deze app kan weer interesses voor je schatten, maar wordt misschien niet meteen in je lijst getoond. Het kan even duren voordat je gerelateerde advertenties ziet."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Door apps gegenereerde interesses resetten?"</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"Kunst en entertainment"</string>
     <string name="topic10002" msgid="1226367977754287428">"Acteren en theater"</string>
     <string name="topic10003" msgid="6949890838957814881">"Animatie en manga"</string>

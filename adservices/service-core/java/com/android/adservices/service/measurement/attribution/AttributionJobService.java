@@ -32,6 +32,7 @@ import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.SystemHealthParams;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.reporting.DebugReportingJobService;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.concurrent.Executor;
@@ -67,6 +68,7 @@ public class AttributionJobService extends JobService {
                     jobFinished(params, !success);
                     // jobFinished is asynchronous, so forcing scheduling avoiding concurrency issue
                     scheduleIfNeeded(this, /* forceSchedule */ true);
+                    DebugReportingJobService.scheduleIfNeeded(getApplicationContext(), true);
                 });
         return true;
     }
@@ -80,15 +82,18 @@ public class AttributionJobService extends JobService {
     /** Schedules {@link AttributionJobService} to observer {@link Trigger} content URI change. */
     @VisibleForTesting
     static void schedule(Context context, JobScheduler jobScheduler) {
-        final JobInfo job = new JobInfo.Builder(AdServicesConfig.MEASUREMENT_ATTRIBUTION_JOB_ID,
-                new ComponentName(context, AttributionJobService.class))
-                .addTriggerContentUri(new JobInfo.TriggerContentUri(
-                        TriggerContentProvider.TRIGGER_URI,
-                        JobInfo.TriggerContentUri.FLAG_NOTIFY_FOR_DESCENDANTS
-                ))
-                .setTriggerContentUpdateDelay(
-                        SystemHealthParams.ATTRIBUTION_JOB_TRIGGERING_DELAY_MS)
-                .build();
+        final JobInfo job =
+                new JobInfo.Builder(
+                                AdServicesConfig.MEASUREMENT_ATTRIBUTION_JOB_ID,
+                                new ComponentName(context, AttributionJobService.class))
+                        .addTriggerContentUri(
+                                new JobInfo.TriggerContentUri(
+                                        TriggerContentProvider.TRIGGER_URI,
+                                        JobInfo.TriggerContentUri.FLAG_NOTIFY_FOR_DESCENDANTS))
+                        .setTriggerContentUpdateDelay(
+                                SystemHealthParams.ATTRIBUTION_JOB_TRIGGERING_DELAY_MS)
+                        .setPersisted(false) // Can't call addTriggerContentUri() on a persisted job
+                        .build();
         jobScheduler.schedule(job);
     }
 

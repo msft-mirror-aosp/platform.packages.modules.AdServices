@@ -105,7 +105,10 @@ public class AdIdServiceImplTest {
     public void setup() throws Exception {
         MockitoAnnotations.initMocks(this);
 
-        mAdIdWorker = new AdIdWorker(mContext, mMockFlags);
+        mAdIdWorker =
+                Mockito.spy(AdIdWorker.getInstance(ApplicationProvider.getApplicationContext()));
+        Mockito.doReturn(null).when(mAdIdWorker).getService();
+
         when(mClock.elapsedRealtime()).thenReturn(150L, 200L);
         mCallerMetadata = new CallerMetadata.Builder().setBinderElapsedTimestamp(100L).build();
         mRequest =
@@ -239,7 +242,7 @@ public class AdIdServiceImplTest {
         when(mPackageManager.checkPermission(ACCESS_ADSERVICES_AD_ID, SDK_PACKAGE_NAME))
                 .thenReturn(PackageManager.PERMISSION_DENIED);
         when(Binder.getCallingUidOrThrow()).thenReturn(SANDBOX_UID);
-        invokeGetAdIdAndVerifyError(mMockSdkContext, STATUS_UNAUTHORIZED);
+        invokeGetAdIdAndVerifyError(mMockSdkContext, STATUS_PERMISSION_NOT_REQUESTED);
     }
 
     @Test
