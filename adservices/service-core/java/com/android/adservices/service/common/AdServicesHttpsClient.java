@@ -21,16 +21,19 @@ import android.annotation.Nullable;
 import android.net.Uri;
 
 import com.android.adservices.LogUtil;
+import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteStreams;
+import com.google.common.util.concurrent.ClosingFuture;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -59,6 +62,7 @@ public class AdServicesHttpsClient {
     private static final long DEFAULT_MAX_BYTES = 1048576;
     private static final String CONTENT_SIZE_ERROR = "Content size exceeds limit!";
     private final ListeningExecutorService mExecutorService;
+    private final UriConverter mUriConverter;
 
     /**
      * Create an HTTPS client with the input {@link ExecutorService} and initial connect and read
@@ -79,10 +83,7 @@ public class AdServicesHttpsClient {
             int connectTimeoutMs,
             int readTimeoutMs,
             long maxBytes) {
-        mConnectTimeoutMs = connectTimeoutMs;
-        mReadTimeoutMs = readTimeoutMs;
-        this.mExecutorService = MoreExecutors.listeningDecorator(executorService);
-        this.mMaxBytes = maxBytes;
+        this(executorService, connectTimeoutMs, readTimeoutMs, maxBytes, new UriConverter());
     }
 
     /**
@@ -96,32 +97,27 @@ public class AdServicesHttpsClient {
         this(executorService, DEFAULT_TIMEOUT_MS, DEFAULT_TIMEOUT_MS, DEFAULT_MAX_BYTES);
     }
 
+    @VisibleForTesting
+    AdServicesHttpsClient(
+            ExecutorService executorService,
+            int connectTimeoutMs,
+            int readTimeoutMs,
+            long maxBytes,
+            UriConverter uriConverter) {
+        mConnectTimeoutMs = connectTimeoutMs;
+        mReadTimeoutMs = readTimeoutMs;
+        mExecutorService = MoreExecutors.listeningDecorator(executorService);
+        mMaxBytes = maxBytes;
+        mUriConverter = uriConverter;
+    }
 
     /** Opens the Url Connection */
     @NonNull
     private URLConnection openUrl(@NonNull URL url) throws IOException {
         Objects.requireNonNull(url);
-
         return url.openConnection();
     }
 
-    @NonNull
-    private URL toUrl(@NonNull Uri uri) {
-        Objects.requireNonNull(uri);
-        Preconditions.checkArgument(
-                ValidatorUtil.HTTPS_SCHEME.equalsIgnoreCase(uri.getScheme()),
-                "URI \"%s\" must use HTTPS",
-                uri.toString());
-
-        URL url;
-        try {
-            url = new URL(uri.toString());
-        } catch (MalformedURLException e) {
-            LogUtil.d(e, "Uri is malformed! ");
-            throw new IllegalArgumentException("Uri is malformed!");
-        }
-        return url;
-    }
 
     @NonNull
     private HttpsURLConnection setupConnection(@NonNull URL url) throws IOException {
@@ -145,14 +141,19 @@ public class AdServicesHttpsClient {
     @NonNull
     public ListenableFuture<String> fetchPayload(@NonNull Uri uri) {
         Objects.requireNonNull(uri);
-
-        return mExecutorService.submit(() -> doFetchPayload(uri));
+        return ClosingFuture.from(mExecutorService.submit(() -> mUriConverter.toUrl(uri)))
+                .transformAsync(
+                        (closer, url) ->
+                                ClosingFuture.from(
+                                        mExecutorService.submit(() -> doFetchPayload(url, closer))),
+                        mExecutorService)
+                .finishToFuture();
     }
 
-    private String doFetchPayload(@NonNull Uri uri) throws IOException {
-        URL url = toUrl(uri);
+    private String doFetchPayload(@NonNull URL url, @NonNull ClosingFuture.DeferredCloser closer)
+            throws IOException {
+        LogUtil.v("Downloading payload from: \"%s\"", url.toString());
         HttpsURLConnection urlConnection;
-
         try {
             urlConnection = setupConnection(url);
         } catch (IOException e) {
@@ -160,43 +161,24 @@ public class AdServicesHttpsClient {
             throw new IllegalArgumentException("Failed to open URL!");
         }
 
+        InputStream inputStream = null;
         try {
             // TODO(b/237342352): Both connect and read timeouts are kludged in this method and if
             //  necessary need to be separated
-            InputStream in = new BufferedInputStream(urlConnection.getInputStream());
+            inputStream = new BufferedInputStream(urlConnection.getInputStream());
+            closer.eventuallyClose(new CloseableConnectionWrapper(urlConnection), mExecutorService);
             int responseCode = urlConnection.getResponseCode();
             if (isSuccessfulResponse(responseCode)) {
-                return fromInputStream(in, urlConnection.getContentLengthLong());
+                return fromInputStream(inputStream, urlConnection.getContentLengthLong());
             } else {
-                InputStream errorStream = urlConnection.getErrorStream();
-                if (!Objects.isNull(errorStream)) {
-                    String errorMessage =
-                            fromInputStream(
-                                    urlConnection.getErrorStream(),
-                                    urlConnection.getContentLengthLong());
-                    String exceptionMessage =
-                            String.format(
-                                    Locale.US,
-                                    "Server returned an error with code %d and message:" + " %s",
-                                    responseCode,
-                                    errorMessage);
-
-                    LogUtil.d(exceptionMessage);
-                    throw new IOException(exceptionMessage);
-                } else {
-                    String exceptionMessage =
-                            String.format(
-                                    Locale.US,
-                                    "Server returned an error with code %d and null" + " message",
-                                    responseCode);
-                    LogUtil.d(exceptionMessage);
-                    throw new IOException(exceptionMessage);
-                }
+                throwError(urlConnection, responseCode);
+                return null;
             }
         } catch (SocketTimeoutException e) {
             throw new IOException("Connection timed out while reading response!", e);
         } finally {
             maybeDisconnect(urlConnection);
+            maybeClose(inputStream);
         }
     }
 
@@ -209,12 +191,18 @@ public class AdServicesHttpsClient {
     public ListenableFuture<Void> reportUri(@NonNull Uri uri) {
         Objects.requireNonNull(uri);
 
-        return mExecutorService.submit(() -> doReportUri(uri));
+        return ClosingFuture.from(mExecutorService.submit(() -> mUriConverter.toUrl(uri)))
+                .transformAsync(
+                        (closer, url) ->
+                                ClosingFuture.from(
+                                        mExecutorService.submit(() -> doReportUri(url, closer))),
+                        mExecutorService)
+                .finishToFuture();
     }
 
-    private Void doReportUri(@NonNull Uri uri) throws IOException {
-        LogUtil.v("Reporting to \"%s\"", uri.toString());
-        URL url = toUrl(uri);
+    private Void doReportUri(@NonNull URL url, @NonNull ClosingFuture.DeferredCloser closer)
+            throws IOException {
+        LogUtil.v("Reporting to: \"%s\"", url.toString());
         HttpsURLConnection urlConnection;
 
         try {
@@ -227,41 +215,46 @@ public class AdServicesHttpsClient {
         try {
             // TODO(b/237342352): Both connect and read timeouts are kludged in this method and if
             //  necessary need to be separated
+            closer.eventuallyClose(new CloseableConnectionWrapper(urlConnection), mExecutorService);
             int responseCode = urlConnection.getResponseCode();
             if (isSuccessfulResponse(responseCode)) {
                 LogUtil.d("Successfully reported for URl: " + url);
-                return null;
             } else {
                 LogUtil.w("Failed to report for URL: " + url);
-                InputStream errorStream = urlConnection.getErrorStream();
-                if (!Objects.isNull(errorStream)) {
-                    String errorMessage =
-                            fromInputStream(
-                                    urlConnection.getErrorStream(),
-                                    urlConnection.getContentLengthLong());
-                    String exceptionMessage =
-                            String.format(
-                                    Locale.US,
-                                    "Server returned an error with code %d and message:" + " %s",
-                                    responseCode,
-                                    errorMessage);
-
-                    LogUtil.d(exceptionMessage);
-                    throw new IOException(exceptionMessage);
-                } else {
-                    String exceptionMessage =
-                            String.format(
-                                    Locale.US,
-                                    "Server returned an error with code %d and null" + " message",
-                                    responseCode);
-                    LogUtil.d(exceptionMessage);
-                    throw new IOException(exceptionMessage);
-                }
+                throwError(urlConnection, responseCode);
             }
+            return null;
         } catch (SocketTimeoutException e) {
             throw new IOException("Connection timed out while reading response!", e);
         } finally {
             maybeDisconnect(urlConnection);
+        }
+    }
+
+    private void throwError(final HttpsURLConnection urlConnection, int responseCode)
+            throws IOException {
+        InputStream errorStream = urlConnection.getErrorStream();
+        if (!Objects.isNull(errorStream)) {
+            String errorMessage =
+                    fromInputStream(
+                            urlConnection.getErrorStream(), urlConnection.getContentLengthLong());
+            String exceptionMessage =
+                    String.format(
+                            Locale.US,
+                            "Server returned an error with code %d and message:" + " %s",
+                            responseCode,
+                            errorMessage);
+
+            LogUtil.d(exceptionMessage);
+            throw new IOException(exceptionMessage);
+        } else {
+            String exceptionMessage =
+                    String.format(
+                            Locale.US,
+                            "Server returned an error with code %d and null" + " message",
+                            responseCode);
+            LogUtil.d(exceptionMessage);
+            throw new IOException(exceptionMessage);
         }
     }
 
@@ -278,8 +271,16 @@ public class AdServicesHttpsClient {
         }
     }
 
+    private static void maybeClose(@Nullable InputStream inputStream) throws IOException {
+        if (inputStream == null) {
+            return;
+        } else {
+            inputStream.close();
+        }
+    }
+
     /**
-     * @return the connect timeout, in milliseconds, when opening an initial link to a target
+     * @return the connection timeout, in milliseconds, when opening an initial link to a target
      *     address with this client
      */
     public int getConnectTimeoutMs() {
@@ -347,5 +348,43 @@ public class AdServicesHttpsClient {
         }
         into.close();
         return into.toString(Charsets.UTF_8);
+    }
+
+    private static class CloseableConnectionWrapper implements Closeable {
+        @Nullable final HttpsURLConnection mURLConnection;
+
+        private CloseableConnectionWrapper(HttpsURLConnection urlConnection) {
+            mURLConnection = urlConnection;
+        }
+
+        @Override
+        public void close() throws IOException {
+            LogUtil.d("Closing HTTPS connection and streams");
+            maybeClose(mURLConnection.getInputStream());
+            maybeClose(mURLConnection.getErrorStream());
+            maybeDisconnect(mURLConnection);
+        }
+    }
+
+    /** A light-weight class to convert Uri to URL */
+    public static final class UriConverter {
+
+        @NonNull
+        URL toUrl(@NonNull Uri uri) {
+            Objects.requireNonNull(uri);
+            Preconditions.checkArgument(
+                    ValidatorUtil.HTTPS_SCHEME.equalsIgnoreCase(uri.getScheme()),
+                    "URI \"%s\" must use HTTPS",
+                    uri.toString());
+
+            URL url;
+            try {
+                url = new URL(uri.toString());
+            } catch (MalformedURLException e) {
+                LogUtil.d(e, "Uri is malformed! ");
+                throw new IllegalArgumentException("Uri is malformed!");
+            }
+            return url;
+        }
     }
 }
