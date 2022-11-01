@@ -26,10 +26,10 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZE
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS_PREVIEW_API;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
@@ -103,6 +103,7 @@ public class TopicsServiceImplTest {
     private static final String INVALID_PACKAGE_NAME = "com.do_not_exists";
     private static final String SOME_SDK_NAME = "SomeSdkName";
     private static final int BINDER_CONNECTION_TIMEOUT_MS = 5_000;
+    private static final int RECORD_USAGE_CALLED_LATCH_TIMEOUT_MS = 1_000;
     private static final String SDK_PACKAGE_NAME = "test_package_name";
     private static final String ALLOWED_SDK_ID = "1234567";
     // This is not allowed per the ad_services_config.xml manifest config.
@@ -119,6 +120,7 @@ public class TopicsServiceImplTest {
     private CountDownLatch mGetTopicsCallbackLatch;
     private CallerMetadata mCallerMetadata;
     private TopicsWorker mTopicsWorker;
+    private TopicsWorker mSpyTopicsWorker;
     private BlockedTopicsManager mBlockedTopicsManager;
     private TopicsDao mTopicsDao;
     private GetTopicsParam mRequest;
@@ -135,6 +137,7 @@ public class TopicsServiceImplTest {
     @Mock private Throttler mMockThrottler;
     @Mock private EnrollmentDao mEnrollmentDao;
     @Mock private AppImportanceFilter mMockAppImportanceFilter;
+    @Mock AdServicesLogger mLogger;
 
     @Before
     public void setup() throws Exception {
@@ -145,11 +148,12 @@ public class TopicsServiceImplTest {
 
         DbHelper dbHelper = DbTestUtil.getDbHelperForTest();
         mTopicsDao = new TopicsDao(dbHelper);
-        CacheManager cacheManager = new CacheManager(mMockEpochManager, mTopicsDao, mMockFlags);
+        CacheManager cacheManager =
+                new CacheManager(mMockEpochManager, mTopicsDao, mMockFlags, mLogger);
 
         mBlockedTopicsManager = new BlockedTopicsManager(mTopicsDao);
         AppUpdateManager appUpdateManager =
-                new AppUpdateManager(mTopicsDao, new Random(), mMockFlags);
+                new AppUpdateManager(dbHelper, mTopicsDao, new Random(), mMockFlags);
         mTopicsWorker =
                 new TopicsWorker(
                         mMockEpochManager,
@@ -157,6 +161,16 @@ public class TopicsServiceImplTest {
                         mBlockedTopicsManager,
                         appUpdateManager,
                         mMockFlags);
+        // Used for verifying recordUsage method invocations.
+        mSpyTopicsWorker =
+                Mockito.spy(
+                        new TopicsWorker(
+                                mMockEpochManager,
+                                cacheManager,
+                                mBlockedTopicsManager,
+                                appUpdateManager,
+                                mMockFlags));
+
         when(mClock.elapsedRealtime()).thenReturn(150L, 200L);
         mCallerMetadata = new CallerMetadata.Builder().setBinderElapsedTimestamp(100L).build();
         mRequest =
@@ -167,13 +181,13 @@ public class TopicsServiceImplTest {
                         .build();
 
         DbTestUtil.deleteTable(TopicsTables.BlockedTopicsContract.TABLE);
-        when(mConsentManager.getConsent(any(PackageManager.class)))
-                .thenReturn(AdServicesApiConsent.GIVEN);
+        when(mConsentManager.getConsent()).thenReturn(AdServicesApiConsent.GIVEN);
         when(mMockSdkContext.getPackageManager()).thenReturn(mPackageManager);
         when(mPackageManager.getPackageUid(TEST_APP_PACKAGE_NAME, 0)).thenReturn(Process.myUid());
 
         // Allow all for signature allow list check
         when(mMockFlags.getPpapiAppSignatureAllowList()).thenReturn(AllowLists.ALLOW_ALL);
+        when(mMockFlags.getTopicsEpochJobPeriodMs()).thenReturn(Flags.TOPICS_EPOCH_JOB_PERIOD_MS);
 
         // Initialize enrollment data.
         EnrollmentData fakeEnrollmentData =
@@ -204,8 +218,7 @@ public class TopicsServiceImplTest {
     @Test
     public void checkNoUserConsent() throws InterruptedException {
         when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
-        when(mConsentManager.getConsent(any(PackageManager.class)))
-                .thenReturn(AdServicesApiConsent.REVOKED);
+        when(mConsentManager.getConsent()).thenReturn(AdServicesApiConsent.REVOKED);
         invokeGetTopicsAndVerifyError(mContext, STATUS_USER_CONSENT_REVOKED);
     }
 
@@ -424,7 +437,7 @@ public class TopicsServiceImplTest {
         runGetTopics(createTestTopicsServiceImplInstance());
     }
 
-    //    @Test
+    @Test
     public void getTopicsSdk() throws Exception {
         Mockito.lenient().when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
         PackageManager.Property property =
@@ -452,8 +465,7 @@ public class TopicsServiceImplTest {
         // block topic1
         mBlockedTopicsManager.blockTopic(topics.get(0));
 
-        when(mConsentManager.getConsent(any(PackageManager.class)))
-                .thenReturn(AdServicesApiConsent.GIVEN);
+        when(mConsentManager.getConsent()).thenReturn(AdServicesApiConsent.GIVEN);
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
 
@@ -506,8 +518,7 @@ public class TopicsServiceImplTest {
             mBlockedTopicsManager.blockTopic(topic);
         }
 
-        when(mConsentManager.getConsent(any(PackageManager.class)))
-                .thenReturn(AdServicesApiConsent.GIVEN);
+        when(mConsentManager.getConsent()).thenReturn(AdServicesApiConsent.GIVEN);
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
 
@@ -550,8 +561,7 @@ public class TopicsServiceImplTest {
         final long currentEpochId = 4L;
         final int numberOfLookBackEpochs = 3;
 
-        when(mConsentManager.getConsent(any(PackageManager.class)))
-                .thenReturn(AdServicesApiConsent.GIVEN);
+        when(mConsentManager.getConsent()).thenReturn(AdServicesApiConsent.GIVEN);
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
 
@@ -589,9 +599,9 @@ public class TopicsServiceImplTest {
                 .containsExactlyElementsIn(expectedGetTopicsResult.getTopics());
 
         // Invocations Summary
-        // loadCache() : 1, getTopics(): 1 * 2
-        verify(mMockEpochManager, Mockito.times(3)).getCurrentEpochId();
-        verify(mMockFlags, Mockito.times(3)).getTopicsNumberOfLookBackEpochs();
+        // loadCache() : 1, getTopics(): 1 * 3
+        verify(mMockEpochManager, Mockito.times(4)).getCurrentEpochId();
+        verify(mMockFlags, Mockito.times(4)).getTopicsNumberOfLookBackEpochs();
     }
 
     @Test
@@ -600,8 +610,7 @@ public class TopicsServiceImplTest {
         final long currentEpochId = 4L;
         final int numberOfLookBackEpochs = 3;
 
-        when(mConsentManager.getConsent(any(PackageManager.class)))
-                .thenReturn(AdServicesApiConsent.GIVEN);
+        when(mConsentManager.getConsent()).thenReturn(AdServicesApiConsent.GIVEN);
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
 
@@ -626,16 +635,18 @@ public class TopicsServiceImplTest {
         // Topic impl service use a background executor to run the task,
         // use a countdownLatch and set the countdown in the logging call operation
         final CountDownLatch logOperationCalledLatch = new CountDownLatch(1);
-        Mockito.doAnswer(new Answer<Object>() {
-            @Override
-            public Object answer(InvocationOnMock invocation) throws Throwable {
-                // The method logAPiCallStats is called.
-                invocation.callRealMethod();
-                logOperationCalledLatch.countDown();
-                return null;
-            }
-        }).when(mAdServicesLogger).logApiCallStats(
-                ArgumentMatchers.any(ApiCallStats.class));
+        Mockito.doAnswer(
+                        new Answer<Object>() {
+                            @Override
+                            public Object answer(InvocationOnMock invocation) throws Throwable {
+                                // The method logAPiCallStats is called.
+                                invocation.callRealMethod();
+                                logOperationCalledLatch.countDown();
+                                return null;
+                            }
+                        })
+                .when(mAdServicesLogger)
+                .logApiCallStats(ArgumentMatchers.any(ApiCallStats.class));
 
         // Setting up the timestamp for latency calculation, we passing in a client side call
         // timestamp as a parameter to the call (100 in the below code), in topic service, it
@@ -700,9 +711,9 @@ public class TopicsServiceImplTest {
         assertThat(argument.getValue().getLatencyMillisecond()).isEqualTo(150);
 
         // Invocations Summary
-        // loadCache() : 1, getTopics(): 1 * 2
-        verify(mMockEpochManager, Mockito.times(3)).getCurrentEpochId();
-        verify(mMockFlags, Mockito.times(3)).getTopicsNumberOfLookBackEpochs();
+        // loadCache() : 1, getTopics(): 1 * 3
+        verify(mMockEpochManager, Mockito.times(4)).getCurrentEpochId();
+        verify(mMockFlags, Mockito.times(4)).getTopicsNumberOfLookBackEpochs();
     }
 
     @Test
@@ -711,8 +722,7 @@ public class TopicsServiceImplTest {
         final long currentEpochId = 4L;
         final int numberOfLookBackEpochs = 3;
 
-        when(mConsentManager.getConsent(any(PackageManager.class)))
-                .thenReturn(AdServicesApiConsent.GIVEN);
+        when(mConsentManager.getConsent()).thenReturn(AdServicesApiConsent.GIVEN);
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
 
@@ -754,6 +764,166 @@ public class TopicsServiceImplTest {
                         mGetTopicsCallbackLatch.await(
                                 BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
                 .isTrue();
+    }
+
+    @Test
+    public void testGetTopics_recordObservation() throws InterruptedException {
+        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        // To capture result in inner class, we have to declare final.
+        final GetTopicsResult[] capturedResponseParcel = new GetTopicsResult[1];
+
+        final long currentEpochId = 4L;
+        final int numberOfLookBackEpochs = 3;
+
+        when(mConsentManager.getConsent()).thenReturn(AdServicesApiConsent.GIVEN);
+        when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
+        when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
+
+        TopicsServiceImpl topicsService = createTestTopicsServiceImplInstance_spyTopicsWorker();
+
+        // Not setting isRecordObservation explicitly will make isRecordObservation to have
+        // default value which is true.
+        mRequest =
+                new GetTopicsParam.Builder()
+                        .setAppPackageName(TEST_APP_PACKAGE_NAME)
+                        .setSdkName(SOME_SDK_NAME)
+                        .setSdkPackageName(SOME_SDK_NAME)
+                        .build();
+
+        // Topic impl service use a background executor to run the task,
+        // use a countdownLatch and set the countdown in the logging call operation
+        final CountDownLatch logOperationCalledLatch = new CountDownLatch(1);
+        Mockito.doAnswer(
+                        new Answer<Object>() {
+                            @Override
+                            public Object answer(InvocationOnMock invocation) throws Throwable {
+                                // The method logAPiCallStats is called.
+                                invocation.callRealMethod();
+                                logOperationCalledLatch.countDown();
+                                return null;
+                            }
+                        })
+                .when(mAdServicesLogger)
+                .logApiCallStats(ArgumentMatchers.any(ApiCallStats.class));
+
+        ArgumentCaptor<ApiCallStats> argument = ArgumentCaptor.forClass(ApiCallStats.class);
+
+        topicsService.getTopics(
+                mRequest,
+                mCallerMetadata,
+                new IGetTopicsCallback() {
+                    @Override
+                    public void onResult(GetTopicsResult responseParcel) {
+                        capturedResponseParcel[0] = responseParcel;
+                    }
+
+                    @Override
+                    public void onFailure(int resultCode) {
+                        Assert.fail();
+                    }
+
+                    @Override
+                    public IBinder asBinder() {
+                        return null;
+                    }
+                });
+
+        // getTopics method finished executing.
+        assertThat(
+                        logOperationCalledLatch.await(
+                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
+                .isTrue();
+
+        // Record the call from App and Sdk to usage history only when isRecordObservation is true.
+        verify(mSpyTopicsWorker, Mockito.times(1))
+                .recordUsage(TEST_APP_PACKAGE_NAME, SOME_SDK_NAME);
+
+        verify(mAdServicesLogger).logApiCallStats(argument.capture());
+        assertThat(argument.getValue().getResultCode()).isEqualTo(STATUS_SUCCESS);
+        assertThat(argument.getValue().getAppPackageName()).isEqualTo(TEST_APP_PACKAGE_NAME);
+        assertThat(argument.getValue().getSdkPackageName()).isEqualTo(SOME_SDK_NAME);
+        // Verify AdServicesLogger logs getTopics API.
+        assertThat(argument.getValue().getApiName())
+                .isEqualTo(AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS);
+    }
+
+    @Test
+    public void testGetTopics_notRecordObservation() throws InterruptedException {
+        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        // To capture result in inner class, we have to declare final.
+        final GetTopicsResult[] capturedResponseParcel = new GetTopicsResult[1];
+
+        final long currentEpochId = 4L;
+        final int numberOfLookBackEpochs = 3;
+
+        when(mConsentManager.getConsent()).thenReturn(AdServicesApiConsent.GIVEN);
+        when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
+        when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
+
+        TopicsServiceImpl topicsService = createTestTopicsServiceImplInstance_spyTopicsWorker();
+
+        // Topic impl service use a background executor to run the task,
+        // use a countdownLatch and set the countdown in the logging call operation
+        final CountDownLatch logOperationCalledLatch = new CountDownLatch(1);
+        Mockito.doAnswer(
+                        new Answer<Object>() {
+                            @Override
+                            public Object answer(InvocationOnMock invocation) throws Throwable {
+                                // The method logAPiCallStats is called.
+                                invocation.callRealMethod();
+                                logOperationCalledLatch.countDown();
+                                return null;
+                            }
+                        })
+                .when(mAdServicesLogger)
+                .logApiCallStats(ArgumentMatchers.any(ApiCallStats.class));
+
+        ArgumentCaptor<ApiCallStats> argument = ArgumentCaptor.forClass(ApiCallStats.class);
+
+        mRequest =
+                new GetTopicsParam.Builder()
+                        .setAppPackageName(TEST_APP_PACKAGE_NAME)
+                        .setSdkName(SOME_SDK_NAME)
+                        .setSdkPackageName(SOME_SDK_NAME)
+                        .setShouldRecordObservation(false)
+                        .build();
+
+        topicsService.getTopics(
+                mRequest,
+                mCallerMetadata,
+                new IGetTopicsCallback() {
+                    @Override
+                    public void onResult(GetTopicsResult responseParcel) {
+                        capturedResponseParcel[0] = responseParcel;
+                    }
+
+                    @Override
+                    public void onFailure(int resultCode) {
+                        Assert.fail();
+                    }
+
+                    @Override
+                    public IBinder asBinder() {
+                        return null;
+                    }
+                });
+
+        // getTopics method finished executing.
+        assertThat(
+                        logOperationCalledLatch.await(
+                                RECORD_USAGE_CALLED_LATCH_TIMEOUT_MS, TimeUnit.MILLISECONDS))
+                .isTrue();
+
+        // Not record the call from App and Sdk to usage history when isRecordObservation is false.
+        verify(mSpyTopicsWorker, never()).recordUsage(anyString(), anyString());
+
+        verify(mAdServicesLogger).logApiCallStats(argument.capture());
+        assertThat(argument.getValue().getResultCode()).isEqualTo(STATUS_SUCCESS);
+        assertThat(argument.getValue().getAppPackageName()).isEqualTo(TEST_APP_PACKAGE_NAME);
+        assertThat(argument.getValue().getSdkPackageName()).isEqualTo(SOME_SDK_NAME);
+        // Verify AdServicesLogger logs Preview API.
+        assertThat(argument.getValue().getApiName())
+                .isEqualTo(AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS_PREVIEW_API);
     }
 
     private void invokeGetTopicsAndVerifyError(Context context, int expectedResultCode)
@@ -909,6 +1079,20 @@ public class TopicsServiceImplTest {
         return new TopicsServiceImpl(
                 mMockSdkContext,
                 mTopicsWorker,
+                mConsentManager,
+                mAdServicesLogger,
+                mClock,
+                mMockFlags,
+                mMockThrottler,
+                mEnrollmentDao,
+                mMockAppImportanceFilter);
+    }
+
+    @NonNull
+    private TopicsServiceImpl createTestTopicsServiceImplInstance_spyTopicsWorker() {
+        return new TopicsServiceImpl(
+                mContext,
+                mSpyTopicsWorker,
                 mConsentManager,
                 mAdServicesLogger,
                 mClock,

@@ -16,10 +16,11 @@
 
 package com.android.adservices.service.measurement.attribution;
 
+import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.measurement.AbstractDbIntegrationTest;
 import com.android.adservices.data.measurement.DatastoreManager;
-import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.data.measurement.DbState;
+import com.android.adservices.data.measurement.SQLDatastoreManager;
 
 import org.json.JSONException;
 import org.junit.Assert;
@@ -51,7 +52,8 @@ public class AttributionJobHandlerIntegrationTest extends AbstractDbIntegrationT
 
     @Override
     public void runActionToTest() {
-        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
+        DatastoreManager datastoreManager =
+                new SQLDatastoreManager(DbTestUtil.getDbHelperForTest());
         Assert.assertTrue("Attribution failed.",
                 (new AttributionJobHandler(datastoreManager))
                         .performPendingAttributions());

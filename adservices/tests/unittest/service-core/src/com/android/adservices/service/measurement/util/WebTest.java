@@ -36,13 +36,15 @@ public class WebTest {
     private static final String HTTPS_SCHEME = "https";
     private static final String HTTP_SCHEME = "http";
     private static final String INVALID_URL = "invalid url";
+    private static final String PATH = "path";
+    private static final String SECOND_PATH = "second_path";
 
     @Test
     public void testTopPrivateDomainAndScheme_ValidPublicDomainAndHttpsScheme() {
         String inputUrl = String.format("%s://%s.%s",
                 HTTPS_SCHEME, TOP_PRIVATE_DOMAIN, VALID_PUBLIC_DOMAIN);
         Uri expectedUri = Uri.parse(inputUrl);
-        Optional output = Web.topPrivateDomainAndScheme(inputUrl);
+        Optional<Uri> output = Web.topPrivateDomainAndScheme(inputUrl);
         assertTrue(output.isPresent());
         assertEquals(expectedUri, output.get());
     }
@@ -52,7 +54,7 @@ public class WebTest {
         String inputUrl = String.format("%s://%s.%s",
                 HTTPS_SCHEME, TOP_PRIVATE_DOMAIN, VALID_PRIVATE_DOMAIN);
         Uri expectedUri = Uri.parse(inputUrl);
-        Optional output = Web.topPrivateDomainAndScheme(inputUrl);
+        Optional<Uri> output = Web.topPrivateDomainAndScheme(inputUrl);
         assertTrue(output.isPresent());
         assertEquals(expectedUri, output.get());
     }
@@ -63,7 +65,7 @@ public class WebTest {
                 HTTPS_SCHEME, SUBDOMAIN, TOP_PRIVATE_DOMAIN, VALID_PUBLIC_DOMAIN);
         Uri expectedUri = Uri.parse(String.format("%s://%s.%s",
                   HTTPS_SCHEME, TOP_PRIVATE_DOMAIN, VALID_PUBLIC_DOMAIN));
-        Optional output = Web.topPrivateDomainAndScheme(inputUrl);
+        Optional<Uri> output = Web.topPrivateDomainAndScheme(inputUrl);
         assertTrue(output.isPresent());
         assertEquals(expectedUri, output.get());
     }
@@ -74,7 +76,7 @@ public class WebTest {
                 HTTPS_SCHEME, SUBDOMAIN, TOP_PRIVATE_DOMAIN, VALID_PRIVATE_DOMAIN);
         Uri expectedUri = Uri.parse(String.format("%s://%s.%s",
                   HTTPS_SCHEME, TOP_PRIVATE_DOMAIN, VALID_PRIVATE_DOMAIN));
-        Optional output = Web.topPrivateDomainAndScheme(inputUrl);
+        Optional<Uri> output = Web.topPrivateDomainAndScheme(inputUrl);
         assertTrue(output.isPresent());
         assertEquals(expectedUri, output.get());
     }
@@ -84,7 +86,7 @@ public class WebTest {
         String inputUrl = String.format("%s://%s.%s",
                 HTTP_SCHEME, TOP_PRIVATE_DOMAIN, VALID_PUBLIC_DOMAIN);
         Uri expectedUri = Uri.parse(inputUrl);
-        Optional output = Web.topPrivateDomainAndScheme(inputUrl);
+        Optional<Uri> output = Web.topPrivateDomainAndScheme(inputUrl);
         assertTrue(output.isPresent());
         assertEquals(expectedUri, output.get());
     }
@@ -92,13 +94,68 @@ public class WebTest {
     @Test
     public void testTopPrivateDomainAndScheme_InvalidTldAndHttpsScheme() {
         String inputUrl = String.format("%s://%s.%s", HTTP_SCHEME, TOP_PRIVATE_DOMAIN, INVALID_TLD);
-        Optional output = Web.topPrivateDomainAndScheme(inputUrl);
+        Optional<Uri> output = Web.topPrivateDomainAndScheme(inputUrl);
         assertFalse(output.isPresent());
     }
 
     @Test
     public void testTopPrivateDomainAndScheme_InvalidUrl() {
-        Optional output = Web.topPrivateDomainAndScheme(INVALID_URL);
+        Optional<Uri> output = Web.topPrivateDomainAndScheme(INVALID_URL);
+        assertFalse(output.isPresent());
+    }
+
+    @Test
+    public void topPrivateDomainAndPath_ForDomainAndPath_ReturnsDomainAndPath() {
+        String inputUrl =
+                String.format(
+                        "%s://%s.%s/%s",
+                        HTTPS_SCHEME, TOP_PRIVATE_DOMAIN, VALID_PUBLIC_DOMAIN, PATH);
+        Uri expectedUri = Uri.parse(inputUrl);
+        Optional<Uri> output = Web.topPrivateDomainSchemeAndPath(Uri.parse(inputUrl));
+        assertTrue(output.isPresent());
+        assertEquals(expectedUri, output.get());
+    }
+
+    @Test
+    public void topPrivateDomainAndPath_ForSubdomain_DoesNotReturnSubdomain() {
+        String inputUrl =
+                String.format(
+                        "%s://%s.%s.%s/%s",
+                        HTTPS_SCHEME, SUBDOMAIN, TOP_PRIVATE_DOMAIN, VALID_PUBLIC_DOMAIN, PATH);
+        Uri uri = Uri.parse(inputUrl);
+        String expectedUri =
+                String.format(
+                        "%s://%s.%s/%s",
+                        HTTPS_SCHEME, TOP_PRIVATE_DOMAIN, VALID_PUBLIC_DOMAIN, PATH);
+        Optional<Uri> output = Web.topPrivateDomainSchemeAndPath(uri);
+        assertTrue(output.isPresent());
+        assertEquals(expectedUri, output.get().toString());
+    }
+
+    @Test
+    public void topPrivateDomainAndPath_ForMultiplePaths_ReturnsMultipleTokens() {
+        String inputUrl =
+                String.format(
+                        "%s://%s.%s.%s/%s/%s",
+                        HTTPS_SCHEME,
+                        SUBDOMAIN,
+                        TOP_PRIVATE_DOMAIN,
+                        VALID_PUBLIC_DOMAIN,
+                        PATH,
+                        SECOND_PATH);
+        Uri uri = Uri.parse(inputUrl);
+        String expectedUri =
+                String.format(
+                        "%s://%s.%s/%s/%s",
+                        HTTPS_SCHEME, TOP_PRIVATE_DOMAIN, VALID_PUBLIC_DOMAIN, PATH, SECOND_PATH);
+        Optional<Uri> output = Web.topPrivateDomainSchemeAndPath(uri);
+        assertTrue(output.isPresent());
+        assertEquals(expectedUri, output.get().toString());
+    }
+
+    @Test
+    public void topPrivateDomainAndPath_ForInvalidUri_ReturnsEmptyOptional() {
+        Optional<Uri> output = Web.topPrivateDomainAndScheme(INVALID_URL);
         assertFalse(output.isPresent());
     }
 }

@@ -34,6 +34,7 @@ android_test {
     ],
     data: [
       ":LoadSdkSuccessfullySdkProvider",
+      ":LoadSdkAndCheckClassloaderSdkProvider",
       ":GetLoadedSdkLibInfoSuccessfully",
       ":LoadSdkSuccessfullySdkProviderTwo",
       ":LoadSdkWithInternalErrorSdkProvider",
@@ -42,7 +43,7 @@ android_test {
       ":CodeProviderWithResources",
     ],
     min_sdk_version: "Tiramisu",
-    target_sdk_version: "current",
+    target_sdk_version: "Tiramisu",
     test_suites: [
         "cts",
         "mts-adservices",

@@ -59,7 +59,10 @@ public class AdServicesManagerService {
 
     private final Context mContext;
 
-    BroadcastReceiver mSystemServicePackageChangedReceiver;
+    private BroadcastReceiver mSystemServicePackageChangedReceiver;
+
+    private HandlerThread mHandlerThread;
+    private Handler mHandler;
 
     // This will be triggered when there is a flag change.
     private final DeviceConfig.OnPropertiesChangedListener mOnFlagsChangedListener =
@@ -119,9 +122,9 @@ public class AdServicesManagerService {
                 // mSystemServicePackageChangedReceiver == null
                 // We haven't registered the receiver.
                 // Start the handler thread.
-                HandlerThread handlerThread = new HandlerThread("AdServicesManagerServiceHandler");
-                handlerThread.start();
-                Handler handler = new Handler(handlerThread.getLooper());
+                mHandlerThread = new HandlerThread("AdServicesManagerServiceHandler");
+                mHandlerThread.start();
+                mHandler = new Handler(mHandlerThread.getLooper());
 
                 final IntentFilter packageChangedIntentFilter = new IntentFilter();
 
@@ -135,14 +138,14 @@ public class AdServicesManagerService {
                             @Override
                             public void onReceive(Context context, Intent intent) {
                                 UserHandle user = getSendingUser();
-                                handler.post(() -> onPackageChange(intent, user));
+                                mHandler.post(() -> onPackageChange(intent, user));
                             }
                         };
                 mContext.registerReceiverForAllUsers(
                         mSystemServicePackageChangedReceiver,
                         packageChangedIntentFilter,
                         /* broadcastPermission */ null,
-                        handler);
+                        mHandler);
                 Log.d(TAG, "Package changed broadcast receivers registered.");
             } else {
                 // FlagsFactory.getFlags().getAdServicesSystemServiceEnabled() == false
@@ -153,6 +156,8 @@ public class AdServicesManagerService {
                     Log.d(TAG, "Unregistering the existing SystemServicePackageChangeReceiver");
                     mContext.unregisterReceiver(mSystemServicePackageChangedReceiver);
                     mSystemServicePackageChangedReceiver = null;
+                    mHandlerThread.quitSafely();
+                    mHandler = null;
                 }
 
                 return;

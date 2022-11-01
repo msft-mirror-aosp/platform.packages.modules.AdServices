@@ -240,7 +240,7 @@ public class AdSelectionOverrider {
         return FluentFuture.from(
                 mBackgroundExecutorService.submit(
                         () -> {
-                            if (!mConsentManager.getConsent(mPackageManager).isGiven()) {
+                            if (!mConsentManager.getConsent().isGiven()) {
                                 return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
                             }
 
@@ -254,7 +254,7 @@ public class AdSelectionOverrider {
         return FluentFuture.from(
                 mBackgroundExecutorService.submit(
                         () -> {
-                            if (!mConsentManager.getConsent(mPackageManager).isGiven()) {
+                            if (!mConsentManager.getConsent().isGiven()) {
                                 return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
                             }
 
@@ -268,7 +268,7 @@ public class AdSelectionOverrider {
         return FluentFuture.from(
                 mBackgroundExecutorService.submit(
                         () -> {
-                            if (!mConsentManager.getConsent(mPackageManager).isGiven()) {
+                            if (!mConsentManager.getConsent().isGiven()) {
                                 return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
                             }
 
@@ -295,7 +295,7 @@ public class AdSelectionOverrider {
             resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
             throw e.rethrowFromSystemServer();
         } finally {
-            mAdServicesLogger.logFledgeApiCallStats(apiName, resultCode);
+            mAdServicesLogger.logFledgeApiCallStats(apiName, resultCode, 0);
         }
     }
 
@@ -313,7 +313,7 @@ public class AdSelectionOverrider {
             resultCodeInt = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
             throw e.rethrowFromSystemServer();
         } finally {
-            mAdServicesLogger.logFledgeApiCallStats(apiName, resultCodeInt);
+            mAdServicesLogger.logFledgeApiCallStats(apiName, resultCodeInt, 0);
         }
     }
 

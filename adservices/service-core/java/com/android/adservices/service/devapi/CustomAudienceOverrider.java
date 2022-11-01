@@ -253,7 +253,7 @@ public class CustomAudienceOverrider {
                 mListeningExecutorService.submit(
                         () -> {
                             if (mConsentManager.isFledgeConsentRevokedForApp(
-                                    mPackageManager, mDevContext.getCallingAppPackageName())) {
+                                    mDevContext.getCallingAppPackageName())) {
                                 LogUtil.v("User consent is revoked!");
                                 return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
                             }
@@ -270,7 +270,7 @@ public class CustomAudienceOverrider {
                 mListeningExecutorService.submit(
                         () -> {
                             if (mConsentManager.isFledgeConsentRevokedForApp(
-                                    mPackageManager, mDevContext.getCallingAppPackageName())) {
+                                    mDevContext.getCallingAppPackageName())) {
                                 return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
                             }
 
@@ -284,7 +284,7 @@ public class CustomAudienceOverrider {
                 mListeningExecutorService.submit(
                         () -> {
                             if (mConsentManager.isFledgeConsentRevokedForApp(
-                                    mPackageManager, mDevContext.getCallingAppPackageName())) {
+                                    mDevContext.getCallingAppPackageName())) {
                                 return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
                             }
 
@@ -311,7 +311,7 @@ public class CustomAudienceOverrider {
             resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
             throw e.rethrowAsRuntimeException();
         } finally {
-            mAdServicesLogger.logFledgeApiCallStats(apiName, resultCode);
+            mAdServicesLogger.logFledgeApiCallStats(apiName, resultCode, 0);
         }
     }
 
@@ -329,7 +329,7 @@ public class CustomAudienceOverrider {
             resultCodeInt = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
             throw e.rethrowAsRuntimeException();
         } finally {
-            mAdServicesLogger.logFledgeApiCallStats(apiName, resultCodeInt);
+            mAdServicesLogger.logFledgeApiCallStats(apiName, resultCodeInt, 0);
         }
     }
 

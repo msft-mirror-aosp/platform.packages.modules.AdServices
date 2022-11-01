@@ -20,10 +20,11 @@ import static org.mockito.Mockito.when;
 
 import android.net.Uri;
 
+import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.measurement.AbstractDbIntegrationTest;
 import com.android.adservices.data.measurement.DatastoreManager;
-import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.data.measurement.DbState;
+import com.android.adservices.data.measurement.SQLDatastoreManager;
 
 import org.json.JSONException;
 import org.junit.Assert;
@@ -74,7 +75,8 @@ public class AggregateEncryptionKeyManagerIntegrationTest extends AbstractDbInte
 
     @Override
     public void runActionToTest() {
-        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
+        DatastoreManager datastoreManager =
+                new SQLDatastoreManager(DbTestUtil.getDbHelperForTest());
         AggregateEncryptionKeyManager aggregateEncryptionKeyManager =
                 new AggregateEncryptionKeyManager(datastoreManager, mFetcher, mClock,
                         MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL);

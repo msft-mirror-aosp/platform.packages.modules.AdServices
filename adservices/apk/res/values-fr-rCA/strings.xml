@@ -47,7 +47,8 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Marche à suivre pour participer"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"L\'activation de la version bêta permet aux applications de tester ces nouvelles façons plus privées de vous montrer des annonces. Vous pouvez désactiver la version bêta à tout moment dans vos paramètres de confidentialité."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Non merci"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"Oui, j\'accepte"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Activer"</string>
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"Plus"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Merci de votre participation"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Vous participez à la version bêta des fonctionnalités de confidentialité relatives aux annonces sur Android. Le bac à sable de confidentialité est activé sur votre appareil.\n\nVous pouvez en savoir plus ou désactiver la version bêta à tout moment dans vos paramètres de confidentialité."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Vous avez choisi de ne pas participer"</string>
@@ -79,8 +80,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Aucun centre d\'intérêt à afficher pour le moment"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Bac à sable de confidentialité"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"La version bêta de la confidentialité des annonces d\'Android offre de nouvelles fonctionnalités que les applications peuvent utiliser pour vous montrer des annonces susceptibles de vous plaire. Ces technologies n\'utilisent pas d\'identifiants d\'appareils.\n\nAndroid peut évaluer les types d\'annonces qui pourraient vous intéresser et sauvegarder temporairement vos centres d\'intérêt sur votre appareil. Cela permet aux applications de vous montrer des annonces pertinentes, sans suivre votre activité sur les sites Web et les applications conçues par d\'autres développeurs."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Vous n\'avez aucun centre d\'intérêt bloqué"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Les applications peuvent évaluer vos centres d\'intérêt et les sauvegarder temporairement sur Android. Il se peut par la suite qu\'une autre application vous montre une annonce liée à ces centres d\'intérêt.\n\nSi vous bloquez une application, elle n\'évaluera plus aucun de vos centres d\'intérêt. Elle ne sera plus ajoutée à cette liste d\'applications tant que vous ne la débloquerez pas. Les centres d\'intérêt préalablement évalués par l\'application seront supprimés, mais vous pourriez encore voir certaines annonces associées à ceux-ci."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Applications que vous avez bloquées"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Réinitialiser les centres d\'intérêt évalués par les applications"</string>
@@ -88,7 +88,25 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Bac à sable de confidentialité"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"La version bêta de la confidentialité des annonces d\'Android offre de nouvelles fonctionnalités que les applications peuvent utiliser pour vous montrer des annonces susceptibles de vous plaire. Ces technologies n\'utilisent pas d\'identifiants d\'appareils.\n\nVos applications peuvent évaluer les types d\'annonces qui pourraient vous intéresser et sauvegarder temporairement vos centres d\'intérêt sur votre appareil. Cela permet aux applications de vous montrer des annonces pertinentes, sans suivre votre activité sur les sites Web et les applications conçues par d\'autres développeurs."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Vous n\'avez aucune application bloquée"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Vous n\'avez aucun centre d\'intérêt bloqué"</string>
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Annuler"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Désactiver le Bac à sable de confidentialité?"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Si vous changez d\'avis ou voulez en savoir plus sur la version bêta des fonctionnalités de confidentialité relatives aux annonces sur Android, accédez à vos paramètres de confidentialité."</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Désactiver"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Bloquer <xliff:g id="TOPIC">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"Ce centre d\'intérêt sera bloqué et ne sera plus ajouté à votre liste, à moins que vous l\'ajoutiez vous-même à nouveau. Il est toutefois possible que vous voyiez encore certaines annonces associées."</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Bloquer"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"Le centre d\'intérêt <xliff:g id="TOPIC">%1$s</xliff:g> est débloqué"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Il est possible qu\'Android ajoute à nouveau ce centre d\'intérêt à votre liste, mais il n\'y apparaîtra peut-être pas immédiatement"</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Réinitialiser tous vos centres d\'intérêt?"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"Votre liste sera effacée, et de nouveaux centres d\'intérêt seront évalués à l\'avenir. Toutefois, vous pourriez encore voir certaines annonces liées aux centres d\'intérêt effacés."</string>
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Réinitialiser"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Bloquer <xliff:g id="APP">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Cette application n\'évaluera pas les centres d\'intérêt pour le Bac à sable de confidentialité et ne sera plus ajoutée à votre liste, à moins que vous la débloquiez.\n\nLes centres d\'intérêt déjà évalués par cette application seront supprimés, mais il est possible que vous voyiez encore certaines annonces associées."</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"L\'application <xliff:g id="APP">%1$s</xliff:g> est débloquée"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Cette application peut à nouveau évaluer vos centres d\'intérêt, mais il est possible qu\'elle n\'apparaisse pas immédiatement sur votre liste. Il faudra sans doute du temps avant que vous puissiez voir des annonces associées."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Réinitialiser les centres d\'intérêt générés par les applications?"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"Les centres d\'intérêt évalués par les applications qui figurent sur votre liste seront supprimés du bac à sable de confidentialité, et les applications évalueront de nouveaux centres d\'intérêt à l\'avenir. Il est toutefois possible que vous voyiez encore certaines annonces associées."</string>
     <string name="topic10001" msgid="1636806320891333775">"Arts et divertissements"</string>
     <string name="topic10002" msgid="1226367977754287428">"Théâtre"</string>
     <string name="topic10003" msgid="6949890838957814881">"Films d\'animation et mangas"</string>

@@ -20,7 +20,7 @@ import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
-import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -63,14 +63,14 @@ public final class SourceFixture {
                 .setInstallCooldownWindow(ValidSourceParams.INSTALL_COOLDOWN_WINDOW)
                 .setAttributionMode(ValidSourceParams.ATTRIBUTION_MODE)
                 .setAggregateSource(ValidSourceParams.buildAggregateSource())
-                .setAggregateFilterData(ValidSourceParams.buildAggregateFilterData())
+                .setFilterData(ValidSourceParams.buildFilterData())
                 .build();
     }
 
     public static class ValidSourceParams {
         public static final Long EXPIRY_TIME = 8640000010L;
         public static final Long PRIORITY = 100L;
-        public static final Long SOURCE_EVENT_ID = 1L;
+        public static final UnsignedLong SOURCE_EVENT_ID = new UnsignedLong(1L);
         public static final Long SOURCE_EVENT_TIME = 8640000000L;
         public static final Uri ATTRIBUTION_DESTINATION =
                 Uri.parse("android-app://com.destination");
@@ -81,7 +81,7 @@ public final class SourceFixture {
         public static final Source.SourceType SOURCE_TYPE = Source.SourceType.EVENT;
         public static final Long INSTALL_ATTRIBUTION_WINDOW = 841839879274L;
         public static final Long INSTALL_COOLDOWN_WINDOW = 8418398274L;
-        public static final Long DEBUG_KEY = 7834690L;
+        public static final UnsignedLong DEBUG_KEY = new UnsignedLong(7834690L);
         public static final @Source.AttributionMode int ATTRIBUTION_MODE =
                 Source.AttributionMode.TRUTHFULLY;
         public static final int AGGREGATE_CONTRIBUTIONS = 0;
@@ -100,7 +100,7 @@ public final class SourceFixture {
             return null;
         }
 
-        public static final String buildAggregateFilterData() {
+        public static final String buildFilterData() {
             try {
                 JSONObject filterData = new JSONObject();
                 filterData.put("conversion_subdomain",
@@ -116,8 +116,8 @@ public final class SourceFixture {
         public static final AggregatableAttributionSource buildAggregatableAttributionSource() {
             return new AggregatableAttributionSource.Builder()
                     .setAggregatableSource(Map.of("5", new BigInteger("345")))
-                    .setAggregateFilterData(
-                            new AggregateFilterData.Builder()
+                    .setFilterData(
+                            new FilterData.Builder()
                                     .setAttributionFilterMap(
                                             Map.of(
                                                     "product", List.of("1234", "4321"),

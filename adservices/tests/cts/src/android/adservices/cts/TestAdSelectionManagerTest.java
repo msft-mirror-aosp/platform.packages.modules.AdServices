@@ -40,7 +40,6 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
-import com.android.compatibility.common.util.ShellUtils;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -97,13 +96,6 @@ public class TestAdSelectionManagerTest extends ForegroundCtsTest {
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
         PhFlagsFixture.overrideEnforceIsolateMaxHeapSize(false);
         PhFlagsFixture.overrideIsolateMaxHeapSizeBytes(0);
-        // We need to turn the Consent Manager into debug mode
-        overrideConsentManagerDebugMode();
-    }
-
-    // Override the Consent Manager behaviour - Consent Given
-    private void overrideConsentManagerDebugMode() {
-        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
     }
 
     @Test

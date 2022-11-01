@@ -45,6 +45,9 @@ import android.test.suitebuilder.annotation.SmallTest;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.runner.AndroidJUnit4;
 
+import com.android.compatibility.common.util.ShellUtils;
+
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -62,6 +65,7 @@ public class MeasurementManagerSandboxCtsTest {
     protected static final Context sSandboxedSdkContext =
             new SandboxedSdkContext(
                     /* baseContext = */ sContext,
+                    /* classLoader = */ sContext.getClassLoader(),
                     /* clientPackageName = */ sContext.getPackageName(),
                     /* info = */ new ApplicationInfo(),
                     /* sdkName = */ "sdkName",
@@ -88,6 +92,13 @@ public class MeasurementManagerSandboxCtsTest {
         mMeasurementManager =
                 Mockito.spy(sSandboxedSdkContext.getSystemService(MeasurementManager.class));
         doReturn(mMockMeasurementService).when(mMeasurementManager).getService();
+
+        overrideMeasurementKillSwitches(true);
+    }
+
+    @After
+    public void teardown() {
+        overrideMeasurementKillSwitches(false);
     }
 
     @Test
@@ -217,5 +228,33 @@ public class MeasurementManagerSandboxCtsTest {
                 .getMeasurementApiStatus(captor.capture(), any(), any());
         Assert.assertNotNull(captor.getValue());
         Assert.assertEquals(sContext.getPackageName(), captor.getValue().getAppPackageName());
+    }
+
+    // Override measurement related kill switch to ignore the effect of actual PH values.
+    // If isOverride = true, override measurement related kill switch to OFF to allow adservices
+    // If isOverride = false, override measurement related kill switch to meaningless value so that
+    // PhFlags will use the default value.
+    private void overrideMeasurementKillSwitches(boolean isOverride) {
+        String overrideString = isOverride ? "false" : "null";
+        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + overrideString);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.measurement_kill_switch " + overrideString);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.measurement_api_register_source_kill_switch "
+                        + overrideString);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.measurement_api_register_trigger_kill_switch "
+                        + overrideString);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.measurement_api_register_web_source_kill_switch "
+                        + overrideString);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.measurement_api_register_web_trigger_kill_switch "
+                        + overrideString);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.measurement_api_delete_registrations_kill_switch "
+                        + overrideString);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.measurement_api_status_kill_switch " + overrideString);
     }
 }
