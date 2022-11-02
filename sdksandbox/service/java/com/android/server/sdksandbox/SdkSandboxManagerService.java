@@ -663,10 +663,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             link = mAppAndRemoteSdkLinks.get(appAndSdkInfo);
         }
         if (link == null) {
+            LogUtil.d(
+                    TAG,
+                    callingInfo + " requested surface package, but could not find SDK " + sdkName);
             handleSurfacePackageError(
                     callingInfo,
                     REQUEST_SURFACE_PACKAGE_SDK_NOT_LOADED,
-                    "SDK is not loaded",
+                    "SDK " + sdkName + " is not loaded",
                     timeSystemServerReceivedCallFromApp,
                     SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX,
                     /*successAtStage*/ false,
@@ -1777,7 +1780,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                                         handleSurfacePackageError(
                                                 mCallingInfo,
                                                 REQUEST_SURFACE_PACKAGE_SDK_NOT_LOADED,
-                                                "SDK is not loaded",
+                                                "SDK " + mSdkName + " is not loaded",
                                                 /*timeSystemServerReceivedCallFromSandbox=*/ -1,
                                                 SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED,
                                                 /*successAtStage=*/ false,
@@ -1858,10 +1861,16 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                             });
                 }
             } catch (DeadObjectException e) {
+                LogUtil.d(
+                        TAG,
+                        mCallingInfo
+                                + " requested surface package from SDK "
+                                + mSdkName
+                                + " but sandbox is not alive");
                 handleSurfacePackageError(
                         mCallingInfo,
                         REQUEST_SURFACE_PACKAGE_SDK_NOT_LOADED,
-                        "SDK is not loaded",
+                        "SDK " + mSdkName + " is not loaded",
                         /*timeSystemServerReceivedCallFromSandbox=*/ -1,
                         SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED,
                         /*successAtStage=*/ false,
@@ -2073,7 +2082,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 for (int i = 0; i < mCallingInfosWithDeathRecipients.size(); i++) {
                     final CallingInfo callingInfo = mCallingInfosWithDeathRecipients.keyAt(i);
                     if (callingInfo.getUid() == uid) {
-                        // Stop the sandbox when the app goes to the background.
+                        LogUtil.d(
+                                TAG,
+                                "App with uid "
+                                        + uid
+                                        + " has gone to the background, unbinding sandbox");
+                        // Unbind the sandbox when the app goes to the background to lower its
+                        // priority.
                         mServiceProvider.unbindService(callingInfo, false);
                     }
                 }
