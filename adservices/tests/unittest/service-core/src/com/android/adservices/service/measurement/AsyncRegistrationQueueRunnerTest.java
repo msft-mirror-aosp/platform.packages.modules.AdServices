@@ -15,6 +15,7 @@
  */
 package com.android.adservices.service.measurement;
 
+import static com.android.adservices.service.measurement.SystemHealthParams.MAX_TRIGGER_REGISTERS_PER_DESTINATION;
 import static com.android.adservices.service.measurement.attribution.TriggerContentProvider.TRIGGER_URI;
 
 import static org.junit.Assert.assertEquals;
@@ -55,6 +56,8 @@ import com.android.adservices.service.measurement.util.AsyncFetchStatus;
 import com.android.adservices.service.measurement.util.AsyncRedirect;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+
+import com.google.common.truth.Truth;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -104,6 +107,12 @@ public class AsyncRegistrationQueueRunnerTest {
                     .setSourceType(Source.SourceType.EVENT)
                     .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                     .setDebugKey(new UnsignedLong(47823478789L))
+                    .build();
+
+    private static final Trigger TRIGGER =
+            TriggerFixture.getValidTriggerBuilder()
+                    .setAttributionDestination(APP_DESTINATION)
+                    .setDestinationType(EventSurfaceType.APP)
                     .build();
 
     private AsyncSourceFetcher mAsyncSourceFetcher;
@@ -1671,6 +1680,69 @@ public class AsyncRegistrationQueueRunnerTest {
 
         // Assertions
         assertFalse(status);
+    }
+
+    @Test
+    public void testRegisterTrigger_belowSystemHealthLimits_success() throws Exception {
+        // Setup
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                spy(
+                        new AsyncRegistrationQueueRunner(
+                                mContentResolver,
+                                mAsyncSourceFetcher,
+                                mAsyncTriggerFetcher,
+                                mEnrollmentDao,
+                                new FakeDatastoreManager()));
+
+        when(mMeasurementDao.getNumTriggersPerDestination(APP_DESTINATION, EventSurfaceType.APP))
+                .thenReturn(0L);
+
+        Truth.assertThat(
+                        AsyncRegistrationQueueRunner.isTriggerAllowedToInsert(
+                                mMeasurementDao, TRIGGER))
+                .isTrue();
+    }
+
+    @Test
+    public void testRegisterTrigger_atSystemHealthLimits_success() throws Exception {
+        // Setup
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                spy(
+                        new AsyncRegistrationQueueRunner(
+                                mContentResolver,
+                                mAsyncSourceFetcher,
+                                mAsyncTriggerFetcher,
+                                mEnrollmentDao,
+                                new FakeDatastoreManager()));
+
+        when(mMeasurementDao.getNumTriggersPerDestination(APP_DESTINATION, EventSurfaceType.APP))
+                .thenReturn(MAX_TRIGGER_REGISTERS_PER_DESTINATION - 1L);
+
+        Truth.assertThat(
+                        AsyncRegistrationQueueRunner.isTriggerAllowedToInsert(
+                                mMeasurementDao, TRIGGER))
+                .isTrue();
+    }
+
+    @Test
+    public void testRegisterTrigger_overSystemHealthLimits_failure() throws Exception {
+        // Setup
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                spy(
+                        new AsyncRegistrationQueueRunner(
+                                mContentResolver,
+                                mAsyncSourceFetcher,
+                                mAsyncTriggerFetcher,
+                                mEnrollmentDao,
+                                new FakeDatastoreManager()));
+
+        when(mMeasurementDao.getNumTriggersPerDestination(APP_DESTINATION, EventSurfaceType.APP))
+                .thenReturn(MAX_TRIGGER_REGISTERS_PER_DESTINATION);
+
+        Truth.assertThat(
+                        AsyncRegistrationQueueRunner.isTriggerAllowedToInsert(
+                                mMeasurementDao, TRIGGER))
+                .isFalse();
     }
 
     private List<Source.FakeReport> createFakeReports(Source source, int count, Uri destination) {
