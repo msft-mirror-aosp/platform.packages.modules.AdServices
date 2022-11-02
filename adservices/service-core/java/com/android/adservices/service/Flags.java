@@ -24,6 +24,8 @@ import android.util.Dumpable;
 
 import androidx.annotation.Nullable;
 
+import com.google.common.collect.ImmutableList;
+
 import java.io.PrintWriter;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -1374,5 +1376,15 @@ public interface Flags extends Dumpable {
     /** @return if to enable database schema version 3. */
     default boolean getEnableDatabaseSchemaVersion3() {
         return ENABLE_DATABASE_SCHEMA_VERSION_3;
+    }
+
+    /** Returns true if the given enrollmentId is blocked from using PP-API. */
+    default boolean isEnrollmentBlocklisted(String enrollmentId) {
+        return false;
+    }
+
+    /** Returns a list of enrollmentId blocked from using PP-API. */
+    default ImmutableList<String> getEnrollmentBlocklist() {
+        return ImmutableList.of();
     }
 }
