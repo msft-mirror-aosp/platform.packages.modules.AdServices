@@ -99,16 +99,14 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android, आपकी दिलचस्पी से जुड़े इस विषय को सूची में फिर से जोड़ सकता है. हालांकि, ऐसा हो सकता है कि यह सूची में तुरंत न दिखे"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"ठीक है"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"क्या आपको अपनी दिलचस्पी के सभी विषय रीसेट करने हैं?"</string>
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"आपकी दिलचस्पी से जुड़े विषय की सूची को मिटा दिया जाएगा. साथ ही, आने वाले समय के लिए, दिलचस्पी से जुड़े नए विषयों का अनुमान लगाया जाएगा. मिटाए जाने के बाद भी, आपको अपनी दिलचस्पी से मिलते-जुलते विज्ञापन दिख सकते हैं."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"रीसेट करें"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"क्या आपको <xliff:g id="APP">%1$s</xliff:g> को ब्लॉक करना है?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"यह ऐप्लिकेशन प्राइवसी सैंडबॉक्स के लिए, आपकी दिलचस्पियों का अनुमान नहीं लगाएगा और जब तक इसे अनब्लॉक नहीं किया जाता, तब तक इसे आपकी सूची में वापस नहीं जोड़ा जाएगा.\n\nऐप्लिकेशन ने आपकी जिन दिलचस्पियों का अनुमान लगाया था उन्हें मिटा दिया जाएगा. हालांकि, आपको अब भी इनसे जुड़े कुछ विज्ञापन दिख सकते हैं."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> को अनब्लॉक कर दिया गया है"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"यह ऐप्लिकेशन फिर से आपकी दिलचस्पियों का अनुमान लगा सकता है. हालांकि, ऐसा हो सकता है कि ये आपकी सूची में तुरंत न दिखें. इससे जुड़े विज्ञापन दिखने में कुछ समय लग सकता है."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"क्या आपको ऐप्लिकेशन की अनुमान लगाई गई दिलचस्पियां रीसेट करनी हैं?"</string>
-    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"आपकी दिलचस्पी से जुड़े उन विषयों की सूची को प्राइवसी सैंडबॉक्स से हटा दिया जाएगा जिनका अनुमान लगाया गया था. साथ ही, ऐप्लिकेशन आने वाले समय के लिए, आपकी दिलचस्पी से जुड़े नए विषयों का अनुमान लगाएगा. आपको अब भी अपनी दिलचस्पी से मिलते-जुलते विज्ञापन दिख सकते हैं."</string>
     <string name="topic10001" msgid="1636806320891333775">"कला और मनोरंजन"</string>
     <string name="topic10002" msgid="1226367977754287428">"अभिनय और थिएटर"</string>
     <string name="topic10003" msgid="6949890838957814881">"ऐनमे और मंगा"</string>
