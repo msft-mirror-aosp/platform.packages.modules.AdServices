@@ -28,6 +28,7 @@ import com.android.adservices.data.enrollment.EnrollmentTables;
 import com.android.adservices.data.measurement.MeasurementTables;
 import com.android.adservices.data.measurement.migration.IMeasurementDbMigrator;
 import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV2;
+import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV3;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.data.topics.migration.ITopicsDbMigrator;
 import com.android.adservices.data.topics.migration.TopicDbMigratorV3;
@@ -160,7 +161,7 @@ public class DbHelper extends SQLiteOpenHelper {
     /** Get Migrators in order for Measurement. */
     @VisibleForTesting
     public List<IMeasurementDbMigrator> getOrderedDbMigrators() {
-        return ImmutableList.of(new MeasurementDbMigratorV2());
+        return ImmutableList.of(new MeasurementDbMigratorV2(), new MeasurementDbMigratorV3());
     }
 
     /** Get Migrators in order for Topics. */
