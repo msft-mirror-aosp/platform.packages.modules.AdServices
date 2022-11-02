@@ -38,6 +38,7 @@ import android.content.pm.PackageManager;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -63,6 +64,7 @@ public class FledgeAuthorizationFilterTest {
 
     @Mock private PackageManager mPackageManager;
     @Mock private EnrollmentDao mEnrollmentDao;
+    @Mock private PhFlags mPhFlags;
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
 
@@ -76,6 +78,7 @@ public class FledgeAuthorizationFilterTest {
                 ExtendedMockito.mockitoSession()
                         .mockStatic(PermissionHelper.class)
                         .mockStatic(AppManifestConfigHelper.class)
+                        .mockStatic(PhFlags.class)
                         .initMocks(this)
                         .startMocking();
         mChecker =
@@ -194,6 +197,8 @@ public class FledgeAuthorizationFilterTest {
         when(AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
                         CONTEXT, PACKAGE_NAME, ENROLLMENT_ID))
                 .thenReturn(true);
+        when(PhFlags.getInstance()).thenReturn(mPhFlags);
+        when(mPhFlags.isEnrollmentBlocklisted(ENROLLMENT_ID)).thenReturn(false);
 
         mChecker.assertAdTechAllowed(
                 CONTEXT, PACKAGE_NAME, CommonFixture.VALID_BUYER_1, API_NAME_LOGGING_ID);
@@ -260,6 +265,28 @@ public class FledgeAuthorizationFilterTest {
                         eq(API_NAME_LOGGING_ID), eq(STATUS_CALLER_NOT_ALLOWED), anyInt());
         verifyNoMoreInteractions(mEnrollmentDao, mAdServicesLoggerMock);
         verifyZeroInteractions(mPackageManager);
+    }
+
+    @Test
+    public void testAdTechInBlocklist_throwSecurityException() {
+        when(mEnrollmentDao.getEnrollmentDataForFledgeByAdTechIdentifier(
+                        CommonFixture.VALID_BUYER_1))
+                .thenReturn(ENROLLMENT_DATA);
+        when(AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
+                        CONTEXT, PACKAGE_NAME, ENROLLMENT_ID))
+                .thenReturn(true);
+        // Add ENROLLMENT_ID to blocklist.
+        when(PhFlags.getInstance()).thenReturn(mPhFlags);
+        when(mPhFlags.isEnrollmentBlocklisted(ENROLLMENT_ID)).thenReturn(true);
+
+        assertThrows(
+                SecurityException.class,
+                () ->
+                        mChecker.assertAdTechAllowed(
+                                CONTEXT,
+                                PACKAGE_NAME,
+                                CommonFixture.VALID_BUYER_1,
+                                API_NAME_LOGGING_ID));
     }
 
     @Test
