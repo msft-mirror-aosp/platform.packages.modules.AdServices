@@ -1774,7 +1774,7 @@ public class FledgeE2ETest {
                 new CallerMetadata.Builder()
                         .setBinderElapsedTimestamp(BINDER_ELAPSED_TIMESTAMP)
                         .build();
-        adSelectionService.runAdSelection(input, callerMetadata, adSelectionTestCallback);
+        adSelectionService.selectAds(input, callerMetadata, adSelectionTestCallback);
         adSelectionTestCallback.mCountDownLatch.await();
         return adSelectionTestCallback;
     }
