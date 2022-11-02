@@ -93,7 +93,7 @@ public class DbHelperTest {
         assertTrue(doesTableExistAndColumnCountMatch(db, "topics_usage_history", 3));
         assertTrue(doesTableExistAndColumnCountMatch(db, "topics_app_usage_history", 3));
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_source", 22));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_trigger", 12));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_trigger", 13));
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_async_registration_contract", 16));
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_event_report", 17));
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_attribution", 10));
@@ -159,12 +159,12 @@ public class DbHelperTest {
     }
 
     @Test
-    public void testSupportsTopContributorsTable() {
+    public void testSupportsTopicContributorsTable() {
         DbHelper dbHelperV2 = new DbHelper(sContext, getDatabaseNameForTest(), /* dbVersion*/ 2);
-        assertThat(dbHelperV2.supportsTopContributorsTable()).isFalse();
+        assertThat(dbHelperV2.supportsTopicContributorsTable()).isFalse();
 
         DbHelper dbHelperV3 = new DbHelper(sContext, getDatabaseNameForTest(), /* dbVersion*/ 3);
-        assertThat(dbHelperV3.supportsTopContributorsTable()).isTrue();
+        assertThat(dbHelperV3.supportsTopicContributorsTable()).isTrue();
     }
 
     @Test

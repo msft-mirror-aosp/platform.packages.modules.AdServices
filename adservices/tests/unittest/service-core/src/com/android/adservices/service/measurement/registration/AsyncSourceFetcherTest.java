@@ -61,8 +61,8 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.MeasurementRegistrationResponseStats;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
-import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -418,14 +418,14 @@ public final class AsyncSourceFetcherTest {
                                             + "  \"priority\": \"123\",\n"
                                             + "  \"expiry\": \"456789\",\n"
                                             + "  \"source_event_id\": \"987654321\",\n"
-                                                // Min value of attribution is 1 day or 86400
-                                                // seconds
-                                                + "  \"install_attribution_window\": \"86300\",\n"
-                                                // Max value of cooldown is 30 days or 2592000
-                                                // seconds
-                                                + "  \"post_install_exclusivity_window\":"
-                                                + " \"9876543210\"\n"
-                                                + "}\n")));
+                                            // Min value of attribution is 1 day or 86400
+                                            // seconds
+                                            + "  \"install_attribution_window\": \"86300\",\n"
+                                            // Max value of cooldown is 30 days or 2592000
+                                            // seconds
+                                            + "  \"post_install_exclusivity_window\":"
+                                            + " \"9876543210\"\n"
+                                            + "}\n")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -1264,9 +1264,12 @@ public final class AsyncSourceFetcherTest {
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch = mFetcher.fetchSource(appSourceRegistrationRequest(
-                request, AsyncRegistration.RedirectType.DAISY_CHAIN, 1),
-                asyncFetchStatus, asyncRedirect);
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(
+                                request, AsyncRegistration.RedirectType.DAISY_CHAIN, 1),
+                        asyncFetchStatus,
+                        asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
         assertTrue(fetch.isPresent());
@@ -1296,9 +1299,12 @@ public final class AsyncSourceFetcherTest {
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch = mFetcher.fetchSource(appSourceRegistrationRequest(
-                request, AsyncRegistration.RedirectType.DAISY_CHAIN, 1),
-                asyncFetchStatus, asyncRedirect);
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(
+                                request, AsyncRegistration.RedirectType.DAISY_CHAIN, 1),
+                        asyncFetchStatus,
+                        asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
         assertTrue(fetch.isPresent());
@@ -1332,8 +1338,8 @@ public final class AsyncSourceFetcherTest {
                                             + "  \"priority\": \"123\",\n"
                                             + "  \"expiry\": \"456789\",\n"
                                             + "  \"source_event_id\": \"987654321\",\n"
-                                                + filterData
-                                                + "}\n")));
+                                            + filterData
+                                            + "}\n")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -1373,8 +1379,8 @@ public final class AsyncSourceFetcherTest {
                                             + "  \"priority\": \"123\",\n"
                                             + "  \"expiry\": \"456789\",\n"
                                             + "  \"source_event_id\": \"987654321\",\n"
-                                                + filterData
-                                                + "}\n")));
+                                            + filterData
+                                            + "}\n")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -1409,8 +1415,8 @@ public final class AsyncSourceFetcherTest {
                                             + "  \"priority\": \"123\",\n"
                                             + "  \"expiry\": \"456789\",\n"
                                             + "  \"source_event_id\": \"987654321\",\n"
-                                                + filterData
-                                                + "}\n")));
+                                            + filterData
+                                            + "}\n")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -1442,8 +1448,8 @@ public final class AsyncSourceFetcherTest {
                                             + "  \"priority\": \"123\",\n"
                                             + "  \"expiry\": \"456789\",\n"
                                             + "  \"source_event_id\": \"987654321\",\n"
-                                                + filterData
-                                                + "}\n")));
+                                            + filterData
+                                            + "}\n")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -1482,8 +1488,8 @@ public final class AsyncSourceFetcherTest {
                                             + "  \"priority\": \"123\",\n"
                                             + "  \"expiry\": \"456789\",\n"
                                             + "  \"source_event_id\": \"987654321\",\n"
-                                                + filterData
-                                                + "}\n")));
+                                            + filterData
+                                            + "}\n")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -1515,8 +1521,8 @@ public final class AsyncSourceFetcherTest {
                                             + "  \"priority\": \"123\",\n"
                                             + "  \"expiry\": \"456789\",\n"
                                             + "  \"source_event_id\": \"987654321\",\n"
-                                                + filterData
-                                                + "}\n")));
+                                            + filterData
+                                            + "}\n")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -1581,10 +1587,8 @@ public final class AsyncSourceFetcherTest {
                                             + "  \"priority\": \"123\",\n"
                                             + "  \"expiry\": \"456789\",\n"
                                             + "  \"source_event_id\": \"987654321\",\n"
-                                            + "\"aggregation_keys\": [{\"id\" :"
-                                            + " \"campaignCounts\", \"key_piece\" :"
-                                            + " \"0x159\"},{\"id\" : \"geoValue\", \"key_piece\" :"
-                                            + " \"0x5\"}]\n"
+                                            + "\"aggregation_keys\": {\"campaignCounts\" :"
+                                            + " \"0x159\", \"geoValue\" : \"0x5\"}\n"
                                             + "}\n")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
@@ -1598,9 +1602,7 @@ public final class AsyncSourceFetcherTest {
         Source result = fetch.get();
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
         assertEquals(
-                new JSONArray(
-                                "[{\"id\" : \"campaignCounts\", \"key_piece\" : \"0x159\"},{\"id\""
-                                        + " : \"geoValue\", \"key_piece\" : \"0x5\"}]")
+                new JSONObject("{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}")
                         .toString(),
                 result.getAggregateSource());
         verify(mUrlConnection).setRequestMethod("POST");
@@ -1608,12 +1610,11 @@ public final class AsyncSourceFetcherTest {
 
     @Test
     public void testBasicSourceRequestWithAggregateSource_rejectsTooManyKeys() throws Exception {
-        StringBuilder tooManyKeys = new StringBuilder("[");
+        StringBuilder tooManyKeys = new StringBuilder("{");
         for (int i = 0; i < 51; i++) {
-            tooManyKeys.append(
-                    String.format("{\"id\": \"campaign-%1$s\", \"key_piece\": \"0x15%1$s\"}", i));
+            tooManyKeys.append(String.format("\"campaign-%1$s\": \"0x15%1$s\"", i));
         }
-        tooManyKeys.append("]");
+        tooManyKeys.append("}");
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
@@ -1627,8 +1628,8 @@ public final class AsyncSourceFetcherTest {
                                             + "  \"priority\": \"123\",\n"
                                             + "  \"expiry\": \"456789\",\n"
                                             + "  \"source_event_id\":"
-                                            + " \"987654321\",'aggregation_keys': "
-                                                + tooManyKeys)));
+                                            + " \"987654321\",\"aggregation_keys\": "
+                                            + tooManyKeys)));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -1642,12 +1643,11 @@ public final class AsyncSourceFetcherTest {
     }
     @Test
     public void testSourceRequestWithAggregateSource_tooManyKeys() throws Exception {
-        StringBuilder tooManyKeys = new StringBuilder("[");
+        StringBuilder tooManyKeys = new StringBuilder("{");
         for (int i = 0; i < MAX_AGGREGATE_KEYS_PER_REGISTRATION + 1; i++) {
-            tooManyKeys.append(
-                    String.format("{\"id\": \"campaign-%1$s\", \"key_piece\": \"0x15%1$s\"}", i));
+            tooManyKeys.append(String.format("\"campaign-%1$s\": \"0x15%1$s\"", i));
         }
-        tooManyKeys.append("]");
+        tooManyKeys.append("}");
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
@@ -1661,8 +1661,8 @@ public final class AsyncSourceFetcherTest {
                                             + "  \"priority\": \"123\",\n"
                                             + "  \"expiry\": \"456789\",\n"
                                             + "  \"source_event_id\":"
-                                            + " \"987654321\",'aggregation_keys': "
-                                                + tooManyKeys)));
+                                            + " \"987654321\",\"aggregation_keys\": "
+                                            + tooManyKeys)));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -1689,10 +1689,8 @@ public final class AsyncSourceFetcherTest {
                                             + "  \"priority\": \"123\",\n"
                                             + "  \"expiry\": \"456789\",\n"
                                             + "  \"source_event_id\": \"987654321\",\n"
-                                            + "\"aggregation_keys\": [{\"id\" :"
-                                            + " \"campaignCounts\", \"key_piece\" :"
-                                            + " \"0x159\"},[\"id\", \"geoValue\", \"key_piece\" ,"
-                                            + " \"0x5\"]\n"
+                                            + "\"aggregation_keys\": [\"campaignCounts\","
+                                            + " \"0x159\", \"geoValue\", \"0x5\"]\n"
                                             + "}\n")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
@@ -1721,11 +1719,11 @@ public final class AsyncSourceFetcherTest {
                                             + "  \"priority\": \"123\",\n"
                                             + "  \"expiry\": \"456789\",\n"
                                             + "  \"source_event_id\": \"987654321\",\n"
-                                            + "\"aggregation_keys\": [{\"id\" : \""
-                                                + LONG_AGGREGATE_KEY_ID
-                                                + "\", \"key_piece\" : \"0x159\"},{\"id\" :"
-                                                + " \"geoValue\", \"key_piece\" : \"0x5\"}]\n"
-                                                + "}\n")));
+                                            + "\"aggregation_keys\": {\""
+                                            + LONG_AGGREGATE_KEY_ID
+                                            + "\": \"0x159\","
+                                            + "\"geoValue\": \"0x5\"}\n"
+                                            + "}\n")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -1754,10 +1752,8 @@ public final class AsyncSourceFetcherTest {
                                             + "  \"priority\": \"123\",\n"
                                             + "  \"expiry\": \"456789\",\n"
                                             + "  \"source_event_id\": \"987654321\",\n"
-                                            + "\"aggregation_keys\": [{\"id\" :"
-                                            + " \"campaignCounts\", \"key_piece\" :"
-                                            + " \"0159\"},{\"id\" : \"geoValue\", \"key_piece\" :"
-                                            + " \"0x5\"}]\n"
+                                            + "\"aggregation_keys\": {\"campaignCounts\" :"
+                                            + " \"0159\", \"geoValue\" : \"0x5\"}\n"
                                             + "}\n")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
@@ -1785,13 +1781,11 @@ public final class AsyncSourceFetcherTest {
                                             + "  \"priority\": \"123\",\n"
                                             + "  \"expiry\": \"456789\",\n"
                                             + "  \"source_event_id\": \"987654321\",\n"
-                                            + "\"aggregation_keys\": [{\"id\" :"
-                                            + " \"campaignCounts\", \"key_piece\" :"
-                                            + " \"0x159\"},{\"id\" : \"geoValue\", \"key_piece\" :"
-                                            + " \""
-                                                + LONG_AGGREGATE_KEY_PIECE
-                                                + "\"}]\n"
-                                                + "}\n")));
+                                            + "\"aggregation_keys\": {\"campaignCounts\":"
+                                            + " \"0x159\", \"geoValue\": \""
+                                            + LONG_AGGREGATE_KEY_PIECE
+                                            + "\"}\n"
+                                            + "}\n")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -1946,9 +1940,7 @@ public final class AsyncSourceFetcherTest {
                         null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
-        String aggregateSource =
-                "[{\"id\" : \"campaignCounts\", \"key_piece\" : \"0x159\"},"
-                        + "{\"id\" : \"geoValue\", \"key_piece\" : \"0x5\"}]";
+        String aggregateSource = "{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}";
         String filterData = "{\"product\":[\"1234\",\"2345\"]," + "\"ctid\":[\"id\"]}";
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -1986,7 +1978,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(
                 result.getEventTime() + TimeUnit.SECONDS.toMillis(456789L),
                 result.getExpiryTime());
-        assertEquals(new JSONArray(aggregateSource).toString(), result.getAggregateSource());
+        assertEquals(new JSONObject(aggregateSource).toString(), result.getAggregateSource());
         verify(mUrlConnection).setRequestMethod("POST");
     }
     @Test
@@ -2000,9 +1992,7 @@ public final class AsyncSourceFetcherTest {
                         null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
-        String aggregateSource =
-                "[{\"id\" : \"campaignCounts\", \"key_piece\" : \"0x159\"},"
-                        + "{\"id\" : \"geoValue\", \"key_piece\" : \"0x5\"}]";
+        String aggregateSource = "{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}";
         String filterData = "{\"product\":[\"1234\",\"2345\"]," + "\"ctid\":[\"id\"]}";
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -2045,7 +2035,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(
                 result.getEventTime() + TimeUnit.SECONDS.toMillis(456789L),
                 result.getExpiryTime());
-        assertEquals(new JSONArray(aggregateSource).toString(), result.getAggregateSource());
+        assertEquals(new JSONObject(aggregateSource).toString(), result.getAggregateSource());
         verify(mUrlConnection).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
     }

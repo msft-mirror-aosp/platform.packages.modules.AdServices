@@ -153,7 +153,7 @@ public class TopicsServiceImplTest {
 
         mBlockedTopicsManager = new BlockedTopicsManager(mTopicsDao);
         AppUpdateManager appUpdateManager =
-                new AppUpdateManager(mTopicsDao, new Random(), mMockFlags);
+                new AppUpdateManager(dbHelper, mTopicsDao, new Random(), mMockFlags);
         mTopicsWorker =
                 new TopicsWorker(
                         mMockEpochManager,

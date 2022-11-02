@@ -107,6 +107,7 @@ public class TriggerTest {
                         .setAggregateTriggerData(aggregateTriggerDatas.toString())
                         .setAggregateValues(values.toString())
                         .setFilters(TOP_LEVEL_FILTERS_JSON_STRING)
+                        .setNotFilters(TOP_LEVEL_FILTERS_JSON_STRING)
                         .setDebugKey(DEBUG_KEY)
                         .setAggregatableAttributionTrigger(
                                 TriggerFixture.getValidTrigger()
@@ -124,6 +125,7 @@ public class TriggerTest {
                         .setAggregateTriggerData(aggregateTriggerDatas.toString())
                         .setAggregateValues(values.toString())
                         .setFilters(TOP_LEVEL_FILTERS_JSON_STRING)
+                        .setNotFilters(TOP_LEVEL_FILTERS_JSON_STRING)
                         .setDebugKey(DEBUG_KEY)
                         .setAggregatableAttributionTrigger(
                                 TriggerFixture.getValidTrigger()
@@ -198,6 +200,11 @@ public class TriggerTest {
                         .setFilters(TOP_LEVEL_FILTERS_JSON_STRING).build(),
                 TriggerFixture.getValidTriggerBuilder()
                         .setFilters(TOP_LEVEL_FILTERS_JSON_STRING_X).build());
+        assertNotEquals(
+                TriggerFixture.getValidTriggerBuilder()
+                        .setNotFilters(TOP_LEVEL_FILTERS_JSON_STRING).build(),
+                TriggerFixture.getValidTriggerBuilder()
+                        .setNotFilters(TOP_LEVEL_FILTERS_JSON_STRING_X).build());
     }
 
     @Test
@@ -233,6 +240,7 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA,
                 TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
+                TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY);
         assertInvalidTriggerArguments(
                 Uri.parse("com.destination"),
@@ -243,6 +251,7 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA,
                 TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
+                TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY);
     }
 
@@ -257,6 +266,7 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA,
                 TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
+                TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY);
     }
 
@@ -271,6 +281,7 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA,
                 TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
+                TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY);
         assertInvalidTriggerArguments(
                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION,
@@ -281,6 +292,7 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA,
                 TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
+                TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY);
     }
 
@@ -508,6 +520,7 @@ public class TriggerTest {
             String aggregateTriggerData,
             String aggregateValues,
             String filters,
+            String notFilters,
             UnsignedLong debugKey) {
         assertThrows(
                 IllegalArgumentException.class,
@@ -521,6 +534,7 @@ public class TriggerTest {
                                 .setAggregateTriggerData(aggregateTriggerData)
                                 .setAggregateValues(aggregateValues)
                                 .setFilters(filters)
+                                .setNotFilters(notFilters)
                                 .setDebugKey(debugKey)
                                 .build());
     }

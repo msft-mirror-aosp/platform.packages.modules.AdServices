@@ -401,18 +401,15 @@ class AttributionJobHandler {
      * @return true for a match, false otherwise
      */
     private boolean doTopLevelFiltersMatch(@NonNull Source source, @NonNull Trigger trigger) {
-        String triggerFilters = trigger.getFilters();
-        // Nothing to match
-        if (triggerFilters == null || triggerFilters.isEmpty()) {
-            return true;
-        }
         try {
-            FilterData sourceFiltersData = source.parseFilterData();
-            FilterData triggerFiltersData = extractFilterMap(triggerFilters);
-            return Filter.isFilterMatch(sourceFiltersData, triggerFiltersData, true);
+            FilterData sourceFilters = source.parseFilterData();
+            FilterData triggerFilters = extractFilterMap(trigger.getFilters());
+            FilterData triggerNotFilters = extractFilterMap(trigger.getNotFilters());
+            return Filter.isFilterMatch(sourceFilters, triggerFilters, true)
+                    && Filter.isFilterMatch(sourceFilters, triggerNotFilters, false);
         } catch (JSONException e) {
             // If JSON is malformed, we shall consider as not matched.
-            LogUtil.e(e, "Malformed JSON string.");
+            LogUtil.e(e, "doTopLevelFiltersMatch: JSON parse failed.");
             return false;
         }
     }
@@ -450,10 +447,11 @@ class AttributionJobHandler {
         return true;
     }
 
-    private FilterData extractFilterMap(String object) throws JSONException {
-        JSONObject sourceFilterObject = new JSONObject(object);
+    private static FilterData extractFilterMap(String str) throws JSONException {
+        String json = (str == null || str.isEmpty()) ? "{}" : str;
+        JSONObject filterObject = new JSONObject(json);
         return new FilterData.Builder()
-                .buildFilterData(sourceFilterObject)
+                .buildFilterData(filterObject)
                 .build();
     }
 

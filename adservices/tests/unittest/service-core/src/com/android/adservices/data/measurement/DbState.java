@@ -259,6 +259,7 @@ public class DbState {
                 .setStatus(tJSON.getInt("status"))
                 .setRegistrant(Uri.parse(tJSON.getString("registrant")))
                 .setFilters(tJSON.optString("filters", null))
+                .setNotFilters(tJSON.optString("not_filters", null))
                 .build();
     }
 
