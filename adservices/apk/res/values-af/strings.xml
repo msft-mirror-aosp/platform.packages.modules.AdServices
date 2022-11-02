@@ -47,7 +47,8 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Hoe om deel te neem"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"As die beta aangeskakel is, word programme toegelaat om hierdie nuwe, meer private maniere te toets om vir jou advertensies te wys. Jy kan die beta enige tyd in jou privaatheidinstellings afskakel."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Nee, dankie"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"Ja, ek sal aansluit"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Skakel aan"</string>
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"Meer"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Dankie vir jou deelname"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Jy is deel van Android se advertensieprivaatheidbeta. Die Privacy Sandbox is vir jou toestel aangeskakel.\n\nJy kan enige tyd in jou privaatheidinstellings meer te wete kom of die beta afskakel."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Jy het gekies om nie deel te neem nie"</string>
@@ -79,8 +80,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Geen belangstellings om op die oomblik te wys nie"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android se privaatheidbeta bied nuwe kenmerke wat programme kan gebruik om vir jou advertensies te wys waarvan jy dalk sal hou. Hierdie tegnologieë gebruik nie toestelidentifiseerders nie.\n\nAndroid kan die soorte advertensies skat waarin jy dalk belang sal stel, en stoor hierdie belangstellings tydelik op jou toestel. Dit maak dit vir programme moontlik om vir jou relevante advertesies te wys sonder om jou aktiwiteit op webwerwe en programme van ander ontwikkelaars na te spoor."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Jy het geen geblokkeerde belangstellings nie"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Programme kan jou belangstellings skat en hulle tydelik met Android stoor. ’n Ander program kan later vir jou ’n advertensie wys wat op hierdie belangstellings gegrond is.\n\nAs jy ’n program blokkeer, sal dit nie meer enige belangstellings skat nie. Dit sal nie weer by hierdie lys programme gevoeg word nie, tensy jy dit deblokkeer. Belangstellings wat reeds deur die program geskat is, sal uitgevee word, maar jy sal steeds verwante advertensies sien."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Programme wat jy geblokkeer het"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Stel belangstellings terug wat deur programme geskat is"</string>
@@ -88,7 +88,25 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android se privaatheidbeta bied nuwe kenmerke wat programme kan gebruik om vir jou advertensies te wys waarvan jy dalk sal hou. Hierdie tegnologieë gebruik nie toestelidentifiseerders nie.\n\nProgramme kan die soorte advertensies skat waarin jy dalk belang sal stel, en stoor hierdie belangstellings tydelik op jou toestel. Dit maak dit vir programme moontlik om vir jou relevante advertesies te wys sonder om jou aktiwiteit op webwerwe en programme van ander ontwikkelaars na te spoor."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Jy het geen geblokkeerde programme nie"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Jy het geen geblokkeerde belangstellings nie"</string>
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Kanselleer"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Skakel Privacy Sandbox af?"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Gaan na jou privaatheidinstellings as jy van plan verander of meer oor Android se advertensieprivaatheidbeta te wete wil kom."</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Skakel af"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Blokkeer <xliff:g id="TOPIC">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"Hierdie belangstelling sal geblokkeer word, en sal nie weer by jou lys gevoeg word nie, tensy jy dit weer byvoeg. Jy kan steeds ’n paar verwante advertensies sien."</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Blokkeer"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"<xliff:g id="TOPIC">%1$s</xliff:g> is gedeblokkeer"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android kan hierdie belangstelling weer by jou lys voeg, maar dit sal dalk nie dadelik verskyn nie"</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Stel al jou belangstellings terug?"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"Jou lys sal uitgevee word, en nuwe belangstellings sal van nou af geskat word. Jy kan steeds ’n paar advertensies sien wat verband hou met belangstellings wat uitgevee is."</string>
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Stel terug"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Blokkeer <xliff:g id="APP">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Hiedie app sal nie belangstellings vir die Privacy Sandbox skat nie, en sal nie weer by jou lys gevoeg word nie, tensy jy dit deblokkeer.\n\nBelangstellings wat reeds deur hierdie app geskat is, sal uitgevee word, maar jy kan steeds ’n paar verwante advertensies sien."</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> is gedeblokkeer"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Hierdie app kan weer belangstellings vir jou skat, maar dit sal dalk nie dadelik op jou lys verskyn nie. Dit kan ’n rukkie duur voordat jy verwante advertensies sien."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Stel belangstellings terug wat deur apps gegenereer is?"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"Belangstellings wat die apps op jou lys geskat het, sal in die Privacy Sandbox uitgevee word, en die apps sal van nou af nuwe belangstellings skat. Jy kan steeds ’n paar soortgelyke advertensies sien."</string>
     <string name="topic10001" msgid="1636806320891333775">"Kuns en vermaak"</string>
     <string name="topic10002" msgid="1226367977754287428">"Toneelspel en teater"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime en Manga"</string>

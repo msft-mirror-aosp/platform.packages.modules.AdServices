@@ -23,7 +23,11 @@ import android.os.OutcomeReceiver;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.runner.AndroidJUnit4;
 
+import com.android.compatibility.common.util.ShellUtils;
+
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -35,6 +39,25 @@ import java.util.concurrent.Executors;
 public class AdIdManagerTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final Context sContext = ApplicationProvider.getApplicationContext();
+
+    @Before
+    public void setup() {
+        overrideAdIdKillSwitch(true);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        overrideAdIdKillSwitch(false);
+    }
+
+    // Override adid related kill switch to ignore the effect of actual PH values.
+    // If shouldOverride = true, override adid related kill switch to OFF to allow adservices
+    // If shouldOverride = false, override adid related kill switch to meaningless value so that
+    // PhFlags will use the default value.
+    private void overrideAdIdKillSwitch(boolean shouldOverride) {
+        String overrideString = shouldOverride ? "false" : "null";
+        ShellUtils.runShellCommand("setprop debug.adservices.adid_kill_switch " + overrideString);
+    }
 
     @Test
     public void testAdIdManager() throws Exception {
@@ -55,6 +78,6 @@ public class AdIdManagerTest {
         adIdManager.getAdId(CALLBACK_EXECUTOR, callback);
         AdId resultAdId = future.get();
         Assert.assertNotNull(resultAdId.getAdId());
-        Assert.assertEquals(false, resultAdId.isLimitAdTrackingEnabled());
+        Assert.assertNotNull(resultAdId.isLimitAdTrackingEnabled());
     }
 }

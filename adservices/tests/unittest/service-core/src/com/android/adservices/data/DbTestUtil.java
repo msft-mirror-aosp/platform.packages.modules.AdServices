@@ -52,7 +52,9 @@ public final class DbTestUtil {
             if (sSingleton == null) {
                 sSingleton =
                         new DbHelper(
-                                sContext, DATABASE_NAME_FOR_TEST, DbHelper.LATEST_DATABASE_VERSION);
+                                sContext,
+                                DATABASE_NAME_FOR_TEST,
+                                DbHelper.CURRENT_DATABASE_VERSION);
             }
             return sSingleton;
         }
@@ -91,5 +93,10 @@ public final class DbTestUtil {
         String query = "SELECT * FROM sqlite_master WHERE type='index' and name='" + index + "'";
         Cursor cursor = db.rawQuery(query, null);
         return cursor != null && cursor.getCount() > 0;
+    }
+
+    /** Return test database name */
+    public static String getDatabaseNameForTest() {
+        return DATABASE_NAME_FOR_TEST;
     }
 }

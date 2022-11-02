@@ -47,7 +47,8 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Кантип катышуу керек"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Бета версияны күйгүзсөңүз, колдонмолор сизге жарнамаларды көрсөтүүнүн жаңы купуя жолдорун сынай алат. Бул бета версияны каалаган убакта купуялык параметрлеринен өчүрө аласыз."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Жок, рахмат"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"Ооба, кошулам"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Күйгүзүү"</string>
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"Дагы"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Катышканыңыз үчүн рахмат"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Android\'деги жарнамалардын купуялыгынын бета версиясына катышып жатасыз. Түзмөгүңүздө Privacy Sandbox өчүрүлдү.\n\nКеңири маалымат алып же каалаган убакта бета версияны купуялык параметрлеринен өчүрө аласыз."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Кошулбоону тандадыңыз"</string>
@@ -79,8 +80,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Учурда көрсөтүү үчүн кызыккан нерселер жок"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android\'деги жарнамалардын купуялыгынын бета версиясы колдонмолор сизге кызыктуу жарнамаларды көрсөтүү үчүн пайдалана турган жаңы функцияларды сунуштайт. Бул технологиялар түзмөктүн идентификаторлорун колдонбойт.\n\nAndroid сизге кызыктуу жарнамаларды аныктап, бул кызыккан нерселериңизди түзмөгүңүзгө убактылуу сактай алат. Ал аркылуу колдонмолор сизге ылайыктуу жарнамаларды көрсөтөт, бирок башка иштеп чыгуучулардын колдонмолорунда жана вебсайттарында жасаган аракеттериңизге көз сала албайт."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Бөгөттөлгөн кызыккан нерселериңиз жок"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Колдонмолор кызыккан нерселериңизди аныктап, аларды Android\'ге убактылуу сактай алат. Кийинчерээк башка колдонмо сизге бул кызыккан нерселердин негизинде жарнама көрсөтө алат.\n\nЭгер колдонмону бөгөттөсөңүз, ал мындан кийин кызыккан нерселериңизди аныктабай калат. Аны бөгөттөн чыгармайынча, ал ушул колдонмолордун тизмесине кошулбайт. Колдонмо буга чейин аныктаган кызыккан нерселер өчүрүлөт, бирок ылайыктуу жарнамаларды дагы деле көрүшүңүз мүмкүн."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Сиз бөгөттөгөн колдонмолор"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Колдонмолор аныктаган кызыккан нерселерди баштапкы абалга келтирүү"</string>
@@ -88,7 +88,25 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android\'деги жарнамалардын купуялыгынын бета версиясы колдонмолор сизге кызыктуу жарнамаларды көрсөтүү үчүн пайдалана турган жаңы функцияларды сунуштайт. Бул технологиялар түзмөктүн идентификаторлорун колдонбойт.\n\nКолдонмолор сизге кызыктуу жарнамаларды аныктап, бул кызыккан нерселериңизди түзмөгүңүзгө убактылуу сактай алат. Ал аркылуу колдонмолор сизге ылайыктуу жарнамаларды көрсөтөт, бирок башка иштеп чыгуучулардын колдонмолорунда жана вебсайттарында жасаган аракеттериңизге көз сала албайт."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Бөгөттөлгөн колдонмолоруңуз жок"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Бөгөттөлгөн кызыккан нерселериңиз жок"</string>
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Токтотуу"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Privacy Sandbox өчүрүлсүнбү?"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Эгер аларды кайра иштеткиңиз келсе же \"Android’де көрүнгөн жарнамалардын купуялыгы\" программасын сыноо жөнүндө кененирээк маалымат алгыңыз келсе, купуялык параметрлерине өтүңүз."</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Өчүрүү"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"<xliff:g id="TOPIC">%1$s</xliff:g> бөгөттөлсүнбү?"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"Бул кызыккан нерсе бөгөттөлбөй, тизмеңизде кайра көрүнүшү үчүн аны кайра кошушуңуз керек. Бирок айрым окшош жарнамаларды көрө бересиз."</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Бөгөттөө"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"<xliff:g id="TOPIC">%1$s</xliff:g> бөгөттөн чыгарылды"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android бул кызыккан нерсени тизмеге кошо алат, бирок ал дароо көрүнбөйт"</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"Жарайт"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Бардык кызыккан нерселериңиз баштапкы абалга келтирилсинби?"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"Тизме тазаланып, жаңы кызыккан нерселериңиз божомолдонот. Тазаланган тизмедеги кызыккан нерселериңиз боюнча жарнамаларды дагы деле көрүшүңүз мүмкүн."</string>
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Баштапкы абалга келтирүү"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g> бөгөттөлсүнбү?"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Бул колдонмо Privacy Sandbox технологиялары үчүн кызыккан нерселериңизди божомолдоп, тизмеңизде көрүнүшү үчүн аны бөгөттөн чыгарышыңыз керек.\n\nБуга чейин аныкталган кызыгууларыңыз өчүрүлөт, бирок алардын негизинде тандалган жарнамалар көрүнө берет."</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> бөгөттөн чыгарылды"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Бул колдонмо кызыккан нерселериңизди кайра божомолдой алат, бирок алар тизмеде дароо көрүнбөйт. Ушул нерселердин негизинде тандалган жарнамалар бир аздан кийин көрүнө баштайт."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Колдонмолор чогулткан кызыккан нерселер баштапкы абалга келтирилсинби?"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"Тизмедеги колдонмолор божомолдогон кызыккан нерселериңиз Privacy Sandbox\'тон өчүрүлүп, колдонмолор жаңы кызыккан нерселериңизди божомолдойт. Бирок айрым окшош жарнамаларды көрө бересиз."</string>
     <string name="topic10001" msgid="1636806320891333775">"Искусство жана көңүл ачуу"</string>
     <string name="topic10002" msgid="1226367977754287428">"Актёрдук жана театр"</string>
     <string name="topic10003" msgid="6949890838957814881">"Аниме жана Манга"</string>

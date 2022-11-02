@@ -108,17 +108,26 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
 
                 // We use Runnable::run so that the callback is called on a binder thread.
                 // Otherwise we'd use the main thread, which could cause a deadlock.
-                final boolean success =
-                        mContext.bindService(intent, BIND_FLAGS, Runnable::run, mServiceConnection);
-                if (!success) {
-                    LogUtil.e("Failed to bindService: " + intent);
+                try {
+                    final boolean success =
+                            mContext.bindService(
+                                    intent, BIND_FLAGS, Runnable::run, mServiceConnection);
+                    if (!success) {
+                        LogUtil.e("Failed to bindService: " + intent);
+                        mServiceConnection = null;
+                        return null;
+                    } else {
+                        LogUtil.d("bindService() started...");
+                    }
+                } catch (Exception e) {
+                    LogUtil.e(
+                            "Caught unexpected exception during service binding: "
+                                    + e.getMessage());
                     mServiceConnection = null;
                     return null;
-                } else {
-                    LogUtil.d("bindService() succeeded...");
                 }
             } else {
-                LogUtil.d("bindService() already pending...");
+                LogUtil.d("There is already a pending connection!");
             }
         }
 
@@ -155,27 +164,21 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
         @Override
         public void onServiceDisconnected(ComponentName name) {
             LogUtil.d("onServiceDisconnected " + mServiceIntentAction);
-            synchronized (mLock) {
-                mService = null;
-            }
+            unbindFromService();
             mConnectionCountDownLatch.countDown();
         }
 
         @Override
         public void onBindingDied(ComponentName name) {
             LogUtil.d("onBindingDied " + mServiceIntentAction);
-            synchronized (mLock) {
-                mService = null;
-            }
+            unbindFromService();
             mConnectionCountDownLatch.countDown();
         }
 
         @Override
         public void onNullBinding(ComponentName name) {
-            LogUtil.e("onNullBinding shouldn't happen: " + mServiceIntentAction);
-            synchronized (mLock) {
-                mService = null;
-            }
+            LogUtil.e("onNullBinding " + mServiceIntentAction);
+            unbindFromService();
             mConnectionCountDownLatch.countDown();
         }
     }
@@ -227,12 +230,10 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
     @Override
     public void unbindFromService() {
         synchronized (mLock) {
-            if (mService == null || mServiceConnection == null) {
-                return; // Nothing to release.
+            if (mServiceConnection != null) {
+                LogUtil.d("unbinding...");
+                mContext.unbindService(mServiceConnection);
             }
-
-            LogUtil.d("unbinding...");
-            mContext.unbindService(mServiceConnection);
             mServiceConnection = null;
             mService = null;
         }

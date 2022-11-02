@@ -3,11 +3,12 @@
     "property": "version_info",
     "taxonomy_type": "chrome_and_mobile_taxonomy",
     "taxonomy_version": "12",
+    "build_id" : "8",
     "updated_date": "2022-08-10"
   },
   {
     "asset_name": "labels_topics",
-    "asset_version": "34",
+    "asset_version": "2",
     "path": "assets/classifier/labels_test_topics.txt",
     "checksum": "a52edeb53126e08e0fc56e0a4be96ee543739ae90e8da7f803dc228ec25eb107",
     "updated_date": "2022-07-29"

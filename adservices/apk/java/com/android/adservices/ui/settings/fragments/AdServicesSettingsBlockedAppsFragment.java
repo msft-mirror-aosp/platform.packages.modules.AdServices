@@ -21,15 +21,20 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.adservices.api.R;
-import com.android.adservices.ui.settings.ActionDelegate;
-import com.android.adservices.ui.settings.AdServicesSettingsActivity;
+import com.android.adservices.service.consent.App;
+import com.android.adservices.ui.settings.activities.BlockedAppsActivity;
+import com.android.adservices.ui.settings.delegates.BlockedAppsActionDelegate;
 import com.android.adservices.ui.settings.viewadatpors.AppsListViewAdapter;
-import com.android.adservices.ui.settings.viewmodels.AppsViewModel;
+import com.android.adservices.ui.settings.viewmodels.BlockedAppsViewModel;
+
+import java.util.function.Function;
 
 /** Fragment for the blocked apps view of the AdServices Settings App. */
 public class AdServicesSettingsBlockedAppsFragment extends Fragment {
@@ -37,37 +42,40 @@ public class AdServicesSettingsBlockedAppsFragment extends Fragment {
     @Override
     public View onCreateView(
             LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.blocked_apps_fragment, container, false);
+        return inflater.inflate(R.layout.blocked_apps_fragment, container, false);
+    }
 
-        setupViewModel(rootView);
+    @Override
+    public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
+        setupViewModel(view);
         initActionListeners();
-
-        return rootView;
     }
 
     // initialize all action listeners except for actions in blocked apps list
     private void initActionListeners() {
-        ActionDelegate actionDelegate =
-                ((AdServicesSettingsActivity) requireActivity()).getActionDelegate();
+        BlockedAppsActionDelegate actionDelegate =
+                ((BlockedAppsActivity) requireActivity()).getActionDelegate();
         actionDelegate.initBlockedAppsFragment();
     }
 
-    /**
-     * Initializes view model connection with blocked apps list. (Action listeners for each item in
-     * the list will be handled by the adapter).
-     */
+    // initializes view model connection with blocked apps list.
+    // (Action listeners for each item in the list will be handled by the adapter)
     private void setupViewModel(View rootView) {
-        AppsViewModel viewModel =
-                ((AdServicesSettingsActivity) requireActivity())
-                        .getViewModelProvider()
-                        .get(AppsViewModel.class);
+        // create adapter
+        BlockedAppsViewModel viewModel =
+                new ViewModelProvider(requireActivity()).get(BlockedAppsViewModel.class);
+        Function<App, View.OnClickListener> getOnclickListener =
+                app -> view -> viewModel.restoreAppConsentButtonClickHandler(app);
+        AppsListViewAdapter adapter =
+                new AppsListViewAdapter(
+                        requireContext(), viewModel.getBlockedApps(), getOnclickListener, true);
+
+        // set adapter for recyclerView
         RecyclerView recyclerView = rootView.findViewById(R.id.blocked_apps_list);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-        AppsListViewAdapter adapter = new AppsListViewAdapter(viewModel, true);
         recyclerView.setAdapter(adapter);
 
         View noBlockedAppsMessage = rootView.findViewById(R.id.no_blocked_apps_message);
-
         viewModel
                 .getBlockedApps()
                 .observe(getViewLifecycleOwner(), blockedAppsList -> {

@@ -47,7 +47,8 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"ਭਾਗ ਲੈਣ ਦਾ ਤਰੀਕਾ"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"ਬੀਟਾ ਨੂੰ ਚਾਲੂ ਕਰਨ ਨਾਲ ਐਪਾਂ ਨੂੰ ਤੁਹਾਨੂੰ ਵਿਗਿਆਪਨ ਦਿਖਾਉਣ ਲਈ ਇਨ੍ਹਾਂ ਨਵੇਂ, ਹੋਰ ਜ਼ਿਆਦਾ ਨਿੱਜੀ ਤਰੀਕਿਆਂ ਦੀ ਜਾਂਚ ਕਰਨ ਦੀ ਆਗਿਆ ਮਿਲਦੀ ਹੈ। ਤੁਸੀਂ ਆਪਣੀਆਂ ਪਰਦੇਦਾਰੀ ਸੈਟਿੰਗਾਂ ਵਿੱਚ ਜਾ ਕੇ ਕਿਸੇ ਵੇਲੇ ਵੀ ਬੀਟਾ ਨੂੰ ਬੰਦ ਕਰ ਸਕਦੇ ਹੋ।"</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"ਨਹੀਂ ਧੰਨਵਾਦ"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"ਹਾਂ, ਮੈਂ ਸ਼ਾਮਲ ਹੋਣ ਲਈ ਤਿਆਰ ਹਾਂ"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"ਚਾਲੂ ਕਰੋ"</string>
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"ਹੋਰ"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"ਭਾਗੀਦਾਰੀ ਲਈ ਤੁਹਾਡਾ ਧੰਨਵਾਦ"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"ਤੁਸੀਂ Android ਦੇ ਵਿਗਿਆਪਨ ਪਰਦੇਦਾਰੀ ਸੰਬੰਧੀ ਬੀਟਾ ਵਰਜਨ ਦਾ ਹਿੱਸਾ ਹੋ। ਪ੍ਰਾਈਵੇਸੀ ਸੈਂਡਬਾਕਸ ਨੂੰ ਤੁਹਾਡੇ ਡੀਵਾਈਸ ਲਈ ਚਾਲੂ ਕੀਤਾ ਗਿਆ ਹੈ।\n\nਤੁਸੀਂ ਆਪਣੀਆਂ ਪਰਦੇਦਾਰੀ ਸੈਟਿੰਗਾਂ ਵਿੱਚ ਜਾ ਕੇ ਹੋਰ ਜਾਣ ਸਕਦੇ ਹੋ ਜਾਂ ਕਿਸੇ ਵੀ ਸਮੇਂ ਬੀਟਾ ਨੂੰ ਬੰਦ ਕਰ ਸਕਦੇ ਹੋ।"</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"ਤੁਸੀਂ ਭਾਗੀਦਾਰੀ ਨਾ ਕਰਨ ਦੀ ਚੋਣ ਕੀਤੀ ਹੈ"</string>
@@ -79,8 +80,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"ਇਸ ਵੇਲੇ ਦਿਖਾਉਣ ਲਈ ਕੋਈ ਦਿਲਚਸਪੀ ਨਹੀਂ ਹੈ"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"ਪ੍ਰਾਈਵੇਸੀ ਸੈਂਡਬਾਕਸ"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android ਦਾ ਵਿਗਿਆਪਨ ਪਰਦੇਦਾਰੀ ਸੰਬੰਧੀ ਬੀਟਾ ਵਰਜਨ ਨਵੀਆਂ ਵਿਸ਼ੇਸ਼ਤਾਵਾਂ ਮੁਹੱਈਆ ਕਰਵਾਉਂਦਾ ਹੈ, ਜਿਨ੍ਹਾਂ ਨੂੰ ਐਪਾਂ ਤੁਹਾਡੇ ਮਨਪਸੰਦ ਵਿਗਿਆਪਨ ਦਿਖਾਉਣ ਲਈ ਵਰਤ ਸਕਦੀਆਂ ਹਨ। ਇਹ ਤਕਨਾਲੋਜੀਆਂ ਡੀਵਾਈਸ ਪਛਾਣਕਰਤਾਵਾਂ ਦੀ ਵਰਤੋਂ ਨਹੀਂ ਕਰਦੀਆਂ।\n\nAndroid ਤੁਹਾਡੇ ਦਿਲਚਸਪੀ ਵਾਲੇ ਵਿਗਿਆਪਨਾਂ ਦੀਆਂ ਕਿਸਮਾਂ ਬਾਰੇ ਅੰਦਾਜ਼ਾ ਲਗਾ ਸਕਦਾ ਹੈ, ਅਤੇ ਉਨ੍ਹਾਂ ਦਿਲਚਸਪੀਆਂ ਨੂੰ ਤੁਹਾਡੇ ਡੀਵਾਈਸ \'ਤੇ ਕੁਝ ਸਮੇਂ ਲਈ ਰੱਖਿਅਤ ਕਰ ਸਕਦਾ ਹੈ। ਇਸ ਨਾਲ ਐਪਾਂ ਨੂੰ ਹੋਰ ਵਿਕਾਸਕਾਰਾਂ ਦੀਆਂ ਵੈੱਬਸਾਈਟਾਂ ਅਤੇ ਐਪਾਂ \'ਤੇ ਤੁਹਾਡੀ ਸਰਗਰਮੀ ਨੂੰ ਟਰੈਕ ਕੀਤੇ ਬਿਨਾਂ, ਤੁਹਾਨੂੰ ਢੁਕਵੇਂ ਵਿਗਿਆਪਨ ਦਿਖਾਉਣ ਦੀ ਆਗਿਆ ਮਿਲਦੀ ਹੈ।"</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"ਤੁਹਾਡੇ ਕੋਲ ਕੋਈ ਬਲਾਕ ਕੀਤੀ ਦਿਲਚਸਪੀ ਨਹੀਂ ਹੈ"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"ਐਪਾਂ ਤੁਹਾਡੀਆਂ ਦਿਲਚਸਪੀਆਂ ਬਾਰੇ ਅੰਦਾਜ਼ਾ ਲਗਾ ਸਕਦੀਆਂ ਹਨ ਅਤੇ ਉਨ੍ਹਾਂ ਨੂੰ Android ਨਾਲ ਕੁਝ ਸਮੇਂ ਲਈ ਰੱਖਿਅਤ ਕਰ ਸਕਦੀਆਂ ਹਨ। ਬਾਅਦ ਵਿੱਚ, ਕੋਈ ਵੱਖਰੀ ਐਪ ਇਨ੍ਹਾਂ ਦਿਲਚਸਪੀਆਂ ਦੇ ਆਧਾਰ \'ਤੇ ਤੁਹਾਨੂੰ ਵਿਗਿਆਪਨ ਦਿਖਾ ਸਕਦੀ ਹੈ।\n\nਜੇ ਤੁਸੀਂ ਕਿਸੇ ਐਪ ਨੂੰ ਬਲਾਕ ਕਰਦੇ ਹੋ, ਤਾਂ ਇਹ ਕਿਸੇ ਹੋਰ ਦਿਲਚਸਪੀ ਬਾਰੇ ਅੰਦਾਜ਼ਾ ਨਹੀਂ ਲਗਾ ਸਕੇਗੀ। ਇਸਨੂੰ ਉਦੋਂ ਤੱਕ ਐਪਾਂ ਦੀ ਇਸ ਸੂਚੀ ਵਿੱਚ ਦੁਬਾਰਾ ਸ਼ਾਮਲ ਨਹੀਂ ਕੀਤਾ ਜਾਵੇਗਾ, ਜਦੋਂ ਤੱਕ ਤੁਸੀਂ ਇਸਨੂੰ ਅਣਬਲਾਕ ਨਹੀਂ ਕਰ ਦਿੰਦੇ। ਐਪ ਵੱਲੋਂ ਪਹਿਲਾਂ ਤੋਂ ਅੰਦਾਜ਼ਨ ਦਿਲਚਸਪੀਆਂ ਨੂੰ ਮਿਟਾ ਦਿੱਤਾ ਜਾਵੇਗਾ, ਪਰ ਤੁਹਾਨੂੰ ਹਾਲੇ ਵੀ ਕੁਝ ਸੰਬੰਧਿਤ ਵਿਗਿਆਪਨ ਦਿਸ ਸਕਦੇ ਹਨ।"</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"ਤੁਹਾਡੇ ਵੱਲੋਂ ਬਲਾਕ ਕੀਤੀਆਂ ਗਈਆਂ ਐਪਾਂ"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"ਐਪਾਂ ਦੀਆਂ ਅੰਦਾਜ਼ਨ ਦਿਲਚਸਪੀਆਂ ਨੂੰ ਰੀਸੈੱਟ ਕਰੋ"</string>
@@ -88,7 +88,25 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"ਪ੍ਰਾਈਵੇਸੀ ਸੈਂਡਬਾਕਸ"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android ਦਾ ਵਿਗਿਆਪਨ ਪਰਦੇਦਾਰੀ ਸੰਬੰਧੀ ਬੀਟਾ ਵਰਜਨ ਨਵੀਆਂ ਵਿਸ਼ੇਸ਼ਤਾਵਾਂ ਮੁਹੱਈਆ ਕਰਵਾਉਂਦਾ ਹੈ, ਜਿਨ੍ਹਾਂ ਨੂੰ ਐਪਾਂ ਤੁਹਾਡੇ ਮਨਪਸੰਦ ਵਿਗਿਆਪਨ ਦਿਖਾਉਣ ਲਈ ਵਰਤ ਸਕਦੀਆਂ ਹਨ। ਇਹ ਤਕਨਾਲੋਜੀਆਂ ਡੀਵਾਈਸ ਪਛਾਣਕਰਤਾਵਾਂ ਦੀ ਵਰਤੋਂ ਨਹੀਂ ਕਰਦੀਆਂ।\n\nਐਪਾਂ ਤੁਹਾਡੇ ਦਿਲਚਸਪੀ ਵਾਲੇ ਵਿਗਿਆਪਨਾਂ ਦੀਆਂ ਕਿਸਮਾਂ ਬਾਰੇ ਅੰਦਾਜ਼ਾ ਲਗਾ ਸਕਦੀਆਂ ਹਨ, ਅਤੇ ਉਨ੍ਹਾਂ ਦਿਲਚਸਪੀਆਂ ਨੂੰ ਤੁਹਾਡੇ ਡੀਵਾਈਸ \'ਤੇ ਕੁਝ ਸਮੇਂ ਲਈ ਰੱਖਿਅਤ ਕਰ ਸਕਦੀਆਂ ਹਨ। ਇਸ ਨਾਲ ਐਪਾਂ ਨੂੰ ਹੋਰ ਵਿਕਾਸਕਾਰਾਂ ਦੀਆਂ ਵੈੱਬਸਾਈਟਾਂ ਅਤੇ ਐਪਾਂ \'ਤੇ ਤੁਹਾਡੀ ਸਰਗਰਮੀ ਨੂੰ ਟਰੈਕ ਕੀਤੇ ਬਿਨਾਂ, ਤੁਹਾਨੂੰ ਢੁਕਵੇਂ ਵਿਗਿਆਪਨ ਦਿਖਾਉਣ ਦੀ ਆਗਿਆ ਮਿਲਦੀ ਹੈ।"</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"ਤੁਹਾਡੇ ਕੋਲ ਕੋਈ ਬਲਾਕ ਕੀਤੀ ਐਪ ਨਹੀਂ ਹੈ"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"ਤੁਹਾਡੇ ਕੋਲ ਕੋਈ ਬਲਾਕ ਕੀਤੀ ਦਿਲਚਸਪੀ ਨਹੀਂ ਹੈ"</string>
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"ਰੱਦ ਕਰੋ"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"ਕੀ ਪ੍ਰਾਈਵੇਸੀ ਸੈਂਡਬਾਕਸ ਨੂੰ ਬੰਦ ਕਰਨਾ ਹੈ?"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"ਜੇ ਤੁਸੀਂ ਆਪਣਾ ਮਨ ਬਦਲਦੇ ਹੋ ਜਾਂ Android ਦੇ ਵਿਗਿਆਪਨ ਪਰਦੇਦਾਰੀ ਬੀਟਾ ਬਾਰੇ ਹੋਰ ਜਾਣਨਾ ਚਾਹੁੰਦੇ ਹੋ, ਤਾਂ ਆਪਣੀਆਂ ਪਰਦੇਦਾਰੀ ਸੈਟਿੰਗਾਂ \'ਤੇ ਜਾਓ"</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"ਬੰਦ ਕਰੋ"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"ਕੀ <xliff:g id="TOPIC">%1$s</xliff:g> ਨੂੰ ਬਲਾਕ ਕਰਨਾ ਹੈ?"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"ਇਸ ਦਿਲਚਸਪੀ ਨੂੰ ਬਲਾਕ ਕਰ ਦਿੱਤਾ ਜਾਵੇਗਾ ਅਤੇ ਇਸਨੂੰ ਤੁਹਾਡੀ ਸੂਚੀ ਵਿੱਚ ਉਦੋਂ ਤੱਕ ਦੁਬਾਰਾ ਸ਼ਾਮਲ ਨਹੀਂ ਕੀਤਾ ਜਾਵੇਗਾ, ਜਦੋਂ ਤੱਕ ਤੁਸੀਂ ਇਸਨੂੰ ਵਾਪਸ ਸ਼ਾਮਲ ਨਹੀਂ ਕਰਦੇ। ਤੁਹਾਨੂੰ ਹਾਲੇ ਵੀ ਕੁਝ ਸੰਬੰਧਿਤ ਵਿਗਿਆਪਨ ਦਿਸ ਸਕਦੇ ਹਨ।"</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"ਬਲਾਕ ਕਰੋ"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"<xliff:g id="TOPIC">%1$s</xliff:g> ਨੂੰ ਅਣਬਲਾਕ ਕੀਤਾ ਗਿਆ"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android ਤੁਹਾਡੀ ਸੂਚੀ ਵਿੱਚ ਇਸ ਦਿਲਚਸਪੀ ਨੂੰ ਦੁਬਾਰਾ ਸ਼ਾਮਲ ਕਰ ਸਕਦਾ ਹੈ, ਪਰ ਹੋ ਸਕਦਾ ਹੈ ਕਿ ਇਹ ਤੁਰੰਤ ਨਾ ਦਿਸੇ"</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"ਠੀਕ ਹੈ"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"ਕੀ ਤੁਹਾਡੀਆਂ ਸਾਰੀਆਂ ਦਿਲਚਸਪੀਆਂ ਨੂੰ ਰੀਸੈੱਟ ਕਰਨਾ ਹੈ?"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"ਤੁਹਾਡੀ ਸੂਚੀ ਨੂੰ ਕਲੀਅਰ ਕੀਤਾ ਜਾਵੇਗਾ ਅਤੇ ਅੱਗੇ ਵਾਸਤੇ ਨਵੀਆਂ ਦਿਲਚਸਪੀਆਂ ਦਾ ਅੰਦਾਜ਼ਾ ਲਗਾਇਆ ਜਾਵੇਗਾ। ਤੁਹਾਨੂੰ ਹਾਲੇ ਵੀ ਕਲੀਅਰ ਕੀਤੀਆਂ ਦਿਲਚਸਪੀਆਂ ਨਾਲ ਸੰਬੰਧਿਤ ਕੁਝ ਵਿਗਿਆਪਨ ਦਿਸ ਸਕਦੇ ਹਨ।"</string>
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"ਰੀਸੈੱਟ ਕਰੋ"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"ਕੀ <xliff:g id="APP">%1$s</xliff:g> ਨੂੰ ਬਲਾਕ ਕਰਨਾ ਹੈ?"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"ਇਹ ਐਪ ਪ੍ਰਾਈਵੇਸੀ ਸੈਂਡਬਾਕਸ ਲਈ ਦਿਲਚਸਪੀਆਂ ਦਾ ਅੰਦਾਜ਼ਾ ਨਹੀਂ ਲਗਾਏਗੀ ਅਤੇ ਇਸਨੂੰ ਤੁਹਾਡੀ ਸੂਚੀ ਵਿੱਚ ਉਦੋਂ ਤੱਕ ਦੁਬਾਰਾ ਸ਼ਾਮਲ ਨਹੀਂ ਕੀਤਾ ਜਾਵੇਗਾ, ਜਦੋਂ ਤੱਕ ਤੁਸੀਂ ਇਸਨੂੰ ਅਣਬਲਾਕ ਨਹੀਂ ਕਰਦੇ।\n\nਇਸ ਐਪ ਵੱਲੋਂ ਪਹਿਲਾਂ ਤੋਂ ਅੰਦਾਜ਼ਨ ਦਿਲਚਸਪੀਆਂ ਨੂੰ ਮਿਟਾ ਦਿੱਤਾ ਜਾਵੇਗਾ, ਪਰ ਤੁਹਾਨੂੰ ਹਾਲੇ ਵੀ ਕੁਝ ਸੰਬੰਧਿਤ ਵਿਗਿਆਪਨ ਦਿਸ ਸਕਦੇ ਹਨ।"</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> ਨੂੰ ਅਣਬਲਾਕ ਕੀਤਾ ਗਿਆ"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"ਇਹ ਐਪ ਤੁਹਾਡੇ ਲਈ ਦੁਬਾਰਾ ਦਿਲਚਸਪੀਆਂ ਦਾ ਅੰਦਾਜ਼ਾ ਲਗਾ ਸਕਦੀ ਹੈ, ਪਰ ਹੋ ਸਕਦਾ ਹੈ ਕਿ ਇਹ ਤੁਰੰਤ ਤੁਹਾਡੀ ਸੂਚੀ ਵਿੱਚ ਨਾ ਦਿਸਣ। ਤੁਹਾਨੂੰ ਸੰਬੰਧਿਤ ਵਿਗਿਆਪਨ ਦਿਸਣ ਵਿੱਚ ਕੁਝ ਸਮਾਂ ਲੱਗ ਸਕਦਾ ਹੈ।"</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"ਕੀ ਐਪਾਂ ਵੱਲੋਂ ਸਿਰਜੀਆਂ ਗਈਆਂ ਦਿਲਚਸਪੀਆਂ ਨੂੰ ਰੀਸੈੱਟ ਕਰਨਾ ਹੈ?"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"ਤੁਹਾਡੀ ਸੂਚੀ ਦੀਆਂ ਐਪਾਂ ਦੁਆਰਾ ਅੰਦਾਜ਼ਾ ਲਗਾਈਆਂ ਦਿਲਚਸਪੀਆਂ ਨੂੰ ਪ੍ਰਾਈਵੇਸੀ ਸੈਂਡਬਾਕਸ ਤੋਂ ਮਿਟਾ ਦਿੱਤਾ ਜਾਵੇਗਾ ਅਤੇ ਉਹ ਐਪਾਂ ਅੱਗੇ ਵਾਸਤੇ ਨਵੀਆਂ ਦਿਲਚਸਪੀਆਂ ਦਾ ਅੰਦਾਜ਼ਾ ਲਗਾਉਣਗੀਆਂ। ਤੁਹਾਨੂੰ ਹਾਲੇ ਵੀ ਕੁਝ ਸੰਬੰਧਿਤ ਵਿਗਿਆਪਨ ਦਿਸ ਸਕਦੇ ਹਨ।"</string>
     <string name="topic10001" msgid="1636806320891333775">"ਕਲਾ ਅਤੇ ਮਨੋਰੰਜਨ"</string>
     <string name="topic10002" msgid="1226367977754287428">"ਅਦਾਕਾਰੀ ਅਤੇ ਥੀਏਟਰ"</string>
     <string name="topic10003" msgid="6949890838957814881">"ਐਨੀਮੇ ਅਤੇ ਮਾਂਗਾ"</string>
