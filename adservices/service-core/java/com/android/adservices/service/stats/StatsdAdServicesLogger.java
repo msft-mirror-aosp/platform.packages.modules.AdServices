@@ -101,7 +101,7 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
         AdServicesStatsLog.write(
                 RUN_AD_SELECTION_PROCESS_REPORTED,
                 stats.getIsRemarketingAdsWon(),
-                stats.getAdSelectionEntrySizeInBytes(),
+                stats.getDBAdSelectionSizeInBytes(),
                 stats.getPersistAdSelectionLatencyInMillis(),
                 stats.getPersistAdSelectionResultCode(),
                 stats.getRunAdSelectionLatencyInMillis(),
