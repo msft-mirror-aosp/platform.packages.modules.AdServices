@@ -18,6 +18,8 @@ package android.app.sdksandbox.testutils;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.fail;
+
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
@@ -73,6 +75,16 @@ public class FakeLoadSdkCallback implements OutcomeReceiver<SandboxedSdk, LoadSd
             mLoadSdkSuccess = true;
         }
         return mLoadSdkSuccess;
+    }
+
+    public void assertLoadSdkIsSuccessful() {
+        if (!this.isLoadSdkSuccessful()) {
+            fail(
+                    "Load SDK was not successful. errorCode: "
+                            + this.getLoadSdkErrorCode()
+                            + ", errorMsg: "
+                            + this.getLoadSdkErrorMsg());
+        }
     }
 
     public int getLoadSdkErrorCode() {
