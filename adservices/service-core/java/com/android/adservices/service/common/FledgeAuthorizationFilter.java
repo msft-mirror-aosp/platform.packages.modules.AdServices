@@ -28,6 +28,7 @@ import android.content.pm.PackageManager;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.internal.annotations.VisibleForTesting;
@@ -144,6 +145,16 @@ public class FledgeAuthorizationFilter {
 
         if (!AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
                 context, appPackageName, enrollmentData.getEnrollmentId())) {
+            LogUtil.v(
+                    "App package name \"%s\" with ad tech identifier \"%s\" not authorized to call"
+                            + " API %d",
+                    appPackageName, adTechIdentifier.toString(), apiNameLoggingId);
+            mAdServicesLogger.logFledgeApiCallStats(apiNameLoggingId, STATUS_CALLER_NOT_ALLOWED, 0);
+            throw new AdTechNotAllowedException();
+        }
+
+        // Check if enrollment is in blocklist.
+        if (PhFlags.getInstance().isEnrollmentBlocklisted(enrollmentData.getEnrollmentId())) {
             LogUtil.v(
                     "App package name \"%s\" with ad tech identifier \"%s\" not authorized to call"
                             + " API %d",
