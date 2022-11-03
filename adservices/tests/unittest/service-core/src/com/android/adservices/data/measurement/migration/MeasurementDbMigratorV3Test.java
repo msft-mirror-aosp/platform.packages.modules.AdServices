@@ -16,6 +16,7 @@
 
 package com.android.adservices.data.measurement.migration;
 
+import static com.android.adservices.data.DbTestUtil.doesIndexExist;
 import static com.android.adservices.data.DbTestUtil.doesTableExistAndColumnCountMatch;
 
 import static org.junit.Assert.assertEquals;
@@ -81,6 +82,7 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
         assertTrue(
                 doesTableExistAndColumnCountMatch(
                         db, MeasurementTables.AttributionContract.TABLE, 10));
+        assertTrue(doesIndexExist(db, "idx_msmt_attribution_ss_so_ds_do_ei_tt"));
         assertEventReportMigration(db);
     }
 

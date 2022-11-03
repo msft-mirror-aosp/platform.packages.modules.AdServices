@@ -202,6 +202,8 @@ public class TopicsServiceImplTest {
                         eq(Throttler.ApiKey.TOPICS_API_APP_PACKAGE_NAME), anyString()))
                 .thenReturn(true);
 
+        when(mMockFlags.isEnrollmentBlocklisted(Mockito.any())).thenReturn(false);
+
         // Initialize mock static.
         mStaticMockitoSession =
                 ExtendedMockito.mockitoSession()
@@ -378,6 +380,19 @@ public class TopicsServiceImplTest {
                 new EnrollmentData.Builder().setEnrollmentId(null).build();
         when(mEnrollmentDao.getEnrollmentDataFromSdkName(SOME_SDK_NAME))
                 .thenReturn(fakeEnrollmentData);
+        invokeGetTopicsAndVerifyError(mMockSdkContext, STATUS_CALLER_NOT_ALLOWED);
+    }
+
+    @Test
+    public void checkSdkEnrollmentInBlocklist_blocked() throws Exception {
+        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        EnrollmentData fakeEnrollmentData =
+                new EnrollmentData.Builder().setEnrollmentId(ALLOWED_SDK_ID).build();
+        when(mEnrollmentDao.getEnrollmentDataFromSdkName(SOME_SDK_NAME))
+                .thenReturn(fakeEnrollmentData);
+
+        when(mMockFlags.isEnrollmentBlocklisted(ALLOWED_SDK_ID)).thenReturn(true);
+
         invokeGetTopicsAndVerifyError(mMockSdkContext, STATUS_CALLER_NOT_ALLOWED);
     }
 

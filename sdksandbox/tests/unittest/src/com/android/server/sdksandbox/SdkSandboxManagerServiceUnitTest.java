@@ -1226,8 +1226,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 () ->
                         SdkSandboxStatsLog.write(
                                 SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                                SdkSandboxStatsLog
-                                        .SANDBOX_API_CALLED__METHOD__GET_LOADED_SDK_LIBRARIES_INFO,
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__GET_SANDBOXED_SDKS,
                                 (int)
                                         (TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP
                                                 - TIME_APP_CALLED_SYSTEM_SERVER),
@@ -1805,8 +1804,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 () ->
                         SdkSandboxStatsLog.write(
                                 SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                                SdkSandboxStatsLog
-                                        .SANDBOX_API_CALLED__METHOD__GET_LOADED_SDK_LIBRARIES_INFO,
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__GET_SANDBOXED_SDKS,
                                 (int)
                                         (END_TIME_IN_SYSTEM_SERVER
                                                 - TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP),
