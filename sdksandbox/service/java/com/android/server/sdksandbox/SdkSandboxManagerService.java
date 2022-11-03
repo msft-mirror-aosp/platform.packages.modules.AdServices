@@ -1091,10 +1091,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 DeviceConfig.getBoolean(
                         DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_DISABLE_SDK_SANDBOX, false);
 
-        // This is required so that the sandbox is not re-enabled in the same boot.
-        @GuardedBy("mLock")
-        private boolean mKillSwitchBecameEnabled = false;
-
         SdkSandboxSettingsListener(Context context) {
             mContext = context;
         }
@@ -1120,21 +1116,17 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         "false",
                         false);
                 mIsKillSwitchEnabled = false;
-                mKillSwitchBecameEnabled = false;
             }
         }
 
         @Override
         public void onPropertiesChanged(@NonNull DeviceConfig.Properties properties) {
             synchronized (mLock) {
-                if (!mIsKillSwitchEnabled && !mKillSwitchBecameEnabled) {
-                    mIsKillSwitchEnabled =
-                            properties.getBoolean(PROPERTY_DISABLE_SDK_SANDBOX, false);
-                    if (mIsKillSwitchEnabled) {
-                        mKillSwitchBecameEnabled = true;
-                        synchronized (SdkSandboxManagerService.this.mLock) {
-                            stopAllSandboxesLocked();
-                        }
+                boolean killSwitchPreviouslyEnabled = mIsKillSwitchEnabled;
+                mIsKillSwitchEnabled = properties.getBoolean(PROPERTY_DISABLE_SDK_SANDBOX, false);
+                if (mIsKillSwitchEnabled && !killSwitchPreviouslyEnabled) {
+                    synchronized (SdkSandboxManagerService.this.mLock) {
+                        stopAllSandboxesLocked();
                     }
                 }
             }
