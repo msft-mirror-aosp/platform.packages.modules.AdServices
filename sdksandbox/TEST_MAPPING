@@ -38,9 +38,6 @@
     },
     {
       "name": "SdkSandboxManagerDisabledTests[com.google.android.adservices.apex]"
-    },
-    {
-     "name": "SdkSandboxPerfScenarioTests[com.google.android.adservices.apex]"
     }
   ],
   "mainline-postsubmit": [
@@ -87,9 +84,6 @@
     },
     {
       "name": "SdkSandboxManagerDisabledTests"
-    },
-    {
-      "name": "SdkSandboxPerfScenarioTests"
     }
   ],
   "postsubmit": [
