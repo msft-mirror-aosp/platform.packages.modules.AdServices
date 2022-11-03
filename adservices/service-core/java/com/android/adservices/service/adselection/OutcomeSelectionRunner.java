@@ -29,6 +29,7 @@ import android.net.Uri;
 import android.os.RemoteException;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.data.adselection.AdSelectionEntryDao;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -39,9 +40,12 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 
 /**
  * Orchestrator that runs the logic retrieved on a list of outcomes and signals.
@@ -49,15 +53,24 @@ import java.util.concurrent.ExecutorService;
  * <p>Class takes in an executor on which it runs the OutcomeSelection logic
  */
 public class OutcomeSelectionRunner {
+    @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
+    @NonNull protected final ListeningExecutorService mBackgroundExecutorService;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
 
     @VisibleForTesting
-    public static final String AD_OUTCOMES_LIST_INPUT_CANNOT_BE_EMPTY_MSG =
+    static final String AD_OUTCOMES_LIST_INPUT_CANNOT_BE_EMPTY_MSG =
             "Ad outcomes list should at least have one element inside";
 
-    public OutcomeSelectionRunner(@NonNull final ExecutorService lightweightExecutorService) {
+    public OutcomeSelectionRunner(
+            @NonNull final AdSelectionEntryDao adSelectionEntryDao,
+            @NonNull final ExecutorService backgroundExecutorService,
+            @NonNull final ExecutorService lightweightExecutorService) {
+        Objects.requireNonNull(adSelectionEntryDao);
+        Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(lightweightExecutorService);
 
+        mAdSelectionEntryDao = adSelectionEntryDao;
+        mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
     }
 
@@ -113,6 +126,9 @@ public class OutcomeSelectionRunner {
             @NonNull AdSelectionSignals selectionSignals,
             @NonNull Uri selectionUri) {
         // TODO(249843968): Implement outcome selection service orchestration
+        FluentFuture<Map<Long, Double>> outcomeIdBidPairsFuture =
+                FluentFuture.from(retrieveAdSelectionIdToBidMap(adOutcomes));
+
         return mLightweightExecutorService.submit(() -> null);
     }
 
@@ -153,5 +169,25 @@ public class OutcomeSelectionRunner {
                 !adSelectionOutcome.getAdOutcomes().isEmpty(),
                 new IllegalArgumentException(AD_OUTCOMES_LIST_INPUT_CANNOT_BE_EMPTY_MSG));
         return null;
+    }
+
+    /** Retrieves winner ad bids using ad selection ids of already run ad selections' outcomes. */
+    @VisibleForTesting
+    ListenableFuture<Map<Long, Double>> retrieveAdSelectionIdToBidMap(
+            List<AdSelectionOutcome> adOutcomes) {
+        Map<Long, Double> retrievedIdBidPairs = new HashMap<>();
+        return mBackgroundExecutorService.submit(
+                () -> {
+                    List<Long> adOutcomeIds =
+                            adOutcomes.parallelStream()
+                                    .map(AdSelectionOutcome::getAdSelectionId)
+                                    .collect(Collectors.toList());
+                    mAdSelectionEntryDao.getAdSelectionEntities(adOutcomeIds).parallelStream()
+                            .forEach(
+                                    e ->
+                                            retrievedIdBidPairs.put(
+                                                    e.getAdSelectionId(), e.getWinningAdBid()));
+                    return retrievedIdBidPairs;
+                });
     }
 }
