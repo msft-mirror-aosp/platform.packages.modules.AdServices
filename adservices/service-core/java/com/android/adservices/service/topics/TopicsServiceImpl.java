@@ -288,7 +288,9 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                                     mContext,
                                     Process.isSdkSandboxUid(callingUid),
                                     topicsParam.getAppPackageName(),
-                                    enrollmentData.getEnrollmentId());
+                                    enrollmentData.getEnrollmentId())
+                            && !mFlags.isEnrollmentBlocklisted(enrollmentData.getEnrollmentId());
+
             if (!permitted) {
                 invokeCallbackWithStatus(
                         callback, STATUS_CALLER_NOT_ALLOWED, "Caller is not authorized.");

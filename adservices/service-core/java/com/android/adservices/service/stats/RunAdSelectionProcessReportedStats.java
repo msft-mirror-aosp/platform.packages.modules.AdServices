@@ -24,8 +24,8 @@ public abstract class RunAdSelectionProcessReportedStats {
     /** @return isRemarketingAdsWon. */
     public abstract boolean getIsRemarketingAdsWon();
 
-    /** @return adSelectionEntrySizeInBytes. */
-    public abstract int getAdSelectionEntrySizeInBytes();
+    /** @return DBAdSelectionSizeInBytes. */
+    public abstract int getDBAdSelectionSizeInBytes();
 
     /** @return persistAdSelectionLatencyInMills. */
     public abstract int getPersistAdSelectionLatencyInMillis();
@@ -49,7 +49,7 @@ public abstract class RunAdSelectionProcessReportedStats {
     abstract static class Builder {
         abstract Builder setIsRemarketingAdsWon(boolean value);
 
-        abstract Builder setAdSelectionEntrySizeInBytes(int value);
+        abstract Builder setDBAdSelectionSizeInBytes(int value);
 
         abstract Builder setPersistAdSelectionLatencyInMillis(int value);
 
