@@ -191,16 +191,6 @@ public class AsyncRegistrationQueueRunner {
                             if (isSourceAllowedToInsert(source, topOrigin, publisherType, dao)) {
                                 insertSourcesFromTransaction(source, dao);
                             }
-                            Uri osDestination =
-                                    asyncRegistration.getRedirectType()
-                                                    != AsyncRegistration.RedirectType.ANY
-                                            ? asyncRegistration.getOsDestination()
-                                            : source.getAppDestination();
-                            Uri webDestination =
-                                    asyncRegistration.getRedirectType()
-                                                    != AsyncRegistration.RedirectType.ANY
-                                            ? asyncRegistration.getWebDestination()
-                                            : source.getWebDestination();
                             if (asyncRegistration.shouldProcessRedirects()) {
                                 LogUtil.d(
                                         "AsyncRegistrationQueueRunner: "
@@ -211,8 +201,8 @@ public class AsyncRegistrationQueueRunner {
                                 processRedirects(
                                         asyncRegistration,
                                         asyncRedirect,
-                                        webDestination,
-                                        osDestination,
+                                        source.getWebDestination(),
+                                        source.getAppDestination(),
                                         dao);
                             }
                         }
