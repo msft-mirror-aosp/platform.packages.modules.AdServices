@@ -18,11 +18,11 @@ package android.app.sdksandbox.testutils;
 
 import android.app.sdksandbox.ILoadSdkCallback;
 import android.app.sdksandbox.IRequestSurfacePackageCallback;
-import android.app.sdksandbox.ISdkSandboxLifecycleCallback;
 import android.app.sdksandbox.ISdkSandboxManager;
+import android.app.sdksandbox.ISdkSandboxProcessDeathCallback;
 import android.app.sdksandbox.ISharedPreferencesSyncCallback;
+import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SharedPreferencesUpdate;
-import android.content.pm.SharedLibraryInfo;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -61,9 +61,8 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
             Bundle params,
             IRequestSurfacePackageCallback callback) {}
 
-
     @Override
-    public List<SharedLibraryInfo> getLoadedSdkLibrariesInfo(
+    public List<SandboxedSdk> getSandboxedSdks(
             String callingPackageName, long timeAppCalledSystemServer) {
         return Collections.emptyList();
     }
@@ -79,12 +78,16 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
             ISharedPreferencesSyncCallback callback) {}
 
     @Override
-    public void addSdkSandboxLifecycleCallback(
-            String callingPackageName, ISdkSandboxLifecycleCallback callback) {}
+    public void addSdkSandboxProcessDeathCallback(
+            String callingPackageName,
+            long timeAppCalledSystemServer,
+            ISdkSandboxProcessDeathCallback callback) {}
 
     @Override
-    public void removeSdkSandboxLifecycleCallback(
-            String callingPackageName, ISdkSandboxLifecycleCallback callback) {}
+    public void removeSdkSandboxProcessDeathCallback(
+            String callingPackageName,
+            long timeAppCalledSystemServer,
+            ISdkSandboxProcessDeathCallback callback) {}
 
     @Override
     public void logLatencyFromSystemServerToApp(String method, int latency) {}

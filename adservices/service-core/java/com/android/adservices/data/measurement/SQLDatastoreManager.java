@@ -16,24 +16,23 @@
 
 package com.android.adservices.data.measurement;
 
+import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 
 import com.android.adservices.data.DbHelper;
+import com.android.adservices.service.FlagsFactory;
 import com.android.internal.annotations.VisibleForTesting;
 
-/**
- *  Datastore manager for SQLite database.
- */
-class SQLDatastoreManager extends DatastoreManager {
+/** Datastore manager for SQLite database. */
+@VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
+public class SQLDatastoreManager extends DatastoreManager {
 
     private final DbHelper mDbHelper;
     private static SQLDatastoreManager sSingleton;
 
-    /**
-     * Acquire an instance of {@link SQLDatastoreManager}.
-     */
+    /** Acquire an instance of {@link SQLDatastoreManager}. */
     static synchronized SQLDatastoreManager getInstance(Context context) {
         if (sSingleton == null) {
             sSingleton = new SQLDatastoreManager(context);
@@ -43,6 +42,12 @@ class SQLDatastoreManager extends DatastoreManager {
 
     private SQLDatastoreManager(Context context) {
         mDbHelper = DbHelper.getInstance(context);
+    }
+
+    /** Get {@link DatastoreManager} instance with a {@link DbHelper}. */
+    @VisibleForTesting
+    public SQLDatastoreManager(@NonNull DbHelper dbHelper) {
+        mDbHelper = dbHelper;
     }
 
     @Override
@@ -58,6 +63,9 @@ class SQLDatastoreManager extends DatastoreManager {
     @Override
     @VisibleForTesting
     public IMeasurementDao getMeasurementDao() {
-        return new MeasurementDao();
+        return new MeasurementDao(
+                () ->
+                        mDbHelper.getDbFileSize()
+                                >= FlagsFactory.getFlags().getMeasurementDbSizeLimit());
     }
 }

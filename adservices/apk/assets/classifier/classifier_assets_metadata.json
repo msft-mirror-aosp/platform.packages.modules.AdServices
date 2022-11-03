@@ -3,6 +3,7 @@
     "property": "version_info",
     "taxonomy_type": "chrome_and_mobile_taxonomy",
     "taxonomy_version": "2",
+    "build_id" : "2",
     "updated_date": "2022-08-10"
   },
   {
@@ -16,8 +17,8 @@
     "asset_name": "precomputed_app_list",
     "asset_version": "2",
     "path": "assets/classifier/precomputed_app_list.csv",
-    "checksum": "79078da8d0414526b14535509a3111e1f40762dc4b5acefa3f9155510dbc666c",
-    "updated_date": "2022-08-17"
+    "checksum": "8749598423bb8baca59e0da508739d544e40f230e7edcdb92438e9e76f75e830",
+    "updated_date": "2022-10-10"
   },
   {
     "asset_name": "topic_id_to_name",

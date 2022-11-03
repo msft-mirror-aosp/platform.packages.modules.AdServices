@@ -74,7 +74,6 @@ android_library {
         "auto_value_annotations"
     ],
     static_libs: [
-        "js-sandbox-client",
         "androidx.concurrent_concurrent-futures",
         "androidx.annotation_annotation",
         "cbor-java",
@@ -83,6 +82,10 @@ android_library {
         "modules-utils-preconditions",
         "tflite_support_classifiers_java",
         "mobile_data_downloader_lib",
+        "androidx.webkit_webkit",
+        "androidx.javascriptengine_javascriptengine",
+        "adservices-proto-lite",
+        "adservices-grpclib-lite",
     ],
     apex_available: ["com.android.adservices"],
 }
@@ -103,4 +106,19 @@ cc_library_shared {
     shared_libs: ["libcrypto"],
     apex_available: ["com.android.adservices"],
     visibility: ["//packages/modules/AdServices:__subpackages__"],
+}
+
+// Schemas needs to be bundled via this android_library since service-core unit tests for schema
+// migration will need this.
+android_library {
+    name: "adservices-service-core-schema",
+    sdk_version: "module_current",
+    min_sdk_version: "Tiramisu",
+    asset_dirs: [
+        "schemas",
+    ],
+    // Must use EmptyManifest.xml since this will be used by the service-core tests. If we use the
+    // normal "AndroidManifest.xml", we may introduce potential error like redeclare permissions.
+    // See b/228270294 for the error about duplicated permissions.
+    manifest: "EmptyManifest.xml",
 }

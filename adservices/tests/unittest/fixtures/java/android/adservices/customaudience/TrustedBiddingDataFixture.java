@@ -20,24 +20,30 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
+import com.google.common.collect.ImmutableList;
+
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.List;
 
 /** Utility class supporting custom audience API unit tests */
 public class TrustedBiddingDataFixture {
-    public static final String VALID_TRUSTED_BIDDING_URL_PATH = "/trusted/bidding/";
+    public static final String VALID_TRUSTED_BIDDING_URI_PATH = "/trusted/bidding/";
 
-    public static final ArrayList<String> VALID_TRUSTED_BIDDING_KEYS = new ArrayList<String>(
-            Arrays.asList("example", "valid", "list", "of", "keys"));
+    public static final ImmutableList<String> VALID_TRUSTED_BIDDING_KEYS =
+            ImmutableList.of("example", "valid", "list", "of", "keys");
 
-    public static Uri getValidTrustedBiddingUrlByBuyer(AdTechIdentifier buyer) {
-        return CommonFixture.getUri(buyer, VALID_TRUSTED_BIDDING_URL_PATH);
+    public static List<String> getValidTrustedBiddingKeys() {
+        return new ArrayList<>(VALID_TRUSTED_BIDDING_KEYS);
+    }
+
+    public static Uri getValidTrustedBiddingUriByBuyer(AdTechIdentifier buyer) {
+        return CommonFixture.getUri(buyer, VALID_TRUSTED_BIDDING_URI_PATH);
     }
 
     public static TrustedBiddingData getValidTrustedBiddingDataByBuyer(AdTechIdentifier buyer) {
         return new TrustedBiddingData.Builder()
-                .setTrustedBiddingKeys(VALID_TRUSTED_BIDDING_KEYS)
-                .setTrustedBiddingUrl(getValidTrustedBiddingUrlByBuyer(buyer))
+                .setTrustedBiddingKeys(getValidTrustedBiddingKeys())
+                .setTrustedBiddingUri(getValidTrustedBiddingUriByBuyer(buyer))
                 .build();
     }
 }

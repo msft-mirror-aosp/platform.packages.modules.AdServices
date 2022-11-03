@@ -20,7 +20,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
-import android.Manifest;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.ReportImpressionRequest;
@@ -35,12 +34,7 @@ import android.net.Uri;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
-import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.adservices.service.PhFlagsFixture;
-import com.android.compatibility.common.util.ShellUtils;
-
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -56,17 +50,8 @@ public class PermissionsValidTest {
     private static final String PERMISSION_NOT_REQUESTED =
             "Caller is not authorized to call this API. Permission was not requested.";
 
-    @Before
-    public void setup() {
-        InstrumentationRegistry.getInstrumentation()
-                .getUiAutomation()
-                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
-    }
-
     @Test
     public void testValidPermissions_topics() throws Exception {
-        overrideDisableTopicsEnrollmentCheck("1");
-
         AdvertisingTopicsClient advertisingTopicsClient1 =
                 new AdvertisingTopicsClient.Builder()
                         .setContext(sContext)
@@ -78,114 +63,81 @@ public class PermissionsValidTest {
         // Not getting an error here indicates that permissions are valid. The valid case is also
         // tested in TopicsManagerTest.
         assertThat(sdk1Result.getTopics()).isEmpty();
-        overrideDisableTopicsEnrollmentCheck("0");
     }
 
     @Test
     public void testValidPermissions_fledgeJoinCustomAudience()
             throws ExecutionException, InterruptedException {
-        PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
+        AdvertisingCustomAudienceClient customAudienceClient =
+                new AdvertisingCustomAudienceClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
 
-        try {
-            AdvertisingCustomAudienceClient customAudienceClient =
-                    new AdvertisingCustomAudienceClient.Builder()
-                            .setContext(sContext)
-                            .setExecutor(CALLBACK_EXECUTOR)
-                            .build();
+        CustomAudience customAudience =
+                new CustomAudience.Builder()
+                        .setBuyer(AdTechIdentifier.fromString("test.com"))
+                        .setName("exampleCustomAudience")
+                        .setDailyUpdateUri(Uri.parse("https://test.com/daily-update"))
+                        .setBiddingLogicUri(Uri.parse("https://test.com/bidding-logic"))
+                        .build();
 
-            CustomAudience customAudience =
-                    new CustomAudience.Builder()
-                            .setBuyer(AdTechIdentifier.fromString("test.com"))
-                            .setName("exampleCustomAudience")
-                            .setDailyUpdateUrl(Uri.parse("https://test.com/daily-update"))
-                            .setBiddingLogicUrl(Uri.parse("https://test.com/bidding-logic"))
-                            .build();
-
-            customAudienceClient.joinCustomAudience(customAudience).get();
-        } finally {
-            PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
-        }
+        customAudienceClient.joinCustomAudience(customAudience).get();
     }
 
     @Test
     public void testValidPermissions_selectAds() {
-        PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
-
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
 
-        try {
-            AdSelectionClient mAdSelectionClient =
-                    new AdSelectionClient.Builder()
-                            .setContext(sContext)
-                            .setExecutor(CALLBACK_EXECUTOR)
-                            .build();
+        AdSelectionClient mAdSelectionClient =
+                new AdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
 
-            ExecutionException exception =
-                    assertThrows(
-                            ExecutionException.class,
-                            () -> mAdSelectionClient.selectAds(adSelectionConfig).get());
-            // We only need to get past the permissions check for this test to be valid
-            assertThat(exception.getMessage()).isNotEqualTo(PERMISSION_NOT_REQUESTED);
-        } finally {
-            PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
-        }
+        ExecutionException exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> mAdSelectionClient.selectAds(adSelectionConfig).get());
+        // We only need to get past the permissions check for this test to be valid
+        assertThat(exception.getMessage()).isNotEqualTo(PERMISSION_NOT_REQUESTED);
     }
 
     @Test
     public void testValidPermissions_reportImpression() {
-        PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
-
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
 
         long adSelectionId = 1;
 
-        try {
-            AdSelectionClient mAdSelectionClient =
-                    new AdSelectionClient.Builder()
-                            .setContext(sContext)
-                            .setExecutor(CALLBACK_EXECUTOR)
-                            .build();
+        AdSelectionClient mAdSelectionClient =
+                new AdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
 
-            ReportImpressionRequest request =
-                    new ReportImpressionRequest(adSelectionId, adSelectionConfig);
+        ReportImpressionRequest request =
+                new ReportImpressionRequest(adSelectionId, adSelectionConfig);
 
-            ExecutionException exception =
-                    assertThrows(
-                            ExecutionException.class,
-                            () -> mAdSelectionClient.reportImpression(request).get());
-            // We only need to get past the permissions check for this test to be valid
-            assertThat(exception.getMessage()).isNotEqualTo(PERMISSION_NOT_REQUESTED);
-        } finally {
-            PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
-        }
+        ExecutionException exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> mAdSelectionClient.reportImpression(request).get());
+        // We only need to get past the permissions check for this test to be valid
+        assertThat(exception.getMessage()).isNotEqualTo(PERMISSION_NOT_REQUESTED);
     }
 
     @Test
     public void testValidPermissions_fledgeLeaveCustomAudience()
             throws ExecutionException, InterruptedException {
-        PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
+        AdvertisingCustomAudienceClient customAudienceClient =
+                new AdvertisingCustomAudienceClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
 
-        try {
-            AdvertisingCustomAudienceClient customAudienceClient =
-                    new AdvertisingCustomAudienceClient.Builder()
-                            .setContext(sContext)
-                            .setExecutor(CALLBACK_EXECUTOR)
-                            .build();
-
-            customAudienceClient
-                    .leaveCustomAudience(
-                            AdTechIdentifier.fromString("test.com"),
-                            "exampleCustomAudience")
-                    .get();
-        } finally {
-            PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
-        }
-    }
-
-    // Override the flag to disable Topics enrollment check.
-    private void overrideDisableTopicsEnrollmentCheck(String val) {
-        // Setting it to 1 here disables the Topics enrollment check.
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.disable_topics_enrollment_check " + val);
+        customAudienceClient
+                .leaveCustomAudience(
+                        AdTechIdentifier.fromString("test.com"), "exampleCustomAudience")
+                .get();
     }
 }

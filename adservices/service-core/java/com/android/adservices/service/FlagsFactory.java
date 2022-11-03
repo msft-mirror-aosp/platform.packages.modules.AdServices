@@ -49,6 +49,21 @@ public class FlagsFactory {
             public boolean getEnforceIsolateMaxHeapSize() {
                 return false;
             }
+
+            @Override
+            public boolean getDisableFledgeEnrollmentCheck() {
+                return true;
+            }
+
+            @Override
+            public boolean getEnableDatabaseSchemaVersion3() {
+                return true;
+            }
+
+            @Override
+            public boolean getEnableTopicContributorsCheck() {
+                return true;
+            }
         };
     }
 }

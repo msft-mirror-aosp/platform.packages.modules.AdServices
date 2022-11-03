@@ -22,15 +22,14 @@ import android.annotation.Nullable;
 import android.net.Uri;
 
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
-import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 import com.android.adservices.service.measurement.noising.ImpressionNoiseParams;
 import com.android.adservices.service.measurement.noising.ImpressionNoiseUtil;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Validation;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -66,12 +65,11 @@ public class Source {
     public static final int DUAL_DESTINATION_IMPRESSION_NOISE_MULTIPLIER = 2;
 
     private String mId;
-    private long mEventId;
+    private UnsignedLong mEventId;
     private Uri mPublisher;
     @EventSurfaceType private int mPublisherType;
     private Uri mAppDestination;
     private Uri mWebDestination;
-    private Uri mAdTechDomain;
     private String mEnrollmentId;
     private Uri mRegistrant;
     private SourceType mSourceType;
@@ -79,25 +77,23 @@ public class Source {
     @Status private int mStatus;
     private long mEventTime;
     private long mExpiryTime;
-    private List<Long> mDedupKeys;
+    private List<UnsignedLong> mDedupKeys;
     @AttributionMode private int mAttributionMode;
     private long mInstallAttributionWindow;
     private long mInstallCooldownWindow;
-    private @Nullable Long mDebugKey;
+    private @Nullable UnsignedLong mDebugKey;
     private boolean mIsInstallAttributed;
-    private String mAggregateFilterData;
+    private String mFilterData;
     private String mAggregateSource;
     private int mAggregateContributions;
     private AggregatableAttributionSource mAggregatableAttributionSource;
 
-    @IntDef(value = {
-            Status.ACTIVE,
-            Status.IGNORED,
-    })
+    @IntDef(value = {Status.ACTIVE, Status.IGNORED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
     public @interface Status {
         int ACTIVE = 0;
         int IGNORED = 1;
+        int MARKED_TO_DELETE = 2;
     }
 
     @IntDef(value = {
@@ -121,7 +117,7 @@ public class Source {
         private final String mValue;
 
         SourceType(String value) {
-            this.mValue = value;
+            mValue = value;
         }
 
         public String getValue() {
@@ -141,14 +137,14 @@ public class Source {
 
     /** Class for storing fake report data. */
     public static class FakeReport {
-        private final long mTriggerData;
+        private final UnsignedLong mTriggerData;
         private final long mReportingTime;
         private final Uri mDestination;
 
-        public FakeReport(long triggerData, long reportingTime, Uri destination) {
-            this.mTriggerData = triggerData;
-            this.mReportingTime = reportingTime;
-            this.mDestination = destination;
+        public FakeReport(UnsignedLong triggerData, long reportingTime, Uri destination) {
+            mTriggerData = triggerData;
+            mReportingTime = reportingTime;
+            mDestination = destination;
         }
 
         @Override
@@ -156,7 +152,7 @@ public class Source {
             if (this == o) return true;
             if (!(o instanceof FakeReport)) return false;
             FakeReport that = (FakeReport) o;
-            return mTriggerData == that.mTriggerData
+            return Objects.equals(mTriggerData, that.mTriggerData)
                     && mReportingTime == that.mReportingTime
                     && Objects.equals(mDestination, that.mDestination);
         }
@@ -170,7 +166,7 @@ public class Source {
             return mReportingTime;
         }
 
-        public long getTriggerData() {
+        public UnsignedLong getTriggerData() {
             return mTriggerData;
         }
 
@@ -242,7 +238,7 @@ public class Source {
     public int getTriggerDataCardinality() {
         return mSourceType == SourceType.EVENT
                 ? PrivacyParams.EVENT_TRIGGER_DATA_CARDINALITY
-                : PrivacyParams.NAVIGATION_TRIGGER_DATA_CARDINALITY;
+                : PrivacyParams.getNavigationTriggerDataCardinality();
     }
 
     /**
@@ -312,19 +308,18 @@ public class Source {
                 && mPublisherType == source.mPublisherType
                 && Objects.equals(mAppDestination, source.mAppDestination)
                 && Objects.equals(mWebDestination, source.mWebDestination)
-                && Objects.equals(mAdTechDomain, source.mAdTechDomain)
                 && Objects.equals(mEnrollmentId, source.mEnrollmentId)
                 && mPriority == source.mPriority
                 && mStatus == source.mStatus
                 && mExpiryTime == source.mExpiryTime
                 && mEventTime == source.mEventTime
-                && mEventId == source.mEventId
+                && Objects.equals(mEventId, source.mEventId)
                 && Objects.equals(mDebugKey, source.mDebugKey)
                 && mSourceType == source.mSourceType
                 && Objects.equals(mDedupKeys, source.mDedupKeys)
                 && Objects.equals(mRegistrant, source.mRegistrant)
                 && mAttributionMode == source.mAttributionMode
-                && Objects.equals(mAggregateFilterData, source.mAggregateFilterData)
+                && Objects.equals(mFilterData, source.mFilterData)
                 && Objects.equals(mAggregateSource, source.mAggregateSource)
                 && mAggregateContributions == source.mAggregateContributions
                 && Objects.equals(
@@ -339,7 +334,6 @@ public class Source {
                 mPublisherType,
                 mAppDestination,
                 mWebDestination,
-                mAdTechDomain,
                 mEnrollmentId,
                 mPriority,
                 mStatus,
@@ -348,7 +342,7 @@ public class Source {
                 mEventId,
                 mSourceType,
                 mDedupKeys,
-                mAggregateFilterData,
+                mFilterData,
                 mAggregateSource,
                 mAggregateContributions,
                 mAggregatableAttributionSource,
@@ -412,7 +406,7 @@ public class Source {
                             .map(
                                     reportConfig ->
                                             new FakeReport(
-                                                    reportConfig[0],
+                                                    new UnsignedLong(Long.valueOf(reportConfig[0])),
                                                     getReportingTimeForNoising(reportConfig[1]),
                                                     resolveFakeReportDestination(reportConfig[2])))
                             .collect(Collectors.toList());
@@ -432,7 +426,7 @@ public class Source {
     /**
      * Identifier provided by the registrant.
      */
-    public long getEventId() {
+    public UnsignedLong getEventId() {
         return mEventId;
     }
 
@@ -444,14 +438,7 @@ public class Source {
     }
 
     /**
-     * AdTech reporting destination domain for generated reports.
-     */
-    public Uri getAdTechDomain() {
-        return mAdTechDomain;
-    }
-
-    /**
-     * AdTech enrollment ID
+     * Ad Tech enrollment ID
      */
     public String getEnrollmentId() {
         return mEnrollmentId;
@@ -493,7 +480,7 @@ public class Source {
     }
 
     /** Debug key of {@link Source}. */
-    public @Nullable Long getDebugKey() {
+    public @Nullable UnsignedLong getDebugKey() {
         return mDebugKey;
     }
 
@@ -507,7 +494,7 @@ public class Source {
     /**
      * List of dedup keys for the attributed {@link Trigger}.
      */
-    public List<Long> getDedupKeys() {
+    public List<UnsignedLong> getDedupKeys() {
         return mDedupKeys;
     }
 
@@ -565,8 +552,8 @@ public class Source {
      * }
      * }
      */
-    public String getAggregateFilterData() {
-        return mAggregateFilterData;
+    public String getFilterData() {
+        return mFilterData;
     }
 
     /**
@@ -624,35 +611,46 @@ public class Source {
     }
 
     /**
+     * Generates AggregatableFilterData from aggregate filter string in Source, including an entry
+     * for source type.
+     */
+    public FilterData parseFilterData() throws JSONException {
+        FilterData filterData;
+        if (mFilterData == null || mFilterData.isEmpty()) {
+            filterData = new FilterData.Builder().build();
+        } else {
+            filterData =
+                    new FilterData.Builder()
+                            .buildFilterData(new JSONObject(mFilterData))
+                            .build();
+        }
+        filterData.getAttributionFilterMap().put("source_type",
+                Collections.singletonList(mSourceType.getValue()));
+        return filterData;
+    }
+
+    /**
      * Generates AggregatableAttributionSource from aggregate source string and aggregate filter
      * data string in Source.
      */
     public Optional<AggregatableAttributionSource> parseAggregateSource()
             throws JSONException, NumberFormatException {
-        if (this.mAggregateSource == null) {
+        if (mAggregateSource == null) {
             return Optional.empty();
         }
-        JSONArray jsonArray = new JSONArray(this.mAggregateSource);
+        JSONObject jsonObject = new JSONObject(mAggregateSource);
         Map<String, BigInteger> aggregateSourceMap = new HashMap<>();
-        for (int i = 0; i < jsonArray.length(); i++) {
-            JSONObject jsonObject = jsonArray.getJSONObject(i);
-            String id = jsonObject.getString("id");
-            String hexString = jsonObject.getString("key_piece");
-            if (hexString.startsWith("0x")) {
-                hexString = hexString.substring(2);
-            }
+        for (String key : jsonObject.keySet()) {
+            // Remove "0x" prefix.
+            String hexString = jsonObject.getString(key).substring(2);
             BigInteger bigInteger = new BigInteger(hexString, 16);
-            aggregateSourceMap.put(id, bigInteger);
+            aggregateSourceMap.put(key, bigInteger);
         }
-        return Optional.of(
+        AggregatableAttributionSource.Builder aggregatableAttributionSourceBuilder =
                 new AggregatableAttributionSource.Builder()
-                        .setAggregatableSource(aggregateSourceMap)
-                        .setAggregateFilterData(
-                                new AggregateFilterData.Builder()
-                                        .buildAggregateFilterData(
-                                                new JSONObject(this.mAggregateFilterData))
-                                        .build())
-                        .build());
+                        .setAggregatableSource(aggregateSourceMap);
+        aggregatableAttributionSourceBuilder.setFilterData(parseFilterData());
+        return Optional.of(aggregatableAttributionSourceBuilder.build());
     }
 
     private List<FakeReport> generateVtcDualDestinationPostInstallFakeReports() {
@@ -664,7 +662,7 @@ public class Source {
                 .map(
                         reportConfig ->
                                 new FakeReport(
-                                        reportConfig[0],
+                                        new UnsignedLong(Long.valueOf(reportConfig[0])),
                                         getReportingTimeForNoising(reportConfig[1]),
                                         resolveFakeReportDestination(reportConfig[2])))
                 .collect(Collectors.toList());
@@ -715,7 +713,7 @@ public class Source {
 
         /** See {@link Source#getEventId()}. */
         @NonNull
-        public Builder setEventId(long eventId) {
+        public Builder setEventId(UnsignedLong eventId) {
             mBuilding.mEventId = eventId;
             return this;
         }
@@ -750,14 +748,6 @@ public class Source {
             return this;
         }
 
-        /** See {@link Source#getAdTechDomain()} ()}. */
-        @NonNull
-        public Builder setAdTechDomain(@NonNull Uri adTechDomain) {
-            Validation.validateUri(adTechDomain);
-            mBuilding.mAdTechDomain = adTechDomain;
-            return this;
-        }
-
         /** See {@link Source#getEnrollmentId()} ()}. */
         @NonNull
         public Builder setEnrollmentId(@NonNull String enrollmentId) {
@@ -788,7 +778,7 @@ public class Source {
         }
 
         /** See {@link Source#getDebugKey()} ()}. */
-        public Builder setDebugKey(@Nullable Long debugKey) {
+        public Builder setDebugKey(@Nullable UnsignedLong debugKey) {
             mBuilding.mDebugKey = debugKey;
             return this;
         }
@@ -803,7 +793,7 @@ public class Source {
 
         /** See {@link Source#getDedupKeys()}. */
         @NonNull
-        public Builder setDedupKeys(@Nullable List<Long> dedupKeys) {
+        public Builder setDedupKeys(@Nullable List<UnsignedLong> dedupKeys) {
             mBuilding.mDedupKeys = dedupKeys;
             return this;
         }
@@ -851,9 +841,9 @@ public class Source {
             return this;
         }
 
-        /** See {@link Source#getAggregateFilterData()}. */
-        public Builder setAggregateFilterData(@Nullable String aggregateFilterData) {
-            mBuilding.mAggregateFilterData = aggregateFilterData;
+        /** See {@link Source#getFilterData()}. */
+        public Builder setFilterData(@Nullable String filterData) {
+            mBuilding.mFilterData = filterData;
             return this;
         }
 
@@ -884,9 +874,7 @@ public class Source {
         public Source build() {
             Validation.validateNonNull(
                     mBuilding.mPublisher,
-                    mBuilding.mAdTechDomain,
-                    // TODO (b/238924528): uncomment when enforcing enrollment.
-                    //mBuilding.mEnrollmentId,
+                    mBuilding.mEnrollmentId,
                     mBuilding.mRegistrant,
                     mBuilding.mSourceType);
 

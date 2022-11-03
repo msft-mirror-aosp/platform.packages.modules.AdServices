@@ -30,4 +30,10 @@ public class DBAdDataFixture {
                 .map(DBAdData::fromServiceObject)
                 .collect(Collectors.toList());
     }
+
+    public static List<DBAdData> getInvalidDbAdDataListByBuyer(AdTechIdentifier buyer) {
+        return AdDataFixture.getInvalidAdsByBuyer(buyer).stream()
+                .map(DBAdData::fromServiceObject)
+                .collect(Collectors.toList());
+    }
 }

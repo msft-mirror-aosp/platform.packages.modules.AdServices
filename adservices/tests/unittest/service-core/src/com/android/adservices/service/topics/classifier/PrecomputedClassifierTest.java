@@ -16,9 +16,15 @@
 
 package com.android.adservices.service.topics.classifier;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__PRECOMPUTED_CLASSIFIER;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_NOT_INVOKED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_SUCCESS;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 
 import android.content.Context;
 
@@ -26,14 +32,18 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.EpochComputationClassifierStats;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.android.libraries.mobiledatadownload.file.SynchronousFileStorage;
+import com.google.common.collect.ImmutableList;
 import com.google.mobiledatadownload.ClientConfigProto.ClientFile;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
@@ -61,6 +71,7 @@ public class PrecomputedClassifierTest {
     private MockitoSession mMockitoSession = null;
     @Mock private SynchronousFileStorage mMockFileStorage;
     @Mock Map<String, ClientFile> mMockDownloadedFiles;
+    @Mock AdServicesLogger mLogger;
 
     @Before
     public void setUp() throws IOException {
@@ -86,7 +97,7 @@ public class PrecomputedClassifierTest {
                         MODEL_FILE_PATH,
                         mMockFileStorage,
                         mMockDownloadedFiles);
-        sPrecomputedClassifier = new PrecomputedClassifier(mModelManager);
+        sPrecomputedClassifier = new PrecomputedClassifier(mModelManager, mLogger);
     }
 
     @After
@@ -97,18 +108,9 @@ public class PrecomputedClassifierTest {
     }
 
     @Test
-    public void testGetInstance() {
-        PrecomputedClassifier firstInstance = PrecomputedClassifier.getInstance(sContext);
-        PrecomputedClassifier secondInstance = PrecomputedClassifier.getInstance(sContext);
-
-        assertThat(firstInstance).isNotNull();
-        assertThat(secondInstance).isNotNull();
-        // Verify singleton behaviour.
-        assertThat(firstInstance).isEqualTo(secondInstance);
-    }
-
-    @Test
     public void testClassify_existingApp() {
+        ArgumentCaptor<EpochComputationClassifierStats> argument =
+                ArgumentCaptor.forClass(EpochComputationClassifierStats.class);
         // Using sample App. This app has 5 classification topic.
         List<Topic> expectedSampleAppTopics =
                 createTopics(Arrays.asList(10222, 10223, 10116, 10243, 10254));
@@ -124,16 +126,48 @@ public class PrecomputedClassifierTest {
 
         // The correct response body should be exactly the same as expectedAppTopicsResponse
         assertThat(testResponse).isEqualTo(expectedAppTopicsResponse);
+        // Verify logged atom.
+        verify(mLogger).logEpochComputationClassifierStats(argument.capture());
+        assertThat(argument.getValue())
+                .isEqualTo(
+                        EpochComputationClassifierStats.builder()
+                                .setTopicIds(ImmutableList.of(10222, 10223, 10116, 10243, 10254))
+                                .setBuildId(2)
+                                .setAssetVersion("2")
+                                .setClassifierType(
+                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__PRECOMPUTED_CLASSIFIER)
+                                .setOnDeviceClassifierStatus(
+                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_NOT_INVOKED)
+                                .setPrecomputedClassifierStatus(
+                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_SUCCESS)
+                                .build());
     }
 
     @Test
     public void testClassify_nonExistingApp() {
+        ArgumentCaptor<EpochComputationClassifierStats> argument =
+                ArgumentCaptor.forClass(EpochComputationClassifierStats.class);
         // Check the non-existing app "random_app"
         Map<String, List<Topic>> testResponse =
                 sPrecomputedClassifier.classify(new HashSet<>(Arrays.asList("random_app")));
 
         // The topics list of "random_app" should be empty
         assertThat(testResponse.get("random_app")).isEmpty();
+        // Verify logged atom.
+        verify(mLogger).logEpochComputationClassifierStats(argument.capture());
+        assertThat(argument.getValue())
+                .isEqualTo(
+                        EpochComputationClassifierStats.builder()
+                                .setTopicIds(ImmutableList.of())
+                                .setBuildId(2)
+                                .setAssetVersion("2")
+                                .setClassifierType(
+                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__PRECOMPUTED_CLASSIFIER)
+                                .setOnDeviceClassifierStatus(
+                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_NOT_INVOKED)
+                                .setPrecomputedClassifierStatus(
+                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_FAILURE)
+                                .build());
     }
 
     @Test

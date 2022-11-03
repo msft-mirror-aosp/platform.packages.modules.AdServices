@@ -59,7 +59,7 @@ public class PermissionsNoPermTest {
                     + "Permission was not requested.";
 
     @Test
-    public void testNoPerm_topics() throws Exception {
+    public void testNoPerm_topics() {
         AdvertisingTopicsClient advertisingTopicsClient1 =
                 new AdvertisingTopicsClient.Builder()
                         .setContext(sContext)
@@ -85,8 +85,8 @@ public class PermissionsNoPermTest {
                 new CustomAudience.Builder()
                         .setBuyer(AdTechIdentifier.fromString("buyer.example.com"))
                         .setName("exampleCustomAudience")
-                        .setDailyUpdateUrl(Uri.parse("https://buyer.example.com/daily-update"))
-                        .setBiddingLogicUrl(Uri.parse("https://buyer.example.com/bidding-logic"))
+                        .setDailyUpdateUri(Uri.parse("https://buyer.example.com/daily-update"))
+                        .setBiddingLogicUri(Uri.parse("https://buyer.example.com/bidding-logic"))
                         .build();
 
         ExecutionException exception =
@@ -232,8 +232,8 @@ public class PermissionsNoPermTest {
         AdSelectionSignals trustedScoringSignals =
                 AdSelectionSignals.fromString(
                         "{\n"
-                                + "\t\"render_url_1\": \"signals_for_1\",\n"
-                                + "\t\"render_url_2\": \"signals_for_2\"\n"
+                                + "\t\"render_uri_1\": \"signals_for_1\",\n"
+                                + "\t\"render_uri_2\": \"signals_for_2\"\n"
                                 + "}");
 
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();

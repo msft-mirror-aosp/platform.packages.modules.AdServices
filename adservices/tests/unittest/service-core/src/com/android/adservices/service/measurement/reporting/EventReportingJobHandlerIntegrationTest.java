@@ -16,12 +16,13 @@
 
 package com.android.adservices.service.measurement.reporting;
 
-import android.net.Uri;
-
+import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.AbstractDbIntegrationTest;
 import com.android.adservices.data.measurement.DatastoreManager;
-import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.data.measurement.DbState;
+import com.android.adservices.data.measurement.SQLDatastoreManager;
+import com.android.adservices.service.enrollment.EnrollmentData;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -33,12 +34,18 @@ import org.mockito.Mockito;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 
 /** Integration tests for {@link EventReportingJobHandler} */
 @RunWith(Parameterized.class)
 public class EventReportingJobHandlerIntegrationTest extends AbstractDbIntegrationTest {
+
+    private static final EnrollmentData ENROLLMENT = new EnrollmentData.Builder()
+            .setAttributionReportingUrl(List.of("https://ad-tech.com"))
+            .build();
     private final JSONObject mParam;
+    private final EnrollmentDao mEnrollmentDao;
 
     @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> data() throws IOException, JSONException {
@@ -53,22 +60,26 @@ public class EventReportingJobHandlerIntegrationTest extends AbstractDbIntegrati
             DbState input, DbState output, JSONObject param, String name) {
         super(input, output);
         mParam = param;
+        mEnrollmentDao = Mockito.mock(EnrollmentDao.class);
     }
 
     public enum Action {
         SINGLE_REPORT,
-        ALL_REPORTS,
-        ALL_REPORTS_FOR_APP,
+        ALL_REPORTS
     }
 
     @Override
     public void runActionToTest() {
         final Integer returnCode = (Integer) get("responseCode");
         final String action = (String) get("action");
+        final boolean isEnrolled = get("notEnrolled") == null;
 
-        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
+        Mockito.doReturn(isEnrolled ? ENROLLMENT : null)
+                .when(mEnrollmentDao).getEnrollmentData(Mockito.any());
+        DatastoreManager datastoreManager =
+                new SQLDatastoreManager(DbTestUtil.getDbHelperForTest());
         EventReportingJobHandler spyReportingService =
-                Mockito.spy(new EventReportingJobHandler(datastoreManager));
+                Mockito.spy(new EventReportingJobHandler(mEnrollmentDao, datastoreManager));
         try {
             Mockito.doReturn(returnCode)
                     .when(spyReportingService)
@@ -85,12 +96,6 @@ public class EventReportingJobHandlerIntegrationTest extends AbstractDbIntegrati
                         "Event report failed.",
                         spyReportingService.performScheduledPendingReportsInWindow(
                                 startValue, endValue));
-                break;
-            case ALL_REPORTS_FOR_APP:
-                final Uri appName = Uri.parse((String) get("appName"));
-                Assert.assertTrue(
-                        "Event report failed.",
-                        spyReportingService.performAllPendingReportsForGivenApp(appName));
                 break;
             case SINGLE_REPORT:
                 final int result = ((Number) Objects.requireNonNull(get("result"))).intValue();

@@ -26,24 +26,26 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
+import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.runner.AndroidJUnit4;
 
-import com.android.adservices.LogUtil;
 import com.android.compatibility.common.util.ShellUtils;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-@RunWith(AndroidJUnit4.class)
+@RunWith(JUnit4.class)
 public class TopicsManagerTest {
+    private static final String TAG = "TopicsManagerTest";
     // The JobId of the Epoch Computation.
     private static final int EPOCH_JOB_ID = 2;
 
@@ -52,6 +54,23 @@ public class TopicsManagerTest {
 
     // Default Epoch Period.
     private static final long TOPICS_EPOCH_JOB_PERIOD_MS = 7 * 86_400_000; // 7 days.
+
+    // Classifier test constants.
+    private static final int TEST_CLASSIFIER_NUMBER_OF_TOP_LABELS = 5;
+    // Each app is given topics with a confidence score between 0.0 to 1.0 float value. This
+    // denotes how confident are you that a particular topic t1 is related to the app x that is
+    // classified.
+    // Threshold value for classifier confidence set to 0 to allow all topics and avoid filtering.
+    private static final float TEST_CLASSIFIER_THRESHOLD = 0.0f;
+    // ON_DEVICE_CLASSIFIER
+    private static final int TEST_CLASSIFIER_TYPE = 1;
+
+    // Classifier default constants.
+    private static final int DEFAULT_CLASSIFIER_NUMBER_OF_TOP_LABELS = 3;
+    // Threshold value for classifier confidence set back to the default.
+    private static final float DEFAULT_CLASSIFIER_THRESHOLD = 0.1f;
+    // PRECOMPUTED_THEN_ON_DEVICE_CLASSIFIER
+    private static final int DEFAULT_CLASSIFIER_TYPE = 3;
 
     // Use 0 percent for random topic in the test so that we can verify the returned topic.
     private static final int TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC = 0;
@@ -69,16 +88,21 @@ public class TopicsManagerTest {
         // We need to skip 3 epochs so that if there is any usage from other test runs, it will
         // not be used for epoch retrieval.
         Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
+
+        overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
+        // We need to turn off random topic so that we can verify the returned topic.
+        overridePercentageForRandomTopic(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+    }
+
+    @After
+    public void teardown() {
+        overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
+        overridePercentageForRandomTopic(TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
     }
 
     @Test
-    public void testTopicsManager() throws Exception {
-        overrideDisableTopicsEnrollmentCheck("1");
-        overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
-
-        // We need to turn off random topic so that we can verify the returned topic.
-        overridePercentageForRandomTopic(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
-
+    public void testTopicsManager_runDefaultClassifier() throws Exception {
+        // Default classifier uses the precomputed list first, then on-device classifier.
         // The Test App has 2 SDKs: sdk1 calls the Topics API and sdk2 does not.
         // Sdk1 calls the Topics API.
         AdvertisingTopicsClient advertisingTopicsClient1 =
@@ -113,7 +137,7 @@ public class TopicsManagerTest {
         Topic topic = sdk1Result.getTopics().get(0);
 
         // topic is one of the 5 classification topics of the Test App.
-        assertThat(topic.getTopicId()).isIn(Arrays.asList(10147,10253,10175,10254,10333));
+        assertThat(topic.getTopicId()).isIn(Arrays.asList(10147, 10253, 10175, 10254, 10333));
 
         assertThat(topic.getModelVersion()).isAtLeast(1L);
         assertThat(topic.getTaxonomyVersion()).isAtLeast(1L);
@@ -128,18 +152,80 @@ public class TopicsManagerTest {
 
         GetTopicsResponse sdk2Result2 = advertisingTopicsClient2.getTopics().get();
         assertThat(sdk2Result2.getTopics()).isEmpty();
-
-        // Reset back the original values.
-        overrideDisableTopicsEnrollmentCheck("0");
-        overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
-        overridePercentageForRandomTopic(TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
     }
 
-    // Override the flag to disable Topics enrollment check.
-    private void overrideDisableTopicsEnrollmentCheck(String val) {
-        // Setting it to 1 here disables the Topics enrollment check.
+    @Test
+    public void testTopicsManager_runOnDeviceClassifier() throws Exception {
+        // Set classifier flag to use on-device classifier.
+        overrideClassifierType(TEST_CLASSIFIER_TYPE);
+
+        // Set number of top labels returned by the on-device classifier to 5.
+        overrideClassifierNumberOfTopLabels(TEST_CLASSIFIER_NUMBER_OF_TOP_LABELS);
+        // Remove classifier threshold by setting it to 0.
+        overrideClassifierThreshold(TEST_CLASSIFIER_THRESHOLD);
+
+        // The Test App has 1 SDK: sdk3
+        // sdk3 calls the Topics API.
+        AdvertisingTopicsClient advertisingTopicsClient3 =
+                new AdvertisingTopicsClient.Builder()
+                        .setContext(sContext)
+                        .setSdkName("sdk3")
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
+        // At beginning, Sdk3 receives no topic.
+        GetTopicsResponse sdk3Result = advertisingTopicsClient3.getTopics().get();
+        assertThat(sdk3Result.getTopics()).isEmpty();
+
+        // Now force the Epoch Computation Job. This should be done in the same epoch for
+        // callersCanLearnMap to have the entry for processing.
+        forceEpochComputationJob();
+
+        // Wait to the next epoch. We will not need to do this after we implement the fix in
+        // go/rb-topics-epoch-scheduling
+        Thread.sleep(TEST_EPOCH_JOB_PERIOD_MS);
+
+        // Since the sdk3 called the Topics API in the previous Epoch, it should receive some topic.
+        sdk3Result = advertisingTopicsClient3.getTopics().get();
+        assertThat(sdk3Result.getTopics()).isNotEmpty();
+
+        // We only have 5 topics classified by the on-device classifier.
+        // The app will be assigned one random topic from one of these 5 topics.
+        assertThat(sdk3Result.getTopics()).hasSize(1);
+        Topic topic = sdk3Result.getTopics().get(0);
+
+        // Top 5 classifications for empty string with v2 model are [10230, 10253, 10227, 10250,
+        // 10257]. This is computed by running the model on the device for empty string.
+        // topic is one of the 5 classification topics of the Test App.
+        List<Integer> expectedTopTopicIds = Arrays.asList(10230, 10253, 10227, 10250, 10257);
+        assertThat(topic.getTopicId()).isIn(expectedTopTopicIds);
+
+        assertThat(topic.getModelVersion()).isAtLeast(2L);
+        assertThat(topic.getTaxonomyVersion()).isAtLeast(2L);
+
+        // Set classifier flag back to default.
+        overrideClassifierType(DEFAULT_CLASSIFIER_TYPE);
+
+        // Set number of top labels returned by the on-device classifier back to default.
+        overrideClassifierNumberOfTopLabels(DEFAULT_CLASSIFIER_NUMBER_OF_TOP_LABELS);
+        // Set classifier threshold back to default.
+        overrideClassifierThreshold(DEFAULT_CLASSIFIER_THRESHOLD);
+    }
+
+    // Override the flag to select classifier type.
+    private void overrideClassifierType(int val) {
+        ShellUtils.runShellCommand("device_config put adservices classifier_type " + val);
+    }
+
+    // Override the flag to change the number of top labels returned by on-device classifier type.
+    private void overrideClassifierNumberOfTopLabels(int val) {
         ShellUtils.runShellCommand(
-                "setprop debug.adservices.disable_topics_enrollment_check " + val);
+                "device_config put adservices classifier_number_of_top_labels " + val);
+    }
+
+    // Override the flag to change the threshold for the classifier.
+    private void overrideClassifierThreshold(float val) {
+        ShellUtils.runShellCommand("device_config put adservices classifier_threshold " + val);
     }
 
     // Override the Epoch Period to shorten the Epoch Length in the test.
@@ -169,22 +255,25 @@ public class TopicsManagerTest {
                         .queryIntentServices(intent, PackageManager.MATCH_SYSTEM_ONLY);
 
         if (resolveInfos == null || resolveInfos.isEmpty()) {
-            LogUtil.e(
+            Log.e(
+                    TAG,
                     "Failed to find resolveInfo for adServices service. Intent action: "
                             + TOPICS_SERVICE_NAME);
             return null;
         }
 
         if (resolveInfos.size() > 1) {
-            LogUtil.e(
-                    "Found multiple services (%1$s) for the same intent action (%2$s)",
-                    TOPICS_SERVICE_NAME, resolveInfos.toString());
+            Log.e(
+                    TAG,
+                    String.format(
+                            "Found multiple services (%1$s) for the same intent action (%2$s)",
+                            TOPICS_SERVICE_NAME, resolveInfos));
             return null;
         }
 
         final ServiceInfo serviceInfo = resolveInfos.get(0).serviceInfo;
         if (serviceInfo == null) {
-            LogUtil.e("Failed to find serviceInfo for adServices service");
+            Log.e(TAG, "Failed to find serviceInfo for adServices service");
             return null;
         }
 

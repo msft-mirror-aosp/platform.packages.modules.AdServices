@@ -27,15 +27,21 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Context;
-import android.content.pm.PackageManager;
 
 import androidx.core.app.NotificationManagerCompat;
+import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.uiautomator.By;
+import androidx.test.uiautomator.UiDevice;
+import androidx.test.uiautomator.UiObject;
+import androidx.test.uiautomator.UiObjectNotFoundException;
+import androidx.test.uiautomator.UiSelector;
+import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.topics.classifier.ModelManager;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.Before;
@@ -49,10 +55,11 @@ import org.mockito.quality.Strictness;
 @RunWith(AndroidJUnit4.class)
 public class ConsentNotificationTriggerTest {
     private static final String NOTIFICATION_CHANNEL_ID = "PRIVACY_SANDBOX_CHANNEL";
+    private static final int LAUNCH_TIMEOUT = 5000;
+    private static UiDevice sDevice;
 
     @Mock private NotificationManagerCompat mNotificationManagerCompat;
     @Mock private ConsentManager mConsentManager;
-    @Mock private ModelManager mModelManager;
     private NotificationManager mNotificationManager;
     private Context mContext;
 
@@ -61,19 +68,21 @@ public class ConsentNotificationTriggerTest {
     @Before
     public void setUp() {
         mContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        // Initialize UiDevice instance
+        sDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
     }
 
     @Test
-    public void testEuNotification() throws InterruptedException {
+    public void testEuNotification() throws InterruptedException, UiObjectNotFoundException {
         MockitoAnnotations.initMocks(this);
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
-                        .spyStatic(ModelManager.class)
+                        .spyStatic(FlagsFactory.class)
                         .strictness(Strictness.WARN)
                         .initMocks(this)
                         .startMocking();
         try {
-            doReturn(mModelManager).when(() -> ModelManager.getInstance(any(Context.class)));
+            ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
             mNotificationManager = mContext.getSystemService(NotificationManager.class);
             final String expectedTitle =
                     mContext.getString(R.string.notificationUI_notification_title_eu);
@@ -91,23 +100,41 @@ public class ConsentNotificationTriggerTest {
                     .isEqualTo(expectedTitle);
             assertThat(notification.extras.getCharSequence(Notification.EXTRA_TEXT))
                     .isEqualTo(expectedContent);
-            Thread.sleep(5000); // wait 5s to make sure that Notification disappears.
+
+            sDevice.openNotification();
+            sDevice.wait(Until.hasObject(By.pkg("com.android.systemui")), LAUNCH_TIMEOUT);
+            UiObject scroller =
+                    sDevice.findObject(
+                            new UiSelector()
+                                    .packageName("com.android.systemui")
+                                    .resourceId(
+                                            "com.android.systemui:id/notification_stack_scroller"));
+            assertThat(scroller.exists()).isTrue();
+            UiSelector notificationCardSelector =
+                    new UiSelector().text(getString(R.string.notificationUI_notification_title_eu));
+            UiObject notificationCard = scroller.getChild(notificationCardSelector);
+            assertThat(notificationCard.exists()).isTrue();
+
+            notificationCard.click();
+            Thread.sleep(LAUNCH_TIMEOUT);
+            UiObject title = getElement(R.string.notificationUI_header_title_eu);
+            assertThat(title.exists()).isTrue();
         } finally {
             mStaticMockSession.finishMocking();
         }
     }
 
     @Test
-    public void testNonEuNotifications() throws InterruptedException {
+    public void testNonEuNotifications() throws InterruptedException, UiObjectNotFoundException {
         MockitoAnnotations.initMocks(this);
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
-                        .spyStatic(ModelManager.class)
+                        .spyStatic(ConsentManager.class)
                         .strictness(Strictness.WARN)
                         .initMocks(this)
                         .startMocking();
         try {
-            doReturn(mModelManager).when(() -> ModelManager.getInstance(any(Context.class)));
+            doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any(Context.class)));
             mNotificationManager = mContext.getSystemService(NotificationManager.class);
             final String expectedTitle =
                     mContext.getString(R.string.notificationUI_notification_title);
@@ -117,6 +144,9 @@ public class ConsentNotificationTriggerTest {
             ConsentNotificationTrigger.showConsentNotification(mContext, false);
             Thread.sleep(1000); // wait 1s to make sure that Notification is displayed.
 
+            verify(mConsentManager).enable(any(Context.class));
+            verify(mConsentManager).recordNotificationDisplayed();
+            verifyNoMoreInteractions(mConsentManager);
             assertThat(mNotificationManager.getActiveNotifications()).hasLength(1);
             final Notification notification =
                     mNotificationManager.getActiveNotifications()[0].getNotification();
@@ -125,7 +155,27 @@ public class ConsentNotificationTriggerTest {
                     .isEqualTo(expectedTitle);
             assertThat(notification.extras.getCharSequence(Notification.EXTRA_TEXT))
                     .isEqualTo(expectedContent);
-            Thread.sleep(5000); // wait 5s to make sure that Notification disappears.
+
+            sDevice.openNotification();
+            sDevice.wait(Until.hasObject(By.pkg("com.android.systemui")), LAUNCH_TIMEOUT);
+
+            UiObject scroller =
+                    sDevice.findObject(
+                            new UiSelector()
+                                    .packageName("com.android.systemui")
+                                    .resourceId(
+                                            "com.android.systemui:id/notification_stack_scroller"));
+            assertThat(scroller.exists()).isTrue();
+            UiObject notificationCard =
+                    scroller.getChild(
+                            new UiSelector()
+                                    .text(getString(R.string.notificationUI_notification_title)));
+            assertThat(notificationCard.exists()).isTrue();
+
+            notificationCard.click();
+            Thread.sleep(LAUNCH_TIMEOUT);
+            UiObject title = getElement(R.string.notificationUI_header_title);
+            assertThat(title.exists()).isTrue();
         } finally {
             mStaticMockSession.finishMocking();
         }
@@ -149,10 +199,18 @@ public class ConsentNotificationTriggerTest {
 
             ConsentNotificationTrigger.showConsentNotification(mContext, true);
 
-            verify(mConsentManager).recordNotificationDisplayed(any(PackageManager.class));
+            verify(mConsentManager).recordNotificationDisplayed();
             verifyNoMoreInteractions(mConsentManager);
         } finally {
             mStaticMockSession.finishMocking();
         }
+    }
+
+    private String getString(int resourceId) {
+        return ApplicationProvider.getApplicationContext().getResources().getString(resourceId);
+    }
+
+    private UiObject getElement(int resId) {
+        return sDevice.findObject(new UiSelector().text(getString(resId)));
     }
 }

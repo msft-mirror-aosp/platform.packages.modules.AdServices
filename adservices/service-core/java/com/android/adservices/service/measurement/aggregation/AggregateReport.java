@@ -19,6 +19,10 @@ package com.android.adservices.service.measurement.aggregation;
 import android.annotation.IntDef;
 import android.net.Uri;
 
+import androidx.annotation.Nullable;
+
+import com.android.adservices.service.measurement.util.UnsignedLong;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -37,21 +41,36 @@ public class AggregateReport {
     private Uri mAttributionDestination;
     private long mSourceRegistrationTime;
     private long mScheduledReportTime;   // triggerTime + random([10min, 1hour])
-    private Uri mAdTechDomain;
     private String mEnrollmentId;
     private String mDebugCleartextPayload;
     private AggregateAttributionData mAggregateAttributionData;
     private @Status int mStatus;
+    private @DebugReportStatus int mDebugReportStatus;
     private String mApiVersion;
+    @Nullable private UnsignedLong mSourceDebugKey;
+    @Nullable private UnsignedLong mTriggerDebugKey;
+    private String mSourceId;
+    private String mTriggerId;
 
-    @IntDef(value = {
-            Status.PENDING,
-            Status.DELIVERED,
-    })
+    @IntDef(value = {Status.PENDING, Status.DELIVERED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
     public @interface Status {
         int PENDING = 0;
         int DELIVERED = 1;
+        int MARKED_TO_DELETE = 2;
+    }
+
+    @IntDef(
+            value = {
+                DebugReportStatus.NONE,
+                DebugReportStatus.PENDING,
+                DebugReportStatus.DELIVERED,
+            })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface DebugReportStatus {
+        int NONE = 0;
+        int PENDING = 1;
+        int DELIVERED = 2;
     }
 
     private AggregateReport() {
@@ -60,11 +79,13 @@ public class AggregateReport {
         mAttributionDestination = null;
         mSourceRegistrationTime = 0L;
         mScheduledReportTime = 0L;
-        mAdTechDomain = null;
         mEnrollmentId = null;
         mDebugCleartextPayload = null;
         mAggregateAttributionData = null;
         mStatus = AggregateReport.Status.PENDING;
+        mDebugReportStatus = AggregateReport.DebugReportStatus.NONE;
+        mSourceDebugKey = null;
+        mTriggerDebugKey = null;
     }
 
     @Override
@@ -73,24 +94,40 @@ public class AggregateReport {
             return false;
         }
         AggregateReport aggregateReport = (AggregateReport) obj;
-        return  Objects.equals(mPublisher, aggregateReport.mPublisher)
+        return Objects.equals(mPublisher, aggregateReport.mPublisher)
                 && Objects.equals(mAttributionDestination, aggregateReport.mAttributionDestination)
                 && mSourceRegistrationTime == aggregateReport.mSourceRegistrationTime
                 && mScheduledReportTime == aggregateReport.mScheduledReportTime
-                && Objects.equals(mAdTechDomain, aggregateReport.mAdTechDomain)
                 && Objects.equals(mEnrollmentId, aggregateReport.mEnrollmentId)
                 && Objects.equals(mDebugCleartextPayload, aggregateReport.mDebugCleartextPayload)
-                && Objects.equals(mAggregateAttributionData,
-                        aggregateReport.mAggregateAttributionData)
+                && Objects.equals(
+                        mAggregateAttributionData, aggregateReport.mAggregateAttributionData)
                 && mStatus == aggregateReport.mStatus
-                && Objects.equals(mApiVersion, aggregateReport.mApiVersion);
+                && mDebugReportStatus == aggregateReport.mDebugReportStatus
+                && Objects.equals(mApiVersion, aggregateReport.mApiVersion)
+                && Objects.equals(mSourceDebugKey, aggregateReport.mSourceDebugKey)
+                && Objects.equals(mTriggerDebugKey, aggregateReport.mTriggerDebugKey)
+                && Objects.equals(mSourceId, aggregateReport.mSourceId)
+                && Objects.equals(mTriggerId, aggregateReport.mTriggerId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mId, mPublisher, mAttributionDestination, mSourceRegistrationTime,
-                mScheduledReportTime, mAdTechDomain, mEnrollmentId, mDebugCleartextPayload,
-                mAggregateAttributionData, mStatus);
+        return Objects.hash(
+                mId,
+                mPublisher,
+                mAttributionDestination,
+                mSourceRegistrationTime,
+                mScheduledReportTime,
+                mEnrollmentId,
+                mDebugCleartextPayload,
+                mAggregateAttributionData,
+                mStatus,
+                mDebugReportStatus,
+                mSourceDebugKey,
+                mTriggerDebugKey,
+                mSourceId,
+                mTriggerId);
     }
 
     /**
@@ -129,13 +166,6 @@ public class AggregateReport {
     }
 
     /**
-     * Uri for report_to of source.
-     */
-    public Uri getAdTechDomain() {
-        return mAdTechDomain;
-    }
-
-    /**
      * Ad-tech enrollment ID.
      */
     public String getEnrollmentId() {
@@ -147,6 +177,18 @@ public class AggregateReport {
      */
     public String getDebugCleartextPayload() {
         return mDebugCleartextPayload;
+    }
+
+    /** Source Debug Key */
+    @Nullable
+    public UnsignedLong getSourceDebugKey() {
+        return mSourceDebugKey;
+    }
+
+    /** Trigger Debug Key */
+    @Nullable
+    public UnsignedLong getTriggerDebugKey() {
+        return mTriggerDebugKey;
     }
 
     /**
@@ -161,6 +203,11 @@ public class AggregateReport {
      */
     public @Status int getStatus() {
         return mStatus;
+    }
+
+    /** Current {@link DebugReportStatus} of the report. */
+    public @DebugReportStatus int getDebugReportStatus() {
+        return mDebugReportStatus;
     }
 
     /**
@@ -195,6 +242,16 @@ public class AggregateReport {
         debugPayload.put("operation", "histogram");
         debugPayload.put("data", jsonArray);
         return debugPayload.toString();
+    }
+
+    /** Source ID */
+    public String getSourceId() {
+        return mSourceId;
+    }
+
+    /** Trigger ID */
+    public String getTriggerId() {
+        return mTriggerId;
     }
 
     /**
@@ -248,14 +305,6 @@ public class AggregateReport {
         }
 
         /**
-         * See {@link AggregateReport#getAdTechDomain()}.
-         */
-        public Builder setAdTechDomain(Uri adTechDomain) {
-            mAttributionReport.mAdTechDomain = adTechDomain;
-            return this;
-        }
-
-        /**
          * See {@link AggregateReport#getEnrollmentId()}.
          */
         public Builder setEnrollmentId(String enrollmentId) {
@@ -287,12 +336,41 @@ public class AggregateReport {
             mAttributionReport.mStatus = status;
             return this;
         }
+        /** See {@link AggregateReport#getDebugReportStatus()} */
+        public Builder setDebugReportStatus(@DebugReportStatus int debugReportStatus) {
+            mAttributionReport.mDebugReportStatus = debugReportStatus;
+            return this;
+        }
 
         /**
          * See {@link AggregateReport#getApiVersion()}
          */
         public Builder setApiVersion(String version) {
             mAttributionReport.mApiVersion = version;
+            return this;
+        }
+
+        /** See {@link AggregateReport#getSourceDebugKey()} ()} */
+        public Builder setSourceDebugKey(UnsignedLong sourceDebugKey) {
+            mAttributionReport.mSourceDebugKey = sourceDebugKey;
+            return this;
+        }
+
+        /** See {@link AggregateReport#getTriggerDebugKey()} ()} */
+        public Builder setTriggerDebugKey(UnsignedLong triggerDebugKey) {
+            mAttributionReport.mTriggerDebugKey = triggerDebugKey;
+            return this;
+        }
+
+        /** See {@link AggregateReport#getSourceId()} */
+        public AggregateReport.Builder setSourceId(String sourceId) {
+            mAttributionReport.mSourceId = sourceId;
+            return this;
+        }
+
+        /** See {@link AggregateReport#getTriggerId()} */
+        public AggregateReport.Builder setTriggerId(String triggerId) {
+            mAttributionReport.mTriggerId = triggerId;
             return this;
         }
 

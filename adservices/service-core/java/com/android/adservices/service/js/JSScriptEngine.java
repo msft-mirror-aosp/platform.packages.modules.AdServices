@@ -20,6 +20,9 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.os.Build;
+import android.webkit.WebView;
 
 import androidx.javascriptengine.IsolateStartupParameters;
 import androidx.javascriptengine.JavaScriptIsolate;
@@ -63,8 +66,10 @@ public class JSScriptEngine {
     public static final String WASM_MODULE_BYTES_ID = "__wasmModuleBytes";
     public static final String WASM_MODULE_ARG_NAME = "wasmModule";
 
-    public static final String NON_SUPPORTED_MAX_HEAP_SIZE_ERROR =
+    public static final String NON_SUPPORTED_MAX_HEAP_SIZE_EXCEPTION_MSG =
             "JS isolate does not support Max heap size";
+    public static final String JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_MSG =
+            "Unable to create isolate";
 
     @SuppressLint("StaticFieldLeak")
     private static JSScriptEngine sSingleton;
@@ -80,6 +85,9 @@ public class JSScriptEngine {
      * the instance is invalidated by calling {@link
      * JavaScriptSandboxProvider#destroyCurrentInstance()}. The instance is returned wrapped in a
      * {@code Future}
+     *
+     * <p>Throws {@link JSSandboxIsNotAvailableException} if JS Sandbox is not available in the
+     * current version of the WebView
      */
     @VisibleForTesting
     static class JavaScriptSandboxProvider {
@@ -97,6 +105,13 @@ public class JSScriptEngine {
         public FluentFuture<JavaScriptSandbox> getFutureInstance(Context context) {
             synchronized (mSandboxLock) {
                 if (mFutureSandbox == null) {
+                    if (!AvailabilityChecker.isJSSandboxAvailable()) {
+                        LogUtil.e(
+                                "JS Sandbox is not available in this version of WebView "
+                                        + "or WebView is not installed at all!");
+                        throw new JSSandboxIsNotAvailableException();
+                    }
+
                     LogUtil.i("Creating JavaScriptSandbox");
                     mSandboxInitStopWatch =
                             mProfiler.start(JSScriptEngineLogConstants.SANDBOX_INIT_TIME);
@@ -163,16 +178,6 @@ public class JSScriptEngine {
                 }
             }
         }
-    }
-
-    @VisibleForTesting
-    @SuppressLint("SetJavaScriptEnabled")
-    public JSScriptEngine(@NonNull Context context) {
-        this(
-                context,
-                new JavaScriptSandboxProvider(Profiler.createNoOpInstance(TAG)),
-                Profiler.createNoOpInstance(TAG),
-                AdServicesExecutors.getLightWeightExecutor());
     }
 
     /** @return JSScriptEngine instance */
@@ -280,21 +285,6 @@ public class JSScriptEngine {
     }
 
     /**
-     * Same as {@link #evaluate(String, List, String, IsolateSettings)} where the entry point
-     * function name is {@link #ENTRY_POINT_FUNC_NAME}.
-     */
-    // TODO(b/242358625): remove this method post updating the perf test
-    @NonNull
-    public ListenableFuture<String> evaluate(
-            @NonNull String jsScript, @NonNull List<JSScriptArgument> args) {
-        return evaluate(
-                jsScript,
-                args,
-                ENTRY_POINT_FUNC_NAME,
-                IsolateSettings.forMaxHeapSizeEnforcementDisabled());
-    }
-
-    /**
      * Invokes the function {@code entryFunctionName} defined by the JS code in {@code jsScript} and
      * return the result. It will reset the WebView status after evaluating the script.
      *
@@ -312,31 +302,6 @@ public class JSScriptEngine {
             @NonNull String entryFunctionName,
             @NonNull IsolateSettings isolateSettings) {
         return evaluateInternal(jsScript, args, entryFunctionName, null, isolateSettings);
-    }
-
-    /**
-     * Invokes the function {@code entryFunctionName} defined by the JS code in {@code jsScript} and
-     * return the result. It will reset the WebView status after evaluating the script.
-     *
-     * @param jsScript The JS script
-     * @param args The arguments to pass when invoking {@code entryFunctionName}
-     * @param entryFunctionName The name of a function defined in {@code jsScript} that should be
-     *     invoked.
-     * @return A {@link ListenableFuture} containing the JS string representation of the result of
-     *     {@code entryFunctionName}'s invocation
-     */
-    // TODO(b/242358625): remove this method post updating the perf test
-    @NonNull
-    public ListenableFuture<String> evaluate(
-            @NonNull String jsScript,
-            @NonNull List<JSScriptArgument> args,
-            @NonNull String entryFunctionName) {
-        return evaluateInternal(
-                jsScript,
-                args,
-                entryFunctionName,
-                null,
-                IsolateSettings.forMaxHeapSizeEnforcementDisabled());
     }
 
     /**
@@ -363,37 +328,6 @@ public class JSScriptEngine {
         Objects.requireNonNull(wasmBinary);
 
         return evaluateInternal(jsScript, args, entryFunctionName, wasmBinary, isolateSettings);
-    }
-
-    /**
-     * Loads the WASM module defined by {@code wasmBinary}, invokes the function {@code
-     * entryFunctionName} defined by the JS code in {@code jsScript} and return the result. It will
-     * reset the WebView status after evaluating the script. The function is expected to accept all
-     * the arguments defined in {@code args} plus an extra final parameter of type {@code
-     * WebAssembly.Module}.
-     *
-     * @param jsScript The JS script
-     * @param args The arguments to pass when invoking {@code entryFunctionName}
-     * @param entryFunctionName The name of a function defined in {@code jsScript} that should be
-     *     invoked.
-     * @return A {@link ListenableFuture} containing the JS string representation of the result of
-     *     {@code entryFunctionName}'s invocation
-     */
-    // TODO(b/242358625): remove this method post updating the perf test
-    @NonNull
-    public ListenableFuture<String> evaluate(
-            @NonNull String jsScript,
-            @NonNull byte[] wasmBinary,
-            @NonNull List<JSScriptArgument> args,
-            @NonNull String entryFunctionName) {
-        Objects.requireNonNull(wasmBinary);
-
-        return evaluateInternal(
-                jsScript,
-                args,
-                entryFunctionName,
-                wasmBinary,
-                IsolateSettings.forMaxHeapSizeEnforcementDisabled());
     }
 
     @NonNull
@@ -538,7 +472,7 @@ public class JSScriptEngine {
             if (!isConfigurableHeapSizeSupported(jsSandbox)
                     && isolateSettings.getEnforceMaxHeapSizeFeature()) {
                 LogUtil.e("Memory limit enforcement required, but not supported by Isolate");
-                throw new IllegalStateException(NON_SUPPORTED_MAX_HEAP_SIZE_ERROR);
+                throw new IllegalStateException(NON_SUPPORTED_MAX_HEAP_SIZE_EXCEPTION_MSG);
             }
 
             JavaScriptIsolate javaScriptIsolate;
@@ -564,7 +498,7 @@ public class JSScriptEngine {
                     "JavaScriptIsolate does not support setting max heap size, cannot create an"
                             + " isolate to run JS code into.");
             throw new JSScriptEngineConnectionException(
-                    "Unable to create isolate", isolateMemoryLimitUnsupported);
+                    JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_MSG, isolateMemoryLimitUnsupported);
         } catch (RuntimeException jsSandboxIsDisconnected) {
             LogUtil.e(
                     "JavaScriptSandboxProcess is disconnected, cannot create an isolate to run JS"
@@ -572,7 +506,7 @@ public class JSScriptEngine {
                             + " future calls.");
             mJsSandboxProvider.destroyCurrentInstance();
             throw new JSScriptEngineConnectionException(
-                    "Unable to create isolate", jsSandboxIsDisconnected);
+                    JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_MSG, jsSandboxIsDisconnected);
         } finally {
             isolateStopWatch.stop();
         }
@@ -623,6 +557,42 @@ public class JSScriptEngine {
         resultBuilder.append("})();\n");
 
         return resultBuilder.toString();
+    }
+
+    /**
+     * Checks if JS Sandbox is available in the WebView version that is installed on the device
+     * before attempting to create it. Attempting to create JS Sandbox when it's not available
+     * results in returning of a null value.
+     */
+    public static class AvailabilityChecker {
+
+        /**
+         * @return true if JS Sandbox is available in the current WebView version, false otherwise.
+         */
+        public static boolean isJSSandboxAvailable() {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+                return false;
+            }
+
+            PackageInfo systemWebViewPackage;
+            if ((systemWebViewPackage = WebView.getCurrentWebViewPackage()) == null) {
+                return false;
+            }
+
+            // The current IPC interface was introduced in 102.0.4976.0 (crrev.com/3560402), so all
+            // versions above that are supported.
+            final long introducedVersion = 4976_000_00L;
+
+            // Additionally, the relevant IPC changes were cherry-picked into M101 at 101.0.4951.24
+            // (crrev.com/3568575), so versions between 101.0.4951.24 inclusive and 102.0.4952.0
+            // exclusive are also supported.
+            final long cpWindowStartInclusive = 4951_240_00L;
+            final long cpWindowEndExclusive = 4952_000_00L;
+
+            return systemWebViewPackage.getLongVersionCode() >= introducedVersion
+                    || (systemWebViewPackage.getLongVersionCode() >= cpWindowStartInclusive
+                            && systemWebViewPackage.getLongVersionCode() < cpWindowEndExclusive);
+        }
     }
 
     /**

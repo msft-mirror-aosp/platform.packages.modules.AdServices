@@ -18,6 +18,7 @@ package com.android.tests.sandbox.fledge;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
+import android.Manifest;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.content.Context;
@@ -26,6 +27,7 @@ import android.os.Process;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 
@@ -52,17 +54,6 @@ public class SandboxedFledgeManagerTest {
 
     private String mAccessStatus;
 
-    static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION =
-            "fledge_ad_selection_enforce_foreground_status_run_ad_selection";
-    static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION =
-            "fledge_ad_selection_enforce_foreground_status_report_impression";
-    static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDE =
-            "fledge_ad_selection_enforce_foreground_status_ad_selection_override";
-    static final String KEY_FOREGROUND_STATUS_LEVEL = "foreground_validation_status_level";
-
-    static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE =
-            "fledge_ad_selection_enforce_foreground_status_custom_audience";
-
     @Before
     public void setup() throws TimeoutException {
         DevContextFilter devContextFilter = DevContextFilter.create(sContext);
@@ -75,7 +66,16 @@ public class SandboxedFledgeManagerTest {
                 String.format("Debuggable: %b\n", isDebuggable)
                         + String.format("Developer options on: %b", isDeveloperMode);
 
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+
+        // Enable CTS to be run with versions of WebView < M105
+        PhFlagsFixture.overrideEnforceIsolateMaxHeapSize(false);
+        PhFlagsFixture.overrideIsolateMaxHeapSizeBytes(0);
+
         makeTestProcessForeground();
+        PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
     }
 
     /**
@@ -92,7 +92,7 @@ public class SandboxedFledgeManagerTest {
     }
 
     @Test
-    public void loadSdkAndRunFledgeFlow() throws Exception {
+    public void loadSdkAndRunFledgeFlow() {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
 
         final SdkSandboxManager sdkSandboxManager =
@@ -102,7 +102,10 @@ public class SandboxedFledgeManagerTest {
 
         sdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), CALLBACK_EXECUTOR, callback);
 
-        assertWithMessage("Callback failed with message " + callback.getLoadSdkErrorMsg())
+        assertWithMessage(
+                        callback.isLoadSdkSuccessful()
+                                ? "Callback was successful"
+                                : "Callback failed with message " + callback.getLoadSdkErrorMsg())
                 .that(callback.isLoadSdkSuccessful())
                 .isTrue();
     }

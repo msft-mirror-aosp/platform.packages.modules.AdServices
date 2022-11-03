@@ -87,16 +87,29 @@ public class AdServicesFrameworkInitializer {
 
         LogUtil.d("Registering AdServices's MeasurementManager.");
         SystemServiceRegistry.registerContextAwareService(
-                MEASUREMENT_SERVICE, MeasurementManager.class,
-                (c) -> new MeasurementManager(c));
+                MEASUREMENT_SERVICE, MeasurementManager.class, MeasurementManager::new);
+        // TODO(b/242889021): don't use this workaround on devices that have proper fix
+        SdkSandboxSystemServiceRegistry.getInstance()
+                .registerServiceMutator(
+                        MEASUREMENT_SERVICE,
+                        (service, ctx) -> ((MeasurementManager) service).initialize(ctx));
 
         LogUtil.d("Registering AdServices's AdIdManager.");
         SystemServiceRegistry.registerContextAwareService(
                 ADID_SERVICE, AdIdManager.class, (c) -> new AdIdManager(c));
+        // TODO(b/242889021): don't use this workaround on devices that have proper fix
+        SdkSandboxSystemServiceRegistry.getInstance()
+                .registerServiceMutator(
+                        ADID_SERVICE, (service, ctx) -> ((AdIdManager) service).initialize(ctx));
 
         LogUtil.d("Registering AdServices's AppSetIdManager.");
         SystemServiceRegistry.registerContextAwareService(
                 APPSETID_SERVICE, AppSetIdManager.class, (c) -> new AppSetIdManager(c));
+        // TODO(b/242889021): don't use this workaround on devices that have proper fix
+        SdkSandboxSystemServiceRegistry.getInstance()
+                .registerServiceMutator(
+                        APPSETID_SERVICE,
+                        (service, ctx) -> ((AppSetIdManager) service).initialize(ctx));
 
         LogUtil.d("Registering AdServices's AdServicesCommonManager.");
         SystemServiceRegistry.registerContextAwareService(AD_SERVICES_COMMON_SERVICE,

@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
+import android.Manifest;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.AdSelectionOutcome;
@@ -53,23 +54,20 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class TestAdSelectionManagerTest extends ForegroundCtsTest {
-    private static final String WRITE_DEVICE_CONFIG_PERMISSION =
-            "android.permission.WRITE_DEVICE_CONFIG";
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
     private static final String DECISION_LOGIC_JS = "function test() { return \"hello world\"; }";
     private static final long AD_SELECTION_ID = 1;
-    private static final AdTechIdentifier SELLER =
-            AdTechIdentifier.fromString("developer.android.com");
+    private static final AdTechIdentifier SELLER = AdTechIdentifier.fromString("test.com");
     private static final Uri DECISION_LOGIC_URI =
-            Uri.parse("https://developer.android.com/test/decisions_logic_urls");
+            Uri.parse("https://test.com/test/decisions_logic_uris");
     private static final Uri TRUSTED_SCORING_SIGNALS_URI =
-            Uri.parse("https://developer.android.com/test/decisions_logic_urls");
+            Uri.parse("https://test.com/test/decisions_logic_uris");
     private static final AdSelectionSignals TRUSTED_SCORING_SIGNALS =
             AdSelectionSignals.fromString(
                     "{\n"
-                            + "\t\"render_url_1\": \"signals_for_1\",\n"
-                            + "\t\"render_url_2\": \"signals_for_2\"\n"
+                            + "\t\"render_uri_1\": \"signals_for_1\",\n"
+                            + "\t\"render_uri_2\": \"signals_for_2\"\n"
                             + "}");
     private static final AdSelectionConfig AD_SELECTION_CONFIG =
             AdSelectionConfigFixture.anAdSelectionConfigBuilder()
@@ -95,7 +93,7 @@ public class TestAdSelectionManagerTest extends ForegroundCtsTest {
 
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
-                .adoptShellPermissionIdentity(WRITE_DEVICE_CONFIG_PERMISSION);
+                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
         PhFlagsFixture.overrideEnforceIsolateMaxHeapSize(false);
         PhFlagsFixture.overrideIsolateMaxHeapSizeBytes(0);
     }

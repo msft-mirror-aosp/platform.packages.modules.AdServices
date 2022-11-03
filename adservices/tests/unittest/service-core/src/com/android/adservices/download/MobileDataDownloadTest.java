@@ -18,6 +18,8 @@ package com.android.adservices.download;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.mockito.Mockito.doReturn;
+
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import android.content.Context;
@@ -25,20 +27,29 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.dx.mockito.inline.extended.StaticMockitoSession;
 
 import com.google.android.libraries.mobiledatadownload.AddFileGroupRequest;
 import com.google.android.libraries.mobiledatadownload.DownloadFileGroupRequest;
+import com.google.android.libraries.mobiledatadownload.GetFileGroupRequest;
+import com.google.android.libraries.mobiledatadownload.Logger;
 import com.google.android.libraries.mobiledatadownload.MobileDataDownload;
 import com.google.android.libraries.mobiledatadownload.TaskScheduler;
+import com.google.common.base.Optional;
 import com.google.mobiledatadownload.ClientConfigProto.ClientFileGroup;
 import com.google.mobiledatadownload.DownloadConfigProto.DataFile;
 import com.google.mobiledatadownload.DownloadConfigProto.DataFileGroup;
 import com.google.mobiledatadownload.DownloadConfigProto.DownloadConditions;
 import com.google.mobiledatadownload.DownloadConfigProto.DownloadConditions.DeviceNetworkPolicy;
 
-import org.junit.Ignore;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -62,10 +73,40 @@ public class MobileDataDownloadTest {
     private static final String FILE_URL_2 = "https://www.gstatic.com/suggest-dev/odws1_empty.jar";
     private static final int FILE_SIZE_2 = 554;
 
+    private static final String TEST_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL =
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-topics-classifier/922/217081737fd739c74dd3ca5c407813d818526577";
+    private static final String TEST_MDD_ENROLLMENT_MANIFEST_FILE_URL =
+            "https://dl.google.com/mdi-serving/adservices/adtech_enrollment/manifest_configs/1/manifest_config_1658790241927.binaryproto";
+    public static final String TEST_TOPIC_FILE_GROUP_NAME = "topics-classifier-model";
+    public static final String TEST_ENROLLMENT_FILE_GROUP_NAME = "adtech_enrollment_data";
+
+    private StaticMockitoSession mStaticMockSession = null;
+    @Mock Flags mMockFlags;
+
+    @Before
+    public void setup() {
+        MockitoAnnotations.initMocks(this);
+
+        // Start a mockitoSession to mock static method.
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(MddLogger.class)
+                        .spyStatic(FlagsFactory.class)
+                        .startMocking();
+    }
+
+    @After
+    public void teardown() {
+        if (mStaticMockSession != null) {
+            mStaticMockSession.finishMocking();
+        }
+    }
+
     @Test
     public void testCreateMddManagerSuccessfully() throws ExecutionException, InterruptedException {
         MobileDataDownload mdd =
-                MobileDataDownloadFactory.getMdd(mContext, FlagsFactory.getFlagsForTest());
+                MobileDataDownloadFactory.getMddForTesting(
+                        mContext, FlagsFactory.getFlagsForTest());
 
         DataFileGroup dataFileGroup =
                 createDataFileGroup(
@@ -102,15 +143,63 @@ public class MobileDataDownloadTest {
         assertThat(clientFileGroup.hasAccount()).isFalse();
     }
 
-    @Ignore
+    /**
+     * This method tests topics and measurement manifest files. It downloads test classifier model
+     * and adtech enrollment data and verifies files downloaded successfully.
+     */
     @Test
-    public void testTopicsManifestFileGroupPopulator()
+    public void testManifestFileGroupPopulator()
             throws ExecutionException, InterruptedException, TimeoutException {
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlagsForTest);
+        // Return a manifest URL for test only. This will download smaller size files only for
+        // testing MDD download feature.
+        doReturn(TEST_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL)
+                .when(mMockFlags)
+                .getMddTopicsClassifierManifestFileUrl();
+        doReturn(/*Download max download threads */ 2)
+                .when(mMockFlags)
+                .getDownloaderMaxDownloadThreads();
+        // Return production enrollment manifest file. This is a small file that will not affect
+        // running this test.
+        doReturn(TEST_MDD_ENROLLMENT_MANIFEST_FILE_URL)
+                .when(mMockFlags)
+                .getMeasurementManifestFileUrl();
+
         MobileDataDownload mdd =
-                MobileDataDownloadFactory.getMdd(mContext, FlagsFactory.getFlagsForTest());
+                MobileDataDownloadFactory.getMddForTesting(
+                        mContext, FlagsFactory.getFlagsForTest());
 
         mdd.handleTask(TaskScheduler.WIFI_CHARGING_PERIODIC_TASK)
                 .get(MAX_HANDLE_TASK_WAIT_TIME_SECS, SECONDS);
+
+        ClientFileGroup clientFileGroup =
+                mdd.getFileGroup(
+                                GetFileGroupRequest.newBuilder()
+                                        .setGroupName(TEST_TOPIC_FILE_GROUP_NAME)
+                                        .build())
+                        .get();
+
+        // Verify topics file group.
+        assertThat(clientFileGroup.getGroupName()).isEqualTo(TEST_TOPIC_FILE_GROUP_NAME);
+        assertThat(clientFileGroup.getOwnerPackage()).isEqualTo(mContext.getPackageName());
+        assertThat(clientFileGroup.getVersionNumber())
+                .isEqualTo(/* Test filegroup version number */ 0);
+        assertThat(clientFileGroup.getFileCount()).isEqualTo(6);
+        assertThat(clientFileGroup.getBuildId()).isEqualTo(/* BuildID generated by Ingress */ 922);
+
+        clientFileGroup =
+                mdd.getFileGroup(
+                                GetFileGroupRequest.newBuilder()
+                                        .setGroupName(TEST_ENROLLMENT_FILE_GROUP_NAME)
+                                        .build())
+                        .get();
+
+        // Verify measurement file group
+        assertThat(clientFileGroup.getGroupName()).isEqualTo(TEST_ENROLLMENT_FILE_GROUP_NAME);
+        assertThat(clientFileGroup.getOwnerPackage()).isEqualTo(mContext.getPackageName());
+        assertThat(clientFileGroup.getFileCount()).isEqualTo(1);
+        assertThat(clientFileGroup.getVersionNumber())
+                .isEqualTo(/* Measurement filegroup version number */ 1);
     }
 
     // A helper function to create a DataFilegroup.
@@ -150,5 +239,25 @@ public class MobileDataDownloadTest {
         }
 
         return dataFileGroupBuilder.build();
+    }
+
+    @Test
+    public void testMddLoggerKillSwitchIsOn() {
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlagsForTest);
+        // Killswitch is on. MddLogger should be disabled.
+        doReturn(true).when(mMockFlags).getMddLoggerKillSwitch();
+        Optional<Logger> mddLogger =
+                MobileDataDownloadFactory.getMddLogger(FlagsFactory.getFlagsForTest());
+        assertThat(mddLogger).isAbsent();
+    }
+
+    @Test
+    public void testMddLoggerKillSwitchIsOff() {
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlagsForTest);
+        // Killswitch is off. MddLogger should be enabled.
+        doReturn(false).when(mMockFlags).getMddLoggerKillSwitch();
+        Optional<Logger> mddLogger =
+                MobileDataDownloadFactory.getMddLogger(FlagsFactory.getFlagsForTest());
+        assertThat(mddLogger).isPresent();
     }
 }

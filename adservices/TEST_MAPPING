@@ -45,12 +45,40 @@
       "name": "CtsAdServicesPermissionsNoPermEndToEndTests[com.google.android.adservices.apex]"
     },
     {
+      "name": "CtsAdServicesNotInAllowListEndToEndTests[com.google.android.adservices.apex]"
+    },
+    {
+      "name": "CtsAdServicesTopicsAppUpdateTests[com.google.android.adservices.apex]"
+    },
+    {
+      "name": "CtsAdServicesTopicsConnectionTests[com.google.android.adservices.apex]"
+    },
+    {
+      "name": "CtsAdServicesMddTests[com.google.android.adservices.apex]"
+    },
+    {
+      // Install com.google.android.adservices.apex and run CtsSandboxedAdIdManagerTests.
+      "name": "CtsSandboxedAdIdManagerTests[com.google.android.adservices.apex]"
+    },
+    {
       // Install com.google.android.adservices.apex and run CtsSandboxedTopicsManagerTests.
       "name": "CtsSandboxedTopicsManagerTests[com.google.android.adservices.apex]"
     },
     {
+      // Install com.google.android.adservices.apex and run CtsSandboxedMeasurementManagerTests.
+      "name": "CtsSandboxedMeasurementManagerTests[com.google.android.adservices.apex]"
+    },
+    {
       // Install com.google.android.adservices.apex and run SandboxedFledgeManagerTests.
       "name": "CtsSandboxedFledgeManagerTests[com.google.android.adservices.apex]"
+    },
+    {
+      // Install com.google.android.adservices.apex and run CtsAdIdEndToEndTest.
+      "name": "CtsAdIdEndToEndTest[com.google.android.adservices.apex]"
+    },
+    {
+      // Install com.google.android.adservices.apex and run CtsAppSetIdEndToEndTest.
+      "name": "CtsAppSetIdEndToEndTest[com.google.android.adservices.apex]"
     }
   ],
   "presubmit": [
@@ -65,6 +93,15 @@
     },
     {
       "name": "AdServicesEndToEndTests"
+    },
+    {
+      "name": "CtsAdServicesTopicsAppUpdateTests"
+    },
+    {
+      "name": "CtsAdServicesTopicsConnectionTests"
+    },
+    {
+      "name": "CtsAdServicesMddTests"
     },
     {
       "name": "CtsAdServicesDeviceTestCases"
@@ -83,6 +120,12 @@
     },
     {
       "name": "AdServicesApkUnitTests"
+    },
+    {
+      "name": "CtsAdIdEndToEndTest"
+    },
+    {
+      "name": "CtsAppSetIdEndToEndTest"
     }
   ]
 }

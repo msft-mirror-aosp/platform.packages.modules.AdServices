@@ -48,8 +48,8 @@ public class FledgeRoomConvertersTest {
         assertNull(FledgeRoomConverters.serializeInstant(null));
         assertNull(FledgeRoomConverters.deserializeInstant(null));
 
-        assertNull(FledgeRoomConverters.serializeUrl(null));
-        assertNull(FledgeRoomConverters.deserializeUrl(null));
+        assertNull(FledgeRoomConverters.serializeUri(null));
+        assertNull(FledgeRoomConverters.deserializeUri(null));
 
         assertNull(FledgeRoomConverters.serializeAdTechIdentifier(null));
         assertNull(FledgeRoomConverters.deserializeAdTechIdentifier(null));
@@ -62,8 +62,8 @@ public class FledgeRoomConvertersTest {
     public void testSerializeDeserializeUri() {
         Uri uri = Uri.parse("http://www.domain.com/adverts/123");
 
-        String fromUri = FledgeRoomConverters.serializeUrl(uri);
-        Uri fromString = FledgeRoomConverters.deserializeUrl(fromUri);
+        String fromUri = FledgeRoomConverters.serializeUri(uri);
+        Uri fromString = FledgeRoomConverters.deserializeUri(fromUri);
 
         assertEquals(uri, fromString);
     }

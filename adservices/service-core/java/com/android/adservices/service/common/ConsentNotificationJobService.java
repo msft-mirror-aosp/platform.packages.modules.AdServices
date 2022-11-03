@@ -33,6 +33,7 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.consent.DeviceRegionProvider;
 
 import java.util.Calendar;
 import java.util.TimeZone;
@@ -42,7 +43,6 @@ import java.util.TimeZone;
  * flags) to trigger the Notification for Privacy Sandbox.
  */
 public class ConsentNotificationJobService extends JobService {
-    static final String EEA_DEVICE = "com.google.android.feature.EEA_DEVICE";
     static final long MILLISECONDS_IN_THE_DAY = 86400000L;
     static final String ADID_ENABLE_STATUS = "adid_enable_status";
     private ConsentManager mConsentManager;
@@ -126,7 +126,7 @@ public class ConsentNotificationJobService extends JobService {
     }
 
     static boolean isEuDevice(Context context) {
-        return context.getPackageManager().hasSystemFeature(EEA_DEVICE);
+        return DeviceRegionProvider.isEuDevice(context);
     }
 
     private static long getMillisecondsInTheCurrentDay(Calendar calendar) {
@@ -160,13 +160,12 @@ public class ConsentNotificationJobService extends JobService {
                         () -> {
                             try {
                                 if (!FlagsFactory.getFlags().getConsentNotificationDebugMode()
-                                        && mConsentManager.wasNotificationDisplayed(
-                                                getPackageManager())) {
+                                        && mConsentManager.wasNotificationDisplayed()) {
                                     LogUtil.i("already notified, return back");
                                     return;
                                 }
                                 AdServicesSyncUtil.getInstance()
-                                        .execute(this, adIdZeroStatus || isEuDevice(this));
+                                        .execute(this, !adIdZeroStatus || isEuDevice(this));
                             } finally {
                                 jobFinished(params, false);
                             }

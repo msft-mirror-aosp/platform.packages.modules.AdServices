@@ -16,12 +16,19 @@
 
 package com.android.adservices.service.topics.classifier;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__ON_DEVICE_CLASSIFIER;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_SUCCESS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED;
+import static com.android.adservices.service.topics.classifier.Preprocessor.limitDescriptionSize;
+
 import android.annotation.NonNull;
-import android.content.Context;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.EpochComputationClassifierStats;
 import com.android.adservices.service.topics.AppInfo;
 import com.android.adservices.service.topics.PackageManagerUtil;
 
@@ -53,6 +60,8 @@ public class OnDeviceClassifier implements Classifier {
     private static final String MODEL_ASSET_FIELD = "tflite_model";
     private static final String LABELS_ASSET_FIELD = "labels_topics";
     private static final String ASSET_VERSION_FIELD = "asset_version";
+    private static final String VERSION_INFO_FIELD = "version_info";
+    private static final String BUILD_ID_FIELD = "build_id";
 
     private static final String NO_VERSION_INFO = "NO_VERSION_INFO";
 
@@ -65,42 +74,36 @@ public class OnDeviceClassifier implements Classifier {
     private ImmutableList<Integer> mLabels;
     private long mModelVersion;
     private long mLabelsVersion;
+    private int mBuildId;
     private boolean mLoaded;
     private ImmutableMap<String, AppInfo> mAppInfoMap;
+    private final AdServicesLogger mLogger;
 
-    public OnDeviceClassifier(
+    OnDeviceClassifier(
             @NonNull Preprocessor preprocessor,
             @NonNull PackageManagerUtil packageManagerUtil1,
             @NonNull Random random,
-            @NonNull ModelManager modelManager) {
+            @NonNull ModelManager modelManager,
+            @NonNull AdServicesLogger logger) {
         mPreprocessor = preprocessor;
         mPackageManagerUtil = packageManagerUtil1;
         mRandom = random;
         mLoaded = false;
         mAppInfoMap = ImmutableMap.of();
         mModelManager = modelManager;
-    }
-
-    /** Returns the singleton instance of the {@link OnDeviceClassifier} given a context. */
-    @NonNull
-    public static OnDeviceClassifier getInstance(@NonNull Context context) {
-        synchronized (OnDeviceClassifier.class) {
-            if (sSingleton == null) {
-                sSingleton =
-                        new OnDeviceClassifier(
-                                new Preprocessor(context),
-                                new PackageManagerUtil(context),
-                                new Random(),
-                                ModelManager.getInstance(context));
-            }
-        }
-        return sSingleton;
+        mLogger = logger;
     }
 
     @Override
     @NonNull
     public ImmutableMap<String, List<Topic>> classify(@NonNull Set<String> appPackageNames) {
         if (appPackageNames.isEmpty()) {
+            return ImmutableMap.of();
+        }
+
+        if (!mModelManager.isModelAvailable()) {
+            // Return empty map since no model is available.
+            LogUtil.d("[ML] No ML model available for classification. Return empty Map.");
             return ImmutableMap.of();
         }
 
@@ -119,6 +122,7 @@ public class OnDeviceClassifier implements Classifier {
         for (String appPackageName : appPackageNames) {
             String appDescription = getProcessedAppDescription(appPackageName);
             List<Topic> appClassificationTopics = getAppClassificationTopics(appDescription);
+            logEpochComputationClassifierStats(appClassificationTopics);
             LogUtil.v(
                     "[ML] Top classification for app description \""
                             + appDescription
@@ -128,6 +132,28 @@ public class OnDeviceClassifier implements Classifier {
         }
 
         return packageNameToTopics.build();
+    }
+
+    private void logEpochComputationClassifierStats(List<Topic> topics) {
+        // Log atom for getTopTopics call.
+        ImmutableList.Builder<Integer> topicIds = ImmutableList.builder();
+        for (Topic topic : topics) {
+            topicIds.add(topic.getTopic());
+        }
+        mLogger.logEpochComputationClassifierStats(
+                EpochComputationClassifierStats.builder()
+                        .setTopicIds(topicIds.build())
+                        .setBuildId(mBuildId)
+                        .setAssetVersion(Long.toString(mModelVersion))
+                        .setClassifierType(
+                                AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__ON_DEVICE_CLASSIFIER)
+                        .setOnDeviceClassifierStatus(
+                                topics.isEmpty()
+                                        ? AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_FAILURE
+                                        : AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_SUCCESS)
+                        .setPrecomputedClassifierStatus(
+                                AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED)
+                        .build());
     }
 
     @Override
@@ -140,7 +166,7 @@ public class OnDeviceClassifier implements Classifier {
         }
 
         return CommonClassifierHelper.getTopTopics(
-                appTopics, mLabels, mRandom, numberOfTopTopics, numberOfRandomTopics);
+                appTopics, mLabels, mRandom, numberOfTopTopics, numberOfRandomTopics, mLogger);
     }
 
     // Uses the BertNLClassifier to fetch the most relevant topic id based on the input app
@@ -148,7 +174,15 @@ public class OnDeviceClassifier implements Classifier {
     private List<Topic> getAppClassificationTopics(@NonNull String appDescription) {
         // Returns list of labelIds with their corresponding score in Category for the app
         // description.
-        List<Category> classifications = mBertNLClassifier.classify(appDescription);
+        List<Category> classifications = ImmutableList.of();
+        try {
+            classifications = mBertNLClassifier.classify(appDescription);
+        } catch (Exception e) {
+            // (TODO:b/242926783): Update to more granular Exception after resolving JNI error
+            // propagation.
+            LogUtil.e("[ML] classify call failed for mBertNLClassifier.");
+            return ImmutableList.of();
+        }
         // Get the highest score first. Sort in decreasing order.
         classifications.sort(Comparator.comparing(Category::getScore).reversed());
 
@@ -197,6 +231,12 @@ public class OnDeviceClassifier implements Classifier {
         // Preprocess the app description for the model.
         appDescription = mPreprocessor.preprocessAppDescription(appDescription);
         appDescription = mPreprocessor.removeStopWords(appDescription);
+        // Limit description size.
+        int maxNumberOfWords = FlagsFactory.getFlags().getClassifierDescriptionMaxWords();
+        int maxNumberOfCharacters = FlagsFactory.getFlags().getClassifierDescriptionMaxLength();
+        appDescription =
+                limitDescriptionSize(appDescription, maxNumberOfWords, maxNumberOfCharacters);
+
         return appDescription;
     }
 
@@ -262,7 +302,7 @@ public class OnDeviceClassifier implements Classifier {
         // Load Bert model.
         try {
             mBertNLClassifier = loadModel();
-        } catch (IOException e) {
+        } catch (Exception e) {
             LogUtil.e(e, "Loading ML model failed.");
             return false;
         }
@@ -279,7 +319,15 @@ public class OnDeviceClassifier implements Classifier {
         mLabelsVersion =
                 Long.parseLong(
                         classifierAssetsMetadata.get(LABELS_ASSET_FIELD).get(ASSET_VERSION_FIELD));
-
+        try {
+            mBuildId =
+                    Integer.parseInt(
+                            classifierAssetsMetadata.get(VERSION_INFO_FIELD).get(BUILD_ID_FIELD));
+        } catch (NumberFormatException e) {
+            // No build id is available.
+            LogUtil.d(e, "Build id is not available");
+            mBuildId = -1;
+        }
         return true;
     }
 

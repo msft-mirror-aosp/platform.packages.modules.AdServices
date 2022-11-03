@@ -38,8 +38,13 @@ public interface SdkSandboxServiceProvider {
 
     /**
      * Unbind the SdkSandbox service associated with the app.
+     *
+     * @param callingInfo represents the app for which the sandbox should be unbound.
+     * @param shouldForgetConnection set to false if there is a possibility of still interacting
+     *     with the sandbox, and true otherwise for e.g. if the sandbox has been unbound when the
+     *     app goes to the background, but sandbox APIs could still be used.
      */
-    void unbindService(CallingInfo callingInfo);
+    void unbindService(CallingInfo callingInfo, boolean shouldForgetConnection);
 
     /**
      * Return bound {@link ISdkSandboxService} connected for {@code callingInfo} or otherwise

@@ -19,12 +19,13 @@ package com.android.adservices.service.measurement.reporting;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import android.net.Uri;
-
+import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.AbstractDbIntegrationTest;
 import com.android.adservices.data.measurement.DatastoreManager;
-import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.data.measurement.DbState;
+import com.android.adservices.data.measurement.SQLDatastoreManager;
+import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
@@ -47,7 +48,11 @@ import java.util.Objects;
 /** Integration tests for {@link AggregateReportingJobHandler} */
 @RunWith(Parameterized.class)
 public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbIntegrationTest {
+    private static final EnrollmentData ENROLLMENT = new EnrollmentData.Builder()
+            .setAttributionReportingUrl(List.of("https://ad-tech.com"))
+            .build();
     private final JSONObject mParam;
+    private final EnrollmentDao mEnrollmentDao;
 
     @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> data() throws IOException, JSONException {
@@ -62,18 +67,19 @@ public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbInteg
             DbState input, DbState output, JSONObject param, String name) {
         super(input, output);
         mParam = param;
+        mEnrollmentDao = Mockito.mock(EnrollmentDao.class);
     }
 
     public enum Action {
         SINGLE_REPORT,
-        ALL_REPORTS,
-        ALL_REPORTS_FOR_APP,
+        ALL_REPORTS
     }
 
     @Override
     public void runActionToTest() {
         final Integer returnCode = (Integer) get("responseCode");
         final String action = (String) get("action");
+        final boolean isEnrolled = get("notEnrolled") == null;
 
         AggregateEncryptionKeyManager mockKeyManager = mock(AggregateEncryptionKeyManager.class);
         ArgumentCaptor<Integer> captorNumberOfKeys = ArgumentCaptor.forClass(Integer.class);
@@ -86,9 +92,13 @@ public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbInteg
                             }
                             return keys;
                         });
-        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
+        Mockito.doReturn(isEnrolled ? ENROLLMENT : null)
+                .when(mEnrollmentDao).getEnrollmentData(Mockito.any());
+        DatastoreManager datastoreManager =
+                new SQLDatastoreManager(DbTestUtil.getDbHelperForTest());
         AggregateReportingJobHandler spyReportingService =
-                Mockito.spy(new AggregateReportingJobHandler(datastoreManager, mockKeyManager));
+                Mockito.spy(new AggregateReportingJobHandler(
+                        mEnrollmentDao, datastoreManager, mockKeyManager));
         try {
             Mockito.doReturn(returnCode)
                     .when(spyReportingService)
@@ -105,12 +115,6 @@ public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbInteg
                         "Aggregate report failed.",
                         spyReportingService.performScheduledPendingReportsInWindow(
                                 startValue, endValue));
-                break;
-            case ALL_REPORTS_FOR_APP:
-                final Uri appName = Uri.parse((String) get("appName"));
-                Assert.assertTrue(
-                        "Aggregate report failed.",
-                        spyReportingService.performAllPendingReportsForGivenApp(appName));
                 break;
             case SINGLE_REPORT:
                 final int result = ((Number) Objects.requireNonNull(get("result"))).intValue();

@@ -45,7 +45,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -83,11 +82,13 @@ public class MeasurementManagerCtsTest {
 
     @Before
     public void setup() {
-        // To grant access to all web context
-        ShellUtils.runShellCommand("device_config put adservices web_context_client_allow_list *");
-
         // To grant access to all pp api app
-        ShellUtils.runShellCommand("device_config put adservices ppapi_app_allow_list *");
+        allowAllPackageNamesAccessMeasurementApis();
+
+        // We need to turn the Consent Manager into debug mode
+        overrideConsentManagerDebugMode();
+
+        overrideMeasurementKillSwitches(true);
 
         mMeasurementClient =
                 new MeasurementClient.Builder()
@@ -98,6 +99,10 @@ public class MeasurementManagerCtsTest {
 
     @After
     public void tearDown() throws Exception {
+        resetAllowSandboxPackageNameAccessMeasurementApis();
+        resetOverrideConsentManagerDebugMode();
+        resetOverrideDisableMeasurementEnrollmentCheck();
+        overrideMeasurementKillSwitches(false);
         TimeUnit.SECONDS.sleep(1);
     }
 
@@ -158,7 +163,6 @@ public class MeasurementManagerCtsTest {
         overrideDisableMeasurementEnrollmentCheck("0");
     }
 
-    @Ignore("b/243204209")
     @Test
     public void testDeleteRegistrations_withRequest_withNoOrigin_withNoRange_withCallback_NoErrors()
             throws Exception {
@@ -169,7 +173,6 @@ public class MeasurementManagerCtsTest {
         overrideDisableMeasurementEnrollmentCheck("0");
     }
 
-    @Ignore("b/243204209")
     @Test
     public void testDeleteRegistrations_withRequest_withNoRange_withCallback_NoErrors()
             throws Exception {
@@ -216,7 +219,6 @@ public class MeasurementManagerCtsTest {
         overrideDisableMeasurementEnrollmentCheck("0");
     }
 
-    @Ignore
     @Test
     public void testDeleteRegistrations_withRequest_withInvalidArguments_withCallback_hasError()
             throws Exception {
@@ -242,6 +244,7 @@ public class MeasurementManagerCtsTest {
                 new DeletionRequest.Builder()
                         .setOriginUris(Collections.singletonList(ORIGIN_URI))
                         .setDomainUris(Collections.singletonList(DOMAIN_URI))
+                        .setStart(Instant.now().plusMillis(1000))
                         .setEnd(Instant.now())
                         .build();
 
@@ -271,9 +274,65 @@ public class MeasurementManagerCtsTest {
         overrideDisableMeasurementEnrollmentCheck("0");
     }
 
+    private void allowAllPackageNamesAccessMeasurementApis() {
+        final String packageName = "*";
+        ShellUtils.runShellCommand(
+                "device_config put adservices ppapi_app_allow_list " + packageName);
+        ShellUtils.runShellCommand(
+                "device_config put adservices web_context_client_allow_list " + packageName);
+    }
+
+    // Override the Consent Manager behaviour - Consent Given
+    private void overrideConsentManagerDebugMode() {
+        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
+    }
+
     // Override the flag to disable Measurement enrollment check. Setting to 1 disables enforcement.
     private void overrideDisableMeasurementEnrollmentCheck(String val) {
         ShellUtils.runShellCommand(
                 "setprop debug.adservices.disable_measurement_enrollment_check " + val);
+    }
+
+    private void resetAllowSandboxPackageNameAccessMeasurementApis() {
+        ShellUtils.runShellCommand("device_config put adservices ppapi_app_allow_list null");
+        ShellUtils.runShellCommand(
+                "device_config put adservices web_context_client_allow_list null");
+    }
+
+    private void resetOverrideConsentManagerDebugMode() {
+        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode null");
+    }
+
+    private void resetOverrideDisableMeasurementEnrollmentCheck() {
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.disable_measurement_enrollment_check null");
+    }
+
+    // Override measurement related kill switch to ignore the effect of actual PH values.
+    // If isOverride = true, override measurement related kill switch to OFF to allow adservices
+    // If isOverride = false, override measurement related kill switch to meaningless value so that
+    // PhFlags will use the default value.
+    private void overrideMeasurementKillSwitches(boolean isOverride) {
+        String overrideString = isOverride ? "false" : "null";
+        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + overrideString);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.measurement_kill_switch " + overrideString);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.measurement_api_register_source_kill_switch "
+                        + overrideString);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.measurement_api_register_trigger_kill_switch "
+                        + overrideString);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.measurement_api_register_web_source_kill_switch "
+                        + overrideString);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.measurement_api_register_web_trigger_kill_switch "
+                        + overrideString);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.measurement_api_delete_registrations_kill_switch "
+                        + overrideString);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.measurement_api_status_kill_switch " + overrideString);
     }
 }

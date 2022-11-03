@@ -31,10 +31,11 @@ public class Attribution {
     private final String mSourceOrigin;
     private final String mDestinationSite;
     private final String mDestinationOrigin;
-    private final String mAdTechDomain;
     private final String mEnrollmentId;
     private final long mTriggerTime;
     private final String mRegistrant;
+    private final String mSourceId;
+    private final String mTriggerId;
 
     private Attribution(Builder builder) {
         this.mId = builder.mId;
@@ -42,10 +43,11 @@ public class Attribution {
         this.mSourceOrigin = builder.mSourceOrigin;
         this.mDestinationSite = builder.mDestinationSite;
         this.mDestinationOrigin = builder.mDestinationOrigin;
-        this.mAdTechDomain = builder.mAdTechDomain;
         this.mEnrollmentId = builder.mEnrollmentId;
         this.mTriggerTime = builder.mTriggerTime;
         this.mRegistrant = builder.mRegistrant;
+        this.mSourceId = builder.mSourceId;
+        this.mTriggerId = builder.mTriggerId;
     }
 
     @Override
@@ -59,9 +61,10 @@ public class Attribution {
                 && Objects.equals(mSourceOrigin, attr.mSourceOrigin)
                 && Objects.equals(mDestinationSite, attr.mDestinationSite)
                 && Objects.equals(mDestinationOrigin, attr.mDestinationOrigin)
-                && Objects.equals(mAdTechDomain, attr.mAdTechDomain)
                 && Objects.equals(mEnrollmentId, attr.mEnrollmentId)
-                && Objects.equals(mRegistrant, attr.mRegistrant);
+                && Objects.equals(mRegistrant, attr.mRegistrant)
+                && Objects.equals(mSourceId, attr.mSourceId)
+                && Objects.equals(mTriggerId, attr.mTriggerId);
     }
 
     @Override
@@ -71,10 +74,11 @@ public class Attribution {
                 mSourceOrigin,
                 mDestinationSite,
                 mDestinationOrigin,
-                mAdTechDomain,
                 mEnrollmentId,
                 mTriggerTime,
-                mRegistrant);
+                mRegistrant,
+                mSourceId,
+                mTriggerId);
     }
 
     /** @return unique identifier for {@link Attribution} */
@@ -102,11 +106,6 @@ public class Attribution {
         return mDestinationOrigin;
     }
 
-    /** @return {@link Source} or {@link Trigger} ad-tech domain */
-    public String getAdTechDomain() {
-        return mAdTechDomain;
-    }
-
     /** @return {@link Source} or {@link Trigger} enrollment ID */
     public String getEnrollmentId() {
         return mEnrollmentId;
@@ -122,6 +121,16 @@ public class Attribution {
         return mRegistrant;
     }
 
+    /** @return {@link Source} ID */
+    public String getSourceId() {
+        return mSourceId;
+    }
+
+    /** @return {@link Trigger} ID */
+    public String getTriggerId() {
+        return mTriggerId;
+    }
+
     /** Builder for AttributionRateLimit */
     public static final class Builder {
         private String mId;
@@ -129,10 +138,11 @@ public class Attribution {
         private String mSourceOrigin;
         private String mDestinationSite;
         private String mDestinationOrigin;
-        private String mAdTechDomain;
         private String mEnrollmentId;
         private long mTriggerTime;
         private String mRegistrant;
+        private String mSourceId;
+        private String mTriggerId;
 
         /** See {@link Attribution#getId()}. */
         public Builder setId(String id) {
@@ -164,12 +174,6 @@ public class Attribution {
             return this;
         }
 
-        /** See {@link Attribution#getAdTechDomain()}. */
-        public Builder setAdTechDomain(String adTechDomain) {
-            mAdTechDomain = adTechDomain;
-            return this;
-        }
-
         /** See {@link Attribution#getEnrollmentId()}. */
         public Builder setEnrollmentId(String enrollmentId) {
             mEnrollmentId = enrollmentId;
@@ -188,6 +192,18 @@ public class Attribution {
             return this;
         }
 
+        /** See {@link Attribution#getSourceId()}. */
+        public Builder setSourceId(String sourceId) {
+            mSourceId = sourceId;
+            return this;
+        }
+
+        /** See {@link Attribution#getTriggerId()}. */
+        public Builder setTriggerId(String triggerId) {
+            mTriggerId = triggerId;
+            return this;
+        }
+
         /** Validate and build the {@link Attribution}. */
         public Attribution build() {
             Validation.validateNonNull(
@@ -195,9 +211,7 @@ public class Attribution {
                     mSourceOrigin,
                     mDestinationSite,
                     mDestinationOrigin,
-                    mAdTechDomain,
-                    // TODO (b/238924528): uncomment when enforcing enrollment
-                    //mEnrollmentId,
+                    mEnrollmentId,
                     mRegistrant);
             return new Attribution(this);
         }

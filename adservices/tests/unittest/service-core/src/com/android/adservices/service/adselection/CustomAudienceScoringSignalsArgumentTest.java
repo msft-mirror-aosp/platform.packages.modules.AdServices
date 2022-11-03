@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.adselection;
 
-import static com.android.adservices.service.adselection.AdSelectionScriptEngine.CUSTOM_AUDIENCE_SIGNALS_ARG_NAME;
+import static com.android.adservices.service.adselection.AdSelectionScriptEngine.CUSTOM_AUDIENCE_SCORING_SIGNALS_ARG_NAME;
 import static com.android.adservices.service.js.JSScriptArgument.recordArg;
 import static com.android.adservices.service.js.JSScriptArgument.stringArg;
 
@@ -44,9 +44,11 @@ public class CustomAudienceScoringSignalsArgumentTest {
     public void testConversionToScriptArgument() throws JSONException {
         JSScriptArgument caSignalJsArgument =
                 CustomAudienceScoringSignalsArgument.asScriptArgument(
-                        CUSTOM_AUDIENCE_SIGNALS_ARG_NAME, mCustomAudienceSignals1);
+                        CUSTOM_AUDIENCE_SCORING_SIGNALS_ARG_NAME, mCustomAudienceSignals1);
         matchCustomAudienceSignals(
-                CUSTOM_AUDIENCE_SIGNALS_ARG_NAME, caSignalJsArgument, mCustomAudienceSignals1);
+                CUSTOM_AUDIENCE_SCORING_SIGNALS_ARG_NAME,
+                caSignalJsArgument,
+                mCustomAudienceSignals1);
     }
 
     @Test
@@ -55,16 +57,16 @@ public class CustomAudienceScoringSignalsArgumentTest {
                 ImmutableList.of(mCustomAudienceSignals1, mCustomAudienceSignals2);
         JSScriptArgument customAudienceSignalsArgumentList =
                 CustomAudienceScoringSignalsArgument.asScriptArgument(
-                        CUSTOM_AUDIENCE_SIGNALS_ARG_NAME, customAudienceSignalsList);
+                        CUSTOM_AUDIENCE_SCORING_SIGNALS_ARG_NAME, customAudienceSignalsList);
 
         Assert.assertEquals(
                 "Custom Audience Signals JS argument name mismatch",
-                CUSTOM_AUDIENCE_SIGNALS_ARG_NAME,
+                CUSTOM_AUDIENCE_SCORING_SIGNALS_ARG_NAME,
                 customAudienceSignalsArgumentList.name());
 
         String expectedJsArgValue =
                 "const "
-                        + CUSTOM_AUDIENCE_SIGNALS_ARG_NAME
+                        + CUSTOM_AUDIENCE_SCORING_SIGNALS_ARG_NAME
                         + " = ["
                         + createCAJsArrayListArgument(mCustomAudienceSignals1)
                         + ","
