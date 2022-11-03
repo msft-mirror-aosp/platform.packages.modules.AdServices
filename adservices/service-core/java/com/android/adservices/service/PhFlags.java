@@ -28,6 +28,8 @@ import androidx.annotation.Nullable;
 import com.android.adservices.LogUtil;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.common.collect.ImmutableList;
+
 import java.io.PrintWriter;
 
 /** Flags Implementation that delegates to DeviceConfig. */
@@ -300,6 +302,9 @@ public final class PhFlags implements Flags {
 
     // Database Schema Version Flags
     static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_3 = "enable_database_schema_version_3";
+
+    // Enrollment flags.
+    static final String KEY_ENROLLMENT_BLOCKLIST_IDS = "enrollment_blocklist_ids";
 
     private static final PhFlags sSingleton = new PhFlags();
 
@@ -2055,5 +2060,23 @@ public final class PhFlags implements Flags {
                         + KEY_FOREGROUND_STATUS_LEVEL
                         + " = "
                         + getForegroundStatuslLevelForValidation());
+    }
+
+    @Override
+    public boolean isEnrollmentBlocklisted(String enrollmentId) {
+        return getEnrollmentBlocklist().contains(enrollmentId);
+    }
+
+    @VisibleForTesting
+    @Override
+    public ImmutableList<String> getEnrollmentBlocklist() {
+        String blocklistFlag =
+                DeviceConfig.getString(
+                        DeviceConfig.NAMESPACE_ADSERVICES, KEY_ENROLLMENT_BLOCKLIST_IDS, "");
+        if (TextUtils.isEmpty(blocklistFlag)) {
+            return ImmutableList.of();
+        }
+        String[] blocklistList = blocklistFlag.split(",");
+        return ImmutableList.copyOf(blocklistList);
     }
 }

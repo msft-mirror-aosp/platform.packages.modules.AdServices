@@ -107,6 +107,7 @@ public final class MeasurementTables {
         String AGGREGATE_TRIGGER_DATA = "aggregate_trigger_data";
         String AGGREGATE_VALUES = "aggregate_values";
         String FILTERS = "filters";
+        String NOT_FILTERS = "not_filters";
         String DEBUG_KEY = "debug_key";
     }
 
@@ -320,6 +321,38 @@ public final class MeasurementTables {
                     + TriggerContract.AGGREGATE_VALUES
                     + " TEXT, "
                     + TriggerContract.FILTERS
+                    + " TEXT, "
+                    + TriggerContract.DEBUG_KEY
+                    + " INTEGER "
+                    + ")";
+
+    public static final String CREATE_TABLE_TRIGGER_V2 =
+            "CREATE TABLE "
+                    + TriggerContract.TABLE
+                    + " ("
+                    + TriggerContract.ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + TriggerContract.ATTRIBUTION_DESTINATION
+                    + " TEXT, "
+                    + TriggerContract.DESTINATION_TYPE
+                    + " INTEGER, "
+                    + TriggerContract.ENROLLMENT_ID
+                    + " TEXT, "
+                    + TriggerContract.TRIGGER_TIME
+                    + " INTEGER, "
+                    + TriggerContract.EVENT_TRIGGERS
+                    + " TEXT, "
+                    + TriggerContract.STATUS
+                    + " INTEGER, "
+                    + TriggerContract.REGISTRANT
+                    + " TEXT, "
+                    + TriggerContract.AGGREGATE_TRIGGER_DATA
+                    + " TEXT, "
+                    + TriggerContract.AGGREGATE_VALUES
+                    + " TEXT, "
+                    + TriggerContract.FILTERS
+                    + " TEXT, "
+                    + TriggerContract.NOT_FILTERS
                     + " TEXT, "
                     + TriggerContract.DEBUG_KEY
                     + " INTEGER "
@@ -646,7 +679,7 @@ public final class MeasurementTables {
             Collections.unmodifiableList(
                     Arrays.asList(
                             CREATE_TABLE_SOURCE_V1,
-                            CREATE_TABLE_TRIGGER_V1,
+                            CREATE_TABLE_TRIGGER_V2,
                             CREATE_TABLE_EVENT_REPORT_V3,
                             CREATE_TABLE_ATTRIBUTION_V3,
                             CREATE_TABLE_AGGREGATE_REPORT_V3,

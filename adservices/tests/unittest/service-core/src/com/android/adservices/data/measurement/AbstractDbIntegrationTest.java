@@ -348,6 +348,7 @@ public abstract class AbstractDbIntegrationTest {
         values.put(MeasurementTables.TriggerContract.REGISTRANT,
                 trigger.getRegistrant().toString());
         values.put(MeasurementTables.TriggerContract.FILTERS, trigger.getFilters());
+        values.put(MeasurementTables.TriggerContract.NOT_FILTERS, trigger.getNotFilters());
         long row = db.insert(MeasurementTables.TriggerContract.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("Trigger insertion failed");

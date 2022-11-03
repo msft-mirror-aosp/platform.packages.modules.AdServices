@@ -841,8 +841,7 @@ public class AttributionJobHandlerTest {
                         .setId("sourceId1")
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setAggregateSource(
-                                "[{\"id\" : \"campaignCounts\", \"key_piece\" : \"0x159\"},"
-                                        + "{\"id\" : \"geoValue\", \"key_piece\" : \"0x5\"}]")
+                                "{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}")
                         .setFilterData("{\"product\":[\"1234\",\"2345\"]}")
                         .build();
         AggregateReport expectedAggregateReport =
@@ -913,13 +912,14 @@ public class AttributionJobHandlerTest {
                         .setEventTriggers(EVENT_TRIGGERS)
                         .build();
 
-        Source source = SourceFixture.getValidSourceBuilder()
-                .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
-                .setAggregateSource("[{\"id\" : \"campaignCounts\", \"key_piece\" : \"0x159\"},"
-                        + "{\"id\" : \"geoValue\", \"key_piece\" : \"0x5\"}]")
-                .setFilterData("{\"product\":[\"1234\",\"2345\"]}")
-                .setAggregateContributions(65536 - 32768 - 1644 + 1)
-                .build();
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setAggregateSource(
+                                "{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}")
+                        .setFilterData("{\"product\":[\"1234\",\"2345\"]}")
+                        .setAggregateContributions(65536 - 32768 - 1644 + 1)
+                        .build();
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
         when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
@@ -983,6 +983,119 @@ public class AttributionJobHandlerTest {
                         eq(Collections.singletonList(trigger.getId())), eq(Trigger.Status.IGNORED));
         verify(mMeasurementDao, never()).updateSourceDedupKeys(any());
         verify(mMeasurementDao, never()).insertEventReport(any());
+        verify(mTransaction, times(2)).begin();
+        verify(mTransaction, times(2)).end();
+    }
+
+    @Test
+    public void performAttributions_triggerNotFiltersWithCommonKeysIntersect_ignoreTrigger()
+            throws DatastoreException {
+        // Setup
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId1")
+                        .setStatus(Trigger.Status.PENDING)
+                        .setEventTriggers(
+                                "[\n"
+                                        + "{\n"
+                                        + "  \"trigger_data\": \"5\",\n"
+                                        + "  \"priority\": \"123\",\n"
+                                        + "  \"deduplication_key\": \"1\"\n"
+                                        + "}"
+                                        + "]\n")
+                        .setNotFilters(
+                                "{\n"
+                                        + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
+                                        + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
+                                        + "}\n")
+                        .build();
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setFilterData(
+                                "{\n"
+                                        + "  \"key_1\": [\"value_1\", \"value_2_x\"],\n"
+                                        + "  \"key_2\": [\"value_1_x\", \"value_2\"]\n"
+                                        + "}\n")
+                        .build();
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        List<Source> matchingSourceList = new ArrayList<>();
+        matchingSourceList.add(source);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
+        when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
+        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
+
+        // Execution
+        attributionService.performPendingAttributions();
+
+        // Assertions
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())), eq(Trigger.Status.IGNORED));
+        verify(mMeasurementDao, never()).updateSourceDedupKeys(any());
+        verify(mMeasurementDao, never()).insertEventReport(any());
+        verify(mTransaction, times(2)).begin();
+        verify(mTransaction, times(2)).end();
+    }
+
+    @Test
+    public void performAttributions_triggerNotFiltersWithCommonKeysDontIntersect_attributeTrigger()
+            throws DatastoreException {
+        // Setup
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId1")
+                        .setStatus(Trigger.Status.PENDING)
+                        .setEventTriggers(
+                                "[\n"
+                                        + "{\n"
+                                        + "  \"trigger_data\": \"5\",\n"
+                                        + "  \"priority\": \"123\",\n"
+                                        + "  \"deduplication_key\": \"1\"\n"
+                                        + "}"
+                                        + "]\n")
+                        .setNotFilters(
+                                "{\n"
+                                        + "  \"key_1\": [\"value_11_x\", \"value_12\"],\n"
+                                        + "  \"key_2\": [\"value_21\", \"value_22_x\"]\n"
+                                        + "}\n")
+                        .build();
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setFilterData(
+                                "{\n"
+                                        + "  \"key_1\": [\"value_11\", \"value_12_x\"],\n"
+                                        + "  \"key_2\": [\"value_21_x\", \"value_22\"]\n"
+                                        + "}\n")
+                        .build();
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        List<Source> matchingSourceList = new ArrayList<>();
+        matchingSourceList.add(source);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
+        when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
+        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
+
+        // Execution
+        attributionService.performPendingAttributions();
+
+        // Assertions
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())),
+                        eq(Trigger.Status.ATTRIBUTED));
+        ArgumentCaptor<Source> sourceArg = ArgumentCaptor.forClass(Source.class);
+        verify(mMeasurementDao).updateSourceDedupKeys(sourceArg.capture());
+        assertEquals(
+                sourceArg.getValue().getDedupKeys(),
+                Collections.singletonList(new UnsignedLong(1L)));
+        verify(mMeasurementDao).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }
@@ -1574,8 +1687,7 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_2\": [\"value_1_y\", \"value_2_y\"]\n"
                                         + "}\n")
                         .setAggregateSource(
-                                "[{\"id\" : \"campaignCounts\", \"key_piece\" : \"0x159\"},"
-                                        + "{\"id\" : \"geoValue\", \"key_piece\" : \"0x5\"}]")
+                                "{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}")
                         .setFilterData(
                                 "{\"product\":[\"1234\",\"2345\"], \"key_1\": "
                                         + "[\"value_1_y\", \"value_2_y\"]}")
@@ -1634,8 +1746,7 @@ public class AttributionJobHandlerTest {
                 SourceFixture.getValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setAggregateSource(
-                                "[{\"id\" : \"campaignCounts\", \"key_piece\" : \"0x159\"},"
-                                        + "{\"id\" : \"geoValue\", \"key_piece\" : \"0x5\"}]")
+                                "{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}")
                         .setFilterData(
                                 "{\n"
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
@@ -1703,8 +1814,7 @@ public class AttributionJobHandlerTest {
                 SourceFixture.getValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setAggregateSource(
-                                "[{\"id\" : \"campaignCounts\", \"key_piece\" : \"0x159\"},"
-                                        + "{\"id\" : \"geoValue\", \"key_piece\" : \"0x5\"}]")
+                                "{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}")
                         .setFilterData(
                                 "{\n"
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
@@ -1772,8 +1882,7 @@ public class AttributionJobHandlerTest {
                 SourceFixture.getValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setAggregateSource(
-                                "[{\"id\" : \"campaignCounts\", \"key_piece\" : \"0x159\"},"
-                                        + "{\"id\" : \"geoValue\", \"key_piece\" : \"0x5\"}]")
+                                "{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}")
                         .setFilterData(
                                 "{\n"
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
@@ -1840,8 +1949,7 @@ public class AttributionJobHandlerTest {
                 SourceFixture.getValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setAggregateSource(
-                                "[{\"id\" : \"campaignCounts\", \"key_piece\" : \"0x159\"},"
-                                        + "{\"id\" : \"geoValue\", \"key_piece\" : \"0x5\"}]")
+                                "{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}")
                         .setFilterData(
                                 "{\n"
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"

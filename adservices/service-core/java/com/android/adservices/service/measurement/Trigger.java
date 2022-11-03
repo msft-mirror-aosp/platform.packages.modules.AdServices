@@ -62,6 +62,7 @@ public class Trigger {
     private String mAggregateValues;
     private AggregatableAttributionTrigger mAggregatableAttributionTrigger;
     private String mFilters;
+    private String mNotFilters;
     private @Nullable UnsignedLong mDebugKey;
 
     @IntDef(value = {Status.PENDING, Status.IGNORED, Status.ATTRIBUTED, Status.MARKED_TO_DELETE})
@@ -98,7 +99,8 @@ public class Trigger {
                 && Objects.equals(mAggregateValues, trigger.mAggregateValues)
                 && Objects.equals(
                         mAggregatableAttributionTrigger, trigger.mAggregatableAttributionTrigger)
-                && Objects.equals(mFilters, trigger.mFilters);
+                && Objects.equals(mFilters, trigger.mFilters)
+                && Objects.equals(mNotFilters, trigger.mNotFilters);
     }
 
     @Override
@@ -115,6 +117,7 @@ public class Trigger {
                 mAggregateValues,
                 mAggregatableAttributionTrigger,
                 mFilters,
+                mNotFilters,
                 mDebugKey);
     }
 
@@ -236,6 +239,13 @@ public class Trigger {
      */
     public String getFilters() {
         return mFilters;
+    }
+
+    /**
+     * Returns top level not-filters. The value is in json format.
+     */
+    public String getNotFilters() {
+        return mNotFilters;
     }
 
     /** Debug key of {@link Trigger}. */
@@ -446,6 +456,13 @@ public class Trigger {
         @NonNull
         public Builder setFilters(@Nullable String filters) {
             mBuilding.mFilters = filters;
+            return this;
+        }
+
+        /** See {@link Trigger#getNotFilters()} */
+        @NonNull
+        public Builder setNotFilters(@Nullable String notFilters) {
+            mBuilding.mNotFilters = notFilters;
             return this;
         }
 

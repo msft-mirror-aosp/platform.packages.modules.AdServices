@@ -31,6 +31,11 @@
         <option name="test-file-name" value="SdkSandboxStorageTestProvider.apk" />
     </target_preparer>
 
+    <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
+        <option name="run-command" value="cmd sdk_sandbox set-state --enabled" />
+        <option name="teardown-command" value="cmd sdk_sandbox set-state --reset" />
+    </target_preparer>
+
     <test class="com.android.tradefed.testtype.HostTest" >
         <option name="class"
                 value="com.android.sdksandbox.cts.host.SdkSandboxDataIsolationHostTest" />

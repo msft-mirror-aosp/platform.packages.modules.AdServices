@@ -51,6 +51,7 @@ public final class TriggerFixture {
                 .setAggregateTriggerData(ValidTriggerParams.AGGREGATE_TRIGGER_DATA)
                 .setAggregateValues(ValidTriggerParams.AGGREGATE_VALUES)
                 .setFilters(ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING)
+                .setNotFilters(ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING)
                 .build();
     }
 
@@ -65,6 +66,9 @@ public final class TriggerFixture {
                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                         + "}\n";
+
+        public static final String TOP_LEVEL_NOT_FILTERS_JSON_STRING =
+                "{\"geo\": [], \"source_type\": [\"event\"]}";
 
         public static final String EVENT_TRIGGERS =
                 "[\n"
