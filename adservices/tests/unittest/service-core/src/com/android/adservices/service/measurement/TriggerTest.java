@@ -19,13 +19,13 @@ package com.android.adservices.service.measurement;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import android.net.Uri;
 
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
-import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
@@ -67,6 +67,16 @@ public class TriggerTest {
                     + "]\n";
 
     private static final UnsignedLong DEBUG_KEY = new UnsignedLong(2367372L);
+    private static final Uri APP_DESTINATION = Uri.parse("android-app://com.android.app");
+    private static final Uri APP_DESTINATION_WITH_PATH =
+            Uri.parse("android-app://com.android.app/with/path");
+    private static final Uri WEB_DESTINATION = Uri.parse("https://example.com");
+    private static final Uri WEB_DESTINATION_WITH_PATH = Uri.parse("https://example.com/with/path");
+    private static final Uri WEB_DESTINATION_WITH_SUBDOMAIN =
+            Uri.parse("https://subdomain.example.com");
+    private static final Uri WEB_DESTINATION_WITH_SUBDOMAIN_PATH_QUERY_FRAGMENT =
+            Uri.parse("https://subdomain.example.com/with/path?query=0#fragment");
+    private static final Uri WEB_DESTINATION_INVALID = Uri.parse("https://example.notatld");
 
     @Test
     public void testEqualsPass() throws JSONException {
@@ -97,6 +107,7 @@ public class TriggerTest {
                         .setAggregateTriggerData(aggregateTriggerDatas.toString())
                         .setAggregateValues(values.toString())
                         .setFilters(TOP_LEVEL_FILTERS_JSON_STRING)
+                        .setNotFilters(TOP_LEVEL_FILTERS_JSON_STRING)
                         .setDebugKey(DEBUG_KEY)
                         .setAggregatableAttributionTrigger(
                                 TriggerFixture.getValidTrigger()
@@ -114,6 +125,7 @@ public class TriggerTest {
                         .setAggregateTriggerData(aggregateTriggerDatas.toString())
                         .setAggregateValues(values.toString())
                         .setFilters(TOP_LEVEL_FILTERS_JSON_STRING)
+                        .setNotFilters(TOP_LEVEL_FILTERS_JSON_STRING)
                         .setDebugKey(DEBUG_KEY)
                         .setAggregatableAttributionTrigger(
                                 TriggerFixture.getValidTrigger()
@@ -188,6 +200,11 @@ public class TriggerTest {
                         .setFilters(TOP_LEVEL_FILTERS_JSON_STRING).build(),
                 TriggerFixture.getValidTriggerBuilder()
                         .setFilters(TOP_LEVEL_FILTERS_JSON_STRING_X).build());
+        assertNotEquals(
+                TriggerFixture.getValidTriggerBuilder()
+                        .setNotFilters(TOP_LEVEL_FILTERS_JSON_STRING).build(),
+                TriggerFixture.getValidTriggerBuilder()
+                        .setNotFilters(TOP_LEVEL_FILTERS_JSON_STRING_X).build());
     }
 
     @Test
@@ -223,6 +240,7 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA,
                 TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
+                TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY);
         assertInvalidTriggerArguments(
                 Uri.parse("com.destination"),
@@ -233,6 +251,7 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA,
                 TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
+                TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY);
     }
 
@@ -247,6 +266,7 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA,
                 TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
+                TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY);
     }
 
@@ -261,6 +281,7 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA,
                 TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
+                TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY);
         assertInvalidTriggerArguments(
                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION,
@@ -271,6 +292,7 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA,
                 TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
+                TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY);
     }
 
@@ -344,6 +366,73 @@ public class TriggerTest {
     }
 
     @Test
+    public void testGetAttributionDestinationBaseUri_appDestination() throws JSONException {
+        Trigger trigger = TriggerFixture.getValidTriggerBuilder()
+                .setAttributionDestination(APP_DESTINATION)
+                .setDestinationType(EventSurfaceType.APP)
+                .build();
+        assertEquals(APP_DESTINATION, trigger.getAttributionDestinationBaseUri());
+    }
+
+    @Test
+    public void testGetAttributionDestinationBaseUri_trimsAppDestination() throws JSONException {
+        Trigger trigger = TriggerFixture.getValidTriggerBuilder()
+                .setAttributionDestination(APP_DESTINATION_WITH_PATH)
+                .setDestinationType(EventSurfaceType.APP)
+                .build();
+        assertEquals(APP_DESTINATION, trigger.getAttributionDestinationBaseUri());
+    }
+
+    @Test
+    public void testGetAttributionDestinationBaseUri_webDestination() throws JSONException {
+        Trigger trigger = TriggerFixture.getValidTriggerBuilder()
+                .setAttributionDestination(WEB_DESTINATION)
+                .setDestinationType(EventSurfaceType.WEB)
+                .build();
+        assertEquals(WEB_DESTINATION, trigger.getAttributionDestinationBaseUri());
+    }
+
+    @Test
+    public void testGetAttributionDestinationBaseUri_trimsWebDestinationWithSubdomain()
+            throws JSONException {
+        Trigger trigger = TriggerFixture.getValidTriggerBuilder()
+                .setAttributionDestination(WEB_DESTINATION_WITH_SUBDOMAIN)
+                .setDestinationType(EventSurfaceType.WEB)
+                .build();
+        assertEquals(WEB_DESTINATION, trigger.getAttributionDestinationBaseUri());
+    }
+
+    @Test
+    public void testGetAttributionDestinationBaseUri_trimsWebDestinationWithPath()
+            throws JSONException {
+        Trigger trigger = TriggerFixture.getValidTriggerBuilder()
+                .setAttributionDestination(WEB_DESTINATION_WITH_PATH)
+                .setDestinationType(EventSurfaceType.WEB)
+                .build();
+        assertEquals(WEB_DESTINATION, trigger.getAttributionDestinationBaseUri());
+    }
+
+    @Test
+    public void testGetAttributionDestinationBaseUri_trimsWebDestinationWithSubdomainPathQueryFrag()
+            throws JSONException {
+        Trigger trigger = TriggerFixture.getValidTriggerBuilder()
+                .setAttributionDestination(WEB_DESTINATION_WITH_SUBDOMAIN_PATH_QUERY_FRAGMENT)
+                .setDestinationType(EventSurfaceType.WEB)
+                .build();
+        assertEquals(WEB_DESTINATION, trigger.getAttributionDestinationBaseUri());
+    }
+
+    @Test
+    public void testGetAttributionDestinationBaseUri_invalidWebDestination()
+            throws JSONException {
+        Trigger trigger = TriggerFixture.getValidTriggerBuilder()
+                .setAttributionDestination(WEB_DESTINATION_INVALID)
+                .setDestinationType(EventSurfaceType.WEB)
+                .build();
+        assertNull(trigger.getAttributionDestinationBaseUri());
+    }
+
+    @Test
     public void parseEventTriggers() throws JSONException {
         // setup
         JSONObject filters1 =
@@ -396,12 +485,12 @@ public class TriggerTest {
                         .setTriggerData(new UnsignedLong(2L))
                         .setDedupKey(new UnsignedLong(2L))
                         .setFilter(
-                                new AggregateFilterData.Builder()
-                                        .buildAggregateFilterData(filters1)
+                                new FilterData.Builder()
+                                        .buildFilterData(filters1)
                                         .build())
                         .setNotFilter(
-                                new AggregateFilterData.Builder()
-                                        .buildAggregateFilterData(notFilters1)
+                                new FilterData.Builder()
+                                        .buildFilterData(notFilters1)
                                         .build())
                         .build();
         EventTrigger eventTrigger2 =
@@ -410,8 +499,8 @@ public class TriggerTest {
                         .setTriggerData(new UnsignedLong(3L))
                         .setDedupKey(new UnsignedLong(3L))
                         .setNotFilter(
-                                new AggregateFilterData.Builder()
-                                        .buildAggregateFilterData(notFilters2)
+                                new FilterData.Builder()
+                                        .buildFilterData(notFilters2)
                                         .build())
                         .build();
 
@@ -431,6 +520,7 @@ public class TriggerTest {
             String aggregateTriggerData,
             String aggregateValues,
             String filters,
+            String notFilters,
             UnsignedLong debugKey) {
         assertThrows(
                 IllegalArgumentException.class,
@@ -444,6 +534,7 @@ public class TriggerTest {
                                 .setAggregateTriggerData(aggregateTriggerData)
                                 .setAggregateValues(aggregateValues)
                                 .setFilters(filters)
+                                .setNotFilters(notFilters)
                                 .setDebugKey(debugKey)
                                 .build());
     }

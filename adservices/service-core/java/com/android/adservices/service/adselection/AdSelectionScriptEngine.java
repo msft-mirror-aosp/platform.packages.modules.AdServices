@@ -73,7 +73,6 @@ public class AdSelectionScriptEngine {
     public static final String PER_BUYER_SIGNALS_ARG_NAME = "__rb_per_buyer_signals";
     public static final String TRUSTED_BIDDING_SIGNALS_ARG_NAME = "__rb_trusted_bidding_signals";
     public static final String CONTEXTUAL_SIGNALS_ARG_NAME = "__rb_contextual_signals";
-    public static final String USER_SIGNALS_ARG_NAME = "__rb_user_signals";
     public static final String CUSTOM_AUDIENCE_BIDDING_SIGNALS_ARG_NAME =
             "__rb_custom_audience_bidding_signals";
     public static final String CUSTOM_AUDIENCE_SCORING_SIGNALS_ARG_NAME =
@@ -150,7 +149,6 @@ public class AdSelectionScriptEngine {
             @NonNull AdSelectionSignals perBuyerSignals,
             @NonNull AdSelectionSignals trustedBiddingSignals,
             @NonNull AdSelectionSignals contextualSignals,
-            @NonNull AdSelectionSignals userSignals,
             @NonNull CustomAudienceSignals customAudienceSignals)
             throws JSONException {
         Objects.requireNonNull(generateBidJS);
@@ -159,7 +157,6 @@ public class AdSelectionScriptEngine {
         Objects.requireNonNull(perBuyerSignals);
         Objects.requireNonNull(trustedBiddingSignals);
         Objects.requireNonNull(contextualSignals);
-        Objects.requireNonNull(userSignals);
         Objects.requireNonNull(customAudienceSignals);
 
         ImmutableList<JSScriptArgument> signals =
@@ -171,7 +168,6 @@ public class AdSelectionScriptEngine {
                                         TRUSTED_BIDDING_SIGNALS_ARG_NAME,
                                         trustedBiddingSignals.toString()))
                         .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals.toString()))
-                        .add(jsonArg(USER_SIGNALS_ARG_NAME, userSignals.toString()))
                         .add(
                                 CustomAudienceBiddingSignalsArgument.asScriptArgument(
                                         CUSTOM_AUDIENCE_BIDDING_SIGNALS_ARG_NAME,

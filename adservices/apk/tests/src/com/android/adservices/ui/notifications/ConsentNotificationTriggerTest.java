@@ -40,6 +40,7 @@ import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -76,10 +77,12 @@ public class ConsentNotificationTriggerTest {
         MockitoAnnotations.initMocks(this);
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
+                        .spyStatic(FlagsFactory.class)
                         .strictness(Strictness.WARN)
                         .initMocks(this)
                         .startMocking();
         try {
+            ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
             mNotificationManager = mContext.getSystemService(NotificationManager.class);
             final String expectedTitle =
                     mContext.getString(R.string.notificationUI_notification_title_eu);

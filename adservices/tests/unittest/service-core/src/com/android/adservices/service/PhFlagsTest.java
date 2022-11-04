@@ -32,6 +32,8 @@ import static com.android.adservices.service.Flags.DISABLE_TOPICS_ENROLLMENT_CHE
 import static com.android.adservices.service.Flags.DOWNLOADER_CONNECTION_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DOWNLOADER_MAX_DOWNLOAD_THREADS;
 import static com.android.adservices.service.Flags.DOWNLOADER_READ_TIMEOUT_MS;
+import static com.android.adservices.service.Flags.ENABLE_DATABASE_SCHEMA_VERSION_3;
+import static com.android.adservices.service.Flags.ENABLE_TOPIC_CONTRIBUTORS_CHECK;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDES;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION;
@@ -141,8 +143,11 @@ import static com.android.adservices.service.PhFlags.KEY_DISABLE_TOPICS_ENROLLME
 import static com.android.adservices.service.PhFlags.KEY_DOWNLOADER_CONNECTION_TIMEOUT_MS;
 import static com.android.adservices.service.PhFlags.KEY_DOWNLOADER_MAX_DOWNLOAD_THREADS;
 import static com.android.adservices.service.PhFlags.KEY_DOWNLOADER_READ_TIMEOUT_MS;
+import static com.android.adservices.service.PhFlags.KEY_ENABLE_DATABASE_SCHEMA_VERSION_3;
+import static com.android.adservices.service.PhFlags.KEY_ENABLE_TOPIC_CONTRIBUTORS_CHECK;
 import static com.android.adservices.service.PhFlags.KEY_ENFORCE_FOREGROUND_STATUS_TOPICS;
 import static com.android.adservices.service.PhFlags.KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE;
+import static com.android.adservices.service.PhFlags.KEY_ENROLLMENT_BLOCKLIST_IDS;
 import static com.android.adservices.service.PhFlags.KEY_FLEDE_AD_SELECTION_OFF_DEVICE_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
@@ -3205,6 +3210,88 @@ public class PhFlagsTest {
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getAdSelectionOffDeviceRequestCompressionEnabled())
                 .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetEnableTopicContributorsCheck() {
+        assertThat(FlagsFactory.getFlags().getEnableTopicContributorsCheck())
+                .isEqualTo(ENABLE_TOPIC_CONTRIBUTORS_CHECK);
+
+        final boolean phOverridingValue = true;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ENABLE_TOPIC_CONTRIBUTORS_CHECK,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getEnableTopicContributorsCheck()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetEnableDatabaseSchemaVersion3() {
+        assertThat(FlagsFactory.getFlags().getEnableDatabaseSchemaVersion3())
+                .isEqualTo(ENABLE_DATABASE_SCHEMA_VERSION_3);
+
+        final boolean phOverridingValue = true;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ENABLE_DATABASE_SCHEMA_VERSION_3,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getEnableDatabaseSchemaVersion3()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testEnrollmentBlocklist_singleEnrollment() {
+        Flags phFlags = FlagsFactory.getFlags();
+
+        String blocklistedEnrollmentId = "enrollmentId1";
+        setEnrollmentBlocklist(blocklistedEnrollmentId);
+
+        assertThat(phFlags.getEnrollmentBlocklist()).contains(blocklistedEnrollmentId);
+    }
+
+    @Test
+    public void testEnrollmentBlocklist_multipleEnrollments() {
+        Flags phFlags = FlagsFactory.getFlags();
+
+        String enrollmentId1 = "enrollmentId1";
+        String enrollmentId2 = "enrollmentId2";
+        String enrollmentId3 = "enrollmentId3";
+
+        String blocklistedEnrollmentId =
+                String.format("%s,%s,%s", enrollmentId1, enrollmentId2, enrollmentId3);
+        setEnrollmentBlocklist(blocklistedEnrollmentId);
+
+        assertThat(phFlags.getEnrollmentBlocklist())
+                .containsExactly(enrollmentId1, enrollmentId2, enrollmentId3);
+    }
+
+    @Test
+    public void testEnrollmentBlocklist_malformedList() {
+        Flags phFlags = FlagsFactory.getFlags();
+
+        String enrollmentId1 = "enrollmentId1";
+        String enrollmentId2 = "enrollmentId2";
+        String enrollmentId3 = "enrollmentId3";
+
+        String blocklistedEnrollmentId =
+                String.format("%s%s%s", enrollmentId1, enrollmentId2, enrollmentId3);
+        setEnrollmentBlocklist(blocklistedEnrollmentId);
+
+        assertThat(phFlags.getEnrollmentBlocklist())
+                .containsNoneOf(enrollmentId1, enrollmentId2, enrollmentId3);
+    }
+
+    private void setEnrollmentBlocklist(String blocklistFlag) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ENROLLMENT_BLOCKLIST_IDS,
+                blocklistFlag,
+                false);
     }
     // CHECKSTYLE:ON IndentationCheck
 }

@@ -99,16 +99,14 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"‏Android ممکن است این علاقه را دوباره به فهرستتان اضافه کند، اما ممکن است فوراً نمایش داده نشود"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"تأیید"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"همه علایقتان بازنشانی شود؟"</string>
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"فهرستتان پاک خواهد شد و ازاین‌به‌بعد علایق جدید برآورد خواهد شد. ممکن است همچنان تعدادی آگهی مرتبط با علایق پاک‌شده مشاهده کنید."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"بازنشانی"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g> مسدود شود؟"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"این برنامه علایق را برای «جعبه ایمنی حریم خصوصی» تخمین نمی‌زند و دیگر به فهرستتان اضافه نخواهد شد، مگراینکه آن را لغو انسداد کنید.\n\nعلایقی که قبلاً توسط این برنامه تخمین زده شده است حذف خواهد شد، اما ممکن است همچنان تعدادی آگهی مرتبط ببینید."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> لغو انسداد شد"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"این برنامه می‌تواند دوباره علایقتان را تخمین بزند، اما ممکن است فوراً در فهرستتان نمایش داده نشود. ممکن است مدتی طول بکشد تا آگهی‌های مرتبط را ببینید."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"علایق ایجادشده توسط برنامه‌ها بازنشانی شود؟"</string>
-    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"علایق برآوردشده توسط برنامه‌های موجود در فهرستتان از «جعبه ایمنی حریم خصوصی» حذف خواهد شد و برنامه‌ها ازاین‌به‌بعد علایق جدید را برآورد خواهند کرد. ممکن است همچنان تعدادی آگهی مرتبط ببینید."</string>
     <string name="topic10001" msgid="1636806320891333775">"هنر و سرگرمی"</string>
     <string name="topic10002" msgid="1226367977754287428">"بازیگری و تئاتر"</string>
     <string name="topic10003" msgid="6949890838957814881">"انیمه و مانگا"</string>

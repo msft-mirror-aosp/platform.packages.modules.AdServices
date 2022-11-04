@@ -28,6 +28,8 @@ import androidx.annotation.Nullable;
 import com.android.adservices.LogUtil;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.common.collect.ImmutableList;
+
 import java.io.PrintWriter;
 
 /** Flags Implementation that delegates to DeviceConfig. */
@@ -294,6 +296,15 @@ public final class PhFlags implements Flags {
     // Interval in which to run Registration Job Queue Service.
     static final String KEY_REGISTRATION_JOB_QUEUE_INTERVAL_MS =
             "key_registration_job_queue_interval_ms";
+
+    // Feature Flags
+    static final String KEY_ENABLE_TOPIC_CONTRIBUTORS_CHECK = "enable_topic_contributors_check";
+
+    // Database Schema Version Flags
+    static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_3 = "enable_database_schema_version_3";
+
+    // Enrollment flags.
+    static final String KEY_ENROLLMENT_BLOCKLIST_IDS = "enrollment_blocklist_ids";
 
     private static final PhFlags sSingleton = new PhFlags();
 
@@ -1613,6 +1624,22 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getEnableTopicContributorsCheck() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ENABLE_TOPIC_CONTRIBUTORS_CHECK,
+                /* defaultValue */ ENABLE_TOPIC_CONTRIBUTORS_CHECK);
+    }
+
+    @Override
+    public boolean getEnableDatabaseSchemaVersion3() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ENABLE_DATABASE_SCHEMA_VERSION_3,
+                /* defaultValue */ ENABLE_DATABASE_SCHEMA_VERSION_3);
+    }
+
+    @Override
     public void dump(@NonNull PrintWriter writer, @Nullable String[] args) {
         writer.println("==== AdServices PH Flags Dump Enrollment ====");
         writer.println(
@@ -2033,5 +2060,23 @@ public final class PhFlags implements Flags {
                         + KEY_FOREGROUND_STATUS_LEVEL
                         + " = "
                         + getForegroundStatuslLevelForValidation());
+    }
+
+    @Override
+    public boolean isEnrollmentBlocklisted(String enrollmentId) {
+        return getEnrollmentBlocklist().contains(enrollmentId);
+    }
+
+    @VisibleForTesting
+    @Override
+    public ImmutableList<String> getEnrollmentBlocklist() {
+        String blocklistFlag =
+                DeviceConfig.getString(
+                        DeviceConfig.NAMESPACE_ADSERVICES, KEY_ENROLLMENT_BLOCKLIST_IDS, "");
+        if (TextUtils.isEmpty(blocklistFlag)) {
+            return ImmutableList.of();
+        }
+        String[] blocklistList = blocklistFlag.split(",");
+        return ImmutableList.copyOf(blocklistList);
     }
 }

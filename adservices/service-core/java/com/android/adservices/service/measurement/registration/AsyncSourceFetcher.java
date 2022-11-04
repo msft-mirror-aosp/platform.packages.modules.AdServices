@@ -39,6 +39,7 @@ import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.MeasurementHttpClient;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.util.AsyncFetchStatus;
+import com.android.adservices.service.measurement.util.AsyncRedirect;
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Web;
@@ -46,7 +47,6 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -69,20 +69,20 @@ import java.util.concurrent.TimeUnit;
  */
 public class AsyncSourceFetcher {
 
-
-
     private final String mDefaultAndroidAppScheme = "android-app";
     private final String mDefaultAndroidAppUriPrefix = mDefaultAndroidAppScheme + "://";
     private final MeasurementHttpClient mNetworkConnection = new MeasurementHttpClient();
     private final EnrollmentDao mEnrollmentDao;
     private final Flags mFlags;
     private final AdServicesLogger mLogger;
+
     public AsyncSourceFetcher(Context context) {
         this(
                 EnrollmentDao.getInstance(context),
                 FlagsFactory.getFlags(),
                 AdServicesLoggerImpl.getInstance());
     }
+
     @VisibleForTesting
     public AsyncSourceFetcher(EnrollmentDao enrollmentDao, Flags flags, AdServicesLogger logger) {
         mEnrollmentDao = enrollmentDao;
@@ -163,7 +163,7 @@ public class AsyncSourceFetcher {
                 LogUtil.d("Source filter-data is invalid.");
                 return false;
             }
-            result.setAggregateFilterData(
+            result.setFilterData(
                     json.getJSONObject(SourceHeaderContract.FILTER_DATA).toString());
         }
         if (!json.isNull(SourceHeaderContract.DESTINATION)) {
@@ -250,7 +250,7 @@ public class AsyncSourceFetcher {
             }
             if (!json.isNull(SourceHeaderContract.AGGREGATION_KEYS)) {
                 if (!areValidAggregationKeys(
-                        json.getJSONArray(SourceHeaderContract.AGGREGATION_KEYS))) {
+                        json.getJSONObject(SourceHeaderContract.AGGREGATION_KEYS))) {
                     return false;
                 }
                 result.setAggregateSource(json.getString(SourceHeaderContract.AGGREGATION_KEYS));
@@ -288,12 +288,14 @@ public class AsyncSourceFetcher {
         }
         return value;
     }
+
     /** Provided a testing hook. */
     @NonNull
     @VisibleForTesting
     public URLConnection openUrl(@NonNull URL url) throws IOException {
         return mNetworkConnection.setup(url);
     }
+
     /**
      * Fetch a source type registration.
      *
@@ -303,12 +305,10 @@ public class AsyncSourceFetcher {
     public Optional<Source> fetchSource(
             @NonNull AsyncRegistration asyncRegistration,
             @NonNull AsyncFetchStatus asyncFetchStatus,
-            List<Uri> redirects) {
+            AsyncRedirect asyncRedirect) {
         List<Source> out = new ArrayList<>();
         fetchSource(
-                asyncRegistration.getType() == AsyncRegistration.RegistrationType.WEB_SOURCE
-                        ? asyncRegistration.getTopOrigin()
-                        : getPublisher(asyncRegistration),
+                asyncRegistration.getTopOrigin(),
                 asyncRegistration.getRegistrationUri(),
                 asyncRegistration.getOsDestination(),
                 asyncRegistration.getWebDestination(),
@@ -317,8 +317,9 @@ public class AsyncSourceFetcher {
                 asyncRegistration.getType() == AsyncRegistration.RegistrationType.WEB_SOURCE,
                 asyncRegistration.getSourceType(),
                 out,
-                asyncRegistration.getRedirect(),
-                redirects,
+                asyncRegistration.shouldProcessRedirects(),
+                asyncRegistration.getRedirectType(),
+                asyncRedirect,
                 asyncRegistration.getType() == AsyncRegistration.RegistrationType.WEB_SOURCE,
                 asyncRegistration.getDebugKeyAllowed(),
                 asyncFetchStatus,
@@ -341,7 +342,8 @@ public class AsyncSourceFetcher {
             @NonNull Source.SourceType sourceType,
             @NonNull List<Source> sourceOut,
             boolean shouldProcessRedirects,
-            @NonNull List<Uri> registrationsOut,
+            @AsyncRegistration.RedirectType int redirectType,
+            @NonNull AsyncRedirect asyncRedirect,
             boolean isWebSource,
             boolean isAllowDebugKey,
             @Nullable AsyncFetchStatus asyncFetchStatus,
@@ -414,7 +416,11 @@ public class AsyncSourceFetcher {
                 return;
             }
             if (shouldProcessRedirects) {
-                registrationsOut.addAll(FetcherUtil.parseRedirects(headers));
+                AsyncRedirect redirectsAndType = FetcherUtil.parseRedirects(headers, redirectType);
+                asyncRedirect.addToRedirects(redirectsAndType.getRedirects());
+                asyncRedirect.setRedirectType(redirectsAndType.getRedirectType());
+            } else {
+                asyncRedirect.setRedirectType(redirectType);
             }
         } catch (IOException e) {
             asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.NETWORK_ERROR);
@@ -424,35 +430,25 @@ public class AsyncSourceFetcher {
         }
     }
 
-    private boolean areValidAggregationKeys(JSONArray aggregationKeys) {
+    private boolean areValidAggregationKeys(JSONObject aggregationKeys) {
         if (aggregationKeys.length() > MAX_AGGREGATE_KEYS_PER_REGISTRATION) {
             LogUtil.d(
                     "Aggregation-keys have more entries than permitted. %s",
                     aggregationKeys.length());
             return false;
         }
-        for (int i = 0; i < aggregationKeys.length(); i++) {
-            JSONObject keyObj = aggregationKeys.optJSONObject(i);
-            if (keyObj == null) {
-                LogUtil.d("SourceFetcher: aggregation key failed to parse.");
-                return false;
-            }
-            String id = keyObj.optString("id");
+        for (String id : aggregationKeys.keySet()) {
             if (!FetcherUtil.isValidAggregateKeyId(id)) {
                 LogUtil.d("SourceFetcher: aggregation key ID is invalid. %s", id);
                 return false;
             }
-            String keyPiece = keyObj.optString("key_piece");
+            String keyPiece = aggregationKeys.optString(id);
             if (!FetcherUtil.isValidAggregateKeyPiece(keyPiece)) {
                 LogUtil.d("SourceFetcher: aggregation key-piece is invalid. %s", keyPiece);
                 return false;
             }
         }
         return true;
-    }
-
-    private Uri getPublisher(AsyncRegistration request) {
-        return Uri.parse(mDefaultAndroidAppUriPrefix + request.getRegistrant());
     }
 
     private interface SourceHeaderContract {
