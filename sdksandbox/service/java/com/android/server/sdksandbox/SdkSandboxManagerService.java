@@ -385,8 +385,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER,
                 callingUid);
 
-        // TODO(b/232924025): Sdk data should be prepared once per sandbox instantiation
-        mSdkSandboxStorageManager.prepareSdkDataOnLoad(callingInfo);
         final long token = Binder.clearCallingIdentity();
         try {
             loadSdkWithClearIdentity(
@@ -1207,6 +1205,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private void onSandboxStart(CallingInfo callingInfo, ISdkSandboxService service)
             throws RemoteException {
+        mSdkSandboxStorageManager.prepareSdkDataOnLoad(callingInfo);
+
         service.initialize(new SdkToServiceLink());
 
         notifySyncManagerSandboxStarted(callingInfo);

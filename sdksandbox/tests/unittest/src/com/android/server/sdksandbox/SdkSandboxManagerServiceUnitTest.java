@@ -110,6 +110,7 @@ public class SdkSandboxManagerServiceUnitTest {
     private Context mSpyContext;
     private SdkSandboxManagerService.Injector mInjector;
     private int mClientAppUid;
+    private PackageManagerLocal mPmLocal;
 
     private static final String CLIENT_PACKAGE_NAME = "com.android.client";
     private static final String SDK_NAME = "com.android.codeprovider";
@@ -169,7 +170,8 @@ public class SdkSandboxManagerServiceUnitTest {
         mProvider = new FakeSdkSandboxProvider(mSdkSandboxService);
 
         // Populate LocalManagerRegistry
-        ExtendedMockito.doReturn(Mockito.mock(PackageManagerLocal.class))
+        mPmLocal = Mockito.mock(PackageManagerLocal.class);
+        ExtendedMockito.doReturn(mPmLocal)
                 .when(() -> LocalManagerRegistry.getManager(PackageManagerLocal.class));
 
         mInjector = Mockito.spy(new InjectorForTest());
@@ -450,6 +452,24 @@ public class SdkSandboxManagerServiceUnitTest {
 
         // Verify that sandbox was initialized
         assertThat(mSdkSandboxService.getInitializationCount()).isEqualTo(1);
+    }
+
+    @Test
+    public void testLoadSdk_sdkDataPrepared_onlyOnce() throws Exception {
+        loadSdk(SDK_NAME);
+        loadSdk(SDK_PROVIDER_RESOURCES_SDK_NAME);
+
+        // Verify that sandbox was initialized
+        Mockito.verify(mPmLocal, Mockito.times(1))
+                .reconcileSdkData(
+                        Mockito.nullable(String.class),
+                        Mockito.anyString(),
+                        Mockito.anyList(),
+                        Mockito.anyInt(),
+                        Mockito.anyInt(),
+                        Mockito.anyInt(),
+                        Mockito.anyString(),
+                        Mockito.anyInt());
     }
 
     @Test
