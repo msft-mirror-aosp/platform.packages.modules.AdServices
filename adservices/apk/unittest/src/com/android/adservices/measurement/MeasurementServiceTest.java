@@ -27,6 +27,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.IBinder;
@@ -34,13 +35,17 @@ import android.os.IBinder;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppImportanceFilter;
+import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.adservices.service.measurement.AsyncRegistrationQueueJobService;
 import com.android.adservices.service.measurement.DeleteExpiredJobService;
+import com.android.adservices.service.measurement.DeleteUninstalledJobService;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.measurement.attribution.AttributionJobService;
 import com.android.adservices.service.measurement.reporting.AggregateFallbackReportingJobService;
@@ -97,7 +102,9 @@ public class MeasurementServiceTest {
 
                     // Verification
                     assertNotNull(binder);
-                    verify(mMockConsentManager, times(1)).getConsent(any());
+                    verify(mMockConsentManager, times(1)).getConsent();
+                    ExtendedMockito.verify(
+                            () -> PackageChangedReceiver.enableReceiver(any(Context.class)));
                     assertJobScheduled(/* timesCalled */ 1);
                 });
     }
@@ -114,7 +121,7 @@ public class MeasurementServiceTest {
 
                     // Verification
                     assertNotNull(binder);
-                    verify(mMockConsentManager, times(1)).getConsent(any());
+                    verify(mMockConsentManager, times(1)).getConsent();
                     assertJobScheduled(/* timesCalled */ 0);
                 });
     }
@@ -131,7 +138,7 @@ public class MeasurementServiceTest {
 
                     // Verification
                     assertNull(binder);
-                    verify(mMockConsentManager, never()).getConsent(any());
+                    verify(mMockConsentManager, never()).getConsent();
                     assertJobScheduled(/* timesCalled */ 0);
                 });
     }
@@ -160,10 +167,14 @@ public class MeasurementServiceTest {
                         .spyStatic(ConsentManager.class)
                         .spyStatic(EnrollmentDao.class)
                         .spyStatic(EventReportingJobService.class)
+                        .spyStatic(PackageChangedReceiver.class)
                         .spyStatic(EventFallbackReportingJobService.class)
                         .spyStatic(DeleteExpiredJobService.class)
+                        .spyStatic(DeleteUninstalledJobService.class)
+                        .spyStatic(MddJobService.class)
                         .spyStatic(FlagsFactory.class)
                         .spyStatic(MeasurementImpl.class)
+                        .spyStatic(AsyncRegistrationQueueJobService.class)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
         try {
@@ -176,7 +187,7 @@ public class MeasurementServiceTest {
 
             final AdServicesApiConsent mockConsent = mock(AdServicesApiConsent.class);
             doReturn(consentStatus).when(mockConsent).isGiven();
-            doReturn(mockConsent).when(mMockConsentManager).getConsent(any());
+            doReturn(mockConsent).when(mMockConsentManager).getConsent();
 
             ExtendedMockito.doReturn(mMockEnrollmentDao)
                     .when(() -> EnrollmentDao.getInstance(any()));
@@ -190,6 +201,8 @@ public class MeasurementServiceTest {
             ExtendedMockito.doReturn(mMockAppImportanceFilter)
                     .when(() -> AppImportanceFilter.create(any(), anyInt(), any()));
 
+            ExtendedMockito.doReturn(true)
+                    .when(() -> PackageChangedReceiver.enableReceiver(any(Context.class)));
             ExtendedMockito.doNothing()
                     .when(() -> AggregateReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
             ExtendedMockito.doNothing()
@@ -209,6 +222,15 @@ public class MeasurementServiceTest {
                                             any(), anyBoolean()));
             ExtendedMockito.doNothing()
                     .when(() -> DeleteExpiredJobService.scheduleIfNeeded(any(), anyBoolean()));
+            ExtendedMockito.doNothing()
+                    .when(() -> DeleteUninstalledJobService.scheduleIfNeeded(any(), anyBoolean()));
+            ExtendedMockito.doReturn(true)
+                    .when(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
+            ExtendedMockito.doNothing()
+                    .when(
+                            () ->
+                                    AsyncRegistrationQueueJobService.scheduleIfNeeded(
+                                            any(), anyBoolean()));
 
             // Execute
             execute.run();
@@ -235,6 +257,14 @@ public class MeasurementServiceTest {
                 times(timesCalled));
         ExtendedMockito.verify(
                 () -> DeleteExpiredJobService.scheduleIfNeeded(any(), anyBoolean()),
+                times(timesCalled));
+        ExtendedMockito.verify(
+                () -> DeleteUninstalledJobService.scheduleIfNeeded(any(), anyBoolean()),
+                times(timesCalled));
+        ExtendedMockito.verify(
+                () -> MddJobService.scheduleIfNeeded(any(), anyBoolean()), times(timesCalled));
+        ExtendedMockito.verify(
+                () -> AsyncRegistrationQueueJobService.scheduleIfNeeded(any(), anyBoolean()),
                 times(timesCalled));
     }
 }

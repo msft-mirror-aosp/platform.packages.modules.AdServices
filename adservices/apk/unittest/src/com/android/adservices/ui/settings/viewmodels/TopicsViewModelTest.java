@@ -40,6 +40,7 @@ import java.io.IOException;
 public class TopicsViewModelTest {
 
     private TopicsViewModel mTopicsViewModel;
+    private BlockedTopicsViewModel mBlockedTopicsViewModel;
     @Mock private ConsentManager mConsentManager;
 
     /** Setup needed before every test in this class. */
@@ -48,11 +49,14 @@ public class TopicsViewModelTest {
         MockitoAnnotations.initMocks(this);
         mTopicsViewModel =
                 new TopicsViewModel(ApplicationProvider.getApplicationContext(), mConsentManager);
+        mBlockedTopicsViewModel =
+                new BlockedTopicsViewModel(
+                        ApplicationProvider.getApplicationContext(), mConsentManager);
     }
 
     /** Test if getTopics returns no topics if {@link ConsentManager} returns no topics. */
     @Test
-    public void testGetTopicsReturnsNoTopics() throws IOException {
+    public void testGetTopicsReturnsNoTopics() {
         ImmutableList<Topic> topicsList = ImmutableList.of();
         doReturn(topicsList).when(mConsentManager).getKnownTopicsWithConsent();
 
@@ -91,7 +95,7 @@ public class TopicsViewModelTest {
     @Test
     public void testRestoreTopic() {
         Topic topic1 = Topic.create(1, 1, 1);
-        mTopicsViewModel.restoreTopicConsent(topic1);
+        mBlockedTopicsViewModel.restoreTopicConsent(topic1);
 
         verify(mConsentManager, times(1)).restoreConsentForTopic(topic1);
     }

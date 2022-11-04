@@ -57,19 +57,25 @@ public final class AggregateFallbackReportingJobService extends JobService {
         }
 
         LogUtil.d("AggregateFallbackReportingJobService.onStartJob");
-        sBlockingExecutor.execute(() -> {
-            boolean success = new AggregateReportingJobHandler(
-                    EnrollmentDao.getInstance(getApplicationContext()),
-                    DatastoreManagerFactory.getDatastoreManager(
-                            getApplicationContext()))
-                    .performScheduledPendingReportsInWindow(
-                            System.currentTimeMillis() - SystemHealthParams
-                                    .MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS,
+        sBlockingExecutor.execute(
+                () -> {
+                    final long windowStartTime =
+                            System.currentTimeMillis()
+                                    - SystemHealthParams
+                                            .MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS;
+                    final long windowEndTime =
                             System.currentTimeMillis()
                                     - AdServicesConfig
-                                    .getMeasurementAggregateFallbackReportingJobPeriodMs());
-            jobFinished(params, !success);
-        });
+                                            .getMeasurementAggregateMainReportingJobPeriodMs();
+                    final boolean success =
+                            new AggregateReportingJobHandler(
+                                            EnrollmentDao.getInstance(getApplicationContext()),
+                                            DatastoreManagerFactory.getDatastoreManager(
+                                                    getApplicationContext()))
+                                    .performScheduledPendingReportsInWindow(
+                                            windowStartTime, windowEndTime);
+                    jobFinished(params, !success);
+                });
         return true;
     }
 
@@ -82,13 +88,18 @@ public final class AggregateFallbackReportingJobService extends JobService {
     /** Schedules {@link AggregateFallbackReportingJobService} */
     @VisibleForTesting
     static void schedule(Context context, JobScheduler jobScheduler) {
-        final JobInfo job = new JobInfo.Builder(
-                AdServicesConfig.MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID,
-                new ComponentName(context, AggregateFallbackReportingJobService.class))
-                .setRequiresDeviceIdle(true)
-                .setRequiresBatteryNotLow(true)
-                .setPeriodic(AdServicesConfig.getMeasurementAggregateFallbackReportingJobPeriodMs())
-                .build();
+        final JobInfo job =
+                new JobInfo.Builder(
+                                AdServicesConfig.MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID,
+                                new ComponentName(
+                                        context, AggregateFallbackReportingJobService.class))
+                        .setRequiresDeviceIdle(true)
+                        .setRequiresBatteryNotLow(true)
+                        .setPeriodic(
+                                AdServicesConfig
+                                        .getMeasurementAggregateFallbackReportingJobPeriodMs())
+                        .setPersisted(true)
+                        .build();
         jobScheduler.schedule(job);
     }
 

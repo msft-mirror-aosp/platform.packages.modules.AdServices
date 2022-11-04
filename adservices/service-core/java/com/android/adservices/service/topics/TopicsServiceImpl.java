@@ -15,7 +15,6 @@
  */
 package com.android.adservices.service.topics;
 
-
 import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
@@ -27,6 +26,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSEN
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__TARGETING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS_PREVIEW_API;
 
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CallerMetadata;
@@ -138,8 +138,10 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
 
                         callback.onResult(mTopicsWorker.getTopics(packageName, sdkName));
 
-                        mTopicsWorker.recordUsage(
-                                topicsParam.getAppPackageName(), topicsParam.getSdkName());
+                        if (topicsParam.shouldRecordObservation()) {
+                            mTopicsWorker.recordUsage(
+                                    topicsParam.getAppPackageName(), topicsParam.getSdkName());
+                        }
                     } catch (RemoteException e) {
                         LogUtil.e(e, "Unable to send result to the callback");
                         resultCode = STATUS_INTERNAL_ERROR;
@@ -154,7 +156,10 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                                 new ApiCallStats.Builder()
                                         .setCode(AdServicesStatsLog.AD_SERVICES_API_CALLED)
                                         .setApiClass(AD_SERVICES_API_CALLED__API_CLASS__TARGETING)
-                                        .setApiName(AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS)
+                                        .setApiName(
+                                                topicsParam.shouldRecordObservation()
+                                                    ? AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS
+                                        : AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS_PREVIEW_API)
                                         .setAppPackageName(packageName)
                                         .setSdkPackageName(sdkName)
                                         .setLatencyMillisecond(apiLatency)
@@ -264,7 +269,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
             return false;
         }
 
-        AdServicesApiConsent userConsent = mConsentManager.getConsent(mContext.getPackageManager());
+        AdServicesApiConsent userConsent = mConsentManager.getConsent();
         if (!userConsent.isGiven()) {
             invokeCallbackWithStatus(
                     callback, STATUS_USER_CONSENT_REVOKED, "User consent revoked.");
@@ -283,7 +288,9 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                                     mContext,
                                     Process.isSdkSandboxUid(callingUid),
                                     topicsParam.getAppPackageName(),
-                                    enrollmentData.getEnrollmentId());
+                                    enrollmentData.getEnrollmentId())
+                            && !mFlags.isEnrollmentBlocklisted(enrollmentData.getEnrollmentId());
+
             if (!permitted) {
                 invokeCallbackWithStatus(
                         callback, STATUS_CALLER_NOT_ALLOWED, "Caller is not authorized.");

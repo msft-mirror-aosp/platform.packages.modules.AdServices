@@ -139,8 +139,7 @@ public class BackgroundFetchJobServiceTest {
             throws ExecutionException, InterruptedException, TimeoutException {
         doReturn(mFlagsWithEnabledBgF).when(FlagsFactory::getFlags);
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
-        doReturn(mPackageManagerMock).when(mBgFJobServiceSpy).getPackageManager();
-        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent();
         doReturn(JOB_SCHEDULER).when(mBgFJobServiceSpy).getSystemService(JobScheduler.class);
         doNothing().when(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
 
@@ -192,8 +191,7 @@ public class BackgroundFetchJobServiceTest {
             throws ExecutionException, InterruptedException, TimeoutException {
         doReturn(mFlagsWithCustomAudienceServiceKillSwitchOff).when(FlagsFactory::getFlags);
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
-        doReturn(mPackageManagerMock).when(mBgFJobServiceSpy).getPackageManager();
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         doReturn(mBgFWorkerMock).when(() -> BackgroundFetchWorker.getInstance(any()));
         doNothing().when(mBgFWorkerMock).runBackgroundFetch(any());
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
@@ -222,8 +220,7 @@ public class BackgroundFetchJobServiceTest {
 
         doReturn(mFlagsWithEnabledBgF).when(FlagsFactory::getFlags);
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
-        doReturn(mPackageManagerMock).when(mBgFJobServiceSpy).getPackageManager();
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         doReturn(mBgFWorkerMock).when(() -> BackgroundFetchWorker.getInstance(any()));
         doNothing().when(mBgFWorkerMock).runBackgroundFetch(any());
         doAnswer(
@@ -250,8 +247,7 @@ public class BackgroundFetchJobServiceTest {
 
         doReturn(mFlagsWithEnabledBgF).when(FlagsFactory::getFlags);
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
-        doReturn(mPackageManagerMock).when(mBgFJobServiceSpy).getPackageManager();
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         doReturn(mBgFWorkerMock).when(() -> BackgroundFetchWorker.getInstance(any()));
         doThrow(TimeoutException.class).when(mBgFWorkerMock).runBackgroundFetch(any());
         doAnswer(
@@ -278,8 +274,7 @@ public class BackgroundFetchJobServiceTest {
 
         doReturn(mFlagsWithEnabledBgF).when(FlagsFactory::getFlags);
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
-        doReturn(mPackageManagerMock).when(mBgFJobServiceSpy).getPackageManager();
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         doReturn(mBgFWorkerMock).when(() -> BackgroundFetchWorker.getInstance(any()));
         doThrow(InterruptedException.class).when(mBgFWorkerMock).runBackgroundFetch(any());
         doAnswer(
@@ -306,8 +301,7 @@ public class BackgroundFetchJobServiceTest {
 
         doReturn(mFlagsWithEnabledBgF).when(FlagsFactory::getFlags);
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
-        doReturn(mPackageManagerMock).when(mBgFJobServiceSpy).getPackageManager();
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         doReturn(mBgFWorkerMock).when(() -> BackgroundFetchWorker.getInstance(any()));
         doThrow(ExecutionException.class).when(mBgFWorkerMock).runBackgroundFetch(any());
         doAnswer(
