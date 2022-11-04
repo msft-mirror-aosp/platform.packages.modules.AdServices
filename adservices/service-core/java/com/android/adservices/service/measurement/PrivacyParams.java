@@ -48,11 +48,15 @@ public final class PrivacyParams {
      * Maximum attributions per rate limit window.
      * Rate limit unit: (Source Site, Destination Site, Reporting Site, Window).
      */
-    public static final int MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW = 100;
+    private static final int MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW = 100;
+
+    public static int getMaxAttributionPerRateLimitWindow() {
+        return MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
+    }
 
     /**
      * Rate limit window for (Source Site, Destination Site, Reporting Site, Window) privacy unit.
-     * 28 days.
+     * 30 days.
      */
     public static final long RATE_LIMIT_WINDOW_MILLISECONDS = TimeUnit.DAYS.toMillis(30);
 
@@ -133,11 +137,15 @@ public final class PrivacyParams {
     /**
      * Trigger data cardinality for 'Navigation' {@link Source} attribution.
      */
-    public static final int NAVIGATION_TRIGGER_DATA_CARDINALITY = 8;
+    private static final int NAVIGATION_TRIGGER_DATA_CARDINALITY = 8;
+
+    public static int getNavigationTriggerDataCardinality() {
+        return NAVIGATION_TRIGGER_DATA_CARDINALITY;
+    }
 
     /** Min expiration value in seconds for attribution reporting register source. */
     public static final long MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS =
-            TimeUnit.DAYS.toSeconds(2);
+            TimeUnit.DAYS.toSeconds(1);
 
     /**
      * Max expiration value in seconds for attribution reporting register source. This value is also
@@ -149,7 +157,7 @@ public final class PrivacyParams {
     /**
      * Minimum limit of duration to determine attribution for a verified installation.
      */
-    public static final long MIN_INSTALL_ATTRIBUTION_WINDOW = TimeUnit.DAYS.toSeconds(2);
+    public static final long MIN_INSTALL_ATTRIBUTION_WINDOW = TimeUnit.DAYS.toSeconds(1);
 
     /**
      * Maximum limit of duration to determine attribution for a verified installation.
@@ -178,24 +186,42 @@ public final class PrivacyParams {
     /** Amount of bytes allocated for aggregate histogram value */
     public static final int AGGREGATE_HISTOGRAM_VALUE_BYTE_SIZE = 4;
 
+    /** Minimum time an aggregate report is delayed after trigger */
+    public static final long AGGREGATE_MIN_REPORT_DELAY = TimeUnit.MINUTES.toMillis(10L);
+
+    /** Maximum time an aggregate report is delayed after trigger */
+    public static final long AGGREGATE_MAX_REPORT_DELAY = TimeUnit.MINUTES.toMillis(60L);
+
     /**
      * Max distinct enrollments for attribution per { Advertiser X Publisher X TimePeriod }.
      */
-    public static final int MAX_DISTINCT_ENROLLMENTS_PER_PUBLISHER_X_DESTINATION_IN_ATTRIBUTION =
+    private static final int MAX_DISTINCT_ENROLLMENTS_PER_PUBLISHER_X_DESTINATION_IN_ATTRIBUTION =
             10;
+
+    public static int getMaxDistinctEnrollmentsPerPublisherXDestinationInAttribution() {
+        return MAX_DISTINCT_ENROLLMENTS_PER_PUBLISHER_X_DESTINATION_IN_ATTRIBUTION;
+    }
 
     /**
      * Max distinct advertisers with pending impressions per
      * { Publisher X Enrollment X TimePeriod }.
      */
-    public static final int MAX_DISTINCT_DESTINATIONS_PER_PUBLISHER_X_ENROLLMENT_IN_ACTIVE_SOURCE =
+    private static final int MAX_DISTINCT_DESTINATIONS_PER_PUBLISHER_X_ENROLLMENT_IN_ACTIVE_SOURCE =
             100;
+
+    public static int getMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource() {
+        return MAX_DISTINCT_DESTINATIONS_PER_PUBLISHER_X_ENROLLMENT_IN_ACTIVE_SOURCE;
+    }
 
     /**
      * Max distinct enrollments with source registration per
      * { Publisher X Advertiser X TimePeriod }.
      */
-    public static final int MAX_DISTINCT_ENROLLMENTS_PER_PUBLISHER_X_DESTINATION_IN_SOURCE = 100;
+    private static final int MAX_DISTINCT_ENROLLMENTS_PER_PUBLISHER_X_DESTINATION_IN_SOURCE = 100;
+
+    public static int getMaxDistinctEnrollmentsPerPublisherXDestinationInSource() {
+        return MAX_DISTINCT_ENROLLMENTS_PER_PUBLISHER_X_DESTINATION_IN_SOURCE;
+    }
 
     private PrivacyParams() {
     }

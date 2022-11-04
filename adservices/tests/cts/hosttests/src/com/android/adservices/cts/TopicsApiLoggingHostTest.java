@@ -81,6 +81,8 @@ public class TopicsApiLoggingHostTest implements IDeviceTest {
         ConfigUtils.removeConfig(getDevice());
         ReportUtils.clearReports(getDevice());
 
+        disableGlobalKillSwitch();
+        disableTopicsAPIKillSwitch();
         // We need to turn the Consent Manager into debug mode
         overrideConsentManagerDebugMode();
         disableMddBackgroundTasks(true);
@@ -89,6 +91,7 @@ public class TopicsApiLoggingHostTest implements IDeviceTest {
 
     @After
     public void tearDown() throws Exception {
+        disableMddBackgroundTasks(false);
         ConfigUtils.removeConfig(getDevice());
         ReportUtils.clearReports(getDevice());
     }
@@ -154,7 +157,7 @@ public class TopicsApiLoggingHostTest implements IDeviceTest {
             throws DeviceNotAvailableException {
         getDevice()
                 .executeShellCommand(
-                        "setprop debug.adservices.mdd_background_task_kill_switch "
+                        "device_config put adservices mdd_background_task_kill_switch "
                                 + isSwitchedOff);
     }
 
@@ -165,5 +168,15 @@ public class TopicsApiLoggingHostTest implements IDeviceTest {
         getDevice()
                 .executeShellCommand(
                         "setprop debug.adservices.disable_topics_enrollment_check " + val);
+    }
+
+    // Disable global_kill_switch to ignore the effect of actual PH values.
+    private void disableGlobalKillSwitch() throws DeviceNotAvailableException {
+        getDevice().executeShellCommand("device_config put adservices global_kill_switch false");
+    }
+
+    // Disable topics_kill_switch to ignore the effect of actual PH values.
+    private void disableTopicsAPIKillSwitch() throws DeviceNotAvailableException {
+        getDevice().executeShellCommand("device_config put adservices topics_kill_switch false");
     }
 }

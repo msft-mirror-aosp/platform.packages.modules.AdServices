@@ -80,6 +80,9 @@ public final class RegisterWebSource implements Action {
         mRegistrationRequest =
                 new WebSourceRegistrationRequestInternal.Builder(
                                 registrationRequest, attributionSource.getPackageName(), 2000L)
+                        .setAdIdPermissionGranted(
+                                regParamsJson.optBoolean(
+                                        TestFormatJsonMapping.IS_ADID_PERMISSION_GRANTED_KEY, true))
                         .build();
 
         mUriToResponseHeadersMap = getUriToResponseHeadersMap(obj);
@@ -102,8 +105,7 @@ public final class RegisterWebSource implements Action {
                                     Uri.parse(
                                             sourceParams.getString(
                                                     TestFormatJsonMapping.REGISTRATION_URI_KEY)))
-                            .setDebugKeyAllowed(
-                                    sourceParams.optBoolean(TestFormatJsonMapping.DEBUG_KEY, false))
+                            .setDebugKeyAllowed(true)
                             .build());
         }
 

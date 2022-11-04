@@ -30,9 +30,11 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.core.content.pm.ApplicationInfoBuilder;
 
 import com.android.adservices.data.common.BooleanFileDatastore;
 
@@ -46,16 +48,16 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 public class AppConsentDaoTest {
-    private final Context mContext = ApplicationProvider.getApplicationContext();
-
-    private AppConsentDao mAppConsentDao;
-    private final PackageManager mPackageManager = mContext.getPackageManager();
-
     @Rule public final MockitoRule rule = MockitoJUnit.rule();
+    private final Context mContext = ApplicationProvider.getApplicationContext();
+    private final PackageManager mPackageManager = mContext.getPackageManager();
+    private AppConsentDao mAppConsentDao;
 
     @Spy
     private BooleanFileDatastore mDatastoreSpy =
@@ -370,6 +372,20 @@ public class AppConsentDaoTest {
         mDatastoreSpy.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
         mDatastoreSpy.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, false);
         mDatastoreSpy.put(AppConsentDaoFixture.APP30_DATASTORE_KEY, true);
+        List<ApplicationInfo> applicationsInstalled =
+                Arrays.asList(
+                        ApplicationInfoBuilder.newBuilder()
+                                .setPackageName(AppConsentDaoFixture.APP10_PACKAGE_NAME)
+                                .build(),
+                        ApplicationInfoBuilder.newBuilder()
+                                .setPackageName(AppConsentDaoFixture.APP20_PACKAGE_NAME)
+                                .build(),
+                        ApplicationInfoBuilder.newBuilder()
+                                .setPackageName(AppConsentDaoFixture.APP30_PACKAGE_NAME)
+                                .build());
+        doReturn(applicationsInstalled)
+                .when(mPackageManagerMock)
+                .getInstalledApplications(any(PackageManager.ApplicationInfoFlags.class));
 
         final Set<String> knownAppsWithConsent = mAppConsentDao.getKnownAppsWithConsent();
 
@@ -385,10 +401,39 @@ public class AppConsentDaoTest {
     }
 
     @Test
+    public void testGetKnownAppsWithConsentNotExistentApp() throws IOException {
+        mDatastoreSpy.put(AppConsentDaoFixture.APP30_DATASTORE_KEY, true);
+        List<ApplicationInfo> applicationsInstalled = new ArrayList<>();
+        doReturn(applicationsInstalled)
+                .when(mPackageManagerMock)
+                .getInstalledApplications(any(PackageManager.ApplicationInfoFlags.class));
+
+        final Set<String> knownAppsWithConsent = mAppConsentDao.getKnownAppsWithConsent();
+
+        assertEquals(0, knownAppsWithConsent.size());
+
+        verify(mDatastoreSpy).initialize();
+    }
+
+    @Test
     public void testGetAppsWithRevokedConsent() throws IOException {
         mDatastoreSpy.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, true);
         mDatastoreSpy.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
         mDatastoreSpy.put(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
+        List<ApplicationInfo> applicationsInstalled =
+                Arrays.asList(
+                        ApplicationInfoBuilder.newBuilder()
+                                .setPackageName(AppConsentDaoFixture.APP10_PACKAGE_NAME)
+                                .build(),
+                        ApplicationInfoBuilder.newBuilder()
+                                .setPackageName(AppConsentDaoFixture.APP20_PACKAGE_NAME)
+                                .build(),
+                        ApplicationInfoBuilder.newBuilder()
+                                .setPackageName(AppConsentDaoFixture.APP30_PACKAGE_NAME)
+                                .build());
+        doReturn(applicationsInstalled)
+                .when(mPackageManagerMock)
+                .getInstalledApplications(any(PackageManager.ApplicationInfoFlags.class));
 
         final Set<String> appsWithRevokedConsent = mAppConsentDao.getAppsWithRevokedConsent();
 
@@ -399,6 +444,21 @@ public class AppConsentDaoTest {
                                 AppConsentDaoFixture.APP10_PACKAGE_NAME,
                                 AppConsentDaoFixture.APP20_PACKAGE_NAME)));
         assertFalse(appsWithRevokedConsent.contains(AppConsentDaoFixture.APP30_PACKAGE_NAME));
+
+        verify(mDatastoreSpy).initialize();
+    }
+
+    @Test
+    public void testGetAppsWithRevokedConsentNonExistentApp() throws IOException {
+        mDatastoreSpy.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, true);
+        List<ApplicationInfo> applicationsInstalled = new ArrayList<>();
+        doReturn(applicationsInstalled)
+                .when(mPackageManagerMock)
+                .getInstalledApplications(any(PackageManager.ApplicationInfoFlags.class));
+
+        final Set<String> appsWithRevokedConsent = mAppConsentDao.getAppsWithRevokedConsent();
+
+        assertEquals(0, appsWithRevokedConsent.size());
 
         verify(mDatastoreSpy).initialize();
     }
@@ -423,6 +483,20 @@ public class AppConsentDaoTest {
         mDatastoreSpy.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, true);
         mDatastoreSpy.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
         mDatastoreSpy.put(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
+        List<ApplicationInfo> applicationsInstalled =
+                Arrays.asList(
+                        ApplicationInfoBuilder.newBuilder()
+                                .setPackageName(AppConsentDaoFixture.APP10_PACKAGE_NAME)
+                                .build(),
+                        ApplicationInfoBuilder.newBuilder()
+                                .setPackageName(AppConsentDaoFixture.APP20_PACKAGE_NAME)
+                                .build(),
+                        ApplicationInfoBuilder.newBuilder()
+                                .setPackageName(AppConsentDaoFixture.APP30_PACKAGE_NAME)
+                                .build());
+        doReturn(applicationsInstalled)
+                .when(mPackageManagerMock)
+                .getInstalledApplications(any(PackageManager.ApplicationInfoFlags.class));
 
         mAppConsentDao.clearKnownAppsWithConsent();
 

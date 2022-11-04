@@ -63,13 +63,16 @@ public class ManifestBasedAdtechAccessResolver implements IAccessResolver {
         if (mUrl == null || TextUtils.isEmpty(mUrl.toString())) {
             return false;
         }
-        String uriWithoutParams = mUrl.buildUpon().clearQuery().fragment(null).build().toString();
+        Uri uriWithoutParams = mUrl.buildUpon().clearQuery().fragment(null).build();
         EnrollmentData enrollment =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(uriWithoutParams);
-        boolean enrollmentKnown = (enrollment != null) && (enrollment.getEnrollmentId() != null);
-        return enrollmentKnown
-                && AppManifestConfigHelper.isAllowedAttributionAccess(
-                        context, mPackageName, enrollment.getEnrollmentId());
+        if (enrollment == null || enrollment.getEnrollmentId() == null) {
+            return false;
+        }
+        String enrollmentId = enrollment.getEnrollmentId();
+        return AppManifestConfigHelper.isAllowedAttributionAccess(
+                        context, mPackageName, enrollmentId)
+                && !mFlags.isEnrollmentBlocklisted(enrollmentId);
     }
 
     @NonNull

@@ -103,6 +103,72 @@
             android:allowBackup="false"
             android:supportsRtl="true"
             android:theme="@style/FilterTouches">
+        <!-- Activity for the main view of Adservices Settings UI-->
+        <activity
+            android:name="com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity"
+            android:exported="true"
+            android:theme="@style/Theme.SubSettingsBase">
+            <intent-filter android:priority="1">
+                <action android:name="android.adservices.ui.SETTINGS" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <!-- Activity for the topics view of Adservices Settings UI-->
+        <activity
+            android:name="com.android.adservices.ui.settings.activities.TopicsActivity"
+            android:exported="true"
+            android:theme="@style/Theme.SubSettingsBase">
+            <intent-filter android:priority="1">
+                <action android:name="android.adservices.ui.TOPICS" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <!-- Activity for the blocked topics view of Adservices Settings UI-->
+        <activity
+            android:name="com.android.adservices.ui.settings.activities.BlockedTopicsActivity"
+            android:exported="true"
+            android:theme="@style/Theme.SubSettingsBase">
+            <intent-filter android:priority="1">
+                <action android:name="android.adservices.ui.BLOCKED_TOPICS" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <!-- Activity for the apps view of Adservices Settings UI-->
+        <activity
+            android:name="com.android.adservices.ui.settings.activities.AppsActivity"
+            android:exported="true"
+            android:theme="@style/Theme.SubSettingsBase">
+            <intent-filter android:priority="1">
+                <action android:name="android.adservices.ui.APPS" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <!-- Activity for the blocked apps view of Adservices Settings UI-->
+        <activity
+            android:name="com.android.adservices.ui.settings.activities.BlockedAppsActivity"
+            android:exported="true"
+            android:theme="@style/Theme.SubSettingsBase">
+            <intent-filter android:priority="1">
+                <action android:name="android.adservices.ui.BLOCKED_APPS" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <!-- Activity for Adservices Detailed Notification UI -->
+        <activity
+            android:name="com.android.adservices.ui.notifications.ConsentNotificationActivity"
+            android:exported="true"
+            android:theme="@style/AdServices.NotificationTheme">
+            <intent-filter android:priority="1">
+                <action android:name="android.adservices.ui.NOTIFICATIONS" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
         <service android:name="com.android.adservices.adselection.AdSelectionService"
                  android:exported="true"
                  android:visibleToInstantApps="false">
@@ -182,30 +248,13 @@
             android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
-        <!-- Activity for Adservices Settings UI -->
-        <activity
-                android:name="com.android.adservices.ui.settings.AdServicesSettingsActivity"
-                android:exported="true"
-                android:theme="@style/Theme.AdServices.Settings">
-            <intent-filter android:priority="1">
-                <action android:name="android.adservices.ui.SETTINGS" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
-
-        <!-- Activity for Adservices Detailed Notification UI -->
-        <activity
-            android:name="com.android.adservices.ui.notifications.ConsentNotificationActivity"
-            android:exported="true"
-            android:theme="@style/AdServices.NotificationTheme">
-            <intent-filter android:priority="1">
-                <action android:name="android.adservices.ui.NOTIFICATIONS" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
-
         <!-- Measurement event main report upload job. -->
         <service android:name="com.android.adservices.service.measurement.reporting.EventReportingJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
+        <!-- Measurement debug report upload job. -->
+        <service android:name="com.android.adservices.service.measurement.reporting.DebugReportingJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
@@ -239,14 +288,27 @@
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
+        <!-- Measurement Deletion Uninstalled Apps Job. -->
+        <service android:name=
+                     "com.android.adservices.service.measurement.DeleteUninstalledJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
         <!-- FLEDGE Background Fetch Job -->
         <service android:name=
                      "com.android.adservices.service.customaudience.BackgroundFetchJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
+        <!-- Registration Queue job. -->
+        <service android:name=
+                     "com.android.adservices.service.measurement.AsyncRegistrationQueueJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
         <receiver android:name="com.android.adservices.service.common.PackageChangedReceiver"
-                  android:exported="true">
+              android:enabled= "false"
+              android:exported="true">
             <intent-filter>
                 <!-- This intent must match the intent definition in the AdServices system
                 service. -->

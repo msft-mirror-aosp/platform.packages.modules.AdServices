@@ -16,24 +16,35 @@
 
 package com.android.adservices.customaudience;
 
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyBoolean;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.spyOn;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
+
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.mockito.Mockito.any;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.IBinder;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.common.PackageChangedReceiver;
+import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.customaudience.CustomAudienceServiceImpl;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
 
 public class CustomAudienceServiceTest {
@@ -42,10 +53,26 @@ public class CustomAudienceServiceTest {
     private final Flags mFlagsWithCustomAudienceSwitchOff = new FlagsWithKillSwitchOff();
 
     @Mock private CustomAudienceServiceImpl mMockCustomAudienceServiceImpl;
+    @Mock private ConsentManager mConsentManagerMock;
+    @Mock private PackageManager mPackageManagerMock;
+
+    private MockitoSession mStaticMockSession;
 
     @Before
     public void setup() {
-        MockitoAnnotations.initMocks(this);
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .mockStatic(ConsentManager.class)
+                        .spyStatic(CustomAudienceServiceImpl.class)
+                        .spyStatic(PackageChangedReceiver.class)
+                        .mockStatic(MddJobService.class)
+                        .initMocks(this)
+                        .startMocking();
+    }
+
+    @After
+    public void teardown() {
+        mStaticMockSession.finishMocking();
     }
 
     @Test
@@ -55,26 +82,34 @@ public class CustomAudienceServiceTest {
         customAudienceService.onCreate();
         IBinder binder = customAudienceService.onBind(getIntentForCustomAudienceService());
         assertNull(binder);
+
+        verify(mConsentManagerMock, never()).getConsent();
+        verify(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()), never());
     }
 
     @Test
     public void testBindableCustomAudienceServiceKillSwitchOff() {
-
-        MockitoSession session =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(CustomAudienceServiceImpl.class)
-                        .startMocking();
-
-        ExtendedMockito.doReturn(mMockCustomAudienceServiceImpl)
+        doReturn(mMockCustomAudienceServiceImpl)
                 .when(() -> CustomAudienceServiceImpl.create(any(Context.class)));
+        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any(Context.class)));
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+        ExtendedMockito.doReturn(true)
+                .when(() -> PackageChangedReceiver.enableReceiver(any(Context.class)));
+        doReturn(true).when(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-        CustomAudienceService customAudienceService =
+        CustomAudienceService customAudienceServiceSpy =
                 new CustomAudienceService(mFlagsWithCustomAudienceSwitchOff);
-        customAudienceService.onCreate();
-        IBinder binder = customAudienceService.onBind(getIntentForCustomAudienceService());
+
+        spyOn(customAudienceServiceSpy);
+        doReturn(mPackageManagerMock).when(customAudienceServiceSpy).getPackageManager();
+
+        customAudienceServiceSpy.onCreate();
+        IBinder binder = customAudienceServiceSpy.onBind(getIntentForCustomAudienceService());
         assertNotNull(binder);
 
-        session.finishMocking();
+        verify(mConsentManagerMock).getConsent();
+        verify(() -> PackageChangedReceiver.enableReceiver(any(Context.class)));
+        verify(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
     }
 
     private Intent getIntentForCustomAudienceService() {

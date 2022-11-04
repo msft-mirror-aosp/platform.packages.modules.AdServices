@@ -31,13 +31,13 @@ import java.util.Objects;
 
 /** Room based database for Ad Selection. */
 @Database(
-        exportSchema = false,
         entities = {DBAdSelection.class, DBBuyerDecisionLogic.class, DBAdSelectionOverride.class},
-        version = 1)
+        version = AdSelectionDatabase.DATABASE_VERSION)
 @TypeConverters({FledgeRoomConverters.class})
 public abstract class AdSelectionDatabase extends RoomDatabase {
     private static final Object SINGLETON_LOCK = new Object();
 
+    public static final int DATABASE_VERSION = 1;
     // TODO(b/230653780): Should we separate the DB.
     public static final String DATABASE_NAME = "adselection.db";
 

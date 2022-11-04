@@ -30,7 +30,6 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
-import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
 import org.junit.Assume;
@@ -75,10 +74,8 @@ public class SandboxedFledgeManagerTest {
         PhFlagsFixture.overrideEnforceIsolateMaxHeapSize(false);
         PhFlagsFixture.overrideIsolateMaxHeapSizeBytes(0);
 
-        PhFlagsFixture.overrideSdkRequestPermitsPerSecond(Integer.MAX_VALUE);
         makeTestProcessForeground();
         PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
-        overrideConsentManagerDebugMode(true);
     }
 
     /**
@@ -92,7 +89,6 @@ public class SandboxedFledgeManagerTest {
     @After
     public void shutDown() {
         SimpleActivity.stopSimpleActivity(sContext);
-        overrideConsentManagerDebugMode(false);
     }
 
     @Test
@@ -112,10 +108,5 @@ public class SandboxedFledgeManagerTest {
                                 : "Callback failed with message " + callback.getLoadSdkErrorMsg())
                 .that(callback.isLoadSdkSuccessful())
                 .isTrue();
-    }
-
-    private void overrideConsentManagerDebugMode(boolean enable) {
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.consent_manager_debug_mode %s", enable);
     }
 }

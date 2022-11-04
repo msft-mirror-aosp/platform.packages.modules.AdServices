@@ -16,9 +16,13 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertEquals;
 
 import android.net.Uri;
+
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -33,8 +37,8 @@ import java.net.HttpURLConnection;
 public class EventReportSenderTest {
 
     private static final String ATTRIBUTION_DESTINATION = "https://toasters.example";
-    private static final String SOURCE_EVENT_ID = "12345";
-    private static final String TRIGGER_DATA = "2";
+    private static final UnsignedLong SOURCE_EVENT_ID = new UnsignedLong(12345L);
+    private static final UnsignedLong TRIGGER_DATA = new UnsignedLong(2L);
     private static final String REPORT_ID = "678";
     private static final String SOURCE_TYPE = "event";
     private static final double RANDOMIZED_TRIGGER_RATE = 0.0024;
@@ -68,7 +72,7 @@ public class EventReportSenderTest {
         Uri reportingOrigin = Uri.parse("https://ad-tech.example");
         JSONObject eventReportJson = createEventReportPayloadExample1().toJson();
 
-        EventReportSender eventReportSender = new EventReportSender();
+        EventReportSender eventReportSender = new EventReportSender(false);
         EventReportSender spyEventReportSender = Mockito.spy(eventReportSender);
 
         Mockito.doReturn(httpUrlConnection).when(spyEventReportSender)
@@ -79,5 +83,13 @@ public class EventReportSenderTest {
 
         assertEquals(outputStream.toString(), eventReportJson.toString());
         assertEquals(responseCode, 200);
+    }
+
+    @Test
+    public void testDebugReportUriPath() {
+        assertThat(new EventReportSender(false).getReportUriPath())
+                .isEqualTo(EventReportSender.EVENT_ATTRIBUTION_REPORT_URI_PATH);
+        assertThat(new EventReportSender(true).getReportUriPath())
+                .isEqualTo(EventReportSender.DEBUG_EVENT_ATTRIBUTION_REPORT_URI_PATH);
     }
 }

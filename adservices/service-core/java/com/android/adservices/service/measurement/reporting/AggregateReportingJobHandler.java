@@ -51,6 +51,7 @@ public class AggregateReportingJobHandler {
     private final EnrollmentDao mEnrollmentDao;
     private final DatastoreManager mDatastoreManager;
     private final AggregateEncryptionKeyManager mAggregateEncryptionKeyManager;
+    private boolean mIsDebugReport;
 
     AggregateReportingJobHandler(EnrollmentDao enrollmentDao, DatastoreManager datastoreManager) {
         mEnrollmentDao = enrollmentDao;
@@ -69,8 +70,20 @@ public class AggregateReportingJobHandler {
     }
 
     /**
+     * Set Debug Report
+     *
+     * @param isDebugReport
+     * @return the instance of AggregateReportingJobHandler
+     */
+    public AggregateReportingJobHandler setDebugReport(boolean isDebugReport) {
+        mIsDebugReport = isDebugReport;
+        return this;
+    }
+
+    /**
      * Finds all aggregate reports within the given window that have a status {@link
-     * AggregateReport.Status#PENDING} and attempts to upload them individually.
+     * AggregateReport.Status#PENDING} or {@link AggregateReport.DebugReportStatus#PENDING} based on
+     * mIsDebugReport and attempts to upload them individually.
      *
      * @param windowStartTime Start time of the search window
      * @param windowEndTime End time of the search window
@@ -78,9 +91,16 @@ public class AggregateReportingJobHandler {
      */
     synchronized boolean performScheduledPendingReportsInWindow(
             long windowStartTime, long windowEndTime) {
-        Optional<List<String>> pendingAggregateReportsInWindowOpt = mDatastoreManager
-                .runInTransactionWithResult((dao) ->
-                        dao.getPendingAggregateReportIdsInWindow(windowStartTime, windowEndTime));
+        Optional<List<String>> pendingAggregateReportsInWindowOpt =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) -> {
+                            if (mIsDebugReport) {
+                                return dao.getPendingAggregateDebugReportIds();
+                            } else {
+                                return dao.getPendingAggregateReportIdsInWindow(
+                                        windowStartTime, windowEndTime);
+                            }
+                        });
         if (!pendingAggregateReportsInWindowOpt.isPresent()) {
             // Failure during event report retrieval
             return true;
@@ -121,7 +141,13 @@ public class AggregateReportingJobHandler {
             return AdServicesStatusUtils.STATUS_IO_ERROR;
         }
         AggregateReport aggregateReport = aggregateReportOpt.get();
-        if (aggregateReport.getStatus() != AggregateReport.Status.PENDING) {
+
+        if (mIsDebugReport
+                && aggregateReport.getDebugReportStatus()
+                        != AggregateReport.DebugReportStatus.PENDING) {
+            return AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+        }
+        if (!mIsDebugReport && aggregateReport.getStatus() != AggregateReport.Status.PENDING) {
             return AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
         }
         try {
@@ -138,8 +164,17 @@ public class AggregateReportingJobHandler {
 
             if (returnCode >= HttpURLConnection.HTTP_OK
                     && returnCode <= 299) {
-                boolean success = mDatastoreManager.runInTransaction((dao) ->
-                        dao.markAggregateReportDelivered(aggregateReportId));
+                boolean success =
+                        mDatastoreManager.runInTransaction(
+                                (dao) -> {
+                                    if (mIsDebugReport) {
+                                        dao.markAggregateDebugReportDelivered(aggregateReportId);
+                                    } else {
+                                        dao.markAggregateReportStatus(
+                                                aggregateReportId,
+                                                AggregateReport.Status.DELIVERED);
+                                    }
+                                });
 
                 return success
                         ? AdServicesStatusUtils.STATUS_SUCCESS
@@ -183,7 +218,7 @@ public class AggregateReportingJobHandler {
     @VisibleForTesting
     public int makeHttpPostRequest(Uri adTechDomain, JSONObject aggregateReportBody)
             throws IOException {
-        AggregateReportSender aggregateReportSender = new AggregateReportSender();
+        AggregateReportSender aggregateReportSender = new AggregateReportSender(mIsDebugReport);
         return aggregateReportSender.sendReport(adTechDomain, aggregateReportBody);
     }
 
