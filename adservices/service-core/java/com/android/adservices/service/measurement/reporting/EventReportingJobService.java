@@ -80,14 +80,16 @@ public final class EventReportingJobService extends JobService {
     /** Schedules {@link EventReportingJobService} */
     @VisibleForTesting
     static void schedule(Context context, JobScheduler jobScheduler) {
-        final JobInfo job = new JobInfo.Builder(
-                AdServicesConfig.MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID,
-                new ComponentName(context, EventReportingJobService.class))
-                .setRequiresDeviceIdle(true)
-                .setRequiresBatteryNotLow(true)
-                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
-                .setPeriodic(AdServicesConfig.getMeasurementEventMainReportingJobPeriodMs())
-                .build();
+        final JobInfo job =
+                new JobInfo.Builder(
+                                AdServicesConfig.MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID,
+                                new ComponentName(context, EventReportingJobService.class))
+                        .setRequiresDeviceIdle(true)
+                        .setRequiresBatteryNotLow(true)
+                        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
+                        .setPeriodic(AdServicesConfig.getMeasurementEventMainReportingJobPeriodMs())
+                        .setPersisted(true)
+                        .build();
         jobScheduler.schedule(job);
     }
 

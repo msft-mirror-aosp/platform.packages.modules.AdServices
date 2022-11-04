@@ -29,6 +29,7 @@ import com.android.adservices.download.MobileDataDownloadFactory;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
 import com.android.adservices.service.common.AppImportanceFilter;
+import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -54,7 +55,7 @@ public class TopicsService extends Service {
         super.onCreate();
 
         if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
-            LogUtil.e("Topics API is disabled");
+            LogUtil.e("onCreate(): Topics API is disabled");
             return;
         }
 
@@ -80,6 +81,7 @@ public class TopicsService extends Service {
             mTopicsService.init();
         }
         if (hasUserConsent()) {
+            PackageChangedReceiver.enableReceiver(this);
             schedulePeriodicJobs();
         }
     }
@@ -91,13 +93,13 @@ public class TopicsService extends Service {
     }
 
     private boolean hasUserConsent() {
-        return ConsentManager.getInstance(this).getConsent(this.getPackageManager()).isGiven();
+        return ConsentManager.getInstance(this).getConsent().isGiven();
     }
 
     @Override
     public IBinder onBind(Intent intent) {
         if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
-            LogUtil.e("Topics API is disabled");
+            LogUtil.e("onBind(): Topics API is disabled, return nullBinding.");
             // Return null so that clients can not bind to the service.
             return null;
         }

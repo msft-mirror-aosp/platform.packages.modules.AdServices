@@ -24,12 +24,15 @@ import static org.mockito.Mockito.spy;
 import android.annotation.IntDef;
 import android.test.mock.MockContentResolver;
 
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
+import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.attribution.AttributionJobHandlerWrapper;
 import com.android.adservices.service.measurement.inputverification.ClickVerifier;
-import com.android.adservices.service.measurement.registration.SourceFetcher;
-import com.android.adservices.service.measurement.registration.TriggerFetcher;
+import com.android.adservices.service.measurement.registration.AsyncSourceFetcher;
+import com.android.adservices.service.measurement.registration.AsyncTriggerFetcher;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.mockito.stubbing.Answer;
 
@@ -57,35 +60,49 @@ class TestObjectProvider {
     }
 
     static MeasurementImpl getMeasurementImpl(
+            DatastoreManager datastoreManager,
+            ClickVerifier clickVerifier,
+            Flags flags,
+            MeasurementDataDeleter measurementDataDeleter,
+            EnrollmentDao enrollmentDao) {
+        return spy(
+                new MeasurementImpl(
+                        null,
+                        datastoreManager,
+                        clickVerifier,
+                        measurementDataDeleter,
+                        enrollmentDao));
+    }
+
+    static AsyncRegistrationQueueRunner getAsyncRegistrationQueueRunner(
             @Type int type,
             DatastoreManager datastoreManager,
-            SourceFetcher sourceFetcher,
-            TriggerFetcher triggerFetcher,
-            ClickVerifier clickVerifier,
-            Flags flags) {
+            AsyncSourceFetcher asyncSourceFetcher,
+            AsyncTriggerFetcher asyncTriggerFetcher,
+            EnrollmentDao enrollmentDao) {
         if (type == Type.DENOISED) {
-            MeasurementImpl measurementImpl =
+            AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                     spy(
-                            new MeasurementImpl(
-                                    null,
+                            new AsyncRegistrationQueueRunner(
                                     new MockContentResolver(),
-                                    datastoreManager,
-                                    sourceFetcher,
-                                    triggerFetcher,
-                                    clickVerifier));
+                                    asyncSourceFetcher,
+                                    asyncTriggerFetcher,
+                                    enrollmentDao,
+                                    datastoreManager));
             // Disable Impression Noise
-            doReturn(Collections.emptyList()).when(measurementImpl).generateFakeEventReports(any());
-            return measurementImpl;
+            doReturn(Collections.emptyList())
+                    .when(asyncRegistrationQueueRunner)
+                    .generateFakeEventReports(any());
+            return asyncRegistrationQueueRunner;
         } else if (type == Type.NOISY) {
-            MeasurementImpl measurementImpl =
+            AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                     spy(
-                            new MeasurementImpl(
-                                    null,
+                            new AsyncRegistrationQueueRunner(
                                     new MockContentResolver(),
-                                    datastoreManager,
-                                    sourceFetcher,
-                                    triggerFetcher,
-                                    clickVerifier));
+                                    asyncSourceFetcher,
+                                    asyncTriggerFetcher,
+                                    enrollmentDao,
+                                    datastoreManager));
             // Create impression noise with 100% probability
             Answer<?> answerSourceEventReports =
                     invocation -> {
@@ -93,9 +110,9 @@ class TestObjectProvider {
                         source.setAttributionMode(Source.AttributionMode.FALSELY);
                         return Collections.singletonList(
                                 new EventReport.Builder()
-                                        .setSourceId(source.getEventId())
+                                        .setSourceEventId(source.getEventId())
                                         .setReportTime(source.getExpiryTime() + ONE_HOUR_IN_MILLIS)
-                                        .setTriggerData(0)
+                                        .setTriggerData(new UnsignedLong(0L))
                                         .setAttributionDestination(source.getAppDestination())
                                         .setEnrollmentId(source.getEnrollmentId())
                                         .setTriggerTime(0)
@@ -106,17 +123,16 @@ class TestObjectProvider {
                                         .build());
                     };
             doAnswer(answerSourceEventReports)
-                    .when(measurementImpl)
+                    .when(asyncRegistrationQueueRunner)
                     .generateFakeEventReports(any());
-            return measurementImpl;
+            return asyncRegistrationQueueRunner;
         }
 
-        return new MeasurementImpl(
-                null,
+        return new AsyncRegistrationQueueRunner(
                 new MockContentResolver(),
-                datastoreManager,
-                sourceFetcher,
-                triggerFetcher,
-                clickVerifier);
+                asyncSourceFetcher,
+                asyncTriggerFetcher,
+                enrollmentDao,
+                datastoreManager);
     }
 }
