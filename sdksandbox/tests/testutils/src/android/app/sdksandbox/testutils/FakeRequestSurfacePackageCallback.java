@@ -16,74 +16,72 @@
 
 package android.app.sdksandbox.testutils;
 
+import static android.app.sdksandbox.SdkSandboxManager.EXTRA_SURFACE_PACKAGE;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import android.app.sdksandbox.RequestSurfacePackageException;
 import android.os.Bundle;
 import android.os.OutcomeReceiver;
-
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import android.view.SurfaceControlViewHost;
 
 public class FakeRequestSurfacePackageCallback
         implements OutcomeReceiver<Bundle, RequestSurfacePackageException> {
-    private CountDownLatch mSurfacePackageLatch = new CountDownLatch(1);
+    private final WaitableCountDownLatch mSurfacePackageLatch = new WaitableCountDownLatch(5);
 
     private boolean mSurfacePackageSuccess;
 
-    private int mErrorCode;
-    private String mErrorMsg;
-    private Bundle mExtraErrorInformation;
+    private RequestSurfacePackageException mSurfacePackageException;
+    private SurfaceControlViewHost.SurfacePackage mSurfacePackage;
 
     @Override
     public void onError(RequestSurfacePackageException exception) {
         mSurfacePackageSuccess = false;
-        mErrorCode = exception.getRequestSurfacePackageErrorCode();
-        mErrorMsg = exception.getMessage();
-        mExtraErrorInformation = exception.getExtraErrorInformation();
+        mSurfacePackageException = exception;
         mSurfacePackageLatch.countDown();
     }
 
     @Override
     public void onResult(Bundle response) {
         mSurfacePackageSuccess = true;
+        mSurfacePackage =
+                response.getParcelable(
+                        EXTRA_SURFACE_PACKAGE, SurfaceControlViewHost.SurfacePackage.class);
         mSurfacePackageLatch.countDown();
     }
 
     public boolean isRequestSurfacePackageSuccessful() {
-        waitForLatch(mSurfacePackageLatch);
+        mSurfacePackageLatch.waitForLatch();
         return mSurfacePackageSuccess;
     }
 
     public Bundle getExtraErrorInformation() {
-        waitForLatch(mSurfacePackageLatch);
+        mSurfacePackageLatch.waitForLatch();
         assertThat(mSurfacePackageSuccess).isFalse();
-        return mExtraErrorInformation;
+        return mSurfacePackageException.getExtraErrorInformation();
+    }
+
+    public SurfaceControlViewHost.SurfacePackage getSurfacePackage() {
+        mSurfacePackageLatch.waitForLatch();
+        assertThat(mSurfacePackageSuccess).isTrue();
+        return mSurfacePackage;
     }
 
     public int getSurfacePackageErrorCode() {
-        waitForLatch(mSurfacePackageLatch);
+        mSurfacePackageLatch.waitForLatch();
         assertThat(mSurfacePackageSuccess).isFalse();
-        return mErrorCode;
+        return mSurfacePackageException.getRequestSurfacePackageErrorCode();
     }
 
     public String getSurfacePackageErrorMsg() {
-        waitForLatch(mSurfacePackageLatch);
+        mSurfacePackageLatch.waitForLatch();
         assertThat(mSurfacePackageSuccess).isFalse();
-        return mErrorMsg;
+        return mSurfacePackageException.getMessage();
     }
 
-    private void waitForLatch(CountDownLatch latch) {
-        try {
-            // Wait for callback to be called
-            final int waitTime = 5;
-            if (!latch.await(waitTime, TimeUnit.SECONDS)) {
-                throw new IllegalStateException(
-                        "Callback not called within " + waitTime + " seconds");
-            }
-        } catch (InterruptedException e) {
-            throw new IllegalStateException(
-                    "Interrupted while waiting on callback: " + e.getMessage());
-        }
+    public RequestSurfacePackageException getSurfacePackageException() {
+        mSurfacePackageLatch.waitForLatch();
+        assertThat(mSurfacePackageSuccess).isFalse();
+        return mSurfacePackageException;
     }
 }
