@@ -393,10 +393,10 @@ public final class AsyncTriggerFetcherTest {
     }
 
     @Test
-    public void testTriggerRequest_eventTriggerData_triggerData_negative() throws Exception {
+    public void fetchTrigger_triggerDataNegative_triggerDataEqualsZero() throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         String eventTriggerData = "[{\"trigger_data\":\"-2\",\"priority\":\"101\"}]";
-        String expectedResult = "[{\"priority\":\"101\"}]";
+        String expectedResult = "[{\"trigger_data\":\"0\",\"priority\":\"101\"}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
@@ -421,11 +421,11 @@ public final class AsyncTriggerFetcherTest {
     }
 
     @Test
-    public void testTriggerRequest_eventTriggerData_triggerData_tooLarge() throws Exception {
+    public void fetchTrigger_triggerDataTooLarge_triggerDataEqualsZero() throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         String eventTriggerData =
                 "[{\"trigger_data\":\"18446744073709551616\"," + "\"priority\":\"101\"}]";
-        String expectedResult = "[{\"priority\":\"101\"}]";
+        String expectedResult = "[{\"trigger_data\":\"0\",\"priority\":\"101\"}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
@@ -450,10 +450,10 @@ public final class AsyncTriggerFetcherTest {
     }
 
     @Test
-    public void testTriggerRequest_eventTriggerData_triggerData_notAnInt() throws Exception {
+    public void fetchTrigger_triggerDataNotAnInt_triggerDataEqualsZero() throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         String eventTriggerData = "[{\"trigger_data\":\"101z\",\"priority\":\"101\"}]";
-        String expectedResult = "[{\"priority\":\"101\"}]";
+        String expectedResult = "[{\"trigger_data\":\"0\",\"priority\":\"101\"}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
@@ -1546,7 +1546,7 @@ public final class AsyncTriggerFetcherTest {
     }
 
     @Test
-    public void testBasicTriggerRequestMinimumFields() throws Exception {
+    public void fetchTrigger_eventTriggerDataNoFields_triggerDataEqualsZero() throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
@@ -1569,7 +1569,7 @@ public final class AsyncTriggerFetcherTest {
                 asyncRegistration.getTopOrigin().toString(),
                 result.getAttributionDestination().toString());
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals("[{}]", result.getEventTriggers());
+        assertEquals("[{\"trigger_data\":\"0\"}]", result.getEventTriggers());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
