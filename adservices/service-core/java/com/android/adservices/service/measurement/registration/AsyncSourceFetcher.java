@@ -107,7 +107,15 @@ public class AsyncSourceFetcher {
                     String.format(
                             "Expected %s and a destination", SourceHeaderContract.SOURCE_EVENT_ID));
         }
-        result.setEventId(new UnsignedLong(json.getString(SourceHeaderContract.SOURCE_EVENT_ID)));
+        UnsignedLong eventId = new UnsignedLong(0L);
+        if (!json.isNull(SourceHeaderContract.SOURCE_EVENT_ID)) {
+            try {
+                eventId = new UnsignedLong(json.getString(SourceHeaderContract.SOURCE_EVENT_ID));
+            } catch (NumberFormatException e) {
+                LogUtil.d(e, "parseCommonSourceParams: parsing source_event_id failed.");
+            }
+        }
+        result.setEventId(eventId);
         if (!json.isNull(SourceHeaderContract.EXPIRY)) {
             long expiry =
                     extractValidNumberInRange(
@@ -268,7 +276,7 @@ public class AsyncSourceFetcher {
         if (shouldValidateDestinations) {
             isDestinationAvailable |= !json.isNull(SourceHeaderContract.WEB_DESTINATION);
         }
-        return !json.isNull(SourceHeaderContract.SOURCE_EVENT_ID) && isDestinationAvailable;
+        return isDestinationAvailable;
     }
 
     private static boolean doUriFieldsMatch(JSONObject json, String fieldName, Uri expectedValue)
