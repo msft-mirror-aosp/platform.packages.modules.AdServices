@@ -99,16 +99,14 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android mungkin menambahkan minat ini pada senarai anda semula tetapi minat ini mungkin tidak akan muncul dengan serta-merta"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Tetapkan semula semua minat anda?"</string>
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"Senarai anda akan dikosongkan dan minat baharu akan dianggarkan pada masa hadapan. Anda mungkin masih akan melihat sesetengah iklan yang berkaitan dengan minat yang dikosongkan."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Tetapkan semula"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Sekat <xliff:g id="APP">%1$s</xliff:g>?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Apl ini tidak akan menganggarkan minat untuk Kotak Pasir Privasi dan tidak akan ditambahkan pada senarai anda semula melainkan anda menyahsekat apl tersebut.\n\nMinat yang telah dianggarkan oleh apl ini akan dipadamkan tetapi anda mungkin masih akan melihat sesetengah iklan yang berkaitan."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> dinyahsekat"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Apl ini boleh menganggarkan minat untuk anda semula tetapi minat tersebut mungkin tidak akan muncul pada senarai anda dengan serta-merta. Sedikit masa mungkin diperlukan untuk anda melihat iklan yang berkaitan."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Tetapkan semula minat yang dijana oleh apl?"</string>
-    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"Minat yang dianggarkan oleh apl pada senarai anda akan dipadamkan daripada Kotak Pasir Privasi dan apl akan menganggarkan minat baharu pada masa hadapan. Anda mungkin masih akan melihat sesetengah iklan yang berkaitan."</string>
     <string name="topic10001" msgid="1636806320891333775">"Seni &amp; Hiburan"</string>
     <string name="topic10002" msgid="1226367977754287428">"Lakonan &amp; Teater"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime &amp; Manga"</string>

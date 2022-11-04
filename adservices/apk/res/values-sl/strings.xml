@@ -99,16 +99,14 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android lahko to zanimanje znova doda na seznam, vendar morda ne bo takoj prikazano."</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"V redu"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Želite ponastaviti vsa zanimanja?"</string>
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"Vaš seznam bo počiščen, v prihodnje pa bodo predvidena nova zanimanja. Morda boste še vedno videli nekaj oglasov, povezanih z izbrisanimi zanimanji."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Ponastavi"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Želite blokirati aplikacijo <xliff:g id="APP">%1$s</xliff:g>?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Ta aplikacija ne bo predvidevala zanimanj za Zasebni peskovnik in ne bo znova dodana na seznam, razen če jo odblokirate.\n\nZanimanja, ki jih je ta aplikacija že predvidela, bodo izbrisana, vendar boste morda še vedno videli nekaj z njimi povezanih oglasov."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Aplikacija <xliff:g id="APP">%1$s</xliff:g> je odblokirana"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Ta aplikacija lahko za vas znova predvideva zanimanja, vendar morda ne bodo takoj prikazana na seznamu. Traja lahko nekaj časa, da boste znova videli povezane oglase."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Želite ponastaviti zanimanja, ki so jih ustvarile aplikacije?"</string>
-    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"Zanimanja, ki jih predvidijo aplikacije na vašem seznamu, bodo izbrisana iz Zasebnega peskovnika, aplikacije pa bodo v prihodnje predvidele nova zanimanja. Morda boste še vedno videli nekaj povezanih oglasov."</string>
     <string name="topic10001" msgid="1636806320891333775">"Umetnost in zabava"</string>
     <string name="topic10002" msgid="1226367977754287428">"Igralstvo in gledališče"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime in manga"</string>

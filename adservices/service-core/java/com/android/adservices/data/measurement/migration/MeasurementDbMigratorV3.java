@@ -35,8 +35,28 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
             MeasurementTables.EventReportContract.TABLE + "_backup";
     private static final String AGGREGATE_REPORT_CONTRACT_BACKUP =
             MeasurementTables.AggregateReport.TABLE + "_backup";
-    private static final String ATTRIBUTION_REPORT_CONTRACT_BACKUP =
+    private static final String ATTRIBUTION_CONTRACT_BACKUP =
             MeasurementTables.AttributionContract.TABLE + "_backup";
+    private static final String ATTRIBUTION_CREATE_INDEX_SS_SO_DS_DO_EI_TT =
+            "CREATE INDEX "
+                    + MeasurementTables.INDEX_PREFIX
+                    + MeasurementTables.AttributionContract.TABLE
+                    + "_ss_so_ds_do_ei_tt"
+                    + " ON "
+                    + MeasurementTables.AttributionContract.TABLE
+                    + "("
+                    + MeasurementTables.AttributionContract.SOURCE_SITE
+                    + ", "
+                    + MeasurementTables.AttributionContract.SOURCE_ORIGIN
+                    + ", "
+                    + MeasurementTables.AttributionContract.DESTINATION_SITE
+                    + ", "
+                    + MeasurementTables.AttributionContract.DESTINATION_ORIGIN
+                    + ", "
+                    + MeasurementTables.AttributionContract.ENROLLMENT_ID
+                    + ", "
+                    + MeasurementTables.AttributionContract.TRIGGER_TIME
+                    + ")";
 
     private static final String[] ALTER_STATEMENTS_VER_3 = {
         String.format(
@@ -90,6 +110,18 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
                 "ALTER TABLE %1$s ADD %2$s INTEGER",
                 MeasurementTables.AttributionContract.TABLE,
                 MeasurementTables.AttributionContract.TRIGGER_ID),
+        String.format(
+                "ALTER TABLE %1$s ADD %2$s INTEGER",
+                MeasurementTables.EventReportContract.TABLE,
+                MeasurementTables.EventReportContract.DEBUG_REPORT_STATUS),
+        String.format(
+                "ALTER TABLE %1$s ADD %2$s INTEGER",
+                MeasurementTables.AggregateReport.TABLE,
+                MeasurementTables.AggregateReport.DEBUG_REPORT_STATUS),
+        String.format(
+                "ALTER TABLE %1$s ADD %2$s TEXT",
+                MeasurementTables.TriggerContract.TABLE,
+                MeasurementTables.TriggerContract.NOT_FILTERS),
 
         // SQLite does not support ALTER TABLE statement with foreign keys
         String.format(
@@ -110,12 +142,13 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
         String.format("DROP TABLE %1$s", AGGREGATE_REPORT_CONTRACT_BACKUP),
         String.format(
                 "ALTER TABLE %1$s RENAME TO %2$s",
-                MeasurementTables.AttributionContract.TABLE, ATTRIBUTION_REPORT_CONTRACT_BACKUP),
+                MeasurementTables.AttributionContract.TABLE, ATTRIBUTION_CONTRACT_BACKUP),
         MeasurementTables.CREATE_TABLE_ATTRIBUTION_V3,
         String.format(
                 "INSERT INTO %1$s SELECT * FROM %2$s",
-                MeasurementTables.AttributionContract.TABLE, ATTRIBUTION_REPORT_CONTRACT_BACKUP),
-        String.format("DROP TABLE %1$s", ATTRIBUTION_REPORT_CONTRACT_BACKUP),
+                MeasurementTables.AttributionContract.TABLE, ATTRIBUTION_CONTRACT_BACKUP),
+        String.format("DROP TABLE %1$s", ATTRIBUTION_CONTRACT_BACKUP),
+        ATTRIBUTION_CREATE_INDEX_SS_SO_DS_DO_EI_TT
     };
 
     public MeasurementDbMigratorV3() {

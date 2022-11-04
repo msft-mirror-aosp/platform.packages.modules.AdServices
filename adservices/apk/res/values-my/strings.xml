@@ -99,16 +99,14 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android က ဤစိတ်ဝင်စားမှုကို သင်၏စာရင်းတွင် ထပ်ထည့်နိုင်သော်လည်း ၎င်းက ချက်ချင်းပေါ်မလာနိုင်ပါ"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"သင်၏ စိတ်ဝင်စားမှုအားလုံးကို ပြင်ဆင်သတ်မှတ်မလား။"</string>
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"သင့်စာရင်းကို ရှင်းလင်းပြီး ယခုမှစ၍ စိတ်ဝင်စားမှုအသစ်များကို ခန့်မှန်းမည်။ ရှင်းလင်းထားသော စိတ်ဝင်စားမှုများနှင့် သက်ဆိုင်သည့် ကြော်ငြာအချို့ကို မြင်နိုင်သေးသည်။"</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"ပြင်ဆင်သတ်မှတ်ရန်"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g> ကို ပိတ်ထားမလား။"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"ဤအက်ပ်သည် Privacy Sandbox အတွက် စိတ်ဝင်စားမှုများကို ခန့်မှန်းမည်မဟုတ်ဘဲ သင်ပြန်မဖွင့်ပါက သင်၏စာရင်းတွင် ၎င်းကို ထပ်ထည့်မည်မဟုတ်ပါ။\n\nဤအက်ပ်က ခန့်မှန်းထားပြီးသော စိတ်ဝင်စားမှုများကို ဖျက်လိုက်မည်ဖြစ်သော်လည်း ဆက်စပ်သော ကြော်ငြာအချို့ကို မြင်ရနိုင်သေးသည်။"</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> ကို ပြန်ဖွင့်လိုက်သည်"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"ဤအက်ပ်သည် သင့်အတွက်စိတ်ဝင်စားမှုများကို ထပ်ခန့်မှန်းနိုင်သော်လည်း ၎င်းက သင်၏စာရင်းတွင် ချက်ချင်းပေါ်မလာနိုင်ပါ။ ဆက်စပ်သော ကြော်ငြာများ မြင်ရရန် အချိန်အနည်းငယ်ကြာနိုင်သည်။"</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"အက်ပ်များကထုတ်ပေးသော စိတ်ဝင်စားမှုများကို ပြင်ဆင်သတ်မှတ်မလား။"</string>
-    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"သင့်စာရင်းတွင် အက်ပ်များမှ ခန့်မှန်းထားသော စိတ်ဝင်စားမှုများကို Privacy Sandbox မှ ဖျက်မည်ဖြစ်ပြီး အက်ပ်များက ယခုမှစ၍ စိတ်ဝင်စားမှုအသစ်များကို ခန့်မှန်းမည်။ ဆက်စပ်သော ကြော်ငြာအချို့ကို မြင်ရနိုင်သေးသည်။"</string>
     <string name="topic10001" msgid="1636806320891333775">"အနုပညာနှင့် ဖျော်ဖြေရေး"</string>
     <string name="topic10002" msgid="1226367977754287428">"သရုပ်ဆောင်ခြင်းနှင့် ကဇာတ်ရုံ"</string>
     <string name="topic10003" msgid="6949890838957814881">"အန်နီမီနှင့် မန်ဂါ"</string>

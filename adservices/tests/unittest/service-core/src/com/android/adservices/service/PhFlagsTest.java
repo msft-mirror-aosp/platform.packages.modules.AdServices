@@ -147,6 +147,7 @@ import static com.android.adservices.service.PhFlags.KEY_ENABLE_DATABASE_SCHEMA_
 import static com.android.adservices.service.PhFlags.KEY_ENABLE_TOPIC_CONTRIBUTORS_CHECK;
 import static com.android.adservices.service.PhFlags.KEY_ENFORCE_FOREGROUND_STATUS_TOPICS;
 import static com.android.adservices.service.PhFlags.KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE;
+import static com.android.adservices.service.PhFlags.KEY_ENROLLMENT_BLOCKLIST_IDS;
 import static com.android.adservices.service.PhFlags.KEY_FLEDE_AD_SELECTION_OFF_DEVICE_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
@@ -3241,6 +3242,56 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getEnableDatabaseSchemaVersion3()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testEnrollmentBlocklist_singleEnrollment() {
+        Flags phFlags = FlagsFactory.getFlags();
+
+        String blocklistedEnrollmentId = "enrollmentId1";
+        setEnrollmentBlocklist(blocklistedEnrollmentId);
+
+        assertThat(phFlags.getEnrollmentBlocklist()).contains(blocklistedEnrollmentId);
+    }
+
+    @Test
+    public void testEnrollmentBlocklist_multipleEnrollments() {
+        Flags phFlags = FlagsFactory.getFlags();
+
+        String enrollmentId1 = "enrollmentId1";
+        String enrollmentId2 = "enrollmentId2";
+        String enrollmentId3 = "enrollmentId3";
+
+        String blocklistedEnrollmentId =
+                String.format("%s,%s,%s", enrollmentId1, enrollmentId2, enrollmentId3);
+        setEnrollmentBlocklist(blocklistedEnrollmentId);
+
+        assertThat(phFlags.getEnrollmentBlocklist())
+                .containsExactly(enrollmentId1, enrollmentId2, enrollmentId3);
+    }
+
+    @Test
+    public void testEnrollmentBlocklist_malformedList() {
+        Flags phFlags = FlagsFactory.getFlags();
+
+        String enrollmentId1 = "enrollmentId1";
+        String enrollmentId2 = "enrollmentId2";
+        String enrollmentId3 = "enrollmentId3";
+
+        String blocklistedEnrollmentId =
+                String.format("%s%s%s", enrollmentId1, enrollmentId2, enrollmentId3);
+        setEnrollmentBlocklist(blocklistedEnrollmentId);
+
+        assertThat(phFlags.getEnrollmentBlocklist())
+                .containsNoneOf(enrollmentId1, enrollmentId2, enrollmentId3);
+    }
+
+    private void setEnrollmentBlocklist(String blocklistFlag) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ENROLLMENT_BLOCKLIST_IDS,
+                blocklistFlag,
+                false);
     }
     // CHECKSTYLE:ON IndentationCheck
 }

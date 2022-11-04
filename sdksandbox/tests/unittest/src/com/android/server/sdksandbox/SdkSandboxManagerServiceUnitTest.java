@@ -1226,8 +1226,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 () ->
                         SdkSandboxStatsLog.write(
                                 SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                                SdkSandboxStatsLog
-                                        .SANDBOX_API_CALLED__METHOD__GET_LOADED_SDK_LIBRARIES_INFO,
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__GET_SANDBOXED_SDKS,
                                 (int)
                                         (TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP
                                                 - TIME_APP_CALLED_SYSTEM_SERVER),
@@ -1805,8 +1804,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 () ->
                         SdkSandboxStatsLog.write(
                                 SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                                SdkSandboxStatsLog
-                                        .SANDBOX_API_CALLED__METHOD__GET_LOADED_SDK_LIBRARIES_INFO,
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__GET_SANDBOXED_SDKS,
                                 (int)
                                         (END_TIME_IN_SYSTEM_SERVER
                                                 - TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP),
@@ -1872,7 +1870,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 new DeviceConfig.Properties(
                         DeviceConfig.NAMESPACE_ADSERVICES,
                         Map.of(PROPERTY_DISABLE_SANDBOX, "false")));
-        assertThat(listener.isKillSwitchEnabled()).isTrue();
+        assertThat(listener.isKillSwitchEnabled()).isFalse();
     }
 
     @Test
@@ -1896,12 +1894,15 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
-    public void testLoadSdkFailsWhenSandboxDisabled() {
+    public void testLoadSdkFailsWhenSandboxDisabled() throws Exception {
         disableNetworkPermissionChecks();
         disableForegroundCheck();
         SdkSandboxManagerService.SdkSandboxSettingsListener listener =
                 mService.getSdkSandboxSettingsListener();
         listener.reset();
+        // Sleep needed to avoid deadlock.
+        // TODO(b/257255118): Remove this sleep.
+        Thread.sleep(500);
         listener.onPropertiesChanged(
                 new DeviceConfig.Properties(
                         DeviceConfig.NAMESPACE_ADSERVICES,

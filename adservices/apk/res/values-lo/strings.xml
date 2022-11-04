@@ -99,16 +99,14 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android ອາດເພີ່ມຄວາມສົນໃຈນີ້ໄປໃສ່ລາຍຊື່ຂອງທ່ານຄືນໃໝ່, ແຕ່ມັນອາດບໍ່ປາກົດໃນທັນທີ"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"ຕົກລົງ"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"ຣີເຊັດຄວາມສົນໃຈທັງໝົດຂອງທ່ານບໍ?"</string>
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"ລາຍຊື່ຂອງທ່ານຈະຖືກລຶບລ້າງ ແລະ ຈະມີການປະເມີນຄວາມສົນໃຈໃໝ່ໃນອະນາຄົດ. ທ່ານອາດຍັງຄົງເຫັນໂຄສະນາບາງຢ່າງທີ່ກ່ຽວຂ້ອງກັບຄວາມສົນໃຈທີ່ຖືກລຶບລ້າງໄປແລ້ວຢູ່."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"ຣີເຊັດ"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"ບລັອກ <xliff:g id="APP">%1$s</xliff:g> ບໍ?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"ແອັບນີ້ຈະບໍ່ຄາດການຄວາມສົນໃຈສຳລັບ Privacy Sandbox ແລະ ຈະບໍ່ຖືກເພີ່ມໃສ່ລາຍຊື່ຂອງທ່ານຄືນໃໝ່, ເວັ້ນແຕ່ທ່ານຈະປົດບລັອກມັນ.\n\nຄວາມສົນໃຈທີ່ຖືກຄາດການໂດຍແອັບນີ້ໄປກ່ອນແລ້ວຈະຖືກລຶບອອກ, ແຕ່ທ່ານອາດຍັງຄົງເຫັນບາງແອັບທີ່ກ່ຽວຂ້ອງຢູ່."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"ປົດບລັອກ <xliff:g id="APP">%1$s</xliff:g> ແລ້ວ"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"ແອັບນີ້ສາມາດຄາດການຄວາມສົນໃຈໃຫ້ທ່ານຄືນໃໝ່ໄດ້, ແຕ່ມັນອາດບໍ່ປາກົດຢູ່ລາຍຊື່ຂອງທ່ານໃນທັນທີ. ມັນອາດໃຊ້ເວລາໄລຍະໜຶ່ງເພື່ອໃຫ້ທ່ານເຫັນໂຄສະນາທີ່ກ່ຽວຂ້ອງ."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"ຣີເຊັດຄວາມສົນໃຈທີ່ແອັບສ້າງຂຶ້ນບໍ?"</string>
-    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"ຄວາມສົນໃຈທີ່ປະເມີນໂດຍແອັບຢູ່ລາຍຊື່ຂອງທ່ານຈະຖືກລຶບອອກຈາກ Privacy Sandbox ແລະ ແອັບຈະປະເມີນຄວາມສົນໃຈໃໝ່ໃນອະນາຄົດ. ທ່ານອາດຈະຍັງຄົງເຫັນໂຄສະນາທີ່ກ່ຽວຂ້ອງບາງຢ່າງຢູ່."</string>
     <string name="topic10001" msgid="1636806320891333775">"ສິນລະປະ ແລະ ການບັນເທີງ"</string>
     <string name="topic10002" msgid="1226367977754287428">"ການສະແດງ ແລະ ໂຮງຮູບເງົາ"</string>
     <string name="topic10003" msgid="6949890838957814881">"ອະນິເມະ ແລະ ມັງງະ"</string>

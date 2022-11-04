@@ -503,12 +503,12 @@ public class EpochManager implements Dumpable {
     }
 
     /**
-     * Check whether TopContributors Feature is enabled. It's enabled only when TopicCOntributors
+     * Check whether TopContributors Feature is enabled. It's enabled only when TopicContributors
      * table is supported and the feature flag is on.
      */
     public boolean supportsTopicContributorFeature() {
         return mFlags.getEnableTopicContributorsCheck()
-                && mTopicsDao.supportsTopContributorsTable();
+                && mTopicsDao.supportsTopicContributorsTable();
     }
 
     @Override

@@ -112,7 +112,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                 clock,
                 consentManager,
                 enrollmentDao,
-                Throttler.getInstance(FlagsFactory.getFlags().getSdkRequestPermitsPerSecond()),
+                Throttler.getInstance(FlagsFactory.getFlags()),
                 flags,
                 AdServicesLoggerImpl.getInstance(),
                 appImportanceFilter);
