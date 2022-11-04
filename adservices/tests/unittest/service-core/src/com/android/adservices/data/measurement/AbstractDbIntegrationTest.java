@@ -23,7 +23,7 @@ import android.database.sqlite.SQLiteException;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.data.DbHelper;
+import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
@@ -79,14 +79,14 @@ public abstract class AbstractDbIntegrationTest {
                         .startMocking();
         ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
 
-        SQLiteDatabase db = DbHelper.getInstance(sContext).getWritableDatabase();
+        SQLiteDatabase db = DbTestUtil.getDbHelperForTest().getWritableDatabase();
         emptyTables(db);
         seedTables(db, mInput);
     }
 
     @After
     public void after() {
-        SQLiteDatabase db = DbHelper.getInstance(sContext).getWritableDatabase();
+        SQLiteDatabase db = DbTestUtil.getDbHelperForTest().getWritableDatabase();
         emptyTables(db);
 
         mStaticMockSession.finishMocking();
@@ -105,7 +105,7 @@ public abstract class AbstractDbIntegrationTest {
     @Test
     public void runTest() throws DatastoreException, JSONException {
         runActionToTest();
-        SQLiteDatabase readerDb = DbHelper.getInstance(sContext).getReadableDatabase();
+        SQLiteDatabase readerDb = DbTestUtil.getDbHelperForTest().getReadableDatabase();
         DbState dbState = new DbState(readerDb);
         mOutput.sortAll();
         dbState.sortAll();
@@ -321,7 +321,7 @@ public abstract class AbstractDbIntegrationTest {
         values.put(
                 MeasurementTables.SourceContract.AGGREGATE_CONTRIBUTIONS,
                 source.getAggregateContributions());
-        values.put(MeasurementTables.SourceContract.FILTER_DATA, source.getAggregateFilterData());
+        values.put(MeasurementTables.SourceContract.FILTER_DATA, source.getFilterData());
         long row = db.insert(MeasurementTables.SourceContract.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("Source insertion failed");
@@ -348,6 +348,7 @@ public abstract class AbstractDbIntegrationTest {
         values.put(MeasurementTables.TriggerContract.REGISTRANT,
                 trigger.getRegistrant().toString());
         values.put(MeasurementTables.TriggerContract.FILTERS, trigger.getFilters());
+        values.put(MeasurementTables.TriggerContract.NOT_FILTERS, trigger.getNotFilters());
         long row = db.insert(MeasurementTables.TriggerContract.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("Trigger insertion failed");

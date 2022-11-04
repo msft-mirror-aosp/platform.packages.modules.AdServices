@@ -63,7 +63,6 @@ import java.util.Optional;
  */
 public class AsyncTriggerFetcher {
 
-    private static final String ANDROID_APP_SCHEME = "android-app";
     private final MeasurementHttpClient mNetworkConnection = new MeasurementHttpClient();
     private final EnrollmentDao mEnrollmentDao;
     private final Flags mFlags;
@@ -136,7 +135,20 @@ public class AsyncTriggerFetcher {
                         json.getString(TriggerHeaderContract.AGGREGATABLE_VALUES));
             }
             if (!json.isNull(TriggerHeaderContract.FILTERS)) {
-                result.setFilters(json.getString(TriggerHeaderContract.FILTERS));
+                JSONObject filters = json.optJSONObject(TriggerHeaderContract.FILTERS);
+                if (!FetcherUtil.areValidAttributionFilters(filters)) {
+                    LogUtil.d("parseTrigger: filters are invalid.");
+                    return false;
+                }
+                result.setFilters(filters.toString());
+            }
+            if (!json.isNull(TriggerHeaderContract.NOT_FILTERS)) {
+                JSONObject notFilters = json.optJSONObject(TriggerHeaderContract.NOT_FILTERS);
+                if (!FetcherUtil.areValidAttributionFilters(notFilters)) {
+                    LogUtil.d("parseTrigger: not-filters are invalid.");
+                    return false;
+                }
+                result.setNotFilters(notFilters.toString());
             }
             boolean isWebAllow = isWebSource && isAllowDebugKey && isAdIdPermissionGranted;
             boolean isAppAllow = !isWebSource && isAdIdPermissionGranted;
@@ -266,9 +278,7 @@ public class AsyncTriggerFetcher {
             AsyncRedirect asyncRedirect) {
         List<Trigger> out = new ArrayList<>();
         fetchTrigger(
-                asyncRegistration.getType() == AsyncRegistration.RegistrationType.WEB_TRIGGER
-                        ? asyncRegistration.getTopOrigin()
-                        : getAttributionDestination(asyncRegistration),
+                asyncRegistration.getTopOrigin(),
                 asyncRegistration.getRegistrationUri(),
                 asyncRegistration.getRegistrant(),
                 asyncRegistration.getRequestTime(),
@@ -417,14 +427,10 @@ public class AsyncTriggerFetcher {
         return true;
     }
 
-    @VisibleForTesting
-    static Uri getAttributionDestination(AsyncRegistration request) {
-        return Uri.parse(ANDROID_APP_SCHEME + "://" + request.getRegistrant());
-    }
-
     private interface TriggerHeaderContract {
         String EVENT_TRIGGER_DATA = "event_trigger_data";
         String FILTERS = "filters";
+        String NOT_FILTERS = "not_filters";
         String AGGREGATABLE_TRIGGER_DATA = "aggregatable_trigger_data";
         String AGGREGATABLE_VALUES = "aggregatable_values";
         String DEBUG_KEY = "debug_key";

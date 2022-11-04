@@ -26,6 +26,9 @@ import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.GetTopicsReportedStats;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
@@ -61,12 +64,15 @@ public class CacheManager implements Dumpable {
     private HashSet<Topic> mCachedBlockedTopics = new HashSet<>();
     // HashSet<TopicId>
     private HashSet<Integer> mCachedBlockedTopicIds = new HashSet<>();
+    private final AdServicesLogger mLogger;
 
     @VisibleForTesting
-    CacheManager(EpochManager epochManager, TopicsDao topicsDao, Flags flags) {
+    CacheManager(
+            EpochManager epochManager, TopicsDao topicsDao, Flags flags, AdServicesLogger logger) {
         mEpochManager = epochManager;
         mTopicsDao = topicsDao;
         mFlags = flags;
+        mLogger = logger;
     }
 
     /** Returns an instance of the CacheManager given a context. */
@@ -78,7 +84,8 @@ public class CacheManager implements Dumpable {
                         new CacheManager(
                                 EpochManager.getInstance(context),
                                 TopicsDao.getInstance(context),
-                                FlagsFactory.getFlags());
+                                FlagsFactory.getFlags(),
+                                AdServicesLoggerImpl.getInstance());
             }
             return sSingleton;
         }
@@ -139,13 +146,20 @@ public class CacheManager implements Dumpable {
         Set<Integer> topicsSet = new HashSet<>();
 
         mReadWriteLock.readLock().lock();
+        int duplicateTopicCount = 0, blockedTopicCount = 0;
         try {
             for (int numEpoch = 0; numEpoch < numberOfLookBackEpochs; numEpoch++) {
                 if (mCachedTopics.containsKey(epochId - numEpoch)) {
                     Topic topic = mCachedTopics.get(epochId - numEpoch).get(Pair.create(app, sdk));
-                    if (topic != null
-                            && !topicsSet.contains(topic.getTopic())
-                            && !mCachedBlockedTopicIds.contains(topic.getTopic())) {
+                    if (topic != null) {
+                        if (topicsSet.contains(topic.getTopic())) {
+                            duplicateTopicCount++;
+                            continue;
+                        }
+                        if (mCachedBlockedTopicIds.contains(topic.getTopic())) {
+                            blockedTopicCount++;
+                            continue;
+                        }
                         topics.add(topic);
                         topicsSet.add(topic.getTopic());
                     }
@@ -156,6 +170,19 @@ public class CacheManager implements Dumpable {
         }
 
         Collections.shuffle(topics, random);
+
+        // Log GetTopics stats.
+        ImmutableList.Builder<Integer> topicIds = ImmutableList.builder();
+        for (Topic topic : topics) {
+            topicIds.add(topic.getTopic());
+        }
+        mLogger.logGetTopicsReportedStats(
+                GetTopicsReportedStats.builder()
+                        .setDuplicateTopicCount(duplicateTopicCount)
+                        .setFilteredBlockedTopicCount(blockedTopicCount)
+                        .setTopicIdsCount(topics.size())
+                        .build());
+
         return topics;
     }
 

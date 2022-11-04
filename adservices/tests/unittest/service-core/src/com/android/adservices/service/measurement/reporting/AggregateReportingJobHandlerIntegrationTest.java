@@ -19,11 +19,12 @@ package com.android.adservices.service.measurement.reporting;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.AbstractDbIntegrationTest;
 import com.android.adservices.data.measurement.DatastoreManager;
-import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.data.measurement.DbState;
+import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
@@ -93,7 +94,8 @@ public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbInteg
                         });
         Mockito.doReturn(isEnrolled ? ENROLLMENT : null)
                 .when(mEnrollmentDao).getEnrollmentData(Mockito.any());
-        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
+        DatastoreManager datastoreManager =
+                new SQLDatastoreManager(DbTestUtil.getDbHelperForTest());
         AggregateReportingJobHandler spyReportingService =
                 Mockito.spy(new AggregateReportingJobHandler(
                         mEnrollmentDao, datastoreManager, mockKeyManager));

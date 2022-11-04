@@ -36,6 +36,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import android.app.job.JobScheduler;
 import android.content.Context;
@@ -62,6 +63,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
 import com.android.adservices.service.common.BackgroundJobsManager;
+import com.android.adservices.service.measurement.AsyncRegistrationQueueJobService;
 import com.android.adservices.service.measurement.DeleteExpiredJobService;
 import com.android.adservices.service.measurement.DeleteUninstalledJobService;
 import com.android.adservices.service.measurement.MeasurementImpl;
@@ -92,6 +94,7 @@ import org.mockito.Spy;
 import org.mockito.quality.Strictness;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -139,6 +142,7 @@ public class ConsentManagerTest {
                         .spyStatic(MaintenanceJobService.class)
                         .spyStatic(MddJobService.class)
                         .spyStatic(DeviceRegionProvider.class)
+                        .spyStatic(AsyncRegistrationQueueJobService.class)
                         .strictness(Strictness.WARN)
                         .initMocks(this)
                         .startMocking();
@@ -190,6 +194,8 @@ public class ConsentManagerTest {
                 .when(() -> DeleteUninstalledJobService.scheduleIfNeeded(any(), anyBoolean()));
         ExtendedMockito.doReturn(true)
                 .when(() -> MaintenanceJobService.scheduleIfNeeded(any(), anyBoolean()));
+        ExtendedMockito.doNothing()
+                .when(() -> AsyncRegistrationQueueJobService.scheduleIfNeeded(any(), anyBoolean()));
     }
 
     @After
@@ -250,6 +256,10 @@ public class ConsentManagerTest {
                 () -> DeleteExpiredJobService.scheduleIfNeeded(any(Context.class), eq(false)));
         ExtendedMockito.verify(
                 () -> DeleteUninstalledJobService.scheduleIfNeeded(any(Context.class), eq(false)));
+        ExtendedMockito.verify(
+                () ->
+                        AsyncRegistrationQueueJobService.scheduleIfNeeded(
+                                any(Context.class), eq(false)));
     }
 
     @Test
@@ -298,6 +308,11 @@ public class ConsentManagerTest {
         ExtendedMockito.verify(
                 () -> DeleteUninstalledJobService.scheduleIfNeeded(any(Context.class), eq(false)),
                 ExtendedMockito.never());
+        ExtendedMockito.verify(
+                () ->
+                        AsyncRegistrationQueueJobService.scheduleIfNeeded(
+                                any(Context.class), eq(false)),
+                ExtendedMockito.never());
     }
 
     @Test
@@ -318,6 +333,7 @@ public class ConsentManagerTest {
                 .cancel(AdServicesConfig.MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID);
         verify(mJobSchedulerMock)
                 .cancel(AdServicesConfig.MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID);
+        verify(mJobSchedulerMock).cancel(AdServicesConfig.ASYNC_REGISTRATION_QUEUE_JOB_ID);
         verify(mJobSchedulerMock).cancel(AdServicesConfig.FLEDGE_BACKGROUND_FETCH_JOB_ID);
         verify(mJobSchedulerMock).cancel(AdServicesConfig.CONSENT_NOTIFICATION_JOB_ID);
         verify(mJobSchedulerMock).cancel(AdServicesConfig.MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID);
@@ -795,16 +811,24 @@ public class ConsentManagerTest {
     @Test
     public void testTopicsProxyCalls() {
         Topic topic = Topic.create(1, 1, 1);
-        List<String> tablesToBlock = List.of(TopicsTables.BlockedTopicsContract.TABLE);
-        ConsentManager consentManager =
-                new ConsentManager(
-                        mContextSpy,
+        ArrayList<String> tablesToBlock = new ArrayList<>();
+        tablesToBlock.add(TopicsTables.BlockedTopicsContract.TABLE);
+
+        TopicsWorker topicsWorker =
+                spy(
                         new TopicsWorker(
                                 mMockEpochManager,
                                 mCacheManager,
                                 mBlockedTopicsManager,
                                 mAppUpdateManager,
-                                mMockFlags),
+                                mMockFlags));
+        // Enable TopicContributors feature
+        when(mMockEpochManager.supportsTopicContributorFeature()).thenReturn(true);
+
+        ConsentManager consentManager =
+                new ConsentManager(
+                        mContextSpy,
+                        topicsWorker,
                         mAppConsentDao,
                         mEnrollmentDao,
                         mMeasurementImpl,
@@ -813,7 +837,8 @@ public class ConsentManagerTest {
                         mMockFlags);
         doNothing().when(mBlockedTopicsManager).blockTopic(any());
         doNothing().when(mBlockedTopicsManager).unblockTopic(any());
-        doNothing().when(mCacheManager).clearAllTopicsData(any());
+        // The actual usage is to invoke clearAllTopicsData() from TopicsWorker
+        doNothing().when(topicsWorker).clearAllTopicsData(any());
 
         consentManager.revokeConsentForTopic(topic);
         consentManager.restoreConsentForTopic(topic);
@@ -821,7 +846,7 @@ public class ConsentManagerTest {
 
         verify(mBlockedTopicsManager).blockTopic(topic);
         verify(mBlockedTopicsManager).unblockTopic(topic);
-        verify(mCacheManager).clearAllTopicsData(tablesToBlock);
+        verify(topicsWorker).clearAllTopicsData(tablesToBlock);
     }
 
     @Test

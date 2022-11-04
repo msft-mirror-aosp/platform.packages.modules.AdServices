@@ -23,7 +23,6 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.util.Pair;
 
@@ -105,6 +104,7 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.TriggerContract.AGGREGATE_VALUES,
                 trigger.getAggregateValues());
         values.put(MeasurementTables.TriggerContract.FILTERS, trigger.getFilters());
+        values.put(MeasurementTables.TriggerContract.NOT_FILTERS, trigger.getNotFilters());
         values.put(MeasurementTables.TriggerContract.DEBUG_KEY,
                 getNullableUnsignedLong(trigger.getDebugKey()));
         long rowId = mSQLTransaction.getDatabase()
@@ -265,7 +265,7 @@ class MeasurementDao implements IMeasurementDao {
                 source.getInstallCooldownWindow());
         values.put(MeasurementTables.SourceContract.ATTRIBUTION_MODE, source.getAttributionMode());
         values.put(MeasurementTables.SourceContract.AGGREGATE_SOURCE, source.getAggregateSource());
-        values.put(MeasurementTables.SourceContract.FILTER_DATA, source.getAggregateFilterData());
+        values.put(MeasurementTables.SourceContract.FILTER_DATA, source.getFilterData());
         values.put(MeasurementTables.SourceContract.AGGREGATE_CONTRIBUTIONS, 0);
         values.put(MeasurementTables.SourceContract.DEBUG_KEY,
                 getNullableUnsignedLong(source.getDebugKey()));
@@ -416,6 +416,45 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
+    public void markEventDebugReportDelivered(String eventReportId) throws DatastoreException {
+        ContentValues values = new ContentValues();
+        values.put(
+                MeasurementTables.EventReportContract.DEBUG_REPORT_STATUS,
+                EventReport.DebugReportStatus.DELIVERED);
+        long rows =
+                mSQLTransaction
+                        .getDatabase()
+                        .update(
+                                MeasurementTables.EventReportContract.TABLE,
+                                values,
+                                MeasurementTables.EventReportContract.ID + " = ?",
+                                new String[] {eventReportId});
+        if (rows != 1) {
+            throw new DatastoreException("EventReport update failed.");
+        }
+    }
+
+    @Override
+    public void markAggregateDebugReportDelivered(String aggregateReportId)
+            throws DatastoreException {
+        ContentValues values = new ContentValues();
+        values.put(
+                MeasurementTables.AggregateReport.DEBUG_REPORT_STATUS,
+                AggregateReport.DebugReportStatus.DELIVERED);
+        long rows =
+                mSQLTransaction
+                        .getDatabase()
+                        .update(
+                                MeasurementTables.AggregateReport.TABLE,
+                                values,
+                                MeasurementTables.AggregateReport.ID + " = ? ",
+                                new String[] {aggregateReportId});
+        if (rows != 1) {
+            throw new DatastoreException("AggregateReport update failed");
+        }
+    }
+
+    @Override
     @Nullable
     public List<EventReport> getSourceEventReports(Source source) throws DatastoreException {
         List<EventReport> eventReports = new ArrayList<>();
@@ -465,6 +504,32 @@ class MeasurementDao implements IMeasurementDao {
             while (cursor.moveToNext()) {
                 eventReports.add(cursor.getString(cursor.getColumnIndex(
                         MeasurementTables.EventReportContract.ID)));
+            }
+            return eventReports;
+        }
+    }
+
+    @Override
+    public List<String> getPendingDebugEventReportIds() throws DatastoreException {
+        List<String> eventReports = new ArrayList<>();
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                MeasurementTables.EventReportContract.TABLE,
+                                /*columns=*/ null,
+                                MeasurementTables.EventReportContract.DEBUG_REPORT_STATUS + " = ? ",
+                                new String[] {
+                                    String.valueOf(EventReport.DebugReportStatus.PENDING)
+                                },
+                                /*groupBy=*/ null,
+                                /*having=*/ null,
+                                /*orderBy=*/ "RANDOM()",
+                                /*limit=*/ null)) {
+            while (cursor.moveToNext()) {
+                eventReports.add(
+                        cursor.getString(
+                                cursor.getColumnIndex(MeasurementTables.EventReportContract.ID)));
             }
             return eventReports;
         }
@@ -522,6 +587,9 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.EventReportContract.ENROLLMENT_ID,
                 eventReport.getEnrollmentId());
         values.put(MeasurementTables.EventReportContract.STATUS, eventReport.getStatus());
+        values.put(
+                MeasurementTables.EventReportContract.DEBUG_REPORT_STATUS,
+                eventReport.getDebugReportStatus());
         values.put(MeasurementTables.EventReportContract.REPORT_TIME, eventReport.getReportTime());
         values.put(MeasurementTables.EventReportContract.TRIGGER_PRIORITY,
                 eventReport.getTriggerPriority());
@@ -699,13 +767,15 @@ class MeasurementDao implements IMeasurementDao {
                         Locale.ENGLISH,
                         "SELECT COUNT(DISTINCT %1$s) FROM %2$s "
                                 + "WHERE %3$s AND %4$s = ? AND %5$s = ? AND %1$s != ? "
-                                + "AND %6$s > ? AND %6$s <= ?",
+                                + "AND %6$s > ? AND %6$s <= ?"
+                                + "AND %7$s > ?",
                         destinationColumn,
                         MeasurementTables.SourceContract.TABLE,
                         getPublisherWhereStatement(publisher, publisherType),
                         MeasurementTables.SourceContract.ENROLLMENT_ID,
                         MeasurementTables.SourceContract.STATUS,
-                        MeasurementTables.SourceContract.EVENT_TIME);
+                        MeasurementTables.SourceContract.EVENT_TIME,
+                        MeasurementTables.SourceContract.EXPIRY_TIME);
         return (int) DatabaseUtils.longForQuery(
                 mSQLTransaction.getDatabase(),
                 query,
@@ -714,6 +784,7 @@ class MeasurementDao implements IMeasurementDao {
                         String.valueOf(Source.Status.ACTIVE),
                         excludedDestination.toString(),
                         String.valueOf(windowStartTime),
+                        String.valueOf(windowEndTime),
                         String.valueOf(windowEndTime) });
     }
 
@@ -726,13 +797,15 @@ class MeasurementDao implements IMeasurementDao {
                         Locale.ENGLISH,
                         "SELECT COUNT(DISTINCT %1$s) FROM %2$s "
                                 + "WHERE %3$s AND (%4$s = ? OR %5$s = ?) AND %1s != ? "
-                                + "AND %6$s > ? AND %6$s <= ?",
+                                + "AND %6$s > ? AND %6$s <= ?"
+                                + "AND %7$s > ?",
                         MeasurementTables.SourceContract.ENROLLMENT_ID,
                         MeasurementTables.SourceContract.TABLE,
                         getPublisherWhereStatement(publisher, publisherType),
                         MeasurementTables.SourceContract.APP_DESTINATION,
                         MeasurementTables.SourceContract.WEB_DESTINATION,
-                        MeasurementTables.SourceContract.EVENT_TIME);
+                        MeasurementTables.SourceContract.EVENT_TIME,
+                        MeasurementTables.SourceContract.EXPIRY_TIME);
         return (int)
                 DatabaseUtils.longForQuery(
                         mSQLTransaction.getDatabase(),
@@ -742,6 +815,7 @@ class MeasurementDao implements IMeasurementDao {
                             destination.toString(),
                             excludedEnrollmentId,
                             String.valueOf(windowStartTime),
+                            String.valueOf(windowEndTime),
                             String.valueOf(windowEndTime)
                         });
     }
@@ -1238,45 +1312,54 @@ class MeasurementDao implements IMeasurementDao {
     public void doInstallAttribution(Uri uri, long eventTimestamp) throws DatastoreException {
         SQLiteDatabase db = mSQLTransaction.getDatabase();
 
-        SQLiteQueryBuilder sqb = new SQLiteQueryBuilder();
-        sqb.setTables(MeasurementTables.SourceContract.TABLE);
-        // Sub query for selecting relevant source ids.
-        // Selecting the highest priority, most recent source with eventTimestamp falling in the
-        // source's install attribution window.
-        String subQuery =
-                sqb.buildQuery(
-                        new String[] {MeasurementTables.SourceContract.ID},
-                        String.format(
-                                Locale.ENGLISH,
-                                MeasurementTables.SourceContract.APP_DESTINATION
-                                        + " = %1$s AND "
-                                        + MeasurementTables.SourceContract.EVENT_TIME
-                                        + " <= %2$d AND "
-                                        + MeasurementTables.SourceContract.EXPIRY_TIME
-                                        + " > %2$d AND "
-                                        + MeasurementTables.SourceContract.EVENT_TIME
+        String whereString =
+                String.format(
+                        Locale.ENGLISH,
+                        mergeConditions(
+                                " AND ",
+                                MeasurementTables.SourceContract.APP_DESTINATION + " = %1$s",
+                                MeasurementTables.SourceContract.EVENT_TIME + " <= %2$d",
+                                MeasurementTables.SourceContract.EXPIRY_TIME + " > %2$d",
+                                MeasurementTables.SourceContract.EVENT_TIME
                                         + " + "
                                         + MeasurementTables.SourceContract
                                                 .INSTALL_ATTRIBUTION_WINDOW
-                                        + " >= %2$d AND "
-                                        + MeasurementTables.SourceContract.STATUS
-                                        + " = %3$d",
-                                DatabaseUtils.sqlEscapeString(uri.toString()),
-                                eventTimestamp,
-                                Source.Status.ACTIVE),
-                        /* groupBy= */ null,
-                        /* having= */ null,
-                        /* sortOrder= */ MeasurementTables.SourceContract.PRIORITY
-                                + " DESC, "
-                                + MeasurementTables.SourceContract.EVENT_TIME
-                                + " DESC",
-                        /* limit = */ "1");
+                                        + " >= %2$d",
+                                MeasurementTables.SourceContract.STATUS + " = %3$d"),
+                        DatabaseUtils.sqlEscapeString(uri.toString()),
+                        eventTimestamp,
+                        Source.Status.ACTIVE);
+
+        // Will generate the records that we are interested in
+        String filterQuery =
+                String.format(
+                        Locale.ENGLISH,
+                        " ( SELECT * from %1$s WHERE %2$s )",
+                        MeasurementTables.SourceContract.TABLE,
+                        whereString);
+
+        // The inner query picks the top record based on priority and recency order after applying
+        // the filter. But first_value generates one value per partition but applies to all the rows
+        // that input has, so we have to nest it with distinct in order to get unique source_ids.
+        String sourceIdsProjection =
+                String.format(
+                        Locale.ENGLISH,
+                        "SELECT DISTINCT(first_source_id) from "
+                                + "(SELECT first_value(%1$s) "
+                                + "OVER (PARTITION BY %2$s ORDER BY %3$s DESC, %4$s DESC) "
+                                + "first_source_id FROM %5$s)",
+                        MeasurementTables.SourceContract.ID,
+                        MeasurementTables.SourceContract.ENROLLMENT_ID,
+                        MeasurementTables.SourceContract.PRIORITY,
+                        MeasurementTables.SourceContract.EVENT_TIME,
+                        filterQuery);
 
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.SourceContract.IS_INSTALL_ATTRIBUTED, true);
-        db.update(MeasurementTables.SourceContract.TABLE,
+        db.update(
+                MeasurementTables.SourceContract.TABLE,
                 values,
-                MeasurementTables.SourceContract.ID + " IN (" + subQuery + ")",
+                MeasurementTables.SourceContract.ID + " IN (" + sourceIdsProjection + ")",
                 null);
     }
 
@@ -1367,6 +1450,9 @@ class MeasurementDao implements IMeasurementDao {
                 aggregateReport.getDebugCleartextPayload());
         values.put(MeasurementTables.AggregateReport.STATUS,
                 aggregateReport.getStatus());
+        values.put(
+                MeasurementTables.AggregateReport.DEBUG_REPORT_STATUS,
+                aggregateReport.getDebugReportStatus());
         values.put(MeasurementTables.AggregateReport.API_VERSION,
                 aggregateReport.getApiVersion());
         values.put(
@@ -1399,8 +1485,35 @@ class MeasurementDao implements IMeasurementDao {
                         String.valueOf(AggregateReport.Status.PENDING)},
                 /*groupBy=*/null, /*having=*/null, /*orderBy=*/"RANDOM()", /*limit=*/null)) {
             while (cursor.moveToNext()) {
-                aggregateReports.add(cursor.getString(cursor.getColumnIndex(
-                        MeasurementTables.EventReportContract.ID)));
+                aggregateReports.add(
+                        cursor.getString(
+                                cursor.getColumnIndex(MeasurementTables.AggregateReport.ID)));
+            }
+            return aggregateReports;
+        }
+    }
+
+    @Override
+    public List<String> getPendingAggregateDebugReportIds() throws DatastoreException {
+        List<String> aggregateReports = new ArrayList<>();
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                MeasurementTables.AggregateReport.TABLE,
+                                /*columns=*/ null,
+                                MeasurementTables.AggregateReport.DEBUG_REPORT_STATUS + " = ? ",
+                                new String[] {
+                                    String.valueOf(AggregateReport.DebugReportStatus.PENDING)
+                                },
+                                /*groupBy=*/ null,
+                                /*having=*/ null,
+                                /*orderBy=*/ "RANDOM()",
+                                /*limit=*/ null)) {
+            while (cursor.moveToNext()) {
+                aggregateReports.add(
+                        cursor.getString(
+                                cursor.getColumnIndex(MeasurementTables.AggregateReport.ID)));
             }
             return aggregateReports;
         }

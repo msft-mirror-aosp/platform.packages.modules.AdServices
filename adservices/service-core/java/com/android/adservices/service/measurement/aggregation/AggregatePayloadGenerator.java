@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.aggregation;
 
+import com.android.adservices.service.measurement.FilterData;
 import com.android.adservices.service.measurement.util.Filter;
 
 import java.math.BigInteger;
@@ -44,12 +45,12 @@ public class AggregatePayloadGenerator {
     public static Optional<List<AggregateHistogramContribution>> generateAttributionReport(
             AggregatableAttributionSource attributionSource,
             AggregatableAttributionTrigger attributionTrigger) {
-        AggregateFilterData sourceFilterData = attributionSource.getAggregateFilterData();
+        FilterData sourceFilterData = attributionSource.getFilterData();
         Map<String, BigInteger> aggregateSourceMap =
                 attributionSource.getAggregatableSource();
         for (AggregateTriggerData triggerData : attributionTrigger.getTriggerData()) {
-            Optional<AggregateFilterData> filterData = triggerData.getFilter();
-            Optional<AggregateFilterData> notFilterData = triggerData.getNotFilter();
+            Optional<FilterData> filterData = triggerData.getFilter();
+            Optional<FilterData> notFilterData = triggerData.getNotFilter();
             // Skip this trigger data when filter doesn't match.
             if (filterData.isPresent()
                     && !Filter.isFilterMatch(sourceFilterData, filterData.get(), true)) {

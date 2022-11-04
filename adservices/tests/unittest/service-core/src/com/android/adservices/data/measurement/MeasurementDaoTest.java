@@ -22,6 +22,7 @@ import static com.android.adservices.data.measurement.MeasurementTables.EventRep
 import static com.android.adservices.data.measurement.MeasurementTables.MSMT_TABLE_PREFIX;
 import static com.android.adservices.data.measurement.MeasurementTables.SourceContract;
 import static com.android.adservices.data.measurement.MeasurementTables.TriggerContract;
+import static com.android.adservices.service.measurement.PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -94,7 +95,7 @@ public class MeasurementDaoTest {
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Uri APP_TWO_SOURCES = Uri.parse("android-app://com.example1.two-sources");
     private static final Uri APP_ONE_SOURCE = Uri.parse("android-app://com.example2.one-source");
-    private static final Uri APP_NO_SOURCE = Uri.parse("android-app://com.example3.no-sources");
+    private static final String DEFAULT_ENROLLMENT_ID = "enrollment-id";
     private static final Uri APP_TWO_PUBLISHER =
             Uri.parse("android-app://com.publisher2.two-sources");
     private static final Uri APP_ONE_PUBLISHER =
@@ -161,7 +162,7 @@ public class MeasurementDaoTest {
             assertEquals(validSource.getInstallCooldownWindow(), source.getInstallCooldownWindow());
             assertEquals(validSource.getAttributionMode(), source.getAttributionMode());
             assertEquals(validSource.getAggregateSource(), source.getAggregateSource());
-            assertEquals(validSource.getAggregateFilterData(), source.getAggregateFilterData());
+            assertEquals(validSource.getFilterData(), source.getFilterData());
             assertEquals(validSource.getAggregateContributions(),
                     source.getAggregateContributions());
         }
@@ -487,6 +488,38 @@ public class MeasurementDaoTest {
                         4, true, true, 4500000001L, publisher,
                         SourceFixture.ValidSourceParams.ENROLLMENT_ID, Source.Status.ACTIVE);
         for (Source source : activeSourcesWithAppAndWebDestinations) {
+            insertSource(source);
+        }
+        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
+        Uri excludedDestination = Uri.parse("https://web-destination-2.com");
+        datastoreManager.runInTransaction(
+                measurementDao -> {
+                    assertEquals(
+                            Integer.valueOf(3),
+                            measurementDao
+                                    .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                                            publisher, EventSurfaceType.APP,
+                                            SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                                            excludedDestination, EventSurfaceType.WEB,
+                                            4500000000L, 6000000000L));
+                });
+    }
+
+    @Test
+    public void testCountDistinctDestinationsPerPublisherInActiveSource_expiredSource() {
+        Uri publisher = Uri.parse("android-app://publisher.app");
+        List<Source> activeSourcesWithAppAndWebDestinations =
+                getSourcesWithDifferentDestinations(
+                        4, true, true, 4500000001L, publisher,
+                        SourceFixture.ValidSourceParams.ENROLLMENT_ID, Source.Status.ACTIVE);
+        List<Source> expiredSourcesWithAppAndWebDestinations =
+                getSourcesWithDifferentDestinations(
+                        6, true, true, 4500000001L, 6000000000L, publisher,
+                        SourceFixture.ValidSourceParams.ENROLLMENT_ID, Source.Status.ACTIVE);
+        for (Source source : activeSourcesWithAppAndWebDestinations) {
+            insertSource(source);
+        }
+        for (Source source : expiredSourcesWithAppAndWebDestinations) {
             insertSource(source);
         }
         DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
@@ -847,6 +880,37 @@ public class MeasurementDaoTest {
     }
 
     @Test
+    public void testCountDistinctEnrollmentsPerPublisherXDestinationInSource_expiredSource() {
+        Uri publisher = Uri.parse("android-app://publisher.app");
+        Uri webDestination = Uri.parse("https://web-destination.com");
+        Uri appDestination = Uri.parse("android-app://destination.app");
+        List<Source> activeSourcesWithAppAndWebDestinations =
+                getSourcesWithDifferentEnrollments(
+                        2, appDestination, webDestination, 4500000001L, publisher,
+                        Source.Status.ACTIVE);
+        List<Source> expiredSourcesWithAppAndWebDestinations =
+                getSourcesWithDifferentEnrollments(
+                        4, appDestination, webDestination, 4500000000L, 6000000000L,
+                        publisher, Source.Status.ACTIVE);
+        for (Source source : activeSourcesWithAppAndWebDestinations) {
+            insertSource(source);
+        }
+        for (Source source : expiredSourcesWithAppAndWebDestinations) {
+            insertSource(source);
+        }
+        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
+        String excludedEnrollmentId = "enrollment-id-1";
+        datastoreManager.runInTransaction(
+                measurementDao -> {
+                    assertEquals(
+                            Integer.valueOf(1),
+                            measurementDao.countDistinctEnrollmentsPerPublisherXDestinationInSource(
+                                    publisher, EventSurfaceType.APP, appDestination,
+                                    excludedEnrollmentId, 4500000000L, 6000000000L));
+                });
+    }
+
+    @Test
     public void testCountDistinctEnrollmentsPerPublisherXDestinationInSource_appDestination() {
         Uri publisher = Uri.parse("android-app://publisher.app");
         Uri webDestination = Uri.parse("https://web-destination.com");
@@ -953,10 +1017,12 @@ public class MeasurementDaoTest {
         SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
         Objects.requireNonNull(db);
         AbstractDbIntegrationTest.insertToDb(
-                createSourceForIATest("IA1", currentTimestamp, 100, -1, false),
+                createSourceForIATest(
+                        "IA1", currentTimestamp, 100, -1, false, DEFAULT_ENROLLMENT_ID),
                 db);
         AbstractDbIntegrationTest.insertToDb(
-                createSourceForIATest("IA2", currentTimestamp, 50, -1, false),
+                createSourceForIATest(
+                        "IA2", currentTimestamp, 50, -1, false, DEFAULT_ENROLLMENT_ID),
                 db);
         // Should select id IA1 because it has higher priority
         assertTrue(
@@ -977,10 +1043,11 @@ public class MeasurementDaoTest {
         SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
         Objects.requireNonNull(db);
         AbstractDbIntegrationTest.insertToDb(
-                createSourceForIATest("IA1", currentTimestamp, -1, 10, false),
+                createSourceForIATest(
+                        "IA1", currentTimestamp, -1, 10, false, DEFAULT_ENROLLMENT_ID),
                 db);
         AbstractDbIntegrationTest.insertToDb(
-                createSourceForIATest("IA2", currentTimestamp, -1, 5, false),
+                createSourceForIATest("IA2", currentTimestamp, -1, 5, false, DEFAULT_ENROLLMENT_ID),
                 db);
         // Should select id=IA2 as it is latest
         assertTrue(
@@ -1002,10 +1069,11 @@ public class MeasurementDaoTest {
         SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
         Objects.requireNonNull(db);
         AbstractDbIntegrationTest.insertToDb(
-                createSourceForIATest("IA1", currentTimestamp, -1, 10, false),
+                createSourceForIATest(
+                        "IA1", currentTimestamp, -1, 10, false, DEFAULT_ENROLLMENT_ID),
                 db);
         AbstractDbIntegrationTest.insertToDb(
-                createSourceForIATest("IA2", currentTimestamp, -1, 5, false),
+                createSourceForIATest("IA2", currentTimestamp, -1, 5, false, DEFAULT_ENROLLMENT_ID),
                 db);
         // Should select id=IA1 as it is the only valid choice.
         // id=IA2 is newer than the evenTimestamp of install event.
@@ -1029,10 +1097,10 @@ public class MeasurementDaoTest {
         SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
         Objects.requireNonNull(db);
         AbstractDbIntegrationTest.insertToDb(
-                createSourceForIATest("IA1", currentTimestamp, 10, 10, true),
+                createSourceForIATest("IA1", currentTimestamp, 10, 10, true, DEFAULT_ENROLLMENT_ID),
                 db);
         AbstractDbIntegrationTest.insertToDb(
-                createSourceForIATest("IA2", currentTimestamp, 10, 11, true),
+                createSourceForIATest("IA2", currentTimestamp, 10, 11, true, DEFAULT_ENROLLMENT_ID),
                 db);
         // Should not update any sources.
         assertTrue(
@@ -1051,7 +1119,9 @@ public class MeasurementDaoTest {
         long currentTimestamp = System.currentTimeMillis();
         SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
         Objects.requireNonNull(db);
-        Source source = createSourceForIATest("IA1", currentTimestamp, 100, -1, false);
+        Source source =
+                createSourceForIATest(
+                        "IA1", currentTimestamp, 100, -1, false, DEFAULT_ENROLLMENT_ID);
 
         // Execution
         // Active source should get install attributed
@@ -1089,6 +1159,90 @@ public class MeasurementDaoTest {
                                                 INSTALLED_PACKAGE, currentTimestamp)));
         assertFalse(getInstallAttributionStatus("IA1", db));
         removeSources(Collections.singletonList("IA1"), db);
+    }
+
+    @Test
+    public void doInstallAttribution_withSourcesAcrossEnrollments_marksOneInstallFromEachAdTech() {
+        long currentTimestamp = System.currentTimeMillis();
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+
+        // Enrollment1: Choose IA2 because that's newer and still occurred before install
+        AbstractDbIntegrationTest.insertToDb(
+                createSourceForIATest(
+                        "IA1", currentTimestamp, -1, 10, false, DEFAULT_ENROLLMENT_ID + "_1"),
+                db);
+        AbstractDbIntegrationTest.insertToDb(
+                createSourceForIATest(
+                        "IA2", currentTimestamp, -1, 9, false, DEFAULT_ENROLLMENT_ID + "_1"),
+                db);
+
+        // Enrollment2: Choose IA4 because IA3's install attribution window has expired
+        AbstractDbIntegrationTest.insertToDb(
+                createSourceForIATest(
+                        "IA3", currentTimestamp, -1, 10, true, DEFAULT_ENROLLMENT_ID + "_2"),
+                db);
+        AbstractDbIntegrationTest.insertToDb(
+                createSourceForIATest(
+                        "IA4", currentTimestamp, -1, 9, false, DEFAULT_ENROLLMENT_ID + "_2"),
+                db);
+
+        // Enrollment3: Choose IA5 because IA6 was registered after install event
+        AbstractDbIntegrationTest.insertToDb(
+                createSourceForIATest(
+                        "IA5", currentTimestamp, -1, 10, false, DEFAULT_ENROLLMENT_ID + "_3"),
+                db);
+        AbstractDbIntegrationTest.insertToDb(
+                createSourceForIATest(
+                        "IA6", currentTimestamp, -1, 5, false, DEFAULT_ENROLLMENT_ID + "_3"),
+                db);
+
+        // Enrollment4: Choose IA8 due to higher priority
+        AbstractDbIntegrationTest.insertToDb(
+                createSourceForIATest(
+                        "IA7", currentTimestamp, 5, 10, false, DEFAULT_ENROLLMENT_ID + "_4"),
+                db);
+        AbstractDbIntegrationTest.insertToDb(
+                createSourceForIATest(
+                        "IA8", currentTimestamp, 10, 10, false, DEFAULT_ENROLLMENT_ID + "_4"),
+                db);
+
+        // Enrollment5: Choose none because both sources are ineligible
+        // Expired install attribution window
+        AbstractDbIntegrationTest.insertToDb(
+                createSourceForIATest(
+                        "IA9", currentTimestamp, 5, 31, true, DEFAULT_ENROLLMENT_ID + "_5"),
+                db);
+        // Registered after install attribution
+        AbstractDbIntegrationTest.insertToDb(
+                createSourceForIATest(
+                        "IA10", currentTimestamp, 10, 3, false, DEFAULT_ENROLLMENT_ID + "_5"),
+                db);
+
+        assertTrue(
+                DatastoreManagerFactory.getDatastoreManager(sContext)
+                        .runInTransaction(
+                                measurementDao -> {
+                                    measurementDao.doInstallAttribution(
+                                            INSTALLED_PACKAGE,
+                                            currentTimestamp - TimeUnit.DAYS.toMillis(7));
+                                }));
+        assertTrue(getInstallAttributionStatus("IA2", db));
+        assertTrue(getInstallAttributionStatus("IA4", db));
+        assertTrue(getInstallAttributionStatus("IA5", db));
+        assertTrue(getInstallAttributionStatus("IA8", db));
+
+        assertFalse(getInstallAttributionStatus("IA1", db));
+        assertFalse(getInstallAttributionStatus("IA3", db));
+        assertFalse(getInstallAttributionStatus("IA6", db));
+        assertFalse(getInstallAttributionStatus("IA7", db));
+        assertFalse(getInstallAttributionStatus("IA9", db));
+        assertFalse(getInstallAttributionStatus("IA10", db));
+
+        removeSources(
+                Arrays.asList(
+                        "IA1", "IA2", "IA3", "IA4", "IA5", "IA6", "IA7", "IA8", "IA8", "IA10"),
+                db);
     }
 
     @Test
@@ -1345,7 +1499,9 @@ public class MeasurementDaoTest {
         long currentTimestamp = System.currentTimeMillis();
         SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
         Objects.requireNonNull(db);
-        Source source = createSourceForIATest("IA1", currentTimestamp, 10, 10, false);
+        Source source =
+                createSourceForIATest(
+                        "IA1", currentTimestamp, 10, 10, false, DEFAULT_ENROLLMENT_ID);
         source.setInstallAttributed(true);
         AbstractDbIntegrationTest.insertToDb(source, db);
         assertTrue(
@@ -2983,12 +3139,35 @@ public class MeasurementDaoTest {
             Uri publisher,
             String enrollmentId,
             @Source.Status int sourceStatus) {
+        long expiryTime = eventTime + TimeUnit.SECONDS.toMillis(
+                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+        return getSourcesWithDifferentDestinations(
+                numSources,
+                hasAppDestination,
+                hasWebDestination,
+                eventTime,
+                expiryTime,
+                publisher,
+                enrollmentId,
+                sourceStatus);
+    }
+
+    private static List<Source> getSourcesWithDifferentDestinations(
+            int numSources,
+            boolean hasAppDestination,
+            boolean hasWebDestination,
+            long eventTime,
+            long expiryTime,
+            Uri publisher,
+            String enrollmentId,
+            @Source.Status int sourceStatus) {
         List<Source> sources = new ArrayList<>();
         for (int i = 0; i < numSources; i++) {
             Source.Builder sourceBuilder =
                     new Source.Builder()
                             .setEventId(new UnsignedLong(0L))
                             .setEventTime(eventTime)
+                            .setExpiryTime(expiryTime)
                             .setPublisher(publisher)
                             .setEnrollmentId(enrollmentId)
                             .setRegistrant(SourceFixture.ValidSourceParams.REGISTRANT)
@@ -3013,12 +3192,33 @@ public class MeasurementDaoTest {
             long eventTime,
             Uri publisher,
             @Source.Status int sourceStatus) {
+        long expiryTime = eventTime + TimeUnit.SECONDS.toMillis(
+                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+        return getSourcesWithDifferentEnrollments(
+            numSources,
+            appDestination,
+            webDestination,
+            eventTime,
+            expiryTime,
+            publisher,
+            sourceStatus);
+    }
+
+    private static List<Source> getSourcesWithDifferentEnrollments(
+            int numSources,
+            Uri appDestination,
+            Uri webDestination,
+            long eventTime,
+            long expiryTime,
+            Uri publisher,
+            @Source.Status int sourceStatus) {
         List<Source> sources = new ArrayList<>();
         for (int i = 0; i < numSources; i++) {
             Source.Builder sourceBuilder =
                     new Source.Builder()
                             .setEventId(new UnsignedLong(0L))
                             .setEventTime(eventTime)
+                            .setExpiryTime(expiryTime)
                             .setPublisher(publisher)
                             .setRegistrant(SourceFixture.ValidSourceParams.REGISTRANT)
                             .setStatus(sourceStatus)
@@ -3120,7 +3320,7 @@ public class MeasurementDaoTest {
         values.put(SourceContract.INSTALL_COOLDOWN_WINDOW, source.getInstallCooldownWindow());
         values.put(SourceContract.ATTRIBUTION_MODE, source.getAttributionMode());
         values.put(SourceContract.AGGREGATE_SOURCE, source.getAggregateSource());
-        values.put(SourceContract.FILTER_DATA, source.getAggregateFilterData());
+        values.put(SourceContract.FILTER_DATA, source.getFilterData());
         values.put(SourceContract.AGGREGATE_CONTRIBUTIONS, 0);
         long row = db.insert("msmt_source", null, values);
         assertNotEquals("Source insertion failed", -1, row);
@@ -4032,13 +4232,18 @@ public class MeasurementDaoTest {
         }
     }
 
-    private Source createSourceForIATest(String id, long currentTime, long priority,
-            int eventTimePastDays, boolean expiredIAWindow) {
+    private Source createSourceForIATest(
+            String id,
+            long currentTime,
+            long priority,
+            int eventTimePastDays,
+            boolean expiredIAWindow,
+            String enrollmentId) {
         return new Source.Builder()
                 .setId(id)
                 .setPublisher(Uri.parse("android-app://com.example.sample"))
                 .setRegistrant(Uri.parse("android-app://com.example.sample"))
-                .setEnrollmentId("enrollment-id")
+                .setEnrollmentId(enrollmentId)
                 .setExpiryTime(currentTime + TimeUnit.DAYS.toMillis(30))
                 .setInstallAttributionWindow(TimeUnit.DAYS.toMillis(expiredIAWindow ? 0 : 30))
                 .setAppDestination(INSTALLED_PACKAGE)

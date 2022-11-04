@@ -252,8 +252,8 @@ public abstract class E2ETest {
         return getTestCasesFrom(inputStreams, testDirectoryList);
     }
 
-    public static Map<String, List<Map<String, List<String>>>>
-            getUriToResponseHeadersMap(JSONObject obj) throws JSONException {
+    public static Map<String, List<Map<String, List<String>>>> getUriToResponseHeadersMap(
+            JSONObject obj) throws JSONException {
         JSONArray uriToResArray = obj.getJSONArray(
                 TestFormatJsonMapping.URI_TO_RESPONSE_HEADERS_KEY);
         Map<String, List<Map<String, List<String>>>> uriToResponseHeadersMap = new HashMap<>();
@@ -318,10 +318,11 @@ public abstract class E2ETest {
     }
 
     static String getReportUrl(ReportType reportType, String origin) {
-        return origin + "/" + (
-                reportType == ReportType.EVENT
-                ? EVENT_ATTRIBUTION_REPORT_URI_PATH
-                : AGGREGATE_ATTRIBUTION_REPORT_URI_PATH);
+        return origin
+                + "/"
+                + (reportType == ReportType.EVENT
+                        ? EVENT_ATTRIBUTION_REPORT_URI_PATH
+                        : AGGREGATE_ATTRIBUTION_REPORT_URI_PATH);
     }
 
     static void clearDatabase() {
@@ -516,7 +517,7 @@ public abstract class E2ETest {
                 // Report time can vary across implementations so cannot be included in the hash;
                 // they should be similarly ordered, however, so we can use them to sort.
                 Comparator.comparing(E2ETest::reportTimeFrom)
-                .thenComparing(obj -> hashForEventReportObject(outputType, obj)));
+                        .thenComparing(obj -> hashForEventReportObject(outputType, obj)));
     }
 
     private static void sortAggregateReportObjects(OutputType outputType,
@@ -552,14 +553,21 @@ public abstract class E2ETest {
 
     private static String getTestFailureMessage(ReportObjects expectedOutput,
             ReportObjects actualOutput) {
-        return String.format("Actual output does not match expected.\n\n"
-                + "(Note that displayed randomized_trigger_rate and report_url are not normalised."
-                + "\nNote that report IDs are ignored in comparisons since they are not known in"
-                + " advance.)\n\nEvent report objects:\n%s\n\n"
-                + "Expected aggregate report objects: %s\n\n"
-                + "Actual aggregate report objects: %s\n",
-                prettify(expectedOutput.mEventReportObjects, actualOutput.mEventReportObjects),
-                expectedOutput.mAggregateReportObjects, actualOutput.mAggregateReportObjects)
+        return String.format(
+                        "Actual output does not match expected.\n\n"
+                            + "(Note that displayed randomized_trigger_rate and report_url are not"
+                            + " normalised.\n"
+                            + "Note that report IDs are ignored in comparisons since they are not"
+                            + " known in advance.)\n\n"
+                            + "Event report objects:\n"
+                            + "%s\n\n"
+                            + "Expected aggregate report objects: %s\n\n"
+                            + "Actual aggregate report objects: %s\n",
+                        prettify(
+                                expectedOutput.mEventReportObjects,
+                                actualOutput.mEventReportObjects),
+                        expectedOutput.mAggregateReportObjects,
+                        actualOutput.mAggregateReportObjects)
                 + getDatastoreState();
     }
 
@@ -630,13 +638,15 @@ public abstract class E2ETest {
     protected static String getDatastoreState() {
         StringBuilder result = new StringBuilder();
         SQLiteDatabase db = DbTestUtil.getDbHelperForTest().getWritableDatabase();
-        List<String> tableNames = ImmutableList.of(
-                "msmt_source",
-                "msmt_trigger",
-                "msmt_attribution",
-                "msmt_event_report",
-                "msmt_aggregate_report",
-                "enrollment_data");
+        List<String> tableNames =
+                ImmutableList.of(
+                        "msmt_source",
+                        "msmt_trigger",
+                        "msmt_attribution",
+                        "msmt_event_report",
+                        "msmt_aggregate_report",
+                        "enrollment_data",
+                        "msmt_async_registration_contract");
         for (String tableName : tableNames) {
             result.append("\n" + tableName + ":\n");
             result.append(getTableState(db, tableName));
@@ -700,6 +710,7 @@ public abstract class E2ETest {
                 validExpiry = PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
             }
             long jobTime = sourceTime + 1000 * validExpiry + 3600000L;
+
             reportingJobsActions.add(new EventReportingJob(jobTime));
         }
 
@@ -902,6 +913,7 @@ public abstract class E2ETest {
         db.delete("msmt_attribution", null, null);
         db.delete("msmt_aggregate_report", null, null);
         db.delete("enrollment_data", null, null);
+        db.delete("msmt_async_registration_contract", null, null);
     }
 
     abstract void processAction(RegisterSource sourceRegistration) throws IOException;
