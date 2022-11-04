@@ -18,11 +18,12 @@ package android.adservices.adselection;
 
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
-import android.adservices.common.AdSelectionSignals;
 import android.adservices.adselection.ReportImpressionInput;
 import android.adservices.adselection.AdSelectionInput;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.AdSelectionOverrideCallback;
+import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.CallerMetadata;
 
 /**
   * This is the Ad Selection Service, which defines the interface used for the Ad selection workflow
@@ -65,7 +66,7 @@ interface AdSelectionService {
     *
     * {@hide}
     */
-    void runAdSelection(in AdSelectionInput request, in AdSelectionCallback callback);
+    void selectAds(in AdSelectionInput request, in CallerMetadata callerMetadata, in AdSelectionCallback callback);
 
     /**
     * Notifies PPAPI that there is a new impression to report for the

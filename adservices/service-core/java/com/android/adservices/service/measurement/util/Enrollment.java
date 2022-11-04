@@ -37,8 +37,9 @@ public final class Enrollment {
     public static Optional<String> maybeGetEnrollmentId(Uri registrationUri,
             EnrollmentDao enrollmentDao) {
         Uri uriWithoutParams = registrationUri.buildUpon().clearQuery().fragment(null).build();
-        EnrollmentData enrollmentData = enrollmentDao.getEnrollmentDataFromMeasurementUrl(
-                uriWithoutParams.toString());
+
+        EnrollmentData enrollmentData =
+                enrollmentDao.getEnrollmentDataFromMeasurementUrl(uriWithoutParams);
         if (enrollmentData != null && enrollmentData.getEnrollmentId() != null) {
             return Optional.of(enrollmentData.getEnrollmentId());
         }

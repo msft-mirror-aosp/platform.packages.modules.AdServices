@@ -24,6 +24,7 @@ import android.content.pm.ResolveInfo;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.UserHandle;
+import android.provider.DeviceConfig;
 import android.util.Log;
 
 import com.android.internal.annotations.VisibleForTesting;
@@ -57,19 +58,32 @@ public class AdServicesManagerService {
     private static final String PACKAGE_DATA_CLEARED = "package_data_cleared";
 
     private final Context mContext;
-    private final Handler mHandler;
+
+    private BroadcastReceiver mSystemServicePackageChangedReceiver;
+
+    private HandlerThread mHandlerThread;
+    private Handler mHandler;
+
+    // This will be triggered when there is a flag change.
+    private final DeviceConfig.OnPropertiesChangedListener mOnFlagsChangedListener =
+            properties -> {
+                if (!properties.getNamespace().equals(DeviceConfig.NAMESPACE_ADSERVICES)) {
+                    return;
+                }
+                registerPackagedChangedBroadcastReceivers();
+            };
 
     @VisibleForTesting
     AdServicesManagerService(Context context) {
         mContext = context;
 
-        // Start the handler thread.
-        HandlerThread handlerThread = new HandlerThread("AdServicesManagerServiceHandler");
-        handlerThread.start();
-        mHandler = new Handler(handlerThread.getLooper());
+        DeviceConfig.addOnPropertiesChangedListener(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                mContext.getMainExecutor(),
+                mOnFlagsChangedListener);
+
         registerPackagedChangedBroadcastReceivers();
     }
-
 
     /** @hide */
     public static class Lifecycle extends SystemService {
@@ -93,28 +107,62 @@ public class AdServicesManagerService {
      * the device at boot up. After receiving the broadcast, send an explicit broadcast to the
      * AdServices module as that user.
      */
-    private void registerPackagedChangedBroadcastReceivers() {
-        final IntentFilter packageChangedIntentFilter = new IntentFilter();
+    @VisibleForTesting
+    void registerPackagedChangedBroadcastReceivers() {
+        // There could be race condition between registerPackagedChangedBroadcastReceivers call
+        // in the AdServicesManagerService constructor and the mOnFlagsChangedListener.
+        synchronized (AdServicesManagerService.class) {
+            if (FlagsFactory.getFlags().getAdServicesSystemServiceEnabled()) {
+                if (mSystemServicePackageChangedReceiver != null) {
+                    // We already register the receiver.
+                    Log.d(TAG, "SystemServicePackageChangedReceiver is already registered.");
+                    return;
+                }
 
-        packageChangedIntentFilter.addAction(Intent.ACTION_PACKAGE_FULLY_REMOVED);
-        packageChangedIntentFilter.addAction(Intent.ACTION_PACKAGE_DATA_CLEARED);
-        packageChangedIntentFilter.addAction(Intent.ACTION_PACKAGE_ADDED);
-        packageChangedIntentFilter.addDataScheme("package");
+                // mSystemServicePackageChangedReceiver == null
+                // We haven't registered the receiver.
+                // Start the handler thread.
+                mHandlerThread = new HandlerThread("AdServicesManagerServiceHandler");
+                mHandlerThread.start();
+                mHandler = new Handler(mHandlerThread.getLooper());
 
-        BroadcastReceiver systemServicePackageChangedReceiver =
-                new BroadcastReceiver() {
-                    @Override
-                    public void onReceive(Context context, Intent intent) {
-                        UserHandle user = getSendingUser();
-                        mHandler.post(() -> onPackageChange(intent, user));
-                    }
-                };
-        mContext.registerReceiverForAllUsers(
-                systemServicePackageChangedReceiver,
-                packageChangedIntentFilter,
-                /* broadcastPermission */ null,
-                mHandler);
-        Log.d(TAG, "Package changed broadcast receivers registered.");
+                final IntentFilter packageChangedIntentFilter = new IntentFilter();
+
+                packageChangedIntentFilter.addAction(Intent.ACTION_PACKAGE_FULLY_REMOVED);
+                packageChangedIntentFilter.addAction(Intent.ACTION_PACKAGE_DATA_CLEARED);
+                packageChangedIntentFilter.addAction(Intent.ACTION_PACKAGE_ADDED);
+                packageChangedIntentFilter.addDataScheme("package");
+
+                mSystemServicePackageChangedReceiver =
+                        new BroadcastReceiver() {
+                            @Override
+                            public void onReceive(Context context, Intent intent) {
+                                UserHandle user = getSendingUser();
+                                mHandler.post(() -> onPackageChange(intent, user));
+                            }
+                        };
+                mContext.registerReceiverForAllUsers(
+                        mSystemServicePackageChangedReceiver,
+                        packageChangedIntentFilter,
+                        /* broadcastPermission */ null,
+                        mHandler);
+                Log.d(TAG, "Package changed broadcast receivers registered.");
+            } else {
+                // FlagsFactory.getFlags().getAdServicesSystemServiceEnabled() == false
+                Log.d(TAG, "AdServicesSystemServiceEnabled is FALSE.");
+
+                // If there is a SystemServicePackageChangeReceiver, unregister it.
+                if (mSystemServicePackageChangedReceiver != null) {
+                    Log.d(TAG, "Unregistering the existing SystemServicePackageChangeReceiver");
+                    mContext.unregisterReceiver(mSystemServicePackageChangedReceiver);
+                    mSystemServicePackageChangedReceiver = null;
+                    mHandlerThread.quitSafely();
+                    mHandler = null;
+                }
+
+                return;
+            }
+        }
     }
 
     /** Sends an explicit broadcast to the AdServices module when a package change occurs. */

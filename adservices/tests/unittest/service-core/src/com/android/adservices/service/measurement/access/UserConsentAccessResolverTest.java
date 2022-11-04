@@ -53,7 +53,7 @@ public class UserConsentAccessResolverTest {
     @Test
     public void isAllowed_consented_success() {
         // Setup
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent(mPackageManager);
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
 
         // Execution
         assertTrue(mClassUnderTest.isAllowed(mContext));
@@ -62,7 +62,7 @@ public class UserConsentAccessResolverTest {
     @Test
     public void isAllowed_notConsented_success() {
         // Setup
-        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManager).getConsent(mPackageManager);
+        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManager).getConsent();
 
         // Execution
         assertFalse(mClassUnderTest.isAllowed(mContext));

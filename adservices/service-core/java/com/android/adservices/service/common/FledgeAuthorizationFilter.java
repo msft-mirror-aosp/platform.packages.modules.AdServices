@@ -16,6 +16,10 @@
 
 package com.android.adservices.service.common;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
+
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
@@ -24,6 +28,7 @@ import android.content.pm.PackageManager;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.internal.annotations.VisibleForTesting;
@@ -83,8 +88,7 @@ public class FledgeAuthorizationFilter {
         }
 
         LogUtil.v("No match found, failing calling package name match in API %d", apiNameLoggingId);
-        mAdServicesLogger.logFledgeApiCallStats(
-                apiNameLoggingId, AdServicesStatusUtils.STATUS_UNAUTHORIZED);
+        mAdServicesLogger.logFledgeApiCallStats(apiNameLoggingId, STATUS_UNAUTHORIZED, 0);
         throw new CallerMismatchException();
     }
 
@@ -101,7 +105,7 @@ public class FledgeAuthorizationFilter {
         if (!PermissionHelper.hasCustomAudiencesPermission(context)) {
             LogUtil.v("Permission not declared by caller in API %d", apiNameLoggingId);
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiNameLoggingId, AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED);
+                    apiNameLoggingId, STATUS_PERMISSION_NOT_REQUESTED, 0);
             throw new SecurityException(
                     AdServicesStatusUtils
                             .SECURITY_EXCEPTION_PERMISSION_NOT_REQUESTED_ERROR_MESSAGE);
@@ -135,8 +139,7 @@ public class FledgeAuthorizationFilter {
             LogUtil.v(
                     "Enrollment data match not found for ad tech \"%s\" while calling API %d",
                     adTechIdentifier.toString(), apiNameLoggingId);
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiNameLoggingId, AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED);
+            mAdServicesLogger.logFledgeApiCallStats(apiNameLoggingId, STATUS_CALLER_NOT_ALLOWED, 0);
             throw new AdTechNotAllowedException();
         }
 
@@ -146,8 +149,17 @@ public class FledgeAuthorizationFilter {
                     "App package name \"%s\" with ad tech identifier \"%s\" not authorized to call"
                             + " API %d",
                     appPackageName, adTechIdentifier.toString(), apiNameLoggingId);
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiNameLoggingId, AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED);
+            mAdServicesLogger.logFledgeApiCallStats(apiNameLoggingId, STATUS_CALLER_NOT_ALLOWED, 0);
+            throw new AdTechNotAllowedException();
+        }
+
+        // Check if enrollment is in blocklist.
+        if (PhFlags.getInstance().isEnrollmentBlocklisted(enrollmentData.getEnrollmentId())) {
+            LogUtil.v(
+                    "App package name \"%s\" with ad tech identifier \"%s\" not authorized to call"
+                            + " API %d",
+                    appPackageName, adTechIdentifier.toString(), apiNameLoggingId);
+            mAdServicesLogger.logFledgeApiCallStats(apiNameLoggingId, STATUS_CALLER_NOT_ALLOWED, 0);
             throw new AdTechNotAllowedException();
         }
     }
