@@ -174,14 +174,20 @@ public class PackageChangedReceiverTest {
                         .strictness(Strictness.LENIENT)
                         .startMocking();
         try {
+            long epochId = 1;
+
             // Kill switch is off.
             doReturn(false).when(mMockFlags).getTopicsKillSwitch();
 
             // Mock static method FlagsFactory.getFlags() to return Mock Flags.
             when(FlagsFactory.getFlags()).thenReturn(mMockFlags);
 
+            // Enable TopicContributors feature
+            when(mMockEpochManager.supportsTopicContributorFeature()).thenReturn(true);
+
             // Stubbing TopicsWorker.getInstance() to return mocked TopicsWorker instance
             doReturn(mSpyTopicsWorker).when(() -> TopicsWorker.getInstance(any()));
+            doReturn(epochId).when(mMockEpochManager).getCurrentEpochId();
 
             // Initialize package receiver meant for Topics
             PackageChangedReceiver spyReceiver = createSpyPackageReceiverForTopics();
@@ -192,7 +198,9 @@ public class PackageChangedReceiverTest {
 
             // Verify method in AppUpdateManager is invoked
             // Note that only package name is passed into following methods.
-            verify(mMockAppUpdateManager).deleteAppDataByUri(eq(Uri.parse(SAMPLE_PACKAGE)));
+            verify(mMockEpochManager).getCurrentEpochId();
+            verify(mMockAppUpdateManager)
+                    .handleAppUninstallationInRealTime(Uri.parse(SAMPLE_PACKAGE), epochId);
         } finally {
             session.finishMocking();
         }
@@ -223,7 +231,7 @@ public class PackageChangedReceiverTest {
             Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
 
             // When the kill switch is on, there is no Topics related work.
-            verify(mSpyTopicsWorker, never()).deletePackageData(any());
+            verify(mSpyTopicsWorker, never()).handleAppUninstallation(any());
         } finally {
             session.finishMocking();
         }
@@ -456,7 +464,7 @@ public class PackageChangedReceiverTest {
             // Note that only package name is passed into following methods.
             verify(mMockEpochManager).getCurrentEpochId();
             verify(mMockAppUpdateManager)
-                    .assignTopicsToNewlyInstalledApps(eq(Uri.parse(SAMPLE_PACKAGE)), eq(epochId));
+                    .handleAppInstallationInRealTime(Uri.parse(SAMPLE_PACKAGE), epochId);
         } finally {
             session.finishMocking();
         }

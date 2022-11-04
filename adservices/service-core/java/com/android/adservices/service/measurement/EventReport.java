@@ -43,20 +43,32 @@ public class EventReport {
     private UnsignedLong mTriggerDedupKey;
     private double mRandomizedTriggerRate;
     private @Status int mStatus;
+    private @DebugReportStatus int mDebugReportStatus;
     private Source.SourceType mSourceType;
     @Nullable private UnsignedLong mSourceDebugKey;
     @Nullable private UnsignedLong mTriggerDebugKey;
     private String mSourceId;
     private String mTriggerId;
 
-    @IntDef(value = {
-            Status.PENDING,
-            Status.DELIVERED,
-    })
+    @IntDef(value = {Status.PENDING, Status.DELIVERED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
     public @interface Status {
         int PENDING = 0;
         int DELIVERED = 1;
+        int MARKED_TO_DELETE = 2;
+    }
+
+    @IntDef(
+            value = {
+                DebugReportStatus.NONE,
+                DebugReportStatus.PENDING,
+                DebugReportStatus.DELIVERED,
+            })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface DebugReportStatus {
+        int NONE = 0;
+        int PENDING = 1;
+        int DELIVERED = 2;
     }
 
     private EventReport() {
@@ -70,6 +82,7 @@ public class EventReport {
         }
         EventReport eventReport = (EventReport) obj;
         return mStatus == eventReport.mStatus
+                && mDebugReportStatus == eventReport.mDebugReportStatus
                 && mReportTime == eventReport.mReportTime
                 && Objects.equals(mAttributionDestination, eventReport.mAttributionDestination)
                 && Objects.equals(mEnrollmentId, eventReport.mEnrollmentId)
@@ -90,6 +103,7 @@ public class EventReport {
     public int hashCode() {
         return Objects.hash(
                 mStatus,
+                mDebugReportStatus,
                 mReportTime,
                 mAttributionDestination,
                 mEnrollmentId,
@@ -170,6 +184,11 @@ public class EventReport {
      */
     public @Status int getStatus() {
         return mStatus;
+    }
+
+    /** Current {@link DebugReportStatus} of the report. */
+    public @DebugReportStatus int getDebugReportStatus() {
+        return mDebugReportStatus;
     }
 
     /**
@@ -295,6 +314,12 @@ public class EventReport {
             return this;
         }
 
+        /** See {@link EventReport#getDebugReportStatus()} ()} */
+        public Builder setDebugReportStatus(@DebugReportStatus int debugReportStatus) {
+            mBuilding.mDebugReportStatus = debugReportStatus;
+            return this;
+        }
+
         /**
          * See {@link EventReport#getSourceType()}
          */
@@ -346,13 +371,17 @@ public class EventReport {
             mBuilding.mSourceEventId = source.getEventId();
             mBuilding.mEnrollmentId = source.getEnrollmentId();
             mBuilding.mStatus = Status.PENDING;
-            mBuilding.mAttributionDestination = trigger.getAttributionDestination();
+            mBuilding.mAttributionDestination = trigger.getAttributionDestinationBaseUri();
             mBuilding.mReportTime =
                     source.getReportingTime(
                             trigger.getTriggerTime(),
                             trigger.getDestinationType());
             mBuilding.mSourceType = source.getSourceType();
             mBuilding.mRandomizedTriggerRate = source.getRandomAttributionProbability();
+            mBuilding.mDebugReportStatus = DebugReportStatus.NONE;
+            if (source.getDebugKey() != null || trigger.getDebugKey() != null) {
+                mBuilding.mDebugReportStatus = DebugReportStatus.PENDING;
+            }
             mBuilding.mSourceDebugKey = source.getDebugKey();
             mBuilding.mTriggerDebugKey = trigger.getDebugKey();
             mBuilding.mSourceId = source.getId();

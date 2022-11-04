@@ -24,6 +24,8 @@ import android.util.Dumpable;
 
 import androidx.annotation.Nullable;
 
+import com.google.common.collect.ImmutableList;
+
 import java.io.PrintWriter;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -915,6 +917,24 @@ public interface Flags extends Dumpable {
                 || getMeasurementKillSwitch()
                 || MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH;
     }
+    /**
+     * Measurement Job Debug Reporting Kill Switch. The default value is false which means Debug
+     * Reporting Job is enabled. This flag is used for emergency turning off the Debug Reporting
+     * Job.
+     */
+    boolean MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for Measurement Job Debug Reporting. The API will be disabled
+     * if either the Global Kill Switch, Measurement Kill Switch, or the Measurement Job Debug
+     * Reporting Kill Switch value is true.
+     */
+    default boolean getMeasurementJobDebugReportingKillSwitch() {
+        // We check the Global Kill Switch first. As a result, it overrides all other kill Switches.
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH;
+    }
 
     /**
      * Measurement Broadcast Receiver Install Attribution Kill Switch. The default value is false
@@ -1064,6 +1084,7 @@ public interface Flags extends Dumpable {
                     + "com.android.adservices.tests.appsetid,"
                     + "com.android.sdksandboxclient,"
                     + "com.android.tests.sandbox.adid,"
+                    + "com.android.tests.sandbox.appsetid,"
                     + "com.android.tests.sandbox.fledge,"
                     + "com.android.tests.sandbox.measurement,"
                     + "com.example.adservices.samples.adid.app,"
@@ -1332,5 +1353,38 @@ public interface Flags extends Dumpable {
         return getGlobalKillSwitch()
                 || getMeasurementKillSwitch()
                 || MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
+    }
+
+    /**
+     * A feature flag to enable the feature of handling topics without any contributors. Note that
+     * in an epoch, an app is a contributor to a topic if the app has called Topics API in this
+     * epoch and is classified to the topic.
+     *
+     * <p>Default value is false, which means the feature is disabled by default and needs to be
+     * ramped up.
+     */
+    boolean ENABLE_TOPIC_CONTRIBUTORS_CHECK = false;
+
+    /** @return if to enable topic contributors check. */
+    default boolean getEnableTopicContributorsCheck() {
+        return ENABLE_TOPIC_CONTRIBUTORS_CHECK;
+    }
+
+    /** Whether to enable database schema version 3 */
+    boolean ENABLE_DATABASE_SCHEMA_VERSION_3 = false;
+
+    /** @return if to enable database schema version 3. */
+    default boolean getEnableDatabaseSchemaVersion3() {
+        return ENABLE_DATABASE_SCHEMA_VERSION_3;
+    }
+
+    /** Returns true if the given enrollmentId is blocked from using PP-API. */
+    default boolean isEnrollmentBlocklisted(String enrollmentId) {
+        return false;
+    }
+
+    /** Returns a list of enrollmentId blocked from using PP-API. */
+    default ImmutableList<String> getEnrollmentBlocklist() {
+        return ImmutableList.of();
     }
 }

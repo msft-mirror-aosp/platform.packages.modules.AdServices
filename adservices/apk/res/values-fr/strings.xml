@@ -99,16 +99,14 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android est susceptible d\'ajouter à nouveau ce centre d\'intérêt à votre liste, mais il est possible qu\'il n\'apparaisse pas immédiatement"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Réinitialiser tous vos centres d\'intérêt ?"</string>
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"Votre liste sera effacée, puis de nouveaux centres d\'intérêt seront estimés au fil du temps. Toutefois, vous continuerez peut-être à voir des annonces qui se rapportent aux centres d\'intérêt supprimés."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Réinitialiser"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Bloquer <xliff:g id="APP">%1$s</xliff:g> ?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Cette appli ne déterminera pas les centres d\'intérêt pour Privacy Sandbox et ne sera pas ajoutée à nouveau à votre liste, sauf si vous la débloquez.\n\nLes centres d\'intérêt déjà déterminés par cette appli seront supprimés, mais vous continuerez peut-être à voir des annonces qui s\'y rapportent."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> est débloqué"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Cette appli pourra déterminer à nouveau vos centres d\'intérêt, mais il est possible qu\'ils n\'apparaissent pas immédiatement dans votre liste. Un délai peut être constaté avant que vous ne voyiez des annonces qui s\'y rapportent."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Réinitialiser les centres d\'intérêt générés par les applis ?"</string>
-    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"Les centres d\'intérêt estimés par les applis de votre liste seront supprimés de Privacy Sandbox et les applis estimeront de nouveaux centres d\'intérêt à partir de maintenant. Toutefois, vous continuerez peut-être à voir des annonces qui s\'y rapportent."</string>
     <string name="topic10001" msgid="1636806320891333775">"Arts et divertissements"</string>
     <string name="topic10002" msgid="1226367977754287428">"Art dramatique"</string>
     <string name="topic10003" msgid="6949890838957814881">"Films d\'animation et manga"</string>

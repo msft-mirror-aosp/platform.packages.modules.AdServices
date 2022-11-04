@@ -106,7 +106,6 @@ public class AdBidGeneratorImplTest {
     private static final AdSelectionSignals EMPTY_AD_SELECTION_SIGNALS = AdSelectionSignals.EMPTY;
     private static final AdSelectionSignals EMPTY_BUYER_SIGNALS = AdSelectionSignals.EMPTY;
     private static final AdSelectionSignals EMPTY_CONTEXTUAL_SIGNALS = AdSelectionSignals.EMPTY;
-    private static final AdSelectionSignals EMPTY_USER_SIGNALS = AdSelectionSignals.EMPTY;
     private static final AdSelectionSignals TRUSTED_BIDDING_SIGNALS =
             AdSelectionSignals.fromString(
                     "{\n" + "\t\"max_bid_limit\": 20,\n" + "\t\"ad_type\": \"retail\"\n" + "}");
@@ -250,7 +249,6 @@ public class AdBidGeneratorImplTest {
                                 EMPTY_BUYER_SIGNALS,
                                 TRUSTED_BIDDING_SIGNALS,
                                 EMPTY_CONTEXTUAL_SIGNALS,
-                                EMPTY_USER_SIGNALS,
                                 mCustomAudienceSignals))
                 .thenReturn(FluentFuture.from(Futures.immediateFuture(AD_WITH_BIDS)));
         // When the call to runAdBiddingPerCA, and the computation of future is complete,
@@ -275,7 +273,6 @@ public class AdBidGeneratorImplTest {
                         EMPTY_BUYER_SIGNALS,
                         TRUSTED_BIDDING_SIGNALS,
                         EMPTY_CONTEXTUAL_SIGNALS,
-                        EMPTY_USER_SIGNALS,
                         mCustomAudienceSignals);
         mMockWebServerRule.verifyMockServerRequests(
                 mServer,
@@ -351,7 +348,6 @@ public class AdBidGeneratorImplTest {
                                 EMPTY_BUYER_SIGNALS,
                                 TRUSTED_BIDDING_SIGNALS,
                                 EMPTY_CONTEXTUAL_SIGNALS,
-                                EMPTY_USER_SIGNALS,
                                 mCustomAudienceSignals))
                 .thenReturn(FluentFuture.from(Futures.immediateFuture(AD_WITH_BIDS)));
         // When the call to runAdBiddingPerCA, and the computation of future is complete,
@@ -377,7 +373,6 @@ public class AdBidGeneratorImplTest {
                         EMPTY_BUYER_SIGNALS,
                         TRUSTED_BIDDING_SIGNALS,
                         EMPTY_CONTEXTUAL_SIGNALS,
-                        EMPTY_USER_SIGNALS,
                         mCustomAudienceSignals);
         mMockWebServerRule.verifyMockServerRequests(
                 mServer, 0, Collections.emptyList(), mRequestMatcherExactMatch);
@@ -418,7 +413,6 @@ public class AdBidGeneratorImplTest {
                                 EMPTY_BUYER_SIGNALS,
                                 TRUSTED_BIDDING_SIGNALS,
                                 EMPTY_CONTEXTUAL_SIGNALS,
-                                EMPTY_USER_SIGNALS,
                                 mCustomAudienceSignals))
                 .thenReturn(FluentFuture.from(Futures.immediateFuture(AD_WITH_NON_POSITIVE_BIDS)));
         // When the call to runAdBiddingPerCA, and the computation of future is complete,
@@ -438,7 +432,6 @@ public class AdBidGeneratorImplTest {
                         EMPTY_BUYER_SIGNALS,
                         TRUSTED_BIDDING_SIGNALS,
                         EMPTY_CONTEXTUAL_SIGNALS,
-                        EMPTY_USER_SIGNALS,
                         mCustomAudienceSignals);
         mMockWebServerRule.verifyMockServerRequests(
                 mServer,
@@ -489,7 +482,6 @@ public class AdBidGeneratorImplTest {
                                 EMPTY_BUYER_SIGNALS,
                                 TRUSTED_BIDDING_SIGNALS,
                                 EMPTY_CONTEXTUAL_SIGNALS,
-                                EMPTY_USER_SIGNALS,
                                 mCustomAudienceSignals))
                 .thenAnswer((invocation) -> generateBidsWithDelay(flagsWithSmallerLimits));
         // When the call to runAdBiddingPerCA, and the computation of future is complete,
@@ -510,7 +502,6 @@ public class AdBidGeneratorImplTest {
                         EMPTY_BUYER_SIGNALS,
                         TRUSTED_BIDDING_SIGNALS,
                         EMPTY_CONTEXTUAL_SIGNALS,
-                        EMPTY_USER_SIGNALS,
                         mCustomAudienceSignals);
         mMockWebServerRule.verifyMockServerRequests(
                 mServer,
@@ -555,7 +546,6 @@ public class AdBidGeneratorImplTest {
                                 EMPTY_BUYER_SIGNALS,
                                 TRUSTED_BIDDING_SIGNALS,
                                 EMPTY_CONTEXTUAL_SIGNALS,
-                                EMPTY_USER_SIGNALS,
                                 mCustomAudienceSignals))
                 .thenThrow(jsonException);
         // When the call to runBidding, and the computation of future is complete.
@@ -566,7 +556,6 @@ public class AdBidGeneratorImplTest {
                         EMPTY_BUYER_SIGNALS,
                         EMPTY_CONTEXTUAL_SIGNALS,
                         mCustomAudienceSignals,
-                        EMPTY_USER_SIGNALS,
                         EMPTY_AD_SELECTION_SIGNALS);
 
         ExecutionException outException = assertThrows(ExecutionException.class, result::get);
@@ -646,7 +635,6 @@ public class AdBidGeneratorImplTest {
                                 EMPTY_BUYER_SIGNALS,
                                 TRUSTED_BIDDING_SIGNALS,
                                 EMPTY_CONTEXTUAL_SIGNALS,
-                                EMPTY_USER_SIGNALS,
                                 customAudienceSignals))
                 .thenReturn(FluentFuture.from(Futures.immediateFuture(AD_WITH_BIDS)));
         // When the call to runAdBiddingPerCA, and the computation of future is complete,
@@ -671,7 +659,6 @@ public class AdBidGeneratorImplTest {
                         EMPTY_BUYER_SIGNALS,
                         TRUSTED_BIDDING_SIGNALS,
                         EMPTY_CONTEXTUAL_SIGNALS,
-                        EMPTY_USER_SIGNALS,
                         customAudienceSignals);
         mMockWebServerRule.verifyMockServerRequests(
                 mServer,
@@ -828,7 +815,6 @@ public class AdBidGeneratorImplTest {
                                 EMPTY_BUYER_SIGNALS,
                                 TRUSTED_BIDDING_SIGNALS,
                                 EMPTY_CONTEXTUAL_SIGNALS,
-                                EMPTY_USER_SIGNALS,
                                 mCustomAudienceSignals))
                 .thenThrow(new JSONException(""));
         // When the call to runBidding, and the computation of future is complete.

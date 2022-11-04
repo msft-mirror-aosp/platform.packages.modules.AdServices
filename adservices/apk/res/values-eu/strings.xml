@@ -99,16 +99,14 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android-ek zure interesa berriro gehi dezake zerrendan, baina baliteke berehala ez agertzea"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"Ados"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Interes guztiak berrezarri nahi dituzu?"</string>
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"Zerrenda garbitu egingo da, eta une horretatik aurrera beste interes batzuk igarriko dira. Hala ere, baliteke garbitutako interesekin erlazionatutako iragarki batzuk ikusten jarraitzea."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Berrezarri"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g> blokeatu nahi duzu?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Aplikazio honek ez ditu estimatuko Privacy Sandbox-erako interesak, eta ez da gehituko berriro zerrendan, desblokeatzen ez baduzu.\n\nAplikazioak dagoeneko estimatu dituen interesak ezabatu egingo dira, baina baliteke haiekin erlazionatutako iragarki batzuk ikusten jarraitzea."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Desblokeatu da <xliff:g id="APP">%1$s</xliff:g>"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Aplikazio honek berriro estima ditzake interesak, baina baliteke berehala ez agertzea zerrendan. Baliteke tarte bat behar izatea erlazionatutako iragarkiak ikusten hasteko."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Aplikazioek sortutako interesak berrezarri nahi dituzu?"</string>
-    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"Zerrendako aplikazioek igarritako interesak Privacy Sandbox-etik ezabatuko dira, eta une horretatik aurrera aplikazioek beste interes batzuk igarriko dituzte. Hala ere, baliteke erlazionatutako iragarki batzuk ikusten jarraitzea."</string>
     <string name="topic10001" msgid="1636806320891333775">"Artea eta aisia"</string>
     <string name="topic10002" msgid="1226367977754287428">"Interpretazioa eta antzerkia"</string>
     <string name="topic10003" msgid="6949890838957814881">"Animea eta manga"</string>

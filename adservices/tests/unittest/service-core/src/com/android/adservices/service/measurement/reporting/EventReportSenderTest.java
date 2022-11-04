@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertEquals;
 
 import android.net.Uri;
@@ -70,7 +72,7 @@ public class EventReportSenderTest {
         Uri reportingOrigin = Uri.parse("https://ad-tech.example");
         JSONObject eventReportJson = createEventReportPayloadExample1().toJson();
 
-        EventReportSender eventReportSender = new EventReportSender();
+        EventReportSender eventReportSender = new EventReportSender(false);
         EventReportSender spyEventReportSender = Mockito.spy(eventReportSender);
 
         Mockito.doReturn(httpUrlConnection).when(spyEventReportSender)
@@ -81,5 +83,13 @@ public class EventReportSenderTest {
 
         assertEquals(outputStream.toString(), eventReportJson.toString());
         assertEquals(responseCode, 200);
+    }
+
+    @Test
+    public void testDebugReportUriPath() {
+        assertThat(new EventReportSender(false).getReportUriPath())
+                .isEqualTo(EventReportSender.EVENT_ATTRIBUTION_REPORT_URI_PATH);
+        assertThat(new EventReportSender(true).getReportUriPath())
+                .isEqualTo(EventReportSender.DEBUG_EVENT_ATTRIBUTION_REPORT_URI_PATH);
     }
 }

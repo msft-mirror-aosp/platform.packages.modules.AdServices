@@ -43,6 +43,7 @@ import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.adservices.service.measurement.AsyncRegistrationQueueJobService;
 import com.android.adservices.service.measurement.DeleteExpiredJobService;
 import com.android.adservices.service.measurement.DeleteUninstalledJobService;
 import com.android.adservices.service.measurement.MeasurementImpl;
@@ -173,6 +174,7 @@ public class MeasurementServiceTest {
                         .spyStatic(MddJobService.class)
                         .spyStatic(FlagsFactory.class)
                         .spyStatic(MeasurementImpl.class)
+                        .spyStatic(AsyncRegistrationQueueJobService.class)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
         try {
@@ -224,6 +226,11 @@ public class MeasurementServiceTest {
                     .when(() -> DeleteUninstalledJobService.scheduleIfNeeded(any(), anyBoolean()));
             ExtendedMockito.doReturn(true)
                     .when(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
+            ExtendedMockito.doNothing()
+                    .when(
+                            () ->
+                                    AsyncRegistrationQueueJobService.scheduleIfNeeded(
+                                            any(), anyBoolean()));
 
             // Execute
             execute.run();
@@ -256,5 +263,8 @@ public class MeasurementServiceTest {
                 times(timesCalled));
         ExtendedMockito.verify(
                 () -> MddJobService.scheduleIfNeeded(any(), anyBoolean()), times(timesCalled));
+        ExtendedMockito.verify(
+                () -> AsyncRegistrationQueueJobService.scheduleIfNeeded(any(), anyBoolean()),
+                times(timesCalled));
     }
 }

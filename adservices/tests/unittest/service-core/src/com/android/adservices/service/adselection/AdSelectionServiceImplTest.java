@@ -72,6 +72,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
@@ -80,6 +81,7 @@ import com.android.adservices.data.adselection.DBAdSelectionOverride;
 import com.android.adservices.data.adselection.DBBuyerDecisionLogic;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -181,7 +183,10 @@ public class AdSelectionServiceImplTest {
 
     @Spy
     FledgeAuthorizationFilter mFledgeAuthorizationFilterSpy =
-            FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLoggerMock);
+            new FledgeAuthorizationFilter(
+                    CONTEXT.getPackageManager(),
+                    new EnrollmentDao(CONTEXT, DbTestUtil.getDbHelperForTest()),
+                    mAdServicesLoggerMock);
 
     private Flags mFlags = new FlagsWithEnrollmentCheckEnabledSwitch(false);
 
@@ -3463,8 +3468,10 @@ public class AdSelectionServiceImplTest {
      */
     private void resetThrottlerToNoRateLimits() {
         Throttler.destroyExistingThrottler();
-        final double noRateLimit = -1;
-        Throttler.getInstance(noRateLimit);
+        final float noRateLimit = -1;
+        Flags mockNoRateLimitFlags = mock(Flags.class);
+        doReturn(noRateLimit).when(mockNoRateLimitFlags).getSdkRequestPermitsPerSecond();
+        Throttler.getInstance(mockNoRateLimitFlags);
     }
 
     private AdSelectionOverrideTestCallback callResetAllOverrides(

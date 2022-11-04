@@ -18,7 +18,25 @@
             "registrant": "android-app://com.example.abc"
           }
         ],
-        "triggers": [],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "android-app://example2.com",
+            "enrollmentId": "enrollment-id-3",
+            "status": 0,
+            "triggerTime": 8640000002,
+            "registrant": "android-app://not.delete.candidate",
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ]
+          }
+        ],
         "event_reports": [
           {
             "id": "id",
@@ -30,14 +48,34 @@
             "status": 0,
             "reportTime": -1,
             "triggerPriority": 101,
-            "sourceType": "navigation"
+            "sourceType": "navigation",
+            "sourceId": "S1",
+            "triggerId": "T1"
           }
         ],
         "attributions": []
       },
       "output": {
         "sources": [],
-        "triggers": [],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "android-app://example2.com",
+            "enrollmentId": "enrollment-id-3",
+            "status": 0,
+            "triggerTime": 8640000002,
+            "registrant": "android-app://not.delete.candidate",
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ]
+          }
+        ],
         "event_reports": [],
         "attributions": []
       },

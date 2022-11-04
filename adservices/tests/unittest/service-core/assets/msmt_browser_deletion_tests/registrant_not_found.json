@@ -229,7 +229,7 @@
     ]
   },
   "param": {
-    "registrant": "android-app://com.registrant.toBeDeleted",
+    "registrant": "com.registrant.toBeDeleted",
     "origins": [],
     "domains": []
   }
