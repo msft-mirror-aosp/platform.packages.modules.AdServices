@@ -19,6 +19,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
@@ -124,6 +125,11 @@ public class DialogManager {
                 (dialogInterface, buttonId) -> {
                     topicsViewModel.resetTopics();
                     sSemaphore.release();
+                    Toast.makeText(
+                                    context,
+                                    R.string.settingsUI_topics_are_reset,
+                                    Toast.LENGTH_SHORT)
+                            .show();
                 };
         new AlertDialog.Builder(context)
                 .setTitle(R.string.settingsUI_dialog_reset_topic_title)
@@ -199,6 +205,11 @@ public class DialogManager {
                 (dialogInterface, buttonId) -> {
                     try {
                         appsViewModel.resetApps();
+                        Toast.makeText(
+                                        context,
+                                        R.string.settingsUI_apps_are_reset,
+                                        Toast.LENGTH_SHORT)
+                                .show();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
