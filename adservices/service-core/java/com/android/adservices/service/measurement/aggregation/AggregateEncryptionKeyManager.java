@@ -24,6 +24,7 @@ import com.android.internal.annotations.VisibleForTesting;
 
 import java.time.Clock;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -39,8 +40,13 @@ public final class AggregateEncryptionKeyManager {
         mDatastoreManager = datastoreManager;
         mAggregateEncryptionKeyFetcher = new AggregateEncryptionKeyFetcher();
         mClock = Clock.systemUTC();
-        mAggregateEncryptionKeyCoordinatorUrl =
-                Uri.parse(AdServicesConfig.getMeasurementAggregateEncryptionKeyCoordinatorUrl());
+        String encryptionKeyCoordinatorUrl =
+                AdServicesConfig.getMeasurementAggregateEncryptionKeyCoordinatorUrl();
+        if (encryptionKeyCoordinatorUrl != null) {
+            mAggregateEncryptionKeyCoordinatorUrl = Uri.parse(encryptionKeyCoordinatorUrl);
+        } else {
+            mAggregateEncryptionKeyCoordinatorUrl = null;
+        }
     }
 
     @VisibleForTesting
@@ -59,6 +65,11 @@ public final class AggregateEncryptionKeyManager {
      * the numKeys specified in the parameters. If no keys are found, the collection would be empty.
      */
     public List<AggregateEncryptionKey> getAggregateEncryptionKeys(int numKeys) {
+        if (mAggregateEncryptionKeyCoordinatorUrl == null) {
+            LogUtil.w("Fetching aggregate encryption keys failed, empty coordinator url.");
+            return Collections.emptyList();
+        }
+
         long eventTime = mClock.millis();
 
         Optional<List<AggregateEncryptionKey>> aggregateEncryptionKeysOptional =

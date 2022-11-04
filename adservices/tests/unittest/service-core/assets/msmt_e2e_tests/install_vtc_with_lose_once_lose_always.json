@@ -4,17 +4,16 @@
     "sources": [
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.com",
-          "source_origin": "android-app://example.1s1.com",
+          "attribution_src_url": "https://www.ad-tech1.test",
           "source_type": "navigation",
-          "registrant": "example.1s1.com"
+          "registrant": "example.1s1.test"
         },
         "responses": [{
-          "url": "https://www.ad-tech1.com",
+          "url": "https://www.ad-tech1.test",
           "response": {
             "Attribution-Reporting-Register-Source": {
               "source_event_id": "1",
-              "destination": "android-app://example.2d1.com",
+              "destination": "android-app://example.2d1.test",
               "priority": "0",
               "install_attribution_window": "172800",
               "post_install_exclusivity_window": "864000",
@@ -28,17 +27,16 @@
       },
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.com",
-          "source_origin": "android-app://example.1s1.com",
+          "attribution_src_url": "https://www.ad-tech1.test",
           "source_type": "event",
-          "registrant": "example.1s1.com"
+          "registrant": "example.1s1.test"
         },
         "responses": [{
-          "url": "https://www.ad-tech1.com",
+          "url": "https://www.ad-tech1.test",
           "response": {
             "Attribution-Reporting-Register-Source": {
               "source_event_id": "2",
-              "destination": "android-app://example.2d1.com",
+              "destination": "android-app://example.2d1.test",
               "priority": "1",
               "install_attribution_window": "172800",
               "post_install_exclusivity_window": "864000",
@@ -52,17 +50,16 @@
       },
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.com",
-          "source_origin": "android-app://example.1s1.com",
+          "attribution_src_url": "https://www.ad-tech1.test",
           "source_type": "event",
-          "registrant": "example.1s1.com"
+          "registrant": "example.1s1.test"
         },
         "responses": [{
-          "url": "https://www.ad-tech1.com",
+          "url": "https://www.ad-tech1.test",
           "response": {
             "Attribution-Reporting-Register-Source": {
               "source_event_id": "3",
-              "destination": "android-app://example.2d1.com",
+              "destination": "android-app://example.2d1.test",
               "priority": "2",
               "install_attribution_window": "172800",
               "post_install_exclusivity_window": "864000",
@@ -76,17 +73,16 @@
       },
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.com",
-          "source_origin": "android-app://example.1s1.com",
+          "attribution_src_url": "https://www.ad-tech1.test",
           "source_type": "event",
-          "registrant": "example.1s1.com"
+          "registrant": "example.1s1.test"
         },
         "responses": [{
-          "url": "https://www.ad-tech1.com",
+          "url": "https://www.ad-tech1.test",
           "response": {
             "Attribution-Reporting-Register-Source": {
               "source_event_id": "4",
-              "destination": "android-app://example.2d1.com",
+              "destination": "android-app://example.2d1.test",
               "priority": "2",
               "install_attribution_window": "172800",
               "post_install_exclusivity_window": "864000",
@@ -100,17 +96,16 @@
       },
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.com",
-          "source_origin": "android-app://example.1s1.com",
+          "attribution_src_url": "https://www.ad-tech1.test",
           "source_type": "event",
-          "registrant": "example.1s1.com"
+          "registrant": "example.1s1.test"
         },
         "responses": [{
-          "url": "https://www.ad-tech1.com",
+          "url": "https://www.ad-tech1.test",
           "response": {
             "Attribution-Reporting-Register-Source": {
               "source_event_id": "5",
-              "destination": "android-app://example.2d1.com",
+              "destination": "android-app://example.2d1.test",
               "priority": "2",
               "install_attribution_window": "172800",
               "post_install_exclusivity_window": "864000",
@@ -124,17 +119,16 @@
       },
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.com",
-          "source_origin": "android-app://example.1s1.com",
+          "attribution_src_url": "https://www.ad-tech1.test",
           "source_type": "event",
-          "registrant": "example.1s1.com"
+          "registrant": "example.1s1.test"
         },
         "responses": [{
-          "url": "https://www.ad-tech1.com",
+          "url": "https://www.ad-tech1.test",
           "response": {
             "Attribution-Reporting-Register-Source": {
               "source_event_id": "6",
-              "destination": "android-app://example.2d1.com",
+              "destination": "android-app://example.2d1.test",
               "priority": "2",
               "install_attribution_window": "172800",
               "post_install_exclusivity_window": "864000",
@@ -150,12 +144,11 @@
     "triggers": [
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.com",
-          "destination_origin": "android-app://example.2d1.com",
-          "registrant": "example.2d1.com"
+          "attribution_src_url": "https://www.ad-tech1.test",
+          "registrant": "example.2d1.test"
         },
         "responses": [{
-          "url": "https://www.ad-tech1.com",
+          "url": "https://www.ad-tech1.test",
             "response": {
               "Attribution-Reporting-Register-Trigger": {
                 "event_trigger_data": [
@@ -172,12 +165,11 @@
       },
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.com",
-          "destination_origin": "android-app://example.2d1.com",
-          "registrant": "example.2d1.com"
+          "attribution_src_url": "https://www.ad-tech1.test",
+          "registrant": "example.2d1.test"
         },
         "responses": [{
-          "url": "https://www.ad-tech1.com",
+          "url": "https://www.ad-tech1.test",
             "response": {
               "Attribution-Reporting-Register-Trigger": {
                 "event_trigger_data": [
@@ -194,12 +186,11 @@
       },
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.com",
-          "destination_origin": "android-app://example.2d1.com",
-          "registrant": "example.2d1.com"
+          "attribution_src_url": "https://www.ad-tech1.test",
+          "registrant": "example.2d1.test"
         },
         "responses": [{
-          "url": "https://www.ad-tech1.com",
+          "url": "https://www.ad-tech1.test",
             "response": {
               "Attribution-Reporting-Register-Trigger": {
                 "event_trigger_data": [
@@ -216,12 +207,11 @@
       },
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.com",
-          "destination_origin": "android-app://example.2d1.com",
-          "registrant": "example.2d1.com"
+          "attribution_src_url": "https://www.ad-tech1.test",
+          "registrant": "example.2d1.test"
         },
         "responses": [{
-          "url": "https://www.ad-tech1.com",
+          "url": "https://www.ad-tech1.test",
             "response": {
               "Attribution-Reporting-Register-Trigger": {
                 "event_trigger_data": [
@@ -238,7 +228,7 @@
       }
     ],
     "installs": [{
-      "uri": "android-app://example.2d1.com",
+      "uri": "android-app://example.2d1.test",
       "timestamp": "800172800001"
     }]
   },
@@ -246,9 +236,9 @@
     "event_level_results": [
       {
         "report_time": "801386000001",
-        "report_url": "https://www.ad-tech1.com",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
         "payload": {
-          "attribution_destination": "android-app://example.2d1.com",
+          "attribution_destination": "android-app://example.2d1.test",
           "source_event_id": "2",
           "trigger_data": "1",
           "source_type": "event",
@@ -257,9 +247,9 @@
       },
       {
         "report_time": "801386000001",
-        "report_url": "https://www.ad-tech1.com",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
         "payload": {
-          "attribution_destination": "android-app://example.2d1.com",
+          "attribution_destination": "android-app://example.2d1.test",
           "source_event_id": "2",
           "trigger_data": "1",
           "source_type": "event",
@@ -268,9 +258,9 @@
       },
       {
         "report_time": "802250000001",
-        "report_url": "https://www.ad-tech1.com",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
         "payload": {
-          "attribution_destination": "android-app://example.2d1.com",
+          "attribution_destination": "android-app://example.2d1.test",
           "source_event_id": "6",
           "trigger_data": "1",
           "source_type": "event",

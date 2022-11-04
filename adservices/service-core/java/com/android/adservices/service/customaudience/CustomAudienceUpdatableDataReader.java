@@ -198,7 +198,7 @@ public class CustomAudienceUpdatableDataReader {
             uriValidator.validate(parsedUri);
 
             DBTrustedBiddingData trustedBiddingData =
-                    new DBTrustedBiddingData.Builder().setUrl(parsedUri).setKeys(keysList).build();
+                    new DBTrustedBiddingData.Builder().setUri(parsedUri).setKeys(keysList).build();
 
             if (trustedBiddingData.size() > mMaxTrustedBiddingDataSizeB) {
                 throw new IllegalArgumentException();

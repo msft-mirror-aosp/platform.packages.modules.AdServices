@@ -22,10 +22,11 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.android.adservices.api.R;
-import com.android.adservices.ui.settings.ActionDelegate;
-import com.android.adservices.ui.settings.AdServicesSettingsActivity;
+import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
+import com.android.adservices.ui.settings.delegates.MainActionDelegate;
 import com.android.adservices.ui.settings.viewmodels.MainViewModel;
 import com.android.settingslib.widget.MainSwitchBar;
 
@@ -53,20 +54,17 @@ public class AdServicesSettingsMainFragment extends Fragment {
 
     // initialize all action listeners
     private void initActionListeners() {
-        ActionDelegate actionDelegate =
-                ((AdServicesSettingsActivity) requireActivity()).getActionDelegate();
+        MainActionDelegate actionDelegate =
+                ((AdServicesSettingsMainActivity) requireActivity()).getActionDelegate();
         actionDelegate.initMainFragment(this);
     }
 
     private void setupViewModel() {
-        MainViewModel model =
-                ((AdServicesSettingsActivity) requireActivity())
-                        .getViewModelProvider()
-                        .get(MainViewModel.class);
+        MainViewModel model = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
 
         MainSwitchBar mainSwitchBar =
-                Objects.requireNonNull(requireActivity().findViewById(R.id.main_switch_bar));
-        View privacySandboxControls = requireActivity().findViewById(R.id.privacy_sandbox_controls);
+                Objects.requireNonNull(requireView().findViewById(R.id.main_switch_bar));
+        View privacySandboxControls = requireView().findViewById(R.id.privacy_sandbox_controls);
         model.getConsent()
                 .observe(
                         getViewLifecycleOwner(),

@@ -17,23 +17,30 @@
 package com.android.adservices.data.enrollment;
 
 import android.adservices.common.AdTechIdentifier;
-import android.annotation.NonNull;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.adservices.service.measurement.util.Web;
 import com.android.internal.annotations.VisibleForTesting;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 
 /** Data Access Object for the EnrollmentData. */
 public class EnrollmentDao implements IEnrollmentDao {
@@ -70,7 +77,8 @@ public class EnrollmentDao implements IEnrollmentDao {
         return prefs.getBoolean(IS_SEEDED, false);
     }
 
-    private void seed() {
+    @VisibleForTesting
+    void seed() {
         if (!isSeeded()) {
             boolean success = true;
             for (EnrollmentData enrollment : PreEnrolledAdTechForTest.getList()) {
@@ -123,24 +131,29 @@ public class EnrollmentDao implements IEnrollmentDao {
 
     @Override
     @Nullable
-    public EnrollmentData getEnrollmentDataFromMeasurementUrl(String url) {
+    public EnrollmentData getEnrollmentDataFromMeasurementUrl(Uri url) {
+        Optional<Uri> registrationBaseUri = Web.topPrivateDomainSchemeAndPath(url);
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
-        if (db == null) {
+        if (!registrationBaseUri.isPresent() || db == null) {
             return null;
         }
+
+        String selectionQuery =
+                getAttributionUrlSelection(
+                                EnrollmentTables.EnrollmentDataContract
+                                        .ATTRIBUTION_SOURCE_REGISTRATION_URL,
+                                registrationBaseUri.get())
+                        + " OR "
+                        + getAttributionUrlSelection(
+                                EnrollmentTables.EnrollmentDataContract
+                                        .ATTRIBUTION_TRIGGER_REGISTRATION_URL,
+                                registrationBaseUri.get());
+
         try (Cursor cursor =
                 db.query(
                         EnrollmentTables.EnrollmentDataContract.TABLE,
                         /*columns=*/ null,
-                        EnrollmentTables.EnrollmentDataContract.ATTRIBUTION_SOURCE_REGISTRATION_URL
-                                + " LIKE '%"
-                                + url
-                                + "%' OR "
-                                + EnrollmentTables.EnrollmentDataContract
-                                        .ATTRIBUTION_TRIGGER_REGISTRATION_URL
-                                + " LIKE '%"
-                                + url
-                                + "%'",
+                        selectionQuery,
                         null,
                         /*groupBy=*/ null,
                         /*having=*/ null,
@@ -150,9 +163,43 @@ public class EnrollmentDao implements IEnrollmentDao {
                 LogUtil.d("Failed to match enrollment for url \"%s\"", url);
                 return null;
             }
-            cursor.moveToNext();
-            return SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor);
+
+            while (cursor.moveToNext()) {
+                EnrollmentData data = SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor);
+                if (validateAttributionUrl(
+                                data.getAttributionSourceRegistrationUrl(), registrationBaseUri)
+                        || validateAttributionUrl(
+                                data.getAttributionTriggerRegistrationUrl(), registrationBaseUri)) {
+                    return data;
+                }
+            }
+            return null;
         }
+    }
+
+    private boolean validateAttributionUrl(
+            List<String> enrolledUris, Optional<Uri> registrationBaseUri) {
+        for (String uri : enrolledUris) {
+            Optional<Uri> enrolledBaseUri = Web.topPrivateDomainSchemeAndPath(Uri.parse(uri));
+            if (registrationBaseUri.equals(enrolledBaseUri)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private String getAttributionUrlSelection(String field, Uri baseUri) {
+        return String.format(
+                Locale.ENGLISH,
+                "(%1$s LIKE %2$s OR %1$s LIKE %3$s)",
+                field,
+                DatabaseUtils.sqlEscapeString("%" + baseUri.toString() + "%"),
+                DatabaseUtils.sqlEscapeString(
+                        baseUri.getScheme()
+                                + "://%."
+                                + baseUri.getEncodedAuthority()
+                                + baseUri.getPath()
+                                + "%"));
     }
 
     @Override
@@ -215,6 +262,52 @@ public class EnrollmentDao implements IEnrollmentDao {
             }
 
             return null;
+        }
+    }
+
+    @Override
+    @NonNull
+    public Set<AdTechIdentifier> getAllFledgeEnrolledAdTechs() {
+        Set<AdTechIdentifier> enrolledAdTechIdentifiers = new HashSet<>();
+
+        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
+        if (db == null) {
+            return enrolledAdTechIdentifiers;
+        }
+
+        try (Cursor cursor =
+                db.query(
+                        /*distinct=*/ true,
+                        /*table=*/ EnrollmentTables.EnrollmentDataContract.TABLE,
+                        /*columns=*/ new String[] {
+                            EnrollmentTables.EnrollmentDataContract
+                                    .REMARKETING_RESPONSE_BASED_REGISTRATION_URL
+                        },
+                        /*selection=*/ EnrollmentTables.EnrollmentDataContract
+                                        .REMARKETING_RESPONSE_BASED_REGISTRATION_URL
+                                + " IS NOT NULL",
+                        /*selectionArgs=*/ null,
+                        /*groupBy=*/ null,
+                        /*having=*/ null,
+                        /*orderBy=*/ null,
+                        /*limit=*/ null)) {
+            if (cursor == null || cursor.getCount() <= 0) {
+                LogUtil.d("Failed to find any FLEDGE-enrolled ad techs");
+                return enrolledAdTechIdentifiers;
+            }
+
+            LogUtil.v("Found %d FLEDGE enrollment entries", cursor.getCount());
+
+            while (cursor.moveToNext()) {
+                enrolledAdTechIdentifiers.addAll(
+                        SqliteObjectMapper.getAdTechIdentifiersFromFledgeCursor(cursor));
+            }
+
+            LogUtil.v(
+                    "Found %d FLEDGE enrolled ad tech identifiers",
+                    enrolledAdTechIdentifiers.size());
+
+            return enrolledAdTechIdentifiers;
         }
     }
 
@@ -282,10 +375,11 @@ public class EnrollmentDao implements IEnrollmentDao {
                 EnrollmentTables.EnrollmentDataContract.ENCRYPTION_KEY_URL,
                 String.join(" ", enrollmentData.getEncryptionKeyUrl()));
         try {
-            db.insert(
+            db.insertWithOnConflict(
                     EnrollmentTables.EnrollmentDataContract.TABLE,
                     /*nullColumnHack=*/ null,
-                    values);
+                    values,
+                    SQLiteDatabase.CONFLICT_REPLACE);
         } catch (SQLException e) {
             LogUtil.e("Failed to insert EnrollmentData. Exception : " + e.getMessage());
             return false;

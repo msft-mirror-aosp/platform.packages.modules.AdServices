@@ -54,13 +54,12 @@ public class SandboxedMeasurementManagerTest {
         // Start a foreground activity
         SimpleActivity.startAndWaitForSimpleActivity(sContext, Duration.ofMillis(1000));
 
-        // We need to turn the Consent Manager into debug mode to simulate grant Consent
-        overrideConsentManagerDebugMode();
-
         enforceMeasurementEnrollmentCheck(true);
 
         // Allow sandbox package name to be able to execute Measurement APIs
         allowSandboxPackageNameAccessMeasurementApis();
+
+        overrideMeasurementKillSwitches(true);
     }
 
     @After
@@ -69,7 +68,8 @@ public class SandboxedMeasurementManagerTest {
 
         // Reset back the original values.
         resetAllowSandboxPackageNameAccessMeasurementApis();
-        resetOverrideConsentManagerDebugMode();
+
+        overrideMeasurementKillSwitches(false);
     }
 
     @Test
@@ -116,16 +116,36 @@ public class SandboxedMeasurementManagerTest {
                 "device_config put adservices web_context_client_allow_list " + sdkSbxName);
     }
 
-    private void overrideConsentManagerDebugMode() {
-        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
-    }
-
     private void resetAllowSandboxPackageNameAccessMeasurementApis() {
         ShellUtils.runShellCommand(
                 "device_config put adservices web_context_client_allow_list null");
     }
 
-    private void resetOverrideConsentManagerDebugMode() {
-        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode null");
+    // Override measurement related kill switch to ignore the effect of actual PH values.
+    // If isOverride = true, override measurement related kill switch to OFF to allow adservices
+    // If isOverride = false, override measurement related kill switch to meaningless value so that
+    // PhFlags will use the default value.
+    private void overrideMeasurementKillSwitches(boolean isOverride) {
+        String overrideString = isOverride ? "false" : "null";
+        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + overrideString);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.measurement_kill_switch " + overrideString);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.measurement_api_register_source_kill_switch "
+                        + overrideString);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.measurement_api_register_trigger_kill_switch "
+                        + overrideString);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.measurement_api_register_web_source_kill_switch "
+                        + overrideString);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.measurement_api_register_web_trigger_kill_switch "
+                        + overrideString);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.measurement_api_delete_registrations_kill_switch "
+                        + overrideString);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.measurement_api_status_kill_switch " + overrideString);
     }
 }

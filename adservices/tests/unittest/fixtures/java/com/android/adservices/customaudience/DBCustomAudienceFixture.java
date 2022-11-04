@@ -37,7 +37,7 @@ public class DBCustomAudienceFixture {
                 .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
                 .setTrustedBiddingData(
                         DBTrustedBiddingDataFixture.getValidBuilderByBuyer(buyer).build())
-                .setBiddingLogicUrl(CustomAudienceFixture.getValidBiddingLogicUrlByBuyer(buyer))
+                .setBiddingLogicUri(CustomAudienceFixture.getValidBiddingLogicUriByBuyer(buyer))
                 .setAds(DBAdDataFixture.getValidDbAdDataListByBuyer(buyer));
     }
 }

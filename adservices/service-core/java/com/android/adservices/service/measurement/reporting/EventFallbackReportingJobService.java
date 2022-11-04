@@ -83,13 +83,16 @@ public final class EventFallbackReportingJobService extends JobService {
     /** Schedules {@link EventFallbackReportingJobService} */
     @VisibleForTesting
     static void schedule(Context context, JobScheduler jobScheduler) {
-        final JobInfo job = new JobInfo.Builder(AdServicesConfig
-                .MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID,
-                new ComponentName(context, EventFallbackReportingJobService.class))
-                .setRequiresDeviceIdle(true)
-                .setRequiresBatteryNotLow(true)
-                .setPeriodic(AdServicesConfig.getMeasurementEventFallbackReportingJobPeriodMs())
-                .build();
+        final JobInfo job =
+                new JobInfo.Builder(
+                                AdServicesConfig.MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID,
+                                new ComponentName(context, EventFallbackReportingJobService.class))
+                        .setRequiresDeviceIdle(true)
+                        .setRequiresBatteryNotLow(true)
+                        .setPeriodic(
+                                AdServicesConfig.getMeasurementEventFallbackReportingJobPeriodMs())
+                        .setPersisted(true)
+                        .build();
         jobScheduler.schedule(job);
     }
 

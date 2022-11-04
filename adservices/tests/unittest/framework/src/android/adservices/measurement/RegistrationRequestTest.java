@@ -26,6 +26,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -42,21 +43,21 @@ public final class RegistrationRequestTest {
     private RegistrationRequest createExampleAttribution() {
         return new RegistrationRequest.Builder()
                 .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
-                .setTopOriginUri(Uri.parse("http://foo.com"))
                 .setRegistrationUri(Uri.parse("http://baz.com"))
                 .setPackageName(sContext.getAttributionSource().getPackageName())
                 .setRequestTime(1000L)
+                .setAdIdPermissionGranted(true)
                 .build();
     }
 
     void verifyExampleAttribution(RegistrationRequest request) {
-        assertEquals("http://foo.com", request.getTopOriginUri().toString());
         assertEquals("http://baz.com", request.getRegistrationUri().toString());
         assertEquals(RegistrationRequest.REGISTER_SOURCE,
                 request.getRegistrationType());
         assertNull(request.getInputEvent());
         assertNotNull(request.getPackageName());
         assertEquals(1000L, request.getRequestTime());
+        assertTrue(request.isAdIdPermissionGranted());
     }
 
     @Test
@@ -89,8 +90,6 @@ public final class RegistrationRequestTest {
                         .setPackageName(sContext.getAttributionSource().getPackageName())
                         .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
                         .build();
-        assertEquals("android-app://" + sContext.getAttributionSource().getPackageName(),
-                request.getTopOriginUri().toString());
         assertEquals("", request.getRegistrationUri().toString());
         assertEquals(RegistrationRequest.REGISTER_TRIGGER,
                 request.getRegistrationType());

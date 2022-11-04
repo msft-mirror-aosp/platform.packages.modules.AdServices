@@ -22,6 +22,7 @@ android_test {
         "src/com/android/server/adservices/*.java",
         "src/**/*.java",
     ],
+    defaults: ["modules-utils-testable-device-config-defaults"],
     manifest: "AndroidManifest.xml",
     test_config: "AndroidTest.xml",
     static_libs: [
@@ -45,7 +46,7 @@ android_test {
     ],
     sdk_version: "module_current",
     min_sdk_version: "Tiramisu",
-    target_sdk_version: "current",
+    target_sdk_version: "Tiramisu",
     test_suites: [
         "general-tests",
         "mts-adservices"

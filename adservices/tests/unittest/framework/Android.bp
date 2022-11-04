@@ -38,7 +38,7 @@ android_test {
     ],
     sdk_version: "module_current",
     min_sdk_version: "Tiramisu",
-    target_sdk_version: "current",
+    target_sdk_version: "Tiramisu",
     test_suites: [
         "general-tests",
         "mts-adservices"

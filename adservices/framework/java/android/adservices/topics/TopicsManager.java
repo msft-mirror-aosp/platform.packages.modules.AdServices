@@ -30,6 +30,7 @@ import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
 import android.os.SystemClock;
+import android.text.TextUtils;
 
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
@@ -58,6 +59,9 @@ public final class TopicsManager {
 
     // When an app calls the Topics API directly, it sets the SDK name to empty string.
     static final String EMPTY_SDK = "";
+
+    // Default value is true to record SDK's Observation when it calls Topics API.
+    static final boolean RECORD_OBSERVATION_DEFAULT = true;
 
     private Context mContext;
     private ServiceBinder<ITopicsService> mServiceBinder;
@@ -136,7 +140,7 @@ public final class TopicsManager {
             sdkPackageName = sandboxedSdkContext.getSdkPackageName();
             appPackageName = sandboxedSdkContext.getClientPackageName();
 
-            if (sdkName != null) {
+            if (!TextUtils.isEmpty(sdkName)) {
                 throw new IllegalArgumentException(
                         "When calling Topics API from Sandbox, caller should not set Ads Sdk Name");
             }
@@ -163,6 +167,7 @@ public final class TopicsManager {
                             .setAppPackageName(appPackageName)
                             .setSdkName(sdkName)
                             .setSdkPackageName(sdkPackageName)
+                            .setShouldRecordObservation(getTopicsRequest.shouldRecordObservation())
                             .build(),
                     callerMetadata,
                     new IGetTopicsCallback.Stub() {

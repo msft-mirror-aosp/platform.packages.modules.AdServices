@@ -24,14 +24,58 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
     <application android:debuggable="true">
-        <!-- Activity for Adservices Settings UI -->
+        <!-- Activity for the main view of Adservices Settings UI-->
         <activity
-                android:name="com.android.adservices.ui.settings.AdServicesSettingsActivityWrapper"
-                android:exported="true"
-                android:theme="@style/Theme.AdServices.Settings">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
+            android:name="com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity"
+            android:exported="true"
+            android:theme="@style/Theme.SubSettingsBase">
+            <intent-filter android:priority="1">
+                <action android:name="android.test.adservices.ui.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <!-- Activity for the topics view of Adservices Settings UI-->
+        <activity
+            android:name="com.android.adservices.ui.settings.activities.TopicsActivity"
+            android:exported="true"
+            android:theme="@style/Theme.SubSettingsBase">
+            <intent-filter android:priority="1">
+                <action android:name="android.test.adservices.ui.TOPICS" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <!-- Activity for the blocked topics view of Adservices Settings UI-->
+        <activity
+            android:name="com.android.adservices.ui.settings.activities.BlockedTopicsActivity"
+            android:exported="true"
+            android:theme="@style/Theme.SubSettingsBase">
+            <intent-filter android:priority="1">
+                <action android:name="android.test.adservices.ui.BLOCKED_TOPICS" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <!-- Activity for the apps view of Adservices Settings UI-->
+        <activity
+            android:name="com.android.adservices.ui.settings.activities.AppsActivity"
+            android:exported="true"
+            android:theme="@style/Theme.SubSettingsBase">
+            <intent-filter android:priority="1">
+                <action android:name="android.test.adservices.ui.APPS" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <!-- Activity for the blocked apps view of Adservices Settings UI-->
+        <activity
+            android:name="com.android.adservices.ui.settings.activities.BlockedAppsActivity"
+            android:exported="true"
+            android:theme="@style/Theme.SubSettingsBase">
+            <intent-filter android:priority="1">
+                <action android:name="android.test.adservices.ui.BLOCKED_APPS" />
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
 

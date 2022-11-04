@@ -47,7 +47,8 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Modalités de participation"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Si vous activez la version bêta, les applis pourront tester de nouvelles méthodes plus respectueuses de la confidentialité pour vous proposer des annonces. Vous pouvez désactiver la version bêta à tout moment dans vos paramètres de confidentialité."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Non, merci"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"Oui, je participe"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Activer"</string>
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"Plus"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Merci de votre participation"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Vous testez la confidentialité des annonces Android en bêta. Privacy Sandbox est activé pour votre appareil.\n\nPour en savoir plus ou désactiver la version bêta, ouvrez à tout moment les paramètres de confidentialité."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Vous avez choisi de ne pas participer"</string>
@@ -79,8 +80,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Aucun centre d\'intérêt à afficher pour l\'instant"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"La version bêta de la configuration des annonces Android offre de nouvelles fonctionnalités permettant aux applis de vous présenter des annonces susceptibles de vous plaire. Ces technologies n\'utilisent pas les identifiants des appareils.\n\nAndroid peut déterminer les types d\'annonces susceptibles de vous intéresser et enregistrer provisoirement ces centres d\'intérêt sur votre appareil. Les applis peuvent ainsi vous présenter des annonces pertinentes, sans surveiller vos activités sur les sites Web et les applis d\'autres développeurs."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Vous n\'avez aucun centre d\'intérêt bloqué"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Les applis peuvent déterminer vos centres d\'intérêt et les enregistrer provisoirement avec Android. Ensuite, une autre appli peut vous présenter une annonce en fonction de ces centres d\'intérêt.\n\nSi vous bloquez une appli, elle ne déterminera plus de centre d\'intérêt. Elle ne sera plus ajoutée à la liste des applis tant que vous ne l\'aurez pas débloquée. Les centres d\'intérêt qu\'elle a déjà générés seront aussi supprimés, mais vous pourrez quand même voir certaines annonces associées."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Applis que vous avez bloquées"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Réinitialiser les centres d\'intérêt déterminés par les applis"</string>
@@ -88,7 +88,25 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"La version bêta de la configuration des annonces Android offre de nouvelles fonctionnalités permettant aux applis de vous présenter des annonces susceptibles de vous plaire. Ces technologies n\'utilisent aucun identifiant d\'appareil.\n\nLes applis peuvent déterminer les types d\'annonces susceptibles de vous intéresser et enregistrer provisoirement ces centres d\'intérêt sur votre appareil. Les applis peuvent ainsi vous présenter des annonces pertinentes, sans surveiller vos activités sur les sites Web et les applis d\'autres développeurs."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Vous n\'avez aucune appli bloquée"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Vous n\'avez aucun centre d\'intérêt bloqué"</string>
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Annuler"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Désactiver Privacy Sandbox ?"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Si vous changez d\'avis ou si vous voulez en savoir plus sur la confidentialité des annonces d\'Android (bêta), accédez à vos paramètres de confidentialité"</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Désactiver"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Bloquer <xliff:g id="TOPIC">%1$s</xliff:g> ?"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"Ce centre d\'intérêt sera bloqué et ne sera pas ajouté à nouveau à votre liste, sauf si vous l\'ajoutez vous-même. Toutefois, vous continuerez peut-être à voir des annonces qui s\'y rapportent."</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Bloquer"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"<xliff:g id="TOPIC">%1$s</xliff:g> est débloqué"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android est susceptible d\'ajouter à nouveau ce centre d\'intérêt à votre liste, mais il est possible qu\'il n\'apparaisse pas immédiatement"</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Réinitialiser tous vos centres d\'intérêt ?"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"Votre liste sera effacée, puis de nouveaux centres d\'intérêt seront estimés au fil du temps. Toutefois, vous continuerez peut-être à voir des annonces qui se rapportent aux centres d\'intérêt supprimés."</string>
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Réinitialiser"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Bloquer <xliff:g id="APP">%1$s</xliff:g> ?"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Cette appli ne déterminera pas les centres d\'intérêt pour Privacy Sandbox et ne sera pas ajoutée à nouveau à votre liste, sauf si vous la débloquez.\n\nLes centres d\'intérêt déjà déterminés par cette appli seront supprimés, mais vous continuerez peut-être à voir des annonces qui s\'y rapportent."</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> est débloqué"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Cette appli pourra déterminer à nouveau vos centres d\'intérêt, mais il est possible qu\'ils n\'apparaissent pas immédiatement dans votre liste. Un délai peut être constaté avant que vous ne voyiez des annonces qui s\'y rapportent."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Réinitialiser les centres d\'intérêt générés par les applis ?"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"Les centres d\'intérêt estimés par les applis de votre liste seront supprimés de Privacy Sandbox et les applis estimeront de nouveaux centres d\'intérêt à partir de maintenant. Toutefois, vous continuerez peut-être à voir des annonces qui s\'y rapportent."</string>
     <string name="topic10001" msgid="1636806320891333775">"Arts et divertissements"</string>
     <string name="topic10002" msgid="1226367977754287428">"Art dramatique"</string>
     <string name="topic10003" msgid="6949890838957814881">"Films d\'animation et manga"</string>

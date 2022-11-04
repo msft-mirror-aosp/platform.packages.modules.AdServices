@@ -18,10 +18,20 @@ package com.android.adservices.service.measurement.registration;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_ATTRIBUTION_FILTERS;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_BYTES_PER_ATTRIBUTION_AGGREGATE_KEY_ID;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_BYTES_PER_ATTRIBUTION_FILTER_STRING;
+import static com.android.adservices.service.measurement.SystemHealthParams.MAX_REDIRECTS_PER_REGISTRATION;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_VALUES_PER_ATTRIBUTION_FILTER;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS;
 
 import android.annotation.NonNull;
 import android.net.Uri;
+
+import com.android.adservices.LogUtil;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.measurement.AsyncRegistration;
+import com.android.adservices.service.measurement.util.AsyncRedirect;
+import com.android.adservices.service.measurement.util.Web;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.MeasurementRegistrationResponseStats;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -38,10 +48,8 @@ import java.util.Map;
  * @hide
  */
 class FetcherUtil {
-    /**
-     * Limit recursion.
-     */
-    static final int REDIRECT_LIMIT = 5;
+    static final String REDIRECT_LIST_HEADER_KEY = "Attribution-Reporting-Redirect";
+    static final String REDIRECT_DAISY_CHAIN_HEADER_KEY = "Location";
 
     /**
      * Determine all redirects.
@@ -49,16 +57,23 @@ class FetcherUtil {
      * <p>Generates a list of: (url, allows_regular_redirects) tuples. Returns true if all steps
      * succeed. Returns false if there are any failures.
      */
-    static List<Uri> parseRedirects(@NonNull Map<String, List<String>> headers) {
+    static AsyncRedirect parseRedirects(@NonNull Map<String, List<String>> headers,
+            @AsyncRegistration.RedirectType int redirectType) {
         List<Uri> redirects = new ArrayList<>();
-        List<String> field = headers.get("Attribution-Reporting-Redirect");
-        if (field != null) {
-            for (int i = 0; i < Math.min(field.size(), REDIRECT_LIMIT); i++) {
-                redirects.add(Uri.parse(field.get(i)));
-            }
+        switch (redirectType) {
+            case AsyncRegistration.RedirectType.ANY:
+                if (headers.containsKey(REDIRECT_LIST_HEADER_KEY)) {
+                    return parseListRedirects(headers, redirects);
+                } else if (headers.containsKey(REDIRECT_DAISY_CHAIN_HEADER_KEY)) {
+                    return parseDaisyChainRedirects(headers, redirects);
+                }
+                return new AsyncRedirect(redirects, AsyncRegistration.RedirectType.NONE);
+            case AsyncRegistration.RedirectType.DAISY_CHAIN:
+                return parseDaisyChainRedirects(headers, redirects);
+            case AsyncRegistration.RedirectType.NONE:
+            default:
+                return new AsyncRedirect(redirects, AsyncRegistration.RedirectType.NONE);
         }
-
-        return redirects;
     }
 
     /**
@@ -127,5 +142,67 @@ class FetcherUtil {
             }
         }
         return true;
+    }
+
+    static void emitHeaderMetrics(
+            Flags flags,
+            AdServicesLogger logger,
+            int registrationType,
+            Map<String, List<String>> headers,
+            Uri registrationUri) {
+        long headerSize = calculateHeadersCharactersLength(headers);
+        long maxSize = flags.getMaxResponseBasedRegistrationPayloadSizeBytes();
+        String adTechDomain = null;
+
+        if (headerSize > maxSize) {
+            adTechDomain =
+                    Web.topPrivateDomainAndScheme(registrationUri).map(Uri::toString).orElse(null);
+        }
+
+        logger.logMeasurementRegistrationsResponseSize(
+                new MeasurementRegistrationResponseStats.Builder(
+                                AD_SERVICES_MEASUREMENT_REGISTRATIONS, registrationType, headerSize)
+                        .setAdTechDomain(adTechDomain)
+                        .build());
+    }
+
+    private static AsyncRedirect parseListRedirects(Map<String, List<String>> headers,
+            List<Uri> redirects) {
+        List<String> field = headers.get("Attribution-Reporting-Redirect");
+        if (field != null) {
+            for (int i = 0; i < Math.min(field.size(), MAX_REDIRECTS_PER_REGISTRATION); i++) {
+                redirects.add(Uri.parse(field.get(i)));
+            }
+        }
+        return new AsyncRedirect(redirects, AsyncRegistration.RedirectType.NONE);
+    }
+
+    private static AsyncRedirect parseDaisyChainRedirects(
+            Map<String, List<String>> headers, List<Uri> redirects) {
+        List<String> field = headers.get("Location");
+        if (field != null) {
+            redirects.add(Uri.parse(field.get(0)));
+            if (field.size() > 1) {
+                LogUtil.d("Expected one Location redirect only, others ignored!");
+            }
+        }
+        return new AsyncRedirect(redirects, AsyncRegistration.RedirectType.DAISY_CHAIN);
+    }
+
+    private static long calculateHeadersCharactersLength(Map<String, List<String>> headers) {
+        long size = 0;
+        for (String headerKey : headers.keySet()) {
+            if (headerKey != null) {
+                size = size + headerKey.length();
+                List<String> headerValues = headers.get(headerKey);
+                if (headerValues != null) {
+                    for (String headerValue : headerValues) {
+                        size = size + headerValue.length();
+                    }
+                }
+            }
+        }
+
+        return size;
     }
 }

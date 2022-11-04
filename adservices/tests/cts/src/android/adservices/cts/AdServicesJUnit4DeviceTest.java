@@ -32,7 +32,7 @@ import org.junit.runner.RunWith;
 public class AdServicesJUnit4DeviceTest {
     @Test
     public void testApiVersion() {
-        assertThat(AdServicesVersion.API_VERSION).isAtLeast(1);
+        assertThat(AdServicesVersion.API_VERSION).isAtLeast(2);
     }
 
     @Test
