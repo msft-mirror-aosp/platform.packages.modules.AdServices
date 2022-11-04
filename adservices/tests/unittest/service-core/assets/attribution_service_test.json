@@ -3455,12 +3455,9 @@
             "expiryTime": 8726400001,
             "priority": 100,
             "status": 0,
-            "aggregationKeys": [
-              {
-                "id": "campaignCounts",
-                "key_piece": "0x159"
-              }
-            ],
+            "aggregationKeys": {
+              "campaignCounts": "0x159"
+            },
             "registrant": "android-app://com.example.abc"
           }
         ],
@@ -3506,12 +3503,9 @@
             "appDestination": "android-app://com.example2.app/d1",
             "webDestination": "https://example2.com",
             "enrollmentId": "enrollment-id-3",
-            "aggregationKeys": [
-              {
-                "id": "campaignCounts",
-                "key_piece": "0x159"
-              }
-            ],
+            "aggregationKeys": {
+              "campaignCounts": "0x159"
+            },
             "aggregateContributions": 32678,
             "eventTime": 8640000001,
             "expiryTime": 8726400001,

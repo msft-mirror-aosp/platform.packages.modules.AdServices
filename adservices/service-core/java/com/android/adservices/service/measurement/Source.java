@@ -30,7 +30,6 @@ import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -639,15 +638,13 @@ public class Source {
         if (mAggregateSource == null) {
             return Optional.empty();
         }
-        JSONArray jsonArray = new JSONArray(mAggregateSource);
+        JSONObject jsonObject = new JSONObject(mAggregateSource);
         Map<String, BigInteger> aggregateSourceMap = new HashMap<>();
-        for (int i = 0; i < jsonArray.length(); i++) {
-            JSONObject jsonObject = jsonArray.getJSONObject(i);
-            String id = jsonObject.getString("id");
+        for (String key : jsonObject.keySet()) {
             // Remove "0x" prefix.
-            String hexString = jsonObject.getString("key_piece").substring(2);
+            String hexString = jsonObject.getString(key).substring(2);
             BigInteger bigInteger = new BigInteger(hexString, 16);
-            aggregateSourceMap.put(id, bigInteger);
+            aggregateSourceMap.put(key, bigInteger);
         }
         AggregatableAttributionSource.Builder aggregatableAttributionSourceBuilder =
                 new AggregatableAttributionSource.Builder()

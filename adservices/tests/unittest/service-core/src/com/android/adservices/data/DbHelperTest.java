@@ -159,12 +159,12 @@ public class DbHelperTest {
     }
 
     @Test
-    public void testSupportsTopContributorsTable() {
+    public void testSupportsTopicContributorsTable() {
         DbHelper dbHelperV2 = new DbHelper(sContext, getDatabaseNameForTest(), /* dbVersion*/ 2);
-        assertThat(dbHelperV2.supportsTopContributorsTable()).isFalse();
+        assertThat(dbHelperV2.supportsTopicContributorsTable()).isFalse();
 
         DbHelper dbHelperV3 = new DbHelper(sContext, getDatabaseNameForTest(), /* dbVersion*/ 3);
-        assertThat(dbHelperV3.supportsTopContributorsTable()).isTrue();
+        assertThat(dbHelperV3.supportsTopicContributorsTable()).isTrue();
     }
 
     @Test
