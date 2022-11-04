@@ -2477,7 +2477,9 @@ public final class AsyncSourceFetcherTest {
                 enrollmentId,
                 registrationRequest.getRegistrationUri(),
                 null,
-                null,
+                redirectType == AsyncRegistration.RedirectType.DAISY_CHAIN
+                        ? Uri.parse(DEFAULT_DESTINATION)
+                        : null,
                 Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + sContext.getPackageName()),
                 null,
                 Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + sContext.getPackageName()),
