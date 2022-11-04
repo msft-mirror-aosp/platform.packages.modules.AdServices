@@ -2494,7 +2494,7 @@ public class AdSelectionE2ETest {
                         .setCallerPackageName(callerPackageName)
                         .build();
 
-        adSelectionService.runAdSelection(input, mMockCallerMetadata, adSelectionTestCallback);
+        adSelectionService.selectAds(input, mMockCallerMetadata, adSelectionTestCallback);
         adSelectionTestCallback.mCountDownLatch.await();
         return adSelectionTestCallback;
     }
