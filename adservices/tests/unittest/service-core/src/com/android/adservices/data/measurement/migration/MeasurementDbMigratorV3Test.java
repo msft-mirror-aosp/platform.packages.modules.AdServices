@@ -20,6 +20,7 @@ import static com.android.adservices.data.DbTestUtil.doesIndexExist;
 import static com.android.adservices.data.DbTestUtil.doesTableExistAndColumnCountMatch;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import android.content.ContentValues;
@@ -29,9 +30,12 @@ import android.database.sqlite.SQLiteDatabase;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.measurement.MeasurementTables;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
+
 
 @RunWith(MockitoJUnitRunner.class)
 public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTestBase {
@@ -55,7 +59,7 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
     };
 
     @Test
-    public void performMigration_success_v2ToV3() {
+    public void performMigration_success_v2ToV3() throws JSONException {
         // Setup
         DbHelper dbHelper = getDbHelper(1);
         SQLiteDatabase db = dbHelper.getWritableDatabase();
@@ -63,6 +67,7 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
         // Execution
         new MeasurementDbMigratorV2().performMigration(db, 1, 2);
 
+        insertV2Sources(db);
         insertEventReports(db);
 
         new MeasurementDbMigratorV3().performMigration(db, 2, 3);
@@ -83,6 +88,7 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
                 doesTableExistAndColumnCountMatch(
                         db, MeasurementTables.AttributionContract.TABLE, 10));
         assertTrue(doesIndexExist(db, "idx_msmt_attribution_ss_so_ds_do_ei_tt"));
+        assertSourceMigration(db);
         assertEventReportMigration(db);
     }
 
@@ -106,6 +112,46 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
         }
     }
 
+    private static void insertV2Sources(SQLiteDatabase db) {
+        // insert a source with valid aggregatable source
+        String validAggregatableSourceV2 =
+                "[\n"
+                        + "              {\n"
+                        + "                \"id\": \"campaignCounts\",\n"
+                        + "                \"key_piece\": \"0x159\"\n"
+                        + "              },\n"
+                        + "              {\n"
+                        + "                \"id\": \"geoValue\",\n"
+                        + "                \"key_piece\": \"0x5\"\n"
+                        + "              }\n"
+                        + "            ]";
+        insertSource(db, "1", validAggregatableSourceV2);
+
+        // insert a source with invalid aggregatable source
+        String invalidAggregatableSourceV2 =
+                "[\n"
+                        + "              {\n"
+                        + "                \"id\": \"campaignCounts\",\n"
+                        + "                \"key_piece\": \"0x159\"\n"
+                        + "              ,\n" // missing closing brace making it invalid
+                        + "              {\n"
+                        + "                \"id\": \"geoValue\",\n"
+                        + "                \"key_piece\": \"0x5\"\n"
+                        + "              }\n"
+                        + "            ]";
+        insertSource(db, "2", invalidAggregatableSourceV2);
+    }
+
+    private static void insertSource(
+            SQLiteDatabase db, String id, String invalidAggregatableSourceV2) {
+        ContentValues invalidValues = new ContentValues();
+        invalidValues.put(MeasurementTables.SourceContract.ID, id);
+        invalidValues.put(
+                MeasurementTables.SourceContract.AGGREGATE_SOURCE, invalidAggregatableSourceV2);
+
+        db.insert(MeasurementTables.SourceContract.TABLE, null, invalidValues);
+    }
+
     private static void assertEventReportMigration(SQLiteDatabase db) {
         Cursor cursor = db.query(
                 MeasurementTables.EventReportContract.TABLE,
@@ -120,6 +166,39 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
         while (cursor.moveToNext()) {
             assertEventReportMigrated(cursor);
         }
+    }
+
+    private static void assertSourceMigration(SQLiteDatabase db) throws JSONException {
+        Cursor cursor =
+                db.query(
+                        MeasurementTables.SourceContract.TABLE,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        MeasurementTables.SourceContract.ID,
+                        null);
+
+        assertEquals(2, cursor.getCount());
+
+        // valid aggregate source case
+        assertTrue(cursor.moveToNext());
+        String aggregateSourceString1 =
+                cursor.getString(
+                        cursor.getColumnIndex(MeasurementTables.SourceContract.AGGREGATE_SOURCE));
+        JSONObject aggregateSourceJsonObject = new JSONObject(aggregateSourceString1);
+
+        assertEquals(2, aggregateSourceJsonObject.length());
+        assertEquals("0x159", aggregateSourceJsonObject.getString("campaignCounts"));
+        assertEquals("0x5", aggregateSourceJsonObject.getString("geoValue"));
+
+        // invalid aggregate source case
+        assertTrue(cursor.moveToNext());
+        String aggregateSourceString2 =
+                cursor.getString(
+                        cursor.getColumnIndex(MeasurementTables.SourceContract.AGGREGATE_SOURCE));
+        assertNull(aggregateSourceString2);
     }
 
     private static void insertEventReport(SQLiteDatabase db, String id, String destination,
