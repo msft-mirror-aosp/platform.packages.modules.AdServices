@@ -98,6 +98,7 @@ public class AsyncRegistrationQueueRunnerTest {
     private static final String DEFAULT_ENROLLMENT_ID = "enrollment_id";
     private static final Uri DEFAULT_REGISTRANT = Uri.parse("android-app://com.registrant");
     private static final Uri DEFAULT_VERIFIED_DESTINATION = Uri.parse("android-app://com.example");
+    private static final String SDK_PACKAGE_NAME = "sdk.package.name";
     private static final Uri APP_TOP_ORIGIN =
             Uri.parse("android-app://" + sDefaultContext.getPackageName());
     private static final Uri WEB_TOP_ORIGIN = Uri.parse("https://example.com");
@@ -1928,10 +1929,11 @@ public class AsyncRegistrationQueueRunnerTest {
     }
 
     private RegistrationRequest buildRequest(String registrationUri) {
-        return new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
-                .setRegistrationUri(Uri.parse(registrationUri))
-                .setPackageName(sDefaultContext.getAttributionSource().getPackageName())
+        return new RegistrationRequest.Builder(
+                        RegistrationRequest.REGISTER_SOURCE,
+                        Uri.parse(registrationUri),
+                        sDefaultContext.getAttributionSource().getPackageName(),
+                        SDK_PACKAGE_NAME)
                 .setAdIdPermissionGranted(true)
                 .build();
     }
