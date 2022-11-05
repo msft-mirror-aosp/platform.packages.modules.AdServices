@@ -92,6 +92,7 @@ import javax.net.ssl.HttpsURLConnection;
 public final class AsyncTriggerFetcherTest {
     private static final String ANDROID_APP_SCHEME = "android-app";
     private static final String ANDROID_APP_SCHEME_URI_PREFIX = ANDROID_APP_SCHEME + "://";
+    private static final String SDK_PACKAGE_NAME = "sdk.package.name";
     private static final String TRIGGER_URI = "https://foo.com";
     private static final String ENROLLMENT_ID = "enrollment-id";
     private static final EnrollmentData ENROLLMENT =
@@ -2622,18 +2623,20 @@ public final class AsyncTriggerFetcherTest {
         verify(mLogger).logMeasurementRegistrationsResponseSize(eq(expectedStats));
     }
     private RegistrationRequest buildRequest(String triggerUri) {
-        return new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
-                .setRegistrationUri(Uri.parse(triggerUri))
-                .setPackageName(CONTEXT.getAttributionSource().getPackageName())
+        return new RegistrationRequest.Builder(
+                        RegistrationRequest.REGISTER_TRIGGER,
+                        Uri.parse(triggerUri),
+                        CONTEXT.getAttributionSource().getPackageName(),
+                        SDK_PACKAGE_NAME)
                 .setAdIdPermissionGranted(true)
                 .build();
     }
     private RegistrationRequest buildRequestWithoutAdIdPermission(String triggerUri) {
-        return new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
-                .setRegistrationUri(Uri.parse(triggerUri))
-                .setPackageName(CONTEXT.getAttributionSource().getPackageName())
+        return new RegistrationRequest.Builder(
+                        RegistrationRequest.REGISTER_TRIGGER,
+                        Uri.parse(triggerUri),
+                        CONTEXT.getAttributionSource().getPackageName(),
+                        SDK_PACKAGE_NAME)
                 .setAdIdPermissionGranted(false)
                 .build();
     }
