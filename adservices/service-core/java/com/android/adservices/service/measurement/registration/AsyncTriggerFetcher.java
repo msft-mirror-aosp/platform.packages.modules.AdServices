@@ -299,7 +299,6 @@ public class AsyncTriggerFetcher {
     }
 
     private Optional<String> getValidEventTriggerData(JSONArray eventTriggerDataArr) {
-
         if (eventTriggerDataArr.length() > MAX_ATTRIBUTION_EVENT_TRIGGER_DATA) {
             LogUtil.d(
                     "Event trigger data list has more entries than permitted. %s",
@@ -313,15 +312,15 @@ public class AsyncTriggerFetcher {
                 JSONObject eventTriggerDatum = eventTriggerDataArr.getJSONObject(i);
                 // Treat invalid trigger data, priority and deduplication key as if they were not
                 // set.
+                UnsignedLong triggerData = new UnsignedLong(0L);
                 if (!eventTriggerDatum.isNull("trigger_data")) {
                     try {
-                        validEventTriggerDatum.put(
-                                "trigger_data",
-                                new UnsignedLong(eventTriggerDatum.getString("trigger_data")));
+                        triggerData = new UnsignedLong(eventTriggerDatum.getString("trigger_data"));
                     } catch (NumberFormatException e) {
                         LogUtil.d(e, "getValidEventTriggerData: parsing trigger_data failed.");
                     }
                 }
+                validEventTriggerDatum.put("trigger_data", triggerData);
                 if (!eventTriggerDatum.isNull("priority")) {
                     try {
                         validEventTriggerDatum.put(

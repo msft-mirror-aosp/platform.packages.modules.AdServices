@@ -591,7 +591,7 @@ public final class AsyncSourceFetcherTest {
     }
 
     @Test
-    public void testBasicSourceRequest_sourceEventId_negative() throws Exception {
+    public void fetchSource_sourceEventIdNegative_fetchSuccess() throws Exception {
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
@@ -613,13 +613,13 @@ public final class AsyncSourceFetcherTest {
                         appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
 
         // Assertion
-        assertFalse(fetch.isPresent());
+        assertTrue(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
     }
 
     @Test
-    public void testBasicSourceRequest_sourceEventId_tooLarge() throws Exception {
+    public void fetchSource_sourceEventIdTooLarge_fetchSuccess() throws Exception {
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
@@ -641,13 +641,13 @@ public final class AsyncSourceFetcherTest {
                         appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
 
         // Assertion
-        assertFalse(fetch.isPresent());
+        assertTrue(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
     }
 
     @Test
-    public void testBasicSourceRequest_sourceEventId_notAnInt() throws Exception {
+    public void fetchSource_sourceEventIdNotAnInt_fetchSuccess() throws Exception {
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
@@ -669,7 +669,7 @@ public final class AsyncSourceFetcherTest {
                         appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
 
         // Assertion
-        assertFalse(fetch.isPresent());
+        assertTrue(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
     }
@@ -2477,7 +2477,9 @@ public final class AsyncSourceFetcherTest {
                 enrollmentId,
                 registrationRequest.getRegistrationUri(),
                 null,
-                null,
+                redirectType == AsyncRegistration.RedirectType.DAISY_CHAIN
+                        ? Uri.parse(DEFAULT_DESTINATION)
+                        : null,
                 Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + sContext.getPackageName()),
                 null,
                 Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + sContext.getPackageName()),
