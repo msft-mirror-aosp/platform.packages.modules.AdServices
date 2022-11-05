@@ -1307,15 +1307,9 @@ public class SourceTest {
 
     @Test
     public void testParseAggregateSource() throws JSONException {
-        JSONArray aggregatableSource = new JSONArray();
-        JSONObject jsonObject1 = new JSONObject();
-        jsonObject1.put("id", "campaignCounts");
-        jsonObject1.put("key_piece", "0x159");
-        JSONObject jsonObject2 = new JSONObject();
-        jsonObject2.put("id", "geoValue");
-        jsonObject2.put("key_piece", "0x5");
-        aggregatableSource.put(jsonObject1);
-        aggregatableSource.put(jsonObject2);
+        JSONObject aggregatableSource = new JSONObject();
+        aggregatableSource.put("campaignCounts", "0x159");
+        aggregatableSource.put("geoValue", "0x5");
 
         JSONObject filterData = new JSONObject();
         filterData.put("conversion_subdomain",

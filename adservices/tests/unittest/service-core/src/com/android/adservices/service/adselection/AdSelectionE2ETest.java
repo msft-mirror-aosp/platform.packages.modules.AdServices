@@ -38,6 +38,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.mock;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
@@ -2291,8 +2292,10 @@ public class AdSelectionE2ETest {
      */
     private void resetThrottlerToNoRateLimits() {
         Throttler.destroyExistingThrottler();
-        final double noRateLimit = -1;
-        Throttler.getInstance(noRateLimit);
+        final float noRateLimit = -1;
+        Flags mockNoRateLimitFlags = mock(Flags.class);
+        doReturn(noRateLimit).when(mockNoRateLimitFlags).getSdkRequestPermitsPerSecond();
+        Throttler.getInstance(mockNoRateLimitFlags);
     }
 
     @Test
@@ -2491,7 +2494,7 @@ public class AdSelectionE2ETest {
                         .setCallerPackageName(callerPackageName)
                         .build();
 
-        adSelectionService.runAdSelection(input, mMockCallerMetadata, adSelectionTestCallback);
+        adSelectionService.selectAds(input, mMockCallerMetadata, adSelectionTestCallback);
         adSelectionTestCallback.mCountDownLatch.await();
         return adSelectionTestCallback;
     }

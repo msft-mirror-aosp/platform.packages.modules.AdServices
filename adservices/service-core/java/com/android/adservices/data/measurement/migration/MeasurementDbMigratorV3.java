@@ -26,6 +26,12 @@ import com.android.adservices.data.measurement.MeasurementTables;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.Web;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 /** Migrates Measurement DB from user version 2 to 3. */
@@ -35,8 +41,28 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
             MeasurementTables.EventReportContract.TABLE + "_backup";
     private static final String AGGREGATE_REPORT_CONTRACT_BACKUP =
             MeasurementTables.AggregateReport.TABLE + "_backup";
-    private static final String ATTRIBUTION_REPORT_CONTRACT_BACKUP =
+    private static final String ATTRIBUTION_CONTRACT_BACKUP =
             MeasurementTables.AttributionContract.TABLE + "_backup";
+    private static final String ATTRIBUTION_CREATE_INDEX_SS_SO_DS_DO_EI_TT =
+            "CREATE INDEX "
+                    + MeasurementTables.INDEX_PREFIX
+                    + MeasurementTables.AttributionContract.TABLE
+                    + "_ss_so_ds_do_ei_tt"
+                    + " ON "
+                    + MeasurementTables.AttributionContract.TABLE
+                    + "("
+                    + MeasurementTables.AttributionContract.SOURCE_SITE
+                    + ", "
+                    + MeasurementTables.AttributionContract.SOURCE_ORIGIN
+                    + ", "
+                    + MeasurementTables.AttributionContract.DESTINATION_SITE
+                    + ", "
+                    + MeasurementTables.AttributionContract.DESTINATION_ORIGIN
+                    + ", "
+                    + MeasurementTables.AttributionContract.ENROLLMENT_ID
+                    + ", "
+                    + MeasurementTables.AttributionContract.TRIGGER_TIME
+                    + ")";
 
     private static final String[] ALTER_STATEMENTS_VER_3 = {
         String.format(
@@ -122,12 +148,13 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
         String.format("DROP TABLE %1$s", AGGREGATE_REPORT_CONTRACT_BACKUP),
         String.format(
                 "ALTER TABLE %1$s RENAME TO %2$s",
-                MeasurementTables.AttributionContract.TABLE, ATTRIBUTION_REPORT_CONTRACT_BACKUP),
+                MeasurementTables.AttributionContract.TABLE, ATTRIBUTION_CONTRACT_BACKUP),
         MeasurementTables.CREATE_TABLE_ATTRIBUTION_V3,
         String.format(
                 "INSERT INTO %1$s SELECT * FROM %2$s",
-                MeasurementTables.AttributionContract.TABLE, ATTRIBUTION_REPORT_CONTRACT_BACKUP),
-        String.format("DROP TABLE %1$s", ATTRIBUTION_REPORT_CONTRACT_BACKUP),
+                MeasurementTables.AttributionContract.TABLE, ATTRIBUTION_CONTRACT_BACKUP),
+        String.format("DROP TABLE %1$s", ATTRIBUTION_CONTRACT_BACKUP),
+        ATTRIBUTION_CREATE_INDEX_SS_SO_DS_DO_EI_TT
     };
 
     public MeasurementDbMigratorV3() {
@@ -139,6 +166,7 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
         for (String sql : ALTER_STATEMENTS_VER_3) {
             db.execSQL(sql);
         }
+        migrateSourceData(db);
         migrateEventReportData(db);
     }
 
@@ -153,6 +181,49 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
             while (cursor.moveToNext()) {
                 updateEventReport(db, cursor);
             }
+        }
+    }
+
+    private static void migrateSourceData(SQLiteDatabase db) {
+        try (Cursor cursor =
+                db.query(
+                        MeasurementTables.SourceContract.TABLE,
+                        new String[] {
+                            MeasurementTables.SourceContract.ID,
+                            MeasurementTables.SourceContract.AGGREGATE_SOURCE
+                        },
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null)) {
+            while (cursor.moveToNext()) {
+                String id =
+                        cursor.getString(
+                                cursor.getColumnIndex(MeasurementTables.SourceContract.ID));
+                String aggregateSourceV2 =
+                        cursor.getString(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.SourceContract.AGGREGATE_SOURCE));
+                String aggregateSourceV3 = convertAggregateSource(aggregateSourceV2);
+                updateAggregateSource(db, id, aggregateSourceV3);
+            }
+        }
+    }
+
+    private static void updateAggregateSource(
+            SQLiteDatabase db, String id, String aggregateSourceV3) {
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.SourceContract.AGGREGATE_SOURCE, aggregateSourceV3);
+        long rowCount =
+                db.update(
+                        MeasurementTables.SourceContract.TABLE,
+                        values,
+                        MeasurementTables.SourceContract.ID + " = ?",
+                        new String[] {id});
+        if (rowCount != 1) {
+            LogUtil.d("MeasurementDbMigratorV3: failed to update aggregate source record.");
         }
     }
 
@@ -195,5 +266,25 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
             return Optional.of(topPrivateDomainAndScheme.get().toString());
         }
         return Optional.empty();
+    }
+
+    private static String convertAggregateSource(String aggregateSourceStringV2) {
+        if (aggregateSourceStringV2 == null) {
+            return null;
+        }
+        try {
+            JSONArray jsonArray = new JSONArray(aggregateSourceStringV2);
+            Map<String, String> aggregateSourceMap = new HashMap<>();
+            for (int i = 0; i < jsonArray.length(); i++) {
+                JSONObject jsonObject = jsonArray.getJSONObject(i);
+                String key = jsonObject.getString("id");
+                String value = jsonObject.getString("key_piece");
+                aggregateSourceMap.put(key, value);
+            }
+            return new JSONObject(aggregateSourceMap).toString();
+        } catch (JSONException e) {
+            LogUtil.e(e, "Aggregate source parsing failed when migrating from V2 to V3.");
+            return null;
+        }
     }
 }

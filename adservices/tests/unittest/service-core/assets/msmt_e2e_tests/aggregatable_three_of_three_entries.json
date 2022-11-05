@@ -27,20 +27,11 @@
                 "id"
               ]
             },
-            "aggregation_keys": [
-              {
-                "id": "campaignCounts",
-                "key_piece": "0x159"
-              },
-              {
-                "id": "geoValue",
-                "key_piece": "0x5"
-              },
-              {
-                "id": "thirdSource",
-                "key_piece": "0x100"
-              }
-            ]
+            "aggregation_keys": {
+              "campaignCounts": "0x159",
+              "geoValue": "0x5",
+              "thirdSource": "0x100"
+            }
           },
           "Location": null,
           "Attribution-Reporting-Redirect": null

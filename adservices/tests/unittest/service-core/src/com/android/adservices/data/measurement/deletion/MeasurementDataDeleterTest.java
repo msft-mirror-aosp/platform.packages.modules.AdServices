@@ -114,7 +114,8 @@ public class MeasurementDataDeleterTest {
 
     private static final Instant START = Instant.ofEpochMilli(5000);
     private static final Instant END = Instant.ofEpochMilli(10000);
-    private static final String PACKAGE_NAME = "com.package.name";
+    private static final String APP_PACKAGE_NAME = "app.package.name";
+    private static final String SDK_PACKAGE_NAME = "sdk.package.name";
 
     @Mock private IMeasurementDao mMeasurementDao;
     @Mock private ITransaction mTransaction;
@@ -287,14 +288,15 @@ public class MeasurementDataDeleterTest {
         when(mAggregateReport1.getId()).thenReturn("aggregateReportId1");
         when(mAggregateReport2.getId()).thenReturn("aggregateReportId2");
         DeletionParam deletionParam =
-                new DeletionParam.Builder()
-                        .setOriginUris(mOriginUris)
-                        .setDomainUris(mDomainUris)
+                new DeletionParam.Builder(
+                                mOriginUris,
+                                mDomainUris,
+                                START,
+                                END,
+                                APP_PACKAGE_NAME,
+                                SDK_PACKAGE_NAME)
                         .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
-                        .setStart(START)
-                        .setEnd(END)
                         .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
-                        .setPackageName(PACKAGE_NAME)
                         .build();
 
         doNothing()
@@ -309,7 +311,7 @@ public class MeasurementDataDeleterTest {
         when(mMeasurementDao.fetchMatchingAggregateReports(sourceIds, triggerIds))
                 .thenReturn(List.of(mAggregateReport1, mAggregateReport2));
         when(mMeasurementDao.fetchMatchingSources(
-                        Uri.parse(ANDROID_APP_SCHEME + "://" + PACKAGE_NAME),
+                        Uri.parse(ANDROID_APP_SCHEME + "://" + APP_PACKAGE_NAME),
                         START,
                         END,
                         mOriginUris,
@@ -317,7 +319,7 @@ public class MeasurementDataDeleterTest {
                         DeletionRequest.MATCH_BEHAVIOR_DELETE))
                 .thenReturn(Arrays.asList(source1.getId(), source2.getId()));
         when(mMeasurementDao.fetchMatchingTriggers(
-                        Uri.parse(ANDROID_APP_SCHEME + "://" + PACKAGE_NAME),
+                        Uri.parse(ANDROID_APP_SCHEME + "://" + APP_PACKAGE_NAME),
                         START,
                         END,
                         mOriginUris,
@@ -354,14 +356,15 @@ public class MeasurementDataDeleterTest {
         when(mAggregateReport1.getId()).thenReturn("aggregateReportId1");
         when(mAggregateReport2.getId()).thenReturn("aggregateReportId2");
         DeletionParam deletionParam =
-                new DeletionParam.Builder()
-                        .setOriginUris(mOriginUris)
-                        .setDomainUris(mDomainUris)
+                new DeletionParam.Builder(
+                                mOriginUris,
+                                mDomainUris,
+                                START,
+                                END,
+                                APP_PACKAGE_NAME,
+                                SDK_PACKAGE_NAME)
                         .setDeletionMode(DeletionRequest.DELETION_MODE_EXCLUDE_INTERNAL_DATA)
-                        .setStart(START)
-                        .setEnd(END)
                         .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
-                        .setPackageName(PACKAGE_NAME)
                         .build();
 
         doNothing()
@@ -376,7 +379,7 @@ public class MeasurementDataDeleterTest {
         when(mMeasurementDao.fetchMatchingAggregateReports(sourceIds, triggerIds))
                 .thenReturn(List.of(mAggregateReport1, mAggregateReport2));
         when(mMeasurementDao.fetchMatchingSources(
-                        Uri.parse(ANDROID_APP_SCHEME + "://" + PACKAGE_NAME),
+                        Uri.parse(ANDROID_APP_SCHEME + "://" + APP_PACKAGE_NAME),
                         START,
                         END,
                         mOriginUris,
@@ -384,7 +387,7 @@ public class MeasurementDataDeleterTest {
                         DeletionRequest.MATCH_BEHAVIOR_DELETE))
                 .thenReturn(Arrays.asList(source1.getId(), source2.getId()));
         when(mMeasurementDao.fetchMatchingTriggers(
-                        Uri.parse(ANDROID_APP_SCHEME + "://" + PACKAGE_NAME),
+                        Uri.parse(ANDROID_APP_SCHEME + "://" + APP_PACKAGE_NAME),
                         START,
                         END,
                         mOriginUris,

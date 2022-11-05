@@ -99,16 +99,14 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android អាចបញ្ចូល​ចំណាប់អារម្មណ៍នេះ​ទៅក្នុងបញ្ជីរបស់អ្នក​ម្ដងទៀត ប៉ុន្តែចំណាប់អារម្មណ៍នេះ​ប្រហែលជាមិនបង្ហាញភ្លាមៗទេ"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"យល់ព្រម"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"កំណត់​ចំណាប់អារម្មណ៍ទាំងអស់របស់អ្នក​ឡើងវិញឬ?"</string>
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"បញ្ជីរបស់អ្នកនឹងត្រូវបានលុប ហើយចំណាប់អារម្មណ៍ថ្មីនឹងត្រូវបានប៉ាន់ស្មានពីពេលនេះតទៅ។ អ្នកនៅតែអាចមើលឃើញការផ្សាយពាណិជ្ជកម្មមួយចំនួនដែលពាក់ព័ន្ធនឹងចំណាប់អារម្មណ៍ដែលបានលុប។"</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"កំណត់​ឡើងវិញ"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"ទប់ស្កាត់ <xliff:g id="APP">%1$s</xliff:g> ឬ?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"កម្មវិធីនេះ​នឹងមិនប៉ាន់ស្មាន​ចំណាប់អារម្មណ៍​សម្រាប់ Privacy Sandbox ហើយនឹងមិនត្រូវបានបញ្ចូល​ទៅក្នុងបញ្ជីរបស់អ្នក​ម្ដងទៀតទេ ប្រសិនបើអ្នក​មិនឈប់ទប់ស្កាត់​កម្មវិធីនេះទេ។\n\nចំណាប់អារម្មណ៍​ដែលបានប៉ាន់ស្មានដោយកម្មវិធីនេះ​រួចហើយ​នឹងត្រូវបានលុប ប៉ុន្តែអ្នកប្រហែលជា​នៅតែមើលឃើញ​ការផ្សាយពាណិជ្ជកម្មដែលពាក់ព័ន្ធ​មួយចំនួន។"</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> ត្រូវបាន​ឈប់ទប់ស្កាត់"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"កម្មវិធីនេះ​អាចប៉ាន់ស្មាន​ចំណាប់អារម្មណ៍​សម្រាប់អ្នកម្ដងទៀត ប៉ុន្តែចំណាប់អារម្មណ៍នេះប្រហែលជាមិនបង្ហាញ​នៅលើបញ្ជីរបស់អ្នក​ភ្លាមៗនោះទេ។ អាចចំណាយពេលបន្តិច ដើម្បីឱ្យអ្នកមើលឃើញ​ការផ្សាយពាណិជ្ជកម្ម​ដែលពាក់ព័ន្ធ។"</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"កំណត់ចំណាប់អារម្មណ៍​ដែលបង្កើតដោយកម្មវិធី​ឡើងវិញឬ?"</string>
-    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"ចំណាប់អារម្មណ៍ដែលបានប៉ាន់ស្មានដោយកម្មវិធីក្នុងបញ្ជីរបស់អ្នកនឹងត្រូវលុបចេញពី Privacy Sandbox ហើយកម្មវិធីនឹងប៉ាន់ស្មានចំណាប់អារម្មណ៍ថ្មីពីពេលនេះតទៅ។ អ្នកនៅតែអាចមើលឃើញការផ្សាយពាណិជ្ជកម្មមួយចំនួនដែលពាក់ព័ន្ធ។"</string>
     <string name="topic10001" msgid="1636806320891333775">"សិល្បៈ និងការកម្សាន្ត"</string>
     <string name="topic10002" msgid="1226367977754287428">"ការសម្ដែង និងរោង​ល្ខោន"</string>
     <string name="topic10003" msgid="6949890838957814881">"គំនូរជីវចល និងតុក្កតា"</string>

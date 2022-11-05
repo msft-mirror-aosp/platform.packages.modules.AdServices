@@ -79,7 +79,10 @@ public final class RegisterWebSource implements Action {
 
         mRegistrationRequest =
                 new WebSourceRegistrationRequestInternal.Builder(
-                                registrationRequest, attributionSource.getPackageName(), 2000L)
+                                registrationRequest,
+                                attributionSource.getPackageName(),
+                                /* sdkPackageName = */ "",
+                                /* requestTime =*/ 2000L)
                         .setAdIdPermissionGranted(
                                 regParamsJson.optBoolean(
                                         TestFormatJsonMapping.IS_ADID_PERMISSION_GRANTED_KEY, true))
