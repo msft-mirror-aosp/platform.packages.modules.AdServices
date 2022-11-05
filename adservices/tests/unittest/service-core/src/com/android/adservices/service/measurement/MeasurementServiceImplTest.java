@@ -24,6 +24,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSEN
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -73,6 +74,7 @@ import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.enrollment.EnrollmentFixture;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.TestableDeviceConfig;
@@ -81,6 +83,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
@@ -102,7 +105,8 @@ public final class MeasurementServiceImplTest {
     public final TestableDeviceConfig.TestableDeviceConfigRule mDeviceConfigRule =
             new TestableDeviceConfig.TestableDeviceConfigRule();
 
-    private static final String PACKAGE_NAME = "test.package.name";
+    private static final String APP_PACKAGE_NAME = "app.package.name";
+    private static final String SDK_PACKAGE_NAME = "sdk.package.name";
     private static final String ALLOW_LIST_WITHOUT_TEST_PACKAGE =
             "test1.package.name,test1.package.name";
     private static final Uri REGISTRATION_URI = Uri.parse("https://registration-uri.com");
@@ -114,7 +118,8 @@ public final class MeasurementServiceImplTest {
             new WebSourceParams.Builder(REGISTRATION_URI).setDebugKeyAllowed(true).build();
     private static final WebTriggerParams TRIGGER_REGISTRATION =
             new WebTriggerParams.Builder(REGISTRATION_URI).setDebugKeyAllowed(true).build();
-    private static final StatusParam STATUS_PARAM = new StatusParam.Builder(PACKAGE_NAME).build();
+    private static final StatusParam STATUS_PARAM =
+            new StatusParam.Builder(APP_PACKAGE_NAME, SDK_PACKAGE_NAME).build();
 
     @Mock private AppImportanceFilter mMockAppImportanceFilter;
     @Mock private PackageManager mPackageManager;
@@ -220,7 +225,7 @@ public final class MeasurementServiceImplTest {
             assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
             assertThat(list.size()).isEqualTo(1);
             assertThat(list.get(0)).isEqualTo(STATUS_SUCCESS);
-
+            assertPackageNameLogged();
         } finally {
             mMockitoSession.finishMocking();
         }
@@ -833,6 +838,7 @@ public final class MeasurementServiceImplTest {
             assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
             assertThat(list.get(0)).isEqualTo(STATUS_SUCCESS);
             assertThat(list.size()).isEqualTo(1);
+            assertPackageNameLogged();
         } finally {
             mMockitoSession.finishMocking();
         }
@@ -1238,6 +1244,7 @@ public final class MeasurementServiceImplTest {
             assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
             assertThat(resultWrapper.get())
                     .isEqualTo(MeasurementManager.MEASUREMENT_API_STATE_ENABLED);
+            assertPackageNameLogged();
         } finally {
             session.finishMocking();
         }
@@ -1482,6 +1489,7 @@ public final class MeasurementServiceImplTest {
             assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
             assertThat(list.get(0)).isEqualTo(STATUS_SUCCESS);
             assertThat(list.size()).isEqualTo(1);
+            assertPackageNameLogged();
         } finally {
             mMockitoSession.finishMocking();
         }
@@ -1821,6 +1829,7 @@ public final class MeasurementServiceImplTest {
             assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
             assertThat(list.get(0)).isEqualTo(STATUS_SUCCESS);
             assertThat(list.size()).isEqualTo(1);
+            assertPackageNameLogged();
         } finally {
             mMockitoSession.finishMocking();
         }
@@ -2528,18 +2537,20 @@ public final class MeasurementServiceImplTest {
     }
 
     private RegistrationRequest getDefaultRegistrationSourceRequest() {
-        return new RegistrationRequest.Builder()
-                .setPackageName(PACKAGE_NAME)
-                .setRegistrationUri(Uri.parse("https://registration-uri.com"))
-                .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
+        return new RegistrationRequest.Builder(
+                        RegistrationRequest.REGISTER_SOURCE,
+                        Uri.parse("https://registration-uri.com"),
+                        APP_PACKAGE_NAME,
+                        SDK_PACKAGE_NAME)
                 .build();
     }
 
     private RegistrationRequest getDefaultRegistrationTriggerRequest() {
-        return new RegistrationRequest.Builder()
-                .setPackageName(PACKAGE_NAME)
-                .setRegistrationUri(Uri.parse("https://registration-uri.com"))
-                .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
+        return new RegistrationRequest.Builder(
+                        RegistrationRequest.REGISTER_TRIGGER,
+                        Uri.parse("https://registration-uri.com"),
+                        APP_PACKAGE_NAME,
+                        SDK_PACKAGE_NAME)
                 .build();
     }
 
@@ -2552,7 +2563,7 @@ public final class MeasurementServiceImplTest {
                         .setAppDestination(APP_DESTINATION)
                         .build();
         return new WebSourceRegistrationRequestInternal.Builder(
-                        sourceRegistrationRequest, PACKAGE_NAME, 10000L)
+                        sourceRegistrationRequest, APP_PACKAGE_NAME, SDK_PACKAGE_NAME, 10000L)
                 .build();
     }
 
@@ -2563,19 +2574,20 @@ public final class MeasurementServiceImplTest {
                                 Uri.parse("android-app://com.example"))
                         .build();
         return new WebTriggerRegistrationRequestInternal.Builder(
-                        webTriggerRegistrationRequest, PACKAGE_NAME)
+                        webTriggerRegistrationRequest, APP_PACKAGE_NAME, SDK_PACKAGE_NAME)
                 .build();
     }
 
     private DeletionParam getDefaultDeletionRequest() {
-        return new DeletionParam.Builder()
-                .setPackageName(PACKAGE_NAME)
-                .setDomainUris(Collections.emptyList())
-                .setOriginUris(Collections.emptyList())
+        return new DeletionParam.Builder(
+                        Collections.emptyList(),
+                        Collections.emptyList(),
+                        Instant.MIN,
+                        Instant.MAX,
+                        APP_PACKAGE_NAME,
+                        SDK_PACKAGE_NAME)
                 .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
                 .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
-                .setStart(Instant.MIN)
-                .setEnd(Instant.MAX)
                 .build();
     }
 
@@ -2731,5 +2743,15 @@ public final class MeasurementServiceImplTest {
         } else {
             doReturn(null).when(mEnrollmentDao).getEnrollmentDataFromMeasurementUrl(any());
         }
+    }
+
+    private void assertPackageNameLogged() throws InterruptedException {
+        // Sleep just a tiny fraction
+        // Logging happens in a separate thread and happens after the result code is returned
+        TimeUnit.MILLISECONDS.sleep(20);
+        ArgumentCaptor<ApiCallStats> captorStatus = ArgumentCaptor.forClass(ApiCallStats.class);
+        verify(mMockAdServicesLogger).logApiCallStats(captorStatus.capture());
+        assertEquals(APP_PACKAGE_NAME, captorStatus.getValue().getAppPackageName());
+        assertEquals(SDK_PACKAGE_NAME, captorStatus.getValue().getSdkPackageName());
     }
 }
