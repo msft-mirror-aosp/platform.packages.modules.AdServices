@@ -178,9 +178,9 @@ public class CacheManager implements Dumpable {
         }
         mLogger.logGetTopicsReportedStats(
                 GetTopicsReportedStats.builder()
-                        .setTopicIds(topicIds.build())
                         .setDuplicateTopicCount(duplicateTopicCount)
                         .setFilteredBlockedTopicCount(blockedTopicCount)
+                        .setTopicIdsCount(topics.size())
                         .build());
 
         return topics;

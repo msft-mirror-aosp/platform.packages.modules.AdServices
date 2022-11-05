@@ -306,7 +306,7 @@ public class TopicsWorker {
     public void reconcileApplicationUpdate(Context context) {
         mReadWriteLock.writeLock().lock();
         try {
-            mAppUpdateManager.reconcileUninstalledApps(context);
+            mAppUpdateManager.reconcileUninstalledApps(context, mEpochManager.getCurrentEpochId());
             mAppUpdateManager.reconcileInstalledApps(context, mEpochManager.getCurrentEpochId());
 
             loadCache();
@@ -317,14 +317,15 @@ public class TopicsWorker {
     }
 
     /**
-     * Delete derived data for a specific app
+     * Handle application uninstallation for Topics API.
      *
      * @param packageUri The {@link Uri} got from Broadcast Intent
      */
-    public void deletePackageData(@NonNull Uri packageUri) {
+    public void handleAppUninstallation(@NonNull Uri packageUri) {
         mReadWriteLock.writeLock().lock();
         try {
-            mAppUpdateManager.deleteAppDataByUri(packageUri);
+            mAppUpdateManager.handleAppUninstallationInRealTime(
+                    packageUri, mEpochManager.getCurrentEpochId());
 
             loadCache();
             LogUtil.v("Derived data is cleared for %s", packageUri.toString());
@@ -341,7 +342,7 @@ public class TopicsWorker {
     public void handleAppInstallation(@NonNull Uri packageUri) {
         mReadWriteLock.writeLock().lock();
         try {
-            mAppUpdateManager.assignTopicsToNewlyInstalledApps(
+            mAppUpdateManager.handleAppInstallationInRealTime(
                     packageUri, mEpochManager.getCurrentEpochId());
 
             loadCache();

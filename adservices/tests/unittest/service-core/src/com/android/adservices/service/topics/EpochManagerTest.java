@@ -1109,21 +1109,21 @@ public final class EpochManagerTest {
                         mMockClock);
 
         // Both on
-        when(dbHelper.supportsTopContributorsTable()).thenReturn(true);
+        when(dbHelper.supportsTopicContributorsTable()).thenReturn(true);
         when(mMockFlag.getEnableTopicContributorsCheck()).thenReturn(true);
         assertThat(epochManager.supportsTopicContributorFeature()).isTrue();
 
         // On and Off
-        when(dbHelper.supportsTopContributorsTable()).thenReturn(true);
+        when(dbHelper.supportsTopicContributorsTable()).thenReturn(true);
         when(mMockFlag.getEnableTopicContributorsCheck()).thenReturn(false);
         assertThat(epochManager.supportsTopicContributorFeature()).isFalse();
 
-        when(dbHelper.supportsTopContributorsTable()).thenReturn(false);
+        when(dbHelper.supportsTopicContributorsTable()).thenReturn(false);
         when(mMockFlag.getEnableTopicContributorsCheck()).thenReturn(true);
         assertThat(epochManager.supportsTopicContributorFeature()).isFalse();
 
         // Both off
-        when(dbHelper.supportsTopContributorsTable()).thenReturn(false);
+        when(dbHelper.supportsTopicContributorsTable()).thenReturn(false);
         when(mMockFlag.getEnableTopicContributorsCheck()).thenReturn(false);
         assertThat(epochManager.supportsTopicContributorFeature()).isFalse();
     }

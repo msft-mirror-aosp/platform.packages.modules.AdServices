@@ -31,20 +31,36 @@ import org.junit.Test;
 @SmallTest
 public final class StatusParamTest {
     private static final Context sContext = InstrumentationRegistry.getTargetContext();
+    private static final String SDK_PACKAGE_NAME = "sdk.package.name";
 
     private StatusParam createExample() {
-        return new StatusParam.Builder(sContext.getAttributionSource().getPackageName()).build();
+        return new StatusParam.Builder(
+                        sContext.getAttributionSource().getPackageName(), SDK_PACKAGE_NAME)
+                .build();
     }
 
     void verifyExample(StatusParam param) {
         assertEquals(sContext.getAttributionSource().getPackageName(), param.getAppPackageName());
+        assertEquals(SDK_PACKAGE_NAME, param.getSdkPackageName());
     }
 
     @Test
-    public void testMissingParams() {
+    public void testMissingAppPackageName_throwException() {
         assertThrows(
                 NullPointerException.class,
-                () -> new StatusParam.Builder(/* appPackageName = */ null).build());
+                () ->
+                        new StatusParam.Builder(/* appPackageName = */ null, SDK_PACKAGE_NAME)
+                                .build());
+    }
+
+    @Test
+    public void testMissingSdkPackageName_throwException() {
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        new StatusParam.Builder(
+                                        sContext.getPackageName(), /* sdkPackageName = */ null)
+                                .build());
     }
 
     @Test

@@ -99,16 +99,14 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android ይህን ዝንባሌ እንደገና በእርስዎ ዝርዝር ላይ ሊያክል ይችላል ነገር ግን ወዲያውኑ ላይታይ ይችላል"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"እሺ"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"ሁሉም ዝንባሌዎችዎ ዳግም ይጀመሩ?"</string>
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"ዝርዝርዎ ይጸዳል እና ከዚህ በኋላ አዲስ ዝንባሌዎች ይገመታሉ። አሁንም ከተጸዱት ዝንባሌዎች ጋር የሚዛመዱ አንዳንድ ማስታወቂያዎችን ሊያዩ ይችላሉ።"</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"ዳግም አስጀምር"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g> ይታገድ?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"ይህ መተግበሪያ ዝንባሌዎችን ለግላዊነት Sandbox አይገምትም እና እርስዎ እገዳውን ካላነሱለት በስተቀር እንደገና በዝርዝርዎ ላይ አይታከልም።\n\nበዚህ መተግበሪያ አስቀድመው የተገመቱ ዝንባሌዎች ይሰረዛሉ ነገር ግን አሁንም አንዳንድ ተዛማጅ ማስታወቂያዎችን ሊያዩ ይችላሉ።"</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"የ<xliff:g id="APP">%1$s</xliff:g> እገዳ ተነስቷል"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"ይህ መተግበሪያ እንደገና ዝንባሌዎችን ለእርስዎ መገመት ይችላል ነገር ግን በዝርዝርዎ ላይ ወዲያውኑ ላይታይ ይችላል። ተዛማጅ ማስታወቂያዎችን እስከሚያዩ ድረስ ጊዜ ሊወስድ ይችላል።"</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"በመተግበሪያዎች የመነጩ ዝንባሌዎች ዳግም ይጀመሩ?"</string>
-    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"በዝርዝርዎ ላይ ባሉ መተግበሪያዎች የተገመቱ ዝንባሌዎች ከግላዊነት Sandbox ይሰረዛሉ፣ እና መተግበሪያዎቹ ከዚህ በኋላ አዲስ ዝንባሌዎችን ይገምታሉ። አሁንም አንዳንድ ተዛማጅ ማስታወቂያዎችን ሊመለከቱ ይችላሉ።"</string>
     <string name="topic10001" msgid="1636806320891333775">"ሥነ ጥበባት እና መዝናኛ"</string>
     <string name="topic10002" msgid="1226367977754287428">"ትወና እና ቲያትር"</string>
     <string name="topic10003" msgid="6949890838957814881">"አኒሜ እና ማንጋ"</string>

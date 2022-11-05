@@ -38,6 +38,7 @@ import android.database.sqlite.SQLiteDatabase;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.data.measurement.DbHelperV1;
 import com.android.adservices.data.topics.migration.TopicDbMigratorV3;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -92,20 +93,7 @@ public class DbHelperTest {
         assertTrue(doesTableExistAndColumnCountMatch(db, "topics_returned_topics", 7));
         assertTrue(doesTableExistAndColumnCountMatch(db, "topics_usage_history", 3));
         assertTrue(doesTableExistAndColumnCountMatch(db, "topics_app_usage_history", 3));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_source", 22));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_trigger", 13));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_async_registration_contract", 16));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_event_report", 17));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_attribution", 10));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_aggregate_report", 14));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_aggregate_encryption_key", 4));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "enrollment_data", 8));
-        assertTrue(doesIndexExist(db, "idx_msmt_source_ad_ei_et"));
-        assertTrue(doesIndexExist(db, "idx_msmt_source_p_ad_wd_s_et"));
-        assertTrue(doesIndexExist(db, "idx_msmt_trigger_ad_ei_tt"));
-        assertTrue(doesIndexExist(db, "idx_msmt_source_et"));
-        assertTrue(doesIndexExist(db, "idx_msmt_trigger_tt"));
-        assertTrue(doesIndexExist(db, "idx_msmt_attribution_ss_so_ds_do_ei_tt"));
+        assertMeasurementSchema(db);
     }
 
     @Test
@@ -159,12 +147,12 @@ public class DbHelperTest {
     }
 
     @Test
-    public void testSupportsTopContributorsTable() {
+    public void testSupportsTopicContributorsTable() {
         DbHelper dbHelperV2 = new DbHelper(sContext, getDatabaseNameForTest(), /* dbVersion*/ 2);
-        assertThat(dbHelperV2.supportsTopContributorsTable()).isFalse();
+        assertThat(dbHelperV2.supportsTopicContributorsTable()).isFalse();
 
         DbHelper dbHelperV3 = new DbHelper(sContext, getDatabaseNameForTest(), /* dbVersion*/ 3);
-        assertThat(dbHelperV3.supportsTopContributorsTable()).isTrue();
+        assertThat(dbHelperV3.supportsTopicContributorsTable()).isTrue();
     }
 
     @Test
@@ -176,5 +164,35 @@ public class DbHelperTest {
         // Test feature flag is on
         when(mMockFlags.getEnableDatabaseSchemaVersion3()).thenReturn(true);
         assertThat(DbHelper.getDatabaseVersionToCreate()).isEqualTo(DATABASE_VERSION_V3);
+    }
+
+    @Test
+    public void testOnUpgrade_measurementMigration() {
+        String dbName = "test_db";
+        DbHelperV1 dbHelperV1 = new DbHelperV1(sContext, dbName, 1);
+        SQLiteDatabase db = dbHelperV1.safeGetWritableDatabase();
+
+        assertEquals(1, db.getVersion());
+
+        DbHelper dbHelperForV3 = new DbHelper(sContext, dbName, 3);
+        dbHelperForV3.onUpgrade(db, 1, DATABASE_VERSION_V3);
+        assertMeasurementSchema(db);
+    }
+
+    private void assertMeasurementSchema(SQLiteDatabase db) {
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_source", 22));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_trigger", 13));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_async_registration_contract", 16));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_event_report", 17));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_attribution", 10));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_aggregate_report", 14));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_aggregate_encryption_key", 4));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "enrollment_data", 8));
+        assertTrue(doesIndexExist(db, "idx_msmt_source_ad_ei_et"));
+        assertTrue(doesIndexExist(db, "idx_msmt_source_p_ad_wd_s_et"));
+        assertTrue(doesIndexExist(db, "idx_msmt_trigger_ad_ei_tt"));
+        assertTrue(doesIndexExist(db, "idx_msmt_source_et"));
+        assertTrue(doesIndexExist(db, "idx_msmt_trigger_tt"));
+        assertTrue(doesIndexExist(db, "idx_msmt_attribution_ss_so_ds_do_ei_tt"));
     }
 }
