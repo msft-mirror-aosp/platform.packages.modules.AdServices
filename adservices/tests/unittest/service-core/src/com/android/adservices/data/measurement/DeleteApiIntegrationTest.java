@@ -16,9 +16,13 @@
 
 package com.android.adservices.data.measurement;
 
+import android.adservices.measurement.DeletionParam;
 import android.adservices.measurement.DeletionRequest;
 import android.content.res.AssetManager;
 import android.net.Uri;
+
+import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -89,18 +93,21 @@ public class DeleteApiIntegrationTest extends AbstractDbIntegrationTest {
         Integer finalMatchBehavior = matchBehavior;
         Integer finalDeletionMode = deletionMode;
 
-        DatastoreManagerFactory.getDatastoreManager(sContext)
-                .runInTransaction(
-                        (dao) -> {
-                            dao.deleteMeasurementData(
-                                    Uri.parse(registrantValue),
-                                    startValueInstant,
-                                    endValueInstant,
-                                    originList,
-                                    domainList,
-                                    finalMatchBehavior,
-                                    finalDeletionMode);
-                        });
+        DatastoreManager datastoreManager =
+                new SQLDatastoreManager(DbTestUtil.getDbHelperForTest());
+        MeasurementDataDeleter measurementDataDeleter =
+                new MeasurementDataDeleter(datastoreManager);
+        measurementDataDeleter.delete(
+                new DeletionParam.Builder(
+                                originList,
+                                domainList,
+                                startValueInstant,
+                                endValueInstant,
+                                registrantValue,
+                                /* sdkPackageName = */ "")
+                        .setMatchBehavior(finalMatchBehavior)
+                        .setDeletionMode(finalDeletionMode)
+                        .build());
     }
 
     private Object get(String name) {

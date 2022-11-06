@@ -42,12 +42,21 @@ public class AdIdManagerTest {
 
     @Before
     public void setup() {
-        overrideAdservicesGlobalKillSwitch(true);
+        overrideAdIdKillSwitch(true);
     }
 
     @After
-    public void teardown() {
-        overrideAdservicesGlobalKillSwitch(false);
+    public void tearDown() throws Exception {
+        overrideAdIdKillSwitch(false);
+    }
+
+    // Override adid related kill switch to ignore the effect of actual PH values.
+    // If shouldOverride = true, override adid related kill switch to OFF to allow adservices
+    // If shouldOverride = false, override adid related kill switch to meaningless value so that
+    // PhFlags will use the default value.
+    private void overrideAdIdKillSwitch(boolean shouldOverride) {
+        String overrideString = shouldOverride ? "false" : "null";
+        ShellUtils.runShellCommand("setprop debug.adservices.adid_kill_switch " + overrideString);
     }
 
     @Test
@@ -70,14 +79,5 @@ public class AdIdManagerTest {
         AdId resultAdId = future.get();
         Assert.assertNotNull(resultAdId.getAdId());
         Assert.assertNotNull(resultAdId.isLimitAdTrackingEnabled());
-    }
-
-    // Override global_kill_switch to ignore the effect of actual PH values.
-    // If isOverride = true, override global_kill_switch to OFF to allow adservices
-    // If isOverride = false, override global_kill_switch to meaningless value so that PhFlags will
-    // use the default value
-    private void overrideAdservicesGlobalKillSwitch(boolean isOverride) {
-        String overrideString = isOverride ? "false" : "null";
-        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + overrideString);
     }
 }

@@ -48,6 +48,7 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Mengaktifkan program beta memungkinkan aplikasi menguji cara baru yang lebih pribadi ini untuk menampilkan iklan kepada Anda. Anda dapat menonaktifkan program beta kapan saja di setelan privasi."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Lain kali"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Aktifkan"</string>
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"Lainnya"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Terima kasih sudah berpartisipasi"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Anda berpartisipasi dalam privasi iklan Android beta. Privacy Sandbox diaktifkan untuk perangkat Anda.\n\nAnda dapat mempelajari lebih lanjut atau menonaktifkan program beta kapan saja di setelan privasi."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Anda telah memilih untuk tidak berpartisipasi"</string>
@@ -79,8 +80,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Tidak ada minat untuk ditampilkan sekarang"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Privasi iklan Android beta memberikan fitur baru yang dapat digunakan aplikasi untuk menampilkan iklan yang mungkin Anda sukai. Teknologi ini tidak menggunakan ID perangkat.\n\nAndroid dapat memperkirakan jenis iklan yang mungkin menarik bagi Anda, dan menyimpan minat ini untuk sementara di perangkat Anda. Hal ini memungkinkan aplikasi menampilkan iklan yang relevan, tanpa melacak aktivitas Anda di seluruh situs dan aplikasi dari developer lainnya."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Anda tidak memiliki minat yang diblokir"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Aplikasi dapat memperkirakan minat dan menyimpan minat ini untuk sementara dengan Android. Selanjutnya, aplikasi lain dapat menampilkan iklan kepada Anda berdasarkan minat ini.\n\nJika Anda memblokir suatu aplikasi, aplikasi tersebut tidak akan memperkirakan minat lagi. Aplikasi tidak akan ditambahkan ke daftar aplikasi ini lagi kecuali jika Anda berhenti memblokirnya. Minat yang telah diperkirakan oleh aplikasi akan dihapus, tetapi Anda mungkin masih melihat beberapa iklan terkait."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Aplikasi yang Anda blokir"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Reset minat yang diperkirakan oleh aplikasi"</string>
@@ -88,7 +88,25 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Privasi iklan Android beta memberikan fitur baru yang dapat digunakan aplikasi untuk menampilkan iklan yang mungkin Anda sukai. Teknologi ini tidak menggunakan ID perangkat.\n\nAplikasi dapat memperkirakan jenis iklan yang mungkin menarik bagi Anda, dan menyimpan minat ini untuk sementara di perangkat Anda. Hal ini memungkinkan aplikasi menampilkan iklan yang relevan, tanpa melacak aktivitas Anda di seluruh situs dan aplikasi dari developer lainnya."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Anda tidak memiliki aplikasi yang diblokir"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Anda tidak memiliki minat yang diblokir"</string>
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Batal"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Nonaktifkan Privacy Sandbox?"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Jika Anda berubah pikiran atau ingin mempelajari privasi iklan Android beta lebih lanjut, buka setelan privasi"</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Nonaktifkan"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Blokir <xliff:g id="TOPIC">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"Minat ini akan diblokir dan tidak akan ditambahkan ke daftar Anda lagi, kecuali jika Anda menambahkannya kembali. Anda mungkin masih melihat beberapa iklan terkait minat tersebut."</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Blokir"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"<xliff:g id="TOPIC">%1$s</xliff:g> berhenti diblokir"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android dapat menambahkan minat ini lagi ke daftar Anda, tetapi minat mungkin tidak langsung muncul"</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"Oke"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Reset semua minat?"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"Daftar Anda akan dihapus dan minat baru akan diperkirakan ke depannya. Anda mungkin masih melihat beberapa iklan terkait minat yang dihapus."</string>
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Reset"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Blokir <xliff:g id="APP">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Aplikasi ini tidak akan memperkirakan minat untuk Privacy Sandbox dan tidak akan ditambahkan ke daftar Anda lagi, kecuali jika Anda berhenti memblokirnya.\n\nMinat yang sudah diperkirakan oleh aplikasi ini akan dihapus, tetapi Anda mungkin masih melihat beberapa iklan terkait minat tersebut."</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> berhenti diblokir"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Aplikasi ini dapat memperkirakan minat lagi untuk Anda, tetapi minat mungkin tidak langsung muncul di daftar. Mungkin perlu waktu agak lama untuk melihat iklan terkait minat tersebut."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Reset minat yang dibuat oleh aplikasi?"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"Minat yang diperkirakan oleh aplikasi dalam daftar Anda akan dihapus dari Privacy Sandbox, dan aplikasi akan memperkirakan minat baru ke depannya. Anda mungkin masih melihat beberapa iklan terkait minat tersebut."</string>
     <string name="topic10001" msgid="1636806320891333775">"Seni &amp; Hiburan"</string>
     <string name="topic10002" msgid="1226367977754287428">"Akting &amp; Teater"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime &amp; Manga"</string>
@@ -468,7 +486,7 @@
     <string name="topic10377" msgid="7834619927563362042">"Robotika"</string>
     <string name="topic10378" msgid="242496862821758873">"Belanja"</string>
     <string name="topic10379" msgid="5505228335012447165">"Barang Antik &amp; Barang Koleksi"</string>
-    <string name="topic10380" msgid="4989560205486143927">"Pakaian"</string>
+    <string name="topic10380" msgid="4989560205486143927">"Busana"</string>
     <string name="topic10381" msgid="7585496746485093505">"Pakaian Anak"</string>
     <string name="topic10382" msgid="5088060295126473451">"Kostum"</string>
     <string name="topic10383" msgid="4947104586590538143">"Pakaian Pria"</string>

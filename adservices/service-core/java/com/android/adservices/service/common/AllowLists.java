@@ -31,6 +31,10 @@ import com.android.internal.annotations.VisibleForTesting;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /** Utility class to handle AllowList for Apps and SDKs. */
 public class AllowLists {
@@ -38,6 +42,25 @@ public class AllowLists {
 
     private static final String SPLITTER = ",";
     private static final String HASH_ALGORITHM = "SHA-256";
+
+    /** Returns whether all entities are allowlisted or not based on the given {@code allowList}. */
+    public static boolean doesAllowListAllowAll(@NonNull String allowList) {
+        Objects.requireNonNull(allowList);
+        return ALLOW_ALL.equals(allowList);
+    }
+
+    /** Splits the given {@code allowList} into the list of entities allowed. */
+    public static List<String> splitAllowList(@NonNull String allowList) {
+        Objects.requireNonNull(allowList);
+
+        if (allowList.trim().isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return Arrays.stream(allowList.split(SPLITTER))
+                .map(String::trim)
+                .collect(Collectors.toList());
+    }
 
     /**
      * A utility to check if an app package exists in the provided allow-list. The allow-list to

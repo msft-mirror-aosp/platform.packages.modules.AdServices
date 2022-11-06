@@ -18,12 +18,15 @@ package com.android.adservices.service.customaudience;
 
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
+import com.android.adservices.data.customaudience.CustomAudienceStats;
 import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetchData;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdServicesHttpsClient;
 
@@ -38,6 +41,8 @@ import java.util.concurrent.ExecutionException;
 /** Runner executing actual background fetch tasks. */
 public class BackgroundFetchRunner {
     private final CustomAudienceDao mCustomAudienceDao;
+    private final PackageManager mPackageManager;
+    private final EnrollmentDao mEnrollmentDao;
     private final Flags mFlags;
     private final AdServicesHttpsClient mHttpsClient;
 
@@ -53,10 +58,17 @@ public class BackgroundFetchRunner {
     }
 
     public BackgroundFetchRunner(
-            @NonNull CustomAudienceDao customAudienceDao, @NonNull Flags flags) {
+            @NonNull CustomAudienceDao customAudienceDao,
+            @NonNull PackageManager packageManager,
+            @NonNull EnrollmentDao enrollmentDao,
+            @NonNull Flags flags) {
         Objects.requireNonNull(customAudienceDao);
+        Objects.requireNonNull(packageManager);
+        Objects.requireNonNull(enrollmentDao);
         Objects.requireNonNull(flags);
         mCustomAudienceDao = customAudienceDao;
+        mPackageManager = packageManager;
+        mEnrollmentDao = enrollmentDao;
         mFlags = flags;
         mHttpsClient =
                 new AdServicesHttpsClient(
@@ -74,10 +86,41 @@ public class BackgroundFetchRunner {
     public void deleteExpiredCustomAudiences(@NonNull Instant jobStartTime) {
         Objects.requireNonNull(jobStartTime);
 
-        LogUtil.d("Starting custom audience garbage collection");
+        LogUtil.d("Starting expired custom audience garbage collection");
         int numCustomAudiencesDeleted =
                 mCustomAudienceDao.deleteAllExpiredCustomAudienceData(jobStartTime);
         LogUtil.d("Deleted %d expired custom audiences", numCustomAudiencesDeleted);
+    }
+
+    /**
+     * Deletes custom audiences whose owner applications which are not installed or in the app
+     * allowlist.
+     *
+     * <p>Also clears corresponding update information from the background fetch table.
+     */
+    public void deleteDisallowedOwnerCustomAudiences() {
+        LogUtil.d("Starting custom audience disallowed owner garbage collection");
+        CustomAudienceStats deletedCAStats =
+                mCustomAudienceDao.deleteAllDisallowedOwnerCustomAudienceData(
+                        mPackageManager, mFlags);
+        LogUtil.d(
+                "Deleted %d custom audiences belonging to %d disallowed owner apps",
+                deletedCAStats.getTotalCustomAudienceCount(), deletedCAStats.getTotalOwnerCount());
+    }
+
+    /**
+     * Deletes custom audiences whose buyer ad techs which are not enrolled to use FLEDGE.
+     *
+     * <p>Also clears corresponding update information from the background fetch table.
+     */
+    public void deleteDisallowedBuyerCustomAudiences() {
+        LogUtil.d("Starting custom audience disallowed buyer garbage collection");
+        CustomAudienceStats deletedCAStats =
+                mCustomAudienceDao.deleteAllDisallowedBuyerCustomAudienceData(
+                        mEnrollmentDao, mFlags);
+        LogUtil.d(
+                "Deleted %d custom audiences belonging to %d disallowed buyer ad techs",
+                deletedCAStats.getTotalCustomAudienceCount(), deletedCAStats.getTotalBuyerCount());
     }
 
     /** Updates a single given custom audience and persists the results. */

@@ -25,7 +25,6 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.ui.settings.fragments.AdServicesSettingsBlockedTopicsFragment;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsTopicsFragment;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -48,7 +47,6 @@ public class TopicsViewModel extends AndroidViewModel {
     /** UI event triggered by view model */
     public enum TopicsViewModelUiEvent {
         BLOCK_TOPIC,
-        RESTORE_TOPIC,
         RESET_TOPICS,
         DISPLAY_BLOCKED_TOPICS_FRAGMENT,
     }
@@ -70,17 +68,22 @@ public class TopicsViewModel extends AndroidViewModel {
         mBlockedTopics = new MutableLiveData<>(getBlockedTopicsFromConsentManager());
     }
 
-    // ---------------------------------------------------------------------------------------------
-    // Topics View
-    // ---------------------------------------------------------------------------------------------
-
     /**
      * Provides the topics displayed in {@link AdServicesSettingsTopicsFragment}.
      *
-     * @return {@link mTopics} a list of topics that represents the user's interests.
+     * @return A list of {@link Topic}s that represents the user's interests.
      */
     public LiveData<ImmutableList<Topic>> getTopics() {
         return mTopics;
+    }
+
+    /**
+     * Provides the blocked topics list.
+     *
+     * @return a list of topics that represents the user's blocked interests.
+     */
+    public LiveData<ImmutableList<Topic>> getBlockedTopics() {
+        return mBlockedTopics;
     }
 
     /**
@@ -109,33 +112,6 @@ public class TopicsViewModel extends AndroidViewModel {
         mTopics.postValue(getTopicsFromConsentManager());
     }
 
-    // ---------------------------------------------------------------------------------------------
-    // Blocked Topics View
-    // ---------------------------------------------------------------------------------------------
-
-    /**
-     * Provides the blocked topics displayed in {@link AdServicesSettingsBlockedTopicsFragment}.
-     *
-     * @return {@link mBlockedTopics} a list of topics that represents the user's blocked interests.
-     */
-    public LiveData<ImmutableList<Topic>> getBlockedTopics() {
-        return mBlockedTopics;
-    }
-
-    /**
-     * Restore the consent for the specified topic (i.e. unblock the topic).
-     *
-     * @param topic the topic to be restored.
-     */
-    public void restoreTopicConsent(Topic topic) {
-        mConsentManager.restoreConsentForTopic(topic);
-        refresh();
-    }
-
-    // ---------------------------------------------------------------------------------------------
-    // Action Handlers
-    // ---------------------------------------------------------------------------------------------
-
     /** Returns an observable but immutable event enum representing an view action on UI. */
     public LiveData<Pair<TopicsViewModelUiEvent, Topic>> getUiEvents() {
         return mEventTrigger;
@@ -157,16 +133,6 @@ public class TopicsViewModel extends AndroidViewModel {
      */
     public void revokeTopicConsentButtonClickHandler(Topic topic) {
         mEventTrigger.postValue(new Pair<>(TopicsViewModelUiEvent.BLOCK_TOPIC, topic));
-    }
-
-    /**
-     * Triggers the block of the specified topic in the list of topics in {@link
-     * AdServicesSettingsTopicsFragment}.
-     *
-     * @param topic the topic to be blocked.
-     */
-    public void restoreTopicConsentButtonClickHandler(Topic topic) {
-        mEventTrigger.postValue(new Pair<>(TopicsViewModelUiEvent.RESTORE_TOPIC, topic));
     }
 
     /** Triggers a reset of all topics related data. */

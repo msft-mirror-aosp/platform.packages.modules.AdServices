@@ -16,10 +16,9 @@
 
 package com.android.adservices.service.stats;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BIDDING_PROCESS_REPORTED__GET_BUYERS_CUSTOM_AUDIENCE_RESULT_CODE__RUN_AD_SELECTION_STATUS_SUCCESS;
-import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BIDDING_PROCESS_REPORTED__RUN_AD_BIDDING_RESULT_CODE__RUN_AD_SELECTION_STATUS_SUCCESS;
-
 import static org.junit.Assert.assertEquals;
+
+import android.adservices.common.AdServicesStatusUtils;
 
 import org.junit.Test;
 
@@ -34,10 +33,8 @@ public class RunAdBiddingProcessReportedStatsTest {
     static final float RATIO_OF_CAS_SELECTING_RMKT_ADS = 0.80f;
     static final int RUN_AD_BIDDING_LATENCY_IN_MILLIS = 10;
     static final int TOTAL_AD_BIDDING_STAGE_LATENCY_IN_MILLIS = 20;
-    static final int GET_BUYERS_CUSTOM_AUDIENCE_RESULT_CODE =
-            RUN_AD_BIDDING_PROCESS_REPORTED__GET_BUYERS_CUSTOM_AUDIENCE_RESULT_CODE__RUN_AD_SELECTION_STATUS_SUCCESS;
-    static final int RUN_AD_BIDDING_RESULT_CODE =
-            RUN_AD_BIDDING_PROCESS_REPORTED__RUN_AD_BIDDING_RESULT_CODE__RUN_AD_SELECTION_STATUS_SUCCESS;
+    static final int GET_BUYERS_CUSTOM_AUDIENCE_RESULT_CODE = AdServicesStatusUtils.STATUS_SUCCESS;
+    static final int RUN_AD_BIDDING_RESULT_CODE = AdServicesStatusUtils.STATUS_SUCCESS;
 
     @Test
     public void testBuilderCreateSuccess() {

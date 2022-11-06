@@ -48,6 +48,7 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Уключэнне бэта-версіі дазволіць тэсціраваць у праграмах новыя, больш прыватныя спосабы паказваць вам рэкламу. Вы можаце ў любы час выключыць бэта-версію ў наладах прыватнасці."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Не, дзякуй"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Уключыць"</string>
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"Разгарнуць"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Дзякуй за ўдзел"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Вы прымаеце ўдзел у тэсціраванні бэта-версіі праграмы \"Прыватнасць у рэкламе на прыладах Android\". На вашай прыладзе ўключаны пакет тэхналогій Privacy Sandbox.\n\nВы можаце ў любы час атрымаць дадатковую інфармацыю або выключыць бэта-версію ў наладах прыватнасці."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Вы адмовіліся ад удзелу"</string>
@@ -79,8 +80,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Пакуль няма інтарэсаў"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Праграма \"Прыватнасць у рэкламе на прыладах Android\" (бэта-версія) забяспечвае ўжыванне ў праграмах новых функцый для паказу вам рэкламы. Гэтыя тэхналогіі не выкарыстоўваюць ідэнтыфікатары прылады.\n\nAndroid будзе аналізаваць, якія тыпы рэкламы могуць быць для вас цікавымі, і часова захоўваць інфармацыю пра вашы інтарэсы на вашай прыладзе. Гэта дазволіць праграмам паказваць вам рэлевантную рэкламу, не адсочваючы вашы дзеянні на вэб-сайтах і ў праграмах іншых распрацоўшчыкаў."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"У вас няма заблакіраваных інтарэсаў"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Праграмы могуць аналізаваць інфармацыю пра вашы інтарэсы і часова захоўваць яе на прыладзе Android. Пазней іншая праграма, кіруючыся гэтымі данымі, можа паказаць вам адпаведную рэкламу.\n\nКалі заблакіраваць праграму, яна не зможа аналізаваць даныя пра інтарэсы і не будзе дадавацца ў гэты спіс праграм, пакуль вы не разблакіруеце яе. Даныя пра інтарэсы, ужо прааналізаваныя праграмай, будуць выдалены, аднак вам па-ранейшаму можа паказвацца адпаведная рэклама."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Праграмы, якія вы заблакіравалі"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Скінуць даныя пра інтарэсы, захаваныя праграмамі"</string>
@@ -88,7 +88,25 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Праграма \"Прыватнасць у рэкламе на прыладах Android\" (бэта-версія) забяспечвае ўжыванне ў праграмах новых функцый для паказу вам рэкламы. Гэтыя тэхналогіі не выкарыстоўваюць ідэнтыфікатары прылады.\n\nПраграмы будуць аналізаваць, якія тыпы рэкламы могуць быць для вас цікавымі, і часова захоўваць інфармацыю пра вашы інтарэсы на вашай прыладзе. Гэта дазволіць праграмам паказваць вам рэлевантную рэкламу, не адсочваючы вашы дзеянні на вэб-сайтах і ў праграмах іншых распрацоўшчыкаў."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"У вас няма заблакіраваных праграм"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"У вас няма заблакіраваных інтарэсаў"</string>
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Скасаваць"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Выключыць Privacy Sandbox?"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Калі вы перадумаеце ці захочаце даведацца больш пра бэта-версію праграмы \"Прыватнасць у рэкламе на прыладах Android\", перайдзіце ў налады прыватнасці"</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Выключыць"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Заблакіраваць тэму \"<xliff:g id="TOPIC">%1$s</xliff:g>\"?"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"Гэты інтарэс будзе заблакіраваны і не з\'явіцца ў спісе, пакуль вы самі не дадасце яго. Аднак вам па-ранейшаму можа паказвацца адпаведная рэклама."</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Заблакіраваць"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"Праграма \"<xliff:g id="TOPIC">%1$s</xliff:g>\" разблакіравана"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android можа зноў дадаць гэты інтарэс у ваш спіс, аднак ён не з\'явіцца там адразу ж"</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Скінуць усе вашы інтарэсы?"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"Ваш спіс будзе ачышчаны, і інтарэсы пачнуць аналізавацца нанава. Аднак вам па-ранейшаму можа паказвацца рэклама, звязаная з выдаленымі інтарэсамі."</string>
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Скінуць"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Заблакіраваць праграму \"<xliff:g id="APP">%1$s</xliff:g>\"?"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Гэта праграма не будзе ствараць інтарэсы для Privacy Sandbox і не з\'явіцца ў спісе, пакуль вы яе не разблакіруеце.\n\nІнтарэсы, ужо створаныя гэтай праграмай, будуць выдалены, аднак вам па-ранейшаму можа паказвацца адпаведная рэклама."</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Праграма \"<xliff:g id="APP">%1$s</xliff:g>\" разблакіравана"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Гэта праграма зноў можа ствараць вашы інтарэсы, аднак яны не з\'явяцца ў спісе адразу ж. Адпаведная рэклама пачне вам паказвацца толькі праз некаторы час."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Скінуць інтарэсы, створаныя праграмамі?"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"Даныя пра інтарэсы, захаваныя праграмамі з вашага спіса, будуць выдалены з Privacy Sandbox, і праграмы пачнуць аналізаваць інтарэсы нанава. Аднак вам па-ранейшаму можа паказвацца адпаведная рэклама."</string>
     <string name="topic10001" msgid="1636806320891333775">"Мастацтва і забавы"</string>
     <string name="topic10002" msgid="1226367977754287428">"Акцёрскае майстэрства і тэатр"</string>
     <string name="topic10003" msgid="6949890838957814881">"Анімэ і манга"</string>

@@ -48,6 +48,7 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Kui lülitate beetaprogrammi sisse, saavad rakendused proovida neid uusi ja privaatsemaid rakenduste näitamise viise. Saate beetaprogrammi igal ajal privaatsusseadete kaudu välja lülitada."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Tänan, ei"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Lülita sisse"</string>
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"Rohkem"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Täname osalemise eest!"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Osalete Androidi reklaamide privaatsuse beetaprogrammis. Privaatsuse liivakast on teie seadme jaoks sisse lülitatud.\n\nLisateavet leiate ja beetaprogrammi saate igal ajal välja lülitada privaatsusseadete kaudu."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Otsustasite mitte osaleda"</string>
@@ -79,8 +80,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Praegu ei ole kuvamiseks ühtegi huvi"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privaatsuse liivakast"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Androidi reklaamide privaatsuse beetaprogramm pakub uusi funktsioone, mida rakendused saavad kasutada selleks, et näidata teile reklaame, mis teile meeldida võivad. Need tehnoloogiad ei kasuta seadmete identifikaatoreid.\n\nAndroid saab prognoosida, millised reklaamid teile huvi pakkuda võivad, ja salvestada need huvid ajutiselt teie seadmesse. See võimaldab rakendustel teile asjakohaseid reklaame näidata ilma teie tegevust muude arendajate veebisaitidel või rakendustes jälgimata."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Teil ei ole blokeeritud huvisid"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Rakendused saavad teie huvisid prognoosida ja need ajutiselt Androidi salvestada. Hiljem saab muu rakendus teile nende huvide alusel reklaami näidata.\n\nKui blokeerite rakenduse, ei prognoosi see enam teie huvisid. Seda ei lisata rakenduste loendisse uuesti enne, kui selle deblokeerite. Rakenduse prognoositud huvid kustutatakse, ent võite siiski näha mõningaid seotud reklaame."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Teie blokeeritud rakendused"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Lähtesta rakenduste prognoositud huvid"</string>
@@ -88,7 +88,25 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privaatsuse liivakast"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Androidi reklaamide privaatsuse beetaprogramm pakub uusi funktsioone, mida rakendused saavad kasutada selleks, et näidata teile reklaame, mis teile meeldida võivad. Need tehnoloogiad ei kasuta seadmete identifikaatoreid.\n\nRakendused saavad prognoosida, millised reklaamid teile huvi pakkuda võivad, ja salvestada need huvid ajutiselt teie seadmesse. See võimaldab rakendustel teile asjakohaseid reklaame näidata ilma teie tegevust muude arendajate veebisaitidel või rakendustes jälgimata."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Teil pole blokeeritud rakendusi"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Teil ei ole blokeeritud huvisid"</string>
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Tühista"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Kas lülitada privaatsuse liivakast välja"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Kui muudate meelt või soovite lisateavet Androidi reklaamide privaatsuse beetaversiooni kohta, avage privaatsusseaded"</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Lülita välja"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Kas blokeerida <xliff:g id="TOPIC">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"See huvi blokeeritakse ja seda ei lisata enam teie loendisse, kui te seda ise tagasi ei lisa. Võite siiski näha mõnda sellega seotud reklaami."</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Blokeeri"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"<xliff:g id="TOPIC">%1$s</xliff:g> ei ole blokeeritud"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android võib selle huvi uuesti teie loendisse lisada, kuid seda ei pruugita kohe kuvada"</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Kas lähtestada kõik teie huvid?"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"Teie loend tühjendatakse ja edaspidi prognoositakse uusi huvisid. Võite siiski näha eemaldatud huvidega seotud reklaame."</string>
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Lähtesta"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Kas blokeerida <xliff:g id="APP">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"See rakendus ei prognoosi privaatsuse liivakasti jaoks huvisid ja seda ei lisata enam teie loendisse, kui te seda ei deblokeeri.\n\nHuvid, mille see rakendus on juba prognoosinud, kustutatakse, kuid võite siiski näha mõnda nendega seotud reklaami."</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> ei ole blokeeritud"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"See rakendus saab teie jaoks uuesti huvisid prognoosida, kuid neid ei pruugita kohe loendis kuvada. Seotud reklaamide kuvamiseks võib aega kuluda."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Kas lähtestada rakenduste loodud huvide loend?"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"Teie loendis olevate rakenduste prognoositud huvid kustutatakse privaatsuse liivakastist ja rakendused prognoosivad edaspidi uusi huvisid. Võite siiski näha mõnda seotud reklaami."</string>
     <string name="topic10001" msgid="1636806320891333775">"Kunst ja meelelahutus"</string>
     <string name="topic10002" msgid="1226367977754287428">"Näitlemine ja teater"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime ja manga"</string>

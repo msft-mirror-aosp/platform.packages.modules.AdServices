@@ -30,6 +30,7 @@ import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
+import android.adservices.common.CallerMetadata;
 import android.annotation.NonNull;
 import android.content.Context;
 
@@ -56,6 +57,8 @@ import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
+import com.android.adservices.service.stats.ApiServiceLatencyCalculator;
+import com.android.adservices.service.stats.Clock;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
@@ -169,27 +172,62 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
     // TODO(b/233116758): Validate all the fields inside the adSelectionConfig.
     @Override
-    public void runAdSelection(
-            @NonNull AdSelectionInput inputParams, @NonNull AdSelectionCallback callback) {
+    public void selectAds(
+            @NonNull AdSelectionInput inputParams,
+            @NonNull CallerMetadata callerMetadata,
+            @NonNull AdSelectionCallback callback) {
+        final ApiServiceLatencyCalculator apiServiceLatencyCalculator =
+                new ApiServiceLatencyCalculator(callerMetadata, Clock.SYSTEM_CLOCK);
         int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
 
         // Caller permissions must be checked in the binder thread, before anything else
         mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
-
         try {
             Objects.requireNonNull(inputParams);
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
+            int overallLatencyMs = apiServiceLatencyCalculator.getApiServiceOverallLatencyMs();
+            LogUtil.v(
+                    "The runAdSelection() arguments should not be null, failed with overall"
+                            + "latency %d in ms.",
+                    overallLatencyMs);
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, 0);
+                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, overallLatencyMs);
             // Rethrow because we want to fail fast
             throw exception;
         }
 
         DevContext devContext = mDevContextFilter.createDevContext();
+        int callerUid = getCallingUid(apiName);
+        mLightweightExecutor.execute(
+                () -> {
+                    // TODO(b/249298855): Evolve off device ad selection logic.
+                    if (mFlags.getAdSelectionOffDeviceEnabled()) {
+                        runOffDeviceAdSelection(
+                                devContext,
+                                callerUid,
+                                inputParams,
+                                callback,
+                                apiServiceLatencyCalculator);
+                    } else {
+                        runOnDeviceAdSelection(
+                                devContext,
+                                callerUid,
+                                inputParams,
+                                callback,
+                                apiServiceLatencyCalculator);
+                    }
+                });
+    }
 
-        AdSelectionRunner adSelectionRunner =
-                new AdSelectionRunner(
+    private void runOnDeviceAdSelection(
+            DevContext devContext,
+            int callerUid,
+            @NonNull AdSelectionInput inputParams,
+            @NonNull AdSelectionCallback callback,
+            @NonNull ApiServiceLatencyCalculator apiServiceLatencyCalculator) {
+        OnDeviceAdSelectionRunner runner =
+                new OnDeviceAdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
@@ -202,12 +240,40 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         devContext,
                         mAppImportanceFilter,
                         mFlags,
-                        () -> Throttler.getInstance(mFlags.getSdkRequestPermitsPerSecond()),
-                        getCallingUid(apiName),
+                        () -> Throttler.getInstance(mFlags),
+                        callerUid,
                         mFledgeAuthorizationFilter,
-                        mFledgeAllowListsFilter);
+                        mFledgeAllowListsFilter,
+                        apiServiceLatencyCalculator);
+        runner.runAdSelection(inputParams, callback);
+    }
 
-        adSelectionRunner.runAdSelection(inputParams, callback);
+    private void runOffDeviceAdSelection(
+            DevContext devContext,
+            int callerUid,
+            @NonNull AdSelectionInput inputParams,
+            @NonNull AdSelectionCallback callback,
+            @NonNull ApiServiceLatencyCalculator apiServiceLatencyCalculator) {
+        TrustedServerAdSelectionRunner runner =
+                new TrustedServerAdSelectionRunner(
+                        mContext,
+                        mCustomAudienceDao,
+                        mAdSelectionEntryDao,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutor,
+                        mBackgroundExecutor,
+                        mScheduledExecutor,
+                        mConsentManager,
+                        mAdServicesLogger,
+                        devContext,
+                        mAppImportanceFilter,
+                        mFlags,
+                        () -> Throttler.getInstance(mFlags),
+                        callerUid,
+                        mFledgeAuthorizationFilter,
+                        mFledgeAllowListsFilter,
+                        apiServiceLatencyCalculator);
+        runner.runAdSelection(inputParams, callback);
     }
 
     @Override
@@ -244,7 +310,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mAdServicesLogger,
                         mAppImportanceFilter,
                         mFlags,
-                        () -> Throttler.getInstance(mFlags.getSdkRequestPermitsPerSecond()),
+                        () -> Throttler.getInstance(mFlags),
                         getCallingUid(apiName),
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilter);

@@ -253,7 +253,7 @@ public class CustomAudienceOverrider {
                 mListeningExecutorService.submit(
                         () -> {
                             if (mConsentManager.isFledgeConsentRevokedForApp(
-                                    mPackageManager, mDevContext.getCallingAppPackageName())) {
+                                    mDevContext.getCallingAppPackageName())) {
                                 LogUtil.v("User consent is revoked!");
                                 return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
                             }
@@ -270,7 +270,7 @@ public class CustomAudienceOverrider {
                 mListeningExecutorService.submit(
                         () -> {
                             if (mConsentManager.isFledgeConsentRevokedForApp(
-                                    mPackageManager, mDevContext.getCallingAppPackageName())) {
+                                    mDevContext.getCallingAppPackageName())) {
                                 return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
                             }
 
@@ -284,7 +284,7 @@ public class CustomAudienceOverrider {
                 mListeningExecutorService.submit(
                         () -> {
                             if (mConsentManager.isFledgeConsentRevokedForApp(
-                                    mPackageManager, mDevContext.getCallingAppPackageName())) {
+                                    mDevContext.getCallingAppPackageName())) {
                                 return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
                             }
 

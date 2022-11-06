@@ -36,6 +36,7 @@ import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.common.BackgroundJobsManager;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -68,9 +69,11 @@ public class NotificationActivityUiAutomatorTest {
                 ExtendedMockito.mockitoSession()
                         .spyStatic(PhFlags.class)
                         .spyStatic(BackgroundJobsManager.class)
+                        .spyStatic(FlagsFactory.class)
                         .strictness(Strictness.WARN)
                         .initMocks(this)
                         .startMocking();
+        ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
         ExtendedMockito.doNothing()
                 .when(() -> BackgroundJobsManager.scheduleAllBackgroundJobs(any(Context.class)));
         mPhFlags = spy(PhFlags.getInstance());
@@ -94,24 +97,11 @@ public class NotificationActivityUiAutomatorTest {
         sIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
     }
 
-    private void startActivity(boolean isEUActivity) {
-        // Send intent
-        sIntent.putExtra("isEUDevice", isEUActivity);
-        sContext.startActivity(sIntent);
-
-        // Wait for the app to appear
-        sDevice.wait(Until.hasObject(By.pkg(NOTIFICATION_TEST_PACKAGE).depth(0)), LAUNCH_TIMEOUT);
-    }
-
     @After
     public void teardown() {
         if (mStaticMockSession != null) {
             mStaticMockSession.finishMocking();
         }
-    }
-
-    private UiObject getElement(int resId) {
-        return sDevice.findObject(new UiSelector().text(getString(resId)));
     }
 
     @Test
@@ -135,7 +125,46 @@ public class NotificationActivityUiAutomatorTest {
         assertThat(moreButton.exists()).isFalse();
     }
 
+    @Test
+    public void acceptedConfirmationScreenTest()
+            throws UiObjectNotFoundException, InterruptedException {
+        startActivity(true);
+        UiObject leftControlButton =
+                getElement(R.string.notificationUI_left_control_button_text_eu);
+        UiObject rightControlButton =
+                getElement(R.string.notificationUI_right_control_button_text_eu);
+        UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
+        assertThat(leftControlButton.exists()).isFalse();
+        assertThat(rightControlButton.exists()).isFalse();
+        assertThat(moreButton.exists()).isTrue();
+
+        while (moreButton.exists()) {
+            moreButton.click();
+            Thread.sleep(2000);
+        }
+        assertThat(leftControlButton.exists()).isTrue();
+        assertThat(rightControlButton.exists()).isTrue();
+        assertThat(moreButton.exists()).isFalse();
+
+        rightControlButton.click();
+        UiObject acceptedTitle = getElement(R.string.notificationUI_confirmation_accept_title);
+        assertThat(acceptedTitle.exists()).isTrue();
+    }
+
+    private void startActivity(boolean isEUActivity) {
+        // Send intent
+        sIntent.putExtra("isEUDevice", isEUActivity);
+        sContext.startActivity(sIntent);
+
+        // Wait for the app to appear
+        sDevice.wait(Until.hasObject(By.pkg(NOTIFICATION_TEST_PACKAGE).depth(0)), LAUNCH_TIMEOUT);
+    }
+
     private String getString(int resourceId) {
         return ApplicationProvider.getApplicationContext().getResources().getString(resourceId);
+    }
+
+    private UiObject getElement(int resId) {
+        return sDevice.findObject(new UiSelector().text(getString(resId)));
     }
 }

@@ -87,20 +87,26 @@ public class AllowListsTest {
 
     @Test
     public void testAppCanUsePpapi_allowAll() {
+        assertThat(AllowLists.doesAllowListAllowAll(ALLOW_ALL)).isTrue();
         assertThat(AllowLists.isPackageAllowListed(ALLOW_ALL, SOME_PACKAGE_NAME)).isTrue();
     }
 
     @Test
     public void testAppCanUsePpapi_emptyAllowList() {
+        assertThat(AllowLists.doesAllowListAllowAll(EMPTY_LIST)).isFalse();
         assertThat(AllowLists.isPackageAllowListed(EMPTY_LIST, SOME_PACKAGE_NAME)).isFalse();
+        assertThat(AllowLists.splitAllowList(EMPTY_LIST)).isEmpty();
     }
 
     @Test
     public void testAppCanUsePpapi_notEmptyAllowList() {
         String allowList = SOME_PACKAGE_NAME + ",AnotherPackageName";
+        assertThat(AllowLists.doesAllowListAllowAll(allowList)).isFalse();
         assertThat(AllowLists.isPackageAllowListed(allowList, "notAllowedPackageName")).isFalse();
         assertThat(AllowLists.isPackageAllowListed(allowList, SOME_PACKAGE_NAME)).isTrue();
         assertThat(AllowLists.isPackageAllowListed(allowList, "AnotherPackageName")).isTrue();
+        assertThat(AllowLists.splitAllowList(allowList))
+                .containsExactly(SOME_PACKAGE_NAME, "AnotherPackageName");
     }
 
     @Test
@@ -112,7 +118,12 @@ public class AllowListsTest {
         assertThat(AllowLists.isPackageAllowListed(listWithSpace, "PackageName1")).isTrue();
         assertThat(AllowLists.isPackageAllowListed(listWithSpace, "PackageName2")).isTrue();
         assertThat(AllowLists.isPackageAllowListed(listWithSpace, "PackageName3")).isTrue();
+        assertThat(AllowLists.splitAllowList(listWithSpace))
+                .containsExactly(SOME_PACKAGE_NAME, "PackageName1", "PackageName2", "PackageName3");
+    }
 
+    @Test
+    public void testAppCanUsePpapi_havingLineSeparators() {
         // Allow list contains leading/trailing line separators
         String listWithLineSeparator =
                 SOME_PACKAGE_NAME + ",\nPackageName1,PackageName2\n,\n\nPackageName3\n\n\n";
@@ -121,6 +132,8 @@ public class AllowListsTest {
         assertThat(AllowLists.isPackageAllowListed(listWithLineSeparator, "PackageName1")).isTrue();
         assertThat(AllowLists.isPackageAllowListed(listWithLineSeparator, "PackageName2")).isTrue();
         assertThat(AllowLists.isPackageAllowListed(listWithLineSeparator, "PackageName3")).isTrue();
+        assertThat(AllowLists.splitAllowList(listWithLineSeparator))
+                .containsExactly(SOME_PACKAGE_NAME, "PackageName1", "PackageName2", "PackageName3");
     }
 
     @Test

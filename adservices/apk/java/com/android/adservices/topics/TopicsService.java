@@ -74,8 +74,7 @@ public class TopicsService extends Service {
                             AdServicesLoggerImpl.getInstance(),
                             Clock.SYSTEM_CLOCK,
                             FlagsFactory.getFlags(),
-                            Throttler.getInstance(
-                                    FlagsFactory.getFlags().getSdkRequestPermitsPerSecond()),
+                            Throttler.getInstance(FlagsFactory.getFlags()),
                             EnrollmentDao.getInstance(this),
                             appImportanceFilter);
             mTopicsService.init();
@@ -93,7 +92,7 @@ public class TopicsService extends Service {
     }
 
     private boolean hasUserConsent() {
-        return ConsentManager.getInstance(this).getConsent(this.getPackageManager()).isGiven();
+        return ConsentManager.getInstance(this).getConsent().isGiven();
     }
 
     @Override

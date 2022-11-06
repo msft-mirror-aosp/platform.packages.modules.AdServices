@@ -48,6 +48,7 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Beta programını açarsanız uygulamalar size reklam göstermek için daha gizlilik odaklı bu yeni yöntemleri test edebilir. Beta programını istediğiniz zaman gizlilik ayarlarınızdan kapatabilirsiniz."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Hayır, teşekkürler"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Etkinleştir"</string>
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"Daha fazla"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Katıldığınız için teşekkür ederiz"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Android reklam gizliliği beta programına dahil edildiniz. Özel Korumalı Alan, cihazınızda açıldı.\n\nDaha fazla bilgi edinebilir veya beta programını istediğiniz zaman gizlilik ayarlarınızdan kapatabilirsiniz."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Katılmamayı seçtiniz."</string>
@@ -79,8 +80,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Şu anda gösterilecek ilgi alanı yok"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Özel Korumalı Alan"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android reklam gizliliği beta programı, uygulamaların size beğenebileceğiniz reklamları göstermek için kullanabileceği yeni özellikler sunar. Bu teknolojiler, cihaz tanımlayıcılarını kullanmaz.\n\nAndroid, ilginizi çekebilecek reklam türlerini tahmin edebilir ve bu ilgi alanlarını geçici olarak cihazınıza kaydedebilir. Böylece, uygulamalar, web sitelerindeki ve diğer geliştiricilerin uygulamalarındaki etkinliklerinizi izlemeden size alakalı reklamlar gösterebilir."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Engellenmiş ilgi alanınız yok"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Uygulamalar, ilgi alanlarınızı tahmin ederek geçici bir süreliğine Android\'e kaydedebilir. Daha sonra farklı bir uygulama size bu ilgi alanlarına dayalı bir reklam gösterebilir.\n\nEngellediğiniz uygulamalar artık ilgi alanlarınızı tahmin edemez. Bu uygulamalar, engellemeyi kaldırmadığınız sürece bu uygulama listesine tekrar eklenmez. Uygulamanın daha önce tahmin ettiği ilgi alanları silinse de bunlarla alakalı reklamlar görmeye devam edebilirsiniz."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Engellediğiniz uygulamalar"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Uygulamaların tahmin ettiği ilgi alanlarını sıfırla"</string>
@@ -88,7 +88,25 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Özel Korumalı Alan"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android reklam gizliliği beta programı, uygulamaların size beğenebileceğiniz reklamları göstermek için kullanabileceği yeni özellikler sunar. Bu teknolojiler, cihaz tanımlayıcılarını kullanmaz.\n\nUygulamalar, ilginizi çekebilecek reklam türlerini tahmin edebilir ve bu ilgi alanlarını geçici olarak cihazınıza kaydedebilir. Böylece, uygulamalar, web sitelerindeki ve diğer geliştiricilerin uygulamalarındaki etkinliklerinizi izlemeden size alakalı reklamlar gösterebilir."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Engellenmiş uygulamanız yok"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Engellenmiş ilgi alanınız yok"</string>
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"İptal"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Özel Korumalı Alan kapatılsın mı?"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Fikrinizi değiştirirseniz veya Android reklam gizliliği beta sürümü hakkında daha fazla bilgi edinmek isterseniz gizlilik ayarlarınıza gidebilirsiniz"</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Kapat"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"<xliff:g id="TOPIC">%1$s</xliff:g> engellensin mi?"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"Tekrar eklemediğiniz sürece bu ilgi alanı engellenecek ve bir daha listenize eklenmeyecektir. Ancak, ilgi alanıyla alakalı bazı reklamları görmeye devam edebilirsiniz."</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Engelle"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"<xliff:g id="TOPIC">%1$s</xliff:g> engellemesi kaldırıldı"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android bu ilgi alanını tekrar listenize ekleyebilir ancak ilgi alanı hemen görünmeyebilir"</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"Tamam"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Tüm ilgi alanlarınız sıfırlansın mı?"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"Listeniz temizlenir ve gelecekte yeni ilgi alanları tahmin edilir. Ancak, silinen ilgi alanlarıyla alakalı bazı reklamları görmeye devam edebilirsiniz."</string>
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Sıfırla"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g> engellensin mi?"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Engellemesini kaldırmadığınız sürece bu uygulama Özel Korumalı Alan için ilgi alanlarını tahmin etmeyecek ve bir daha listenize eklenmeyecektir.\n\nBu uygulamanın daha önce tahmin ettiği ilgi alanları silinecek olsa da bazı alakalı reklamları görmeye devam edebilirsiniz."</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> engellemesi kaldırıldı"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Bu uygulama, ilgi alanlarınızı tahmin etmeye başlayacak olsa da ilgi alanları, listenizde hemen görünmeyebilir. Alakalı reklamları görmeye başlamanız biraz zaman alabilir."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Uygulamaların oluşturduğu ilgi alanları sıfırlansın mı?"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"Listenizdeki uygulamalar tarafından tahmin edilen ilgi alanları Özel Korumalı Alan\'dan silinir ve uygulamalar gelecekte yeni ilgi alanları tahmin eder. Ancak, ilgi alanıyla alakalı bazı reklamları görmeye devam edebilirsiniz."</string>
     <string name="topic10001" msgid="1636806320891333775">"Sanat ve Eğlence"</string>
     <string name="topic10002" msgid="1226367977754287428">"Oyunculuk ve Tiyatro"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime ve Manga"</string>

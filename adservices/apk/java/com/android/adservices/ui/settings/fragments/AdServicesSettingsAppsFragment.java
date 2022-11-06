@@ -19,17 +19,22 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.adservices.api.R;
-import com.android.adservices.ui.settings.ActionDelegate;
-import com.android.adservices.ui.settings.AdServicesSettingsActivity;
+import com.android.adservices.service.consent.App;
+import com.android.adservices.ui.settings.activities.AppsActivity;
+import com.android.adservices.ui.settings.delegates.AppsActionDelegate;
 import com.android.adservices.ui.settings.viewadatpors.AppsListViewAdapter;
 import com.android.adservices.ui.settings.viewmodels.AppsViewModel;
+
+import java.util.function.Function;
 
 /** Fragment for the apps view of the AdServices Settings App. */
 public class AdServicesSettingsAppsFragment extends Fragment {
@@ -37,35 +42,42 @@ public class AdServicesSettingsAppsFragment extends Fragment {
     @Override
     public View onCreateView(
             LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.apps_fragment, container, false);
-
-        setupViewModel(rootView);
-
-        return rootView;
+        return inflater.inflate(R.layout.apps_fragment, container, false);
     }
 
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
+        setupViewModel(view);
         initActionListeners();
     }
 
-    // initialize all action listeners except for actions in topics list
+    @Override
+    public void onResume() {
+        super.onResume();
+        AppsViewModel viewModel = new ViewModelProvider(requireActivity()).get(AppsViewModel.class);
+        viewModel.refresh();
+    }
+
+    // initialize all action listeners except for actions in apps list
     private void initActionListeners() {
-        ActionDelegate actionDelegate =
-                ((AdServicesSettingsActivity) requireActivity()).getActionDelegate();
+        AppsActionDelegate actionDelegate = ((AppsActivity) requireActivity()).getActionDelegate();
         actionDelegate.initAppsFragment(this);
     }
 
-    // initializes view model connection with topics list.
+    // initializes view model connection with apps list.
     // (Action listeners for each item in the list will be handled by the adapter)
     private void setupViewModel(View rootView) {
-        AppsViewModel viewModel =
-                ((AdServicesSettingsActivity) requireActivity())
-                        .getViewModelProvider()
-                        .get(AppsViewModel.class);
+        // create adapter
+        AppsViewModel viewModel = new ViewModelProvider(requireActivity()).get(AppsViewModel.class);
+        Function<App, View.OnClickListener> getOnclickListener =
+                app -> view -> viewModel.revokeAppConsentButtonClickHandler(app);
+        AppsListViewAdapter adapter =
+                new AppsListViewAdapter(
+                        requireContext(), viewModel.getApps(), getOnclickListener, false);
+
+        // set adapter for recyclerView
         RecyclerView recyclerView = rootView.findViewById(R.id.apps_list);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-        AppsListViewAdapter adapter = new AppsListViewAdapter(viewModel, false);
         recyclerView.setAdapter(adapter);
 
         View noAppsMessage = rootView.findViewById(R.id.no_apps_message);
@@ -76,7 +88,7 @@ public class AdServicesSettingsAppsFragment extends Fragment {
         // blocked_apps_when_empty_state_button is added to noAppsMessage
         // noAppsMessages is visible only when Empty State
         // blocked_apps_when_empty_state_button differs from blocked_apps_button
-        // in style with rounded corners, centered, blue/grey
+        // in style with rounded corners, centered, colored
         viewModel
                 .getApps()
                 .observe(
@@ -94,15 +106,26 @@ public class AdServicesSettingsAppsFragment extends Fragment {
                             adapter.notifyDataSetChanged();
                         });
 
-        View blockedAppsWhenEmptyStateButton =
+        Button blockedAppsWhenEmptyStateButton =
                 rootView.findViewById(R.id.blocked_apps_when_empty_state_button);
         viewModel
                 .getBlockedApps()
                 .observe(
                         getViewLifecycleOwner(),
                         blockedAppsList -> {
-                            blockedAppsWhenEmptyStateButton.setEnabled(
-                                    blockedAppsList.isEmpty() ? false : true);
+                            if (blockedAppsList.isEmpty()) {
+                                blockedAppsWhenEmptyStateButton.setEnabled(false);
+                                blockedAppsWhenEmptyStateButton.setAlpha(
+                                        getResources().getFloat(R.dimen.disabled_button_alpha));
+                                blockedAppsWhenEmptyStateButton.setText(
+                                        R.string.settingsUI_apps_view_no_blocked_apps_text);
+                            } else {
+                                blockedAppsWhenEmptyStateButton.setEnabled(true);
+                                blockedAppsWhenEmptyStateButton.setAlpha(
+                                        getResources().getFloat(R.dimen.enabled_button_alpha));
+                                blockedAppsWhenEmptyStateButton.setText(
+                                        R.string.settingsUI_blocked_apps_title);
+                            }
                         });
     }
 }

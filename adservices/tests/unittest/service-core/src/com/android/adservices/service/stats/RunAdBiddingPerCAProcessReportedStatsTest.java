@@ -17,12 +17,10 @@
 package com.android.adservices.service.stats;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BIDDING_PER_CAPROCESS_REPORTED__BUYER_DECISION_LOGIC_SCRIPT_TYPE__JAVASCRIPT;
-import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BIDDING_PER_CAPROCESS_REPORTED__GET_BUYER_DECISION_LOGIC_RESULT_CODE__RUN_AD_SELECTION_STATUS_SUCCESS;
-import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BIDDING_PER_CAPROCESS_REPORTED__GET_TRUSTED_BIDDING_SIGNALS_RESULT_CODE__RUN_AD_SELECTION_STATUS_SUCCESS;
-import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BIDDING_PER_CAPROCESS_REPORTED__RUN_AD_BIDDING_PER_CA_RESULT_CODE__RUN_AD_SELECTION_STATUS_SUCCESS;
-import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BIDDING_PER_CAPROCESS_REPORTED__RUN_BIDDING_RESULT_CODE__RUN_AD_SELECTION_STATUS_SUCCESS;
 
 import static org.junit.Assert.assertEquals;
+
+import android.adservices.common.AdServicesStatusUtils;
 
 import org.junit.Test;
 
@@ -30,11 +28,9 @@ import org.junit.Test;
 public class RunAdBiddingPerCAProcessReportedStatsTest {
     static final int NUM_OF_ADS_FOR_BIDDING = 10;
     static final int RUN_AD_BIDDING_PER_CA_LATENCY_IN_MILLIS = 5;
-    static final int RUN_AD_BIDDING_PER_CA_RESULT_CODE =
-            RUN_AD_BIDDING_PER_CAPROCESS_REPORTED__RUN_AD_BIDDING_PER_CA_RESULT_CODE__RUN_AD_SELECTION_STATUS_SUCCESS;
+    static final int RUN_AD_BIDDING_PER_CA_RESULT_CODE = AdServicesStatusUtils.STATUS_SUCCESS;
     static final int GET_BUYER_DECISION_LOGIC_LATENCY_IN_MILLIS = 5;
-    static final int GET_BUYER_DECISION_LOGIC_RESULT_CODE =
-            RUN_AD_BIDDING_PER_CAPROCESS_REPORTED__GET_BUYER_DECISION_LOGIC_RESULT_CODE__RUN_AD_SELECTION_STATUS_SUCCESS;
+    static final int GET_BUYER_DECISION_LOGIC_RESULT_CODE = AdServicesStatusUtils.STATUS_SUCCESS;
     static final int BUYER_DECISION_LOGIC_SCRIPT_TYPE =
             RUN_AD_BIDDING_PER_CAPROCESS_REPORTED__BUYER_DECISION_LOGIC_SCRIPT_TYPE__JAVASCRIPT;
     static final int FETCHED_BUYER_DECISION_LOGIC_SCRIPT_SIZE_IN_BYTES = 10;
@@ -43,10 +39,8 @@ public class RunAdBiddingPerCAProcessReportedStatsTest {
     static final int GET_TRUSTED_BIDDING_SIGNALS_LATENCY_IN_MILLIS = 5;
     static final int GENERATE_BIDS_LATENCY_IN_MILLIS = 10;
     static final int RUN_BIDDING_LATENCY_IN_MILLIS = 5;
-    static final int RUN_BIDDING_RESULT_CODE =
-            RUN_AD_BIDDING_PER_CAPROCESS_REPORTED__RUN_BIDDING_RESULT_CODE__RUN_AD_SELECTION_STATUS_SUCCESS;
-    static final int GET_TRUSTED_BIDDING_SIGNALS_RESULT_CODE =
-            RUN_AD_BIDDING_PER_CAPROCESS_REPORTED__GET_TRUSTED_BIDDING_SIGNALS_RESULT_CODE__RUN_AD_SELECTION_STATUS_SUCCESS;
+    static final int RUN_BIDDING_RESULT_CODE = AdServicesStatusUtils.STATUS_SUCCESS;
+    static final int GET_TRUSTED_BIDDING_SIGNALS_RESULT_CODE = AdServicesStatusUtils.STATUS_SUCCESS;
 
     @Test
     public void testBuilderCreateSuccess() {

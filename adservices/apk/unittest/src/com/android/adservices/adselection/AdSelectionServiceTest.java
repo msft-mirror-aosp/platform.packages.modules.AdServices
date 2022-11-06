@@ -35,6 +35,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.MaintenanceJobService;
 import com.android.adservices.service.adselection.AdSelectionServiceImpl;
 import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.consent.AdServicesApiConsent;
@@ -67,6 +68,7 @@ public class AdSelectionServiceTest {
                         .spyStatic(AdSelectionServiceImpl.class)
                         .spyStatic(PackageChangedReceiver.class)
                         .mockStatic(MddJobService.class)
+                        .mockStatic(MaintenanceJobService.class)
                         .initMocks(this)
                         .startMocking();
     }
@@ -84,7 +86,7 @@ public class AdSelectionServiceTest {
         IBinder binder = adSelectionService.onBind(getIntentForAdSelectionService());
         assertNull(binder);
 
-        verify(mConsentManagerMock, never()).getConsent(any());
+        verify(mConsentManagerMock, never()).getConsent();
         verify(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()), never());
     }
 
@@ -93,10 +95,11 @@ public class AdSelectionServiceTest {
         doReturn(mMockAdSelectionServiceImpl)
                 .when(() -> AdSelectionServiceImpl.create(any(Context.class)));
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any(Context.class)));
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         ExtendedMockito.doReturn(true)
                 .when(() -> PackageChangedReceiver.enableReceiver(any(Context.class)));
         doReturn(true).when(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
+        doReturn(true).when(() -> MaintenanceJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         AdSelectionService adSelectionServiceSpy =
                 new AdSelectionService(mFlagsWithAdSelectionSwitchOff);
@@ -108,9 +111,10 @@ public class AdSelectionServiceTest {
         IBinder binder = adSelectionServiceSpy.onBind(getIntentForAdSelectionService());
         assertNotNull(binder);
 
-        verify(mConsentManagerMock).getConsent(any());
+        verify(mConsentManagerMock).getConsent();
         verify(() -> PackageChangedReceiver.enableReceiver(any(Context.class)));
         verify(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
+        verify(() -> MaintenanceJobService.scheduleIfNeeded(any(), anyBoolean()));
     }
 
     private Intent getIntentForAdSelectionService() {

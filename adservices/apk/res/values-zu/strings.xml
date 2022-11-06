@@ -48,6 +48,7 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Ukuvula i-beta kuvumela ama-app ukuthi ahlole lezi zindlela ezintsha, zokugodliwe zokukubonisa izikhangiso. Ungakwazi ukuvala i-beta noma nini kumasethingi akho obumfihlo."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Cha ngiyabonga"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Vula"</string>
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"Okwengeziwe"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Siyabonga ngokubamba iqhaza"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Uyingxenye ye-beta yobumfihlo yezikhangiso ze-Android. I-Privacy Sandbox ivuliwe kudivayisi yakho.\n\nUngafunda kabanzi noma uvale i-beta noma nini kumasethingi akho obumfihlo."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Ukhethe ukungabambi iqhaza"</string>
@@ -79,8 +80,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Azikho izintshisekelo ongazibonisa njengamanje"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"I-Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"I-beta yobumfihlo yezikhangiso ze-Android inikeza izakhi ezintsha ezingasetshenziswa ama-app ukuze akubonise izikhangiso ongase uzithande. Lobu buchwepheshe abuzisebenzisi izinkomba zedivayisi.\n\nI-Android ingalinganisela izinhlobo zezikhangiso ongaba nentshisekelo kuzo, futhi ilondoloze lezi zintshisekelo zakho okwesikhashana kudivayisi yakho. Lokhu kuvumela ama-app ukuthi akubonise izikhangiso ezihambisanayo, ngaphandle kokulandelela umsebenzi wakho kuwo wonke amawebhusayithi nama-app avela kwabanye onjiniyela."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Awunakho ongaba nentshiseklo kukho okuvinjiwe"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Ama-app angalinganisela ongaba nentshisekelo kukho futhi alondoloze lezi okwesikhashana nge-Android. Kamuva, i-app ehlukile ingakubonisa isikhangiso esisekelwe kulezi zintshisekelo.\n\nUma uvimba i-app, ngeke iphinde isikisele okunye ongaba nentshisekelo kukho. Ngeke iphinde yengezwe kulolu uhlu lwama-app ngaphandle kokuthi uyivulele. Ongaba netshisekelo kukho okusikiselwe kakade i-app kuzosulwa, kodwa usengabona ezinye izikhangiso ezihambisanayo."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Ama-app owavimbile"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Setha kabusha ongaba nentshisekelo kukho okusikiselwe ama-app"</string>
@@ -88,7 +88,25 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"I-Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"I-beta yobumfihlo yezikhangiso ze-Android inikeza izakhi ezintsha ezingasetshenziswa ama-app ukuze akubonise izikhangiso ongase uzithande. Lobu buchwepheshe abuzisebenzisi izinkomba zedivayisi.\n\nAma-app angalinganisela izinhlobo zezikhangiso ongaba nentshisekelo kuzo, futhi alondoloze lezi zintshisekelo zakho okwesikhashana kudivayisi yakho. Lokhu kuvumela ama-app ukuthi akubonise izikhangiso ezihambisanayo, ngaphandle kokulandelela umsebenzi wakho kuwo wonke amawebhusayithi nama-app avela kwabanye onjiniyela."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Awunawo ama-app avinjiwe"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Awunakho ongaba nentshiseklo kukho okuvinjiwe"</string>
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Khansela"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Vala i-Privacy Sandbox?"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Uma ushintsha umqondo wakho noma ufuna ukufunda okwengeziwe mayelana ne-beta yobumfihlo yezikhangiso ze-Android, yiya kumasethingi akho obumfihlo"</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Vala"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Vimba i-<xliff:g id="TOPIC">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"Le ntshisekelo izovinjwa futhi ngeke ingezwe ohlwini lwakho futhi, ngaphandle uma uyengeza futhi. Usengabona ezinye zezikhangiso ezihlobene."</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Vimba"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"I-<xliff:g id="TOPIC">%1$s</xliff:g> ivulelwe"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"I-Android ingase yengeze le ntshisekelo ohlwini lwakho futhi, kodwa ingase ingaveli ngokushesha"</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"KULUNGILE"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Setha kabusha zonke izintshisekelo zakho?"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"Uhlu lwakho luzosulwa futhi intshisekelo entsha izolinganiswa ukuya phambili. Usangabona eziny izikhangiso ezihlobene nentshisekelo esuliwe."</string>
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Setha kabusha"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Vimba i-<xliff:g id="APP">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Le-app ngeke ilinganisele ongaba nentshisekelo kukho ku-Privacy Sandbox futhi ngeke lungezwe ohlwini lwakho futhi, ngaphandle kokuthi uluvule.\n\nIzintshisekelo ezivele zilinganiselwe yile-app zizosulwa, kodwa usengabona ezinye izikhangiso ezihlobene."</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"I-<xliff:g id="APP">%1$s</xliff:g> ivulelwe"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Le-app ingalinganisela izinto ongaba nentshisekelo kuzo futhi, kodwa ingase ingaveli ohlwini lwakho ngokushesha. Kungase kuthathe isikhashana ukuze ubone izikhangiso ezihlobene."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Setha kabusha izintshisekelo ezikhiqizwe ama-app?"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"Intshisekelo elinganiswa ama-app ohlwini lwakho izosulwa ku-Privacy Sandbox, futhi ama-app azolinganisa intshisekelo entsha ukuya phambili. Usengabona ezinye zezikhangiso ezihlobene."</string>
     <string name="topic10001" msgid="1636806320891333775">"Ubuciko Nokokuzijabulisa"</string>
     <string name="topic10002" msgid="1226367977754287428">"Ukulingisa Netiyetha"</string>
     <string name="topic10003" msgid="6949890838957814881">"I-Anime ne-Manga"</string>

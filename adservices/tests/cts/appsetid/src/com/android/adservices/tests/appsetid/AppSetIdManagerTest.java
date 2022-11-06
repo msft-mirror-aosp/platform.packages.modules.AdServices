@@ -42,12 +42,22 @@ public class AppSetIdManagerTest {
 
     @Before
     public void setup() {
-        overrideAdservicesGlobalKillSwitch(true);
+        overrideAppSetIdKillSwitch(true);
     }
 
     @After
-    public void teardown() {
-        overrideAdservicesGlobalKillSwitch(false);
+    public void tearDown() throws Exception {
+        overrideAppSetIdKillSwitch(false);
+    }
+
+    // Override appsetid related kill switch to ignore the effect of actual PH values.
+    // If shouldOverride = true, override appsetid related kill switch to OFF to allow adservices
+    // If shouldOverride = false, override appsetid related kill switch to meaningless value so that
+    // PhFlags will use the default value.
+    private void overrideAppSetIdKillSwitch(boolean shouldOverride) {
+        String overrideString = shouldOverride ? "false" : "null";
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.appsetid_kill_switch " + overrideString);
     }
 
     @Test
@@ -70,14 +80,5 @@ public class AppSetIdManagerTest {
         AppSetId resultAppSetId = future.get();
         Assert.assertNotNull(resultAppSetId.getId());
         Assert.assertNotNull(resultAppSetId.getScope());
-    }
-
-    // Override global_kill_switch to ignore the effect of actual PH values.
-    // If isOverride = true, override global_kill_switch to OFF to allow adservices
-    // If isOverride = false, override global_kill_switch to meaningless value so that PhFlags will
-    // use the default value.
-    private void overrideAdservicesGlobalKillSwitch(boolean isOverride) {
-        String overrideString = isOverride ? "false" : "null";
-        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + overrideString);
     }
 }

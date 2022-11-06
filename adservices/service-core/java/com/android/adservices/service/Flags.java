@@ -24,6 +24,8 @@ import android.util.Dumpable;
 
 import androidx.annotation.Nullable;
 
+import com.google.common.collect.ImmutableList;
+
 import java.io.PrintWriter;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -145,6 +147,19 @@ public interface Flags extends Dumpable {
     /** Returns the number of max characters allowed in the description for topics classifier. */
     default int getClassifierDescriptionMaxLength() {
         return CLASSIFIER_DESCRIPTION_MAX_LENGTH;
+    }
+
+    // TODO(b/243829477): Remove this flag when flow of pushing models is refined.
+    /**
+     * Whether classifier should force using bundled files. This flag is mainly used in CTS tests to
+     * force using precomputed_app_list to avoid model mismatch due to update. Default value is
+     * false which means to use downloaded files.
+     */
+    boolean CLASSIFIER_FORCE_USE_BUNDLED_FILES = false;
+
+    /** Returns whether to force using bundled files */
+    default boolean getClassifierForceUseBundledFiles() {
+        return CLASSIFIER_FORCE_USE_BUNDLED_FILES;
     }
 
     /* The default period for the Maintenance job. */
@@ -462,11 +477,14 @@ public interface Flags extends Dumpable {
         return FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT;
     }
 
-    // TODO(b/240647148): Limits are increased temporarily, decrease these numbers after
-    //  implementing a solution for more accurately scoped timeout
+    // TODO(b/240647148): Limits are increased temporarily, re-evaluate these numbers after
+    //  getting real world data from telemetry & set accurately scoped timeout
     long FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS = 5000;
+    long FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS = 10000;
     long FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS = 5000;
+    // For *on device* ad selection.
     long FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS = 10000;
+    long FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS = 10_000;
 
     long FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS = 2000;
 
@@ -475,17 +493,30 @@ public interface Flags extends Dumpable {
         return FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
     }
 
+    /** Returns the timeout constant in milliseconds that limits the bidding per Buyer */
+    default long getAdSelectionBiddingTimeoutPerBuyerMs() {
+        return FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS;
+    }
+
     /** Returns the timeout constant in milliseconds that limits the scoring */
     default long getAdSelectionScoringTimeoutMs() {
         return FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
     }
 
     /**
-     * Returns the timeout constant in milliseconds that limits the overall ad selection
-     * orchestration
+     * Returns the timeout constant in milliseconds that limits the overall *on device* ad selection
+     * orchestration.
      */
     default long getAdSelectionOverallTimeoutMs() {
         return FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
+    }
+
+    /**
+     * Returns the timeout constant in milliseconds that limits the overall off device ad selection
+     * orchestration.
+     */
+    default long getAdSelectionOffDeviceOverallTimeoutMs() {
+        return FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS;
     }
 
     /**
@@ -494,6 +525,30 @@ public interface Flags extends Dumpable {
      */
     default long getReportImpressionOverallTimeoutMs() {
         return FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
+    }
+
+    // 24 hours in seconds
+    long FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S = 60 * 60 * 24;
+
+    /**
+     * Returns the amount of time in seconds after which ad selection data is considered expired.
+     */
+    default long getAdSelectionExpirationWindowS() {
+        return FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S;
+    }
+
+    boolean FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED = false;
+
+    /** @return whether to call trusted servers for off device ad selection. */
+    default boolean getAdSelectionOffDeviceEnabled() {
+        return FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED;
+    }
+
+    boolean FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED = true;
+
+    /** Returns whether to compress requests sent off device for ad selection. */
+    default boolean getAdSelectionOffDeviceRequestCompressionEnabled() {
+        return FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED;
     }
 
     boolean ADSERVICES_ENABLED = false;
@@ -808,6 +863,24 @@ public interface Flags extends Dumpable {
     }
 
     /**
+     * Measurement Job Delete Uninstalled Kill Switch. The default value is false which means Delete
+     * Uninstalled Job is enabled. This flag is used for emergency turning off the Delete
+     * Uninstalled Job.
+     */
+    boolean MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for Measurement Job Delete Uninstalled. The API will be
+     * disabled if either the Global Kill Switch, Measurement Kill Switch, or the Measurement Job
+     * Delete Uninstalled Kill Switch value is true.
+     */
+    default boolean getMeasurementJobDeleteUninstalledKillSwitch() {
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH;
+    }
+
+    /**
      * Measurement Job Event Fallback Reporting Kill Switch. The default value is false which means
      * Event Fallback Reporting Job is enabled. This flag is used for emergency turning off the
      * Event Fallback Reporting Job.
@@ -843,6 +916,24 @@ public interface Flags extends Dumpable {
         return getGlobalKillSwitch()
                 || getMeasurementKillSwitch()
                 || MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH;
+    }
+    /**
+     * Measurement Job Debug Reporting Kill Switch. The default value is false which means Debug
+     * Reporting Job is enabled. This flag is used for emergency turning off the Debug Reporting
+     * Job.
+     */
+    boolean MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for Measurement Job Debug Reporting. The API will be disabled
+     * if either the Global Kill Switch, Measurement Kill Switch, or the Measurement Job Debug
+     * Reporting Kill Switch value is true.
+     */
+    default boolean getMeasurementJobDebugReportingKillSwitch() {
+        // We check the Global Kill Switch first. As a result, it overrides all other kill Switches.
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH;
     }
 
     /**
@@ -890,10 +981,9 @@ public interface Flags extends Dumpable {
      */
     boolean ADID_KILL_SWITCH = false; // By default, the AdId API is enabled.
 
-    /** Gets the state of the global and adId kill switch. */
+    /** Gets the state of adId kill switch. */
     default boolean getAdIdKillSwitch() {
-        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch() || ADID_KILL_SWITCH;
+        return ADID_KILL_SWITCH;
     }
 
     // APPSETID Killswitch.
@@ -905,8 +995,7 @@ public interface Flags extends Dumpable {
 
     /** Gets the state of the global and appSetId kill switch. */
     default boolean getAppSetIdKillSwitch() {
-        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch() || APPSETID_KILL_SWITCH;
+        return APPSETID_KILL_SWITCH;
     }
 
     // TOPICS Killswitches
@@ -993,6 +1082,9 @@ public interface Flags extends Dumpable {
                     + "com.android.adservices.tests.permissions.valid,"
                     + "com.android.adservices.tests.adid,"
                     + "com.android.adservices.tests.appsetid,"
+                    + "com.android.sdksandboxclient,"
+                    + "com.android.tests.sandbox.adid,"
+                    + "com.android.tests.sandbox.appsetid,"
                     + "com.android.tests.sandbox.fledge,"
                     + "com.android.tests.sandbox.measurement,"
                     + "com.example.adservices.samples.adid.app,"
@@ -1231,18 +1323,68 @@ public interface Flags extends Dumpable {
         return MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES;
     }
 
-    boolean OFF_DEVICE_AD_SELECTION_ENABLED = false;
-
-    /** @return whether to call trusted servers for off device ad selection. */
-    default boolean getOffDeviceAdSelectionEnabled() {
-        return OFF_DEVICE_AD_SELECTION_ENABLED;
-    }
-
     /** UI Dialogs feature enabled. */
-    boolean UI_DIALOGS_FEATURE_ENABLED = true;
+    boolean UI_DIALOGS_FEATURE_ENABLED = false;
 
     /** Returns if the UI Dialogs feature is enabled. */
     default boolean getUIDialogsFeatureEnabled() {
         return UI_DIALOGS_FEATURE_ENABLED;
+    }
+
+    long ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS = (int) TimeUnit.HOURS.toMillis(1);
+    /** Returns the interval in which to run Registration Job Queue Service. */
+    default long getRegistrationJobQueueIntervalMs() {
+        return ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS;
+    }
+
+    /**
+     * Registration Job Queue Kill Switch. The default value is false which means Registration Job
+     * Queue is enabled. This flag is used for emergency shutdown of the Registration Job Queue.
+     */
+    boolean MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for Registration Job Queue. The API will be disabled if either
+     * the Global Kill Switch, Measurement Kill Switch, or the Registration Job Queue Kill Switch
+     * value is true.
+     */
+    default boolean getRegistrationJobQueueKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
+    }
+
+    /**
+     * A feature flag to enable the feature of handling topics without any contributors. Note that
+     * in an epoch, an app is a contributor to a topic if the app has called Topics API in this
+     * epoch and is classified to the topic.
+     *
+     * <p>Default value is false, which means the feature is disabled by default and needs to be
+     * ramped up.
+     */
+    boolean ENABLE_TOPIC_CONTRIBUTORS_CHECK = false;
+
+    /** @return if to enable topic contributors check. */
+    default boolean getEnableTopicContributorsCheck() {
+        return ENABLE_TOPIC_CONTRIBUTORS_CHECK;
+    }
+
+    /** Whether to enable database schema version 3 */
+    boolean ENABLE_DATABASE_SCHEMA_VERSION_3 = false;
+
+    /** @return if to enable database schema version 3. */
+    default boolean getEnableDatabaseSchemaVersion3() {
+        return ENABLE_DATABASE_SCHEMA_VERSION_3;
+    }
+
+    /** Returns true if the given enrollmentId is blocked from using PP-API. */
+    default boolean isEnrollmentBlocklisted(String enrollmentId) {
+        return false;
+    }
+
+    /** Returns a list of enrollmentId blocked from using PP-API. */
+    default ImmutableList<String> getEnrollmentBlocklist() {
+        return ImmutableList.of();
     }
 }

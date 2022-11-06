@@ -22,10 +22,11 @@ import android.annotation.Nullable;
 import android.net.Uri;
 
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
-import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
+import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Validation;
+import com.android.adservices.service.measurement.util.Web;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -61,18 +62,16 @@ public class Trigger {
     private String mAggregateValues;
     private AggregatableAttributionTrigger mAggregatableAttributionTrigger;
     private String mFilters;
+    private String mNotFilters;
     private @Nullable UnsignedLong mDebugKey;
 
-    @IntDef(value = {
-            Status.PENDING,
-            Status.IGNORED,
-            Status.ATTRIBUTED,
-    })
+    @IntDef(value = {Status.PENDING, Status.IGNORED, Status.ATTRIBUTED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
     public @interface Status {
         int PENDING = 0;
         int IGNORED = 1;
         int ATTRIBUTED = 2;
+        int MARKED_TO_DELETE = 3;
     }
 
     private Trigger() {
@@ -100,7 +99,8 @@ public class Trigger {
                 && Objects.equals(mAggregateValues, trigger.mAggregateValues)
                 && Objects.equals(
                         mAggregatableAttributionTrigger, trigger.mAggregatableAttributionTrigger)
-                && Objects.equals(mFilters, trigger.mFilters);
+                && Objects.equals(mFilters, trigger.mFilters)
+                && Objects.equals(mNotFilters, trigger.mNotFilters);
     }
 
     @Override
@@ -117,6 +117,7 @@ public class Trigger {
                 mAggregateValues,
                 mAggregatableAttributionTrigger,
                 mFilters,
+                mNotFilters,
                 mDebugKey);
     }
 
@@ -240,6 +241,13 @@ public class Trigger {
         return mFilters;
     }
 
+    /**
+     * Returns top level not-filters. The value is in json format.
+     */
+    public String getNotFilters() {
+        return mNotFilters;
+    }
+
     /** Debug key of {@link Trigger}. */
     public @Nullable UnsignedLong getDebugKey() {
         return mDebugKey;
@@ -270,14 +278,14 @@ public class Trigger {
                             .setKey(bigInteger)
                             .setSourceKeys(sourceKeySet);
             if (jsonObject.has("filters") && !jsonObject.isNull("filters")) {
-                AggregateFilterData filters = new AggregateFilterData.Builder()
-                        .buildAggregateFilterData(jsonObject.getJSONObject("filters")).build();
+                FilterData filters = new FilterData.Builder()
+                        .buildFilterData(jsonObject.getJSONObject("filters")).build();
                 builder.setFilter(filters);
             }
             if (jsonObject.has("not_filters")
                     && !jsonObject.isNull("not_filters")) {
-                AggregateFilterData notFilters = new AggregateFilterData.Builder()
-                        .buildAggregateFilterData(
+                FilterData notFilters = new FilterData.Builder()
+                        .buildFilterData(
                                 jsonObject.getJSONObject("not_filters")).build();
                 builder.setNotFilter(notFilters);
             }
@@ -322,9 +330,9 @@ public class Trigger {
             }
 
             if (!eventTriggersJsonString.isNull(EventTriggerContract.FILTERS)) {
-                AggregateFilterData filters =
-                        new AggregateFilterData.Builder()
-                                .buildAggregateFilterData(
+                FilterData filters =
+                        new FilterData.Builder()
+                                .buildFilterData(
                                         eventTriggersJsonString.getJSONObject(
                                                 EventTriggerContract.FILTERS))
                                 .build();
@@ -332,9 +340,9 @@ public class Trigger {
             }
 
             if (!eventTriggersJsonString.isNull(EventTriggerContract.NOT_FILTERS)) {
-                AggregateFilterData notFilters =
-                        new AggregateFilterData.Builder()
-                                .buildAggregateFilterData(
+                FilterData notFilters =
+                        new FilterData.Builder()
+                                .buildFilterData(
                                         eventTriggersJsonString.getJSONObject(
                                                 EventTriggerContract.NOT_FILTERS))
                                 .build();
@@ -344,6 +352,20 @@ public class Trigger {
         }
 
         return eventTriggers;
+    }
+
+    /**
+     * Returns a {@code Uri} with scheme and (1) public suffix + 1 in case of a web destination, or
+     * (2) the Android package name in case of an app destination. Returns null if extracting the
+     * public suffix + 1 fails.
+     */
+    public @Nullable Uri getAttributionDestinationBaseUri() {
+        if (mDestinationType == EventSurfaceType.APP) {
+            return BaseUriExtractor.getBaseUri(mAttributionDestination);
+        } else {
+            Optional<Uri> uri = Web.topPrivateDomainAndScheme(mAttributionDestination);
+            return uri.orElse(null);
+        }
     }
 
     /**
@@ -434,6 +456,13 @@ public class Trigger {
         @NonNull
         public Builder setFilters(@Nullable String filters) {
             mBuilding.mFilters = filters;
+            return this;
+        }
+
+        /** See {@link Trigger#getNotFilters()} */
+        @NonNull
+        public Builder setNotFilters(@Nullable String notFilters) {
+            mBuilding.mNotFilters = notFilters;
             return this;
         }
 

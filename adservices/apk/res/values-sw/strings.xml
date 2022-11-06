@@ -48,6 +48,7 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Kuwasha toleo la beta huwezesha programu kujaribu njia hizi mpya zenye faragha zaidi ili zikuonyeshe matangazo. Unaweza kuzima toleo la beta wakati wowote kwenye mipangilio ya faragha."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Hapana"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Washa"</string>
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"Zaidi"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Asante kwa kushiriki"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Umejiunga kwenye toleo la beta la faragha ya matangazo kwenye Android. Kipengele cha Mazingira ya Faragha kimewashwa kwenye kifaa chako.\n\nUnaweza kupata maelezo zaidi au kuzima toleo la beta wakati wowote katika mipangilio ya faragha."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Umechagua kutoshiriki"</string>
@@ -79,8 +80,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Hakuna mambo yanayokuvutia ya kuonyesha kwa sasa"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Mazingira ya Faragha"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Toleo la beta la faragha ya matangazo kwenye Android hutoa vipengele vipya ambavyo programu zinaweza kutumia ili zikuonyeshe matangazo ambayo huenda ukayapenda. Teknolojia hizi hazitumii vitambulishi vya kifaa.\n\nAndroid inaweza kukadiria aina ya matangazo ambayo huenda yakakuvutia na kuhifadhi mambo haya yanayokuvutia kwa muda kwenye kifaa chako. Hali hii huwezesha programu kukuonyesha matangazo yanayokufaa, bila kufuatilia shughuli zako kwenye tovuti na programu za wasanidi programu wengine."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Huna mambo yanayokuvutia uliyozuia"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Programu zinaweza kukadiria mambo yanayokuvutia na kuyahifadhi kwa muda kupitia Android. Hapo baadaye, programu tofauti inaweza kukuonyesha tangazo kulingana na mambo haya yanayokuvutia.\n\nIwapo utazuia programu, haitakadiria mambo yanayokuvutia. Haitawekwa tena kwenye orodha hii ya programu isipokuwa uiondolee kizuizi. Mambo yanayokuvutia yaliyoakadiriwa na programu hiyo yatafutwa, ila huenda bado ukaona baadhi ya matangazo yanayohusiana."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Programu ulizozizuia"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Weka upya mambo yanayokuvutia yaliyokadiriwa na programu"</string>
@@ -88,7 +88,25 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Mazingira ya Faragha"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Toleo la beta la faragha ya matangazo kwenye Android hutoa vipengele vipya ambavyo programu zinaweza kutumia ili zikuonyeshe matangazo ambayo huenda ukayapenda. Teknolojia hizi hazitumii vitambulishi vya kifaa.\n\nProgramu zako zinaweza kukadiria aina ya matangazo ambayo huenda yakakuvutia na kuhifadhi mambo haya yanayokuvitia kwa muda kwenye kifaa chako. Hali hii huwezesha programu kukuonyesha matangazo yanayokufaa, bila kufuatilia shughuli zako kwenye tovuti na programu za wasanidi programu wengine."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Huna programu ulizozuia"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Huna mambo yanayokuvutia uliyozuia"</string>
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Ghairi"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Ungependa kuzima kipengele cha Mazingira ya Faragha?"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Iwapo utabadili mawazo yako au utataka kupata maelezo zaidi kuhusu toleo la beta la faragha ya matangazo kwenye Android, nenda kwenye mipangilio ya faragha"</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Zima"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Ungependa kuzuia mada ya <xliff:g id="TOPIC">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"Mada hii inayokuvutia itazuiwa na haitawekwa kwenye orodha yako tena, isipokuwa ukiiweka mwenyewe. Huenda bado ukaona baadhi ya matangazo yanayohusiana."</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Zuia"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"Umeiondolea kizuizi mada ya <xliff:g id="TOPIC">%1$s</xliff:g>"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Huenda Android ikaweka tena mada hii inayokuvutia kwenye orodha yako, lakini inaweza isionekane papo hapo"</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"Sawa"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Ungependa kuweka upya mambo yote yanayokuvutia?"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"Orodha yako itafutwa na mambo mapya yanayokuvutia yatakadiriwa kuanzia sasa. Bado unaweza kuona baadhi ya matangazo yanayohusiana na mambo yanayokuvutia yaliyofutwa."</string>
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Weka upya"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Ungependa kuzuia programu ya <xliff:g id="APP">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Programu hii haitakadiria mambo yanayokuvutia kwa ajili ya kipengele cha Mazingira ya faragha na haitawekwa kwenye orodha yako tena isipokuwa ukiondoa kizuizi.\n\nMambo yanayokuvutia yaliyokadiriwa na programu hii yatafutwa, ila huenda bado ukaona baadhi ya matangazo yanayohusiana."</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Umeiondolea kizuizi programu ya <xliff:g id="APP">%1$s</xliff:g>"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Programu hii inaweza kukadiria tena mambo yanayokuvutia lakini inaweza isionekane kwenye orodha yako papo hapo. Huenda ikachukua muda hadi uone matangazo yanayohusiana."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Ungependa kuweka upya mambo yanayokuvutia yaliyokadiriwa na programu?"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"Mambo yanayokuvutia yanayokadiriwa na programu kwenye orodha yako yatafutwa kwenye Mazingira ya faragha na programu zitakadiria mambo mapya yanayokuvutia kuanzia sasa. Bado unaweza kuona baadhi ya matangazo yanayohusiana."</string>
     <string name="topic10001" msgid="1636806320891333775">"Sanaa na Burudani"</string>
     <string name="topic10002" msgid="1226367977754287428">"Uigizaji na Ukumbi wa Maonyesho"</string>
     <string name="topic10003" msgid="6949890838957814881">"Vibonzo na Manga"</string>

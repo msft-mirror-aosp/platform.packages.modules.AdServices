@@ -81,16 +81,17 @@ public class TopicsApiLoggingHostTest implements IDeviceTest {
         ConfigUtils.removeConfig(getDevice());
         ReportUtils.clearReports(getDevice());
 
+        disableGlobalKillSwitch();
+        disableTopicsAPIKillSwitch();
         // We need to turn the Consent Manager into debug mode
         overrideConsentManagerDebugMode();
         disableMddBackgroundTasks(true);
         overrideDisableTopicsEnrollmentCheck("1");
-        overrideAdservicesGlobalKillSwitch(true);
     }
 
     @After
     public void tearDown() throws Exception {
-        overrideAdservicesGlobalKillSwitch(false);
+        disableMddBackgroundTasks(false);
         ConfigUtils.removeConfig(getDevice());
         ReportUtils.clearReports(getDevice());
     }
@@ -156,7 +157,7 @@ public class TopicsApiLoggingHostTest implements IDeviceTest {
             throws DeviceNotAvailableException {
         getDevice()
                 .executeShellCommand(
-                        "setprop debug.adservices.mdd_background_task_kill_switch "
+                        "device_config put adservices mdd_background_task_kill_switch "
                                 + isSwitchedOff);
     }
 
@@ -169,15 +170,13 @@ public class TopicsApiLoggingHostTest implements IDeviceTest {
                         "setprop debug.adservices.disable_topics_enrollment_check " + val);
     }
 
-    // Override global_kill_switch to ignore the effect of actual PH values.
-    // If isOverride = true, override global_kill_switch to OFF to allow adservices
-    // If isOverride = false, override global_kill_switch to meaningless value so that PhFlags will
-    // use the default value.
-    private void overrideAdservicesGlobalKillSwitch(boolean isOverride)
-            throws DeviceNotAvailableException {
-        String overrideString = isOverride ? "false" : "null";
-        getDevice()
-                .executeShellCommand(
-                        "setprop debug.adservices.global_kill_switch " + overrideString);
+    // Disable global_kill_switch to ignore the effect of actual PH values.
+    private void disableGlobalKillSwitch() throws DeviceNotAvailableException {
+        getDevice().executeShellCommand("device_config put adservices global_kill_switch false");
+    }
+
+    // Disable topics_kill_switch to ignore the effect of actual PH values.
+    private void disableTopicsAPIKillSwitch() throws DeviceNotAvailableException {
+        getDevice().executeShellCommand("device_config put adservices topics_kill_switch false");
     }
 }

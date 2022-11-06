@@ -68,13 +68,14 @@ public class ManifestBasedAdtechAccessResolverTest {
         mMockEnrollmentDao = mock(EnrollmentDao.class);
         doReturn(EnrollmentFixture.getValidEnrollment())
                 .when(mMockEnrollmentDao)
-                .getEnrollmentDataFromMeasurementUrl(eq(ENROLLED_AD_TECH_URL.toString()));
+                .getEnrollmentDataFromMeasurementUrl(eq(ENROLLED_AD_TECH_URL));
         mMockitoSession =
                 ExtendedMockito.mockitoSession()
                         .mockStatic(AppManifestConfigHelper.class)
                         .strictness(Strictness.LENIENT)
                         .initMocks(this)
                         .startMocking();
+        when(mFlags.isEnrollmentBlocklisted(any())).thenReturn(false);
     }
 
     @After
@@ -190,6 +191,21 @@ public class ManifestBasedAdtechAccessResolverTest {
         when(AppManifestConfigHelper.isAllowedAttributionAccess(any(), any(), any()))
                 .thenReturn(true);
         assertTrue(mClassUnderTest.isAllowed(CONTEXT));
+    }
+
+    @Test
+    public void isNotAllowed_enrollmentInBlocklist() {
+        mClassUnderTest =
+                new ManifestBasedAdtechAccessResolver(
+                        mMockEnrollmentDao, mFlags, PACKAGE, ENROLLED_AD_TECH_URL);
+        when(mFlags.isDisableMeasurementEnrollmentCheck()).thenReturn(false);
+        when(AppManifestConfigHelper.isAllowedAttributionAccess(any(), any(), any()))
+                .thenReturn(true);
+
+        String enrollmentId = EnrollmentFixture.getValidEnrollment().getEnrollmentId();
+        when(mFlags.isEnrollmentBlocklisted(enrollmentId)).thenReturn(true);
+
+        assertFalse(mClassUnderTest.isAllowed(CONTEXT));
     }
 
     @Test

@@ -16,30 +16,27 @@
 
 package com.android.adservices.service.stats;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BIDDING_PROCESS_REPORTED__RUN_AD_BIDDING_RESULT_CODE__RUN_AD_SELECTION_STATUS_SUCCESS;
-import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_SELECTION_PROCESS_REPORTED__PERSIST_AD_SELECTION_RESULT_CODE__RUN_AD_SELECTION_STATUS_SUCCESS;
-
 import static org.junit.Assert.assertEquals;
+
+import android.adservices.common.AdServicesStatusUtils;
 
 import org.junit.Test;
 
 /** Unit tests for {@link RunAdSelectionProcessReportedStats}. */
 public class RunAdSelectionProcessReportedStatsTest {
     static final boolean IS_RMKT_ADS_WON = true;
-    static final int AD_SELECTION_ENTRY_SIZE_IN_BYTES = 100;
+    static final int DB_AD_SELECTION_SIZE_IN_BYTES = 100;
     static final int PERSIST_AD_SELECTION_LATENCY_IN_MILLIS = 10;
     static final int RUN_AD_SELECTION_LATENCY_IN_MILLIS = 10;
-    static final int PERSIST_AD_SELECTION_RESULT_CODE =
-            RUN_AD_SELECTION_PROCESS_REPORTED__PERSIST_AD_SELECTION_RESULT_CODE__RUN_AD_SELECTION_STATUS_SUCCESS;
-    static final int RUN_AD_SELECTION_RESULT_CODE =
-            RUN_AD_BIDDING_PROCESS_REPORTED__RUN_AD_BIDDING_RESULT_CODE__RUN_AD_SELECTION_STATUS_SUCCESS;
+    static final int PERSIST_AD_SELECTION_RESULT_CODE = AdServicesStatusUtils.STATUS_SUCCESS;
+    static final int RUN_AD_SELECTION_RESULT_CODE = AdServicesStatusUtils.STATUS_SUCCESS;
 
     @Test
     public void testBuilderCreateSuccess() {
         RunAdSelectionProcessReportedStats stats =
                 RunAdSelectionProcessReportedStats.builder()
                         .setIsRemarketingAdsWon(IS_RMKT_ADS_WON)
-                        .setAdSelectionEntrySizeInBytes(AD_SELECTION_ENTRY_SIZE_IN_BYTES)
+                        .setDBAdSelectionSizeInBytes(DB_AD_SELECTION_SIZE_IN_BYTES)
                         .setPersistAdSelectionLatencyInMillis(
                                 PERSIST_AD_SELECTION_LATENCY_IN_MILLIS)
                         .setPersistAdSelectionResultCode(PERSIST_AD_SELECTION_RESULT_CODE)
@@ -47,7 +44,7 @@ public class RunAdSelectionProcessReportedStatsTest {
                         .setRunAdSelectionResultCode(RUN_AD_SELECTION_RESULT_CODE)
                         .build();
         assertEquals(IS_RMKT_ADS_WON, stats.getIsRemarketingAdsWon());
-        assertEquals(AD_SELECTION_ENTRY_SIZE_IN_BYTES, stats.getAdSelectionEntrySizeInBytes());
+        assertEquals(DB_AD_SELECTION_SIZE_IN_BYTES, stats.getDBAdSelectionSizeInBytes());
         assertEquals(
                 PERSIST_AD_SELECTION_LATENCY_IN_MILLIS,
                 stats.getPersistAdSelectionLatencyInMillis());

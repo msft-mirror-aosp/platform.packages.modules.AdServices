@@ -22,7 +22,6 @@ import android.annotation.Nullable;
 import android.net.Uri;
 
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
-import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 import com.android.adservices.service.measurement.noising.ImpressionNoiseParams;
 import com.android.adservices.service.measurement.noising.ImpressionNoiseUtil;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -31,7 +30,6 @@ import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -85,19 +83,17 @@ public class Source {
     private long mInstallCooldownWindow;
     private @Nullable UnsignedLong mDebugKey;
     private boolean mIsInstallAttributed;
-    private String mAggregateFilterData;
+    private String mFilterData;
     private String mAggregateSource;
     private int mAggregateContributions;
     private AggregatableAttributionSource mAggregatableAttributionSource;
 
-    @IntDef(value = {
-            Status.ACTIVE,
-            Status.IGNORED,
-    })
+    @IntDef(value = {Status.ACTIVE, Status.IGNORED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
     public @interface Status {
         int ACTIVE = 0;
         int IGNORED = 1;
+        int MARKED_TO_DELETE = 2;
     }
 
     @IntDef(value = {
@@ -121,7 +117,7 @@ public class Source {
         private final String mValue;
 
         SourceType(String value) {
-            this.mValue = value;
+            mValue = value;
         }
 
         public String getValue() {
@@ -146,9 +142,9 @@ public class Source {
         private final Uri mDestination;
 
         public FakeReport(UnsignedLong triggerData, long reportingTime, Uri destination) {
-            this.mTriggerData = triggerData;
-            this.mReportingTime = reportingTime;
-            this.mDestination = destination;
+            mTriggerData = triggerData;
+            mReportingTime = reportingTime;
+            mDestination = destination;
         }
 
         @Override
@@ -242,7 +238,7 @@ public class Source {
     public int getTriggerDataCardinality() {
         return mSourceType == SourceType.EVENT
                 ? PrivacyParams.EVENT_TRIGGER_DATA_CARDINALITY
-                : PrivacyParams.NAVIGATION_TRIGGER_DATA_CARDINALITY;
+                : PrivacyParams.getNavigationTriggerDataCardinality();
     }
 
     /**
@@ -323,7 +319,7 @@ public class Source {
                 && Objects.equals(mDedupKeys, source.mDedupKeys)
                 && Objects.equals(mRegistrant, source.mRegistrant)
                 && mAttributionMode == source.mAttributionMode
-                && Objects.equals(mAggregateFilterData, source.mAggregateFilterData)
+                && Objects.equals(mFilterData, source.mFilterData)
                 && Objects.equals(mAggregateSource, source.mAggregateSource)
                 && mAggregateContributions == source.mAggregateContributions
                 && Objects.equals(
@@ -346,7 +342,7 @@ public class Source {
                 mEventId,
                 mSourceType,
                 mDedupKeys,
-                mAggregateFilterData,
+                mFilterData,
                 mAggregateSource,
                 mAggregateContributions,
                 mAggregatableAttributionSource,
@@ -556,8 +552,8 @@ public class Source {
      * }
      * }
      */
-    public String getAggregateFilterData() {
-        return mAggregateFilterData;
+    public String getFilterData() {
+        return mFilterData;
     }
 
     /**
@@ -615,34 +611,46 @@ public class Source {
     }
 
     /**
+     * Generates AggregatableFilterData from aggregate filter string in Source, including an entry
+     * for source type.
+     */
+    public FilterData parseFilterData() throws JSONException {
+        FilterData filterData;
+        if (mFilterData == null || mFilterData.isEmpty()) {
+            filterData = new FilterData.Builder().build();
+        } else {
+            filterData =
+                    new FilterData.Builder()
+                            .buildFilterData(new JSONObject(mFilterData))
+                            .build();
+        }
+        filterData.getAttributionFilterMap().put("source_type",
+                Collections.singletonList(mSourceType.getValue()));
+        return filterData;
+    }
+
+    /**
      * Generates AggregatableAttributionSource from aggregate source string and aggregate filter
      * data string in Source.
      */
     public Optional<AggregatableAttributionSource> parseAggregateSource()
             throws JSONException, NumberFormatException {
-        if (this.mAggregateSource == null) {
+        if (mAggregateSource == null) {
             return Optional.empty();
         }
-        JSONArray jsonArray = new JSONArray(this.mAggregateSource);
+        JSONObject jsonObject = new JSONObject(mAggregateSource);
         Map<String, BigInteger> aggregateSourceMap = new HashMap<>();
-        for (int i = 0; i < jsonArray.length(); i++) {
-            JSONObject jsonObject = jsonArray.getJSONObject(i);
-            String id = jsonObject.getString("id");
+        for (String key : jsonObject.keySet()) {
             // Remove "0x" prefix.
-            String hexString = jsonObject.getString("key_piece").substring(2);
+            String hexString = jsonObject.getString(key).substring(2);
             BigInteger bigInteger = new BigInteger(hexString, 16);
-            aggregateSourceMap.put(id, bigInteger);
+            aggregateSourceMap.put(key, bigInteger);
         }
-        AggregatableAttributionSource.Builder asBuilder =
+        AggregatableAttributionSource.Builder aggregatableAttributionSourceBuilder =
                 new AggregatableAttributionSource.Builder()
                         .setAggregatableSource(aggregateSourceMap);
-        if (this.mAggregateFilterData != null) {
-            asBuilder.setAggregateFilterData(
-                    new AggregateFilterData.Builder()
-                            .buildAggregateFilterData(new JSONObject(this.mAggregateFilterData))
-                            .build());
-        }
-        return Optional.of(asBuilder.build());
+        aggregatableAttributionSourceBuilder.setFilterData(parseFilterData());
+        return Optional.of(aggregatableAttributionSourceBuilder.build());
     }
 
     private List<FakeReport> generateVtcDualDestinationPostInstallFakeReports() {
@@ -833,9 +841,9 @@ public class Source {
             return this;
         }
 
-        /** See {@link Source#getAggregateFilterData()}. */
-        public Builder setAggregateFilterData(@Nullable String aggregateFilterData) {
-            mBuilding.mAggregateFilterData = aggregateFilterData;
+        /** See {@link Source#getFilterData()}. */
+        public Builder setFilterData(@Nullable String filterData) {
+            mBuilding.mFilterData = filterData;
             return this;
         }
 

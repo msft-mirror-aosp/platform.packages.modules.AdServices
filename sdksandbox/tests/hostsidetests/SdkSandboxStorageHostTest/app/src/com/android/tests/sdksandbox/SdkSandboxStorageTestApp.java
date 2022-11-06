@@ -21,17 +21,16 @@ import static android.os.storage.StorageManager.UUID_DEFAULT;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.fail;
 
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.app.usage.StorageStats;
 import android.app.usage.StorageStatsManager;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Process;
 import android.os.UserHandle;
-import android.preference.PreferenceManager;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
@@ -50,7 +49,6 @@ import org.junit.runners.JUnit4;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.util.Set;
 
 @RunWith(JUnit4.class)
 public class SdkSandboxStorageTestApp {
@@ -66,10 +64,6 @@ public class SdkSandboxStorageTestApp {
             "open failed: ENOENT (No such file or directory)";
 
     @Rule public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(TestActivity.class);
-
-    private static final String KEY_TO_SYNC = "hello";
-    private static final String BULK_SYNC_VALUE = "bulksync";
-    private static final String UPDATE_VALUE = "update";
 
     private Context mContext;
     private SdkSandboxManager mSdkSandboxManager;
@@ -87,7 +81,13 @@ public class SdkSandboxStorageTestApp {
     public void loadSdk() throws Exception {
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        if (!callback.isLoadSdkSuccessful()) {
+            fail(
+                    "Load SDK was not successful. errorCode: "
+                            + callback.getLoadSdkErrorCode()
+                            + ", errorMsg: "
+                            + callback.getLoadSdkErrorMsg());
+        }
 
         // Store the returned SDK interface so that we can interact with it later.
         mSdk = IStorageTestSdk1Api.Stub.asInterface(callback.getSandboxedSdk().getInterface());
@@ -133,111 +133,23 @@ public class SdkSandboxStorageTestApp {
         final StorageStats finalAppStats = stats.queryStatsForUid(UUID_DEFAULT, uid);
         final StorageStats finalUserStats = stats.queryStatsForUser(UUID_DEFAULT, user);
 
-        // Verify the space used with a 5% error margin
         long deltaAppSize = 2 * sizeInBytes;
         long deltaCacheSize = sizeInBytes;
-        long errorMarginSize = sizeInBytes / 20; // 0.5 MB
 
         // Assert app size is same
         final long appSizeAppStats = finalAppStats.getDataBytes() - initialAppStats.getDataBytes();
         final long appSizeUserStats =
                 finalUserStats.getDataBytes() - initialUserStats.getDataBytes();
-        assertMostlyEquals(deltaAppSize, appSizeAppStats, errorMarginSize);
-        assertMostlyEquals(deltaAppSize, appSizeUserStats, errorMarginSize);
+        assertMostlyEquals(deltaAppSize, appSizeAppStats, 5);
+        assertMostlyEquals(deltaAppSize, appSizeUserStats, 10);
 
         // Assert cache size is same
         final long cacheSizeAppStats =
                 finalAppStats.getCacheBytes() - initialAppStats.getCacheBytes();
         final long cacheSizeUserStats =
                 finalUserStats.getCacheBytes() - initialUserStats.getCacheBytes();
-        assertMostlyEquals(deltaCacheSize, cacheSizeAppStats, errorMarginSize);
-        assertMostlyEquals(deltaCacheSize, cacheSizeUserStats, errorMarginSize);
-    }
-
-    @Test
-    public void testSharedPreferences_IsSyncedFromAppToSandbox() throws Exception {
-        loadSdk();
-
-        // Write to default shared preference
-        final SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(mContext);
-        pref.edit().putString(KEY_TO_SYNC, BULK_SYNC_VALUE).commit();
-
-        // Start syncing keys
-        mSdkSandboxManager.addSyncedSharedPreferencesKeys(Set.of(KEY_TO_SYNC));
-        // Allow some time for data to sync
-        Thread.sleep(1000);
-
-        // Verify same key can be read from the sandbox
-        final String syncedValueInSandbox = mSdk.getSyncedSharedPreferencesString(KEY_TO_SYNC);
-        assertThat(syncedValueInSandbox).isEqualTo(BULK_SYNC_VALUE);
-    }
-
-    @Test
-    public void testSharedPreferences_SyncPropagatesUpdates() throws Exception {
-        loadSdk();
-
-        // Start syncing keys
-        mSdkSandboxManager.addSyncedSharedPreferencesKeys(Set.of(KEY_TO_SYNC));
-
-        // Update the default SharedPreferences
-        final SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(mContext);
-        pref.edit().putString(KEY_TO_SYNC, UPDATE_VALUE).commit();
-        // Allow some time for data to sync
-        Thread.sleep(1000);
-
-        // Verify update was propagated
-        final String syncedValueInSandbox = mSdk.getSyncedSharedPreferencesString(KEY_TO_SYNC);
-        assertThat(syncedValueInSandbox).isEqualTo(UPDATE_VALUE);
-    }
-
-    @Test
-    public void testSharedPreferences_SyncStartedBeforeLoadingSdk() throws Exception {
-        // Write to default shared preference
-        final SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(mContext);
-        pref.edit().putString(KEY_TO_SYNC, BULK_SYNC_VALUE).commit();
-
-        // Start syncing keys
-        mSdkSandboxManager.addSyncedSharedPreferencesKeys(Set.of(KEY_TO_SYNC));
-
-        // Load Sdk so that sandbox is started
-        loadSdk();
-        // Allow some time for data to sync
-        Thread.sleep(1000);
-
-        // Verify same key can be read from the sandbox
-        final String syncedValueInSandbox = mSdk.getSyncedSharedPreferencesString(KEY_TO_SYNC);
-        assertThat(syncedValueInSandbox).isEqualTo(BULK_SYNC_VALUE);
-    }
-
-    @Test
-    public void testSharedPreferences_SyncRemoveKeys() throws Exception {
-        loadSdk();
-
-        // Write to default shared preference
-        final SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(mContext);
-        pref.edit().putString(KEY_TO_SYNC, BULK_SYNC_VALUE).commit();
-
-        // Start syncing keys
-        mSdkSandboxManager.addSyncedSharedPreferencesKeys(Set.of(KEY_TO_SYNC));
-
-        // Remove the key
-        mSdkSandboxManager.removeSyncedSharedPreferencesKeys(Set.of(KEY_TO_SYNC));
-
-        // Allow some time for data to sync
-        Thread.sleep(1000);
-
-        // Verify key has been removed from the sandbox
-        final String syncedValueInSandbox = mSdk.getSyncedSharedPreferencesString(KEY_TO_SYNC);
-        assertThat(syncedValueInSandbox).isEmpty();
-    }
-
-    @Test
-    public void testSharedPreferences_SyncedDataClearedOnSandboxRestart() throws Exception {
-        loadSdk();
-
-        // Verify previously synced keys are not available in sandbox anymore
-        final String syncedValueInSandbox = mSdk.getSyncedSharedPreferencesString(KEY_TO_SYNC);
-        assertThat(syncedValueInSandbox).isEmpty();
+        assertMostlyEquals(deltaCacheSize, cacheSizeAppStats, 5);
+        assertMostlyEquals(deltaCacheSize, cacheSizeUserStats, 10);
     }
 
     private static void assertDirIsNotAccessible(String path) {
@@ -252,9 +164,18 @@ public class SdkSandboxStorageTestApp {
         assertThat(new File(path).canExecute()).isFalse();
     }
 
-    private static void assertMostlyEquals(long expected, long actual, long delta) {
-        if (Math.abs(expected - actual) > delta) {
-            throw new AssertionFailedError("Expected roughly " + expected + " but was " + actual);
+    private static void assertMostlyEquals(
+            long expected, long actual, long errorMarginInPercentage) {
+        final double diffInSize = Math.abs(expected - actual);
+        final double diffInPercentage = (diffInSize / expected) * 100;
+        if (diffInPercentage > errorMarginInPercentage) {
+            throw new AssertionFailedError(
+                    "Expected roughly "
+                            + expected
+                            + " but was "
+                            + actual
+                            + ". Diff in percentage: "
+                            + Math.round(diffInPercentage * 100) / 100.00);
         }
     }
 }

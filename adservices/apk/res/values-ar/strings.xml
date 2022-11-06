@@ -48,6 +48,7 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"يؤدي تفعيل الإصدار التجريبي إلى السماح للتطبيقات بتجربة هذه الطرق الجديدة التي توفر المزيد من الخصوصية لعرض إعلاناتك. يمكنك إيقاف الإصدار التجريبي في أي وقت من إعدادات الخصوصية لديك."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"لا، شكرًا"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"تفعيل"</string>
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"المزيد"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"نشكرك على المشاركة"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"‏أنت تشارك في حماية خصوصية الإعلانات من Android (الإصدار التجريبي) تم تفعيل \"مبادرة حماية الخصوصية\" على جهازك.\n\nيمكنك الاطّلاع على المزيد من المعلومات أو إيقاف الإصدار التجريبي في أي وقت في إعدادات الخصوصية لديك."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"لقد اختَرت عدم المشاركة"</string>
@@ -79,8 +80,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"لا تتوفّر اهتمامات لعرضها في الوقت الحالي."</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"مبادرة حماية الخصوصية"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"‏توفّر حماية خصوصية الإعلانات من Android (الإصدار التجريبي) ميزات جديدة يمكن للتطبيقات استخدامها لعرض التطبيقات التي قد تعجبك. لا تستخدم هذه التقنيات معرّفات الأجهزة.\n\nيمكن لنظام Android أن يُحدّد أنواع الإعلانات التي قد تهتم بمشاهدتها، وحفظ فئات الاهتمام على جهازك مؤقّتًا. يتيح هذا الأمر للتطبيقات عرض الإعلانات ذات الصلة، بدون أن يتم تتبُّع نشاطك بواسطة المواقع الإلكترونية والتطبيقات التابعة لمطورين آخرين."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"ليس لديك فئات اهتمام محظورة"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"‏يمكن أن تُحدّد التطبيقات اهتماماتك وتحفظها مؤقتًا على نظام Android. وفي وقت لاحق، يمكن أن يعرض تطبيق آخر إعلانًا وفقًا لهذه الاهتمامات.\n\nفي حال حظر أحد التطبيقات، لن يُحدّد هذا التطبيق أي اهتمامات بعد ذلك. لن تتم إضافة هذا التطبيق إلى قائمة التطبيقات مرة أخرى ما لم يتم إزالة حظره. وسيتم أيضًا حذف الاهتمامات التي سبق وحدّدها التطبيق، ولكن قد يستمر ظهور بعض الإعلانات ذات الصلة."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"التطبيقات المحظورة"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"إعادة ضبط الاهتمامات المحددّة وفقًا للتطبيقات"</string>
@@ -88,7 +88,25 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"مبادرة حماية الخصوصية"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"‏توفّر حماية خصوصية الإعلانات من Android (الإصدار التجريبي) ميزات جديدة يمكن للتطبيقات استخدامها لعرض التطبيقات التي قد تعجبك. لا تستخدم هذه التقنيات معرّفات الأجهزة.\n\nيمكن أن تُحدّد التطبيقات أنواع الإعلانات التي قد تهتم بمشاهدتها، وحفظ فئات الاهتمام هذه على جهازك مؤقّتًا. يتيح هذا الأمر للتطبيقات عرض الإعلانات ذات الصلة، بدون أن يتم تتبُّع نشاطك بواسطة المواقع الإلكترونية والتطبيقات التابعة لمطورين آخرين."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"ليس هناك تطبيقات محظورة."</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"ليس لديك فئات اهتمام محظورة"</string>
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"إلغاء"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"هل تريد إيقاف \"مبادرة حماية الخصوصية\"؟"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"‏إذا غيّرت رأيك أو أردت معرفة المزيد من المعلومات عن الإصدار التجريبي من الخصوصية في عرض الإعلانات على نظام Android، انتقِل إلى إعدادات الخصوصية."</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"إيقاف"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"هل تريد حظر <xliff:g id="TOPIC">%1$s</xliff:g>؟"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"سيتم حظر هذا الاهتمام ولن تتم إضافته إلى قائمتك مرة أخرى ما لم تضِفه مجددًا. قد تظلّ تظهر لك بعض الإعلانات ذات الصلة."</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"حظر"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"تمت إزالة حظر <xliff:g id="TOPIC">%1$s</xliff:g>"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"‏قد يضيف نظام Android هذا الاهتمام إلى قائمتك مرة أخرى، ولكنه قد لا يظهر على الفور."</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"حسنًا"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"هل تريد إعادة ضبط كل الاهتمامات؟"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"سيتم محو قائمتك وتقدير اهتمامات جديدة من الآن فصاعدًا. قد تظلّ تظهر لك بعض الإعلانات ذات الصلة بالاهتمامات التي تم محوها."</string>
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"إعادة الضبط"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"هل تريد حظر <xliff:g id="APP">%1$s</xliff:g>؟"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"لن يقدِّر هذا التطبيق اهتماماتك من أجل \"مبادرة حماية الخصوصية\" ولن تتم إضافته إلى قائمتك مرة أخرى ما لم تتم إزالة حظره.\n\nسيتم حذف الاهتمامات التي سبق أن قدّرها هذا التطبيق، ولكن قد تظلّ تظهر لك بعض الإعلانات ذات الصلة."</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"تمت إزالة حظر <xliff:g id="APP">%1$s</xliff:g>"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"يمكن أن يقدِّر هذا التطبيق اهتماماتك نيابةً عنك مرة أخرى، ولكنها قد لا تظهر في قائمتك على الفور. وقد يستغرق ظهور الإعلانات ذات الصلة لك بعض الوقت."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"هل تريد إعادة ضبط الاهتمامات التي تُنشئها التطبيقات؟"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"الاهتمامات التي تم تقديرها وفقًا للتطبيقات في قائمتك سيتم حذفها من \"مبادرة حماية الخصوصية\" وستقدِّر التطبيقات اهتمامات جديدة من الآن فصاعدًا. قد تظلّ تظهر لك بعض الإعلانات ذات الصلة."</string>
     <string name="topic10001" msgid="1636806320891333775">"فنون وترفيه"</string>
     <string name="topic10002" msgid="1226367977754287428">"تمثيل ومسرح"</string>
     <string name="topic10003" msgid="6949890838957814881">"أنمي وقصص مصورة"</string>

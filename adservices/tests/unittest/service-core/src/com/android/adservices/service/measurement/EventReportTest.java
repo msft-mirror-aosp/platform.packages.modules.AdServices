@@ -39,6 +39,7 @@ import org.junit.Test;
 
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /** Unit tests for {@link EventReport} */
@@ -52,6 +53,8 @@ public final class EventReportTest {
     private static final UnsignedLong TRIGGER_DATA = new UnsignedLong(4L);
     private static final UnsignedLong SOURCE_DEBUG_KEY = new UnsignedLong(237865L);
     private static final UnsignedLong TRIGGER_DEBUG_KEY = new UnsignedLong(928762L);
+    private static final String SOURCE_ID = UUID.randomUUID().toString();
+    private static final String TRIGGER_ID = UUID.randomUUID().toString();
     private static final Uri APP_DESTINATION = Uri.parse("android-app://example1.app");
     private static final Uri WEB_DESTINATION = Uri.parse("https://example1.com");
     private static final String EVENT_TRIGGERS =
@@ -77,7 +80,7 @@ public final class EventReportTest {
     public void creation_success() {
         EventReport eventReport = createExample();
         assertEquals("1", eventReport.getId());
-        assertEquals(new UnsignedLong(21L), eventReport.getSourceId());
+        assertEquals(new UnsignedLong(21L), eventReport.getSourceEventId());
         assertEquals("enrollment-id", eventReport.getEnrollmentId());
         assertEquals("https://bar.com", eventReport.getAttributionDestination().toString());
         assertEquals(1000L, eventReport.getTriggerTime());
@@ -86,16 +89,19 @@ public final class EventReportTest {
         assertEquals(new UnsignedLong(3L), eventReport.getTriggerDedupKey());
         assertEquals(2000L, eventReport.getReportTime());
         assertEquals(EventReport.Status.PENDING, eventReport.getStatus());
+        assertEquals(EventReport.DebugReportStatus.PENDING, eventReport.getDebugReportStatus());
         assertEquals(Source.SourceType.NAVIGATION, eventReport.getSourceType());
         assertEquals(SOURCE_DEBUG_KEY, eventReport.getSourceDebugKey());
         assertEquals(TRIGGER_DEBUG_KEY, eventReport.getTriggerDebugKey());
+        assertEquals(SOURCE_ID, eventReport.getSourceId());
+        assertEquals(TRIGGER_ID, eventReport.getTriggerId());
     }
 
     @Test
     public void creationSuccessSingleSourceDebugKey() {
         EventReport eventReport = createExampleSingleSourceDebugKey();
         assertEquals("1", eventReport.getId());
-        assertEquals(new UnsignedLong(21L), eventReport.getSourceId());
+        assertEquals(new UnsignedLong(21L), eventReport.getSourceEventId());
         assertEquals("enrollment-id", eventReport.getEnrollmentId());
         assertEquals("https://bar.com", eventReport.getAttributionDestination().toString());
         assertEquals(1000L, eventReport.getTriggerTime());
@@ -104,16 +110,19 @@ public final class EventReportTest {
         assertEquals(new UnsignedLong(3L), eventReport.getTriggerDedupKey());
         assertEquals(2000L, eventReport.getReportTime());
         assertEquals(EventReport.Status.PENDING, eventReport.getStatus());
+        assertEquals(EventReport.DebugReportStatus.PENDING, eventReport.getDebugReportStatus());
         assertEquals(Source.SourceType.NAVIGATION, eventReport.getSourceType());
         assertEquals(SOURCE_DEBUG_KEY, eventReport.getSourceDebugKey());
         assertNull(eventReport.getTriggerDebugKey());
+        assertEquals(SOURCE_ID, eventReport.getSourceId());
+        assertEquals(TRIGGER_ID, eventReport.getTriggerId());
     }
 
     @Test
     public void creationSuccessSingleTriggerDebugKey() {
         EventReport eventReport = createExampleSingleTriggerDebugKey();
         assertEquals("1", eventReport.getId());
-        assertEquals(new UnsignedLong(21L), eventReport.getSourceId());
+        assertEquals(new UnsignedLong(21L), eventReport.getSourceEventId());
         assertEquals("enrollment-id", eventReport.getEnrollmentId());
         assertEquals("https://bar.com", eventReport.getAttributionDestination().toString());
         assertEquals(1000L, eventReport.getTriggerTime());
@@ -122,16 +131,19 @@ public final class EventReportTest {
         assertEquals(new UnsignedLong(3L), eventReport.getTriggerDedupKey());
         assertEquals(2000L, eventReport.getReportTime());
         assertEquals(EventReport.Status.PENDING, eventReport.getStatus());
+        assertEquals(EventReport.DebugReportStatus.PENDING, eventReport.getDebugReportStatus());
         assertEquals(Source.SourceType.NAVIGATION, eventReport.getSourceType());
         assertNull(eventReport.getSourceDebugKey());
         assertEquals(TRIGGER_DEBUG_KEY, eventReport.getTriggerDebugKey());
+        assertEquals(SOURCE_ID, eventReport.getSourceId());
+        assertEquals(TRIGGER_ID, eventReport.getTriggerId());
     }
 
     @Test
     public void defaults_success() {
         EventReport eventReport = new EventReport.Builder().build();
         assertNull(eventReport.getId());
-        assertNull(eventReport.getSourceId());
+        assertNull(eventReport.getSourceEventId());
         assertNull(eventReport.getEnrollmentId());
         assertNull(eventReport.getAttributionDestination());
         assertEquals(0L, eventReport.getTriggerTime());
@@ -140,9 +152,12 @@ public final class EventReportTest {
         assertNull(eventReport.getTriggerDedupKey());
         assertEquals(0L, eventReport.getReportTime());
         assertEquals(EventReport.Status.PENDING, eventReport.getStatus());
+        assertEquals(EventReport.DebugReportStatus.NONE, eventReport.getDebugReportStatus());
         assertNull(eventReport.getSourceType());
         assertNull(eventReport.getSourceDebugKey());
         assertNull(eventReport.getTriggerDebugKey());
+        assertNull(eventReport.getSourceId());
+        assertNull(eventReport.getTriggerId());
     }
 
     @Test
@@ -166,12 +181,14 @@ public final class EventReportTest {
         // Truncated data 4 % 2 = 0
         assertEquals(new UnsignedLong(0L), report.getTriggerData());
         assertEquals(trigger.getTriggerTime(), report.getTriggerTime());
-        assertEquals(source.getEventId(), report.getSourceId());
+        assertEquals(source.getEventId(), report.getSourceEventId());
         assertEquals(source.getEnrollmentId(), report.getEnrollmentId());
         assertEquals(trigger.getAttributionDestination(), report.getAttributionDestination());
         assertEquals(source.getExpiryTime() + ONE_HOUR_IN_MILLIS, report.getReportTime());
         assertEquals(source.getSourceType(), report.getSourceType());
         assertEquals(EVENT_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
+        assertEquals(SOURCE_ID, report.getSourceId());
+        assertEquals(TRIGGER_ID, report.getTriggerId());
     }
 
     @Test
@@ -196,12 +213,14 @@ public final class EventReportTest {
         assertEquals(TRIGGER_DEDUP_KEY, report.getTriggerDedupKey());
         assertEquals(new UnsignedLong(0L), report.getTriggerData());
         assertEquals(trigger.getTriggerTime(), report.getTriggerTime());
-        assertEquals(source.getEventId(), report.getSourceId());
+        assertEquals(source.getEventId(), report.getSourceEventId());
         assertEquals(source.getEnrollmentId(), report.getEnrollmentId());
         assertEquals(trigger.getAttributionDestination(), report.getAttributionDestination());
         assertEquals(source.getExpiryTime() + ONE_HOUR_IN_MILLIS, report.getReportTime());
         assertEquals(source.getSourceType(), report.getSourceType());
         assertEquals(EVENT_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
+        assertEquals(SOURCE_ID, report.getSourceId());
+        assertEquals(TRIGGER_ID, report.getTriggerId());
     }
 
     @Test
@@ -228,7 +247,7 @@ public final class EventReportTest {
         // uint64 18446744073709501613 = long -50003
         // Truncated data 18446744073709501613 % 8 = 5
         assertEquals(new UnsignedLong(5L), report.getTriggerData());
-        assertEquals(source.getEventId(), report.getSourceId());
+        assertEquals(source.getEventId(), report.getSourceEventId());
         assertEquals(source.getEnrollmentId(), report.getEnrollmentId());
         assertEquals(APP_DESTINATION, report.getAttributionDestination());
         assertEquals(
@@ -239,6 +258,8 @@ public final class EventReportTest {
         assertEquals(Source.SourceType.NAVIGATION, report.getSourceType());
         assertEquals(
                 NAVIGATION_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
+        assertEquals(SOURCE_ID, report.getSourceId());
+        assertEquals(TRIGGER_ID, report.getTriggerId());
     }
 
     @Test
@@ -262,12 +283,14 @@ public final class EventReportTest {
         // Truncated data 4 % 2 = 0
         assertEquals(new UnsignedLong(0L), report.getTriggerData());
         assertEquals(trigger.getTriggerTime(), report.getTriggerTime());
-        assertEquals(source.getEventId(), report.getSourceId());
+        assertEquals(source.getEventId(), report.getSourceEventId());
         assertEquals(source.getEnrollmentId(), report.getEnrollmentId());
         assertEquals(trigger.getAttributionDestination(), report.getAttributionDestination());
         assertEquals(source.getExpiryTime() + ONE_HOUR_IN_MILLIS, report.getReportTime());
         assertEquals(Source.SourceType.EVENT, report.getSourceType());
         assertEquals(EVENT_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
+        assertEquals(SOURCE_ID, report.getSourceId());
+        assertEquals(TRIGGER_ID, report.getTriggerId());
     }
 
     @Test
@@ -288,7 +311,7 @@ public final class EventReportTest {
         assertEquals(TRIGGER_PRIORITY, report.getTriggerPriority());
         assertEquals(TRIGGER_DEDUP_KEY, report.getTriggerDedupKey());
         assertEquals(trigger.getTriggerTime(), report.getTriggerTime());
-        assertEquals(source.getEventId(), report.getSourceId());
+        assertEquals(source.getEventId(), report.getSourceEventId());
         assertEquals(source.getEnrollmentId(), report.getEnrollmentId());
         assertEquals(trigger.getAttributionDestination(), report.getAttributionDestination());
         assertEquals(source.getExpiryTime() + ONE_HOUR_IN_MILLIS, report.getReportTime());
@@ -297,6 +320,8 @@ public final class EventReportTest {
                 INSTALL_ATTR_EVENT_NOISE_PROBABILITY,
                 report.getRandomizedTriggerRate(),
                 DOUBLE_MAX_DELTA);
+        assertEquals(SOURCE_ID, report.getSourceId());
+        assertEquals(TRIGGER_ID, report.getTriggerId());
     }
 
     @Test
@@ -317,12 +342,14 @@ public final class EventReportTest {
         assertEquals(TRIGGER_PRIORITY, report.getTriggerPriority());
         assertEquals(TRIGGER_DEDUP_KEY, report.getTriggerDedupKey());
         assertEquals(trigger.getTriggerTime(), report.getTriggerTime());
-        assertEquals(source.getEventId(), report.getSourceId());
+        assertEquals(source.getEventId(), report.getSourceEventId());
         assertEquals(source.getEnrollmentId(), report.getEnrollmentId());
         assertEquals(trigger.getAttributionDestination(), report.getAttributionDestination());
         assertEquals(source.getExpiryTime() + ONE_HOUR_IN_MILLIS, report.getReportTime());
         assertEquals(Source.SourceType.EVENT, report.getSourceType());
         assertEquals(EVENT_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
+        assertEquals(SOURCE_ID, report.getSourceId());
+        assertEquals(TRIGGER_ID, report.getTriggerId());
     }
 
     @Test
@@ -344,7 +371,7 @@ public final class EventReportTest {
         assertEquals(TRIGGER_PRIORITY, report.getTriggerPriority());
         assertEquals(TRIGGER_DEDUP_KEY, report.getTriggerDedupKey());
         assertEquals(trigger.getTriggerTime(), report.getTriggerTime());
-        assertEquals(source.getEventId(), report.getSourceId());
+        assertEquals(source.getEventId(), report.getSourceEventId());
         assertEquals(source.getEnrollmentId(), report.getEnrollmentId());
         assertEquals(APP_DESTINATION, report.getAttributionDestination());
         assertEquals(
@@ -355,6 +382,8 @@ public final class EventReportTest {
         assertEquals(Source.SourceType.NAVIGATION, report.getSourceType());
         assertEquals(
                 NAVIGATION_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
+        assertEquals(SOURCE_ID, report.getSourceId());
+        assertEquals(TRIGGER_ID, report.getTriggerId());
     }
 
     @Test
@@ -376,7 +405,7 @@ public final class EventReportTest {
         assertEquals(TRIGGER_PRIORITY, report.getTriggerPriority());
         assertEquals(TRIGGER_DEDUP_KEY, report.getTriggerDedupKey());
         assertEquals(trigger.getTriggerTime(), report.getTriggerTime());
-        assertEquals(source.getEventId(), report.getSourceId());
+        assertEquals(source.getEventId(), report.getSourceEventId());
         assertEquals(source.getEnrollmentId(), report.getEnrollmentId());
         assertEquals(trigger.getAttributionDestination(), report.getAttributionDestination());
         assertEquals(
@@ -385,6 +414,8 @@ public final class EventReportTest {
         assertEquals(source.getSourceType(), report.getSourceType());
         assertEquals(
                 NAVIGATION_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
+        assertEquals(SOURCE_ID, report.getSourceId());
+        assertEquals(TRIGGER_ID, report.getTriggerId());
     }
 
     @Test
@@ -407,7 +438,7 @@ public final class EventReportTest {
         assertEquals(TRIGGER_DEDUP_KEY, report.getTriggerDedupKey());
         assertEquals(new UnsignedLong(4L), report.getTriggerData());
         assertEquals(trigger.getTriggerTime(), report.getTriggerTime());
-        assertEquals(source.getEventId(), report.getSourceId());
+        assertEquals(source.getEventId(), report.getSourceEventId());
         assertEquals(source.getEnrollmentId(), report.getEnrollmentId());
         assertEquals(trigger.getAttributionDestination(), report.getAttributionDestination());
         // One hour after install attributed navigation type window
@@ -421,6 +452,8 @@ public final class EventReportTest {
                 INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY,
                 report.getRandomizedTriggerRate(),
                 DOUBLE_MAX_DELTA);
+        assertEquals(SOURCE_ID, report.getSourceId());
+        assertEquals(TRIGGER_ID, report.getTriggerId());
     }
 
     @Test
@@ -443,7 +476,7 @@ public final class EventReportTest {
         assertEquals(TRIGGER_DEDUP_KEY, report.getTriggerDedupKey());
         assertEquals(new UnsignedLong(4L), report.getTriggerData());
         assertEquals(trigger.getTriggerTime(), report.getTriggerTime());
-        assertEquals(source.getEventId(), report.getSourceId());
+        assertEquals(source.getEventId(), report.getSourceEventId());
         assertEquals(source.getEnrollmentId(), report.getEnrollmentId());
         assertEquals(trigger.getAttributionDestination(), report.getAttributionDestination());
         // One hour after regular navigation type window (without install attribution consideration)
@@ -455,6 +488,8 @@ public final class EventReportTest {
         assertEquals(source.getSourceType(), report.getSourceType());
         assertEquals(
                 NAVIGATION_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
+        assertEquals(SOURCE_ID, report.getSourceId());
+        assertEquals(TRIGGER_ID, report.getTriggerId());
     }
 
     @Test
@@ -474,7 +509,7 @@ public final class EventReportTest {
         final EventReport eventReport2 =
                 new EventReport.Builder()
                         .setId("1")
-                        .setSourceId(new UnsignedLong(22L))
+                        .setSourceEventId(new UnsignedLong(22L))
                         .setEnrollmentId("another-enrollment-id")
                         .setAttributionDestination(Uri.parse("https://bar.com"))
                         .setTriggerTime(1000L)
@@ -483,6 +518,7 @@ public final class EventReportTest {
                         .setTriggerDedupKey(new UnsignedLong(3L))
                         .setReportTime(2000L)
                         .setStatus(EventReport.Status.PENDING)
+                        .setStatus(EventReport.DebugReportStatus.PENDING)
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .build();
         final Set<EventReport> eventReportSet1 = Set.of(eventReport1);
@@ -499,6 +535,7 @@ public final class EventReportTest {
             Uri appDestination,
             Uri webDestination) {
         return SourceFixture.getValidSourceBuilder()
+                .setId(SOURCE_ID)
                 .setEventId(new UnsignedLong(10L))
                 .setSourceType(sourceType)
                 .setInstallCooldownWindow(isInstallAttributable ? 100 : 0)
@@ -512,6 +549,7 @@ public final class EventReportTest {
 
     private Trigger createTriggerForTest(long eventTime, Uri destination) {
         return TriggerFixture.getValidTriggerBuilder()
+                .setId(TRIGGER_ID)
                 .setTriggerTime(eventTime)
                 .setEventTriggers(EVENT_TRIGGERS)
                 .setEnrollmentId("enrollment-id")
@@ -522,7 +560,7 @@ public final class EventReportTest {
     private EventReport createExample() {
         return new EventReport.Builder()
                 .setId("1")
-                .setSourceId(new UnsignedLong(21L))
+                .setSourceEventId(new UnsignedLong(21L))
                 .setEnrollmentId("enrollment-id")
                 .setAttributionDestination(Uri.parse("https://bar.com"))
                 .setTriggerTime(1000L)
@@ -531,16 +569,19 @@ public final class EventReportTest {
                 .setTriggerDedupKey(new UnsignedLong(3L))
                 .setReportTime(2000L)
                 .setStatus(EventReport.Status.PENDING)
+                .setDebugReportStatus(EventReport.DebugReportStatus.PENDING)
                 .setSourceType(Source.SourceType.NAVIGATION)
                 .setSourceDebugKey(SOURCE_DEBUG_KEY)
                 .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
+                .setSourceId(SOURCE_ID)
+                .setTriggerId(TRIGGER_ID)
                 .build();
     }
 
     private EventReport createExampleSingleTriggerDebugKey() {
         return new EventReport.Builder()
                 .setId("1")
-                .setSourceId(new UnsignedLong(21L))
+                .setSourceEventId(new UnsignedLong(21L))
                 .setEnrollmentId("enrollment-id")
                 .setAttributionDestination(Uri.parse("https://bar.com"))
                 .setTriggerTime(1000L)
@@ -549,15 +590,18 @@ public final class EventReportTest {
                 .setTriggerDedupKey(new UnsignedLong(3L))
                 .setReportTime(2000L)
                 .setStatus(EventReport.Status.PENDING)
+                .setDebugReportStatus(EventReport.DebugReportStatus.PENDING)
                 .setSourceType(Source.SourceType.NAVIGATION)
                 .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
+                .setSourceId(SOURCE_ID)
+                .setTriggerId(TRIGGER_ID)
                 .build();
     }
 
     private EventReport createExampleSingleSourceDebugKey() {
         return new EventReport.Builder()
                 .setId("1")
-                .setSourceId(new UnsignedLong(21L))
+                .setSourceEventId(new UnsignedLong(21L))
                 .setEnrollmentId("enrollment-id")
                 .setAttributionDestination(Uri.parse("https://bar.com"))
                 .setTriggerTime(1000L)
@@ -566,8 +610,11 @@ public final class EventReportTest {
                 .setTriggerDedupKey(new UnsignedLong(3L))
                 .setReportTime(2000L)
                 .setStatus(EventReport.Status.PENDING)
+                .setDebugReportStatus(EventReport.DebugReportStatus.PENDING)
                 .setSourceType(Source.SourceType.NAVIGATION)
                 .setSourceDebugKey(SOURCE_DEBUG_KEY)
+                .setSourceId(SOURCE_ID)
+                .setTriggerId(TRIGGER_ID)
                 .build();
     }
 }

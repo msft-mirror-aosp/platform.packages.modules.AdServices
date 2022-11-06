@@ -67,4 +67,22 @@ public interface AdServicesLogger {
      */
     void logUpdateCustomAudienceProcessReportedStats(
             UpdateCustomAudienceProcessReportedStats stats);
+
+    /**
+     * Logs GetTopics API call stats as an {@link
+     * com.android.adservices.service.stats.GetTopicsReportedStats} object.
+     */
+    void logGetTopicsReportedStats(GetTopicsReportedStats stats);
+
+    /**
+     * Logs stats for getTopTopics as an {@link
+     * com.android.adservices.service.stats.EpochComputationGetTopTopicsStats} object.
+     */
+    void logEpochComputationGetTopTopicsStats(EpochComputationGetTopTopicsStats stats);
+
+    /**
+     * Logs classifier stats during epoch computation as an {@link
+     * com.android.adservices.service.stats.EpochComputationClassifierStats} object.
+     */
+    void logEpochComputationClassifierStats(EpochComputationClassifierStats stats);
 }

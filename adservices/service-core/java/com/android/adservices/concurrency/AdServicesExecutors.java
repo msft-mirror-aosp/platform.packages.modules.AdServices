@@ -43,7 +43,7 @@ public final class AdServicesExecutors {
     //  low-end devices. This may cause deadlock for starvation in those low-end devices.
     private static final int MIN_BACKGROUND_EXECUTOR_THREADS = 4;
     private static final int MIN_LIGHTWEIGHT_EXECUTOR_THREADS = 2;
-    private static final int MAX_SCHEDULED_EXECUTOR_THREADS = 2;
+    private static final int MAX_SCHEDULED_EXECUTOR_THREADS = 4;
 
     private static final String LIGHTWEIGHT_NAME = "lightweight";
     private static final String BACKGROUND_NAME = "background";
