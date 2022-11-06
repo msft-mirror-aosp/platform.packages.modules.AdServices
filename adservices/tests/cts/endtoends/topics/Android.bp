@@ -23,14 +23,13 @@ android_test {
     ],
     static_libs: [
         "androidx.concurrent_concurrent-futures",
-        "compatibility-device-util-axt",
+        "compatibility-device-util-axt", // Needed for ShellUtils.runShellCommand
         "truth-prebuilt",
-        "ub-uiautomator",
-        "adservices-test-fixtures",
         "adservices-clients",
     ],
     libs: [
         "android.test.base",
+        // TODO(b/246590510): Remove these.
         "framework-adservices.impl",
         "framework-sdksandbox.impl",
     ],
@@ -39,8 +38,6 @@ android_test {
         "general-tests",
         "mts-adservices"
     ],
-    // To fix Pre-submit warning, suggested by farivar@
-    javacflags: ["-parameters"],
     sdk_version: "module_current",
     min_sdk_version: "Tiramisu",
     test_mainline_modules: ["com.google.android.adservices.apex"],

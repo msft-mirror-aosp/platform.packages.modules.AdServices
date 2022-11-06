@@ -172,7 +172,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
     // TODO(b/233116758): Validate all the fields inside the adSelectionConfig.
     @Override
-    public void runAdSelection(
+    public void selectAds(
             @NonNull AdSelectionInput inputParams,
             @NonNull CallerMetadata callerMetadata,
             @NonNull AdSelectionCallback callback) {
@@ -240,7 +240,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         devContext,
                         mAppImportanceFilter,
                         mFlags,
-                        () -> Throttler.getInstance(mFlags.getSdkRequestPermitsPerSecond()),
+                        () -> Throttler.getInstance(mFlags),
                         callerUid,
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilter,
@@ -268,7 +268,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         devContext,
                         mAppImportanceFilter,
                         mFlags,
-                        () -> Throttler.getInstance(mFlags.getSdkRequestPermitsPerSecond()),
+                        () -> Throttler.getInstance(mFlags),
                         callerUid,
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilter,
@@ -310,7 +310,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mAdServicesLogger,
                         mAppImportanceFilter,
                         mFlags,
-                        () -> Throttler.getInstance(mFlags.getSdkRequestPermitsPerSecond()),
+                        () -> Throttler.getInstance(mFlags),
                         getCallingUid(apiName),
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilter);

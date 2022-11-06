@@ -14,20 +14,14 @@
  * limitations under the License.
  */
 
-package android.app.sdksandbox.testutils.testscenario;
+package com.android.adservices.data.measurement;
 
-import java.util.List;
-import android.os.Bundle;
+import android.database.Cursor;
 
-import android.app.sdksandbox.testutils.testscenario.ISdkSandboxResultCallback;
+import com.android.adservices.service.measurement.Source;
 
-interface ISdkSandboxTestExecutor {
-    /*
-     * This constant is used for optionally loading a test author
-     * binder. This is useful for when a test author wants their
-     * SDK driven tests to invoke an event outside the test SDK.
-     */
-    const String TEST_AUTHOR_DEFINED_BINDER = "TEST_AUTHOR_DEFINED_BINDER";
-
-    oneway void executeTest(String testName, in Bundle params, in ISdkSandboxResultCallback callback);
+public class SqliteObjectMapperAccessor {
+    public static Source constructSourceFromCursor(Cursor cursor) {
+        return SqliteObjectMapper.constructSourceFromCursor(cursor);
+    }
 }

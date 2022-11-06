@@ -98,14 +98,15 @@ public class DeleteApiIntegrationTest extends AbstractDbIntegrationTest {
         MeasurementDataDeleter measurementDataDeleter =
                 new MeasurementDataDeleter(datastoreManager);
         measurementDataDeleter.delete(
-                new DeletionParam.Builder()
-                        .setPackageName(registrantValue)
+                new DeletionParam.Builder(
+                                originList,
+                                domainList,
+                                startValueInstant,
+                                endValueInstant,
+                                registrantValue,
+                                /* sdkPackageName = */ "")
                         .setMatchBehavior(finalMatchBehavior)
-                        .setEnd(endValueInstant)
-                        .setStart(startValueInstant)
                         .setDeletionMode(finalDeletionMode)
-                        .setDomainUris(domainList)
-                        .setOriginUris(originList)
                         .build());
     }
 
