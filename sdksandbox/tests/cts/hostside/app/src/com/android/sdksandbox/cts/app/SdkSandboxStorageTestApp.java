@@ -18,6 +18,8 @@ package com.android.sdksandbox.cts.app;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.fail;
+
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.content.Context;
@@ -100,11 +102,16 @@ public class SdkSandboxStorageTestApp {
         final SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(mContext);
         pref.edit().putString(KEY_TO_SYNC, UPDATE_VALUE).commit();
         // Allow some time for data to sync
-        Thread.sleep(1000);
+        for (int i = 0; i < 10; i++) {
+            Thread.sleep(500);
 
-        // Verify update was propagated
-        final String syncedValueInSandbox = mSdk.getSyncedSharedPreferencesString(KEY_TO_SYNC);
-        assertThat(syncedValueInSandbox).isEqualTo(UPDATE_VALUE);
+            // Verify update was propagated
+            final String syncedValueInSandbox = mSdk.getSyncedSharedPreferencesString(KEY_TO_SYNC);
+            if (syncedValueInSandbox.equals(UPDATE_VALUE)) {
+                return;
+            }
+        }
+        fail("failed to sync value in 5 seconds");
     }
 
     @Test

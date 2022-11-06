@@ -110,6 +110,7 @@ public class SdkSandboxManagerServiceUnitTest {
     private Context mSpyContext;
     private SdkSandboxManagerService.Injector mInjector;
     private int mClientAppUid;
+    private PackageManagerLocal mPmLocal;
 
     private static final String CLIENT_PACKAGE_NAME = "com.android.client";
     private static final String SDK_NAME = "com.android.codeprovider";
@@ -169,7 +170,8 @@ public class SdkSandboxManagerServiceUnitTest {
         mProvider = new FakeSdkSandboxProvider(mSdkSandboxService);
 
         // Populate LocalManagerRegistry
-        ExtendedMockito.doReturn(Mockito.mock(PackageManagerLocal.class))
+        mPmLocal = Mockito.mock(PackageManagerLocal.class);
+        ExtendedMockito.doReturn(mPmLocal)
                 .when(() -> LocalManagerRegistry.getManager(PackageManagerLocal.class));
 
         mInjector = Mockito.spy(new InjectorForTest());
@@ -450,6 +452,24 @@ public class SdkSandboxManagerServiceUnitTest {
 
         // Verify that sandbox was initialized
         assertThat(mSdkSandboxService.getInitializationCount()).isEqualTo(1);
+    }
+
+    @Test
+    public void testLoadSdk_sdkDataPrepared_onlyOnce() throws Exception {
+        loadSdk(SDK_NAME);
+        loadSdk(SDK_PROVIDER_RESOURCES_SDK_NAME);
+
+        // Verify that sandbox was initialized
+        Mockito.verify(mPmLocal, Mockito.times(1))
+                .reconcileSdkData(
+                        Mockito.nullable(String.class),
+                        Mockito.anyString(),
+                        Mockito.anyList(),
+                        Mockito.anyInt(),
+                        Mockito.anyInt(),
+                        Mockito.anyInt(),
+                        Mockito.anyString(),
+                        Mockito.anyInt());
     }
 
     @Test
@@ -1226,8 +1246,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 () ->
                         SdkSandboxStatsLog.write(
                                 SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                                SdkSandboxStatsLog
-                                        .SANDBOX_API_CALLED__METHOD__GET_LOADED_SDK_LIBRARIES_INFO,
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__GET_SANDBOXED_SDKS,
                                 (int)
                                         (TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP
                                                 - TIME_APP_CALLED_SYSTEM_SERVER),
@@ -1805,8 +1824,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 () ->
                         SdkSandboxStatsLog.write(
                                 SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                                SdkSandboxStatsLog
-                                        .SANDBOX_API_CALLED__METHOD__GET_LOADED_SDK_LIBRARIES_INFO,
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__GET_SANDBOXED_SDKS,
                                 (int)
                                         (END_TIME_IN_SYSTEM_SERVER
                                                 - TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP),
@@ -1872,7 +1890,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 new DeviceConfig.Properties(
                         DeviceConfig.NAMESPACE_ADSERVICES,
                         Map.of(PROPERTY_DISABLE_SANDBOX, "false")));
-        assertThat(listener.isKillSwitchEnabled()).isTrue();
+        assertThat(listener.isKillSwitchEnabled()).isFalse();
     }
 
     @Test
@@ -1896,12 +1914,15 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
-    public void testLoadSdkFailsWhenSandboxDisabled() {
+    public void testLoadSdkFailsWhenSandboxDisabled() throws Exception {
         disableNetworkPermissionChecks();
         disableForegroundCheck();
         SdkSandboxManagerService.SdkSandboxSettingsListener listener =
                 mService.getSdkSandboxSettingsListener();
         listener.reset();
+        // Sleep needed to avoid deadlock.
+        // TODO(b/257255118): Remove this sleep.
+        Thread.sleep(500);
         listener.onPropertiesChanged(
                 new DeviceConfig.Properties(
                         DeviceConfig.NAMESPACE_ADSERVICES,

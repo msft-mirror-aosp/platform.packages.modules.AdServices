@@ -107,6 +107,7 @@ public final class MeasurementTables {
         String AGGREGATE_TRIGGER_DATA = "aggregate_trigger_data";
         String AGGREGATE_VALUES = "aggregate_values";
         String FILTERS = "filters";
+        String NOT_FILTERS = "not_filters";
         String DEBUG_KEY = "debug_key";
     }
 
@@ -122,6 +123,7 @@ public final class MeasurementTables {
         String TRIGGER_DEDUP_KEY = "trigger_dedup_key";
         String TRIGGER_TIME = "trigger_time";
         String STATUS = "status";
+        String DEBUG_REPORT_STATUS = "debug_report_status";
         String SOURCE_TYPE = "source_type";
         String ENROLLMENT_ID = "enrollment_id";
         String RANDOMIZED_TRIGGER_RATE = "randomized_trigger_rate";
@@ -157,6 +159,7 @@ public final class MeasurementTables {
         String ENROLLMENT_ID = "enrollment_id";
         String DEBUG_CLEARTEXT_PAYLOAD = "debug_cleartext_payload";
         String STATUS = "status";
+        String DEBUG_REPORT_STATUS = "debug_report_status";
         String API_VERSION = "api_version";
         String SOURCE_DEBUG_KEY = "source_debug_key";
         String TRIGGER_DEBUG_KEY = "trigger_debug_key";
@@ -323,6 +326,38 @@ public final class MeasurementTables {
                     + " INTEGER "
                     + ")";
 
+    public static final String CREATE_TABLE_TRIGGER_V2 =
+            "CREATE TABLE "
+                    + TriggerContract.TABLE
+                    + " ("
+                    + TriggerContract.ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + TriggerContract.ATTRIBUTION_DESTINATION
+                    + " TEXT, "
+                    + TriggerContract.DESTINATION_TYPE
+                    + " INTEGER, "
+                    + TriggerContract.ENROLLMENT_ID
+                    + " TEXT, "
+                    + TriggerContract.TRIGGER_TIME
+                    + " INTEGER, "
+                    + TriggerContract.EVENT_TRIGGERS
+                    + " TEXT, "
+                    + TriggerContract.STATUS
+                    + " INTEGER, "
+                    + TriggerContract.REGISTRANT
+                    + " TEXT, "
+                    + TriggerContract.AGGREGATE_TRIGGER_DATA
+                    + " TEXT, "
+                    + TriggerContract.AGGREGATE_VALUES
+                    + " TEXT, "
+                    + TriggerContract.FILTERS
+                    + " TEXT, "
+                    + TriggerContract.NOT_FILTERS
+                    + " TEXT, "
+                    + TriggerContract.DEBUG_KEY
+                    + " INTEGER "
+                    + ")";
+
     public static final String CREATE_TABLE_EVENT_REPORT_V1 =
             "CREATE TABLE "
                     + EventReportContract.TABLE
@@ -376,6 +411,8 @@ public final class MeasurementTables {
                     + EventReportContract.TRIGGER_TIME
                     + " INTEGER, "
                     + EventReportContract.STATUS
+                    + " INTEGER, "
+                    + EventReportContract.DEBUG_REPORT_STATUS
                     + " INTEGER, "
                     + EventReportContract.SOURCE_TYPE
                     + " TEXT, "
@@ -511,6 +548,8 @@ public final class MeasurementTables {
                     + " TEXT, "
                     + AggregateReport.STATUS
                     + " INTEGER, "
+                    + AggregateReport.DEBUG_REPORT_STATUS
+                    + " INTEGER, "
                     + AggregateReport.API_VERSION
                     + " TEXT, "
                     + AggregateReport.SOURCE_DEBUG_KEY
@@ -640,7 +679,7 @@ public final class MeasurementTables {
             Collections.unmodifiableList(
                     Arrays.asList(
                             CREATE_TABLE_SOURCE_V1,
-                            CREATE_TABLE_TRIGGER_V1,
+                            CREATE_TABLE_TRIGGER_V2,
                             CREATE_TABLE_EVENT_REPORT_V3,
                             CREATE_TABLE_ATTRIBUTION_V3,
                             CREATE_TABLE_AGGREGATE_REPORT_V3,

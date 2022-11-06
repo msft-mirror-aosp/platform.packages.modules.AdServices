@@ -388,12 +388,12 @@ public class ModelManagerTest {
         mTestClassifierAssetsMetadata = mTestModelManager.retrieveClassifierAssetsMetadata();
         assertThat(mTestClassifierAssetsMetadata).hasSize(7);
 
-        // The property of metadata with correct format should contain 3 attributions:
-        // "taxonomy_type", "taxonomy_version", "updated_date".
+        // The property of metadata with correct format should contain 4 attributions:
+        // "taxonomy_type", "taxonomy_version", "updated_date", "build_id".
         // The key name of property is "version_info"
-        assertThat(mTestClassifierAssetsMetadata.get("version_info")).hasSize(3);
-        assertThat(mTestClassifierAssetsMetadata.get("version_info").keySet()).containsExactly(
-                "taxonomy_type", "taxonomy_version", "updated_date");
+        assertThat(mTestClassifierAssetsMetadata.get("version_info")).hasSize(4);
+        assertThat(mTestClassifierAssetsMetadata.get("version_info").keySet())
+                .containsExactly("taxonomy_type", "taxonomy_version", "updated_date", "build_id");
 
         // The property "version_info" should have attribution "taxonomy_version"
         // and its value should be "12".

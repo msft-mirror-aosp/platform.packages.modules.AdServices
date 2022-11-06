@@ -104,6 +104,7 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.TriggerContract.AGGREGATE_VALUES,
                 trigger.getAggregateValues());
         values.put(MeasurementTables.TriggerContract.FILTERS, trigger.getFilters());
+        values.put(MeasurementTables.TriggerContract.NOT_FILTERS, trigger.getNotFilters());
         values.put(MeasurementTables.TriggerContract.DEBUG_KEY,
                 getNullableUnsignedLong(trigger.getDebugKey()));
         long rowId = mSQLTransaction.getDatabase()
@@ -264,7 +265,7 @@ class MeasurementDao implements IMeasurementDao {
                 source.getInstallCooldownWindow());
         values.put(MeasurementTables.SourceContract.ATTRIBUTION_MODE, source.getAttributionMode());
         values.put(MeasurementTables.SourceContract.AGGREGATE_SOURCE, source.getAggregateSource());
-        values.put(MeasurementTables.SourceContract.FILTER_DATA, source.getAggregateFilterData());
+        values.put(MeasurementTables.SourceContract.FILTER_DATA, source.getFilterData());
         values.put(MeasurementTables.SourceContract.AGGREGATE_CONTRIBUTIONS, 0);
         values.put(MeasurementTables.SourceContract.DEBUG_KEY,
                 getNullableUnsignedLong(source.getDebugKey()));
@@ -415,6 +416,45 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
+    public void markEventDebugReportDelivered(String eventReportId) throws DatastoreException {
+        ContentValues values = new ContentValues();
+        values.put(
+                MeasurementTables.EventReportContract.DEBUG_REPORT_STATUS,
+                EventReport.DebugReportStatus.DELIVERED);
+        long rows =
+                mSQLTransaction
+                        .getDatabase()
+                        .update(
+                                MeasurementTables.EventReportContract.TABLE,
+                                values,
+                                MeasurementTables.EventReportContract.ID + " = ?",
+                                new String[] {eventReportId});
+        if (rows != 1) {
+            throw new DatastoreException("EventReport update failed.");
+        }
+    }
+
+    @Override
+    public void markAggregateDebugReportDelivered(String aggregateReportId)
+            throws DatastoreException {
+        ContentValues values = new ContentValues();
+        values.put(
+                MeasurementTables.AggregateReport.DEBUG_REPORT_STATUS,
+                AggregateReport.DebugReportStatus.DELIVERED);
+        long rows =
+                mSQLTransaction
+                        .getDatabase()
+                        .update(
+                                MeasurementTables.AggregateReport.TABLE,
+                                values,
+                                MeasurementTables.AggregateReport.ID + " = ? ",
+                                new String[] {aggregateReportId});
+        if (rows != 1) {
+            throw new DatastoreException("AggregateReport update failed");
+        }
+    }
+
+    @Override
     @Nullable
     public List<EventReport> getSourceEventReports(Source source) throws DatastoreException {
         List<EventReport> eventReports = new ArrayList<>();
@@ -464,6 +504,32 @@ class MeasurementDao implements IMeasurementDao {
             while (cursor.moveToNext()) {
                 eventReports.add(cursor.getString(cursor.getColumnIndex(
                         MeasurementTables.EventReportContract.ID)));
+            }
+            return eventReports;
+        }
+    }
+
+    @Override
+    public List<String> getPendingDebugEventReportIds() throws DatastoreException {
+        List<String> eventReports = new ArrayList<>();
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                MeasurementTables.EventReportContract.TABLE,
+                                /*columns=*/ null,
+                                MeasurementTables.EventReportContract.DEBUG_REPORT_STATUS + " = ? ",
+                                new String[] {
+                                    String.valueOf(EventReport.DebugReportStatus.PENDING)
+                                },
+                                /*groupBy=*/ null,
+                                /*having=*/ null,
+                                /*orderBy=*/ "RANDOM()",
+                                /*limit=*/ null)) {
+            while (cursor.moveToNext()) {
+                eventReports.add(
+                        cursor.getString(
+                                cursor.getColumnIndex(MeasurementTables.EventReportContract.ID)));
             }
             return eventReports;
         }
@@ -521,6 +587,9 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.EventReportContract.ENROLLMENT_ID,
                 eventReport.getEnrollmentId());
         values.put(MeasurementTables.EventReportContract.STATUS, eventReport.getStatus());
+        values.put(
+                MeasurementTables.EventReportContract.DEBUG_REPORT_STATUS,
+                eventReport.getDebugReportStatus());
         values.put(MeasurementTables.EventReportContract.REPORT_TIME, eventReport.getReportTime());
         values.put(MeasurementTables.EventReportContract.TRIGGER_PRIORITY,
                 eventReport.getTriggerPriority());
@@ -658,6 +727,15 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
+    public long getNumTriggersPerDestination(Uri destination, @EventSurfaceType int destinationType)
+            throws DatastoreException {
+        return DatabaseUtils.queryNumEntries(
+                mSQLTransaction.getDatabase(),
+                MeasurementTables.TriggerContract.TABLE,
+                getDestinationWhereStatement(destination, destinationType));
+    }
+
+    @Override
     public Integer countDistinctEnrollmentsPerPublisherXDestinationInAttribution(Uri sourceSite,
             Uri destinationSite, String excludedEnrollmentId, long windowStartTime,
             long windowEndTime) throws DatastoreException {
@@ -698,13 +776,15 @@ class MeasurementDao implements IMeasurementDao {
                         Locale.ENGLISH,
                         "SELECT COUNT(DISTINCT %1$s) FROM %2$s "
                                 + "WHERE %3$s AND %4$s = ? AND %5$s = ? AND %1$s != ? "
-                                + "AND %6$s > ? AND %6$s <= ?",
+                                + "AND %6$s > ? AND %6$s <= ?"
+                                + "AND %7$s > ?",
                         destinationColumn,
                         MeasurementTables.SourceContract.TABLE,
                         getPublisherWhereStatement(publisher, publisherType),
                         MeasurementTables.SourceContract.ENROLLMENT_ID,
                         MeasurementTables.SourceContract.STATUS,
-                        MeasurementTables.SourceContract.EVENT_TIME);
+                        MeasurementTables.SourceContract.EVENT_TIME,
+                        MeasurementTables.SourceContract.EXPIRY_TIME);
         return (int) DatabaseUtils.longForQuery(
                 mSQLTransaction.getDatabase(),
                 query,
@@ -713,6 +793,7 @@ class MeasurementDao implements IMeasurementDao {
                         String.valueOf(Source.Status.ACTIVE),
                         excludedDestination.toString(),
                         String.valueOf(windowStartTime),
+                        String.valueOf(windowEndTime),
                         String.valueOf(windowEndTime) });
     }
 
@@ -725,13 +806,15 @@ class MeasurementDao implements IMeasurementDao {
                         Locale.ENGLISH,
                         "SELECT COUNT(DISTINCT %1$s) FROM %2$s "
                                 + "WHERE %3$s AND (%4$s = ? OR %5$s = ?) AND %1s != ? "
-                                + "AND %6$s > ? AND %6$s <= ?",
+                                + "AND %6$s > ? AND %6$s <= ?"
+                                + "AND %7$s > ?",
                         MeasurementTables.SourceContract.ENROLLMENT_ID,
                         MeasurementTables.SourceContract.TABLE,
                         getPublisherWhereStatement(publisher, publisherType),
                         MeasurementTables.SourceContract.APP_DESTINATION,
                         MeasurementTables.SourceContract.WEB_DESTINATION,
-                        MeasurementTables.SourceContract.EVENT_TIME);
+                        MeasurementTables.SourceContract.EVENT_TIME,
+                        MeasurementTables.SourceContract.EXPIRY_TIME);
         return (int)
                 DatabaseUtils.longForQuery(
                         mSQLTransaction.getDatabase(),
@@ -741,6 +824,7 @@ class MeasurementDao implements IMeasurementDao {
                             destination.toString(),
                             excludedEnrollmentId,
                             String.valueOf(windowStartTime),
+                            String.valueOf(windowEndTime),
                             String.valueOf(windowEndTime)
                         });
     }
@@ -1375,6 +1459,9 @@ class MeasurementDao implements IMeasurementDao {
                 aggregateReport.getDebugCleartextPayload());
         values.put(MeasurementTables.AggregateReport.STATUS,
                 aggregateReport.getStatus());
+        values.put(
+                MeasurementTables.AggregateReport.DEBUG_REPORT_STATUS,
+                aggregateReport.getDebugReportStatus());
         values.put(MeasurementTables.AggregateReport.API_VERSION,
                 aggregateReport.getApiVersion());
         values.put(
@@ -1407,8 +1494,35 @@ class MeasurementDao implements IMeasurementDao {
                         String.valueOf(AggregateReport.Status.PENDING)},
                 /*groupBy=*/null, /*having=*/null, /*orderBy=*/"RANDOM()", /*limit=*/null)) {
             while (cursor.moveToNext()) {
-                aggregateReports.add(cursor.getString(cursor.getColumnIndex(
-                        MeasurementTables.EventReportContract.ID)));
+                aggregateReports.add(
+                        cursor.getString(
+                                cursor.getColumnIndex(MeasurementTables.AggregateReport.ID)));
+            }
+            return aggregateReports;
+        }
+    }
+
+    @Override
+    public List<String> getPendingAggregateDebugReportIds() throws DatastoreException {
+        List<String> aggregateReports = new ArrayList<>();
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                MeasurementTables.AggregateReport.TABLE,
+                                /*columns=*/ null,
+                                MeasurementTables.AggregateReport.DEBUG_REPORT_STATUS + " = ? ",
+                                new String[] {
+                                    String.valueOf(AggregateReport.DebugReportStatus.PENDING)
+                                },
+                                /*groupBy=*/ null,
+                                /*having=*/ null,
+                                /*orderBy=*/ "RANDOM()",
+                                /*limit=*/ null)) {
+            while (cursor.moveToNext()) {
+                aggregateReports.add(
+                        cursor.getString(
+                                cursor.getColumnIndex(MeasurementTables.AggregateReport.ID)));
             }
             return aggregateReports;
         }
@@ -1520,6 +1634,44 @@ class MeasurementDao implements IMeasurementDao {
                     DatabaseUtils.sqlEscapeString(publisher.toString()),
                     DatabaseUtils.sqlEscapeString(
                             publisher.getScheme() + "://%." + publisher.getEncodedAuthority()));
+        }
+    }
+
+    /** Returns a SQL where statement for matching an app/web destination. */
+    private static String getDestinationWhereStatement(
+            Uri destination, @EventSurfaceType int destinationType) {
+        Optional<Uri> destinationBaseUriOptional = extractBaseUri(destination, destinationType);
+        if (!destinationBaseUriOptional.isPresent()) {
+            throw new IllegalArgumentException(
+                    String.format(
+                            Locale.ENGLISH,
+                            "getDestinationWhereStatement:" + " Unable to extract base uri from %s",
+                            destination.toString()));
+        }
+        Uri destinationBaseUri = destinationBaseUriOptional.get();
+
+        if (destinationType == EventSurfaceType.APP) {
+            return String.format(
+                    Locale.ENGLISH,
+                    "(%1$s = %2$s OR %1$s LIKE %3$s)",
+                    MeasurementTables.TriggerContract.ATTRIBUTION_DESTINATION,
+                    DatabaseUtils.sqlEscapeString(destinationBaseUri.toString()),
+                    DatabaseUtils.sqlEscapeString(destinationBaseUri + "/%"));
+        } else {
+            String schemeSubDomainMatcher =
+                    destination.getScheme() + "://%." + destinationBaseUri.getAuthority();
+            String schemeDomainMatcher =
+                    destination.getScheme() + "://" + destinationBaseUri.getAuthority();
+            String domainAndPathMatcher = schemeDomainMatcher + "/%";
+            String subDomainAndPathMatcher = schemeSubDomainMatcher + "/%";
+            return String.format(
+                    Locale.ENGLISH,
+                    "(%1$s = %2$s OR %1$s LIKE %3$s OR %1$s LIKE %4$s OR %1$s LIKE %5$s)",
+                    MeasurementTables.TriggerContract.ATTRIBUTION_DESTINATION,
+                    DatabaseUtils.sqlEscapeString(schemeDomainMatcher),
+                    DatabaseUtils.sqlEscapeString(schemeSubDomainMatcher),
+                    DatabaseUtils.sqlEscapeString(domainAndPathMatcher),
+                    DatabaseUtils.sqlEscapeString(subDomainAndPathMatcher));
         }
     }
 

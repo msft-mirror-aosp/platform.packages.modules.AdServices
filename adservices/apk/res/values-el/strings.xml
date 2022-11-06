@@ -99,16 +99,14 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Το Android ενδέχεται να προσθέσει ξανά αυτό το ενδιαφέρον στη λίστα, αλλά μπορεί να μην εμφανιστεί αμέσως."</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Να γίνει επαναφορά όλων των ενδιαφερόντων;"</string>
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"Η λίστα σας θα διαγραφεί και τα νέα ενδιαφέροντα θα εκτιμώνται στο μέλλον. Ενδέχεται να εξακολουθείτε να βλέπετε ορισμένες διαφημίσεις που σχετίζονται με διαγραμμένα ενδιαφέροντα."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Επαναφορά"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Να αποκλειστεί η εφαρμογή <xliff:g id="APP">%1$s</xliff:g>;"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Η συγκεκριμένη εφαρμογή δεν θα κάνει εκτιμήσεις για ενδιαφέροντα για το Πλαίσιο ιδιωτικότητας και δεν θα προστεθεί ξανά στη λίστα, εκτός και αν καταργήσετε τον αποκλεισμό της.\n\nΤα ενδιαφέροντα για τα οποία έχει ήδη κάνει εκτιμήσεις αυτή η εφαρμογή θα διαγραφούν, αλλά μπορεί να εξακολουθήσετε να βλέπετε ορισμένες σχετικές διαφημίσεις."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Ο αποκλεισμός της εφαρμογής <xliff:g id="APP">%1$s</xliff:g> καταργήθηκε"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Η συγκεκριμένη εφαρμογή θα μπορεί να κάνει ξανά εκτιμήσεις για ενδιαφέροντα, αλλά ενδέχεται να μην εμφανιστούν αμέσως στη λίστα. Ενδέχεται να χρειαστεί κάποιος χρόνος για να δείτε σχετικές διαφημίσεις."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Να γίνει επαναφορά των ενδιαφερόντων που δημιουργούνται από εφαρμογές;"</string>
-    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"Τα ενδιαφέροντα που εκτιμώνται από τις εφαρμογές στη λίστα σας θα διαγραφούν από το Πλαίσιο ιδιωτικότητας και οι εφαρμογές θα εκτιμούν νέα ενδιαφέροντα στο μέλλον. Ενδέχεται να συνεχίσετε να βλέπετε μερικές σχετικές διαφημίσεις."</string>
     <string name="topic10001" msgid="1636806320891333775">"Τέχνες και ψυχαγωγία"</string>
     <string name="topic10002" msgid="1226367977754287428">"Ηθοποιία και θέατρο"</string>
     <string name="topic10003" msgid="6949890838957814881">"Ανιμέ και Manga"</string>

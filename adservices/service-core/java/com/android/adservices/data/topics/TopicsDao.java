@@ -53,6 +53,7 @@ public class TopicsDao {
         TopicsTables.TopTopicsContract.TABLE,
         TopicsTables.BlockedTopicsContract.TABLE,
         TopicsTables.EpochOriginContract.TABLE,
+        TopicsTables.TopicContributorsContract.TABLE
     };
 
     private final DbHelper mDbHelper; // Used in tests.
@@ -931,19 +932,18 @@ public class TopicsDao {
     }
 
     /**
-     * Delete by column for the given values.
+     * Delete by column for the given values. Allow passing in multiple tables with their
+     * corresponding column names to delete by.
      *
-     * @param tableName the table to remove entries from
-     * @param columnNameToDeleteFrom the column name in the table to delete from
+     * @param tableNamesAndColumnNamePairs the tables and corresponding column names to remove
+     *     entries from
      * @param valuesToDelete a {@link List} of values to delete if the entry has such value in
      *     {@code columnNameToDeleteFrom}
      */
     public void deleteFromTableByColumn(
-            @NonNull String tableName,
-            @NonNull String columnNameToDeleteFrom,
+            @NonNull List<Pair<String, String>> tableNamesAndColumnNamePairs,
             @NonNull List<String> valuesToDelete) {
-        Objects.requireNonNull(tableName);
-        Objects.requireNonNull(columnNameToDeleteFrom);
+        Objects.requireNonNull(tableNamesAndColumnNamePairs);
         Objects.requireNonNull(valuesToDelete);
 
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
@@ -952,23 +952,101 @@ public class TopicsDao {
             return;
         }
 
-        // Construct the "IN" part of SQL Query
-        StringBuilder whereClauseBuilder = new StringBuilder();
-        whereClauseBuilder.append("(?");
-        for (int i = 0; i < valuesToDelete.size() - 1; i++) {
-            whereClauseBuilder.append(",?");
+        for (Pair<String, String> tableAndColumnNamePair : tableNamesAndColumnNamePairs) {
+            String tableName = tableAndColumnNamePair.first;
+            String columnNameToDeleteFrom = tableAndColumnNamePair.second;
+
+            // Construct the "IN" part of SQL Query
+            StringBuilder whereClauseBuilder = new StringBuilder();
+            whereClauseBuilder.append("(?");
+            for (int i = 0; i < valuesToDelete.size() - 1; i++) {
+                whereClauseBuilder.append(",?");
+            }
+            whereClauseBuilder.append(')');
+
+            String whereClause = columnNameToDeleteFrom + " IN " + whereClauseBuilder;
+            String[] whereArgs = valuesToDelete.toArray(new String[0]);
+
+            try {
+                db.delete(tableName, whereClause, whereArgs);
+            } catch (SQLException e) {
+                LogUtil.e(
+                        e,
+                        String.format(
+                                "Failed to delete %s in table %s.", valuesToDelete, tableName));
+            }
         }
-        whereClauseBuilder.append(')');
+    }
 
-        String whereClause = columnNameToDeleteFrom + " IN " + whereClauseBuilder;
-        String[] whereArgs = valuesToDelete.toArray(new String[0]);
+    /**
+     * Delete an entry from tables if the value in the column of this entry exists in the given
+     * values.
+     *
+     * <p>Similar to deleteEntriesFromTableByColumn but only delete entries that satisfy the equal
+     * condition.
+     *
+     * @param tableNamesAndColumnNamePairs the tables and corresponding column names to remove
+     *     entries from
+     * @param valuesToDelete a {@link List} of values to delete if the entry has such value in
+     *     {@code columnNameToDeleteFrom}
+     * @param equalConditionColumnName the column name of the equal condition
+     * @param equalConditionColumnValue the value in {@code equalConditionColumnName} of the equal
+     *     condition
+     * @param isStringEqualConditionColumnValue whether the value of {@code
+     *     equalConditionColumnValue} is a string
+     */
+    public void deleteEntriesFromTableByColumnWithEqualCondition(
+            @NonNull List<Pair<String, String>> tableNamesAndColumnNamePairs,
+            @NonNull List<String> valuesToDelete,
+            @NonNull String equalConditionColumnName,
+            @NonNull String equalConditionColumnValue,
+            boolean isStringEqualConditionColumnValue) {
+        Objects.requireNonNull(tableNamesAndColumnNamePairs);
+        Objects.requireNonNull(valuesToDelete);
+        Objects.requireNonNull(equalConditionColumnName);
+        Objects.requireNonNull(equalConditionColumnValue);
 
-        try {
-            db.delete(tableName, whereClause, whereArgs);
-        } catch (SQLException e) {
-            LogUtil.e(
-                    e,
-                    String.format("Failed to delete %s in table %s.", valuesToDelete, tableName));
+        SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
+        // If valuesToDelete is empty, do nothing.
+        if (db == null || valuesToDelete.isEmpty()) {
+            return;
+        }
+
+        for (Pair<String, String> tableAndColumnNamePair : tableNamesAndColumnNamePairs) {
+            String tableName = tableAndColumnNamePair.first;
+            String columnNameToDeleteFrom = tableAndColumnNamePair.second;
+
+            // Construct the "IN" part of SQL Query
+            StringBuilder whereClauseBuilder = new StringBuilder();
+            whereClauseBuilder.append("(?");
+            for (int i = 0; i < valuesToDelete.size() - 1; i++) {
+                whereClauseBuilder.append(",?");
+            }
+            whereClauseBuilder.append(')');
+
+            // Add equal condition to sql query. If the value is a string, bound it with single
+            // quotes.
+            String whereClause =
+                    columnNameToDeleteFrom
+                            + " IN "
+                            + whereClauseBuilder
+                            + " AND "
+                            + equalConditionColumnName
+                            + " = ";
+            if (isStringEqualConditionColumnValue) {
+                whereClause += "'" + equalConditionColumnValue + "'";
+            } else {
+                whereClause += equalConditionColumnValue;
+            }
+
+            try {
+                db.delete(tableName, whereClause, valuesToDelete.toArray(new String[0]));
+            } catch (SQLException e) {
+                LogUtil.e(
+                        e,
+                        String.format(
+                                "Failed to delete %s in table %s.", valuesToDelete, tableName));
+            }
         }
     }
 
@@ -1127,5 +1205,10 @@ public class TopicsDao {
         }
 
         return topicToContributorsMap;
+    }
+
+    /** Check whether TopContributors Table is supported in current database. */
+    public boolean supportsTopicContributorsTable() {
+        return mDbHelper.supportsTopicContributorsTable();
     }
 }

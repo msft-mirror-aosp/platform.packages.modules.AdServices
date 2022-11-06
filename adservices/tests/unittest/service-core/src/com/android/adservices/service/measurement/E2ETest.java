@@ -710,6 +710,7 @@ public abstract class E2ETest {
                 validExpiry = PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
             }
             long jobTime = sourceTime + 1000 * validExpiry + 3600000L;
+
             reportingJobsActions.add(new EventReportingJob(jobTime));
         }
 

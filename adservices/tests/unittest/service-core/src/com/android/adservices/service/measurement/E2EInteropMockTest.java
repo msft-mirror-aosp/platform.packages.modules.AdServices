@@ -32,7 +32,6 @@ import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Web;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Assert;
@@ -41,7 +40,6 @@ import org.junit.runners.Parameterized;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -101,8 +99,15 @@ public class E2EInteropMockTest extends E2EMockTest {
             Assert.assertTrue(
                     "measurementDao.insertSource failed",
                     sDatastoreManager.runInTransaction(
-                            measurementDao ->
-                                    measurementDao.insertSource(source)));
+                            measurementDao -> {
+                                if (AsyncRegistrationQueueRunner.isSourceAllowedToInsert(
+                                        source,
+                                        source.getPublisher(),
+                                        EventSurfaceType.WEB,
+                                        measurementDao)) {
+                                    measurementDao.insertSource(source);
+                                }
+                            }));
         }
     }
 
@@ -141,7 +146,7 @@ public class E2EInteropMockTest extends E2EMockTest {
             sourceBuilder.setEventTime(timestamp);
             sourceBuilder.setSourceType(getSourceType(request));
             sourceBuilder.setAttributionMode(Source.AttributionMode.TRUTHFULLY);
-            sourceBuilder.setRegistrant(getRegistrant(request.getPackageName()));
+            sourceBuilder.setRegistrant(getRegistrant(request.getAppPackageName()));
             List<String> field = headers.get("Attribution-Reporting-Register-Source");
             JSONObject json = new JSONObject(field.get(0));
             sourceBuilder.setEventId(new UnsignedLong(json.getString("source_event_id")));
@@ -166,13 +171,12 @@ public class E2EInteropMockTest extends E2EMockTest {
                 sourceBuilder.setDebugKey(new UnsignedLong(json.getString("debug_key")));
             }
             if (!json.isNull("filter_data")) {
-                sourceBuilder.setAggregateFilterData(json.getJSONObject("filter_data").toString());
+                sourceBuilder.setFilterData(json.getJSONObject("filter_data").toString());
             }
             sourceBuilder.setWebDestination(Web.topPrivateDomainAndScheme(
                     Uri.parse(json.getString("destination"))).get());
             if (!json.isNull("aggregation_keys")) {
-                sourceBuilder.setAggregateSource(mapAggregationKeys(
-                        json.getJSONObject("aggregation_keys")));
+                sourceBuilder.setAggregateSource(json.getJSONObject("aggregation_keys").toString());
             }
             return sourceBuilder.build();
         } catch (JSONException e) {
@@ -191,7 +195,7 @@ public class E2EInteropMockTest extends E2EMockTest {
             triggerBuilder.setAttributionDestination(Uri.parse(destination));
             triggerBuilder.setDestinationType(EventSurfaceType.WEB);
             triggerBuilder.setTriggerTime(timestamp);
-            triggerBuilder.setRegistrant(getRegistrant(request.getPackageName()));
+            triggerBuilder.setRegistrant(getRegistrant(request.getAppPackageName()));
             List<String> field = headers.get("Attribution-Reporting-Register-Trigger");
             JSONObject json = new JSONObject(field.get(0));
             if (!json.isNull("event_trigger_data")) {
@@ -207,6 +211,9 @@ public class E2EInteropMockTest extends E2EMockTest {
             }
             if (!json.isNull("filters")) {
                 triggerBuilder.setFilters(json.getString("filters"));
+            }
+            if (!json.isNull("not_filters")) {
+                triggerBuilder.setNotFilters(json.getString("not_filters"));
             }
             if (!json.isNull("debug_key")) {
                 triggerBuilder.setDebugKey(new UnsignedLong(json.getString("debug_key")));
@@ -236,18 +243,5 @@ public class E2EInteropMockTest extends E2EMockTest {
         }
 
         return value;
-    }
-
-    private static String mapAggregationKeys(JSONObject json) throws JSONException {
-        JSONArray result = new JSONArray();
-        Iterator<String> keys = json.keys();
-        while (keys.hasNext()) {
-            String key = keys.next();
-            JSONObject obj = new JSONObject()
-                    .put("id", key)
-                    .put("key_piece", json.getString(key));
-            result.put(obj);
-        }
-        return result.toString();
     }
 }

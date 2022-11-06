@@ -16,11 +16,13 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.adservices.data.adselection.AdSelectionDatabase.DATABASE_NAME;
 import static com.android.adservices.service.adselection.ImpressionReporter.CALLER_PACKAGE_NAME_MISMATCH;
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_JOIN_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_LEAVE_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS;
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_SELECT_ADS;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.DB_AD_SELECTION_FILE_SIZE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyBoolean;
@@ -108,6 +110,7 @@ import org.mockito.MockitoSession;
 import org.mockito.Spy;
 import org.mockito.quality.Strictness;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -179,6 +182,8 @@ public class FledgeE2ETest {
     @Spy
     FledgeAllowListsFilter mFledgeAllowListsFilterSpy =
             new FledgeAllowListsFilter(mFlags, mAdServicesLogger);
+
+    @Mock private File mMockDBAdSelectionFile;
 
     @Before
     public void setUp() throws Exception {
@@ -264,6 +269,8 @@ public class FledgeE2ETest {
                 .thenReturn(true);
 
         mLocalhostBuyerDomain = Uri.parse(mMockWebServerRule.getServerBaseAddress());
+        when(CONTEXT.getDatabasePath(DATABASE_NAME)).thenReturn(mMockDBAdSelectionFile);
+        when(mMockDBAdSelectionFile.length()).thenReturn(DB_AD_SELECTION_FILE_SIZE);
     }
 
     @After
@@ -1774,7 +1781,7 @@ public class FledgeE2ETest {
                 new CallerMetadata.Builder()
                         .setBinderElapsedTimestamp(BINDER_ELAPSED_TIMESTAMP)
                         .build();
-        adSelectionService.runAdSelection(input, callerMetadata, adSelectionTestCallback);
+        adSelectionService.selectAds(input, callerMetadata, adSelectionTestCallback);
         adSelectionTestCallback.mCountDownLatch.await();
         return adSelectionTestCallback;
     }

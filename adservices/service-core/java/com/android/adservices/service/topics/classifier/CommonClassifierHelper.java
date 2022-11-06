@@ -21,6 +21,8 @@ import android.content.res.AssetManager;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.EpochComputationGetTopTopicsStats;
 import com.android.internal.util.Preconditions;
 
 import java.io.IOException;
@@ -74,7 +76,7 @@ class CommonClassifierHelper {
 
                 // This bytes[] has bytes in decimal format;
                 // Convert it to hexadecimal format
-                for(int i = 0; i < bytes.length; i++) {
+                for (int i = 0; i < bytes.length; i++) {
                     assetSha256CheckSum.append(
                             Integer.toString((bytes[i] & 0xff) + 0x100, 16).substring(1));
                 }
@@ -109,7 +111,8 @@ class CommonClassifierHelper {
             @NonNull List<Integer> labelIds,
             @NonNull Random random,
             @NonNull int numberOfTopTopics,
-            @NonNull int numberOfRandomTopics) {
+            @NonNull int numberOfRandomTopics,
+            @NonNull AdServicesLogger logger) {
         Preconditions.checkArgument(
                 numberOfTopTopics > 0, "numberOfTopTopics should larger than 0");
         Preconditions.checkArgument(
@@ -126,7 +129,14 @@ class CommonClassifierHelper {
         // If there are no topic in the appTopics list, an empty topic list will be returned.
         if (topicsToAppTopicCount.isEmpty()) {
             LogUtil.w("Unable to retrieve any topics from device.");
-
+            // Log atom for getTopTopics call.
+            logger.logEpochComputationGetTopTopicsStats(
+                    EpochComputationGetTopTopicsStats.builder()
+                            .setTopTopicCount(0)
+                            .setPaddedRandomTopicsCount(0)
+                            .setAppsConsideredCount(-1)
+                            .setSdksConsideredCount(-1)
+                            .build());
             return new ArrayList<>();
         }
 
@@ -141,6 +151,16 @@ class CommonClassifierHelper {
         int numberOfRandomPaddingTopics = Math.max(0, numberOfTopTopics - allSortedTopics.size());
         List<Topic> topTopics =
                 allSortedTopics.subList(0, Math.min(numberOfTopTopics, allSortedTopics.size()));
+
+        // Log atom for getTopTopics call.
+        // TODO(b/256638889): Log apps and sdk considered count.
+        logger.logEpochComputationGetTopTopicsStats(
+                EpochComputationGetTopTopicsStats.builder()
+                        .setTopTopicCount(numberOfTopTopics)
+                        .setPaddedRandomTopicsCount(numberOfRandomPaddingTopics)
+                        .setAppsConsideredCount(-1)
+                        .setSdksConsideredCount(-1)
+                        .build());
 
         // If the size of topTopics smaller than numberOfTopTopics,
         // the top topics list will be padded by numberOfRandomPaddingTopics random topics.

@@ -32,6 +32,7 @@ import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.SystemHealthParams;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.reporting.DebugReportingJobService;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.concurrent.Executor;
@@ -67,6 +68,7 @@ public class AttributionJobService extends JobService {
                     jobFinished(params, !success);
                     // jobFinished is asynchronous, so forcing scheduling avoiding concurrency issue
                     scheduleIfNeeded(this, /* forceSchedule */ true);
+                    DebugReportingJobService.scheduleIfNeeded(getApplicationContext(), true);
                 });
         return true;
     }

@@ -104,12 +104,20 @@ public interface IMeasurementDao {
      */
     long getNumTriggersPerRegistrant(Uri registrant) throws DatastoreException;
 
+    /** Gets the number of triggers associated to a destination. */
+    long getNumTriggersPerDestination(Uri destination, @EventSurfaceType int destinationType)
+            throws DatastoreException;
+
     /**
-     * Gets the count of distinct IDs of enrollments in the Attribution table in a time window
-     * with matching publisher and destination, excluding a given enrollment ID.
+     * Gets the count of distinct IDs of enrollments in the Attribution table in a time window with
+     * matching publisher and destination, excluding a given enrollment ID.
      */
-    Integer countDistinctEnrollmentsPerPublisherXDestinationInAttribution(Uri sourceSite,
-            Uri destination, String excludedEnrollmentId, long windowStartTime, long windowEndTime)
+    Integer countDistinctEnrollmentsPerPublisherXDestinationInAttribution(
+            Uri sourceSite,
+            Uri destination,
+            String excludedEnrollmentId,
+            long windowStartTime,
+            long windowEndTime)
             throws DatastoreException;
 
     /**
@@ -210,6 +218,13 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
+     * Change the status of an event debug report to DELIVERED
+     *
+     * @param eventReportId the id of the event report to be updated
+     */
+    void markEventDebugReportDelivered(String eventReportId) throws DatastoreException;
+
+    /**
      * Change the status of an aggregate report to DELIVERED
      *
      * @param aggregateReportId the id of the event report to be updated
@@ -217,6 +232,13 @@ public interface IMeasurementDao {
      */
     void markAggregateReportStatus(String aggregateReportId, @AggregateReport.Status int status)
             throws DatastoreException;
+
+    /**
+     * Change the status of an aggregate debug report to DELIVERED
+     *
+     * @param aggregateReportId the id of the event report to be updated
+     */
+    void markAggregateDebugReportDelivered(String aggregateReportId) throws DatastoreException;
 
     /**
      * Saves the {@link EventReport} to datastore.
@@ -233,6 +255,9 @@ public interface IMeasurementDao {
      */
     List<String> getPendingEventReportIdsInWindow(long windowStartTime, long windowEndTime)
             throws DatastoreException;
+
+    /** Returns list of all debug event reports. */
+    List<String> getPendingDebugEventReportIds() throws DatastoreException;
 
     /**
      * Returns list of all pending event reports for a given app right away.
@@ -305,6 +330,9 @@ public interface IMeasurementDao {
      */
     List<String> getPendingAggregateReportIdsInWindow(long windowStartTime, long windowEndTime)
             throws DatastoreException;
+
+    /** Returns list of all aggregate debug reports. */
+    List<String> getPendingAggregateDebugReportIds() throws DatastoreException;
 
     /**
      * Returns list of all pending aggregate reports for a given app right away.
