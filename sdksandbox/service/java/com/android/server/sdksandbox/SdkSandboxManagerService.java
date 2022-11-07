@@ -1058,7 +1058,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     void clearSdkSandboxState() {
         synchronized (mLock) {
             mCheckedVisibilityPatch = false;
-            getSdkSandboxSettingsListener().reset();
+            getSdkSandboxSettingsListener().setKillSwitchState(true);
         }
     }
 
@@ -1071,7 +1071,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         synchronized (mLock) {
             mCheckedVisibilityPatch = true;
             mHasVisibilityPatch = true;
-            getSdkSandboxSettingsListener().reset();
+            getSdkSandboxSettingsListener().setKillSwitchState(false);
         }
     }
 
@@ -1090,7 +1090,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         @GuardedBy("mLock")
         private boolean mIsKillSwitchEnabled =
                 DeviceConfig.getBoolean(
-                        DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_DISABLE_SDK_SANDBOX, false);
+                        DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_DISABLE_SDK_SANDBOX, true);
 
         SdkSandboxSettingsListener(Context context) {
             mContext = context;
@@ -1109,14 +1109,14 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
 
         @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
-        void reset() {
+        void setKillSwitchState(boolean enabled) {
             synchronized (mLock) {
                 DeviceConfig.setProperty(
                         DeviceConfig.NAMESPACE_ADSERVICES,
                         PROPERTY_DISABLE_SDK_SANDBOX,
-                        "false",
+                        Boolean.toString(enabled),
                         false);
-                mIsKillSwitchEnabled = false;
+                mIsKillSwitchEnabled = enabled;
             }
         }
 
@@ -1124,7 +1124,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         public void onPropertiesChanged(@NonNull DeviceConfig.Properties properties) {
             synchronized (mLock) {
                 boolean killSwitchPreviouslyEnabled = mIsKillSwitchEnabled;
-                mIsKillSwitchEnabled = properties.getBoolean(PROPERTY_DISABLE_SDK_SANDBOX, false);
+                mIsKillSwitchEnabled = properties.getBoolean(PROPERTY_DISABLE_SDK_SANDBOX, true);
                 if (mIsKillSwitchEnabled && !killSwitchPreviouslyEnabled) {
                     synchronized (SdkSandboxManagerService.this.mLock) {
                         stopAllSandboxesLocked();

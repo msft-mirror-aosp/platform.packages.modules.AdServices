@@ -177,6 +177,7 @@ public class SdkSandboxManagerServiceUnitTest {
         mInjector = Mockito.spy(new InjectorForTest());
 
         mService = new SdkSandboxManagerService(mSpyContext, mProvider, mInjector);
+        mService.forceEnableSandbox();
 
         mClientAppUid = Process.myUid();
     }
@@ -1851,13 +1852,15 @@ public class SdkSandboxManagerServiceUnitTest {
 
     @Test
     public void testIsDisabled() {
-        mService.clearSdkSandboxState();
+        mService.forceEnableSandbox();
         mSdkSandboxService.setIsDisabledResponse(false);
         assertThat(mService.isSdkSandboxDisabled(mSdkSandboxService)).isFalse();
 
         mService.clearSdkSandboxState();
         mSdkSandboxService.setIsDisabledResponse(true);
         assertThat(mService.isSdkSandboxDisabled(mSdkSandboxService)).isTrue();
+
+        mService.forceEnableSandbox();
     }
 
     @Test
@@ -1902,7 +1905,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 new DeviceConfig.Properties(
                         DeviceConfig.NAMESPACE_ADSERVICES,
                         Map.of(PROPERTY_DISABLE_SANDBOX, "false")));
-        mService.getSdkSandboxSettingsListener().reset();
+        mService.getSdkSandboxSettingsListener().setKillSwitchState(false);
         loadSdk(SDK_NAME);
         listener.onPropertiesChanged(
                 new DeviceConfig.Properties(
@@ -1919,7 +1922,7 @@ public class SdkSandboxManagerServiceUnitTest {
         disableForegroundCheck();
         SdkSandboxManagerService.SdkSandboxSettingsListener listener =
                 mService.getSdkSandboxSettingsListener();
-        listener.reset();
+        listener.setKillSwitchState(true);
         // Sleep needed to avoid deadlock.
         // TODO(b/257255118): Remove this sleep.
         Thread.sleep(500);
