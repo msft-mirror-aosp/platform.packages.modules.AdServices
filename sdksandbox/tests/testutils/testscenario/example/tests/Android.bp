@@ -16,23 +16,24 @@ package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
-android_library {
-    name: "CtsSdkSandboxTestScenario",
-    srcs: [
-         "src/**/*.java",
+android_test {
+    name: "SdkSandboxTestUtilsExampleTest",
+    defaults: ["cts_defaults"],
+    libs: [
+        "android.test.runner",
+        "android.test.base",
     ],
     static_libs: [
-        "truth-prebuilt",
-        "CtsSdkSandboxTestExecutor",
-        "SdkSandboxTestUtils",
-        "compatibility-device-util-axt",
         "androidx.test.core",
+        "ctstestrunner-axt",
+        "CtsSdkSandboxTestScenario",
     ],
-    visibility: [
-        "//cts/tests/tests:__subpackages__",
-        "//packages/modules/AdServices/sdksandbox/tests/testutils/testscenario/example/tests",
+    data: [
+        ":SdkSandboxTestUtilsExampleTestSdk",
     ],
-    manifest: "AndroidManifest.xml",
-    resource_dirs: ["res"],
+    srcs: [
+        "src/**/*.java",
+    ],
+    test_suites: ["general-tests"],
+    sdk_version: "current",
 }
-
