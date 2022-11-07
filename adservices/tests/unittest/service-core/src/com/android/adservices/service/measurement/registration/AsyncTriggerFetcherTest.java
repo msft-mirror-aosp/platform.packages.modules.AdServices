@@ -92,6 +92,7 @@ import javax.net.ssl.HttpsURLConnection;
 public final class AsyncTriggerFetcherTest {
     private static final String ANDROID_APP_SCHEME = "android-app";
     private static final String ANDROID_APP_SCHEME_URI_PREFIX = ANDROID_APP_SCHEME + "://";
+    private static final String SDK_PACKAGE_NAME = "sdk.package.name";
     private static final String TRIGGER_URI = "https://foo.com";
     private static final String ENROLLMENT_ID = "enrollment-id";
     private static final EnrollmentData ENROLLMENT =
@@ -393,10 +394,10 @@ public final class AsyncTriggerFetcherTest {
     }
 
     @Test
-    public void testTriggerRequest_eventTriggerData_triggerData_negative() throws Exception {
+    public void fetchTrigger_triggerDataNegative_triggerDataEqualsZero() throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         String eventTriggerData = "[{\"trigger_data\":\"-2\",\"priority\":\"101\"}]";
-        String expectedResult = "[{\"priority\":\"101\"}]";
+        String expectedResult = "[{\"trigger_data\":\"0\",\"priority\":\"101\"}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
@@ -421,11 +422,11 @@ public final class AsyncTriggerFetcherTest {
     }
 
     @Test
-    public void testTriggerRequest_eventTriggerData_triggerData_tooLarge() throws Exception {
+    public void fetchTrigger_triggerDataTooLarge_triggerDataEqualsZero() throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         String eventTriggerData =
                 "[{\"trigger_data\":\"18446744073709551616\"," + "\"priority\":\"101\"}]";
-        String expectedResult = "[{\"priority\":\"101\"}]";
+        String expectedResult = "[{\"trigger_data\":\"0\",\"priority\":\"101\"}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
@@ -450,10 +451,10 @@ public final class AsyncTriggerFetcherTest {
     }
 
     @Test
-    public void testTriggerRequest_eventTriggerData_triggerData_notAnInt() throws Exception {
+    public void fetchTrigger_triggerDataNotAnInt_triggerDataEqualsZero() throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         String eventTriggerData = "[{\"trigger_data\":\"101z\",\"priority\":\"101\"}]";
-        String expectedResult = "[{\"priority\":\"101\"}]";
+        String expectedResult = "[{\"trigger_data\":\"0\",\"priority\":\"101\"}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
@@ -1546,7 +1547,7 @@ public final class AsyncTriggerFetcherTest {
     }
 
     @Test
-    public void testBasicTriggerRequestMinimumFields() throws Exception {
+    public void fetchTrigger_eventTriggerDataNoFields_triggerDataEqualsZero() throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
@@ -1569,7 +1570,7 @@ public final class AsyncTriggerFetcherTest {
                 asyncRegistration.getTopOrigin().toString(),
                 result.getAttributionDestination().toString());
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals("[{}]", result.getEventTriggers());
+        assertEquals("[{\"trigger_data\":\"0\"}]", result.getEventTriggers());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -2622,18 +2623,20 @@ public final class AsyncTriggerFetcherTest {
         verify(mLogger).logMeasurementRegistrationsResponseSize(eq(expectedStats));
     }
     private RegistrationRequest buildRequest(String triggerUri) {
-        return new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
-                .setRegistrationUri(Uri.parse(triggerUri))
-                .setPackageName(CONTEXT.getAttributionSource().getPackageName())
+        return new RegistrationRequest.Builder(
+                        RegistrationRequest.REGISTER_TRIGGER,
+                        Uri.parse(triggerUri),
+                        CONTEXT.getAttributionSource().getPackageName(),
+                        SDK_PACKAGE_NAME)
                 .setAdIdPermissionGranted(true)
                 .build();
     }
     private RegistrationRequest buildRequestWithoutAdIdPermission(String triggerUri) {
-        return new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
-                .setRegistrationUri(Uri.parse(triggerUri))
-                .setPackageName(CONTEXT.getAttributionSource().getPackageName())
+        return new RegistrationRequest.Builder(
+                        RegistrationRequest.REGISTER_TRIGGER,
+                        Uri.parse(triggerUri),
+                        CONTEXT.getAttributionSource().getPackageName(),
+                        SDK_PACKAGE_NAME)
                 .setAdIdPermissionGranted(false)
                 .build();
     }

@@ -153,7 +153,7 @@ public final class MeasurementImpl {
                 case RegistrationRequest.REGISTER_TRIGGER:
                     return EnqueueAsyncRegistration.appSourceOrTriggerRegistrationRequest(
                                     request,
-                                    getRegistrant(request.getPackageName()),
+                                    getRegistrant(request.getAppPackageName()),
                                     requestTime,
                                     mEnrollmentDao,
                                     mDatastoreManager)
@@ -184,7 +184,7 @@ public final class MeasurementImpl {
             boolean enqueueStatus =
                     EnqueueAsyncRegistration.webSourceRegistrationRequest(
                             sourceRegistrationRequest,
-                            getRegistrant(request.getPackageName()),
+                            getRegistrant(request.getAppPackageName()),
                             requestTime,
                             mEnrollmentDao,
                             mDatastoreManager);
@@ -216,7 +216,7 @@ public final class MeasurementImpl {
             boolean enqueueStatus =
                     EnqueueAsyncRegistration.webTriggerRegistrationRequest(
                             triggerRegistrationRequest,
-                            getRegistrant(request.getPackageName()),
+                            getRegistrant(request.getAppPackageName()),
                             requestTime,
                             mEnrollmentDao,
                             mDatastoreManager);

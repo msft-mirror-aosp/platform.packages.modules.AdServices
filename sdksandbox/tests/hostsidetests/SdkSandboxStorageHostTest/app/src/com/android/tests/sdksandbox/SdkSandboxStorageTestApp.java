@@ -140,16 +140,16 @@ public class SdkSandboxStorageTestApp {
         final long appSizeAppStats = finalAppStats.getDataBytes() - initialAppStats.getDataBytes();
         final long appSizeUserStats =
                 finalUserStats.getDataBytes() - initialUserStats.getDataBytes();
-        assertMostlyEquals(deltaAppSize, appSizeAppStats);
-        assertMostlyEquals(deltaAppSize, appSizeUserStats);
+        assertMostlyEquals(deltaAppSize, appSizeAppStats, 5);
+        assertMostlyEquals(deltaAppSize, appSizeUserStats, 10);
 
         // Assert cache size is same
         final long cacheSizeAppStats =
                 finalAppStats.getCacheBytes() - initialAppStats.getCacheBytes();
         final long cacheSizeUserStats =
                 finalUserStats.getCacheBytes() - initialUserStats.getCacheBytes();
-        assertMostlyEquals(deltaCacheSize, cacheSizeAppStats);
-        assertMostlyEquals(deltaCacheSize, cacheSizeUserStats);
+        assertMostlyEquals(deltaCacheSize, cacheSizeAppStats, 5);
+        assertMostlyEquals(deltaCacheSize, cacheSizeUserStats, 10);
     }
 
     private static void assertDirIsNotAccessible(String path) {
@@ -164,10 +164,18 @@ public class SdkSandboxStorageTestApp {
         assertThat(new File(path).canExecute()).isFalse();
     }
 
-    private static void assertMostlyEquals(long expected, long actual) {
-        final long errorMarginSize = expected / 20; // 5%
-        if (Math.abs(expected - actual) > errorMarginSize) {
-            throw new AssertionFailedError("Expected roughly " + expected + " but was " + actual);
+    private static void assertMostlyEquals(
+            long expected, long actual, long errorMarginInPercentage) {
+        final double diffInSize = Math.abs(expected - actual);
+        final double diffInPercentage = (diffInSize / expected) * 100;
+        if (diffInPercentage > errorMarginInPercentage) {
+            throw new AssertionFailedError(
+                    "Expected roughly "
+                            + expected
+                            + " but was "
+                            + actual
+                            + ". Diff in percentage: "
+                            + Math.round(diffInPercentage * 100) / 100.00);
         }
     }
 }

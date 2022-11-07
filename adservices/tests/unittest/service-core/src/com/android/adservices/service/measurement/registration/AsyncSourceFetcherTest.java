@@ -86,7 +86,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import javax.net.ssl.HttpsURLConnection;
-/** Unit tests for {@link SourceFetcher} */
+/** Unit tests for {@link AsyncSourceFetcher} */
 @RunWith(MockitoJUnitRunner.class)
 @SmallTest
 public final class AsyncSourceFetcherTest {
@@ -114,6 +114,7 @@ public final class AsyncSourceFetcherTest {
     private static final long ALT_EXPIRY = 456790;
     private static final Uri REGISTRATION_URI_1 = Uri.parse("https://foo.com");
     private static final Uri REGISTRATION_URI_2 = Uri.parse("https://foo2.com");
+    private static final String SDK_PACKAGE_NAME = "sdk.package.name";
     private static final Uri OS_DESTINATION = Uri.parse("android-app://com.os-destination");
     private static final String LONG_FILTER_STRING = "12345678901234567890123456";
     private static final String LONG_AGGREGATE_KEY_ID = "12345678901234567890123456";
@@ -310,11 +311,7 @@ public final class AsyncSourceFetcherTest {
     @Test
     public void testSourceRequestWithPostInstallAttributes() throws Exception {
         RegistrationRequest request =
-                new RegistrationRequest.Builder()
-                        .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
-                        .setRegistrationUri(Uri.parse("https://foo.com"))
-                        .setPackageName(sContext.getAttributionSource().getPackageName())
-                        .build();
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL("https://foo.com"));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
@@ -354,11 +351,7 @@ public final class AsyncSourceFetcherTest {
     @Test
     public void testSourceRequestWithPostInstallAttributesReceivedAsNull() throws Exception {
         RegistrationRequest request =
-                new RegistrationRequest.Builder()
-                        .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
-                        .setRegistrationUri(Uri.parse("https://foo.com"))
-                        .setPackageName(sContext.getAttributionSource().getPackageName())
-                        .build();
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL("https://foo.com"));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
@@ -401,11 +394,7 @@ public final class AsyncSourceFetcherTest {
     @Test
     public void testSourceRequestWithInstallAttributesOutofBounds() throws IOException {
         RegistrationRequest request =
-                new RegistrationRequest.Builder()
-                        .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
-                        .setRegistrationUri(Uri.parse("https://foo.com"))
-                        .setPackageName(sContext.getAttributionSource().getPackageName())
-                        .build();
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL("https://foo.com"));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
@@ -591,7 +580,7 @@ public final class AsyncSourceFetcherTest {
     }
 
     @Test
-    public void testBasicSourceRequest_sourceEventId_negative() throws Exception {
+    public void fetchSource_sourceEventIdNegative_fetchSuccess() throws Exception {
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
@@ -613,13 +602,13 @@ public final class AsyncSourceFetcherTest {
                         appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
 
         // Assertion
-        assertFalse(fetch.isPresent());
+        assertTrue(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
     }
 
     @Test
-    public void testBasicSourceRequest_sourceEventId_tooLarge() throws Exception {
+    public void fetchSource_sourceEventIdTooLarge_fetchSuccess() throws Exception {
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
@@ -641,13 +630,13 @@ public final class AsyncSourceFetcherTest {
                         appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
 
         // Assertion
-        assertFalse(fetch.isPresent());
+        assertTrue(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
     }
 
     @Test
-    public void testBasicSourceRequest_sourceEventId_notAnInt() throws Exception {
+    public void fetchSource_sourceEventIdNotAnInt_fetchSuccess() throws Exception {
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
@@ -669,7 +658,7 @@ public final class AsyncSourceFetcherTest {
                         appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
 
         // Assertion
-        assertFalse(fetch.isPresent());
+        assertTrue(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
     }
@@ -879,11 +868,7 @@ public final class AsyncSourceFetcherTest {
     @Test
     public void testBasicSourceRequestMinimumFieldsAndRestNull() throws Exception {
         RegistrationRequest request =
-                new RegistrationRequest.Builder()
-                        .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
-                        .setRegistrationUri(Uri.parse("https://foo.com"))
-                        .setPackageName(sContext.getAttributionSource().getPackageName())
-                        .build();
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL("https://foo.com"));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
@@ -2426,18 +2411,12 @@ public final class AsyncSourceFetcherTest {
                                         .build()));
     }
     private RegistrationRequest buildRequest(String registrationUri) {
-        return new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
-                .setRegistrationUri(Uri.parse(registrationUri))
-                .setPackageName(sContext.getAttributionSource().getPackageName())
+        return buildDefaultRegistrationRequestBuilder(registrationUri)
                 .setAdIdPermissionGranted(true)
                 .build();
     }
     private RegistrationRequest buildRequestWithoutAdIdPermission(String registrationUri) {
-        return new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
-                .setRegistrationUri(Uri.parse(registrationUri))
-                .setPackageName(sContext.getAttributionSource().getPackageName())
+        return buildDefaultRegistrationRequestBuilder(registrationUri)
                 .setAdIdPermissionGranted(false)
                 .build();
     }
@@ -2477,7 +2456,9 @@ public final class AsyncSourceFetcherTest {
                 enrollmentId,
                 registrationRequest.getRegistrationUri(),
                 null,
-                null,
+                redirectType == AsyncRegistration.RedirectType.DAISY_CHAIN
+                        ? Uri.parse(DEFAULT_DESTINATION)
+                        : null,
                 Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + sContext.getPackageName()),
                 null,
                 Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + sContext.getPackageName()),
@@ -2631,5 +2612,14 @@ public final class AsyncSourceFetcherTest {
         assertEquals(
                 result.getEventTime() + TimeUnit.SECONDS.toMillis(DEFAULT_EXPIRY),
                 result.getExpiryTime());
+    }
+
+    private RegistrationRequest.Builder buildDefaultRegistrationRequestBuilder(
+            String registrationUri) {
+        return new RegistrationRequest.Builder(
+                RegistrationRequest.REGISTER_SOURCE,
+                Uri.parse(registrationUri),
+                sContext.getAttributionSource().getPackageName(),
+                SDK_PACKAGE_NAME);
     }
 }
