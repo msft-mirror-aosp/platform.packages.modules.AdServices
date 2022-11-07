@@ -146,7 +146,7 @@ public class E2EInteropMockTest extends E2EMockTest {
             sourceBuilder.setEventTime(timestamp);
             sourceBuilder.setSourceType(getSourceType(request));
             sourceBuilder.setAttributionMode(Source.AttributionMode.TRUTHFULLY);
-            sourceBuilder.setRegistrant(getRegistrant(request.getPackageName()));
+            sourceBuilder.setRegistrant(getRegistrant(request.getAppPackageName()));
             List<String> field = headers.get("Attribution-Reporting-Register-Source");
             JSONObject json = new JSONObject(field.get(0));
             sourceBuilder.setEventId(new UnsignedLong(json.getString("source_event_id")));
@@ -195,7 +195,7 @@ public class E2EInteropMockTest extends E2EMockTest {
             triggerBuilder.setAttributionDestination(Uri.parse(destination));
             triggerBuilder.setDestinationType(EventSurfaceType.WEB);
             triggerBuilder.setTriggerTime(timestamp);
-            triggerBuilder.setRegistrant(getRegistrant(request.getPackageName()));
+            triggerBuilder.setRegistrant(getRegistrant(request.getAppPackageName()));
             List<String> field = headers.get("Attribution-Reporting-Register-Trigger");
             JSONObject json = new JSONObject(field.get(0));
             if (!json.isNull("event_trigger_data")) {

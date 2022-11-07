@@ -32,29 +32,38 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import android.adservices.measurement.RegistrationRequest;
+import android.adservices.measurement.WebSourceParams;
+import android.adservices.measurement.WebSourceRegistrationRequest;
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.RemoteException;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.data.DbHelper;
+import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
 import com.android.adservices.data.measurement.MeasurementTables;
+import com.android.adservices.data.measurement.SQLDatastoreManager;
+import com.android.adservices.data.measurement.SqliteObjectMapperAccessor;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.measurement.registration.AsyncSourceFetcher;
 import com.android.adservices.service.measurement.registration.AsyncTriggerFetcher;
+import com.android.adservices.service.measurement.registration.EnqueueAsyncRegistration;
 import com.android.adservices.service.measurement.util.AsyncFetchStatus;
 import com.android.adservices.service.measurement.util.AsyncRedirect;
 import com.android.adservices.service.measurement.util.UnsignedLong;
+import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.truth.Truth;
@@ -70,13 +79,18 @@ import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 import org.mockito.stubbing.Answer;
 
+import java.io.IOException;
+import java.net.URL;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import javax.net.ssl.HttpsURLConnection;
 
 /** Unit tests for {@link AsyncRegistrationQueueRunnerTest} */
 public class AsyncRegistrationQueueRunnerTest {
@@ -84,21 +98,22 @@ public class AsyncRegistrationQueueRunnerTest {
     private static final String DEFAULT_ENROLLMENT_ID = "enrollment_id";
     private static final Uri DEFAULT_REGISTRANT = Uri.parse("android-app://com.registrant");
     private static final Uri DEFAULT_VERIFIED_DESTINATION = Uri.parse("android-app://com.example");
+    private static final String SDK_PACKAGE_NAME = "sdk.package.name";
     private static final Uri APP_TOP_ORIGIN =
             Uri.parse("android-app://" + sDefaultContext.getPackageName());
-    private static final Uri WEB_TOP_ORIGIN = Uri.parse("https://example.com");
-    private static final Uri REGISTRATION_URI = Uri.parse("https://foo.com/bar?ad=134");
-    private static final String LIST_TYPE_REDIRECT_URI_1 = "https://foo.com";
-    private static final String LIST_TYPE_REDIRECT_URI_2 = "https://bar.com";
-    private static final String LOCATION_TYPE_REDIRECT_URI = "https://baz.com";
-    private static final Uri WEB_DESTINATION = Uri.parse("https://web-destination.com");
+    private static final Uri WEB_TOP_ORIGIN = WebUtil.validUri("https://example.test");
+    private static final Uri REGISTRATION_URI = WebUtil.validUri("https://foo.test/bar?ad=134");
+    private static final String LIST_TYPE_REDIRECT_URI_1 = WebUtil.validUrl("https://foo.test");
+    private static final String LIST_TYPE_REDIRECT_URI_2 = WebUtil.validUrl("https://bar.test");
+    private static final String LOCATION_TYPE_REDIRECT_URI = WebUtil.validUrl("https://baz.test");
+    private static final Uri WEB_DESTINATION = WebUtil.validUri("https://web-destination.test");
     private static final Uri APP_DESTINATION = Uri.parse("android-app://com.app_destination");
     private static final Source SOURCE_1 =
             SourceFixture.getValidSourceBuilder()
                     .setEventId(new UnsignedLong(1L))
                     .setPublisher(APP_TOP_ORIGIN)
                     .setAppDestination(Uri.parse("android-app://com.destination1"))
-                    .setWebDestination(Uri.parse("https://web-destination1.com"))
+                    .setWebDestination(WebUtil.validUri("https://web-destination1.test"))
                     .setEnrollmentId(DEFAULT_ENROLLMENT_ID)
                     .setRegistrant(Uri.parse("android-app://com.example"))
                     .setEventTime(new Random().nextLong())
@@ -107,6 +122,19 @@ public class AsyncRegistrationQueueRunnerTest {
                     .setSourceType(Source.SourceType.EVENT)
                     .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                     .setDebugKey(new UnsignedLong(47823478789L))
+                    .build();
+    private static final Uri DEFAULT_WEB_DESTINATION =
+            WebUtil.validUri("https://def-web-destination.test");
+    private static final Uri ALT_WEB_DESTINATION =
+            WebUtil.validUri("https://alt-web-destination.test");
+    private static final Uri ALT_APP_DESTINATION =
+            Uri.parse("android-app://com.alt-app_destination");
+    private static final String DEFAULT_REGISTRATION = WebUtil.validUrl("https://foo.test");
+    private static final Uri DEFAULT_OS_DESTINATION =
+            Uri.parse("android-app://com.def-os-destination");
+    private static final WebSourceParams DEFAULT_REGISTRATION_PARAM_LIST =
+            new WebSourceParams.Builder(Uri.parse(DEFAULT_REGISTRATION))
+                    .setDebugKeyAllowed(true)
                     .build();
 
     private static final Trigger TRIGGER =
@@ -118,6 +146,8 @@ public class AsyncRegistrationQueueRunnerTest {
     private AsyncSourceFetcher mAsyncSourceFetcher;
     private AsyncTriggerFetcher mAsyncTriggerFetcher;
 
+    @Mock HttpsURLConnection mUrlConnection1;
+    @Mock HttpsURLConnection mUrlConnection2;
     @Mock private IMeasurementDao mMeasurementDao;
     @Mock private Source mMockedSource;
     @Mock private Trigger mMockedTrigger;
@@ -125,6 +155,9 @@ public class AsyncRegistrationQueueRunnerTest {
     @Mock private EnrollmentDao mEnrollmentDao;
     @Mock private ContentResolver mContentResolver;
     @Mock private ContentProviderClient mMockContentProviderClient;
+    @Mock HttpsURLConnection mUrlConnection;
+    @Mock Flags mFlags;
+    @Mock AdServicesLogger mLogger;
 
     private MockitoSession mStaticMockSession;
 
@@ -147,10 +180,8 @@ public class AsyncRegistrationQueueRunnerTest {
 
     @After
     public void cleanup() {
-        SQLiteDatabase db = DbHelper.getInstance(sDefaultContext).safeGetWritableDatabase();
-        for (String table : MeasurementTables.ALL_MSMT_TABLES) {
-            db.delete(table, null, null);
-        }
+        SQLiteDatabase db = DbTestUtil.getDbHelperForTest().getWritableDatabase();
+        emptyTables(db);
         mStaticMockSession.finishMocking();
     }
 
@@ -187,8 +218,8 @@ public class AsyncRegistrationQueueRunnerTest {
                     asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
                     AsyncRedirect asyncRedirect = invocation.getArgument(2);
                     asyncRedirect.addToRedirects(List.of(
-                            Uri.parse("https://example.com/sF1"),
-                            Uri.parse("https://example.com/sF2")));
+                            WebUtil.validUri("https://example.test/sF1"),
+                            WebUtil.validUri("https://example.test/sF2")));
                     return Optional.of(mMockedSource);
                 };
         doAnswer(answerAsyncSourceFetcher)
@@ -197,7 +228,7 @@ public class AsyncRegistrationQueueRunnerTest {
 
         Source.FakeReport sf =
                 new Source.FakeReport(
-                        new UnsignedLong(1L), 1L, Uri.parse("https://example.com/sF"));
+                        new UnsignedLong(1L), 1L, WebUtil.validUri("https://example.test/sF"));
         List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
         when(mMockedSource.assignAttributionModeAndGenerateFakeReports())
                 .thenReturn(eventReportList);
@@ -563,7 +594,7 @@ public class AsyncRegistrationQueueRunnerTest {
 
         Source.FakeReport sf =
                 new Source.FakeReport(
-                        new UnsignedLong(1L), 1L, Uri.parse("https://example.com/sF"));
+                        new UnsignedLong(1L), 1L, WebUtil.validUri("https://example.test/sF"));
         List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
         when(mMockedSource.assignAttributionModeAndGenerateFakeReports())
                 .thenReturn(eventReportList);
@@ -598,8 +629,8 @@ public class AsyncRegistrationQueueRunnerTest {
                     asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.SERVER_UNAVAILABLE);
                     AsyncRedirect asyncRedirect = invocation.getArgument(2);
                     asyncRedirect.addToRedirects(List.of(
-                            Uri.parse("https://example.com/sF1"),
-                            Uri.parse("https://example.com/sF2")));
+                            WebUtil.validUri("https://example.test/sF1"),
+                            WebUtil.validUri("https://example.test/sF2")));
                     return Optional.empty();
                 };
         doAnswer(answerAsyncSourceFetcher)
@@ -608,7 +639,7 @@ public class AsyncRegistrationQueueRunnerTest {
 
         Source.FakeReport sf =
                 new Source.FakeReport(
-                        new UnsignedLong(1L), 1L, Uri.parse("https://example.com/sF"));
+                        new UnsignedLong(1L), 1L, WebUtil.validUri("https://example.test/sF"));
         List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
         when(mMockedSource.assignAttributionModeAndGenerateFakeReports())
                 .thenReturn(eventReportList);
@@ -651,8 +682,8 @@ public class AsyncRegistrationQueueRunnerTest {
                     asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.NETWORK_ERROR);
                     AsyncRedirect asyncRedirect = invocation.getArgument(2);
                     asyncRedirect.addToRedirects(List.of(
-                            Uri.parse("https://example.com/sF1"),
-                            Uri.parse("https://example.com/sF2")));
+                            WebUtil.validUri("https://example.test/sF1"),
+                            WebUtil.validUri("https://example.test/sF2")));
                     return Optional.empty();
                 };
         doAnswer(answerAsyncSourceFetcher)
@@ -661,7 +692,7 @@ public class AsyncRegistrationQueueRunnerTest {
 
         Source.FakeReport sf =
                 new Source.FakeReport(
-                        new UnsignedLong(1L), 1L, Uri.parse("https://example.com/sF"));
+                        new UnsignedLong(1L), 1L, WebUtil.validUri("https://example.test/sF"));
         List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
         when(mMockedSource.assignAttributionModeAndGenerateFakeReports())
                 .thenReturn(eventReportList);
@@ -740,8 +771,8 @@ public class AsyncRegistrationQueueRunnerTest {
                     asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
                     AsyncRedirect asyncRedirect = invocation.getArgument(2);
                     asyncRedirect.addToRedirects(List.of(
-                            Uri.parse("https://example.com/sF1"),
-                            Uri.parse("https://example.com/sF2")));
+                            WebUtil.validUri("https://example.test/sF1"),
+                            WebUtil.validUri("https://example.test/sF2")));
                     return Optional.of(mMockedTrigger);
                 };
         doAnswer(answerAsyncTriggerFetcher)
@@ -810,8 +841,8 @@ public class AsyncRegistrationQueueRunnerTest {
                     asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.SERVER_UNAVAILABLE);
                     AsyncRedirect asyncRedirect = invocation.getArgument(2);
                     asyncRedirect.addToRedirects(List.of(
-                            Uri.parse("https://example.com/sF1"),
-                            Uri.parse("https://example.com/sF2")));
+                            WebUtil.validUri("https://example.test/sF1"),
+                            WebUtil.validUri("https://example.test/sF2")));
                     return Optional.of(mMockedSource);
                 };
         doAnswer(answerAsyncTriggerFetcher)
@@ -854,8 +885,8 @@ public class AsyncRegistrationQueueRunnerTest {
                     asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.NETWORK_ERROR);
                     AsyncRedirect asyncRedirect = invocation.getArgument(2);
                     asyncRedirect.addToRedirects(List.of(
-                            Uri.parse("https://example.com/sF1"),
-                            Uri.parse("https://example.com/sF2")));
+                            WebUtil.validUri("https://example.test/sF1"),
+                            WebUtil.validUri("https://example.test/sF2")));
                     return Optional.of(mMockedSource);
                 };
         doAnswer(answerAsyncTriggerFetcher)
@@ -898,8 +929,8 @@ public class AsyncRegistrationQueueRunnerTest {
                     asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.PARSING_ERROR);
                     AsyncRedirect asyncRedirect = invocation.getArgument(2);
                     asyncRedirect.addToRedirects(List.of(
-                            Uri.parse("https://example.com/sF1"),
-                            Uri.parse("https://example.com/sF2")));
+                            WebUtil.validUri("https://example.test/sF1"),
+                            WebUtil.validUri("https://example.test/sF2")));
                     return Optional.empty();
                 };
         doAnswer(answerAsyncTriggerFetcher)
@@ -941,7 +972,7 @@ public class AsyncRegistrationQueueRunnerTest {
 
         Source.FakeReport sf =
                 new Source.FakeReport(
-                        new UnsignedLong(1L), 1L, Uri.parse("https://example.com/sF"));
+                        new UnsignedLong(1L), 1L, WebUtil.validUri("https://example.test/sF"));
         List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
         when(mMockedSource.assignAttributionModeAndGenerateFakeReports())
                 .thenReturn(eventReportList);
@@ -981,7 +1012,7 @@ public class AsyncRegistrationQueueRunnerTest {
 
         Source.FakeReport sf =
                 new Source.FakeReport(
-                        new UnsignedLong(1L), 1L, Uri.parse("https://example.com/sF"));
+                        new UnsignedLong(1L), 1L, WebUtil.validUri("https://example.test/sF"));
         List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
         when(mMockedSource.assignAttributionModeAndGenerateFakeReports())
                 .thenReturn(eventReportList);
@@ -1070,7 +1101,7 @@ public class AsyncRegistrationQueueRunnerTest {
 
         Source.FakeReport sf =
                 new Source.FakeReport(
-                        new UnsignedLong(1L), 1L, Uri.parse("https://example.com/sF"));
+                        new UnsignedLong(1L), 1L, WebUtil.validUri("https://example.test/sF"));
         List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
         when(mMockedSource.assignAttributionModeAndGenerateFakeReports())
                 .thenReturn(eventReportList);
@@ -1745,6 +1776,184 @@ public class AsyncRegistrationQueueRunnerTest {
                 .isFalse();
     }
 
+    @Test
+    public void testRegisterAppSource_redirectOverridesWebAndOsDestinations()
+            throws DatastoreException, IOException {
+        // Setup
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        AsyncSourceFetcher mFetcher = spy(new AsyncSourceFetcher(mEnrollmentDao, mFlags, mLogger));
+        doReturn(mUrlConnection1).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        doReturn(mUrlConnection2).when(mFetcher).openUrl(new URL("https://foo-redirect.test"));
+        when(mUrlConnection1.getResponseCode()).thenReturn(200);
+        when(mUrlConnection2.getResponseCode()).thenReturn(200);
+        when(mUrlConnection1.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "  \"priority\": \"123\",\n"
+                                                + "  \"expiry\": \"456789\",\n"
+                                                + "  \"source_event_id\": \"987654321\",\n"
+                                                + "  \"destination\": \""
+                                                + DEFAULT_OS_DESTINATION
+                                                + "\",\n"
+                                                + "\"web_destination\": \""
+                                                + DEFAULT_WEB_DESTINATION
+                                                + "\""
+                                                + "}"),
+                                "Attribution-Reporting-Redirect",
+                                List.of("https://foo-redirect.test")));
+        when(mUrlConnection2.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "  \"priority\": \"321\",\n"
+                                                + "  \"expiry\": \"987654\",\n"
+                                                + "  \"source_event_id\": \"123456789\",\n"
+                                                + "  \"destination\": \""
+                                                + ALT_APP_DESTINATION
+                                                + "\",\n"
+                                                + "\"web_destination\": \""
+                                                + ALT_WEB_DESTINATION
+                                                + "\""
+                                                + "}")));
+        DatastoreManager datastoreManager =
+                spy(new SQLDatastoreManager(DbTestUtil.getDbHelperForTest()));
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                spy(
+                        new AsyncRegistrationQueueRunner(
+                                mContentResolver,
+                                mFetcher,
+                                mAsyncTriggerFetcher,
+                                mEnrollmentDao,
+                                datastoreManager));
+        ArgumentCaptor<DatastoreManager.ThrowingCheckedConsumer> consumerArgCaptor =
+                ArgumentCaptor.forClass(DatastoreManager.ThrowingCheckedConsumer.class);
+        EnqueueAsyncRegistration.appSourceOrTriggerRegistrationRequest(
+                request, APP_TOP_ORIGIN, 100, mEnrollmentDao, datastoreManager);
+
+        // Execution
+        asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker(2L, (short) 5);
+
+        // Assertion
+        verify(datastoreManager, times(3)).runInTransaction(consumerArgCaptor.capture());
+        consumerArgCaptor.getValue().accept(mMeasurementDao);
+        try (Cursor cursor =
+                DbTestUtil.getDbHelperForTest()
+                        .getReadableDatabase()
+                        .query(
+                                MeasurementTables.SourceContract.TABLE,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null)) {
+            Assert.assertTrue(cursor.moveToNext());
+            Source source = SqliteObjectMapperAccessor.constructSourceFromCursor(cursor);
+            assertEquals(new UnsignedLong(987654321L), source.getEventId());
+            assertEquals(DEFAULT_WEB_DESTINATION, source.getWebDestination());
+            assertEquals(DEFAULT_OS_DESTINATION, source.getAppDestination());
+            Assert.assertTrue(cursor.moveToNext());
+            source = SqliteObjectMapperAccessor.constructSourceFromCursor(cursor);
+            assertEquals(new UnsignedLong(123456789L), source.getEventId());
+            assertEquals(DEFAULT_WEB_DESTINATION, source.getWebDestination());
+            assertEquals(DEFAULT_OS_DESTINATION, source.getAppDestination());
+        }
+    }
+
+    @Test
+    public void testRegisterWebSource_failsWebAndOsDestinationVerification()
+            throws DatastoreException, IOException {
+        // Setup
+        AsyncSourceFetcher mFetcher = spy(new AsyncSourceFetcher(mEnrollmentDao, mFlags, mLogger));
+        WebSourceRegistrationRequest request =
+                buildWebSourceRegistrationRequest(
+                        Collections.singletonList(DEFAULT_REGISTRATION_PARAM_LIST),
+                        WEB_TOP_ORIGIN.toString(),
+                        DEFAULT_OS_DESTINATION,
+                        DEFAULT_WEB_DESTINATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "  \"destination\": \""
+                                                + ALT_APP_DESTINATION
+                                                + "\",\n"
+                                                + "  \"priority\": \"123\",\n"
+                                                + "  \"expiry\": \"456789\",\n"
+                                                + "  \"source_event_id\": \"987654321\",\n"
+                                                + "\"web_destination\": \""
+                                                + ALT_WEB_DESTINATION
+                                                + "\""
+                                                + "}")));
+        DatastoreManager datastoreManager =
+                spy(new SQLDatastoreManager(DbTestUtil.getDbHelperForTest()));
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                spy(
+                        new AsyncRegistrationQueueRunner(
+                                mContentResolver,
+                                mFetcher,
+                                mAsyncTriggerFetcher,
+                                mEnrollmentDao,
+                                datastoreManager));
+        ArgumentCaptor<DatastoreManager.ThrowingCheckedConsumer> consumerArgCaptor =
+                ArgumentCaptor.forClass(DatastoreManager.ThrowingCheckedConsumer.class);
+        EnqueueAsyncRegistration.webSourceRegistrationRequest(
+                request, APP_TOP_ORIGIN, 100, mEnrollmentDao, datastoreManager);
+
+        // Execution
+        asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker(2L, (short) 5);
+
+        // Assertion
+        verify(datastoreManager, times(2)).runInTransaction(consumerArgCaptor.capture());
+        consumerArgCaptor.getValue().accept(mMeasurementDao);
+        try (Cursor cursor =
+                DbTestUtil.getDbHelperForTest()
+                        .getReadableDatabase()
+                        .query(
+                                MeasurementTables.SourceContract.TABLE,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null)) {
+            Assert.assertFalse(cursor.moveToNext());
+        }
+    }
+
+    private RegistrationRequest buildRequest(String registrationUri) {
+        return new RegistrationRequest.Builder(
+                        RegistrationRequest.REGISTER_SOURCE,
+                        Uri.parse(registrationUri),
+                        sDefaultContext.getAttributionSource().getPackageName(),
+                        SDK_PACKAGE_NAME)
+                .setAdIdPermissionGranted(true)
+                .build();
+    }
+
+    private WebSourceRegistrationRequest buildWebSourceRegistrationRequest(
+            List<WebSourceParams> sourceParamsList,
+            String topOrigin,
+            Uri appDestination,
+            Uri webDestination) {
+        WebSourceRegistrationRequest.Builder webSourceRegistrationRequestBuilder =
+                new WebSourceRegistrationRequest.Builder(sourceParamsList, Uri.parse(topOrigin))
+                        .setAppDestination(appDestination);
+        if (webDestination != null) {
+            webSourceRegistrationRequestBuilder.setWebDestination(webDestination);
+        }
+        return webSourceRegistrationRequestBuilder.build();
+    }
+
     private List<Source.FakeReport> createFakeReports(Source source, int count, Uri destination) {
         return IntStream.range(0, count)
                 .mapToObj(
@@ -1855,5 +2064,15 @@ public class AsyncRegistrationQueueRunnerTest {
                 mAsyncTriggerFetcher,
                 mEnrollmentDao,
                 new FakeDatastoreManager()));
+    }
+
+    private static void emptyTables(SQLiteDatabase db) {
+        db.delete("msmt_source", null, null);
+        db.delete("msmt_trigger", null, null);
+        db.delete("msmt_event_report", null, null);
+        db.delete("msmt_attribution", null, null);
+        db.delete("msmt_aggregate_report", null, null);
+        db.delete("enrollment_data", null, null);
+        db.delete("msmt_async_registration_contract", null, null);
     }
 }

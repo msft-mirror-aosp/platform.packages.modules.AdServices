@@ -86,9 +86,7 @@ public class SqliteObjectMapper {
         return builder.build();
     }
 
-    /**
-     * Create {@link Source} object from SQLite datastore.
-     */
+    /** Create {@link Source} object from SQLite datastore. */
     static Source constructSourceFromCursor(Cursor cursor) {
         Source.Builder builder = new Source.Builder();
         setTextColumn(cursor, MeasurementTables.SourceContract.ID,
