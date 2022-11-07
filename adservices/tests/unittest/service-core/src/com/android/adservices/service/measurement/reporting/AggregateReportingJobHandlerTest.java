@@ -124,7 +124,7 @@ public class AggregateReportingJobHandlerTest {
                 Mockito.spy(
                         new AggregateReportingJobHandler(
                                         mEnrollmentDao, mDatastoreManager, mockKeyManager)
-                                .setDebugReport(true));
+                                .setIsDebugInstance(true));
     }
 
     @Test
