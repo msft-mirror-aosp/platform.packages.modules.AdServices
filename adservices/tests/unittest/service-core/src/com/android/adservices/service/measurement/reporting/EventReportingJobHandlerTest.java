@@ -98,7 +98,7 @@ public class EventReportingJobHandlerTest {
         mSpyDebugEventReportingJobHandler =
                 Mockito.spy(
                         new EventReportingJobHandler(mEnrollmentDao, mDatastoreManager)
-                                .setDebugReport(true));
+                                .setIsDebugInstance(true));
     }
 
     @Test
