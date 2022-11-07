@@ -78,6 +78,7 @@ import java.util.stream.IntStream;
 /** Unit tests for {@link AsyncRegistrationQueueRunnerTest} */
 public class AsyncRegistrationQueueRunnerTest {
     private static final Context sDefaultContext = ApplicationProvider.getApplicationContext();
+    private static final boolean DEFAULT_AD_ID_PERMISSION = false;
     private static final String DEFAULT_ENROLLMENT_ID = "enrollment_id";
     private static final Uri DEFAULT_REGISTRANT = Uri.parse("android-app://com.registrant");
     private static final Uri DEFAULT_VERIFIED_DESTINATION = Uri.parse("android-app://com.example");
