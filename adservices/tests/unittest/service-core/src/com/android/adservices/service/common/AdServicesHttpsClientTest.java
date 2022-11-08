@@ -20,12 +20,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.timeout;
-import static org.mockito.Mockito.verify;
 
 import android.adservices.http.MockWebServerRule;
 import android.net.Uri;
@@ -33,10 +27,8 @@ import android.net.Uri;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.MockWebServerRuleFactory;
-import com.android.adservices.concurrency.AdServicesExecutors;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
@@ -45,20 +37,12 @@ import com.google.mockwebserver.RecordedRequest;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.internal.stubbing.answers.AnswersWithDelay;
-import org.mockito.internal.stubbing.answers.Returns;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
-
-import javax.net.ssl.HttpsURLConnection;
 
 @SmallTest
 public class AdServicesHttpsClientTest {
@@ -66,16 +50,11 @@ public class AdServicesHttpsClientTest {
     private final String mJsScript = "function test() { return \"hello world\"; }";
     private final String mReportingPath = "/reporting/";
     private final String mFetchPayloadPath = "/fetchPayload/";
-    private final String mFakeUrl = "https://fake-url.com";
+    private AdServicesHttpsClient mClient;
     private final int mTimeoutDeltaMs = 1000;
     private final int mBytesPerPeriod = 1;
+
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
-    @Rule public MockitoRule rule = MockitoJUnit.rule();
-    private AdServicesHttpsClient mClient;
-    @Mock private AdServicesHttpsClient.UriConverter mUriConverterMock;
-    @Mock private URL mUrlMock;
-    @Mock private HttpsURLConnection mURLConnectionMock;
-    @Mock private InputStream mInputStreamMock;
 
     @Before
     public void setup() {
@@ -234,73 +213,6 @@ public class AdServicesHttpsClientTest {
                 assertThrows(
                         ExecutionException.class, () -> fetchPayload(Uri.parse(url.toString())));
         assertThat(exception.getCause()).isInstanceOf(IOException.class);
-    }
-
-    @Test
-    public void testHttpsClientFreesResourcesWhenCancelled() throws Exception {
-        // Creating a client with large default limits
-        int defaultTimeoutMs = 5000;
-        int defaultMaxSizeBytes = 5000;
-        int delayMs = 4000;
-        long waitForEventualCompletionMs = delayMs * 4L;
-        mClient =
-                new AdServicesHttpsClient(
-                        AdServicesExecutors.getBackgroundExecutor(),
-                        defaultTimeoutMs,
-                        defaultTimeoutMs,
-                        defaultMaxSizeBytes,
-                        mUriConverterMock);
-
-        doReturn(mUrlMock).when(mUriConverterMock).toUrl(any(Uri.class));
-        doReturn(mURLConnectionMock).when(mUrlMock).openConnection();
-        doReturn(mInputStreamMock).when(mURLConnectionMock).getInputStream();
-        doAnswer(new AnswersWithDelay(delayMs, new Returns(202)))
-                .when(mURLConnectionMock)
-                .getResponseCode();
-
-        ListenableFuture<String> futureResponse = mClient.fetchPayload(Uri.parse((mFakeUrl)));
-
-        // There could be some lag between fetch call and connection opening
-        verify(mUrlMock, timeout(delayMs)).openConnection();
-        // We cancel the future while the request is going on
-        assertTrue(
-                "The request should have been ongoing, until being force-cancelled now",
-                futureResponse.cancel(true));
-        // Given the resources are set to be eventually closed, we add a timeout
-        verify(mInputStreamMock, timeout(waitForEventualCompletionMs).atLeast(1)).close();
-        verify(mURLConnectionMock, timeout(waitForEventualCompletionMs).atLeast(1)).disconnect();
-    }
-
-    @Test
-    public void testHttpsClientFreesResourcesInNormalFlow() throws Exception {
-        // Creating a client with large default limits
-        int defaultTimeoutMs = 5000;
-        int defaultMaxSizeBytes = 5000;
-        int delayMs = 2000;
-        long waitForEventualCompletionMs = delayMs * 4L;
-        mClient =
-                new AdServicesHttpsClient(
-                        AdServicesExecutors.getBackgroundExecutor(),
-                        defaultTimeoutMs,
-                        defaultTimeoutMs,
-                        defaultMaxSizeBytes,
-                        mUriConverterMock);
-
-        doReturn(mUrlMock).when(mUriConverterMock).toUrl(any(Uri.class));
-        doReturn(mURLConnectionMock).when(mUrlMock).openConnection();
-        doReturn(mInputStreamMock).when(mURLConnectionMock).getInputStream();
-        doReturn(202).when(mURLConnectionMock).getResponseCode();
-
-        ListenableFuture<String> futureResponse = mClient.fetchPayload(Uri.parse((mFakeUrl)));
-
-        // There could be some lag between fetch call and connection opening
-        verify(mUrlMock, timeout(delayMs)).openConnection();
-        // Given the resources are set to be eventually closed, we add a timeout
-        verify(mInputStreamMock, timeout(waitForEventualCompletionMs).atLeast(1)).close();
-        verify(mURLConnectionMock, timeout(waitForEventualCompletionMs).atLeast(1)).disconnect();
-        assertTrue(
-                "The future response for fetchPayload should have been completed",
-                futureResponse.isDone());
     }
 
     private String fetchPayload(Uri uri) throws Exception {

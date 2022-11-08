@@ -37,6 +37,7 @@ import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.adservices.measurement.WebTriggerRegistrationRequestInternal;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
 import android.net.Uri;
 import android.os.OutcomeReceiver;
 import android.test.suitebuilder.annotation.SmallTest;
@@ -66,7 +67,7 @@ public class MeasurementManagerSandboxCtsTest {
                     /* baseContext = */ sContext,
                     /* classLoader = */ sContext.getClassLoader(),
                     /* clientPackageName = */ sContext.getPackageName(),
-                    /* info = */ sContext.getApplicationInfo(),
+                    /* info = */ new ApplicationInfo(),
                     /* sdkName = */ "sdkName",
                     /* sdkCeDataDir = */ null,
                     /* sdkDeDataDir = */ null);
@@ -114,7 +115,7 @@ public class MeasurementManagerSandboxCtsTest {
 
         verify(mMockMeasurementService, timeout(2000)).register(captor.capture(), any(), any());
         Assert.assertNotNull(captor.getValue());
-        Assert.assertEquals(sContext.getPackageName(), captor.getValue().getAppPackageName());
+        Assert.assertEquals(sContext.getPackageName(), captor.getValue().getPackageName());
     }
 
     @Test
@@ -131,7 +132,7 @@ public class MeasurementManagerSandboxCtsTest {
 
         verify(mMockMeasurementService, timeout(2000)).register(captor.capture(), any(), any());
         Assert.assertNotNull(captor.getValue());
-        Assert.assertEquals(sContext.getPackageName(), captor.getValue().getAppPackageName());
+        Assert.assertEquals(sContext.getPackageName(), captor.getValue().getPackageName());
     }
 
     @Test
@@ -164,7 +165,7 @@ public class MeasurementManagerSandboxCtsTest {
         verify(mMockMeasurementService, timeout(2000))
                 .registerWebSource(captor.capture(), any(), any());
         Assert.assertNotNull(captor.getValue());
-        Assert.assertEquals(sContext.getPackageName(), captor.getValue().getAppPackageName());
+        Assert.assertEquals(sContext.getPackageName(), captor.getValue().getPackageName());
     }
 
     @Test
@@ -190,7 +191,7 @@ public class MeasurementManagerSandboxCtsTest {
         verify(mMockMeasurementService, timeout(2000))
                 .registerWebTrigger(captor.capture(), any(), any());
         Assert.assertNotNull(captor.getValue());
-        Assert.assertEquals(sContext.getPackageName(), captor.getValue().getAppPackageName());
+        Assert.assertEquals(sContext.getPackageName(), captor.getValue().getPackageName());
     }
 
     @Test
@@ -212,7 +213,7 @@ public class MeasurementManagerSandboxCtsTest {
         verify(mMockMeasurementService, timeout(2000))
                 .deleteRegistrations(captor.capture(), any(), any());
         Assert.assertNotNull(captor.getValue());
-        Assert.assertEquals(sContext.getPackageName(), captor.getValue().getAppPackageName());
+        Assert.assertEquals(sContext.getPackageName(), captor.getValue().getPackageName());
     }
 
     @Test

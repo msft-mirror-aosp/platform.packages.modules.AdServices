@@ -192,14 +192,13 @@ public class MeasurementManager {
 
         Objects.requireNonNull(attributionSource);
 
-        final RegistrationRequest.Builder builder =
-                new RegistrationRequest.Builder(
-                                RegistrationRequest.REGISTER_SOURCE,
-                                attributionSource,
-                                getAppPackageName(),
-                                getSdkPackageName())
-                        .setRequestTime(SystemClock.uptimeMillis())
-                        .setInputEvent(inputEvent);
+        RegistrationRequest.Builder builder =
+                new RegistrationRequest.Builder()
+                        .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
+                        .setRegistrationUri(attributionSource)
+                        .setInputEvent(inputEvent)
+                        .setPackageName(getPackageName())
+                        .setRequestTime(SystemClock.uptimeMillis());
 
         mAdIdManager.getAdId(
                 mAdIdExecutor,
@@ -266,12 +265,9 @@ public class MeasurementManager {
                     }
                 };
 
-        final WebSourceRegistrationRequestInternal.Builder builder =
+        WebSourceRegistrationRequestInternal.Builder builder =
                 new WebSourceRegistrationRequestInternal.Builder(
-                        request,
-                        getAppPackageName(),
-                        getSdkPackageName(),
-                        SystemClock.uptimeMillis());
+                        request, getPackageName(), SystemClock.uptimeMillis());
 
         mAdIdManager.getAdId(
                 mAdIdExecutor,
@@ -360,8 +356,7 @@ public class MeasurementManager {
                 };
 
         WebTriggerRegistrationRequestInternal.Builder builder =
-                new WebTriggerRegistrationRequestInternal.Builder(
-                        request, getAppPackageName(), getSdkPackageName());
+                new WebTriggerRegistrationRequestInternal.Builder(request, getPackageName());
 
         mAdIdManager.getAdId(
                 mAdIdExecutor,
@@ -424,12 +419,11 @@ public class MeasurementManager {
 
         Objects.requireNonNull(trigger);
 
-        final RegistrationRequest.Builder builder =
-                new RegistrationRequest.Builder(
-                        RegistrationRequest.REGISTER_TRIGGER,
-                        trigger,
-                        getAppPackageName(),
-                        getSdkPackageName());
+        RegistrationRequest.Builder builder =
+                new RegistrationRequest.Builder()
+                        .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
+                        .setRegistrationUri(trigger)
+                        .setPackageName(getPackageName());
 
         mAdIdManager.getAdId(
                 mAdIdExecutor,
@@ -508,15 +502,14 @@ public class MeasurementManager {
             @NonNull @CallbackExecutor Executor executor,
             @NonNull OutcomeReceiver<Object, Exception> callback) {
         deleteRegistrations(
-                new DeletionParam.Builder(
-                                deletionRequest.getOriginUris(),
-                                deletionRequest.getDomainUris(),
-                                deletionRequest.getStart(),
-                                deletionRequest.getEnd(),
-                                getAppPackageName(),
-                                getSdkPackageName())
+                new DeletionParam.Builder()
+                        .setOriginUris(deletionRequest.getOriginUris())
+                        .setDomainUris(deletionRequest.getDomainUris())
                         .setDeletionMode(deletionRequest.getDeletionMode())
                         .setMatchBehavior(deletionRequest.getMatchBehavior())
+                        .setStart(deletionRequest.getStart())
+                        .setEnd(deletionRequest.getEnd())
+                        .setPackageName(getPackageName())
                         .build(),
                 executor,
                 callback);
@@ -547,7 +540,7 @@ public class MeasurementManager {
 
         try {
             service.getMeasurementApiStatus(
-                    new StatusParam.Builder(getAppPackageName(), getSdkPackageName()).build(),
+                    new StatusParam.Builder(getPackageName()).build(),
                     generateCallerMetadataWithCurrentTime(),
                     new IMeasurementApiStatusCallback.Stub() {
                         @Override
@@ -573,21 +566,12 @@ public class MeasurementManager {
         mServiceBinder.unbindFromService();
     }
 
-    /** Returns the package name of the app from the SDK or app context */
-    private String getAppPackageName() {
+    /** Returns the client's (caller's) package name from the SDK or app context */
+    private String getPackageName() {
         if (mContext instanceof SandboxedSdkContext) {
             return ((SandboxedSdkContext) mContext).getClientPackageName();
         } else {
             return mContext.getPackageName();
-        }
-    }
-
-    /** Returns the package name of the sdk from the SDK or empty if no SDK found */
-    private String getSdkPackageName() {
-        if (mContext instanceof SandboxedSdkContext) {
-            return ((SandboxedSdkContext) mContext).getSdkPackageName();
-        } else {
-            return "";
         }
     }
 

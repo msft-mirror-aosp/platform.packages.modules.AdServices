@@ -60,9 +60,7 @@ public final class RegisterWebTrigger implements Action {
 
         mRegistrationRequest =
                 new WebTriggerRegistrationRequestInternal.Builder(
-                                registrationRequest,
-                                attributionSource.getPackageName(),
-                                /* sdkPackageName = */ "")
+                                registrationRequest, attributionSource.getPackageName())
                         .setAdIdPermissionGranted(
                                 regParamsJson.optBoolean(
                                         TestFormatJsonMapping.IS_ADID_PERMISSION_GRANTED_KEY, true))

@@ -74,7 +74,8 @@ public class TopicsService extends Service {
                             AdServicesLoggerImpl.getInstance(),
                             Clock.SYSTEM_CLOCK,
                             FlagsFactory.getFlags(),
-                            Throttler.getInstance(FlagsFactory.getFlags()),
+                            Throttler.getInstance(
+                                    FlagsFactory.getFlags().getSdkRequestPermitsPerSecond()),
                             EnrollmentDao.getInstance(this),
                             appImportanceFilter);
             mTopicsService.init();

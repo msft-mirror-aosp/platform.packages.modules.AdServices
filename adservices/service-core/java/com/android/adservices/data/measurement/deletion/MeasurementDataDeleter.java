@@ -60,7 +60,7 @@ public class MeasurementDataDeleter {
                 (dao) -> {
                     List<String> sourceIds =
                             dao.fetchMatchingSources(
-                                    getRegistrant(deletionParam.getAppPackageName()),
+                                    getRegistrant(deletionParam.getPackageName()),
                                     deletionParam.getStart(),
                                     deletionParam.getEnd(),
                                     deletionParam.getOriginUris(),
@@ -68,7 +68,7 @@ public class MeasurementDataDeleter {
                                     deletionParam.getMatchBehavior());
                     List<String> triggerIds =
                             dao.fetchMatchingTriggers(
-                                    getRegistrant(deletionParam.getAppPackageName()),
+                                    getRegistrant(deletionParam.getPackageName()),
                                     deletionParam.getStart(),
                                     deletionParam.getEnd(),
                                     deletionParam.getOriginUris(),

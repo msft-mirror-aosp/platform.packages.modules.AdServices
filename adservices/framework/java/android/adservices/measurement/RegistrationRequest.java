@@ -43,19 +43,16 @@ public final class RegistrationRequest implements Parcelable {
     public @interface RegistrationType {}
     /** Invalid registration type used as a default. */
     public static final int INVALID = 0;
-    /**
-     * A request to register an Attribution Source event (NOTE: AdServices type not
-     * android.context.AttributionSource).
-     */
+    /** A request to register an Attribution Source event
+     * (NOTE: adservices type not android.context.AttributionSource). */
     public static final int REGISTER_SOURCE = 1;
     /** A request to register a trigger event. */
     public static final int REGISTER_TRIGGER = 2;
 
-    @RegistrationType private final int mRegistrationType;
+    private final @RegistrationType int mRegistrationType;
     private final Uri mRegistrationUri;
     private final InputEvent mInputEvent;
-    private final String mAppPackageName;
-    private final String mSdkPackageName;
+    private final String mPackageName;
     private final long mRequestTime;
     private final boolean mIsAdIdPermissionGranted;
 
@@ -63,8 +60,7 @@ public final class RegistrationRequest implements Parcelable {
         mRegistrationType = builder.mRegistrationType;
         mRegistrationUri = builder.mRegistrationUri;
         mInputEvent = builder.mInputEvent;
-        mAppPackageName = builder.mAppPackageName;
-        mSdkPackageName = builder.mSdkPackageName;
+        mPackageName = builder.mPackageName;
         mRequestTime = builder.mRequestTime;
         mIsAdIdPermissionGranted = builder.mIsAdIdPermissionGranted;
     }
@@ -75,8 +71,7 @@ public final class RegistrationRequest implements Parcelable {
     private RegistrationRequest(Parcel in) {
         mRegistrationType = in.readInt();
         mRegistrationUri = Uri.CREATOR.createFromParcel(in);
-        mAppPackageName = in.readString();
-        mSdkPackageName = in.readString();
+        mPackageName = in.readString();
         boolean hasInputEvent = in.readBoolean();
         if (hasInputEvent) {
             mInputEvent = InputEvent.CREATOR.createFromParcel(in);
@@ -87,17 +82,16 @@ public final class RegistrationRequest implements Parcelable {
         mIsAdIdPermissionGranted = in.readBoolean();
     }
 
-    /** Creator for Parcelable (via reflection). */
-    @NonNull
-    public static final Parcelable.Creator<RegistrationRequest> CREATOR =
+    /**
+     * Creator for Paracelable (via reflection).
+     */
+    public static final @NonNull Parcelable.Creator<RegistrationRequest> CREATOR =
             new Parcelable.Creator<RegistrationRequest>() {
-                @Override
-                public RegistrationRequest createFromParcel(Parcel in) {
+                @Override public RegistrationRequest createFromParcel(Parcel in) {
                     return new RegistrationRequest(in);
                 }
 
-                @Override
-                public RegistrationRequest[] newArray(int size) {
+                @Override public RegistrationRequest[] newArray(int size) {
                     return new RegistrationRequest[size];
                 }
             };
@@ -116,8 +110,7 @@ public final class RegistrationRequest implements Parcelable {
         Objects.requireNonNull(out);
         out.writeInt(mRegistrationType);
         mRegistrationUri.writeToParcel(out, flags);
-        out.writeString(mAppPackageName);
-        out.writeString(mSdkPackageName);
+        out.writeString(mPackageName);
         if (mInputEvent != null) {
             out.writeBoolean(true);
             mInputEvent.writeToParcel(out, flags);
@@ -128,44 +121,38 @@ public final class RegistrationRequest implements Parcelable {
         out.writeBoolean(mIsAdIdPermissionGranted);
     }
 
-    /** Type of the registration. */
-    @RegistrationType
-    public int getRegistrationType() {
+    /**
+     * Type of the registration.
+     */
+    public @RegistrationType int getRegistrationType() {
         return mRegistrationType;
     }
 
-    /** Source URI of the App / Publisher. */
-    @NonNull
-    public Uri getRegistrationUri() {
+    /**
+     * Source URI of the App / Publisher.
+     */
+    public @NonNull Uri getRegistrationUri() {
         return mRegistrationUri;
     }
 
-    /** InputEvent related to an ad event. */
-    @Nullable
-    public InputEvent getInputEvent() {
+    /**
+     * InputEvent related to ad event.
+     */
+    public @Nullable InputEvent getInputEvent() {
         return mInputEvent;
     }
 
-    /** Package name of the app used for the registration. */
-    @NonNull
-    public String getAppPackageName() {
-        return mAppPackageName;
-    }
-
-    /** Package name of the sdk used for the registration. */
-    @NonNull
-    public String getSdkPackageName() {
-        return mSdkPackageName;
+    /** Client's package name used for the registration. */
+    public @NonNull String getPackageName() {
+        return mPackageName;
     }
 
     /** Time the request was created, as millis since boot excluding time in deep sleep. */
-    @NonNull
-    public long getRequestTime() {
+    public @NonNull long getRequestTime() {
         return mRequestTime;
     }
     /** Ad ID Permission */
-    @NonNull
-    public boolean isAdIdPermissionGranted() {
+    public @NonNull boolean isAdIdPermissionGranted() {
         return mIsAdIdPermissionGranted;
     }
 
@@ -173,69 +160,88 @@ public final class RegistrationRequest implements Parcelable {
      * A builder for {@link RegistrationRequest}.
      */
     public static final class Builder {
-        @RegistrationType private final int mRegistrationType;
-        private final Uri mRegistrationUri;
-        private final String mAppPackageName;
-        private final String mSdkPackageName;
+        private @RegistrationType int mRegistrationType;
+        private Uri mRegistrationUri;
         private InputEvent mInputEvent;
+        private String mPackageName;
         private long mRequestTime;
         private boolean mIsAdIdPermissionGranted;
 
-        /**
-         * Builder constructor for {@link RegistrationRequest}.
-         *
-         * @param type registration type, either source or trigger
-         * @param registrationUri registration uri endpoint for registering a source/trigger
-         * @param appPackageName app package name that is calling PP API
-         * @param sdkPackageName sdk package name that is calling PP API
-         */
-        public Builder(
-                @RegistrationType int type,
-                @NonNull Uri registrationUri,
-                @NonNull String appPackageName,
-                @NonNull String sdkPackageName) {
-            if (type != REGISTER_SOURCE && type != REGISTER_TRIGGER) {
-                throw new IllegalArgumentException("Invalid registrationType");
-            }
-
-            Objects.requireNonNull(registrationUri);
-            Objects.requireNonNull(appPackageName);
-            Objects.requireNonNull(sdkPackageName);
-            mRegistrationType = type;
-            mRegistrationUri = registrationUri;
-            mAppPackageName = appPackageName;
-            mSdkPackageName = sdkPackageName;
+        public Builder() {
+            mRegistrationType = INVALID;
+            mRegistrationUri = Uri.EMPTY;
         }
 
-        /** See {@link RegistrationRequest#getInputEvent}. */
-        @NonNull
-        public Builder setInputEvent(@Nullable InputEvent event) {
+        /**
+         * See {@link RegistrationRequest#getRegistrationType}.
+         */
+        public @NonNull Builder setRegistrationType(
+                @RegistrationType int type) {
+            if (type != REGISTER_SOURCE
+                    && type != REGISTER_TRIGGER) {
+                throw new IllegalArgumentException("Invalid registrationType");
+            }
+            mRegistrationType = type;
+            return this;
+        }
+
+        /**
+         * See {@link RegistrationRequest#getRegistrationUri}.
+         */
+        public @NonNull Builder setRegistrationUri(@NonNull Uri uri) {
+            Objects.requireNonNull(uri);
+            mRegistrationUri = uri;
+            return this;
+        }
+
+        /**
+         * See {@link RegistrationRequest#getInputEvent}.
+         */
+        public @NonNull Builder setInputEvent(@Nullable InputEvent event) {
             mInputEvent = event;
             return this;
         }
 
+        /** See {@link RegistrationRequest#getPackageName()}. */
+        public @NonNull Builder setPackageName(@NonNull String packageName) {
+            Objects.requireNonNull(packageName);
+            mPackageName = packageName;
+            return this;
+        }
+
         /** See {@link RegistrationRequest#getRequestTime}. */
-        @NonNull
-        public Builder setRequestTime(long requestTime) {
+        public @NonNull Builder setRequestTime(long requestTime) {
             mRequestTime = requestTime;
             return this;
         }
 
         /** See {@link RegistrationRequest#isAdIdPermissionGranted()}. */
-        @NonNull
-        public Builder setAdIdPermissionGranted(boolean adIdPermissionGranted) {
+        public @NonNull Builder setAdIdPermissionGranted(boolean adIdPermissionGranted) {
             mIsAdIdPermissionGranted = adIdPermissionGranted;
             return this;
         }
 
-        /** Build the RegistrationRequest. */
-        @NonNull
-        public RegistrationRequest build() {
+        /**
+         * Build the RegistrationRequest.
+         */
+        public @NonNull RegistrationRequest build() {
+            // Check parameters that start in a non-null state don't
+            // somehow get changed to an invalid one (this should
+            // not be possible), if it happens throw IllegalStateException.
+            if (mRegistrationUri == null) {
+                throw new IllegalStateException("Unexpected null value");
+            }
             // Ensure registrationType has been set,
             // throws IllegalArgumentException if mRegistrationType
             // isn't a valid choice.
-            if (mRegistrationType != REGISTER_SOURCE && mRegistrationType != REGISTER_TRIGGER) {
+            if (mRegistrationType != REGISTER_SOURCE
+                    && mRegistrationType != REGISTER_TRIGGER) {
                 throw new IllegalArgumentException("Invalid registrationType");
+            }
+            // Ensure the packageName has been set.
+            // throws IllegalArgumentException if the packageName is null.
+            if (mPackageName == null) {
+                throw new IllegalArgumentException("packageName unset");
             }
 
             return new RegistrationRequest(this);

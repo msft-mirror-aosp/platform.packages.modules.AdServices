@@ -104,20 +104,12 @@ public interface IMeasurementDao {
      */
     long getNumTriggersPerRegistrant(Uri registrant) throws DatastoreException;
 
-    /** Gets the number of triggers associated to a destination. */
-    long getNumTriggersPerDestination(Uri destination, @EventSurfaceType int destinationType)
-            throws DatastoreException;
-
     /**
-     * Gets the count of distinct IDs of enrollments in the Attribution table in a time window with
-     * matching publisher and destination, excluding a given enrollment ID.
+     * Gets the count of distinct IDs of enrollments in the Attribution table in a time window
+     * with matching publisher and destination, excluding a given enrollment ID.
      */
-    Integer countDistinctEnrollmentsPerPublisherXDestinationInAttribution(
-            Uri sourceSite,
-            Uri destination,
-            String excludedEnrollmentId,
-            long windowStartTime,
-            long windowEndTime)
+    Integer countDistinctEnrollmentsPerPublisherXDestinationInAttribution(Uri sourceSite,
+            Uri destination, String excludedEnrollmentId, long windowStartTime, long windowEndTime)
             throws DatastoreException;
 
     /**

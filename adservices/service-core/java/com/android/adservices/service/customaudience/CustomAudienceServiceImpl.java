@@ -99,7 +99,9 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                         AD_SERVICES_API_CALLED__API_CLASS__FLEDGE,
                         () -> FlagsFactory.getFlags().getForegroundStatuslLevelForValidation()),
                 FlagsFactory.getFlags(),
-                () -> Throttler.getInstance(FlagsFactory.getFlags()),
+                () ->
+                        Throttler.getInstance(
+                                FlagsFactory.getFlags().getSdkRequestPermitsPerSecond()),
                 CallingAppUidSupplierBinderImpl.create());
     }
 

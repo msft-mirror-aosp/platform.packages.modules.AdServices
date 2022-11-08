@@ -3468,10 +3468,8 @@ public class AdSelectionServiceImplTest {
      */
     private void resetThrottlerToNoRateLimits() {
         Throttler.destroyExistingThrottler();
-        final float noRateLimit = -1;
-        Flags mockNoRateLimitFlags = mock(Flags.class);
-        doReturn(noRateLimit).when(mockNoRateLimitFlags).getSdkRequestPermitsPerSecond();
-        Throttler.getInstance(mockNoRateLimitFlags);
+        final double noRateLimit = -1;
+        Throttler.getInstance(noRateLimit);
     }
 
     private AdSelectionOverrideTestCallback callResetAllOverrides(

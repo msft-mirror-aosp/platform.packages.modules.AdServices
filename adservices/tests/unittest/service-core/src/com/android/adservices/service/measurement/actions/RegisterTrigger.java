@@ -49,16 +49,16 @@ public final class RegisterTrigger implements Action {
         mDestination = regParamsJson.optString(TestFormatJsonMapping.TRIGGER_TOP_ORIGIN_URI_KEY);
 
         mRegistrationRequest =
-                new RegistrationRequest.Builder(
-                                RegistrationRequest.REGISTER_TRIGGER,
+                new RegistrationRequest.Builder()
+                        .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
+                        .setRegistrationUri(
                                 Uri.parse(
                                         regParamsJson.getString(
-                                                TestFormatJsonMapping.REGISTRATION_URI_KEY)),
-                                attributionSource.getPackageName(),
-                                /* sdkPackageName = */ "")
+                                                TestFormatJsonMapping.REGISTRATION_URI_KEY)))
                         .setAdIdPermissionGranted(
                                 regParamsJson.optBoolean(
                                         TestFormatJsonMapping.IS_ADID_PERMISSION_GRANTED_KEY, true))
+                        .setPackageName(attributionSource.getPackageName())
                         .build();
 
         mUriToResponseHeadersMap = getUriToResponseHeadersMap(obj);

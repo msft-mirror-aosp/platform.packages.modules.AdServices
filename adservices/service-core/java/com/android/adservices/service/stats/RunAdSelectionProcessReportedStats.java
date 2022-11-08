@@ -16,8 +16,6 @@
 
 package com.android.adservices.service.stats;
 
-import android.annotation.NonNull;
-
 import com.google.auto.value.AutoValue;
 
 /** Class for runAdSelection process reported stats. */
@@ -42,39 +40,25 @@ public abstract class RunAdSelectionProcessReportedStats {
     public abstract int getRunAdSelectionResultCode();
 
     /** @return generic builder. */
-    public static Builder builder() {
+    static Builder builder() {
         return new AutoValue_RunAdSelectionProcessReportedStats.Builder();
     }
 
     /** Builder class for {@link RunAdSelectionProcessReportedStats}. */
     @AutoValue.Builder
-    public abstract static class Builder {
-        /** See {@link RunAdSelectionProcessReportedStats#getIsRemarketingAdsWon()} */
-        @NonNull
-        public abstract Builder setIsRemarketingAdsWon(boolean value);
+    abstract static class Builder {
+        abstract Builder setIsRemarketingAdsWon(boolean value);
 
-        /** See {@link RunAdSelectionProcessReportedStats#getDBAdSelectionSizeInBytes()} */
-        @NonNull
-        public abstract Builder setDBAdSelectionSizeInBytes(int value);
+        abstract Builder setDBAdSelectionSizeInBytes(int value);
 
-        /** See {@link RunAdSelectionProcessReportedStats#getPersistAdSelectionLatencyInMillis()} */
-        @NonNull
-        public abstract Builder setPersistAdSelectionLatencyInMillis(int value);
+        abstract Builder setPersistAdSelectionLatencyInMillis(int value);
 
-        /** See {@link RunAdSelectionProcessReportedStats#getPersistAdSelectionResultCode()} */
-        @NonNull
-        public abstract Builder setPersistAdSelectionResultCode(int value);
+        abstract Builder setPersistAdSelectionResultCode(int value);
 
-        /** See {@link RunAdSelectionProcessReportedStats#getRunAdSelectionLatencyInMillis()} */
-        @NonNull
-        public abstract Builder setRunAdSelectionLatencyInMillis(int value);
+        abstract Builder setRunAdSelectionLatencyInMillis(int value);
 
-        /** See {@link RunAdSelectionProcessReportedStats#getRunAdSelectionResultCode()} */
-        @NonNull
-        public abstract Builder setRunAdSelectionResultCode(int value);
+        abstract Builder setRunAdSelectionResultCode(int value);
 
-        /** Build the {@link RunAdSelectionProcessReportedStats} */
-        @NonNull
-        public abstract RunAdSelectionProcessReportedStats build();
+        abstract RunAdSelectionProcessReportedStats build();
     }
 }

@@ -29,7 +29,7 @@ import java.util.Objects;
  * @hide
  */
 public class WebSourceRegistrationRequestInternal implements Parcelable {
-    /** Creator for Parcelable (via reflection). */
+    /** Creator for Paracelable (via reflection). */
     public static final Parcelable.Creator<WebSourceRegistrationRequestInternal> CREATOR =
             new Parcelable.Creator<WebSourceRegistrationRequestInternal>() {
                 @Override
@@ -44,10 +44,8 @@ public class WebSourceRegistrationRequestInternal implements Parcelable {
             };
     /** Holds input to measurement source registration calls from web context. */
     @NonNull private final WebSourceRegistrationRequest mSourceRegistrationRequest;
-    /** Holds app package info of where the request is coming from. */
-    @NonNull private final String mAppPackageName;
-    /** Holds sdk package info of where the request is coming from. */
-    @NonNull private final String mSdkPackageName;
+    /** Holds package info of where the request is coming from. */
+    @NonNull private final String mPackageName;
     /** Time the request was created, as millis since boot excluding time in deep sleep. */
     private final long mRequestTime;
     /** AD ID Permission Granted. */
@@ -55,8 +53,7 @@ public class WebSourceRegistrationRequestInternal implements Parcelable {
 
     private WebSourceRegistrationRequestInternal(@NonNull Builder builder) {
         mSourceRegistrationRequest = builder.mSourceRegistrationRequest;
-        mAppPackageName = builder.mAppPackageName;
-        mSdkPackageName = builder.mSdkPackageName;
+        mPackageName = builder.mPackageName;
         mRequestTime = builder.mRequestTime;
         mIsAdIdPermissionGranted = builder.mIsAdIdPermissionGranted;
     }
@@ -64,8 +61,7 @@ public class WebSourceRegistrationRequestInternal implements Parcelable {
     private WebSourceRegistrationRequestInternal(Parcel in) {
         Objects.requireNonNull(in);
         mSourceRegistrationRequest = WebSourceRegistrationRequest.CREATOR.createFromParcel(in);
-        mAppPackageName = in.readString();
-        mSdkPackageName = in.readString();
+        mPackageName = in.readString();
         mRequestTime = in.readLong();
         mIsAdIdPermissionGranted = in.readBoolean();
     }
@@ -75,14 +71,9 @@ public class WebSourceRegistrationRequestInternal implements Parcelable {
         return mSourceRegistrationRequest;
     }
 
-    /** Getter for {@link #mAppPackageName}. */
-    public String getAppPackageName() {
-        return mAppPackageName;
-    }
-
-    /** Getter for {@link #mSdkPackageName}. */
-    public String getSdkPackageName() {
-        return mSdkPackageName;
+    /** Getter for {@link #mPackageName}. */
+    public String getPackageName() {
+        return mPackageName;
     }
 
     /** Getter for {@link #mRequestTime}. */
@@ -101,19 +92,14 @@ public class WebSourceRegistrationRequestInternal implements Parcelable {
         if (!(o instanceof WebSourceRegistrationRequestInternal)) return false;
         WebSourceRegistrationRequestInternal that = (WebSourceRegistrationRequestInternal) o;
         return Objects.equals(mSourceRegistrationRequest, that.mSourceRegistrationRequest)
-                && Objects.equals(mAppPackageName, that.mAppPackageName)
-                && Objects.equals(mSdkPackageName, that.mSdkPackageName)
+                && Objects.equals(mPackageName, that.mPackageName)
                 && mRequestTime == that.mRequestTime
                 && mIsAdIdPermissionGranted == that.mIsAdIdPermissionGranted;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(
-                mSourceRegistrationRequest,
-                mAppPackageName,
-                mSdkPackageName,
-                mIsAdIdPermissionGranted);
+        return Objects.hash(mSourceRegistrationRequest, mPackageName, mIsAdIdPermissionGranted);
     }
 
     @Override
@@ -125,8 +111,7 @@ public class WebSourceRegistrationRequestInternal implements Parcelable {
     public void writeToParcel(@NonNull Parcel out, int flags) {
         Objects.requireNonNull(out);
         mSourceRegistrationRequest.writeToParcel(out, flags);
-        out.writeString(mAppPackageName);
-        out.writeString(mSdkPackageName);
+        out.writeString(mPackageName);
         out.writeLong(mRequestTime);
         out.writeBoolean(mIsAdIdPermissionGranted);
     }
@@ -135,10 +120,8 @@ public class WebSourceRegistrationRequestInternal implements Parcelable {
     public static final class Builder {
         /** External source registration request from client app SDK. */
         @NonNull private final WebSourceRegistrationRequest mSourceRegistrationRequest;
-        /** Package name of the app used for the registration. Used to determine the registrant. */
-        @NonNull private final String mAppPackageName;
-        /** Package name of the sdk used for the registration. */
-        @NonNull private final String mSdkPackageName;
+        /** Client's package name used for the registration. Used to determine the registrant. */
+        @NonNull private final String mPackageName;
         /** Time the request was created, as millis since boot excluding time in deep sleep. */
         private final long mRequestTime;
         /** AD ID Permission Granted. */
@@ -147,20 +130,17 @@ public class WebSourceRegistrationRequestInternal implements Parcelable {
          * Builder constructor for {@link WebSourceRegistrationRequestInternal}.
          *
          * @param sourceRegistrationRequest external source registration request
-         * @param appPackageName app package name that is calling PP API
-         * @param sdkPackageName sdk package name that is calling PP API
+         * @param packageName that is calling PP API
+         * @param requestTime time that the request was created
          */
         public Builder(
                 @NonNull WebSourceRegistrationRequest sourceRegistrationRequest,
-                @NonNull String appPackageName,
-                @NonNull String sdkPackageName,
+                @NonNull String packageName,
                 long requestTime) {
             Objects.requireNonNull(sourceRegistrationRequest);
-            Objects.requireNonNull(appPackageName);
-            Objects.requireNonNull(sdkPackageName);
+            Objects.requireNonNull(packageName);
             mSourceRegistrationRequest = sourceRegistrationRequest;
-            mAppPackageName = appPackageName;
-            mSdkPackageName = sdkPackageName;
+            mPackageName = packageName;
             mRequestTime = requestTime;
         }
 

@@ -37,6 +37,7 @@ import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.adservices.measurement.WebTriggerRegistrationRequestInternal;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
 import android.net.Uri;
 import android.os.OutcomeReceiver;
 
@@ -69,11 +70,10 @@ public class MeasurementManagerTest {
                     sContext,
                     sContext.getClassLoader(),
                     CLIENT_PACKAGE_NAME,
-                    sContext.getApplicationInfo(),
+                    new ApplicationInfo(),
                     "sdkName",
                     /* sdkCeDataDir = */ null,
                     /* sdkDeDataDir = */ null);
-
     @After
     public void tearDown() {
         resetOverrideConsentManagerDebugMode();
@@ -101,8 +101,8 @@ public class MeasurementManagerTest {
                 /* callback = */ null);
 
         assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
-        Assert.assertNotNull(captor.getValue().getAppPackageName());
-        Assert.assertEquals(CLIENT_PACKAGE_NAME, captor.getValue().getAppPackageName());
+        Assert.assertNotNull(captor.getValue().getPackageName());
+        Assert.assertEquals(CLIENT_PACKAGE_NAME, captor.getValue().getPackageName());
     }
 
     @Test
@@ -128,8 +128,8 @@ public class MeasurementManagerTest {
                 /* callback = */ null);
 
         assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
-        Assert.assertNotNull(captor.getValue().getAppPackageName());
-        Assert.assertEquals(CLIENT_PACKAGE_NAME, captor.getValue().getAppPackageName());
+        Assert.assertNotNull(captor.getValue().getPackageName());
+        Assert.assertEquals(CLIENT_PACKAGE_NAME, captor.getValue().getPackageName());
     }
 
     @Test
@@ -193,8 +193,8 @@ public class MeasurementManagerTest {
                 /* callback = */ null);
 
         assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
-        Assert.assertNotNull(captor.getValue().getAppPackageName());
-        Assert.assertEquals(CLIENT_PACKAGE_NAME, captor.getValue().getAppPackageName());
+        Assert.assertNotNull(captor.getValue().getPackageName());
+        Assert.assertEquals(CLIENT_PACKAGE_NAME, captor.getValue().getPackageName());
     }
 
     @Test
@@ -219,8 +219,8 @@ public class MeasurementManagerTest {
                 /* callback = */ null);
 
         assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
-        Assert.assertNotNull(captor.getValue().getAppPackageName());
-        Assert.assertEquals(CLIENT_PACKAGE_NAME, captor.getValue().getAppPackageName());
+        Assert.assertNotNull(captor.getValue().getPackageName());
+        Assert.assertEquals(CLIENT_PACKAGE_NAME, captor.getValue().getPackageName());
     }
 
     @Test
@@ -278,8 +278,8 @@ public class MeasurementManagerTest {
                 /* callback = */ null);
 
         assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
-        Assert.assertNotNull(captor.getValue().getAppPackageName());
-        Assert.assertEquals(CLIENT_PACKAGE_NAME, captor.getValue().getAppPackageName());
+        Assert.assertNotNull(captor.getValue().getPackageName());
+        Assert.assertEquals(CLIENT_PACKAGE_NAME, captor.getValue().getPackageName());
     }
 
     @Test
@@ -304,8 +304,8 @@ public class MeasurementManagerTest {
                 /* callback = */ null);
 
         assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
-        Assert.assertNotNull(captor.getValue().getAppPackageName());
-        Assert.assertEquals(CLIENT_PACKAGE_NAME, captor.getValue().getAppPackageName());
+        Assert.assertNotNull(captor.getValue().getPackageName());
+        Assert.assertEquals(CLIENT_PACKAGE_NAME, captor.getValue().getPackageName());
     }
 
     @Test
@@ -350,8 +350,8 @@ public class MeasurementManagerTest {
                 Uri.parse("https://example.com"), /* executor = */ null, /* callback = */ null);
 
         assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
-        Assert.assertNotNull(captor.getValue().getAppPackageName());
-        Assert.assertEquals(CLIENT_PACKAGE_NAME, captor.getValue().getAppPackageName());
+        Assert.assertNotNull(captor.getValue().getPackageName());
+        Assert.assertEquals(CLIENT_PACKAGE_NAME, captor.getValue().getPackageName());
     }
 
     @Test
@@ -374,8 +374,8 @@ public class MeasurementManagerTest {
                 Uri.parse("https://example.com"), /* executor = */ null, /* callback = */ null);
 
         assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
-        Assert.assertNotNull(captor.getValue().getAppPackageName());
-        Assert.assertEquals(CLIENT_PACKAGE_NAME, captor.getValue().getAppPackageName());
+        Assert.assertNotNull(captor.getValue().getPackageName());
+        Assert.assertEquals(CLIENT_PACKAGE_NAME, captor.getValue().getPackageName());
     }
 
     @Test
@@ -414,8 +414,8 @@ public class MeasurementManagerTest {
                 CALLBACK_EXECUTOR,
                 i -> new CompletableFuture<>().complete(i));
 
-        Assert.assertNotNull(captor.getValue().getAppPackageName());
-        Assert.assertEquals(CLIENT_PACKAGE_NAME, captor.getValue().getAppPackageName());
+        Assert.assertNotNull(captor.getValue().getPackageName());
+        Assert.assertEquals(CLIENT_PACKAGE_NAME, captor.getValue().getPackageName());
     }
 
     @Test
@@ -432,8 +432,8 @@ public class MeasurementManagerTest {
                 CALLBACK_EXECUTOR,
                 i -> new CompletableFuture<>().complete(i));
 
-        Assert.assertNotNull(captor.getValue().getAppPackageName());
-        Assert.assertEquals(CLIENT_PACKAGE_NAME, captor.getValue().getAppPackageName());
+        Assert.assertNotNull(captor.getValue().getPackageName());
+        Assert.assertEquals(CLIENT_PACKAGE_NAME, captor.getValue().getPackageName());
     }
 
     @Test

@@ -66,7 +66,7 @@ interface AdSelectionService {
     *
     * {@hide}
     */
-    void selectAds(in AdSelectionInput request, in CallerMetadata callerMetadata, in AdSelectionCallback callback);
+    void runAdSelection(in AdSelectionInput request, in CallerMetadata callerMetadata, in AdSelectionCallback callback);
 
     /**
     * Notifies PPAPI that there is a new impression to report for the

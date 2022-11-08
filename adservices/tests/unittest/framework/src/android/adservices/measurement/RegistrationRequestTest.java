@@ -36,15 +36,15 @@ import org.junit.Test;
  */
 @SmallTest
 public final class RegistrationRequestTest {
+    private static final String TAG = "RegistrationRequestTest";
+
     private static final Context sContext = InstrumentationRegistry.getTargetContext();
-    private static final String SDK_PACKAGE_NAME = "sdk.package.name";
 
     private RegistrationRequest createExampleAttribution() {
-        return new RegistrationRequest.Builder(
-                        RegistrationRequest.REGISTER_SOURCE,
-                        Uri.parse("http://baz.com"),
-                        sContext.getAttributionSource().getPackageName(),
-                        SDK_PACKAGE_NAME)
+        return new RegistrationRequest.Builder()
+                .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
+                .setRegistrationUri(Uri.parse("http://baz.com"))
+                .setPackageName(sContext.getAttributionSource().getPackageName())
                 .setRequestTime(1000L)
                 .setAdIdPermissionGranted(true)
                 .build();
@@ -55,88 +55,56 @@ public final class RegistrationRequestTest {
         assertEquals(RegistrationRequest.REGISTER_SOURCE,
                 request.getRegistrationType());
         assertNull(request.getInputEvent());
-        assertNotNull(request.getAppPackageName());
-        assertEquals(SDK_PACKAGE_NAME, request.getSdkPackageName());
+        assertNotNull(request.getPackageName());
         assertEquals(1000L, request.getRequestTime());
         assertTrue(request.isAdIdPermissionGranted());
     }
 
     @Test
-    public void testNoRegistrationType_throwException() {
+    public void testNoRegistrationType() throws Exception {
         assertThrows(
                 IllegalArgumentException.class,
-                () ->
-                        new RegistrationRequest.Builder(
-                                        RegistrationRequest.INVALID,
-                                        Uri.parse("http://foo.com"),
-                                        sContext.getAttributionSource().getPackageName(),
-                                        SDK_PACKAGE_NAME)
-                                .build());
+                () -> {
+                    new RegistrationRequest.Builder()
+                            .setPackageName(sContext.getAttributionSource().getPackageName())
+                            .build();
+                });
     }
 
     @Test
-    public void testNoAttributionSource_throwException() {
+    public void testNoAttributionSource() throws Exception {
         assertThrows(
-                NullPointerException.class,
-                () ->
-                        new RegistrationRequest.Builder(
-                                        RegistrationRequest.REGISTER_TRIGGER,
-                                        /* registrationUri = */ null,
-                                        sContext.getAttributionSource().getPackageName(),
-                                        SDK_PACKAGE_NAME)
-                                .build());
-    }
-
-    @Test
-    public void testNoAppPackageName_throwException() {
-        assertThrows(
-                NullPointerException.class,
-                () ->
-                        new RegistrationRequest.Builder(
-                                        RegistrationRequest.REGISTER_TRIGGER,
-                                        Uri.parse("http://foo.com"),
-                                        /* appPackageName = */ null,
-                                        SDK_PACKAGE_NAME)
-                                .build());
-    }
-
-    @Test
-    public void testNoSdkPackageName_throwException() {
-        assertThrows(
-                NullPointerException.class,
-                () ->
-                        new RegistrationRequest.Builder(
-                                        RegistrationRequest.REGISTER_TRIGGER,
-                                        /* registrationUri = */ Uri.parse("http://foo.com"),
-                                        sContext.getAttributionSource().getPackageName(),
-                                        /* sdkPackageName = */ null)
-                                .build());
+                IllegalArgumentException.class,
+                () -> {
+                    new RegistrationRequest.Builder()
+                        .setRegistrationType(
+                                RegistrationRequest.REGISTER_TRIGGER)
+                        .build();
+                });
     }
 
     @Test
     public void testDefaults() throws Exception {
         RegistrationRequest request =
-                new RegistrationRequest.Builder(
-                                RegistrationRequest.REGISTER_TRIGGER,
-                                Uri.parse("http://foo.com"),
-                                sContext.getAttributionSource().getPackageName(),
-                                SDK_PACKAGE_NAME)
+                new RegistrationRequest.Builder()
+                        .setPackageName(sContext.getAttributionSource().getPackageName())
+                        .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
                         .build();
-        assertEquals("http://foo.com", request.getRegistrationUri().toString());
-        assertEquals(RegistrationRequest.REGISTER_TRIGGER, request.getRegistrationType());
+        assertEquals("", request.getRegistrationUri().toString());
+        assertEquals(RegistrationRequest.REGISTER_TRIGGER,
+                request.getRegistrationType());
         assertNull(request.getInputEvent());
-        assertNotNull(request.getAppPackageName());
-        assertEquals(SDK_PACKAGE_NAME, request.getSdkPackageName());
+        assertNotNull(request.getPackageName());
         assertEquals(0, request.getRequestTime());
     }
 
     @Test
-    public void testCreationAttribution() {
+    public void testCreationAttribution() throws Exception {
         verifyExampleAttribution(createExampleAttribution());
     }
 
     @Test
-    public void testParcelingAttribution() {
+    public void testParcelingAttribution() throws Exception {
         Parcel p = Parcel.obtain();
         createExampleAttribution().writeToParcel(p, 0);
         p.setDataPosition(0);

@@ -61,7 +61,6 @@ public class EnqueueAsyncRegistrationTest {
     private static Context sDefaultContext = ApplicationProvider.getApplicationContext();
     private static final Uri REGISTRATION_URI_1 = Uri.parse("https://foo.com/bar?ad=134");
     private static final Uri REGISTRATION_URI_2 = Uri.parse("https://foo.com/bar?ad=256");
-    private static final String SDK_PACKAGE_NAME = "sdk.package.name";
     private static final String DEFAULT_ENROLLMENT = "enrollment-id";
     private static final WebSourceParams INPUT_SOURCE_REGISTRATION_1 =
             new WebSourceParams.Builder(REGISTRATION_URI_1).setDebugKeyAllowed(true).build();
@@ -137,11 +136,10 @@ public class EnqueueAsyncRegistrationTest {
         DatastoreManager datastoreManager =
                 new SQLDatastoreManager(DbTestUtil.getDbHelperForTest());
         RegistrationRequest registrationRequest =
-                new RegistrationRequest.Builder(
-                                RegistrationRequest.REGISTER_SOURCE,
-                                Uri.parse("http://baz.com"),
-                                sDefaultContext.getAttributionSource().getPackageName(),
-                                SDK_PACKAGE_NAME)
+                new RegistrationRequest.Builder()
+                        .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
+                        .setRegistrationUri(Uri.parse("http://baz.com"))
+                        .setPackageName(sDefaultContext.getAttributionSource().getPackageName())
                         .build();
 
         Assert.assertTrue(
@@ -190,11 +188,10 @@ public class EnqueueAsyncRegistrationTest {
         DatastoreManager datastoreManager =
                 new SQLDatastoreManager(DbTestUtil.getDbHelperForTest());
         RegistrationRequest registrationRequest =
-                new RegistrationRequest.Builder(
-                                RegistrationRequest.REGISTER_SOURCE,
-                                Uri.parse("http://baz.com"),
-                                sDefaultContext.getAttributionSource().getPackageName(),
-                                SDK_PACKAGE_NAME)
+                new RegistrationRequest.Builder()
+                        .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
+                        .setRegistrationUri(Uri.parse("http://baz.com"))
+                        .setPackageName(sDefaultContext.getAttributionSource().getPackageName())
                         .setInputEvent(mInputEvent)
                         .build();
 
@@ -244,11 +241,10 @@ public class EnqueueAsyncRegistrationTest {
         DatastoreManager datastoreManager =
                 new SQLDatastoreManager(DbTestUtil.getDbHelperForTest());
         RegistrationRequest registrationRequest =
-                new RegistrationRequest.Builder(
-                                RegistrationRequest.REGISTER_TRIGGER,
-                                Uri.parse("http://baz.com"),
-                                sDefaultContext.getAttributionSource().getPackageName(),
-                                SDK_PACKAGE_NAME)
+                new RegistrationRequest.Builder()
+                        .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
+                        .setRegistrationUri(Uri.parse("http://baz.com"))
+                        .setPackageName(sDefaultContext.getAttributionSource().getPackageName())
                         .build();
 
         Assert.assertTrue(
@@ -790,11 +786,10 @@ public class EnqueueAsyncRegistrationTest {
     @Test
     public void test_verifyAsyncRegistrationStoredCorrectly() {
         RegistrationRequest registrationRequest =
-                new RegistrationRequest.Builder(
-                                RegistrationRequest.REGISTER_SOURCE,
-                                Uri.parse("http://baz.com"),
-                                sDefaultContext.getAttributionSource().getPackageName(),
-                                SDK_PACKAGE_NAME)
+                new RegistrationRequest.Builder()
+                        .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
+                        .setRegistrationUri(Uri.parse("http://baz.com"))
+                        .setPackageName(sDefaultContext.getAttributionSource().getPackageName())
                         .build();
 
         DatastoreManager datastoreManager =

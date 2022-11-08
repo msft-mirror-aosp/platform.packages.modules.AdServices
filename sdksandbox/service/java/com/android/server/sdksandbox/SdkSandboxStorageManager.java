@@ -18,7 +18,6 @@ package com.android.server.sdksandbox;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
-import android.app.sdksandbox.LogUtil;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
@@ -98,7 +97,6 @@ class SdkSandboxStorageManager {
      * package.
      */
     public void onPackageAddedOrUpdated(CallingInfo callingInfo) {
-        LogUtil.d(TAG, "Preparing SDK data on package added or update for: " + callingInfo);
         synchronized (mLock) {
             reconcileSdkDataSubDirs(callingInfo, /*forInstrumentation=*/false);
         }
@@ -117,7 +115,6 @@ class SdkSandboxStorageManager {
     }
 
     public void prepareSdkDataOnLoad(CallingInfo callingInfo) {
-        LogUtil.d(TAG, "Preparing SDK data on load for: " + callingInfo);
         synchronized (mLock) {
             reconcileSdkDataSubDirs(callingInfo, /*forInstrumentation=*/false);
         }
@@ -252,7 +249,6 @@ class SdkSandboxStorageManager {
                                 + "). However client app doesn't depend on any SDKs. Only "
                                 + "creating \"shared\" sdk sandbox data sub directory");
             } else {
-                Log.i(TAG, "No SDKs used. Skipping SDK data reconcilation for " + callingInfo);
                 return;
             }
         }
@@ -302,14 +298,11 @@ class SdkSandboxStorageManager {
                         /*previousAppId=*/ -1,
                         /*seInfo=*/ "default",
                         flags);
-                Log.i(TAG, "SDK data reconciled for " + callingInfo);
             } catch (Exception e) {
                 // We will retry when sdk gets loaded
                 Log.w(TAG, "Failed to reconcileSdkData for " + packageName + " subDirNames: "
                         + String.join(", ", subDirNames) + " error: " + e.getMessage());
             }
-        } else {
-            Log.i(TAG, "Skipping SDK data reconcilation for " + callingInfo);
         }
     }
 

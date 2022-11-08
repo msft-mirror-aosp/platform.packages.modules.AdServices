@@ -727,15 +727,6 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public long getNumTriggersPerDestination(Uri destination, @EventSurfaceType int destinationType)
-            throws DatastoreException {
-        return DatabaseUtils.queryNumEntries(
-                mSQLTransaction.getDatabase(),
-                MeasurementTables.TriggerContract.TABLE,
-                getDestinationWhereStatement(destination, destinationType));
-    }
-
-    @Override
     public Integer countDistinctEnrollmentsPerPublisherXDestinationInAttribution(Uri sourceSite,
             Uri destinationSite, String excludedEnrollmentId, long windowStartTime,
             long windowEndTime) throws DatastoreException {
@@ -1634,44 +1625,6 @@ class MeasurementDao implements IMeasurementDao {
                     DatabaseUtils.sqlEscapeString(publisher.toString()),
                     DatabaseUtils.sqlEscapeString(
                             publisher.getScheme() + "://%." + publisher.getEncodedAuthority()));
-        }
-    }
-
-    /** Returns a SQL where statement for matching an app/web destination. */
-    private static String getDestinationWhereStatement(
-            Uri destination, @EventSurfaceType int destinationType) {
-        Optional<Uri> destinationBaseUriOptional = extractBaseUri(destination, destinationType);
-        if (!destinationBaseUriOptional.isPresent()) {
-            throw new IllegalArgumentException(
-                    String.format(
-                            Locale.ENGLISH,
-                            "getDestinationWhereStatement:" + " Unable to extract base uri from %s",
-                            destination.toString()));
-        }
-        Uri destinationBaseUri = destinationBaseUriOptional.get();
-
-        if (destinationType == EventSurfaceType.APP) {
-            return String.format(
-                    Locale.ENGLISH,
-                    "(%1$s = %2$s OR %1$s LIKE %3$s)",
-                    MeasurementTables.TriggerContract.ATTRIBUTION_DESTINATION,
-                    DatabaseUtils.sqlEscapeString(destinationBaseUri.toString()),
-                    DatabaseUtils.sqlEscapeString(destinationBaseUri + "/%"));
-        } else {
-            String schemeSubDomainMatcher =
-                    destination.getScheme() + "://%." + destinationBaseUri.getAuthority();
-            String schemeDomainMatcher =
-                    destination.getScheme() + "://" + destinationBaseUri.getAuthority();
-            String domainAndPathMatcher = schemeDomainMatcher + "/%";
-            String subDomainAndPathMatcher = schemeSubDomainMatcher + "/%";
-            return String.format(
-                    Locale.ENGLISH,
-                    "(%1$s = %2$s OR %1$s LIKE %3$s OR %1$s LIKE %4$s OR %1$s LIKE %5$s)",
-                    MeasurementTables.TriggerContract.ATTRIBUTION_DESTINATION,
-                    DatabaseUtils.sqlEscapeString(schemeDomainMatcher),
-                    DatabaseUtils.sqlEscapeString(schemeSubDomainMatcher),
-                    DatabaseUtils.sqlEscapeString(domainAndPathMatcher),
-                    DatabaseUtils.sqlEscapeString(subDomainAndPathMatcher));
         }
     }
 

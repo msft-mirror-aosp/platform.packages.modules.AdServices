@@ -137,7 +137,7 @@ public class AdSelectionManager {
 
         try {
             final AdSelectionService service = getService();
-            service.selectAds(
+            service.runAdSelection(
                     new AdSelectionInput.Builder()
                             .setAdSelectionConfig(adSelectionConfig)
                             .setCallerPackageName(getCallerPackageName())

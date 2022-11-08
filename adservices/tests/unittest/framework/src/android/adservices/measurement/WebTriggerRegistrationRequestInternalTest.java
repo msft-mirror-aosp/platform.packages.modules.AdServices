@@ -38,7 +38,6 @@ public class WebTriggerRegistrationRequestInternalTest {
             InstrumentationRegistry.getInstrumentation().getContext();
     private static final Uri REGISTRATION_URI_1 = Uri.parse("https://foo1.com");
     private static final Uri REGISTRATION_URI_2 = Uri.parse("https://foo2.com");
-    private static final String SDK_PACKAGE_NAME = "sdk.package.name";
     private static final Uri TOP_ORIGIN_URI = Uri.parse("https://top-origin.com");
 
     private static final WebTriggerParams TRIGGER_REGISTRATION_1 =
@@ -70,38 +69,19 @@ public class WebTriggerRegistrationRequestInternalTest {
     }
 
     @Test
-    public void build_nullTriggerRegistrationRequest_throwsException() {
+    public void build_nullParameters_throwsException() {
         assertThrows(
                 NullPointerException.class,
                 () ->
                         new WebTriggerRegistrationRequestInternal.Builder(
-                                        null,
-                                        CONTEXT.getAttributionSource().getPackageName(),
-                                        SDK_PACKAGE_NAME)
+                                        null, CONTEXT.getAttributionSource().getPackageName())
                                 .build());
-    }
 
-    @Test
-    public void build_nullAppPackageName_throwsException() {
         assertThrows(
                 NullPointerException.class,
                 () ->
                         new WebTriggerRegistrationRequestInternal.Builder(
-                                        EXAMPLE_EXTERNAL_TRIGGER_REG_REQUEST,
-                                        /* appPackageName */ null,
-                                        SDK_PACKAGE_NAME)
-                                .build());
-    }
-
-    @Test
-    public void build_nullSdkPackageName_throwsException() {
-        assertThrows(
-                NullPointerException.class,
-                () ->
-                        new WebTriggerRegistrationRequestInternal.Builder(
-                                        EXAMPLE_EXTERNAL_TRIGGER_REG_REQUEST,
-                                        CONTEXT.getAttributionSource().getPackageName(),
-                                        /* sdkPackageName = */ null)
+                                        EXAMPLE_EXTERNAL_TRIGGER_REG_REQUEST, null)
                                 .build());
     }
 
@@ -126,7 +106,7 @@ public class WebTriggerRegistrationRequestInternalTest {
         final WebTriggerRegistrationRequestInternal request1 = createExampleRegistrationRequest();
         final WebTriggerRegistrationRequestInternal request2 =
                 new WebTriggerRegistrationRequestInternal.Builder(
-                                EXAMPLE_EXTERNAL_TRIGGER_REG_REQUEST, "com.foo", SDK_PACKAGE_NAME)
+                                EXAMPLE_EXTERNAL_TRIGGER_REG_REQUEST, "com.foo")
                         .build();
         final Set<WebTriggerRegistrationRequestInternal> requestSet1 = Set.of(request1);
         final Set<WebTriggerRegistrationRequestInternal> requestSet2 = Set.of(request2);
@@ -138,15 +118,14 @@ public class WebTriggerRegistrationRequestInternalTest {
     private WebTriggerRegistrationRequestInternal createExampleRegistrationRequest() {
         return new WebTriggerRegistrationRequestInternal.Builder(
                         EXAMPLE_EXTERNAL_TRIGGER_REG_REQUEST,
-                        CONTEXT.getAttributionSource().getPackageName(),
-                        SDK_PACKAGE_NAME)
+                        CONTEXT.getAttributionSource().getPackageName())
                 .setAdIdPermissionGranted(true)
                 .build();
     }
 
     private void verifyExampleRegistrationInternal(WebTriggerRegistrationRequestInternal request) {
         verifyExampleRegistration(request.getTriggerRegistrationRequest());
-        assertEquals(CONTEXT.getAttributionSource().getPackageName(), request.getAppPackageName());
+        assertEquals(CONTEXT.getAttributionSource().getPackageName(), request.getPackageName());
         assertTrue(request.isAdIdPermissionGranted());
     }
 

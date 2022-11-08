@@ -102,25 +102,9 @@ public class MeasurementDaoTest {
             Uri.parse("android-app://com.publisher1.one-source");
     private static final Uri APP_NO_PUBLISHER =
             Uri.parse("android-app://com.publisher3.no-sources");
-    private static final Uri APP_BROWSER = Uri.parse("android-app://com.example1.browser");
-    private static final Uri WEB_ONE_DESTINATION = Uri.parse("https://www.example1.com");
-    private static final Uri WEB_ONE_DESTINATION_DIFFERENT_SUBDOMAIN =
-            Uri.parse("https://store.example1.com");
-    private static final Uri WEB_ONE_DESTINATION_DIFFERENT_SUBDOMAIN_2 =
-            Uri.parse("https://foo.example1.com");
-    private static final Uri WEB_TWO_DESTINATION = Uri.parse("https://www.example2.com");
-    private static final Uri WEB_TWO_DESTINATION_WITH_PATH =
-            Uri.parse("https://www.example2.com/ad/foo");
-    private static final Uri APP_ONE_DESTINATION =
-            Uri.parse("android-app://com.example1.one-trigger");
-    private static final Uri APP_TWO_DESTINATION =
+    private static final Uri APP_TWO_TRIGGERS =
             Uri.parse("android-app://com.example1.two-triggers");
-    private static final Uri APP_THREE_DESTINATION =
-            Uri.parse("android-app://com.example1.three-triggers");
-    private static final Uri APP_THREE_DESTINATION_PATH1 =
-            Uri.parse("android-app://com.example1.three-triggers/path1");
-    private static final Uri APP_THREE_DESTINATION_PATH2 =
-            Uri.parse("android-app://com.example1.three-triggers/path2");
+    private static final Uri APP_ONE_TRIGGER = Uri.parse("android-app://com.example1.one-trigger");
     private static final Uri APP_NO_TRIGGERS = Uri.parse("android-app://com.example1.no-triggers");
     private static final Uri INSTALLED_PACKAGE = Uri.parse("android-app://com.example.installed");
     private static final Uri WEB_PUBLISHER_ONE = Uri.parse("https://not.example.com");
@@ -128,8 +112,6 @@ public class MeasurementDaoTest {
     private static final Uri WEB_PUBLISHER_THREE = Uri.parse("http://not.example.com");
     private static final Uri APP_DESTINATION = Uri.parse("android-app://com.destination.example");
 
-    // Fake ID count for initializing triggers.
-    private int mValueId = 1;
     private MockitoSession mStaticMockSession;
 
     @Before
@@ -355,6 +337,24 @@ public class MeasurementDaoTest {
     }
 
     @Test
+    public void testGetNumTriggersPerRegistrant() {
+        setupSourceAndTriggerData();
+        DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
+        dm.runInTransaction(
+                measurementDao -> {
+                    assertEquals(2, measurementDao.getNumTriggersPerRegistrant(APP_TWO_TRIGGERS));
+                });
+        dm.runInTransaction(
+                measurementDao -> {
+                    assertEquals(1, measurementDao.getNumTriggersPerRegistrant(APP_ONE_TRIGGER));
+                });
+        dm.runInTransaction(
+                measurementDao -> {
+                    assertEquals(0, measurementDao.getNumTriggersPerRegistrant(APP_NO_TRIGGERS));
+                });
+    }
+
+    @Test
     public void testCountDistinctEnrollmentsPerPublisherXDestinationInAttribution_atWindow() {
         Uri sourceSite = Uri.parse("android-app://publisher.app");
         Uri appDestination = Uri.parse("android-app://destination.app");
@@ -391,251 +391,10 @@ public class MeasurementDaoTest {
         String excludedEnrollmentId = "enrollment-id-0";
         datastoreManager.runInTransaction(
                 measurementDao -> {
-                    assertEquals(
-                            Integer.valueOf(0),
-                            measurementDao
-                                    .countDistinctEnrollmentsPerPublisherXDestinationInAttribution(
-                                            sourceSite,
-                                            appDestination,
-                                            excludedEnrollmentId,
-                                            5000000000L,
-                                            6000000000L));
-                });
-    }
-
-    @Test
-    public void testGetNumTriggersPerRegistrant() {
-        setupSourceAndTriggerData();
-        DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
-        dm.runInTransaction(
-                measurementDao -> {
-                    assertEquals(
-                            2, measurementDao.getNumTriggersPerRegistrant(APP_TWO_DESTINATION));
-                });
-        dm.runInTransaction(
-                measurementDao -> {
-                    assertEquals(
-                            1, measurementDao.getNumTriggersPerRegistrant(APP_ONE_DESTINATION));
-                });
-        dm.runInTransaction(
-                measurementDao -> {
-                    assertEquals(0, measurementDao.getNumTriggersPerRegistrant(APP_NO_TRIGGERS));
-                });
-    }
-
-    @Test
-    public void singleAppTrigger_triggersPerDestination_returnsOne() {
-        List<Trigger> triggerList = new ArrayList<>();
-        triggerList.add(createAppTrigger(APP_ONE_DESTINATION, APP_ONE_DESTINATION));
-        addTriggersToDatabase(triggerList);
-
-        DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
-        dm.runInTransaction(
-                measurementDao ->
-                        assertThat(
-                                        measurementDao.getNumTriggersPerDestination(
-                                                APP_ONE_DESTINATION, EventSurfaceType.APP))
-                                .isEqualTo(1));
-    }
-
-    @Test
-    public void multipleAppTriggers_similarUris_triggersPerDestination() {
-        List<Trigger> triggerList = new ArrayList<>();
-        triggerList.add(createAppTrigger(APP_TWO_DESTINATION, APP_TWO_DESTINATION));
-        triggerList.add(createAppTrigger(APP_TWO_DESTINATION, APP_TWO_DESTINATION));
-        addTriggersToDatabase(triggerList);
-
-        DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
-        dm.runInTransaction(
-                measurementDao ->
-                        assertThat(
-                                        measurementDao.getNumTriggersPerDestination(
-                                                APP_TWO_DESTINATION, EventSurfaceType.APP))
-                                .isEqualTo(2));
-    }
-
-    @Test
-    public void noAppTriggers_triggersPerDestination_returnsNone() {
-        DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
-        dm.runInTransaction(
-                measurementDao ->
-                        assertThat(
-                                        measurementDao.getNumTriggersPerDestination(
-                                                APP_NO_TRIGGERS, EventSurfaceType.APP))
-                                .isEqualTo(0));
-    }
-
-    @Test
-    public void multipleAppTriggers_differentPaths_returnsAllMatching() {
-        List<Trigger> triggerList = new ArrayList<>();
-        triggerList.add(createAppTrigger(APP_THREE_DESTINATION, APP_THREE_DESTINATION));
-        triggerList.add(createAppTrigger(APP_THREE_DESTINATION, APP_THREE_DESTINATION_PATH1));
-        triggerList.add(createAppTrigger(APP_THREE_DESTINATION, APP_THREE_DESTINATION_PATH2));
-        addTriggersToDatabase(triggerList);
-
-        DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
-        dm.runInTransaction(
-                measurementDao -> {
-                    assertThat(
-                                    measurementDao.getNumTriggersPerDestination(
-                                            APP_THREE_DESTINATION, EventSurfaceType.APP))
-                            .isEqualTo(3);
-                    // Try the same thing, but use the app uri with path to find number of triggers.
-                    assertThat(
-                                    measurementDao.getNumTriggersPerDestination(
-                                            APP_THREE_DESTINATION_PATH1, EventSurfaceType.APP))
-                            .isEqualTo(3);
-                    assertThat(
-                                    measurementDao.getNumTriggersPerDestination(
-                                            APP_THREE_DESTINATION_PATH2, EventSurfaceType.APP))
-                            .isEqualTo(3);
-                    Uri unseenAppThreePath =
-                            Uri.parse("android-app://com.example1.three-triggers/path3");
-                    assertThat(
-                                    measurementDao.getNumTriggersPerDestination(
-                                            unseenAppThreePath, EventSurfaceType.APP))
-                            .isEqualTo(3);
-                });
-    }
-
-    @Test
-    public void singleWebTrigger_triggersPerDestination_returnsOne() {
-        List<Trigger> triggerList = new ArrayList<>();
-        triggerList.add(createWebTrigger(WEB_ONE_DESTINATION));
-        addTriggersToDatabase(triggerList);
-
-        DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
-        dm.runInTransaction(
-                measurementDao -> {
-                    assertThat(
-                                    measurementDao.getNumTriggersPerDestination(
-                                            WEB_ONE_DESTINATION, EventSurfaceType.WEB))
-                            .isEqualTo(1);
-                });
-    }
-
-    @Test
-    public void webTriggerMultipleSubDomains_triggersPerDestination_returnsAllMatching() {
-        List<Trigger> triggerList = new ArrayList<>();
-        triggerList.add(createWebTrigger(WEB_ONE_DESTINATION));
-        triggerList.add(createWebTrigger(WEB_ONE_DESTINATION_DIFFERENT_SUBDOMAIN));
-        triggerList.add(createWebTrigger(WEB_ONE_DESTINATION_DIFFERENT_SUBDOMAIN_2));
-        addTriggersToDatabase(triggerList);
-
-        DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
-        dm.runInTransaction(
-                measurementDao -> {
-                    assertThat(
-                                    measurementDao.getNumTriggersPerDestination(
-                                            WEB_ONE_DESTINATION, EventSurfaceType.WEB))
-                            .isEqualTo(3);
-                    assertThat(
-                                    measurementDao.getNumTriggersPerDestination(
-                                            WEB_ONE_DESTINATION_DIFFERENT_SUBDOMAIN,
-                                            EventSurfaceType.WEB))
-                            .isEqualTo(3);
-                    assertThat(
-                                    measurementDao.getNumTriggersPerDestination(
-                                            WEB_ONE_DESTINATION_DIFFERENT_SUBDOMAIN_2,
-                                            EventSurfaceType.WEB))
-                            .isEqualTo(3);
-                    assertThat(
-                                    measurementDao.getNumTriggersPerDestination(
-                                            Uri.parse("https://new-subdomain.example1.com"),
-                                            EventSurfaceType.WEB))
-                            .isEqualTo(3);
-                    assertThat(
-                                    measurementDao.getNumTriggersPerDestination(
-                                            Uri.parse("https://example1.com"),
-                                            EventSurfaceType.WEB))
-                            .isEqualTo(3);
-                });
-    }
-
-    @Test
-    public void webTriggerWithoutSubdomains_triggersPerDestination_returnsAllMatching() {
-        List<Trigger> triggerList = new ArrayList<>();
-        Uri webDestinationWithoutSubdomain = Uri.parse("https://example1.com");
-        Uri webDestinationWithoutSubdomainPath1 = Uri.parse("https://example1.com/path1");
-        Uri webDestinationWithoutSubdomainPath2 = Uri.parse("https://example1.com/path2");
-        Uri webDestinationWithoutSubdomainPath3 = Uri.parse("https://example1.com/path3");
-        triggerList.add(createWebTrigger(webDestinationWithoutSubdomain));
-        triggerList.add(createWebTrigger(webDestinationWithoutSubdomainPath1));
-        triggerList.add(createWebTrigger(webDestinationWithoutSubdomainPath2));
-        addTriggersToDatabase(triggerList);
-
-        DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
-        dm.runInTransaction(
-                measurementDao -> {
-                    assertThat(
-                                    measurementDao.getNumTriggersPerDestination(
-                                            webDestinationWithoutSubdomain, EventSurfaceType.WEB))
-                            .isEqualTo(3);
-                    assertThat(
-                                    measurementDao.getNumTriggersPerDestination(
-                                            webDestinationWithoutSubdomainPath1,
-                                            EventSurfaceType.WEB))
-                            .isEqualTo(3);
-                    assertThat(
-                                    measurementDao.getNumTriggersPerDestination(
-                                            webDestinationWithoutSubdomainPath2,
-                                            EventSurfaceType.WEB))
-                            .isEqualTo(3);
-                    assertThat(
-                                    measurementDao.getNumTriggersPerDestination(
-                                            webDestinationWithoutSubdomainPath3,
-                                            EventSurfaceType.WEB))
-                            .isEqualTo(3);
-                });
-    }
-
-    @Test
-    public void webTriggerDifferentPaths_triggersPerDestination_returnsAllMatching() {
-        List<Trigger> triggerList = new ArrayList<>();
-        triggerList.add(createWebTrigger(WEB_TWO_DESTINATION));
-        triggerList.add(createWebTrigger(WEB_TWO_DESTINATION_WITH_PATH));
-        addTriggersToDatabase(triggerList);
-
-        DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
-        dm.runInTransaction(
-                measurementDao -> {
-                    assertThat(
-                                    measurementDao.getNumTriggersPerDestination(
-                                            WEB_TWO_DESTINATION, EventSurfaceType.WEB))
-                            .isEqualTo(2);
-                    assertThat(
-                                    measurementDao.getNumTriggersPerDestination(
-                                            WEB_TWO_DESTINATION_WITH_PATH, EventSurfaceType.WEB))
-                            .isEqualTo(2);
-                });
-    }
-
-    @Test
-    public void noMathingWebTriggers_triggersPerDestination_returnsZero() {
-        List<Trigger> triggerList = new ArrayList<>();
-        triggerList.add(createWebTrigger(WEB_ONE_DESTINATION));
-        addTriggersToDatabase(triggerList);
-
-        DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
-        dm.runInTransaction(
-                measurementDao -> {
-                    Uri differentScheme = Uri.parse("http://www.example1.com");
-                    assertThat(
-                                    measurementDao.getNumTriggersPerDestination(
-                                            differentScheme, EventSurfaceType.WEB))
-                            .isEqualTo(0);
-
-                    Uri notMatchingUrl2 = Uri.parse("https://www.not-example1.com");
-                    assertThat(
-                                    measurementDao.getNumTriggersPerDestination(
-                                            notMatchingUrl2, EventSurfaceType.WEB))
-                            .isEqualTo(0);
-
-                    Uri notMatchingUrl = Uri.parse("https://www.not-example-1.com");
-                    assertThat(
-                                    measurementDao.getNumTriggersPerDestination(
-                                            notMatchingUrl, EventSurfaceType.WEB))
-                            .isEqualTo(0);
+                    assertEquals(Integer.valueOf(0), measurementDao
+                            .countDistinctEnrollmentsPerPublisherXDestinationInAttribution(
+                                    sourceSite, appDestination, excludedEnrollmentId,
+                                    5000000000L, 6000000000L));
                 });
     }
 
@@ -4426,88 +4185,16 @@ public class MeasurementDaoTest {
             assertNotEquals("Source insertion failed", -1, row);
         }
         List<Trigger> triggersList = new ArrayList<>();
-        triggersList.add(
-                TriggerFixture.getValidTriggerBuilder()
-                        .setId("T1")
-                        .setRegistrant(APP_TWO_DESTINATION)
-                        .build());
-        triggersList.add(
-                TriggerFixture.getValidTriggerBuilder()
-                        .setId("T2")
-                        .setRegistrant(APP_TWO_DESTINATION)
-                        .build());
-        triggersList.add(
-                TriggerFixture.getValidTriggerBuilder()
-                        .setId("T3")
-                        .setRegistrant(APP_ONE_DESTINATION)
-                        .build());
-
-        // Add web triggers.
-        triggersList.add(
-                TriggerFixture.getValidTriggerBuilder()
-                        .setId("T4")
-                        .setRegistrant(APP_BROWSER)
-                        .setAttributionDestination(WEB_ONE_DESTINATION)
-                        .build());
-        triggersList.add(
-                TriggerFixture.getValidTriggerBuilder()
-                        .setId("T5")
-                        .setRegistrant(APP_BROWSER)
-                        .setAttributionDestination(WEB_ONE_DESTINATION_DIFFERENT_SUBDOMAIN)
-                        .build());
-        triggersList.add(
-                TriggerFixture.getValidTriggerBuilder()
-                        .setId("T7")
-                        .setRegistrant(APP_BROWSER)
-                        .setAttributionDestination(WEB_ONE_DESTINATION_DIFFERENT_SUBDOMAIN_2)
-                        .build());
-        triggersList.add(
-                TriggerFixture.getValidTriggerBuilder()
-                        .setId("T8")
-                        .setRegistrant(APP_BROWSER)
-                        .setAttributionDestination(WEB_TWO_DESTINATION)
-                        .build());
-        triggersList.add(
-                TriggerFixture.getValidTriggerBuilder()
-                        .setId("T9")
-                        .setRegistrant(APP_BROWSER)
-                        .setAttributionDestination(WEB_TWO_DESTINATION_WITH_PATH)
-                        .build());
-
+        triggersList.add(TriggerFixture.getValidTriggerBuilder()
+                .setId("T1").setRegistrant(APP_TWO_TRIGGERS).build());
+        triggersList.add(TriggerFixture.getValidTriggerBuilder()
+                .setId("T2").setRegistrant(APP_TWO_TRIGGERS).build());
+        triggersList.add(TriggerFixture.getValidTriggerBuilder()
+                .setId("T3").setRegistrant(APP_ONE_TRIGGER).build());
         for (Trigger trigger : triggersList) {
             ContentValues values = new ContentValues();
             values.put("_id", trigger.getId());
             values.put("registrant", trigger.getRegistrant().toString());
-            values.put("attribution_destination", trigger.getAttributionDestination().toString());
-            long row = db.insert("msmt_trigger", null, values);
-            Assert.assertNotEquals("Trigger insertion failed", -1, row);
-        }
-    }
-
-    private Trigger createWebTrigger(Uri attributionDestination) {
-        return TriggerFixture.getValidTriggerBuilder()
-                .setId("ID" + mValueId++)
-                .setAttributionDestination(attributionDestination)
-                .setRegistrant(APP_BROWSER)
-                .build();
-    }
-
-    private Trigger createAppTrigger(Uri registrant, Uri destination) {
-        return TriggerFixture.getValidTriggerBuilder()
-                .setId("ID" + mValueId++)
-                .setAttributionDestination(destination)
-                .setRegistrant(registrant)
-                .build();
-    }
-
-    private void addTriggersToDatabase(List<Trigger> triggersList) {
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
-
-        for (Trigger trigger : triggersList) {
-            ContentValues values = new ContentValues();
-            values.put("_id", trigger.getId());
-            values.put("registrant", trigger.getRegistrant().toString());
-            values.put("attribution_destination", trigger.getAttributionDestination().toString());
             long row = db.insert("msmt_trigger", null, values);
             assertNotEquals("Trigger insertion failed", -1, row);
         }
