@@ -59,8 +59,8 @@ import java.util.List;
 public class EnqueueAsyncRegistrationTest {
 
     private static Context sDefaultContext = ApplicationProvider.getApplicationContext();
-    private static final Uri REGISTRATION_URI_1 = Uri.parse("https://foo.com/bar?ad=134");
-    private static final Uri REGISTRATION_URI_2 = Uri.parse("https://foo.com/bar?ad=256");
+    private static final Uri REGISTRATION_URI_1 = Uri.parse("https://foo.test/bar?ad=134");
+    private static final Uri REGISTRATION_URI_2 = Uri.parse("https://foo.test/bar?ad=256");
     private static final String SDK_PACKAGE_NAME = "sdk.package.name";
     private static final String DEFAULT_ENROLLMENT = "enrollment-id";
     private static final WebSourceParams INPUT_SOURCE_REGISTRATION_1 =
@@ -95,10 +95,10 @@ public class EnqueueAsyncRegistrationTest {
     private static final WebSourceRegistrationRequest
             VALID_WEB_SOURCE_REGISTRATION_NULL_INPUT_EVENT =
                     new WebSourceRegistrationRequest.Builder(
-                                    sSourceParamsList, Uri.parse("android-app://example.com/aD1"))
-                            .setWebDestination(Uri.parse("android-app://example.com/aD1"))
-                            .setAppDestination(Uri.parse("android-app://example.com/aD1"))
-                            .setVerifiedDestination(Uri.parse("android-app://example.com/aD1"))
+                                    sSourceParamsList, Uri.parse("android-app://example.test/aD1"))
+                            .setWebDestination(Uri.parse("android-app://example.test/aD1"))
+                            .setAppDestination(Uri.parse("android-app://example.test/aD1"))
+                            .setVerifiedDestination(Uri.parse("android-app://example.test/aD1"))
                             .build();
 
     private static final WebTriggerRegistrationRequest VALID_WEB_TRIGGER_REGISTRATION =
@@ -139,7 +139,7 @@ public class EnqueueAsyncRegistrationTest {
         RegistrationRequest registrationRequest =
                 new RegistrationRequest.Builder(
                                 RegistrationRequest.REGISTER_SOURCE,
-                                Uri.parse("http://baz.com"),
+                                Uri.parse("http://baz.test"),
                                 sDefaultContext.getAttributionSource().getPackageName(),
                                 SDK_PACKAGE_NAME)
                         .build();
@@ -192,7 +192,7 @@ public class EnqueueAsyncRegistrationTest {
         RegistrationRequest registrationRequest =
                 new RegistrationRequest.Builder(
                                 RegistrationRequest.REGISTER_SOURCE,
-                                Uri.parse("http://baz.com"),
+                                Uri.parse("http://baz.test"),
                                 sDefaultContext.getAttributionSource().getPackageName(),
                                 SDK_PACKAGE_NAME)
                         .setInputEvent(mInputEvent)
@@ -246,7 +246,7 @@ public class EnqueueAsyncRegistrationTest {
         RegistrationRequest registrationRequest =
                 new RegistrationRequest.Builder(
                                 RegistrationRequest.REGISTER_TRIGGER,
-                                Uri.parse("http://baz.com"),
+                                Uri.parse("http://baz.test"),
                                 sDefaultContext.getAttributionSource().getPackageName(),
                                 SDK_PACKAGE_NAME)
                         .build();
@@ -333,15 +333,15 @@ public class EnqueueAsyncRegistrationTest {
                         asyncRegistration.getRegistrant());
                 Assert.assertNotNull(asyncRegistration.getWebDestination());
                 Assert.assertEquals(
-                        Uri.parse("android-app://example.com/aD1"),
+                        Uri.parse("android-app://example.test/aD1"),
                         asyncRegistration.getWebDestination());
                 Assert.assertNotNull(asyncRegistration.getOsDestination());
                 Assert.assertEquals(
-                        Uri.parse("android-app://example.com/aD1"),
+                        Uri.parse("android-app://example.test/aD1"),
                         asyncRegistration.getOsDestination());
                 Assert.assertNotNull(asyncRegistration.getVerifiedDestination());
                 Assert.assertEquals(
-                        Uri.parse("android-app://example.com/aD1"),
+                        Uri.parse("android-app://example.test/aD1"),
                         asyncRegistration.getVerifiedDestination());
                 Assert.assertNotNull(asyncRegistration.getType());
                 Assert.assertEquals(
@@ -362,15 +362,15 @@ public class EnqueueAsyncRegistrationTest {
                         asyncRegistrationTwo.getRegistrant());
                 Assert.assertNotNull(asyncRegistrationTwo.getWebDestination());
                 Assert.assertEquals(
-                        Uri.parse("android-app://example.com/aD1"),
+                        Uri.parse("android-app://example.test/aD1"),
                         asyncRegistrationTwo.getWebDestination());
                 Assert.assertNotNull(asyncRegistrationTwo.getOsDestination());
                 Assert.assertEquals(
-                        Uri.parse("android-app://example.com/aD1"),
+                        Uri.parse("android-app://example.test/aD1"),
                         asyncRegistrationTwo.getOsDestination());
                 Assert.assertNotNull(asyncRegistrationTwo.getVerifiedDestination());
                 Assert.assertEquals(
-                        Uri.parse("android-app://example.com/aD1"),
+                        Uri.parse("android-app://example.test/aD1"),
                         asyncRegistrationTwo.getVerifiedDestination());
                 Assert.assertNotNull(asyncRegistrationTwo.getTopOrigin());
                 Assert.assertEquals(
@@ -398,15 +398,15 @@ public class EnqueueAsyncRegistrationTest {
                         asyncRegistration.getRegistrant());
                 Assert.assertNotNull(asyncRegistration.getWebDestination());
                 Assert.assertEquals(
-                        Uri.parse("android-app://example.com/aD1"),
+                        Uri.parse("android-app://example.test/aD1"),
                         asyncRegistration.getWebDestination());
                 Assert.assertNotNull(asyncRegistration.getOsDestination());
                 Assert.assertEquals(
-                        Uri.parse("android-app://example.com/aD1"),
+                        Uri.parse("android-app://example.test/aD1"),
                         asyncRegistration.getOsDestination());
                 Assert.assertNotNull(asyncRegistration.getVerifiedDestination());
                 Assert.assertEquals(
-                        Uri.parse("android-app://example.com/aD1"),
+                        Uri.parse("android-app://example.test/aD1"),
                         asyncRegistration.getVerifiedDestination());
                 Assert.assertNotNull(asyncRegistration.getTopOrigin());
                 Assert.assertEquals(
@@ -430,15 +430,15 @@ public class EnqueueAsyncRegistrationTest {
                         asyncRegistrationTwo.getRegistrant());
                 Assert.assertNotNull(asyncRegistrationTwo.getWebDestination());
                 Assert.assertEquals(
-                        Uri.parse("android-app://example.com/aD1"),
+                        Uri.parse("android-app://example.test/aD1"),
                         asyncRegistrationTwo.getWebDestination());
                 Assert.assertNotNull(asyncRegistrationTwo.getOsDestination());
                 Assert.assertEquals(
-                        Uri.parse("android-app://example.com/aD1"),
+                        Uri.parse("android-app://example.test/aD1"),
                         asyncRegistrationTwo.getOsDestination());
                 Assert.assertNotNull(asyncRegistrationTwo.getVerifiedDestination());
                 Assert.assertEquals(
-                        Uri.parse("android-app://example.com/aD1"),
+                        Uri.parse("android-app://example.test/aD1"),
                         asyncRegistrationTwo.getVerifiedDestination());
                 Assert.assertNotNull(asyncRegistrationTwo.getTopOrigin());
                 Assert.assertEquals(
@@ -463,10 +463,10 @@ public class EnqueueAsyncRegistrationTest {
         sourceParamsList.add(INPUT_SOURCE_REGISTRATION_2);
         WebSourceRegistrationRequest validWebSourceRegistration =
                 new WebSourceRegistrationRequest.Builder(
-                                sourceParamsList, Uri.parse("android-app://example.com/aD1"))
-                        .setWebDestination(Uri.parse("android-app://example.com/aD1"))
-                        .setAppDestination(Uri.parse("android-app://example.com/aD1"))
-                        .setVerifiedDestination(Uri.parse("android-app://example.com/aD1"))
+                                sourceParamsList, Uri.parse("android-app://example.test/aD1"))
+                        .setWebDestination(Uri.parse("android-app://example.test/aD1"))
+                        .setAppDestination(Uri.parse("android-app://example.test/aD1"))
+                        .setVerifiedDestination(Uri.parse("android-app://example.test/aD1"))
                         .setInputEvent(mInputEvent)
                         .build();
         Assert.assertTrue(
@@ -511,15 +511,15 @@ public class EnqueueAsyncRegistrationTest {
                         asyncRegistration.getRegistrant());
                 Assert.assertNotNull(asyncRegistration.getWebDestination());
                 Assert.assertEquals(
-                        Uri.parse("android-app://example.com/aD1"),
+                        Uri.parse("android-app://example.test/aD1"),
                         asyncRegistration.getWebDestination());
                 Assert.assertNotNull(asyncRegistration.getOsDestination());
                 Assert.assertEquals(
-                        Uri.parse("android-app://example.com/aD1"),
+                        Uri.parse("android-app://example.test/aD1"),
                         asyncRegistration.getOsDestination());
                 Assert.assertNotNull(asyncRegistration.getVerifiedDestination());
                 Assert.assertEquals(
-                        Uri.parse("android-app://example.com/aD1"),
+                        Uri.parse("android-app://example.test/aD1"),
                         asyncRegistration.getVerifiedDestination());
                 Assert.assertNotNull(asyncRegistration.getType());
                 Assert.assertEquals(
@@ -541,15 +541,15 @@ public class EnqueueAsyncRegistrationTest {
                         asyncRegistrationTwo.getRegistrant());
                 Assert.assertNotNull(asyncRegistrationTwo.getWebDestination());
                 Assert.assertEquals(
-                        Uri.parse("android-app://example.com/aD1"),
+                        Uri.parse("android-app://example.test/aD1"),
                         asyncRegistrationTwo.getWebDestination());
                 Assert.assertNotNull(asyncRegistrationTwo.getOsDestination());
                 Assert.assertEquals(
-                        Uri.parse("android-app://example.com/aD1"),
+                        Uri.parse("android-app://example.test/aD1"),
                         asyncRegistrationTwo.getOsDestination());
                 Assert.assertNotNull(asyncRegistrationTwo.getVerifiedDestination());
                 Assert.assertEquals(
-                        Uri.parse("android-app://example.com/aD1"),
+                        Uri.parse("android-app://example.test/aD1"),
                         asyncRegistrationTwo.getVerifiedDestination());
                 Assert.assertNotNull(asyncRegistrationTwo.getTopOrigin());
                 Assert.assertEquals(
@@ -578,15 +578,15 @@ public class EnqueueAsyncRegistrationTest {
                         asyncRegistration.getRegistrant());
                 Assert.assertNotNull(asyncRegistration.getWebDestination());
                 Assert.assertEquals(
-                        Uri.parse("android-app://example.com/aD1"),
+                        Uri.parse("android-app://example.test/aD1"),
                         asyncRegistration.getWebDestination());
                 Assert.assertNotNull(asyncRegistration.getOsDestination());
                 Assert.assertEquals(
-                        Uri.parse("android-app://example.com/aD1"),
+                        Uri.parse("android-app://example.test/aD1"),
                         asyncRegistration.getOsDestination());
                 Assert.assertNotNull(asyncRegistration.getVerifiedDestination());
                 Assert.assertEquals(
-                        Uri.parse("android-app://example.com/aD1"),
+                        Uri.parse("android-app://example.test/aD1"),
                         asyncRegistration.getVerifiedDestination());
                 Assert.assertNotNull(asyncRegistration.getTopOrigin());
                 Assert.assertEquals(
@@ -611,15 +611,15 @@ public class EnqueueAsyncRegistrationTest {
                         asyncRegistrationTwo.getRegistrant());
                 Assert.assertNotNull(asyncRegistrationTwo.getWebDestination());
                 Assert.assertEquals(
-                        Uri.parse("android-app://example.com/aD1"),
+                        Uri.parse("android-app://example.test/aD1"),
                         asyncRegistrationTwo.getWebDestination());
                 Assert.assertNotNull(asyncRegistrationTwo.getOsDestination());
                 Assert.assertEquals(
-                        Uri.parse("android-app://example.com/aD1"),
+                        Uri.parse("android-app://example.test/aD1"),
                         asyncRegistrationTwo.getOsDestination());
                 Assert.assertNotNull(asyncRegistrationTwo.getVerifiedDestination());
                 Assert.assertEquals(
-                        Uri.parse("android-app://example.com/aD1"),
+                        Uri.parse("android-app://example.test/aD1"),
                         asyncRegistrationTwo.getVerifiedDestination());
                 Assert.assertNotNull(asyncRegistrationTwo.getTopOrigin());
                 Assert.assertEquals(
@@ -792,7 +792,7 @@ public class EnqueueAsyncRegistrationTest {
         RegistrationRequest registrationRequest =
                 new RegistrationRequest.Builder(
                                 RegistrationRequest.REGISTER_SOURCE,
-                                Uri.parse("http://baz.com"),
+                                Uri.parse("http://baz.test"),
                                 sDefaultContext.getAttributionSource().getPackageName(),
                                 SDK_PACKAGE_NAME)
                         .build();

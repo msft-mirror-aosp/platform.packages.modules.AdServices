@@ -54,6 +54,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.measurement.AsyncRegistration;
 import com.android.adservices.service.measurement.Source;
+import com.android.adservices.service.measurement.WebUtil;
 import com.android.adservices.service.measurement.util.AsyncFetchStatus;
 import com.android.adservices.service.measurement.util.AsyncRedirect;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -92,7 +93,7 @@ import javax.net.ssl.HttpsURLConnection;
 public final class AsyncSourceFetcherTest {
     private static final String ANDROID_APP_SCHEME = "android-app";
     private static final String ANDROID_APP_SCHEME_URI_PREFIX = ANDROID_APP_SCHEME + "://";
-    private static final String DEFAULT_REGISTRATION = "https://foo.com";
+    private static final String DEFAULT_REGISTRATION = WebUtil.validUrl("https://foo.test");
     private static final String ENROLLMENT_ID = "enrollment-id";
     private static final EnrollmentData ENROLLMENT =
             new EnrollmentData.Builder().setEnrollmentId("enrollment-id").build();
@@ -106,14 +107,15 @@ public final class AsyncSourceFetcherTest {
     private static final UnsignedLong DEFAULT_EVENT_ID = new UnsignedLong(987654321L);
     private static final UnsignedLong EVENT_ID_1 = new UnsignedLong(987654321L);
     private static final UnsignedLong DEBUG_KEY = new UnsignedLong(823523783L);
-    private static final String LIST_TYPE_REDIRECT_URI = "https://bar.com";
-    private static final String LOCATION_TYPE_REDIRECT_URI = "https://example.com";
+    private static final String LIST_TYPE_REDIRECT_URI = WebUtil.validUrl("https://bar.test");
+    private static final String LOCATION_TYPE_REDIRECT_URI =
+            WebUtil.validUrl("https://example.test");
     private static final String ALT_DESTINATION = "android-app://com.yourapps";
     private static final long ALT_PRIORITY = 321;
     private static final long ALT_EVENT_ID = 123456789;
     private static final long ALT_EXPIRY = 456790;
-    private static final Uri REGISTRATION_URI_1 = Uri.parse("https://foo.com");
-    private static final Uri REGISTRATION_URI_2 = Uri.parse("https://foo2.com");
+    private static final Uri REGISTRATION_URI_1 = WebUtil.validUri("https://foo.test");
+    private static final Uri REGISTRATION_URI_2 = WebUtil.validUri("https://foo2.test");
     private static final String SDK_PACKAGE_NAME = "sdk.package.name";
     private static final Uri OS_DESTINATION = Uri.parse("android-app://com.os-destination");
     private static final String LONG_FILTER_STRING = "12345678901234567890123456";
@@ -121,9 +123,9 @@ public final class AsyncSourceFetcherTest {
     private static final String LONG_AGGREGATE_KEY_PIECE = "0x123456789012345678901234567890123";
     private static final Uri OS_DESTINATION_WITH_PATH =
             Uri.parse("android-app://com.os-destination/my/path");
-    private static final Uri WEB_DESTINATION = Uri.parse("https://web-destination.com");
+    private static final Uri WEB_DESTINATION = WebUtil.validUri("https://web-destination.test");
     private static final Uri WEB_DESTINATION_WITH_SUBDOMAIN =
-            Uri.parse("https://subdomain.web-destination.com");
+            WebUtil.validUri("https://subdomain.web-destination.test");
     private static final WebSourceParams SOURCE_REGISTRATION_1 =
             new WebSourceParams.Builder(REGISTRATION_URI_1).setDebugKeyAllowed(true).build();
     private static final WebSourceParams SOURCE_REGISTRATION_2 =
@@ -312,7 +314,7 @@ public final class AsyncSourceFetcherTest {
     public void testSourceRequestWithPostInstallAttributes() throws Exception {
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
-        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL("https://foo.com"));
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -352,7 +354,7 @@ public final class AsyncSourceFetcherTest {
     public void testSourceRequestWithPostInstallAttributesReceivedAsNull() throws Exception {
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
-        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL("https://foo.com"));
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -395,7 +397,7 @@ public final class AsyncSourceFetcherTest {
     public void testSourceRequestWithInstallAttributesOutofBounds() throws IOException {
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
-        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL("https://foo.com"));
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -440,7 +442,7 @@ public final class AsyncSourceFetcherTest {
 
     @Test
     public void testBadSourceUrl() {
-        RegistrationRequest request = buildRequest(/* registrationUri = */ "bad-schema://foo.com");
+        RegistrationRequest request = buildRequest(WebUtil.validUrl("bad-schema://foo.test"));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -869,7 +871,7 @@ public final class AsyncSourceFetcherTest {
     public void testBasicSourceRequestMinimumFieldsAndRestNull() throws Exception {
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
-        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL("https://foo.com"));
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -986,7 +988,7 @@ public final class AsyncSourceFetcherTest {
     }
     @Test
     public void testNotOverHttps() throws Exception {
-        RegistrationRequest request = buildRequest("http://foo.com");
+        RegistrationRequest request = buildRequest(WebUtil.validUrl("http://foo.test"));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -1039,7 +1041,7 @@ public final class AsyncSourceFetcherTest {
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         Map<String, List<String>> headersFirstRequest = new HashMap<>();
         headersFirstRequest.put("Attribution-Reporting-Register-Source", List.of("{}"));
-        headersFirstRequest.put("Attribution-Reporting-Redirect", List.of("https://bar.com"));
+        headersFirstRequest.put("Attribution-Reporting-Redirect", List.of(LIST_TYPE_REDIRECT_URI));
         Map<String, List<String>> headersSecondRequest = new HashMap<>();
         headersSecondRequest.put(
                 "Attribution-Reporting-Register-Source",
@@ -2050,7 +2052,7 @@ public final class AsyncSourceFetcherTest {
                                                 + "  \"destination\":"
                                                 + " android-app://wrong.os-destination,\n"
                                                 + "  \"web_destination\": "
-                                                + WEB_DESTINATION
+                                                + "\"" + WEB_DESTINATION + "\""
                                                 + ",\n"
                                                 + "  \"filter_data\": "
                                                 + filterData
@@ -2090,10 +2092,12 @@ public final class AsyncSourceFetcherTest {
                                                 + "  \"expiry\": \"456789\",\n"
                                                 + "  \"source_event_id\": \"987654321\",\n"
                                                 + "  \"destination\":  "
-                                                + OS_DESTINATION
+                                                + "\"" + OS_DESTINATION + "\""
                                                 + ",\n"
                                                 + "  \"web_destination\": "
-                                                + " https://wrong-web-destination.com,\n"
+                                                + "\"" + WebUtil.validUrl(
+                                                        "https://wrong-web-destination.test")
+                                                + "\",\n"
                                                 + "  \"filter_data\": "
                                                 + filterData
                                                 + "}")));

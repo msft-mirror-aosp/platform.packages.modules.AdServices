@@ -12,32 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package {
-    default_applicable_licenses: ["Android-Apache-2.0"],
-}
+package com.android.sdksandbox.cts.provider.mediationtest;
 
-java_library {
-    name: "SdkSandboxTestUtils",
-    srcs: [
-        "src/**/testutils/*.java",
-    ],
-    libs: [
-        "framework-sdksandbox.impl",
-    ],
-    static_libs: [
-        "truth-prebuilt",
-        "androidx.test.ext.junit",
-    ],
-    visibility: [
-        // TODO(b/222118402): adjust once code is moved
-        "//packages/modules/AdServices:__subpackages__",
-    ],
-}
+import android.app.sdksandbox.SandboxedSdk;
 
-java_library_host {
-    name: "SdkSandboxHostTestUtils",
-    srcs: [
-        "src/**/hosttestutils/*.java",
-    ],
-    libs: ["tradefed"],
+interface IMediationTestSdkApi {
+    List<SandboxedSdk> getSandboxedSdks();
 }
