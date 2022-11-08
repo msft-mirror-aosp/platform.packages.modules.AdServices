@@ -898,6 +898,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
 
         final long startTimeForLoadingSandbox = mInjector.getCurrentTime();
+
+        // Prepare sdk data directories before starting the sandbox. If sdk data package directory
+        // is missing, starting the sandbox process would crash as we will fail to mount data_mirror
+        // for sdk-data isolation.
+        mSdkSandboxStorageManager.prepareSdkDataOnLoad(callingInfo);
+
         startSdkSandbox(
                 callingInfo,
                 new SandboxBindingCallback() {
@@ -1200,8 +1206,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private void onSandboxStart(CallingInfo callingInfo, ISdkSandboxService service)
             throws RemoteException {
-        mSdkSandboxStorageManager.prepareSdkDataOnLoad(callingInfo);
-
         service.initialize(new SdkToServiceLink());
 
         notifySyncManagerSandboxStarted(callingInfo);
