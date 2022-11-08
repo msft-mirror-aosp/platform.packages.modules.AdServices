@@ -1897,6 +1897,17 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
+    public void testOtherPropertyChangeDoesNotAffectKillSwitch() {
+        SdkSandboxManagerService.SdkSandboxSettingsListener listener =
+                mService.getSdkSandboxSettingsListener();
+        assertThat(listener.isKillSwitchEnabled()).isFalse();
+        listener.onPropertiesChanged(
+                new DeviceConfig.Properties(
+                        DeviceConfig.NAMESPACE_ADSERVICES, Map.of("other_property", "true")));
+        assertThat(listener.isKillSwitchEnabled()).isFalse();
+    }
+
+    @Test
     public void testKillswitchStopsSandbox() throws Exception {
         disableKillUid();
         SdkSandboxManagerService.SdkSandboxSettingsListener listener =
