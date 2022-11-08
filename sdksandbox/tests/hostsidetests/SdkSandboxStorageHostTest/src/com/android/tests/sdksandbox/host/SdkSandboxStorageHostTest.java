@@ -633,8 +633,8 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     public void testSdkDataPackageDirectory_SharedStorageIsUsable() throws Exception {
         installPackage(TEST_APP_STORAGE_APK);
 
-        // LoadSdk to ensure per-sdk storage is available. This also reduces flakiness.
-        runPhase("loadSdk");
+        // Allow some extra time for broadcast to propagate and sdk data to be created
+        Thread.sleep(WAIT_TO_PROCESS_PACKAGE_ADDED_BROADCAST);
 
         // Verify that shared storage exist
         final String sharedCePath =
@@ -859,8 +859,8 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     public void testSdkDataSubDirectory_PerSdkStorageIsUsable() throws Exception {
         installPackage(TEST_APP_STORAGE_APK);
 
-        // LoadSdk to ensure per-sdk storage is available. This also reduces flakiness
-        runPhase("loadSdk");
+        // Allow some extra time for broadcast to propagate and sdk data to be created
+        Thread.sleep(WAIT_TO_PROCESS_PACKAGE_ADDED_BROADCAST);
 
         // Verify that per-sdk storage exist
         final String perSdkStorage =
