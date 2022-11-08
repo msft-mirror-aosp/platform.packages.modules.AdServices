@@ -32,13 +32,31 @@ public class EventReportSender extends MeasurementReportSender {
     public static final String EVENT_ATTRIBUTION_REPORT_URI_PATH =
             ".well-known/attribution-reporting/report-event-attribution";
 
+    @VisibleForTesting
+    public static final String DEBUG_EVENT_ATTRIBUTION_REPORT_URI_PATH =
+            ".well-known/attribution-reporting/debug/report-event-attribution";
+
+    private String mReportUriPath;
+
+    public EventReportSender(boolean isDebugReport) {
+        this.mReportUriPath = EVENT_ATTRIBUTION_REPORT_URI_PATH;
+        if (isDebugReport) {
+            this.mReportUriPath = DEBUG_EVENT_ATTRIBUTION_REPORT_URI_PATH;
+        }
+    }
+
+    /** The report uri path. */
+    @VisibleForTesting
+    public String getReportUriPath() {
+        return mReportUriPath;
+    }
+
     /**
      * Creates URL to send the POST request to.
      */
     URL createReportingFullUrl(Uri adTechDomain)
             throws MalformedURLException {
-        Uri reportingFullUrl = Uri.withAppendedPath(adTechDomain,
-                EVENT_ATTRIBUTION_REPORT_URI_PATH);
+        Uri reportingFullUrl = Uri.withAppendedPath(adTechDomain, mReportUriPath);
         return new URL(reportingFullUrl.toString());
     }
 }

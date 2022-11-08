@@ -19,7 +19,12 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.only;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -42,6 +47,7 @@ import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.stats.AdServicesLogger;
 
 import com.google.common.collect.ImmutableList;
 
@@ -51,6 +57,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -63,35 +70,44 @@ import java.util.Set;
 public class TopicsWorkerTest {
     // Spy the Context to test app reconciliation
     private final Context mContext = spy(ApplicationProvider.getApplicationContext());
+    private final DbHelper mDbHelper = spy(DbTestUtil.getDbHelperForTest());
 
     private TopicsWorker mTopicsWorker;
     private TopicsDao mTopicsDao;
-    private AppUpdateManager mAppUpdateManager;
     private CacheManager mCacheManager;
     private BlockedTopicsManager mBlockedTopicsManager;
+    // Spy DbHelper to mock supportsTopContributorsTable feature.
 
     @Mock private EpochManager mMockEpochManager;
     @Mock private Flags mMockFlags;
+    @Mock AdServicesLogger mLogger;
 
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
 
         // Clean DB before each test
+        DbTestUtil.deleteTable(TopicsTables.TaxonomyContract.TABLE);
+        DbTestUtil.deleteTable(TopicsTables.AppClassificationTopicsContract.TABLE);
+        DbTestUtil.deleteTable(TopicsTables.CallerCanLearnTopicsContract.TABLE);
+        DbTestUtil.deleteTable(TopicsTables.TopTopicsContract.TABLE);
         DbTestUtil.deleteTable(TopicsTables.ReturnedTopicContract.TABLE);
+        DbTestUtil.deleteTable(TopicsTables.UsageHistoryContract.TABLE);
+        DbTestUtil.deleteTable(TopicsTables.AppUsageHistoryContract.TABLE);
         DbTestUtil.deleteTable(TopicsTables.BlockedTopicsContract.TABLE);
+        DbTestUtil.deleteTable(TopicsTables.TopicContributorsContract.TABLE);
 
-        DbHelper dbHelper = DbTestUtil.getDbHelperForTest();
-        mTopicsDao = new TopicsDao(dbHelper);
-        mAppUpdateManager = new AppUpdateManager(mTopicsDao, new Random(), mMockFlags);
-        mCacheManager = new CacheManager(mMockEpochManager, mTopicsDao, mMockFlags);
+        mTopicsDao = new TopicsDao(mDbHelper);
+        mCacheManager = new CacheManager(mMockEpochManager, mTopicsDao, mMockFlags, mLogger);
+        AppUpdateManager appUpdateManager =
+                new AppUpdateManager(mDbHelper, mTopicsDao, new Random(), mMockFlags);
         mBlockedTopicsManager = new BlockedTopicsManager(mTopicsDao);
         mTopicsWorker =
                 new TopicsWorker(
                         mMockEpochManager,
                         mCacheManager,
                         mBlockedTopicsManager,
-                        mAppUpdateManager,
+                        appUpdateManager,
                         mMockFlags);
     }
 
@@ -541,7 +557,8 @@ public class TopicsWorkerTest {
         final String app = "app";
         final String sdk = "sdk";
 
-        List<String> tableExclusionList = List.of(TopicsTables.BlockedTopicsContract.TABLE);
+        ArrayList<String> tableExclusionList = new ArrayList<>();
+        tableExclusionList.add(TopicsTables.BlockedTopicsContract.TABLE);
 
         Topic topic1 =
                 Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
@@ -563,6 +580,7 @@ public class TopicsWorkerTest {
         mTopicsDao.recordBlockedTopic(topic1);
 
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(epochId);
+        when(mMockEpochManager.supportsTopicContributorFeature()).thenReturn(true);
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
 
         // Real Cache Manager requires loading cache before getTopics() being called.
@@ -601,7 +619,7 @@ public class TopicsWorkerTest {
         mTopicsWorker.clearAllTopicsData(tableExclusionList);
         assertThat(mTopicsDao.retrieveAllBlockedTopics()).isNotEmpty();
 
-        mTopicsWorker.clearAllTopicsData(Collections.emptyList());
+        mTopicsWorker.clearAllTopicsData(new ArrayList<>());
         assertThat(mTopicsDao.retrieveAllBlockedTopics()).isEmpty();
 
         GetTopicsResult emptyGetTopicsResult =
@@ -614,6 +632,35 @@ public class TopicsWorkerTest {
 
         assertThat(mTopicsWorker.getTopics(app, sdk)).isEqualTo(emptyGetTopicsResult);
         assertThat(mTopicsWorker.getTopics(app, /* sdk */ "")).isEqualTo(emptyGetTopicsResult);
+    }
+
+    @Test
+    public void testClearAllTopicsData_topicContributorsTable() {
+        final long epochId = 1;
+        final int topicId = 1;
+        final String app = "app";
+        Map<Integer, Set<String>> topicContributorsMap = Map.of(topicId, Set.of(app));
+        mTopicsDao.persistTopicContributors(epochId, topicContributorsMap);
+
+        // To test feature flag is off
+        doReturn(false).when(mMockEpochManager).supportsTopicContributorFeature();
+        mTopicsWorker.clearAllTopicsData(/* tables to exclude */ new ArrayList<>());
+        // TopicContributors table should remain the same
+        assertThat(mTopicsDao.retrieveTopicToContributorsMap(epochId))
+                .isEqualTo(topicContributorsMap);
+
+        // To test feature flag is on
+        doReturn(true).when(mMockEpochManager).supportsTopicContributorFeature();
+        mTopicsWorker.clearAllTopicsData(/* tables to exclude */ new ArrayList<>());
+        // TopicContributors table be cleared.
+        assertThat(mTopicsDao.retrieveTopicToContributorsMap(epochId)).isEmpty();
+    }
+
+    @Test
+    public void testClearAllTopicsData_ImmutableList() {
+        assertThrows(
+                ClassCastException.class,
+                () -> mTopicsWorker.clearAllTopicsData((ArrayList<String>) List.of("anyString")));
     }
 
     @Test
@@ -630,7 +677,6 @@ public class TopicsWorkerTest {
         final long modelVersion = 1L;
         final int numOfLookBackEpochs = 3;
         final int topicsNumberOfTopTopics = 5;
-        final int topicsNumberOfRandomTopics = 1;
         final int topicsPercentageForRandomTopic = 5;
 
         Topic topic1 = Topic.create(/* topic */ 1, taxonomyVersion, modelVersion);
@@ -669,14 +715,13 @@ public class TopicsWorkerTest {
                             topicsPercentageForRandomTopic, // Will select a regular topic
                             1, // Index of second topic
                             0, // Will select a random topic
-                            topicsNumberOfRandomTopics - 1 // Select the last random topic
+                            0 // Select the first random topic
                         });
         AppUpdateManager appUpdateManager =
-                new AppUpdateManager(mTopicsDao, mockRandom, mMockFlags);
+                new AppUpdateManager(mDbHelper, mTopicsDao, mockRandom, mMockFlags);
 
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numOfLookBackEpochs);
         when(mMockFlags.getTopicsNumberOfTopTopics()).thenReturn(topicsNumberOfTopTopics);
-        when(mMockFlags.getTopicsNumberOfRandomTopics()).thenReturn(topicsNumberOfRandomTopics);
         when(mMockFlags.getTopicsPercentageForRandomTopic())
                 .thenReturn(topicsPercentageForRandomTopic);
 
@@ -710,6 +755,12 @@ public class TopicsWorkerTest {
             mTopicsDao.recordUsageHistory(epochId, app1, sdk);
             mTopicsDao.recordUsageHistory(epochId, app2, sdk);
             mTopicsDao.recordUsageHistory(epochId, app4, sdk);
+
+            // Persist topics to TopicContributors Table avoid being filtered out
+            for (Topic topic : topTopics) {
+                mTopicsDao.persistTopicContributors(
+                        epochId, Map.of(topic.getTopic(), Set.of(app1, app2, app3, app4)));
+            }
         }
         // Persist returned topic to app 5. Note that the epoch id to persist is older than
         // (currentEpochId - numOfLookBackEpochs). Therefore, app5 won't be handled as a newly
@@ -719,6 +770,9 @@ public class TopicsWorkerTest {
 
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numOfLookBackEpochs);
+        // Enable Topic Contributors Check Feature
+        doReturn(true).when(mDbHelper).supportsTopicContributorsTable();
+        when(mMockFlags.getEnableTopicContributorsCheck()).thenReturn(true);
 
         // Initialize a local TopicsWorker to use mocked AppUpdateManager
         TopicsWorker topicsWorker =
@@ -800,12 +854,11 @@ public class TopicsWorkerTest {
         assertThat((topicsWorker.getTopics(app5, sdk))).isEqualTo(emptyGetTopicsResult);
 
         verify(mMockFlags).getTopicsNumberOfTopTopics();
-        verify(mMockFlags).getTopicsNumberOfRandomTopics();
         verify(mMockFlags).getTopicsPercentageForRandomTopic();
     }
 
     @Test
-    public void testDeletePackageData() {
+    public void testHandleAppUninstallation() {
         final long epochId = 4L;
         final int numberOfLookBackEpochs = 3;
         final String app = "app";
@@ -858,7 +911,7 @@ public class TopicsWorkerTest {
 
         // Delete data belonging to the app
         Uri packageUri = Uri.parse("package:" + app);
-        mTopicsWorker.deletePackageData(packageUri);
+        mTopicsWorker.handleAppUninstallation(packageUri);
 
         GetTopicsResult emptyGetTopicsResult =
                 new GetTopicsResult.Builder()
@@ -871,6 +924,284 @@ public class TopicsWorkerTest {
     }
 
     @Test
+    public void testHandleAppUninstallation_handleTopTopicsWithoutContributors() {
+        // The test sets up to handle below scenarios:
+        // * Both app1 and app2 have usage in the epoch and all 6 topics are top topics.
+        // * app1 is classified to topic1, topic2. app2 is classified to topic1 and topic3.
+        // * Both app1 and app2 calls Topics API via .
+        // * In Epoch1, as app2 is able to learn topic2 via sdk, though topic2 is not a classified
+        //   topic of app2, both app1 and app2 can have topic2 as the returned topic.
+        // * In Epoch4, app1 gets uninstalled. Since app1 is the only contributor of topic2, topic2
+        //   will be deleted from epoch1. Therefore, app2 will also have empty returned topic in
+        //   Epoch1, along with app1.
+        // * Comparison case in Epoch2 (multiple contributors): Both app1 and app3 has usages and
+        //   are classified topic1 and topic2 with topic1 as the returned topic . When app1 gets
+        //   uninstalled in Epoch4, app3 will still be able to return topic2 which comes from
+        //   Epoch2.
+        // * Comparison case in Epoch3 (the feature topic is only removed on epoch basis): app4 has
+        //   same setup as app2 in Epoch1: it has topic2 as returned topic in Epoch1, but is NOT
+        //   classified to topic2. app4 also has topic2 as returned topic in Epoch3. Therefore, when
+        //   app1 is uninstalled in Epoch4, topic1 will be removed for app4 as returned topic in
+        //   Epoch1 but not in Epoch3. So if app4 calls Topics API in Epoch4, it's still able to
+        //   return topic1 as a result.
+        final long epochId1 = 1;
+        final long epochId2 = 2;
+        final long epochId3 = 3;
+        final long epochId4 = 4;
+        final long taxonomyVersion = 1L;
+        final long modelVersion = 1L;
+        final String app1 = "app1"; // app to uninstall at Epoch4
+        final String app2 = "app2"; // positive case to verify the removal of the returned topic
+        final String app3 = "app3"; // negative case to verify scenario of multiple contributors
+        final String app4 = "app4"; // negative ase to verify the removal is on epoch basis
+        final String sdk = "sdk";
+        Topic topic1 = Topic.create(/* topic */ 1, taxonomyVersion, modelVersion);
+        Topic topic2 = Topic.create(/* topic */ 2, taxonomyVersion, modelVersion);
+        Topic topic3 = Topic.create(/* topic */ 3, taxonomyVersion, modelVersion);
+        Topic topic4 = Topic.create(/* topic */ 4, taxonomyVersion, modelVersion);
+        Topic topic5 = Topic.create(/* topic */ 5, taxonomyVersion, modelVersion);
+        Topic topic6 = Topic.create(/* topic */ 6, taxonomyVersion, modelVersion);
+
+        // Set the number in flag so that it doesn't depend on the actual value in PhFlags.
+        when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(3);
+
+        // Persist Top topics for epoch1 ~ epoch4
+        mTopicsDao.persistTopTopics(
+                epochId1, List.of(topic1, topic2, topic3, topic4, topic5, topic6));
+        mTopicsDao.persistTopTopics(
+                epochId2, List.of(topic1, topic2, topic3, topic4, topic5, topic6));
+        mTopicsDao.persistTopTopics(
+                epochId3, List.of(topic1, topic2, topic3, topic4, topic5, topic6));
+
+        // Persist AppClassificationTopics Table
+        mTopicsDao.persistAppClassificationTopics(
+                epochId1,
+                Map.of(
+                        app1, List.of(topic1, topic2),
+                        app2, List.of(topic1, topic3),
+                        app4, List.of(topic1, topic3)));
+        mTopicsDao.persistAppClassificationTopics(
+                epochId2, // app1 and app3 have same setup in epoch2
+                Map.of(
+                        app1, List.of(topic1, topic2),
+                        app3, List.of(topic1, topic2)));
+        mTopicsDao.persistAppClassificationTopics(
+                epochId3, // app4 has topic2 as returned topic in epoch3, which won't be removed.
+                Map.of(app4, List.of(topic2)));
+
+        // Compute and persist TopicContributors table
+        mTopicsDao.persistTopicContributors(
+                epochId1,
+                Map.of(
+                        topic1.getTopic(), Set.of(app1, app2, app4),
+                        topic2.getTopic(), Set.of(app1),
+                        topic3.getTopic(), Set.of(app2, app4)));
+        mTopicsDao.persistTopicContributors(
+                epochId2,
+                Map.of(
+                        topic1.getTopic(), Set.of(app1, app3),
+                        topic2.getTopic(), Set.of(app1, app3)));
+        mTopicsDao.persistTopicContributors(epochId3, Map.of(topic2.getTopic(), Set.of(app4)));
+
+        // Persist Usage table to ensure each app has called Topics API in favored epoch
+        mTopicsDao.recordUsageHistory(epochId1, app1, sdk);
+        mTopicsDao.recordUsageHistory(epochId1, app2, sdk);
+        mTopicsDao.recordUsageHistory(epochId2, app1, sdk);
+        mTopicsDao.recordUsageHistory(epochId2, app3, sdk);
+        mTopicsDao.recordUsageHistory(epochId3, app4, sdk);
+
+        // Persist ReturnedTopics table, all returned topics should be topic2 based on the setup
+        mTopicsDao.persistReturnedAppTopicsMap(
+                epochId1,
+                Map.of(
+                        Pair.create(app1, sdk), topic2,
+                        Pair.create(app2, sdk), topic2));
+        mTopicsDao.persistReturnedAppTopicsMap(
+                epochId2,
+                Map.of(
+                        Pair.create(app1, sdk), topic2,
+                        Pair.create(app3, sdk), topic2));
+        mTopicsDao.persistReturnedAppTopicsMap(epochId3, Map.of(Pair.create(app4, sdk), topic2));
+
+        // Real Cache Manager requires loading cache before getTopics() being called.
+        // The results are observed at Epoch4
+        when(mMockEpochManager.getCurrentEpochId()).thenReturn(epochId4);
+        mTopicsWorker.loadCache();
+        // Enable Topic Contributors check feature
+        doReturn(true).when(mDbHelper).supportsTopicContributorsTable();
+        when(mMockFlags.getEnableTopicContributorsCheck()).thenReturn(true);
+
+        // Verify apps are able to get topic before uninstallation happens
+        GetTopicsResult topic2GetTopicsResult =
+                new GetTopicsResult.Builder()
+                        .setResultCode(STATUS_SUCCESS)
+                        .setTaxonomyVersions(List.of(taxonomyVersion))
+                        .setModelVersions(List.of(modelVersion))
+                        .setTopics(List.of(topic2.getTopic()))
+                        .build();
+        assertThat(mTopicsWorker.getTopics(app1, sdk)).isEqualTo(topic2GetTopicsResult);
+        assertThat(mTopicsWorker.getTopics(app2, sdk)).isEqualTo(topic2GetTopicsResult);
+        assertThat(mTopicsWorker.getTopics(app3, sdk)).isEqualTo(topic2GetTopicsResult);
+        assertThat(mTopicsWorker.getTopics(app4, sdk)).isEqualTo(topic2GetTopicsResult);
+
+        // Uninstall app1
+        Uri packageUri = Uri.parse("package:" + app1);
+        mTopicsWorker.handleAppUninstallation(packageUri);
+
+        // Verify Topics API results at Epoch 4
+        GetTopicsResult emptyGetTopicsResult =
+                new GetTopicsResult.Builder()
+                        .setResultCode(STATUS_SUCCESS)
+                        .setTaxonomyVersions(Collections.emptyList())
+                        .setModelVersions(Collections.emptyList())
+                        .setTopics(Collections.emptyList())
+                        .build();
+
+        // app1 doesn't have any returned topics due to uninstallation
+        assertThat(mTopicsWorker.getTopics(app1, sdk)).isEqualTo(emptyGetTopicsResult);
+        // app2 doesn't have returned topics as it only calls Topics API at Epoch1 and its returned
+        // topic topic2 is cleaned due to app1's uninstallation.
+        assertThat(mTopicsWorker.getTopics(app2, sdk)).isEqualTo(emptyGetTopicsResult);
+        // app3 has topic2 as returned topic. topic2 won't be cleaned at Epoch2 as both app1 and
+        // app3 are contributors to topic2 in Epoch3.
+        assertThat(mTopicsWorker.getTopics(app3, sdk)).isEqualTo(topic2GetTopicsResult);
+        // app4 has topic2 as returned topic. topic2 is cleaned as returned topic for app4 in
+        // Epoch1. However, app4 is still able to return topic2 as topic2 is a returned topic for
+        // app4 at Epoch3.
+        assertThat(mTopicsWorker.getTopics(app4, sdk)).isEqualTo(topic2GetTopicsResult);
+
+        // Verify TopicContributors Map is updated: app1 should be removed after the uninstallation.
+        // To make the result more readable, original TopicContributors Map before uninstallation is
+        // Epoch1:  topic1 -> app1, app2, app4
+        //          topic2 -> app1
+        //          topic3 -> app2, app4
+        // Epoch2:  topic1 -> app1, app3
+        //          topic2 -> app1, app3
+        // Epoch3:  topic2 -> app4
+        assertThat(mTopicsDao.retrieveTopicToContributorsMap(epochId1))
+                .isEqualTo(
+                        Map.of(
+                                topic1.getTopic(),
+                                Set.of(app2, app4),
+                                topic3.getTopic(),
+                                Set.of(app2, app4)));
+        assertThat(mTopicsDao.retrieveTopicToContributorsMap(epochId2))
+                .isEqualTo(
+                        Map.of(topic1.getTopic(), Set.of(app3), topic2.getTopic(), Set.of(app3)));
+        assertThat(mTopicsDao.retrieveTopicToContributorsMap(epochId3))
+                .isEqualTo(Map.of(topic2.getTopic(), Set.of(app4)));
+    }
+
+    @Test
+    public void testHandleAppUninstallation_contributorDeletionsToSameTopic() {
+        // To test the scenario a topic has two contributors, and both are deleted consecutively.
+        // Both app1 and app2 are contributors to topic1 and return topic1. app3 is not the
+        // contributor but also returns topic1, learnt via same SDK.
+        final long epochId1 = 1;
+        final long epochId2 = 2;
+        final long taxonomyVersion = 1L;
+        final long modelVersion = 1L;
+        final String app1 = "app1";
+        final String app2 = "app2";
+        final String app3 = "app3";
+        final String sdk = "sdk";
+        Topic topic1 = Topic.create(/* topic */ 1, taxonomyVersion, modelVersion);
+        Topic topic2 = Topic.create(/* topic */ 2, taxonomyVersion, modelVersion);
+        Topic topic3 = Topic.create(/* topic */ 3, taxonomyVersion, modelVersion);
+        Topic topic4 = Topic.create(/* topic */ 4, taxonomyVersion, modelVersion);
+        Topic topic5 = Topic.create(/* topic */ 5, taxonomyVersion, modelVersion);
+        Topic topic6 = Topic.create(/* topic */ 6, taxonomyVersion, modelVersion);
+
+        // Set the number in flag so that it doesn't depend on the actual value in PhFlags.
+        when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(1);
+
+        // Persist Top topics for epoch1 ~ epoch4
+        mTopicsDao.persistTopTopics(
+                epochId1, List.of(topic1, topic2, topic3, topic4, topic5, topic6));
+
+        // Persist AppClassificationTopics Table
+        mTopicsDao.persistAppClassificationTopics(
+                epochId1,
+                Map.of(
+                        app1, List.of(topic1),
+                        app2, List.of(topic1)));
+
+        // Compute and persist TopicContributors table
+        mTopicsDao.persistTopicContributors(
+                epochId1, Map.of(topic1.getTopic(), Set.of(app1, app2)));
+
+        // Persist ReturnedTopics table. App3 is able to
+        mTopicsDao.persistReturnedAppTopicsMap(
+                epochId1,
+                Map.of(
+                        Pair.create(app1, sdk), topic1,
+                        Pair.create(app2, sdk), topic1,
+                        Pair.create(app3, sdk), topic1));
+
+        // Real Cache Manager requires loading cache before getTopics() being called.
+        // The results are observed at EpochId = 2
+        when(mMockEpochManager.getCurrentEpochId()).thenReturn(epochId2);
+        mTopicsWorker.loadCache();
+        // Enable Topic Contributors check feature
+        doReturn(true).when(mDbHelper).supportsTopicContributorsTable();
+        when(mMockFlags.getEnableTopicContributorsCheck()).thenReturn(true);
+
+        // An empty getTopics() result to verify
+        GetTopicsResult emptyGetTopicsResult =
+                new GetTopicsResult.Builder()
+                        .setResultCode(STATUS_SUCCESS)
+                        .setTaxonomyVersions(Collections.emptyList())
+                        .setModelVersions(Collections.emptyList())
+                        .setTopics(Collections.emptyList())
+                        .build();
+
+        // Delete app1
+        mTopicsWorker.handleAppUninstallation(Uri.parse(app1));
+        // app1 should be deleted from TopicContributors Map
+        assertThat(mTopicsDao.retrieveTopicToContributorsMap(epochId1))
+                .isEqualTo(Map.of(topic1.getTopic(), Set.of(app2)));
+        // app1 should have empty result
+        assertThat(mTopicsWorker.getTopics(app1, sdk)).isEqualTo(emptyGetTopicsResult);
+
+        // Delete app2
+        mTopicsWorker.handleAppUninstallation(Uri.parse(app2));
+        // topic1 has app2 as the only contributor, and will be removed.
+        assertThat(mTopicsDao.retrieveTopicToContributorsMap(epochId1)).isEmpty();
+        // app2 should have empty result
+        assertThat(mTopicsWorker.getTopics(app2, sdk)).isEqualTo(emptyGetTopicsResult);
+
+        // As topic1 is removed, app3 also has empty result
+        assertThat(mTopicsWorker.getTopics(app3, sdk)).isEqualTo(emptyGetTopicsResult);
+    }
+
+    @Test
+    public void testHandleAppUninstallation_disableTopicContributorsCheck() {
+        final String app = "app";
+        Uri packageUri = Uri.parse("package:" + app);
+
+        AppUpdateManager appUpdateManager =
+                spy(new AppUpdateManager(mDbHelper, mTopicsDao, new Random(), mMockFlags));
+        TopicsWorker topicsWorker =
+                new TopicsWorker(
+                        mMockEpochManager,
+                        mCacheManager,
+                        mBlockedTopicsManager,
+                        appUpdateManager,
+                        mMockFlags);
+
+        when(mMockEpochManager.getCurrentEpochId()).thenReturn(/* any value */ 1L);
+        when(appUpdateManager.convertUriToAppName(packageUri)).thenReturn(app);
+
+        // Verify when feature flag is off
+        doReturn(false).when(mDbHelper).supportsTopicContributorsTable();
+        topicsWorker.handleAppUninstallation(packageUri);
+
+        verify(appUpdateManager).convertUriToAppName(packageUri);
+        verify(appUpdateManager, never()).handleTopTopicsWithoutContributors(anyLong(), any());
+        verify(appUpdateManager).deleteAppDataFromTableByApps(List.of(app));
+    }
+
+    @Test
     public void testHandleAppInstallation() {
         final String appName = "app";
         Uri packageUri = Uri.parse("package:" + appName);
@@ -879,7 +1210,6 @@ public class TopicsWorkerTest {
         final long modelVersion = 1L;
         final int numOfLookBackEpochs = 3;
         final int topicsNumberOfTopTopics = 5;
-        final int topicsNumberOfRandomTopics = 1;
         final int topicsPercentageForRandomTopic = 5;
 
         // As selectAssignedTopicFromTopTopics() randomly assigns a top topic, pass in a Mocked
@@ -896,10 +1226,10 @@ public class TopicsWorkerTest {
                             topicsPercentageForRandomTopic, // Will select a regular topic
                             1, // Index of second topic
                             0, // Will select a random topic
-                            topicsNumberOfRandomTopics - 1 // Select the last random topic
+                            0 // Select the first random topic
                         });
         AppUpdateManager appUpdateManager =
-                new AppUpdateManager(mTopicsDao, mockRandom, mMockFlags);
+                new AppUpdateManager(mDbHelper, mTopicsDao, mockRandom, mMockFlags);
         // Create a local TopicsWorker in order to user above local AppUpdateManager
         TopicsWorker topicsWorker =
                 new TopicsWorker(
@@ -911,10 +1241,12 @@ public class TopicsWorkerTest {
 
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numOfLookBackEpochs);
         when(mMockFlags.getTopicsNumberOfTopTopics()).thenReturn(topicsNumberOfTopTopics);
-        when(mMockFlags.getTopicsNumberOfRandomTopics()).thenReturn(topicsNumberOfRandomTopics);
         when(mMockFlags.getTopicsPercentageForRandomTopic())
                 .thenReturn(topicsPercentageForRandomTopic);
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
+        // Enable Topic Contributors check feature
+        doReturn(true).when(mDbHelper).supportsTopicContributorsTable();
+        when(mMockFlags.getEnableTopicContributorsCheck()).thenReturn(true);
 
         Topic topic1 = Topic.create(/* topic */ 1, taxonomyVersion, modelVersion);
         Topic topic2 = Topic.create(/* topic */ 2, taxonomyVersion, modelVersion);
@@ -929,6 +1261,11 @@ public class TopicsWorkerTest {
                 epochId >= currentEpochId - numOfLookBackEpochs;
                 epochId--) {
             mTopicsDao.persistTopTopics(epochId, topTopics);
+            // Persist topics to TopicContributors Table avoid being filtered out
+            for (Topic topic : topTopics) {
+                mTopicsDao.persistTopicContributors(
+                        epochId, Map.of(topic.getTopic(), Set.of(appName)));
+            }
         }
 
         // Verify getTopics() returns nothing before calling assignTopicsToNewlyInstalledApps()
@@ -965,7 +1302,6 @@ public class TopicsWorkerTest {
                 .containsExactlyElementsIn(expectedGetTopicsResult.getTopics());
 
         verify(mMockFlags).getTopicsNumberOfTopTopics();
-        verify(mMockFlags).getTopicsNumberOfRandomTopics();
         verify(mMockFlags).getTopicsPercentageForRandomTopic();
     }
 }

@@ -19,6 +19,7 @@ import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_DELETE
 
 import android.net.Uri;
 
+import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
@@ -53,7 +54,7 @@ public class DeleteExpiredDynamicIntegrationTest extends AbstractDbIntegrationTe
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
                         .setAppDestination(Uri.parse("android-app://com.example.app/aD"))
-                        .setPublisher(Uri.parse("https://example.com/aS"))
+                        .setPublisher(Uri.parse("https://example.test/aS"))
                         .setId("non-expired")
                         .setEventId(new UnsignedLong(2L))
                         .setPriority(3L)
@@ -77,7 +78,7 @@ public class DeleteExpiredDynamicIntegrationTest extends AbstractDbIntegrationTe
     // test, although it's ostensibly unused by this constructor.
     public DeleteExpiredDynamicIntegrationTest(DbState input, DbState output, String name) {
         super(input, output);
-        this.mDatastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
+        this.mDatastoreManager = new SQLDatastoreManager(DbTestUtil.getDbHelperForTest());
     }
 
     public void runActionToTest() {

@@ -34,6 +34,7 @@ import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.MeasurementHttpClient;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.util.AsyncFetchStatus;
+import com.android.adservices.service.measurement.util.AsyncRedirect;
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -62,7 +63,6 @@ import java.util.Optional;
  */
 public class AsyncTriggerFetcher {
 
-    private static final String ANDROID_APP_SCHEME = "android-app";
     private final MeasurementHttpClient mNetworkConnection = new MeasurementHttpClient();
     private final EnrollmentDao mEnrollmentDao;
     private final Flags mFlags;
@@ -135,7 +135,20 @@ public class AsyncTriggerFetcher {
                         json.getString(TriggerHeaderContract.AGGREGATABLE_VALUES));
             }
             if (!json.isNull(TriggerHeaderContract.FILTERS)) {
-                result.setFilters(json.getString(TriggerHeaderContract.FILTERS));
+                JSONObject filters = json.optJSONObject(TriggerHeaderContract.FILTERS);
+                if (!FetcherUtil.areValidAttributionFilters(filters)) {
+                    LogUtil.d("parseTrigger: filters are invalid.");
+                    return false;
+                }
+                result.setFilters(filters.toString());
+            }
+            if (!json.isNull(TriggerHeaderContract.NOT_FILTERS)) {
+                JSONObject notFilters = json.optJSONObject(TriggerHeaderContract.NOT_FILTERS);
+                if (!FetcherUtil.areValidAttributionFilters(notFilters)) {
+                    LogUtil.d("parseTrigger: not-filters are invalid.");
+                    return false;
+                }
+                result.setNotFilters(notFilters.toString());
             }
             boolean isWebAllow = isWebSource && isAllowDebugKey && isAdIdPermissionGranted;
             boolean isAppAllow = !isWebSource && isAdIdPermissionGranted;
@@ -167,7 +180,8 @@ public class AsyncTriggerFetcher {
             Uri registrant,
             long triggerTime,
             boolean shouldProcessRedirects,
-            @NonNull List<Uri> registrationsOut,
+            @AsyncRegistration.RedirectType int redirectType,
+            @NonNull AsyncRedirect asyncRedirect,
             @NonNull List<Trigger> triggerOut,
             boolean isWebSource,
             boolean isAllowDebugKey,
@@ -238,7 +252,11 @@ public class AsyncTriggerFetcher {
                 return;
             }
             if (shouldProcessRedirects) {
-                registrationsOut.addAll(FetcherUtil.parseRedirects(headers));
+                AsyncRedirect redirectsAndType = FetcherUtil.parseRedirects(headers, redirectType);
+                asyncRedirect.addToRedirects(redirectsAndType.getRedirects());
+                asyncRedirect.setRedirectType(redirectsAndType.getRedirectType());
+            } else {
+                asyncRedirect.setRedirectType(redirectType);
             }
         } catch (IOException e) {
             LogUtil.d(e, "Failed to get registration response");
@@ -257,17 +275,16 @@ public class AsyncTriggerFetcher {
     public Optional<Trigger> fetchTrigger(
             @NonNull AsyncRegistration asyncRegistration,
             @NonNull AsyncFetchStatus asyncFetchStatus,
-            List<Uri> redirects) {
+            AsyncRedirect asyncRedirect) {
         List<Trigger> out = new ArrayList<>();
         fetchTrigger(
-                asyncRegistration.getType() == AsyncRegistration.RegistrationType.WEB_TRIGGER
-                        ? asyncRegistration.getTopOrigin()
-                        : getAttributionDestination(asyncRegistration),
+                asyncRegistration.getTopOrigin(),
                 asyncRegistration.getRegistrationUri(),
                 asyncRegistration.getRegistrant(),
                 asyncRegistration.getRequestTime(),
-                asyncRegistration.getRedirect(),
-                redirects,
+                asyncRegistration.shouldProcessRedirects(),
+                asyncRegistration.getRedirectType(),
+                asyncRedirect,
                 out,
                 asyncRegistration.getType() == AsyncRegistration.RegistrationType.WEB_TRIGGER,
                 asyncRegistration.getDebugKeyAllowed(),
@@ -282,7 +299,6 @@ public class AsyncTriggerFetcher {
     }
 
     private Optional<String> getValidEventTriggerData(JSONArray eventTriggerDataArr) {
-
         if (eventTriggerDataArr.length() > MAX_ATTRIBUTION_EVENT_TRIGGER_DATA) {
             LogUtil.d(
                     "Event trigger data list has more entries than permitted. %s",
@@ -296,15 +312,15 @@ public class AsyncTriggerFetcher {
                 JSONObject eventTriggerDatum = eventTriggerDataArr.getJSONObject(i);
                 // Treat invalid trigger data, priority and deduplication key as if they were not
                 // set.
+                UnsignedLong triggerData = new UnsignedLong(0L);
                 if (!eventTriggerDatum.isNull("trigger_data")) {
                     try {
-                        validEventTriggerDatum.put(
-                                "trigger_data",
-                                new UnsignedLong(eventTriggerDatum.getString("trigger_data")));
+                        triggerData = new UnsignedLong(eventTriggerDatum.getString("trigger_data"));
                     } catch (NumberFormatException e) {
                         LogUtil.d(e, "getValidEventTriggerData: parsing trigger_data failed.");
                     }
                 }
+                validEventTriggerDatum.put("trigger_data", triggerData);
                 if (!eventTriggerDatum.isNull("priority")) {
                     try {
                         validEventTriggerDatum.put(
@@ -410,14 +426,10 @@ public class AsyncTriggerFetcher {
         return true;
     }
 
-    @VisibleForTesting
-    static Uri getAttributionDestination(AsyncRegistration request) {
-        return Uri.parse(ANDROID_APP_SCHEME + "://" + request.getRegistrant());
-    }
-
     private interface TriggerHeaderContract {
         String EVENT_TRIGGER_DATA = "event_trigger_data";
         String FILTERS = "filters";
+        String NOT_FILTERS = "not_filters";
         String AGGREGATABLE_TRIGGER_DATA = "aggregatable_trigger_data";
         String AGGREGATABLE_VALUES = "aggregatable_values";
         String DEBUG_KEY = "debug_key";

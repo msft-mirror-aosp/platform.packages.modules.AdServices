@@ -56,7 +56,7 @@ public final class EventReportTest {
     private static final String SOURCE_ID = UUID.randomUUID().toString();
     private static final String TRIGGER_ID = UUID.randomUUID().toString();
     private static final Uri APP_DESTINATION = Uri.parse("android-app://example1.app");
-    private static final Uri WEB_DESTINATION = Uri.parse("https://example1.com");
+    private static final Uri WEB_DESTINATION = Uri.parse("https://example1.test");
     private static final String EVENT_TRIGGERS =
             "[\n"
                     + "{\n"
@@ -82,13 +82,14 @@ public final class EventReportTest {
         assertEquals("1", eventReport.getId());
         assertEquals(new UnsignedLong(21L), eventReport.getSourceEventId());
         assertEquals("enrollment-id", eventReport.getEnrollmentId());
-        assertEquals("https://bar.com", eventReport.getAttributionDestination().toString());
+        assertEquals("https://bar.test", eventReport.getAttributionDestination().toString());
         assertEquals(1000L, eventReport.getTriggerTime());
         assertEquals(new UnsignedLong(8L), eventReport.getTriggerData());
         assertEquals(2L, eventReport.getTriggerPriority());
         assertEquals(new UnsignedLong(3L), eventReport.getTriggerDedupKey());
         assertEquals(2000L, eventReport.getReportTime());
         assertEquals(EventReport.Status.PENDING, eventReport.getStatus());
+        assertEquals(EventReport.DebugReportStatus.PENDING, eventReport.getDebugReportStatus());
         assertEquals(Source.SourceType.NAVIGATION, eventReport.getSourceType());
         assertEquals(SOURCE_DEBUG_KEY, eventReport.getSourceDebugKey());
         assertEquals(TRIGGER_DEBUG_KEY, eventReport.getTriggerDebugKey());
@@ -102,13 +103,14 @@ public final class EventReportTest {
         assertEquals("1", eventReport.getId());
         assertEquals(new UnsignedLong(21L), eventReport.getSourceEventId());
         assertEquals("enrollment-id", eventReport.getEnrollmentId());
-        assertEquals("https://bar.com", eventReport.getAttributionDestination().toString());
+        assertEquals("https://bar.test", eventReport.getAttributionDestination().toString());
         assertEquals(1000L, eventReport.getTriggerTime());
         assertEquals(new UnsignedLong(8L), eventReport.getTriggerData());
         assertEquals(2L, eventReport.getTriggerPriority());
         assertEquals(new UnsignedLong(3L), eventReport.getTriggerDedupKey());
         assertEquals(2000L, eventReport.getReportTime());
         assertEquals(EventReport.Status.PENDING, eventReport.getStatus());
+        assertEquals(EventReport.DebugReportStatus.PENDING, eventReport.getDebugReportStatus());
         assertEquals(Source.SourceType.NAVIGATION, eventReport.getSourceType());
         assertEquals(SOURCE_DEBUG_KEY, eventReport.getSourceDebugKey());
         assertNull(eventReport.getTriggerDebugKey());
@@ -122,13 +124,14 @@ public final class EventReportTest {
         assertEquals("1", eventReport.getId());
         assertEquals(new UnsignedLong(21L), eventReport.getSourceEventId());
         assertEquals("enrollment-id", eventReport.getEnrollmentId());
-        assertEquals("https://bar.com", eventReport.getAttributionDestination().toString());
+        assertEquals("https://bar.test", eventReport.getAttributionDestination().toString());
         assertEquals(1000L, eventReport.getTriggerTime());
         assertEquals(new UnsignedLong(8L), eventReport.getTriggerData());
         assertEquals(2L, eventReport.getTriggerPriority());
         assertEquals(new UnsignedLong(3L), eventReport.getTriggerDedupKey());
         assertEquals(2000L, eventReport.getReportTime());
         assertEquals(EventReport.Status.PENDING, eventReport.getStatus());
+        assertEquals(EventReport.DebugReportStatus.PENDING, eventReport.getDebugReportStatus());
         assertEquals(Source.SourceType.NAVIGATION, eventReport.getSourceType());
         assertNull(eventReport.getSourceDebugKey());
         assertEquals(TRIGGER_DEBUG_KEY, eventReport.getTriggerDebugKey());
@@ -149,6 +152,7 @@ public final class EventReportTest {
         assertNull(eventReport.getTriggerDedupKey());
         assertEquals(0L, eventReport.getReportTime());
         assertEquals(EventReport.Status.PENDING, eventReport.getStatus());
+        assertEquals(EventReport.DebugReportStatus.NONE, eventReport.getDebugReportStatus());
         assertNull(eventReport.getSourceType());
         assertNull(eventReport.getSourceDebugKey());
         assertNull(eventReport.getTriggerDebugKey());
@@ -507,13 +511,14 @@ public final class EventReportTest {
                         .setId("1")
                         .setSourceEventId(new UnsignedLong(22L))
                         .setEnrollmentId("another-enrollment-id")
-                        .setAttributionDestination(Uri.parse("https://bar.com"))
+                        .setAttributionDestination(Uri.parse("https://bar.test"))
                         .setTriggerTime(1000L)
                         .setTriggerData(new UnsignedLong(8L))
                         .setTriggerPriority(2L)
                         .setTriggerDedupKey(new UnsignedLong(3L))
                         .setReportTime(2000L)
                         .setStatus(EventReport.Status.PENDING)
+                        .setStatus(EventReport.DebugReportStatus.PENDING)
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .build();
         final Set<EventReport> eventReportSet1 = Set.of(eventReport1);
@@ -557,13 +562,14 @@ public final class EventReportTest {
                 .setId("1")
                 .setSourceEventId(new UnsignedLong(21L))
                 .setEnrollmentId("enrollment-id")
-                .setAttributionDestination(Uri.parse("https://bar.com"))
+                .setAttributionDestination(Uri.parse("https://bar.test"))
                 .setTriggerTime(1000L)
                 .setTriggerData(new UnsignedLong(8L))
                 .setTriggerPriority(2L)
                 .setTriggerDedupKey(new UnsignedLong(3L))
                 .setReportTime(2000L)
                 .setStatus(EventReport.Status.PENDING)
+                .setDebugReportStatus(EventReport.DebugReportStatus.PENDING)
                 .setSourceType(Source.SourceType.NAVIGATION)
                 .setSourceDebugKey(SOURCE_DEBUG_KEY)
                 .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
@@ -577,13 +583,14 @@ public final class EventReportTest {
                 .setId("1")
                 .setSourceEventId(new UnsignedLong(21L))
                 .setEnrollmentId("enrollment-id")
-                .setAttributionDestination(Uri.parse("https://bar.com"))
+                .setAttributionDestination(Uri.parse("https://bar.test"))
                 .setTriggerTime(1000L)
                 .setTriggerData(new UnsignedLong(8L))
                 .setTriggerPriority(2L)
                 .setTriggerDedupKey(new UnsignedLong(3L))
                 .setReportTime(2000L)
                 .setStatus(EventReport.Status.PENDING)
+                .setDebugReportStatus(EventReport.DebugReportStatus.PENDING)
                 .setSourceType(Source.SourceType.NAVIGATION)
                 .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
                 .setSourceId(SOURCE_ID)
@@ -596,13 +603,14 @@ public final class EventReportTest {
                 .setId("1")
                 .setSourceEventId(new UnsignedLong(21L))
                 .setEnrollmentId("enrollment-id")
-                .setAttributionDestination(Uri.parse("https://bar.com"))
+                .setAttributionDestination(Uri.parse("https://bar.test"))
                 .setTriggerTime(1000L)
                 .setTriggerData(new UnsignedLong(8L))
                 .setTriggerPriority(2L)
                 .setTriggerDedupKey(new UnsignedLong(3L))
                 .setReportTime(2000L)
                 .setStatus(EventReport.Status.PENDING)
+                .setDebugReportStatus(EventReport.DebugReportStatus.PENDING)
                 .setSourceType(Source.SourceType.NAVIGATION)
                 .setSourceDebugKey(SOURCE_DEBUG_KEY)
                 .setSourceId(SOURCE_ID)

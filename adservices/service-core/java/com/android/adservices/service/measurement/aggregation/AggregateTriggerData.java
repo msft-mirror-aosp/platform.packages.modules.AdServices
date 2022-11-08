@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement.aggregation;
 
+import com.android.adservices.service.measurement.FilterData;
+
 import java.math.BigInteger;
 import java.util.HashSet;
 import java.util.Objects;
@@ -29,8 +31,8 @@ public class AggregateTriggerData {
 
     private BigInteger mKey;
     private Set<String> mSourceKeys;
-    private Optional<AggregateFilterData> mFilter;
-    private Optional<AggregateFilterData> mNotFilter;
+    private Optional<FilterData> mFilter;
+    private Optional<FilterData> mNotFilter;
 
     private AggregateTriggerData() {
         mKey = null;
@@ -74,14 +76,14 @@ public class AggregateTriggerData {
      * Returns the filter which controls when aggregate trigger data ise used based on impression
      * side information.
      */
-    public Optional<AggregateFilterData> getFilter() {
+    public Optional<FilterData> getFilter() {
         return mFilter;
     }
 
     /**
      * Returns the not_filter, reverse of filter.
      */
-    public Optional<AggregateFilterData> getNotFilter() {
+    public Optional<FilterData> getNotFilter() {
         return mNotFilter;
     }
 
@@ -114,7 +116,7 @@ public class AggregateTriggerData {
         /**
          * See {@link AggregateTriggerData#getFilter()}.
          */
-        public Builder setFilter(AggregateFilterData filter) {
+        public Builder setFilter(FilterData filter) {
             mBuilding.mFilter = Optional.of(filter);
             return this;
         }
@@ -122,7 +124,7 @@ public class AggregateTriggerData {
         /**
          * See {@link AggregateTriggerData#getNotFilter()}
          */
-        public Builder setNotFilter(AggregateFilterData notFilter) {
+        public Builder setNotFilter(FilterData notFilter) {
             mBuilding.mNotFilter = Optional.of(notFilter);
             return this;
         }

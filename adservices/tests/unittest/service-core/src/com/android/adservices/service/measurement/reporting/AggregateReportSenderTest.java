@@ -23,6 +23,8 @@ import android.net.Uri;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
+import com.google.common.truth.Truth;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Rule;
@@ -79,7 +81,7 @@ public class AggregateReportSenderTest {
                 createAggregateReportBodyExample1().toJson(AggregateCryptoFixture.getKey());
         Uri reportingOrigin = Uri.parse(REPORTING_ORIGIN);
 
-        AggregateReportSender aggregateReportSender = new AggregateReportSender();
+        AggregateReportSender aggregateReportSender = new AggregateReportSender(false);
         AggregateReportSender spyAggregateReportSender = Mockito.spy(aggregateReportSender);
 
         Mockito.doReturn(httpUrlConnection).when(spyAggregateReportSender)
@@ -98,8 +100,16 @@ public class AggregateReportSenderTest {
         URL spyUrl = Mockito.spy(new URL("https://foo"));
         Mockito.doReturn(mockConnection).when(spyUrl).openConnection();
 
-        AggregateReportSender aggregateReportSender = new AggregateReportSender();
+        AggregateReportSender aggregateReportSender = new AggregateReportSender(false);
         HttpURLConnection connection = aggregateReportSender.createHttpUrlConnection(spyUrl);
         assertEquals(mockConnection, connection);
+    }
+
+    @Test
+    public void testDebugReportUriPath() {
+        Truth.assertThat(new AggregateReportSender(false).getReportUriPath())
+                .isEqualTo(AggregateReportSender.AGGREGATE_ATTRIBUTION_REPORT_URI_PATH);
+        Truth.assertThat(new AggregateReportSender(true).getReportUriPath())
+                .isEqualTo(AggregateReportSender.DEBUG_AGGREGATE_ATTRIBUTION_REPORT_URI_PATH);
     }
 }

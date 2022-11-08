@@ -21,6 +21,7 @@ import static android.os.storage.StorageManager.UUID_DEFAULT;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.fail;
 
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
@@ -80,7 +81,13 @@ public class SdkSandboxStorageTestApp {
     public void loadSdk() throws Exception {
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        if (!callback.isLoadSdkSuccessful()) {
+            fail(
+                    "Load SDK was not successful. errorCode: "
+                            + callback.getLoadSdkErrorCode()
+                            + ", errorMsg: "
+                            + callback.getLoadSdkErrorMsg());
+        }
 
         // Store the returned SDK interface so that we can interact with it later.
         mSdk = IStorageTestSdk1Api.Stub.asInterface(callback.getSandboxedSdk().getInterface());
@@ -126,25 +133,23 @@ public class SdkSandboxStorageTestApp {
         final StorageStats finalAppStats = stats.queryStatsForUid(UUID_DEFAULT, uid);
         final StorageStats finalUserStats = stats.queryStatsForUser(UUID_DEFAULT, user);
 
-        // Verify the space used with a 5% error margin
         long deltaAppSize = 2 * sizeInBytes;
         long deltaCacheSize = sizeInBytes;
-        long errorMarginSize = sizeInBytes / 20; // 0.5 MB
 
         // Assert app size is same
         final long appSizeAppStats = finalAppStats.getDataBytes() - initialAppStats.getDataBytes();
         final long appSizeUserStats =
                 finalUserStats.getDataBytes() - initialUserStats.getDataBytes();
-        assertMostlyEquals(deltaAppSize, appSizeAppStats, errorMarginSize);
-        assertMostlyEquals(deltaAppSize, appSizeUserStats, errorMarginSize);
+        assertMostlyEquals(deltaAppSize, appSizeAppStats, 5);
+        assertMostlyEquals(deltaAppSize, appSizeUserStats, 10);
 
         // Assert cache size is same
         final long cacheSizeAppStats =
                 finalAppStats.getCacheBytes() - initialAppStats.getCacheBytes();
         final long cacheSizeUserStats =
                 finalUserStats.getCacheBytes() - initialUserStats.getCacheBytes();
-        assertMostlyEquals(deltaCacheSize, cacheSizeAppStats, errorMarginSize);
-        assertMostlyEquals(deltaCacheSize, cacheSizeUserStats, errorMarginSize);
+        assertMostlyEquals(deltaCacheSize, cacheSizeAppStats, 5);
+        assertMostlyEquals(deltaCacheSize, cacheSizeUserStats, 10);
     }
 
     private static void assertDirIsNotAccessible(String path) {
@@ -159,9 +164,18 @@ public class SdkSandboxStorageTestApp {
         assertThat(new File(path).canExecute()).isFalse();
     }
 
-    private static void assertMostlyEquals(long expected, long actual, long delta) {
-        if (Math.abs(expected - actual) > delta) {
-            throw new AssertionFailedError("Expected roughly " + expected + " but was " + actual);
+    private static void assertMostlyEquals(
+            long expected, long actual, long errorMarginInPercentage) {
+        final double diffInSize = Math.abs(expected - actual);
+        final double diffInPercentage = (diffInSize / expected) * 100;
+        if (diffInPercentage > errorMarginInPercentage) {
+            throw new AssertionFailedError(
+                    "Expected roughly "
+                            + expected
+                            + " but was "
+                            + actual
+                            + ". Diff in percentage: "
+                            + Math.round(diffInPercentage * 100) / 100.00);
         }
     }
 }

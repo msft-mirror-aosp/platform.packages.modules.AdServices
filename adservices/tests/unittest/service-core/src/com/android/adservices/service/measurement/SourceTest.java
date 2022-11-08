@@ -29,7 +29,6 @@ import android.net.Uri;
 import androidx.annotation.Nullable;
 
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
-import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 import com.android.adservices.service.measurement.noising.ImpressionNoiseParams;
 import com.android.adservices.service.measurement.noising.ImpressionNoiseUtil;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -78,16 +77,16 @@ public class SourceTest {
         aggregateSource.put(jsonObject1);
         aggregateSource.put(jsonObject2);
 
-        JSONObject aggregateFilterData = new JSONObject();
-        aggregateFilterData.put(
+        JSONObject filterData = new JSONObject();
+        filterData.put(
                 "conversion_subdomain", Collections.singletonList("electronics.megastore"));
-        aggregateFilterData.put("product", Arrays.asList("1234", "2345"));
+        filterData.put("product", Arrays.asList("1234", "2345"));
         assertEquals(
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
-                        .setAppDestination(Uri.parse("android-app://example.com/aD1"))
-                        .setWebDestination(Uri.parse("https://example.com/aD2"))
-                        .setPublisher(Uri.parse("https://example.com/aS"))
+                        .setAppDestination(Uri.parse("android-app://example.test/aD1"))
+                        .setWebDestination(Uri.parse("https://example.test/aD2"))
+                        .setPublisher(Uri.parse("https://example.test/aS"))
                         .setPublisherType(EventSurfaceType.WEB)
                         .setId("1")
                         .setEventId(new UnsignedLong(2L))
@@ -101,7 +100,7 @@ public class SourceTest {
                         .setStatus(Source.Status.ACTIVE)
                         .setSourceType(Source.SourceType.EVENT)
                         .setRegistrant(Uri.parse("android-app://com.example.abc"))
-                        .setAggregateFilterData(aggregateFilterData.toString())
+                        .setFilterData(filterData.toString())
                         .setAggregateSource(aggregateSource.toString())
                         .setAggregateContributions(50001)
                         .setDebugKey(DEBUG_KEY_1)
@@ -110,9 +109,9 @@ public class SourceTest {
                         .build(),
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
-                        .setAppDestination(Uri.parse("android-app://example.com/aD1"))
-                        .setWebDestination(Uri.parse("https://example.com/aD2"))
-                        .setPublisher(Uri.parse("https://example.com/aS"))
+                        .setAppDestination(Uri.parse("android-app://example.test/aD1"))
+                        .setWebDestination(Uri.parse("https://example.test/aD2"))
+                        .setPublisher(Uri.parse("https://example.test/aS"))
                         .setPublisherType(EventSurfaceType.WEB)
                         .setId("1")
                         .setEventId(new UnsignedLong(2L))
@@ -126,7 +125,7 @@ public class SourceTest {
                         .setStatus(Source.Status.ACTIVE)
                         .setSourceType(Source.SourceType.EVENT)
                         .setRegistrant(Uri.parse("android-app://com.example.abc"))
-                        .setAggregateFilterData(aggregateFilterData.toString())
+                        .setFilterData(filterData.toString())
                         .setAggregateSource(aggregateSource.toString())
                         .setAggregateContributions(50001)
                         .setDebugKey(DEBUG_KEY_1)
@@ -145,17 +144,17 @@ public class SourceTest {
                 SourceFixture.getValidSourceBuilder().setEventId(new UnsignedLong(2L)).build());
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder()
-                        .setAppDestination(Uri.parse("android-app://1.com"))
+                        .setAppDestination(Uri.parse("android-app://1.test"))
                         .build(),
                 SourceFixture.getValidSourceBuilder()
-                        .setAppDestination(Uri.parse("android-app://2.com"))
+                        .setAppDestination(Uri.parse("android-app://2.test"))
                         .build());
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder()
-                        .setWebDestination(Uri.parse("https://1.com"))
+                        .setWebDestination(Uri.parse("https://1.test"))
                         .build(),
                 SourceFixture.getValidSourceBuilder()
-                        .setWebDestination(Uri.parse("https://2.com"))
+                        .setWebDestination(Uri.parse("https://2.test"))
                         .build());
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder()
@@ -166,9 +165,9 @@ public class SourceTest {
                         .build());
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder()
-                        .setPublisher(Uri.parse("https://1.com")).build(),
+                        .setPublisher(Uri.parse("https://1.test")).build(),
                 SourceFixture.getValidSourceBuilder()
-                        .setPublisher(Uri.parse("https://2.com")).build());
+                        .setPublisher(Uri.parse("https://2.test")).build());
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder()
                         .setPublisherType(EventSurfaceType.APP).build(),
@@ -262,7 +261,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
-                SourceFixture.ValidSourceParams.buildAggregateFilterData());
+                SourceFixture.ValidSourceParams.buildFilterData());
 
         assertInvalidSourceArguments(
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
@@ -280,7 +279,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
-                SourceFixture.ValidSourceParams.buildAggregateFilterData());
+                SourceFixture.ValidSourceParams.buildFilterData());
     }
 
     @Test
@@ -301,7 +300,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
-                SourceFixture.ValidSourceParams.buildAggregateFilterData());
+                SourceFixture.ValidSourceParams.buildFilterData());
 
         assertInvalidSourceArguments(
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
@@ -319,7 +318,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
-                SourceFixture.ValidSourceParams.buildAggregateFilterData());
+                SourceFixture.ValidSourceParams.buildFilterData());
 
         assertInvalidSourceArguments(
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
@@ -337,7 +336,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
-                SourceFixture.ValidSourceParams.buildAggregateFilterData());
+                SourceFixture.ValidSourceParams.buildFilterData());
     }
 
     @Test
@@ -358,7 +357,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
-                SourceFixture.ValidSourceParams.buildAggregateFilterData());
+                SourceFixture.ValidSourceParams.buildFilterData());
     }
 
     @Test
@@ -379,7 +378,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
-                SourceFixture.ValidSourceParams.buildAggregateFilterData());
+                SourceFixture.ValidSourceParams.buildFilterData());
 
         assertInvalidSourceArguments(
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
@@ -397,7 +396,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
-                SourceFixture.ValidSourceParams.buildAggregateFilterData());
+                SourceFixture.ValidSourceParams.buildFilterData());
     }
 
     @Test
@@ -418,7 +417,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
-                SourceFixture.ValidSourceParams.buildAggregateFilterData());
+                SourceFixture.ValidSourceParams.buildFilterData());
     }
 
     @Test
@@ -598,8 +597,8 @@ public class SourceTest {
         final AggregatableAttributionSource attributionSource =
                 new AggregatableAttributionSource.Builder()
                         .setAggregatableSource(aggregatableSource)
-                        .setAggregateFilterData(
-                                new AggregateFilterData.Builder()
+                        .setFilterData(
+                                new FilterData.Builder()
                                         .setAttributionFilterMap(filterMap)
                                         .build())
                         .build();
@@ -611,14 +610,14 @@ public class SourceTest {
 
         assertNotNull(source.getAggregatableAttributionSource());
         assertNotNull(source.getAggregatableAttributionSource().getAggregatableSource());
-        assertNotNull(source.getAggregatableAttributionSource().getAggregateFilterData());
+        assertNotNull(source.getAggregatableAttributionSource().getFilterData());
         assertEquals(
                 aggregatableSource,
                 source.getAggregatableAttributionSource().getAggregatableSource());
         assertEquals(
                 filterMap,
                 source.getAggregatableAttributionSource()
-                        .getAggregateFilterData()
+                        .getFilterData()
                         .getAttributionFilterMap());
     }
 
@@ -1265,58 +1264,52 @@ public class SourceTest {
     }
 
     @Test
-    public void testParseAggregateFilterData_nonEmpty() throws JSONException {
-        JSONObject filterData = new JSONObject();
-        filterData.put("conversion", new JSONArray(Collections.singletonList("electronics")));
-        filterData.put("product", new JSONArray(Arrays.asList("1234", "2345")));
+    public void testParseFilterData_nonEmpty() throws JSONException {
+        JSONObject filterDataJson = new JSONObject();
+        filterDataJson.put("conversion", new JSONArray(Collections.singletonList("electronics")));
+        filterDataJson.put("product", new JSONArray(Arrays.asList("1234", "2345")));
         Source source = SourceFixture.getValidSourceBuilder()
                 .setSourceType(Source.SourceType.NAVIGATION)
-                .setAggregateFilterData(filterData.toString())
+                .setFilterData(filterDataJson.toString())
                 .build();
-        AggregateFilterData aggregateFilterData = source.parseAggregateFilterData();
-        assertEquals(aggregateFilterData.getAttributionFilterMap().size(), 3);
+        FilterData filterData = source.parseFilterData();
+        assertEquals(filterData.getAttributionFilterMap().size(), 3);
         assertEquals(Collections.singletonList("electronics"),
-                aggregateFilterData.getAttributionFilterMap().get("conversion"));
+                filterData.getAttributionFilterMap().get("conversion"));
         assertEquals(Arrays.asList("1234", "2345"),
-                aggregateFilterData.getAttributionFilterMap().get("product"));
+                filterData.getAttributionFilterMap().get("product"));
         assertEquals(Collections.singletonList("navigation"),
-                aggregateFilterData.getAttributionFilterMap().get("source_type"));
+                filterData.getAttributionFilterMap().get("source_type"));
     }
 
     @Test
-    public void testParseAggregateFilterData_nullAggregateFilterData() throws JSONException {
+    public void testParseFilterData_nullFilterData() throws JSONException {
         Source source = SourceFixture.getValidSourceBuilder()
                 .setSourceType(Source.SourceType.EVENT)
                 .build();
-        AggregateFilterData aggregateFilterData = source.parseAggregateFilterData();
-        assertEquals(aggregateFilterData.getAttributionFilterMap().size(), 1);
+        FilterData filterData = source.parseFilterData();
+        assertEquals(filterData.getAttributionFilterMap().size(), 1);
         assertEquals(Collections.singletonList("event"),
-                aggregateFilterData.getAttributionFilterMap().get("source_type"));
+                filterData.getAttributionFilterMap().get("source_type"));
     }
 
     @Test
-    public void testParseAggregateFilterData_emptyAggregateFilterData() throws JSONException {
+    public void testParseFilterData_emptyFilterData() throws JSONException {
         Source source = SourceFixture.getValidSourceBuilder()
                 .setSourceType(Source.SourceType.EVENT)
-                .setAggregateFilterData("")
+                .setFilterData("")
                 .build();
-        AggregateFilterData aggregateFilterData = source.parseAggregateFilterData();
-        assertEquals(aggregateFilterData.getAttributionFilterMap().size(), 1);
+        FilterData filterData = source.parseFilterData();
+        assertEquals(filterData.getAttributionFilterMap().size(), 1);
         assertEquals(Collections.singletonList("event"),
-                aggregateFilterData.getAttributionFilterMap().get("source_type"));
+                filterData.getAttributionFilterMap().get("source_type"));
     }
 
     @Test
     public void testParseAggregateSource() throws JSONException {
-        JSONArray aggregatableSource = new JSONArray();
-        JSONObject jsonObject1 = new JSONObject();
-        jsonObject1.put("id", "campaignCounts");
-        jsonObject1.put("key_piece", "0x159");
-        JSONObject jsonObject2 = new JSONObject();
-        jsonObject2.put("id", "geoValue");
-        jsonObject2.put("key_piece", "0x5");
-        aggregatableSource.put(jsonObject1);
-        aggregatableSource.put(jsonObject2);
+        JSONObject aggregatableSource = new JSONObject();
+        aggregatableSource.put("campaignCounts", "0x159");
+        aggregatableSource.put("geoValue", "0x5");
 
         JSONObject filterData = new JSONObject();
         filterData.put("conversion_subdomain",
@@ -1326,7 +1319,7 @@ public class SourceTest {
         Source source = SourceFixture.getValidSourceBuilder()
                 .setSourceType(Source.SourceType.NAVIGATION)
                 .setAggregateSource(aggregatableSource.toString())
-                .setAggregateFilterData(filterData.toString()).build();
+                .setFilterData(filterData.toString()).build();
         Optional<AggregatableAttributionSource> aggregatableAttributionSource =
                 source.parseAggregateSource();
         assertTrue(aggregatableAttributionSource.isPresent());
@@ -1335,7 +1328,7 @@ public class SourceTest {
         assertEquals(
                 aggregateSource.getAggregatableSource().get("campaignCounts").longValue(), 345L);
         assertEquals(aggregateSource.getAggregatableSource().get("geoValue").longValue(), 5L);
-        assertEquals(aggregateSource.getAggregateFilterData().getAttributionFilterMap().size(), 3);
+        assertEquals(aggregateSource.getFilterData().getAttributionFilterMap().size(), 3);
     }
 
     private void verifyAlgorithmicFakeReportGeneration(Source source, int expectedCardinality) {
@@ -1406,7 +1399,7 @@ public class SourceTest {
             @Nullable UnsignedLong debugKey,
             @Source.AttributionMode int attributionMode,
             @Nullable String aggregateSource,
-            @Nullable String aggregateFilterData) {
+            @Nullable String filterData) {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -1425,7 +1418,7 @@ public class SourceTest {
                                 .setInstallCooldownWindow(installCooldownWindow)
                                 .setAttributionMode(attributionMode)
                                 .setAggregateSource(aggregateSource)
-                                .setAggregateFilterData(aggregateFilterData)
+                                .setFilterData(filterData)
                                 .setDebugKey(debugKey)
                                 .build());
     }

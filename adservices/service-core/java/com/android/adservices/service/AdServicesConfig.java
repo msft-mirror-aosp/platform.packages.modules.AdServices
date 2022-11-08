@@ -52,7 +52,7 @@ public class AdServicesConfig {
     public static final int MEASUREMENT_DELETE_EXPIRED_JOB_ID = 4;
 
     public static long MEASUREMENT_DELETE_EXPIRED_JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(24);
-    public static long MEASUREMENT_DELETE_EXPIRED_WINDOW_MS = TimeUnit.DAYS.toMillis(30);
+    public static long MEASUREMENT_DELETE_EXPIRED_WINDOW_MS = TimeUnit.DAYS.toMillis(37);
 
     /**
      * Returns the min time period (in millis) between each expired-record deletion maintenance job
@@ -152,14 +152,20 @@ public class AdServicesConfig {
     public static long MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(24);
 
     /**
+     * Job ID for the Async Registration Queue JobService ({@link
+     * com.android.adservices.service.measurement.AsyncRegistrationQueueJobService})
+     */
+    public static final int ASYNC_REGISTRATION_QUEUE_JOB_ID = 15;
+
+    /**
      * Job ID for Measurement Delete Records From UninstalledApps Job ({@link
      * com.android.adservices.service.measurement.DeleteUninstalledJobService})
      */
     public static final int MEASUREMENT_DELETE_UNINSTALLED_JOB_ID = 16;
 
     /**
-     * Job ID for the Async Registration Queue JobService ({@link
-     * com.android.adservices.service.measurement.AsyncRegistrationQueueJobService})
+     * Job ID for Measurement Debug Reporting Job ({@link
+     * com.android.adservices.service.measurement.reporting.DebugReportingJobService})
      */
-    public static final int ASYNC_REGISTRATION_QUEUE_JOB_ID = 15;
+    public static final int MEASUREMENT_DEBUG_REPORT_JOB_ID = 17;
 }

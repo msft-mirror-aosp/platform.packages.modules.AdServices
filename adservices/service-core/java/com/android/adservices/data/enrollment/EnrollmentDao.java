@@ -21,6 +21,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
@@ -31,10 +32,14 @@ import androidx.annotation.Nullable;
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.adservices.service.measurement.util.Web;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 /** Data Access Object for the EnrollmentData. */
@@ -126,24 +131,29 @@ public class EnrollmentDao implements IEnrollmentDao {
 
     @Override
     @Nullable
-    public EnrollmentData getEnrollmentDataFromMeasurementUrl(String url) {
+    public EnrollmentData getEnrollmentDataFromMeasurementUrl(Uri url) {
+        Optional<Uri> registrationBaseUri = Web.topPrivateDomainSchemeAndPath(url);
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
-        if (db == null) {
+        if (!registrationBaseUri.isPresent() || db == null) {
             return null;
         }
+
+        String selectionQuery =
+                getAttributionUrlSelection(
+                                EnrollmentTables.EnrollmentDataContract
+                                        .ATTRIBUTION_SOURCE_REGISTRATION_URL,
+                                registrationBaseUri.get())
+                        + " OR "
+                        + getAttributionUrlSelection(
+                                EnrollmentTables.EnrollmentDataContract
+                                        .ATTRIBUTION_TRIGGER_REGISTRATION_URL,
+                                registrationBaseUri.get());
+
         try (Cursor cursor =
                 db.query(
                         EnrollmentTables.EnrollmentDataContract.TABLE,
                         /*columns=*/ null,
-                        EnrollmentTables.EnrollmentDataContract.ATTRIBUTION_SOURCE_REGISTRATION_URL
-                                + " LIKE '%"
-                                + url
-                                + "%' OR "
-                                + EnrollmentTables.EnrollmentDataContract
-                                        .ATTRIBUTION_TRIGGER_REGISTRATION_URL
-                                + " LIKE '%"
-                                + url
-                                + "%'",
+                        selectionQuery,
                         null,
                         /*groupBy=*/ null,
                         /*having=*/ null,
@@ -153,9 +163,43 @@ public class EnrollmentDao implements IEnrollmentDao {
                 LogUtil.d("Failed to match enrollment for url \"%s\"", url);
                 return null;
             }
-            cursor.moveToNext();
-            return SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor);
+
+            while (cursor.moveToNext()) {
+                EnrollmentData data = SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor);
+                if (validateAttributionUrl(
+                                data.getAttributionSourceRegistrationUrl(), registrationBaseUri)
+                        || validateAttributionUrl(
+                                data.getAttributionTriggerRegistrationUrl(), registrationBaseUri)) {
+                    return data;
+                }
+            }
+            return null;
         }
+    }
+
+    private boolean validateAttributionUrl(
+            List<String> enrolledUris, Optional<Uri> registrationBaseUri) {
+        for (String uri : enrolledUris) {
+            Optional<Uri> enrolledBaseUri = Web.topPrivateDomainSchemeAndPath(Uri.parse(uri));
+            if (registrationBaseUri.equals(enrolledBaseUri)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private String getAttributionUrlSelection(String field, Uri baseUri) {
+        return String.format(
+                Locale.ENGLISH,
+                "(%1$s LIKE %2$s OR %1$s LIKE %3$s)",
+                field,
+                DatabaseUtils.sqlEscapeString("%" + baseUri.toString() + "%"),
+                DatabaseUtils.sqlEscapeString(
+                        baseUri.getScheme()
+                                + "://%."
+                                + baseUri.getEncodedAuthority()
+                                + baseUri.getPath()
+                                + "%"));
     }
 
     @Override

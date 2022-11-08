@@ -16,8 +16,15 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.common.AdServicesStatusUtils.ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 
+import static com.android.adservices.data.adselection.AdSelectionDatabase.DATABASE_NAME;
 import static com.android.adservices.service.adselection.AdSelectionRunner.AD_SELECTION_THROTTLED;
 import static com.android.adservices.service.adselection.AdSelectionRunner.AD_SELECTION_TIMED_OUT;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_AD_SELECTION_FAILURE;
@@ -26,6 +33,15 @@ import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_WINNING_AD_FOUND;
 import static com.android.adservices.service.adselection.AdSelectionRunner.JS_SANDBOX_IS_NOT_AVAILABLE;
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_SELECT_ADS;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.DB_AD_SELECTION_FILE_SIZE;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.IS_RMKT_ADS_WON;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.PERSIST_AD_SELECTION_END_TIMESTAMP;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.PERSIST_AD_SELECTION_START_TIMESTAMP;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.RUN_AD_SELECTION_INTERNAL_FINAL_LATENCY_MS;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.RUN_AD_SELECTION_OVERALL_LATENCY_MS;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.START_ELAPSED_TIMESTAMP;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.STOP_ELAPSED_TIMESTAMP;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.sCallerMetadata;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
@@ -38,6 +54,8 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyZeroInteractions;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
+
+import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -68,6 +86,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
+import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.DBAdSelection;
@@ -75,6 +94,7 @@ import com.android.adservices.data.adselection.DBAdSelectionEntry;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdServicesHttpsClient;
@@ -85,9 +105,10 @@ import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
-import com.android.adservices.service.stats.ApiServiceLatencyCalculator;
+import com.android.adservices.service.stats.RunAdSelectionProcessReportedStats;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
@@ -99,6 +120,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.function.ThrowingRunnable;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.MockitoSession;
 import org.mockito.Spy;
@@ -107,6 +130,7 @@ import org.mockito.internal.stubbing.answers.Returns;
 import org.mockito.quality.Strictness;
 import org.mockito.stubbing.Answer;
 
+import java.io.File;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -141,8 +165,9 @@ public class OnDeviceAdSelectionRunnerTest {
             Uri.parse("https://developer.android.com/test/decisions_logic_uris");
     private static final Uri TRUSTED_SIGNALS_URI =
             Uri.parse("https://developer.android.com/test/trusted_signals_uri");
-    private static final int RUN_AD_SELECTION_OVERALL_LATENCY_MS = 200;
-
+    private static final boolean IS_RMKT_ADS_UNSET = false;
+    private static final int PERSIST_AD_SELECTION_LATENCY_MS =
+            (int) (PERSIST_AD_SELECTION_END_TIMESTAMP - PERSIST_AD_SELECTION_START_TIMESTAMP);
     private MockitoSession mStaticMockSession = null;
     @Mock private AdsScoreGenerator mMockAdsScoreGenerator;
     @Mock private AdBidGenerator mMockAdBidGenerator;
@@ -151,7 +176,12 @@ public class OnDeviceAdSelectionRunnerTest {
     @Spy private Clock mClock = Clock.systemUTC();
     @Mock private ConsentManager mConsentManagerMock;
     @Mock private Throttler mMockThrottler;
-    @Mock private ApiServiceLatencyCalculator mMockApiServiceLatencyCalculator;
+    @Mock private com.android.adservices.service.stats.Clock mAdSelectionExecutionLoggerClock;
+    @Mock private File mMockDBAdSelectionFile;
+
+    @Captor
+    ArgumentCaptor<RunAdSelectionProcessReportedStats>
+            mRunAdSelectionProcessReportedStatsArgumentCaptor;
 
     private Flags mFlags =
             new Flags() {
@@ -165,7 +195,7 @@ public class OnDeviceAdSelectionRunnerTest {
                     return true;
                 }
             };
-    private Context mContext = ApplicationProvider.getApplicationContext();
+    @Spy private Context mContext = ApplicationProvider.getApplicationContext();
     private AdServicesHttpsClient mAdServicesHttpsClient;
     private ExecutorService mLightweightExecutorService;
     private ExecutorService mBackgroundExecutorService;
@@ -176,7 +206,10 @@ public class OnDeviceAdSelectionRunnerTest {
     private AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
     private final FledgeAuthorizationFilter mFledgeAuthorizationFilter =
-            FledgeAuthorizationFilter.create(mContext, mAdServicesLoggerMock);
+            new FledgeAuthorizationFilter(
+                    mContext.getPackageManager(),
+                    new EnrollmentDao(mContext, DbTestUtil.getDbHelperForTest()),
+                    mAdServicesLoggerMock);
     private final FledgeAllowListsFilter mFledgeAllowListsFilter =
             new FledgeAllowListsFilter(mFlags, mAdServicesLoggerMock);
 
@@ -195,6 +228,7 @@ public class OnDeviceAdSelectionRunnerTest {
     private List<AdScoringOutcome> mAdScoringOutcomeList;
 
     private AdSelectionRunner mAdSelectionRunner;
+    private AdSelectionExecutionLogger mAdSelectionExecutionLogger;
 
     @Before
     public void setUp() {
@@ -208,7 +242,6 @@ public class OnDeviceAdSelectionRunnerTest {
                         .initMocks(this)
                         .startMocking();
 
-        mContext = ApplicationProvider.getApplicationContext();
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mScheduledExecutor = AdServicesExecutors.getScheduler();
@@ -327,9 +360,10 @@ public class OnDeviceAdSelectionRunnerTest {
                         .setCreationTimestamp(adSelectionCreationTs)
                         .build();
 
+        mockAdSelectionExecutionLoggerSpyWithSuccessAdSelection();
+
         when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
-        when(mMockApiServiceLatencyCalculator.getApiServiceOverallLatencyMs())
-                .thenReturn(RUN_AD_SELECTION_OVERALL_LATENCY_MS);
+
         mAdSelectionRunner =
                 new OnDeviceAdSelectionRunner(
                         mContext,
@@ -351,7 +385,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         CALLER_UID,
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilter,
-                        mMockApiServiceLatencyCalculator);
+                        mAdSelectionExecutionLogger);
         assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 
         AdSelectionTestCallback resultsCallback =
@@ -386,14 +420,14 @@ public class OnDeviceAdSelectionRunnerTest {
         assertEquals(
                 expectedAdSelectionResult,
                 mAdSelectionEntryDao.getAdSelectionEntityById(AD_SELECTION_ID));
-
-        verify(mMockApiServiceLatencyCalculator).getApiServiceOverallLatencyMs();
+        verifyLogForSuccessfulAdSelectionProcess(STATUS_SUCCESS);
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
-                        eq(AdServicesStatusUtils.STATUS_SUCCESS),
+                        eq(STATUS_SUCCESS),
                         eq(RUN_AD_SELECTION_OVERALL_LATENCY_MS));
     }
+
 
     @Test
     public void testRunAdSelectionWithRevokedUserConsentSuccess() throws AdServicesException {
@@ -412,8 +446,9 @@ public class OnDeviceAdSelectionRunnerTest {
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
-        when(mMockApiServiceLatencyCalculator.getApiServiceOverallLatencyMs())
-                .thenReturn(RUN_AD_SELECTION_OVERALL_LATENCY_MS);
+
+        mockAdSelectionExecutionLoggerSpyWithFailedAdSelectionBeforePersistAdSelection();
+
         mAdSelectionRunner =
                 new OnDeviceAdSelectionRunner(
                         mContext,
@@ -435,7 +470,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         CALLER_UID,
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilter,
-                        mMockApiServiceLatencyCalculator);
+                        mAdSelectionExecutionLogger);
 
         assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 
@@ -452,11 +487,12 @@ public class OnDeviceAdSelectionRunnerTest {
         assertEquals(Uri.EMPTY, resultsCallback.mAdSelectionResponse.getRenderUri());
         assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 
-        verify(mMockApiServiceLatencyCalculator).getApiServiceOverallLatencyMs();
+        verifyLogForFailurePriorPersistAdSelection(STATUS_USER_CONSENT_REVOKED);
+
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
-                        eq(AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED),
+                        eq(STATUS_USER_CONSENT_REVOKED),
                         eq(RUN_AD_SELECTION_OVERALL_LATENCY_MS));
     }
 
@@ -523,8 +559,9 @@ public class OnDeviceAdSelectionRunnerTest {
                         .build();
 
         when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
-        when(mMockApiServiceLatencyCalculator.getApiServiceOverallLatencyMs())
-                .thenReturn(RUN_AD_SELECTION_OVERALL_LATENCY_MS);
+
+        mockAdSelectionExecutionLoggerSpyWithSuccessAdSelection();
+
         mAdSelectionRunner =
                 new OnDeviceAdSelectionRunner(
                         mContext,
@@ -546,7 +583,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         CALLER_UID,
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilter,
-                        mMockApiServiceLatencyCalculator);
+                        mAdSelectionExecutionLogger);
 
         assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 
@@ -575,11 +612,13 @@ public class OnDeviceAdSelectionRunnerTest {
                 expectedDBAdSelectionResult.getWinningAdRenderUri(),
                 resultsCallback.mAdSelectionResponse.getRenderUri());
         assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
-        verify(mMockApiServiceLatencyCalculator).getApiServiceOverallLatencyMs();
+
+        verifyLogForSuccessfulAdSelectionProcess(STATUS_SUCCESS);
+
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
-                        eq(AdServicesStatusUtils.STATUS_SUCCESS),
+                        eq(STATUS_SUCCESS),
                         eq(RUN_AD_SELECTION_OVERALL_LATENCY_MS));
     }
 
@@ -597,8 +636,9 @@ public class OnDeviceAdSelectionRunnerTest {
         verifyZeroInteractions(mMockAdBidGenerator);
         // If there was no bidding then we should not even attempt to run scoring
         verifyZeroInteractions(mMockAdsScoreGenerator);
-        when(mMockApiServiceLatencyCalculator.getApiServiceOverallLatencyMs())
-                .thenReturn(RUN_AD_SELECTION_OVERALL_LATENCY_MS);
+
+        mockAdSelectionExecutionLoggerSpyWithFailedAdSelectionBeforePersistAdSelection();
+
         mAdSelectionRunner =
                 new OnDeviceAdSelectionRunner(
                         mContext,
@@ -620,14 +660,15 @@ public class OnDeviceAdSelectionRunnerTest {
                         CALLER_UID,
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilter,
-                        mMockApiServiceLatencyCalculator);
+                        mAdSelectionExecutionLogger);
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
 
         assertFalse(resultsCallback.mIsSuccess);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(), ERROR_NO_CA_AVAILABLE);
-        verify(mMockApiServiceLatencyCalculator).getApiServiceOverallLatencyMs();
+
+        verifyLogForFailurePriorPersistAdSelection(STATUS_INTERNAL_ERROR);
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
@@ -642,12 +683,11 @@ public class OnDeviceAdSelectionRunnerTest {
         // Creating ad selection config for happy case with all the buyers in place
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        String validationFailure = "Failed app status validation";
-        doThrow(new IllegalStateException(validationFailure))
+        doThrow(new AppImportanceFilter.WrongCallingApplicationStateException())
                 .when(mAppImportanceFilter)
                 .assertCallerIsInForeground(
                         CALLER_UID, AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, null);
-
+        mockAdSelectionExecutionLoggerSpyWithFailedAdSelectionBeforePersistAdSelection();
         mAdSelectionRunner =
                 new OnDeviceAdSelectionRunner(
                         mContext,
@@ -669,13 +709,22 @@ public class OnDeviceAdSelectionRunnerTest {
                         CALLER_UID,
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilter,
-                        mMockApiServiceLatencyCalculator);
+                        mAdSelectionExecutionLogger);
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
 
         assertFalse(resultsCallback.mIsSuccess);
         verifyErrorMessageIsCorrect(
-                resultsCallback.mFledgeErrorResponse.getErrorMessage(), validationFailure);
+                resultsCallback.mFledgeErrorResponse.getErrorMessage(),
+                ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE);
+
+        verifyLogForFailurePriorPersistAdSelection(STATUS_BACKGROUND_CALLER);
+
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(STATUS_BACKGROUND_CALLER),
+                        eq(RUN_AD_SELECTION_OVERALL_LATENCY_MS));
     }
 
     @Test
@@ -696,8 +745,9 @@ public class OnDeviceAdSelectionRunnerTest {
 
         // Creating ad selection config for happy case with all the buyers in place
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
-        when(mMockApiServiceLatencyCalculator.getApiServiceOverallLatencyMs())
-                .thenReturn(RUN_AD_SELECTION_OVERALL_LATENCY_MS);
+
+        mockAdSelectionExecutionLoggerSpyWithFailedAdSelectionBeforePersistAdSelection();
+
         mAdSelectionRunner =
                 new OnDeviceAdSelectionRunner(
                         mContext,
@@ -719,7 +769,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         CALLER_UID,
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilter,
-                        mMockApiServiceLatencyCalculator);
+                        mAdSelectionExecutionLogger);
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
 
@@ -730,6 +780,13 @@ public class OnDeviceAdSelectionRunnerTest {
         assertFalse(resultsCallback.mIsSuccess);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(), ERROR_NO_CA_AVAILABLE);
+
+        verifyLogForFailurePriorPersistAdSelection(STATUS_INTERNAL_ERROR);
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(STATUS_INTERNAL_ERROR),
+                        eq(RUN_AD_SELECTION_OVERALL_LATENCY_MS));
     }
 
     @Test
@@ -780,8 +837,9 @@ public class OnDeviceAdSelectionRunnerTest {
                                 Futures.immediateFuture(mAdScoringOutcomeList.subList(0, 1)))));
 
         when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
-        when(mMockApiServiceLatencyCalculator.getApiServiceOverallLatencyMs())
-                .thenReturn(RUN_AD_SELECTION_OVERALL_LATENCY_MS);
+
+        mockAdSelectionExecutionLoggerSpyWithSuccessAdSelection();
+
         mAdSelectionRunner =
                 new OnDeviceAdSelectionRunner(
                         mContext,
@@ -803,7 +861,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         CALLER_UID,
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilter,
-                        mMockApiServiceLatencyCalculator);
+                        mAdSelectionExecutionLogger);
 
         assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 
@@ -860,11 +918,12 @@ public class OnDeviceAdSelectionRunnerTest {
                 expectedDBAdSelectionResult.getWinningAdRenderUri(),
                 resultsCallback.mAdSelectionResponse.getRenderUri());
         assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
-        verify(mMockApiServiceLatencyCalculator).getApiServiceOverallLatencyMs();
+        verifyLogForSuccessfulAdSelectionProcess(STATUS_SUCCESS);
+
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
-                        eq(AdServicesStatusUtils.STATUS_SUCCESS),
+                        eq(STATUS_SUCCESS),
                         eq(RUN_AD_SELECTION_OVERALL_LATENCY_MS));
     }
 
@@ -908,8 +967,9 @@ public class OnDeviceAdSelectionRunnerTest {
 
         // If the result of bidding is empty, then we should not even attempt to run scoring
         verifyZeroInteractions(mMockAdsScoreGenerator);
-        when(mMockApiServiceLatencyCalculator.getApiServiceOverallLatencyMs())
-                .thenReturn(RUN_AD_SELECTION_OVERALL_LATENCY_MS);
+
+        mockAdSelectionExecutionLoggerSpyWithFailedAdSelectionBeforePersistAdSelection();
+
         mAdSelectionRunner =
                 new OnDeviceAdSelectionRunner(
                         mContext,
@@ -931,7 +991,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         CALLER_UID,
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilter,
-                        mMockApiServiceLatencyCalculator);
+                        mAdSelectionExecutionLogger);
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
@@ -957,7 +1017,7 @@ public class OnDeviceAdSelectionRunnerTest {
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(),
                 ERROR_NO_VALID_BIDS_FOR_SCORING);
-        verify(mMockApiServiceLatencyCalculator).getApiServiceOverallLatencyMs();
+        verifyLogForFailurePriorPersistAdSelection(STATUS_INTERNAL_ERROR);
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
@@ -1006,8 +1066,9 @@ public class OnDeviceAdSelectionRunnerTest {
         // In this case assuming we get an empty result
         when(mMockAdsScoreGenerator.runAdScoring(mAdBiddingOutcomeList, adSelectionConfig))
                 .thenReturn((FluentFuture.from(Futures.immediateFuture(Collections.EMPTY_LIST))));
-        when(mMockApiServiceLatencyCalculator.getApiServiceOverallLatencyMs())
-                .thenReturn(RUN_AD_SELECTION_OVERALL_LATENCY_MS);
+
+        mockAdSelectionExecutionLoggerSpyWithFailedAdSelectionBeforePersistAdSelection();
+
         mAdSelectionRunner =
                 new OnDeviceAdSelectionRunner(
                         mContext,
@@ -1029,7 +1090,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         CALLER_UID,
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilter,
-                        mMockApiServiceLatencyCalculator);
+                        mAdSelectionExecutionLogger);
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
@@ -1055,7 +1116,8 @@ public class OnDeviceAdSelectionRunnerTest {
         assertFalse(resultsCallback.mIsSuccess);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(), ERROR_NO_WINNING_AD_FOUND);
-        verify(mMockApiServiceLatencyCalculator).getApiServiceOverallLatencyMs();
+
+        verifyLogForFailurePriorPersistAdSelection(STATUS_INTERNAL_ERROR);
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
@@ -1111,8 +1173,9 @@ public class OnDeviceAdSelectionRunnerTest {
         // In this case assuming we get a result with negative scores
         when(mMockAdsScoreGenerator.runAdScoring(mAdBiddingOutcomeList, adSelectionConfig))
                 .thenReturn((FluentFuture.from(Futures.immediateFuture(negativeScoreOutcome))));
-        when(mMockApiServiceLatencyCalculator.getApiServiceOverallLatencyMs())
-                .thenReturn(RUN_AD_SELECTION_OVERALL_LATENCY_MS);
+
+        mockAdSelectionExecutionLoggerSpyWithFailedAdSelectionBeforePersistAdSelection();
+
         mAdSelectionRunner =
                 new OnDeviceAdSelectionRunner(
                         mContext,
@@ -1134,7 +1197,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         CALLER_UID,
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilter,
-                        mMockApiServiceLatencyCalculator);
+                        mAdSelectionExecutionLogger);
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
@@ -1160,7 +1223,9 @@ public class OnDeviceAdSelectionRunnerTest {
         assertFalse(resultsCallback.mIsSuccess);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(), ERROR_NO_WINNING_AD_FOUND);
-        verify(mMockApiServiceLatencyCalculator).getApiServiceOverallLatencyMs();
+
+        verifyLogForFailurePriorPersistAdSelection(STATUS_INTERNAL_ERROR);
+
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
@@ -1218,8 +1283,9 @@ public class OnDeviceAdSelectionRunnerTest {
                 .thenReturn((FluentFuture.from(Futures.immediateFuture(negativeScoreOutcome))));
 
         when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
-        when(mMockApiServiceLatencyCalculator.getApiServiceOverallLatencyMs())
-                .thenReturn(RUN_AD_SELECTION_OVERALL_LATENCY_MS);
+
+        mockAdSelectionExecutionLoggerSpyWithSuccessAdSelection();
+
         mAdSelectionRunner =
                 new OnDeviceAdSelectionRunner(
                         mContext,
@@ -1241,7 +1307,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         CALLER_UID,
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilter,
-                        mMockApiServiceLatencyCalculator);
+                        mAdSelectionExecutionLogger);
 
         assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 
@@ -1298,11 +1364,13 @@ public class OnDeviceAdSelectionRunnerTest {
                 expectedDBAdSelectionResult.getWinningAdRenderUri(),
                 resultsCallback.mAdSelectionResponse.getRenderUri());
         assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
-        verify(mMockApiServiceLatencyCalculator).getApiServiceOverallLatencyMs();
+
+        verifyLogForSuccessfulAdSelectionProcess(STATUS_SUCCESS);
+
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
-                        eq(AdServicesStatusUtils.STATUS_SUCCESS),
+                        eq(STATUS_SUCCESS),
                         eq(RUN_AD_SELECTION_OVERALL_LATENCY_MS));
     }
 
@@ -1350,8 +1418,9 @@ public class OnDeviceAdSelectionRunnerTest {
         // In this case we expect a JSON validation exception
         when(mMockAdsScoreGenerator.runAdScoring(mAdBiddingOutcomeList, adSelectionConfig))
                 .thenThrow(new AdServicesException(ERROR_INVALID_JSON));
-        when(mMockApiServiceLatencyCalculator.getApiServiceOverallLatencyMs())
-                .thenReturn(RUN_AD_SELECTION_OVERALL_LATENCY_MS);
+
+        mockAdSelectionExecutionLoggerSpyWithFailedAdSelectionBeforePersistAdSelection();
+
         mAdSelectionRunner =
                 new OnDeviceAdSelectionRunner(
                         mContext,
@@ -1373,7 +1442,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         CALLER_UID,
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilter,
-                        mMockApiServiceLatencyCalculator);
+                        mAdSelectionExecutionLogger);
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
@@ -1398,7 +1467,9 @@ public class OnDeviceAdSelectionRunnerTest {
         assertFalse(resultsCallback.mIsSuccess);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(), ERROR_INVALID_JSON);
-        verify(mMockApiServiceLatencyCalculator).getApiServiceOverallLatencyMs();
+
+        verifyLogForFailurePriorPersistAdSelection(STATUS_INTERNAL_ERROR);
+
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
@@ -1468,8 +1539,10 @@ public class OnDeviceAdSelectionRunnerTest {
                         new AnswersWithDelay(
                                 2 * mFlags.getAdSelectionOverallTimeoutMs(),
                                 new Returns(AD_SELECTION_ID)));
-        when(mMockApiServiceLatencyCalculator.getApiServiceOverallLatencyMs())
-                .thenReturn(RUN_AD_SELECTION_OVERALL_LATENCY_MS);
+
+        // Assume persist ad selection started.
+        mockAdSelectionExecutionLoggerSpyWithFailedAdSelectionWithPersistAdSelectionStarted();
+
         mAdSelectionRunner =
                 new OnDeviceAdSelectionRunner(
                         mContext,
@@ -1491,7 +1564,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         CALLER_UID,
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilter,
-                        mMockApiServiceLatencyCalculator);
+                        mAdSelectionExecutionLogger);
 
         assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 
@@ -1505,6 +1578,14 @@ public class OnDeviceAdSelectionRunnerTest {
                 "Error response code mismatch",
                 AdServicesStatusUtils.STATUS_TIMEOUT,
                 response.getStatusCode());
+
+        verifyLogForFailureByPersistAdSelection(STATUS_TIMEOUT);
+
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(STATUS_TIMEOUT),
+                        eq(RUN_AD_SELECTION_OVERALL_LATENCY_MS));
     }
 
     @Test
@@ -1606,6 +1687,8 @@ public class OnDeviceAdSelectionRunnerTest {
 
         when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
 
+        mockAdSelectionExecutionLoggerSpyWithSuccessAdSelection();
+
         mAdSelectionRunner =
                 new OnDeviceAdSelectionRunner(
                         mContext,
@@ -1627,7 +1710,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         CALLER_UID,
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilter,
-                        mMockApiServiceLatencyCalculator);
+                        mAdSelectionExecutionLogger);
 
         assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 
@@ -1663,12 +1746,12 @@ public class OnDeviceAdSelectionRunnerTest {
         assertEquals(
                 expectedAdSelectionResult,
                 mAdSelectionEntryDao.getAdSelectionEntityById(AD_SELECTION_ID));
-
+        verifyLogForSuccessfulAdSelectionProcess(STATUS_SUCCESS);
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
-                        eq(AdServicesStatusUtils.STATUS_SUCCESS),
-                        anyInt());
+                        eq(STATUS_SUCCESS),
+                        eq(RUN_AD_SELECTION_OVERALL_LATENCY_MS));
     }
 
     @Test
@@ -1681,8 +1764,9 @@ public class OnDeviceAdSelectionRunnerTest {
 
         // Throttle Ad Selection request
         when(mMockThrottler.tryAcquire(eq(FLEDGE_API_SELECT_ADS), anyString())).thenReturn(false);
-        when(mMockApiServiceLatencyCalculator.getApiServiceOverallLatencyMs())
-                .thenReturn(RUN_AD_SELECTION_OVERALL_LATENCY_MS);
+
+        mockAdSelectionExecutionLoggerSpyWithFailedAdSelectionBeforePersistAdSelection();
+
         mAdSelectionRunner =
                 new OnDeviceAdSelectionRunner(
                         mContext,
@@ -1704,7 +1788,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         CALLER_UID,
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilter,
-                        mMockApiServiceLatencyCalculator);
+                        mAdSelectionExecutionLogger);
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
@@ -1714,8 +1798,14 @@ public class OnDeviceAdSelectionRunnerTest {
         verifyErrorMessageIsCorrect(response.getErrorMessage(), AD_SELECTION_THROTTLED);
         Assert.assertEquals(
                 "Error response code mismatch",
-                AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED,
+                STATUS_RATE_LIMIT_REACHED,
                 response.getStatusCode());
+        verifyLogForFailurePriorPersistAdSelection(STATUS_RATE_LIMIT_REACHED);
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(STATUS_RATE_LIMIT_REACHED),
+                        eq(RUN_AD_SELECTION_OVERALL_LATENCY_MS));
     }
 
     @Test
@@ -1741,8 +1831,7 @@ public class OnDeviceAdSelectionRunnerTest {
                                 CALLER_UID,
                                 mFledgeAuthorizationFilter,
                                 mFledgeAllowListsFilter,
-                                mMockApiServiceLatencyCalculator);
-
+                                mAdSelectionExecutionLogger);
         Throwable throwable =
                 assertThrows(IllegalArgumentException.class, initializeAdSelectionRunner);
         verifyErrorMessageIsCorrect(throwable.getMessage(), JS_SANDBOX_IS_NOT_AVAILABLE);
@@ -1831,5 +1920,113 @@ public class OnDeviceAdSelectionRunnerTest {
             mFledgeErrorResponse = fledgeErrorResponse;
             mCountDownLatch.countDown();
         }
+    }
+
+    private void mockAdSelectionExecutionLoggerSpyWithSuccessAdSelection() {
+        when(mAdSelectionExecutionLoggerClock.elapsedRealtime())
+                .thenReturn(
+                        START_ELAPSED_TIMESTAMP,
+                        PERSIST_AD_SELECTION_START_TIMESTAMP,
+                        PERSIST_AD_SELECTION_END_TIMESTAMP,
+                        STOP_ELAPSED_TIMESTAMP);
+        mAdSelectionExecutionLogger =
+                new AdSelectionExecutionLogger(
+                        sCallerMetadata,
+                        mAdSelectionExecutionLoggerClock,
+                        mContext,
+                        mAdServicesLoggerMock);
+        when(mContext.getDatabasePath(DATABASE_NAME)).thenReturn(mMockDBAdSelectionFile);
+        when(mMockDBAdSelectionFile.length()).thenReturn(DB_AD_SELECTION_FILE_SIZE);
+    }
+
+    private void mockAdSelectionExecutionLoggerSpyWithFailedAdSelectionBeforePersistAdSelection() {
+        when(mAdSelectionExecutionLoggerClock.elapsedRealtime())
+                .thenReturn(START_ELAPSED_TIMESTAMP, STOP_ELAPSED_TIMESTAMP);
+        mAdSelectionExecutionLogger =
+                new AdSelectionExecutionLogger(
+                        sCallerMetadata,
+                        mAdSelectionExecutionLoggerClock,
+                        mContext,
+                        mAdServicesLoggerMock);
+    }
+
+    private void
+            mockAdSelectionExecutionLoggerSpyWithFailedAdSelectionWithPersistAdSelectionStarted() {
+        when(mAdSelectionExecutionLoggerClock.elapsedRealtime())
+                .thenReturn(
+                        START_ELAPSED_TIMESTAMP,
+                        PERSIST_AD_SELECTION_START_TIMESTAMP,
+                        STOP_ELAPSED_TIMESTAMP);
+        mAdSelectionExecutionLogger =
+                new AdSelectionExecutionLogger(
+                        sCallerMetadata,
+                        mAdSelectionExecutionLoggerClock,
+                        mContext,
+                        mAdServicesLoggerMock);
+        // set the start state of persisting ad selection.
+        mAdSelectionExecutionLogger.startPersistAdSelection();
+    }
+
+    private void verifyLogForSuccessfulAdSelectionProcess(int resultCode) {
+        verify(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(
+                        mRunAdSelectionProcessReportedStatsArgumentCaptor.capture());
+        RunAdSelectionProcessReportedStats runAdSelectionProcessReportedStats =
+                mRunAdSelectionProcessReportedStatsArgumentCaptor.getValue();
+
+        assertThat(runAdSelectionProcessReportedStats.getIsRemarketingAdsWon())
+                .isEqualTo(IS_RMKT_ADS_WON);
+        assertThat(runAdSelectionProcessReportedStats.getDBAdSelectionSizeInBytes())
+                .isEqualTo((int) DB_AD_SELECTION_FILE_SIZE);
+        assertThat(runAdSelectionProcessReportedStats.getPersistAdSelectionLatencyInMillis())
+                .isEqualTo(PERSIST_AD_SELECTION_LATENCY_MS);
+        assertThat(runAdSelectionProcessReportedStats.getPersistAdSelectionResultCode())
+                .isEqualTo(resultCode);
+        assertThat(runAdSelectionProcessReportedStats.getRunAdSelectionLatencyInMillis())
+                .isEqualTo(RUN_AD_SELECTION_INTERNAL_FINAL_LATENCY_MS);
+        assertThat(runAdSelectionProcessReportedStats.getRunAdSelectionResultCode())
+                .isEqualTo(resultCode);
+    }
+
+    private void verifyLogForFailurePriorPersistAdSelection(int resultCode) {
+        verify(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(
+                        mRunAdSelectionProcessReportedStatsArgumentCaptor.capture());
+        RunAdSelectionProcessReportedStats runAdSelectionProcessReportedStats =
+                mRunAdSelectionProcessReportedStatsArgumentCaptor.getValue();
+
+        assertThat(runAdSelectionProcessReportedStats.getIsRemarketingAdsWon())
+                .isEqualTo(IS_RMKT_ADS_UNSET);
+        assertThat(runAdSelectionProcessReportedStats.getDBAdSelectionSizeInBytes())
+                .isEqualTo(AdServicesStatusUtils.STATUS_UNSET);
+        assertThat(runAdSelectionProcessReportedStats.getPersistAdSelectionLatencyInMillis())
+                .isEqualTo(AdServicesStatusUtils.STATUS_UNSET);
+        assertThat(runAdSelectionProcessReportedStats.getPersistAdSelectionResultCode())
+                .isEqualTo(AdServicesStatusUtils.STATUS_UNSET);
+        assertThat(runAdSelectionProcessReportedStats.getRunAdSelectionLatencyInMillis())
+                .isEqualTo(RUN_AD_SELECTION_INTERNAL_FINAL_LATENCY_MS);
+        assertThat(runAdSelectionProcessReportedStats.getRunAdSelectionResultCode())
+                .isEqualTo(resultCode);
+    }
+
+    private void verifyLogForFailureByPersistAdSelection(int resultCode) {
+        verify(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(
+                        mRunAdSelectionProcessReportedStatsArgumentCaptor.capture());
+        RunAdSelectionProcessReportedStats runAdSelectionProcessReportedStats =
+                mRunAdSelectionProcessReportedStatsArgumentCaptor.getValue();
+
+        assertThat(runAdSelectionProcessReportedStats.getIsRemarketingAdsWon())
+                .isEqualTo(IS_RMKT_ADS_UNSET);
+        assertThat(runAdSelectionProcessReportedStats.getDBAdSelectionSizeInBytes())
+                .isEqualTo(AdServicesStatusUtils.STATUS_UNSET);
+        assertThat(runAdSelectionProcessReportedStats.getPersistAdSelectionLatencyInMillis())
+                .isEqualTo(AdServicesStatusUtils.STATUS_UNSET);
+        assertThat(runAdSelectionProcessReportedStats.getPersistAdSelectionResultCode())
+                .isEqualTo(resultCode);
+        assertThat(runAdSelectionProcessReportedStats.getRunAdSelectionLatencyInMillis())
+                .isEqualTo(RUN_AD_SELECTION_INTERNAL_FINAL_LATENCY_MS);
+        assertThat(runAdSelectionProcessReportedStats.getRunAdSelectionResultCode())
+                .isEqualTo(resultCode);
     }
 }

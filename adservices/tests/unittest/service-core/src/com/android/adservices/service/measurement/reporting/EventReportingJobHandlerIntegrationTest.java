@@ -16,12 +16,14 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.AbstractDbIntegrationTest;
 import com.android.adservices.data.measurement.DatastoreManager;
-import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.data.measurement.DbState;
+import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.adservices.service.measurement.WebUtil;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -39,8 +41,9 @@ import java.util.Objects;
 /** Integration tests for {@link EventReportingJobHandler} */
 @RunWith(Parameterized.class)
 public class EventReportingJobHandlerIntegrationTest extends AbstractDbIntegrationTest {
+
     private static final EnrollmentData ENROLLMENT = new EnrollmentData.Builder()
-            .setAttributionReportingUrl(List.of("https://ad-tech.com"))
+            .setAttributionReportingUrl(List.of(WebUtil.validUrl("https://ad-tech.test")))
             .build();
     private final JSONObject mParam;
     private final EnrollmentDao mEnrollmentDao;
@@ -74,7 +77,8 @@ public class EventReportingJobHandlerIntegrationTest extends AbstractDbIntegrati
 
         Mockito.doReturn(isEnrolled ? ENROLLMENT : null)
                 .when(mEnrollmentDao).getEnrollmentData(Mockito.any());
-        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
+        DatastoreManager datastoreManager =
+                new SQLDatastoreManager(DbTestUtil.getDbHelperForTest());
         EventReportingJobHandler spyReportingService =
                 Mockito.spy(new EventReportingJobHandler(mEnrollmentDao, datastoreManager));
         try {

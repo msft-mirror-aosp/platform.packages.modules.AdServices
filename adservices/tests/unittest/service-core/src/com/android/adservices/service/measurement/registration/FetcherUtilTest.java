@@ -32,6 +32,9 @@ import android.net.Uri;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.measurement.AsyncRegistration;
+import com.android.adservices.service.measurement.WebUtil;
+import com.android.adservices.service.measurement.util.AsyncRedirect;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.MeasurementRegistrationResponseStats;
 
@@ -56,7 +59,7 @@ import java.util.stream.IntStream;
 @RunWith(MockitoJUnitRunner.class)
 public final class FetcherUtilTest {
     private static final String LONG_FILTER_STRING = "12345678901234567890123456";
-    private static final Uri REGISTRATION_URI = Uri.parse("https://foo.com");
+    private static final Uri REGISTRATION_URI = WebUtil.validUri("https://foo.test");
     @Mock Flags mFlags;
     @Mock AdServicesLogger mLogger;
 
@@ -82,27 +85,49 @@ public final class FetcherUtilTest {
     }
 
     @Test
-    public void testParseRedirectsNothingInitial() {
-        List<Uri> redirs = FetcherUtil.parseRedirects(Map.of());
-        assertEquals(0, redirs.size());
+    public void parseRedirects_noRedirectHeaders_returnsEmpty() {
+        AsyncRedirect asyncRedirect = FetcherUtil.parseRedirects(
+                Map.of(), AsyncRegistration.RedirectType.ANY);
+        assertEquals(AsyncRegistration.RedirectType.NONE, asyncRedirect.getRedirectType());
+        assertEquals(0, asyncRedirect.getRedirects().size());
     }
 
     @Test
-    public void testParseRedirectsARR() {
-        List<Uri> redirs =
-                FetcherUtil.parseRedirects(
-                        Map.of("Attribution-Reporting-Redirect", List.of("foo.com", "bar.com")));
-        assertEquals(2, redirs.size());
-        assertEquals(Uri.parse("foo.com"), redirs.get(0));
-        assertEquals(Uri.parse("bar.com"), redirs.get(1));
+    public void parseRedirects_bothHeaderTypes_choosesListType() {
+        AsyncRedirect asyncRedirect = FetcherUtil.parseRedirects(
+                Map.of(
+                        "Attribution-Reporting-Redirect", List.of("foo.test", "bar.test"),
+                        "Location", List.of("baz.test")),
+                AsyncRegistration.RedirectType.ANY);
+        assertEquals(AsyncRegistration.RedirectType.NONE, asyncRedirect.getRedirectType());
+        List<Uri> redirects = asyncRedirect.getRedirects();
+        assertEquals(2, redirects.size());
+        assertEquals(Uri.parse("foo.test"), redirects.get(0));
+        assertEquals(Uri.parse("bar.test"), redirects.get(1));
     }
 
     @Test
-    public void testParseRedirectsSingleElementARR() {
-        List<Uri> redirs =
-                FetcherUtil.parseRedirects(
-                        Map.of("Attribution-Reporting-Redirect", List.of("foo.com")));
-        assertEquals(1, redirs.size());
+    public void parseRedirects_locationHeaderOnly_choosesLocationType() {
+        AsyncRedirect asyncRedirect = FetcherUtil.parseRedirects(
+                Map.of("Location", List.of("foo.test")),
+                AsyncRegistration.RedirectType.ANY);
+        assertEquals(AsyncRegistration.RedirectType.DAISY_CHAIN, asyncRedirect.getRedirectType());
+        List<Uri> redirects = asyncRedirect.getRedirects();
+        assertEquals(1, redirects.size());
+        assertEquals(Uri.parse("foo.test"), redirects.get(0));
+    }
+
+    @Test
+    public void parseRedirects_bothHeaderTypes_providedLocationType_choosesLocationType() {
+        AsyncRedirect asyncRedirect = FetcherUtil.parseRedirects(
+                Map.of(
+                        "Attribution-Reporting-Redirect", List.of("foo.test", "bar.test"),
+                        "Location", List.of("baz.test")),
+                AsyncRegistration.RedirectType.DAISY_CHAIN);
+        assertEquals(AsyncRegistration.RedirectType.DAISY_CHAIN, asyncRedirect.getRedirectType());
+        List<Uri> redirects = asyncRedirect.getRedirects();
+        assertEquals(1, redirects.size());
+        assertEquals(Uri.parse("baz.test"), redirects.get(0));
     }
 
     @Test

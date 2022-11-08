@@ -26,6 +26,7 @@ java_library {
     ],
     static_libs: [
         "truth-prebuilt",
+        "androidx.test.ext.junit",
     ],
     visibility: [
         // TODO(b/222118402): adjust once code is moved

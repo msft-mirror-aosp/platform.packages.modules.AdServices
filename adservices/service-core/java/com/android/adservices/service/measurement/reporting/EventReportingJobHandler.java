@@ -46,6 +46,7 @@ public class EventReportingJobHandler {
 
     private final EnrollmentDao mEnrollmentDao;
     private final DatastoreManager mDatastoreManager;
+    private boolean mIsDebugInstance;
 
     EventReportingJobHandler(EnrollmentDao enrollmentDao, DatastoreManager datastoreManager) {
         mEnrollmentDao = enrollmentDao;
@@ -53,8 +54,20 @@ public class EventReportingJobHandler {
     }
 
     /**
+     * Set isDebugInstance
+     *
+     * @param isDebugInstance indicates a debug event report
+     * @return the instance of EventReportingJobHandler
+     */
+    public EventReportingJobHandler setIsDebugInstance(boolean isDebugInstance) {
+        mIsDebugInstance = isDebugInstance;
+        return this;
+    }
+
+    /**
      * Finds all reports within the given window that have a status {@link
-     * EventReport.Status#PENDING} and attempts to upload them individually.
+     * EventReport.Status#PENDING} or {@link EventReport.DebugReportStatus#PENDING} based on
+     * mIsDebugReport and attempts to upload them individually.
      *
      * @param windowStartTime Start time of the search window
      * @param windowEndTime End time of the search window
@@ -62,9 +75,16 @@ public class EventReportingJobHandler {
      */
     synchronized boolean performScheduledPendingReportsInWindow(
             long windowStartTime, long windowEndTime) {
-        Optional<List<String>> pendingEventReportsInWindowOpt = mDatastoreManager
-                .runInTransactionWithResult((dao) ->
-                        dao.getPendingEventReportIdsInWindow(windowStartTime, windowEndTime));
+        Optional<List<String>> pendingEventReportsInWindowOpt =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) -> {
+                            if (mIsDebugInstance) {
+                                return dao.getPendingDebugEventReportIds();
+                            } else {
+                                return dao.getPendingEventReportIdsInWindow(
+                                        windowStartTime, windowEndTime);
+                            }
+                        });
         if (!pendingEventReportsInWindowOpt.isPresent()) {
             // Failure during event report retrieval
             return true;
@@ -94,7 +114,12 @@ public class EventReportingJobHandler {
             return AdServicesStatusUtils.STATUS_IO_ERROR;
         }
         EventReport eventReport = eventReportOpt.get();
-        if (eventReport.getStatus() != EventReport.Status.PENDING) {
+
+        if (mIsDebugInstance
+                && eventReport.getDebugReportStatus() != EventReport.DebugReportStatus.PENDING) {
+            return AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+        }
+        if (!mIsDebugInstance && eventReport.getStatus() != EventReport.Status.PENDING) {
             return AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
         }
         try {
@@ -110,8 +135,16 @@ public class EventReportingJobHandler {
 
             if (returnCode >= HttpURLConnection.HTTP_OK
                     && returnCode <= 299) {
-                boolean success = mDatastoreManager.runInTransaction((dao) ->
-                        dao.markEventReportDelivered(eventReportId));
+                boolean success =
+                        mDatastoreManager.runInTransaction(
+                                (dao) -> {
+                                    if (mIsDebugInstance) {
+                                        dao.markEventDebugReportDelivered(eventReportId);
+                                    } else {
+                                        dao.markEventReportStatus(
+                                                eventReportId, EventReport.Status.DELIVERED);
+                                    }
+                                });
 
                 return success
                         ? AdServicesStatusUtils.STATUS_SUCCESS
@@ -150,7 +183,7 @@ public class EventReportingJobHandler {
     @VisibleForTesting
     public int makeHttpPostRequest(Uri adTechDomain, JSONObject eventReportPayload)
             throws IOException {
-        EventReportSender eventReportSender = new EventReportSender();
+        EventReportSender eventReportSender = new EventReportSender(mIsDebugInstance);
         return eventReportSender.sendReport(adTechDomain, eventReportPayload);
     }
 

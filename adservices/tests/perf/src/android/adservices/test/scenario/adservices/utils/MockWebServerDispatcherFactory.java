@@ -86,7 +86,7 @@ public final class MockWebServerDispatcherFactory {
                     + "}";
     private static final String DEFAULT_BIDDING_LOGIC_JS_WITH_EXECUTION_TIME_FORMAT =
             "function generateBid(ad, auction_signals, per_buyer_signals,"
-                    + " trusted_bidding_signals, contextual_signals, user_signals,"
+                    + " trusted_bidding_signals, contextual_signals,"
                     + " custom_audience_signals) { \n"
                     + " const start = Date.now(); let now = start; while (now-start < %d) "
                     + "{now=Date.now();}\n"

@@ -137,6 +137,7 @@ public class TopicsServiceImplTest {
     @Mock private Throttler mMockThrottler;
     @Mock private EnrollmentDao mEnrollmentDao;
     @Mock private AppImportanceFilter mMockAppImportanceFilter;
+    @Mock AdServicesLogger mLogger;
 
     @Before
     public void setup() throws Exception {
@@ -147,11 +148,12 @@ public class TopicsServiceImplTest {
 
         DbHelper dbHelper = DbTestUtil.getDbHelperForTest();
         mTopicsDao = new TopicsDao(dbHelper);
-        CacheManager cacheManager = new CacheManager(mMockEpochManager, mTopicsDao, mMockFlags);
+        CacheManager cacheManager =
+                new CacheManager(mMockEpochManager, mTopicsDao, mMockFlags, mLogger);
 
         mBlockedTopicsManager = new BlockedTopicsManager(mTopicsDao);
         AppUpdateManager appUpdateManager =
-                new AppUpdateManager(mTopicsDao, new Random(), mMockFlags);
+                new AppUpdateManager(dbHelper, mTopicsDao, new Random(), mMockFlags);
         mTopicsWorker =
                 new TopicsWorker(
                         mMockEpochManager,
@@ -199,6 +201,8 @@ public class TopicsServiceImplTest {
         when(mMockThrottler.tryAcquire(
                         eq(Throttler.ApiKey.TOPICS_API_APP_PACKAGE_NAME), anyString()))
                 .thenReturn(true);
+
+        when(mMockFlags.isEnrollmentBlocklisted(Mockito.any())).thenReturn(false);
 
         // Initialize mock static.
         mStaticMockitoSession =
@@ -376,6 +380,19 @@ public class TopicsServiceImplTest {
                 new EnrollmentData.Builder().setEnrollmentId(null).build();
         when(mEnrollmentDao.getEnrollmentDataFromSdkName(SOME_SDK_NAME))
                 .thenReturn(fakeEnrollmentData);
+        invokeGetTopicsAndVerifyError(mMockSdkContext, STATUS_CALLER_NOT_ALLOWED);
+    }
+
+    @Test
+    public void checkSdkEnrollmentInBlocklist_blocked() throws Exception {
+        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        EnrollmentData fakeEnrollmentData =
+                new EnrollmentData.Builder().setEnrollmentId(ALLOWED_SDK_ID).build();
+        when(mEnrollmentDao.getEnrollmentDataFromSdkName(SOME_SDK_NAME))
+                .thenReturn(fakeEnrollmentData);
+
+        when(mMockFlags.isEnrollmentBlocklisted(ALLOWED_SDK_ID)).thenReturn(true);
+
         invokeGetTopicsAndVerifyError(mMockSdkContext, STATUS_CALLER_NOT_ALLOWED);
     }
 
