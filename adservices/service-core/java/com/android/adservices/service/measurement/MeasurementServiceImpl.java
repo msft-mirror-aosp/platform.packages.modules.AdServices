@@ -84,7 +84,6 @@ import java.util.function.Supplier;
  * @hide
  */
 public class MeasurementServiceImpl extends IMeasurementService.Stub {
-    private static final String EMPTY_PACKAGE_NAME = "";
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
     private static final Executor sLightExecutor = AdServicesExecutors.getLightWeightExecutor();
     private final Clock mClock;
@@ -147,21 +146,22 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             @NonNull CallerMetadata callerMetadata,
             @NonNull IMeasurementCallback callback) {
         Objects.requireNonNull(request);
+        Objects.requireNonNull(callerMetadata);
         Objects.requireNonNull(callback);
 
         final long serviceStartTime = mClock.elapsedRealtime();
 
         final Throttler.ApiKey apiKey = getApiKey(request);
         final int apiNameId = getApiNameId(request);
-        if (isThrottled(request.getPackageName(), apiKey, callback)) {
+        if (isThrottled(request.getAppPackageName(), apiKey, callback)) {
             logApiStats(
                     apiNameId,
-                    request.getPackageName(),
+                    request.getAppPackageName(),
+                    request.getSdkPackageName(),
                     getLatency(callerMetadata, serviceStartTime),
                     STATUS_RATE_LIMIT_REACHED);
             return;
         }
-
         final int callerUid = Binder.getCallingUidOrThrow();
         final boolean attributionPermission = PermissionHelper.hasAttributionPermission(mContext);
         sBackgroundExecutor.execute(
@@ -178,17 +178,18 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                                     request, mFlags)),
                                     new AppPackageAccessResolver(
                                             mFlags.getPpapiAppAllowList(),
-                                            request.getPackageName()),
+                                            request.getAppPackageName()),
                                     new UserConsentAccessResolver(mConsentManager),
                                     new PermissionAccessResolver(attributionPermission),
                                     new ManifestBasedAdtechAccessResolver(
                                             mEnrollmentDao,
                                             mFlags,
-                                            request.getPackageName(),
+                                            request.getAppPackageName(),
                                             request.getRegistrationUri())),
                             callback,
                             apiNameId,
-                            request.getPackageName(),
+                            request.getAppPackageName(),
+                            request.getSdkPackageName(),
                             callerMetadata,
                             serviceStartTime);
                 });
@@ -201,16 +202,18 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             @NonNull CallerMetadata callerMetadata,
             @NonNull IMeasurementCallback callback) {
         Objects.requireNonNull(request);
+        Objects.requireNonNull(callerMetadata);
         Objects.requireNonNull(callback);
 
         final long serviceStartTime = mClock.elapsedRealtime();
 
         final Throttler.ApiKey apiKey = Throttler.ApiKey.MEASUREMENT_API_REGISTER_WEB_SOURCE;
         final int apiNameId = AD_SERVICES_API_CALLED__API_NAME__REGISTER_WEB_SOURCE;
-        if (isThrottled(request.getPackageName(), apiKey, callback)) {
+        if (isThrottled(request.getAppPackageName(), apiKey, callback)) {
             logApiStats(
                     apiNameId,
-                    request.getPackageName(),
+                    request.getAppPackageName(),
+                    request.getSdkPackageName(),
                     getLatency(callerMetadata, serviceStartTime),
                     STATUS_RATE_LIMIT_REACHED);
             return;
@@ -234,23 +237,24 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             enforceForeground),
                                     new AppPackageAccessResolver(
                                             mFlags.getPpapiAppAllowList(),
-                                            request.getPackageName()),
+                                            request.getAppPackageName()),
                                     new UserConsentAccessResolver(mConsentManager),
                                     new PermissionAccessResolver(attributionPermission),
                                     new ManifestBasedAdtechAccessResolver(
                                             mEnrollmentDao,
                                             mFlags,
-                                            request.getPackageName(),
+                                            request.getAppPackageName(),
                                             request.getSourceRegistrationRequest()
                                                     .getSourceParams()
                                                     .get(0)
                                                     .getRegistrationUri()),
                                     new AppPackageAccessResolver(
                                             mFlags.getWebContextClientAppAllowList(),
-                                            request.getPackageName())),
+                                            request.getAppPackageName())),
                             callback,
                             apiNameId,
-                            request.getPackageName(),
+                            request.getAppPackageName(),
+                            request.getSdkPackageName(),
                             callerMetadata,
                             serviceStartTime);
                 });
@@ -263,16 +267,18 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             @NonNull CallerMetadata callerMetadata,
             @NonNull IMeasurementCallback callback) {
         Objects.requireNonNull(request);
+        Objects.requireNonNull(callerMetadata);
         Objects.requireNonNull(callback);
 
         final long serviceStartTime = mClock.elapsedRealtime();
 
         final Throttler.ApiKey apiKey = Throttler.ApiKey.MEASUREMENT_API_REGISTER_WEB_TRIGGER;
         final int apiNameId = AD_SERVICES_API_CALLED__API_NAME__REGISTER_WEB_TRIGGER;
-        if (isThrottled(request.getPackageName(), apiKey, callback)) {
+        if (isThrottled(request.getAppPackageName(), apiKey, callback)) {
             logApiStats(
                     apiNameId,
-                    request.getPackageName(),
+                    request.getAppPackageName(),
+                    request.getSdkPackageName(),
                     getLatency(callerMetadata, serviceStartTime),
                     STATUS_RATE_LIMIT_REACHED);
             return;
@@ -296,20 +302,21 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             enforceForeground),
                                     new AppPackageAccessResolver(
                                             mFlags.getPpapiAppAllowList(),
-                                            request.getPackageName()),
+                                            request.getAppPackageName()),
                                     new UserConsentAccessResolver(mConsentManager),
                                     new PermissionAccessResolver(attributionPermission),
                                     new ManifestBasedAdtechAccessResolver(
                                             mEnrollmentDao,
                                             mFlags,
-                                            request.getPackageName(),
+                                            request.getAppPackageName(),
                                             request.getTriggerRegistrationRequest()
                                                     .getTriggerParams()
                                                     .get(0)
                                                     .getRegistrationUri())),
                             callback,
                             apiNameId,
-                            request.getPackageName(),
+                            request.getAppPackageName(),
+                            request.getSdkPackageName(),
                             callerMetadata,
                             serviceStartTime);
                 });
@@ -321,16 +328,18 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             @NonNull CallerMetadata callerMetadata,
             @NonNull IMeasurementCallback callback) {
         Objects.requireNonNull(request);
+        Objects.requireNonNull(callerMetadata);
         Objects.requireNonNull(callback);
 
         final long serviceStartTime = mClock.elapsedRealtime();
 
         final Throttler.ApiKey apiKey = Throttler.ApiKey.MEASUREMENT_API_DELETION_REGISTRATION;
         final int apiNameId = AD_SERVICES_API_CALLED__API_NAME__DELETE_REGISTRATIONS;
-        if (isThrottled(request.getPackageName(), apiKey, callback)) {
+        if (isThrottled(request.getAppPackageName(), apiKey, callback)) {
             logApiStats(
                     apiNameId,
-                    request.getPackageName(),
+                    request.getAppPackageName(),
+                    request.getSdkPackageName(),
                     getLatency(callerMetadata, serviceStartTime),
                     STATUS_RATE_LIMIT_REACHED);
             return;
@@ -354,13 +363,14 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             enforceForeground),
                                     new AppPackageAccessResolver(
                                             mFlags.getPpapiAppAllowList(),
-                                            request.getPackageName()),
+                                            request.getAppPackageName()),
                                     new AppPackageAccessResolver(
                                             mFlags.getWebContextClientAppAllowList(),
-                                            request.getPackageName())),
+                                            request.getAppPackageName())),
                             callback,
                             apiNameId,
-                            request.getPackageName(),
+                            request.getAppPackageName(),
+                            request.getSdkPackageName(),
                             callerMetadata,
                             serviceStartTime);
                 });
@@ -371,6 +381,8 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             @NonNull StatusParam statusParam,
             @NonNull CallerMetadata callerMetadata,
             @NonNull IMeasurementApiStatusCallback callback) {
+        Objects.requireNonNull(statusParam);
+        Objects.requireNonNull(callerMetadata);
         Objects.requireNonNull(callback);
 
         final long serviceStartTime = mClock.elapsedRealtime();
@@ -417,6 +429,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                         logApiStats(
                                 apiNameId,
                                 statusParam.getAppPackageName(),
+                                statusParam.getSdkPackageName(),
                                 getLatency(callerMetadata, serviceStartTime),
                                 statusCode);
                     }
@@ -457,14 +470,19 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         return false;
     }
 
-    private void logApiStats(int apiNameId, String appPackageName, int latency, int resultCode) {
+    private void logApiStats(
+            int apiNameId,
+            String appPackageName,
+            String sdkPackageName,
+            int latency,
+            int resultCode) {
         mAdServicesLogger.logApiCallStats(
                 new ApiCallStats.Builder()
                         .setCode(AD_SERVICES_API_CALLED)
                         .setApiClass(AD_SERVICES_API_CALLED__API_CLASS__MEASUREMENT)
                         .setApiName(apiNameId)
                         .setAppPackageName(appPackageName)
-                        .setSdkPackageName(EMPTY_PACKAGE_NAME)
+                        .setSdkPackageName(sdkPackageName)
                         .setLatencyMillisecond(latency)
                         .setResultCode(resultCode)
                         .build());
@@ -476,6 +494,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             IMeasurementCallback callback,
             int apiNameId,
             String appPackageName,
+            String sdkPackageName,
             CallerMetadata callerMetadata,
             long serviceStartTime) {
 
@@ -506,6 +525,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             logApiStats(
                     apiNameId,
                     appPackageName,
+                    sdkPackageName,
                     getLatency(callerMetadata, serviceStartTime),
                     statusCode);
         }
@@ -517,6 +537,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             IMeasurementCallback callback,
             int apiNameId,
             String appPackageName,
+            String sdkPackageName,
             CallerMetadata callerMetadata,
             long serviceStartTime) {
 
@@ -554,6 +575,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             logApiStats(
                     apiNameId,
                     appPackageName,
+                    sdkPackageName,
                     getLatency(callerMetadata, serviceStartTime),
                     statusCode);
         }

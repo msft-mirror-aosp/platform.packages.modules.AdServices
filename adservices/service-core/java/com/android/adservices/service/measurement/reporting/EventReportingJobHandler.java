@@ -46,7 +46,7 @@ public class EventReportingJobHandler {
 
     private final EnrollmentDao mEnrollmentDao;
     private final DatastoreManager mDatastoreManager;
-    private boolean mIsDebugReport;
+    private boolean mIsDebugInstance;
 
     EventReportingJobHandler(EnrollmentDao enrollmentDao, DatastoreManager datastoreManager) {
         mEnrollmentDao = enrollmentDao;
@@ -54,13 +54,13 @@ public class EventReportingJobHandler {
     }
 
     /**
-     * Set Debug Report
+     * Set isDebugInstance
      *
-     * @param isDebugReport
+     * @param isDebugInstance indicates a debug event report
      * @return the instance of EventReportingJobHandler
      */
-    public EventReportingJobHandler setDebugReport(boolean isDebugReport) {
-        mIsDebugReport = isDebugReport;
+    public EventReportingJobHandler setIsDebugInstance(boolean isDebugInstance) {
+        mIsDebugInstance = isDebugInstance;
         return this;
     }
 
@@ -78,7 +78,7 @@ public class EventReportingJobHandler {
         Optional<List<String>> pendingEventReportsInWindowOpt =
                 mDatastoreManager.runInTransactionWithResult(
                         (dao) -> {
-                            if (mIsDebugReport) {
+                            if (mIsDebugInstance) {
                                 return dao.getPendingDebugEventReportIds();
                             } else {
                                 return dao.getPendingEventReportIdsInWindow(
@@ -115,11 +115,11 @@ public class EventReportingJobHandler {
         }
         EventReport eventReport = eventReportOpt.get();
 
-        if (mIsDebugReport
+        if (mIsDebugInstance
                 && eventReport.getDebugReportStatus() != EventReport.DebugReportStatus.PENDING) {
             return AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
         }
-        if (!mIsDebugReport && eventReport.getStatus() != EventReport.Status.PENDING) {
+        if (!mIsDebugInstance && eventReport.getStatus() != EventReport.Status.PENDING) {
             return AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
         }
         try {
@@ -138,7 +138,7 @@ public class EventReportingJobHandler {
                 boolean success =
                         mDatastoreManager.runInTransaction(
                                 (dao) -> {
-                                    if (mIsDebugReport) {
+                                    if (mIsDebugInstance) {
                                         dao.markEventDebugReportDelivered(eventReportId);
                                     } else {
                                         dao.markEventReportStatus(
@@ -183,7 +183,7 @@ public class EventReportingJobHandler {
     @VisibleForTesting
     public int makeHttpPostRequest(Uri adTechDomain, JSONObject eventReportPayload)
             throws IOException {
-        EventReportSender eventReportSender = new EventReportSender(mIsDebugReport);
+        EventReportSender eventReportSender = new EventReportSender(mIsDebugInstance);
         return eventReportSender.sendReport(adTechDomain, eventReportPayload);
     }
 

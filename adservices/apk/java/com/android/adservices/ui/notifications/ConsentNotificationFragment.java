@@ -46,7 +46,9 @@ import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActiv
 /** Fragment for the topics view of the AdServices Settings App. */
 public class ConsentNotificationFragment extends Fragment {
     public static final String IS_EU_DEVICE_ARGUMENT_KEY = "isEUDevice";
+    public static final String IS_INFO_VIEW_EXPANDED_KEY = "is_info_view_expanded";
     private boolean mIsEUDevice;
+    private boolean mIsInfoViewExpanded = false;
     private @Nullable ScrollToBottomController mScrollToBottomController;
 
     @Override
@@ -61,6 +63,15 @@ public class ConsentNotificationFragment extends Fragment {
                 requireActivity().getIntent().getBooleanExtra(IS_EU_DEVICE_ARGUMENT_KEY, true);
         logLandingPageDisplayed();
         setupListeners(savedInstanceState);
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
+        if (mScrollToBottomController != null) {
+            mScrollToBottomController.saveInstanceState(savedInstanceState);
+        }
+        savedInstanceState.putBoolean(IS_INFO_VIEW_EXPANDED_KEY, mIsInfoViewExpanded);
     }
 
     private void logLandingPageDisplayed() {
@@ -92,19 +103,10 @@ public class ConsentNotificationFragment extends Fragment {
 
     private void setupListeners(Bundle savedInstanceState) {
         TextView howItWorksExpander = requireActivity().findViewById(R.id.how_it_works_expander);
-        howItWorksExpander.setOnClickListener(
-                view -> {
-                    View text = requireActivity().findViewById(R.id.how_it_works_expanded_text);
-                    if (text.getVisibility() == View.VISIBLE) {
-                        text.setVisibility(View.GONE);
-                        howItWorksExpander.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                                0, 0, R.drawable.ic_expand, 0);
-                    } else {
-                        text.setVisibility(View.VISIBLE);
-                        howItWorksExpander.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                                0, 0, R.drawable.ic_minimize, 0);
-                    }
-                });
+        if (savedInstanceState != null) {
+            setInfoViewState(savedInstanceState.getBoolean(IS_INFO_VIEW_EXPANDED_KEY, false));
+        }
+        howItWorksExpander.setOnClickListener(view -> setInfoViewState(!mIsInfoViewExpanded));
 
         Button leftControlButton = requireActivity().findViewById(R.id.leftControlButton);
         leftControlButton.setOnClickListener(
@@ -132,6 +134,21 @@ public class ConsentNotificationFragment extends Fragment {
                 new ScrollToBottomController(
                         scrollView, leftControlButton, rightControlButton, savedInstanceState);
         mScrollToBottomController.bind();
+    }
+
+    private void setInfoViewState(boolean expanded) {
+        View text = requireActivity().findViewById(R.id.how_it_works_expanded_text);
+        TextView expander = requireActivity().findViewById(R.id.how_it_works_expander);
+        if (expanded) {
+            mIsInfoViewExpanded = true;
+            text.setVisibility(View.VISIBLE);
+            expander.setCompoundDrawablesRelativeWithIntrinsicBounds(
+                    0, 0, R.drawable.ic_minimize, 0);
+        } else {
+            mIsInfoViewExpanded = false;
+            text.setVisibility(View.GONE);
+            expander.setCompoundDrawablesRelativeWithIntrinsicBounds(0, 0, R.drawable.ic_expand, 0);
+        }
     }
 
     private void startConfirmationFragment(Bundle args) {

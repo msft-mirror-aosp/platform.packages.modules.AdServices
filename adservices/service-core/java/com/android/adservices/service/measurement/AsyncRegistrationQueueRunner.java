@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement;
 
+import static com.android.adservices.service.measurement.SystemHealthParams.MAX_TRIGGER_REGISTERS_PER_DESTINATION;
 import static com.android.adservices.service.measurement.attribution.TriggerContentProvider.TRIGGER_URI;
 
 import android.content.ContentProviderClient;
@@ -190,16 +191,6 @@ public class AsyncRegistrationQueueRunner {
                             if (isSourceAllowedToInsert(source, topOrigin, publisherType, dao)) {
                                 insertSourcesFromTransaction(source, dao);
                             }
-                            Uri osDestination =
-                                    asyncRegistration.getRedirectType()
-                                                    != AsyncRegistration.RedirectType.ANY
-                                            ? asyncRegistration.getOsDestination()
-                                            : source.getAppDestination();
-                            Uri webDestination =
-                                    asyncRegistration.getRedirectType()
-                                                    != AsyncRegistration.RedirectType.ANY
-                                            ? asyncRegistration.getWebDestination()
-                                            : source.getWebDestination();
                             if (asyncRegistration.shouldProcessRedirects()) {
                                 LogUtil.d(
                                         "AsyncRegistrationQueueRunner: "
@@ -210,8 +201,8 @@ public class AsyncRegistrationQueueRunner {
                                 processRedirects(
                                         asyncRegistration,
                                         asyncRedirect,
-                                        webDestination,
-                                        osDestination,
+                                        source.getWebDestination(),
+                                        source.getAppDestination(),
                                         dao);
                             }
                         }
@@ -275,7 +266,9 @@ public class AsyncRegistrationQueueRunner {
                                                 asyncRegistration.getOsDestination(),
                                                 dao);
                                     }
-                                    dao.insertTrigger(trigger);
+                                    if (isTriggerAllowedToInsert(dao, trigger)) {
+                                        dao.insertTrigger(trigger);
+                                    }
                                 }
                                 dao.deleteAsyncRegistration(asyncRegistration.getId());
                             }
@@ -486,6 +479,21 @@ public class AsyncRegistrationQueueRunner {
             }
         }
         return true;
+    }
+
+    @VisibleForTesting
+    static boolean isTriggerAllowedToInsert(IMeasurementDao dao, Trigger trigger) {
+        long triggerInsertedPerDestination;
+        try {
+            triggerInsertedPerDestination =
+                    dao.getNumTriggersPerDestination(
+                            trigger.getAttributionDestination(), trigger.getDestinationType());
+        } catch (DatastoreException e) {
+            LogUtil.e("Unable to fetch number of triggers currently registered per destination.");
+            return false;
+        }
+
+        return triggerInsertedPerDestination < MAX_TRIGGER_REGISTERS_PER_DESTINATION;
     }
 
     private static AsyncRegistration createAsyncRegistrationRedirect(

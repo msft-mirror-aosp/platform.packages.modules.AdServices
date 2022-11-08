@@ -24,14 +24,18 @@ android_test {
     static_libs: [
         "androidx.test.runner",
         "androidx.test.rules",
+        "collector-device-lib-platform",
         "microbenchmark-device-lib",
         "platform-test-options",
         "platform-test-rules",
         "sdksandbox-perf-test-scenarios",
         "ub-uiautomator",
     ],
+    // Certificate and platform api is needed for collector-device-lib-platform.
     certificate: "platform",
+    platform_apis: true,
     srcs: ["src//**/*.java"],
-    test_suites: ["device-tests"],
+    test_suites: ["device-tests", "general-tests"],
+    data: [":perfetto_artifacts"],
     min_sdk_version: "33",
 }

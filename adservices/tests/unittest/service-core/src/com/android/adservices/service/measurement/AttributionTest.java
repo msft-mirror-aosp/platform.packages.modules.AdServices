@@ -26,8 +26,8 @@ import java.util.UUID;
 
 public class AttributionTest {
     private static final String ID = "AR1";
-    private static final String DESTINATION_ORIGIN = "https://destination.com/origin";
-    private static final String DESTINATION_SITE = "https://destination.com";
+    private static final String DESTINATION_ORIGIN = "https://destination.test/origin";
+    private static final String DESTINATION_SITE = "https://destination.test";
     private static final String PUBLISHER_ORIGIN = "android-app://com.publisher/abc";
     private static final String PUBLISHER_SITE = "android-app://com.publisher";
     private static final String REGISTRANT = "android-app://com.registrant";
