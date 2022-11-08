@@ -1139,6 +1139,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         mIsKillSwitchEnabled =
                                 properties.getBoolean(PROPERTY_DISABLE_SDK_SANDBOX, true);
                         if (mIsKillSwitchEnabled && !killSwitchPreviouslyEnabled) {
+                            Log.i(TAG, "SDK sandbox killswitch has become enabled");
                             synchronized (SdkSandboxManagerService.this.mLock) {
                                 stopAllSandboxesLocked();
                             }
@@ -1245,6 +1246,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             ISdkSandboxService service) {
 
         if (isSdkSandboxDisabled(service)) {
+            Log.e(TAG, "SDK cannot be loaded because SDK sandbox is disabled");
             link.handleLoadSdkException(
                     new LoadSdkException(LOAD_SDK_SDK_SANDBOX_DISABLED, SANDBOX_DISABLED_MSG),
                     -1,
