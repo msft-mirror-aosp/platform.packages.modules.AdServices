@@ -95,6 +95,7 @@ import javax.net.ssl.HttpsURLConnection;
 /** Unit tests for {@link AsyncRegistrationQueueRunnerTest} */
 public class AsyncRegistrationQueueRunnerTest {
     private static final Context sDefaultContext = ApplicationProvider.getApplicationContext();
+    private static final boolean DEFAULT_AD_ID_PERMISSION = false;
     private static final String DEFAULT_ENROLLMENT_ID = "enrollment_id";
     private static final Uri DEFAULT_REGISTRANT = Uri.parse("android-app://com.registrant");
     private static final Uri DEFAULT_VERIFIED_DESTINATION = Uri.parse("android-app://com.example");
@@ -1907,7 +1908,12 @@ public class AsyncRegistrationQueueRunnerTest {
         ArgumentCaptor<DatastoreManager.ThrowingCheckedConsumer> consumerArgCaptor =
                 ArgumentCaptor.forClass(DatastoreManager.ThrowingCheckedConsumer.class);
         EnqueueAsyncRegistration.webSourceRegistrationRequest(
-                request, APP_TOP_ORIGIN, 100, mEnrollmentDao, datastoreManager);
+                request,
+                DEFAULT_AD_ID_PERMISSION,
+                APP_TOP_ORIGIN,
+                100,
+                mEnrollmentDao,
+                datastoreManager);
 
         // Execution
         asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker(2L, (short) 5);
