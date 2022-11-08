@@ -287,6 +287,8 @@ public final class PhFlags implements Flags {
     // UI keys
     static final String KEY_UI_DIALOGS_FEATURE_ENABLED = "ui_dialogs_feature_enabled";
 
+    static final String KEY_GA_UX_FEATURE_ENABLED = "ga_ux_enabled";
+
     // Maximum possible percentage for percentage variables
     static final int MAX_PERCENTAGE = 100;
 
@@ -1613,6 +1615,17 @@ public final class PhFlags implements Flags {
                         DeviceConfig.NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_UI_DIALOGS_FEATURE_ENABLED,
                         /* defaultValue */ UI_DIALOGS_FEATURE_ENABLED));
+    }
+
+    @Override
+    public boolean getGaUxFeatureEnabled() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return SystemProperties.getBoolean(
+                getSystemPropertyName(KEY_GA_UX_FEATURE_ENABLED),
+                /* defaultValue */ DeviceConfig.getBoolean(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_GA_UX_FEATURE_ENABLED,
+                        /* defaultValue */ GA_UX_FEATURE_ENABLED));
     }
 
     @Override
