@@ -1123,11 +1123,20 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         @Override
         public void onPropertiesChanged(@NonNull DeviceConfig.Properties properties) {
             synchronized (mLock) {
-                boolean killSwitchPreviouslyEnabled = mIsKillSwitchEnabled;
-                mIsKillSwitchEnabled = properties.getBoolean(PROPERTY_DISABLE_SDK_SANDBOX, true);
-                if (mIsKillSwitchEnabled && !killSwitchPreviouslyEnabled) {
-                    synchronized (SdkSandboxManagerService.this.mLock) {
-                        stopAllSandboxesLocked();
+                for (String name : properties.getKeyset()) {
+                    if (name == null) {
+                        continue;
+                    }
+
+                    if (name.equals(PROPERTY_DISABLE_SDK_SANDBOX)) {
+                        boolean killSwitchPreviouslyEnabled = mIsKillSwitchEnabled;
+                        mIsKillSwitchEnabled =
+                                properties.getBoolean(PROPERTY_DISABLE_SDK_SANDBOX, true);
+                        if (mIsKillSwitchEnabled && !killSwitchPreviouslyEnabled) {
+                            synchronized (SdkSandboxManagerService.this.mLock) {
+                                stopAllSandboxesLocked();
+                            }
+                        }
                     }
                 }
             }
