@@ -47,7 +47,8 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"ಭಾಗವಹಿಸುವುದು ಹೇಗೆ"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"ಬೀಟಾವನ್ನು ಆನ್ ಮಾಡುವುದರಿಂದ ನಿಮಗೆ ಜಾಹೀರಾತುಗಳನ್ನು ತೋರಿಸುವ ಈ ಇನ್ನಷ್ಟು ಖಾಸಗಿಯಾದ ವಿಧಾನವನ್ನು ಪರೀಕ್ಷಿಸುವ ಅವಕಾಶ ಆ್ಯಪ್‌ಗಳಿಗೆ ದೊರೆಯುತ್ತದೆ. ನಿಮ್ಮ ಗೌಪ್ಯತೆ ಸೆಟ್ಟಿಂಗ್‌ಗಳಲ್ಲಿ ನೀವು ಯಾವಾಗ ಬೇಕಾದರೂ ಬೀಟಾ ಅನ್ನು ಆಫ್ ಮಾಡಬಹುದು."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"ಬೇಡ"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"ಹೌದು, ನಾನು ಸೇರಿಕೊಳ್ಳುತ್ತೇನೆ"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"ಆನ್ ಮಾಡಿ"</string>
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"ಇನ್ನಷ್ಟು"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"ಭಾಗವಹಿಸಿದ್ದಕ್ಕಾಗಿ ಧನ್ಯವಾದಗಳು"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"ನೀವು Android ನ ಜಾಹೀರಾತುಗಳ ಗೌಪ್ಯತೆ ಬೀಟಾದ ಭಾಗವಾಗಿದ್ದೀರಿ. ನಿಮ್ಮ ಸಾಧನಕ್ಕಾಗಿ ಪ್ರೈವೆಸಿ ಸ್ಯಾಂಡ್‌ಬಾಕ್ಸ್ ಅನ್ನು ಆನ್ ಮಾಡಲಾಗಿದೆ.\n\nನಿಮ್ಮ ಗೌಪ್ಯತೆ ಸೆಟ್ಟಿಂಗ್‌ಗಳಲ್ಲಿ ನೀವು ಇನ್ನಷ್ಟು ತಿಳಿಯಬಹುದು ಅಥವಾ ಬೀಟಾ ಅನ್ನು ಯಾವಾಗ ಬೇಕಾದರೂ ಆಫ್ ಮಾಡಬಹುದು."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"ನೀವು ಭಾಗವಹಿಸದಿರಲು ಆಯ್ಕೆಮಾಡಿದ್ದೀರಿ"</string>
@@ -79,8 +80,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"ಇದೀಗ ತೋರಿಸಲು ಯಾವುದೇ ಆಸಕ್ತಿಗಳಿಲ್ಲ"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"ಗೌಪ್ಯತೆ ಸ್ಯಾಂಡ್‌ಬಾಕ್ಸ್"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android ಜಾಹೀರಾತುಗಳ ಗೌಪ್ಯತೆಯ ಬೀಟಾ ಹೊಸ ಫೀಚರ್‌ಗಳನ್ನು ಒದಗಿಸುತ್ತಿದ್ದು ಅವುಗಳನ್ನು ಬಳಸಿಕೊಂಡು ಆ್ಯಪ್‌ಗಳು ನಿಮಗೆ ಇಷ್ಟವಾಗಬಹುದಾದ ಜಾಹೀರಾತುಗಳನ್ನು ತೋರಿಸಬಹುದು. ಈ ತಂತ್ರಜ್ಞಾನಗಳು ಸಾಧನ ಗುರುತಿಸುವಿಕೆಗಳನ್ನು ಬಳಸುವುದಿಲ್ಲ.\n\nAndroid ನಿಮಗೆ ಯಾವ ಪ್ರಕಾರದ ಜಾಹೀರಾತುಗಳು ಇಷ್ಟವಾಗುತ್ತವೆ ಎಂಬುದನ್ನು ಅಂದಾಜು ಮಾಡಬಲ್ಲದು ಮತ್ತು ಈ ಆಸಕ್ತಿಗಳನ್ನು ನಿಮ್ಮ ಸಾಧನದಲ್ಲಿ ತಾತ್ಕಾಲಿಕವಾಗಿ ಉಳಿಸಬಲ್ಲದು. ಇತರ ಡೆವಲಪರ್‌ಗಳ ವೆಬ್‌ಸೈಟ್‌ಗಳು ಮತ್ತು ಆ್ಯಪ್‌ಗಳಾದ್ಯಂತ ನಿಮ್ಮ ಚಟುವಟಿಕೆಯನ್ನು ಟ್ರ್ಯಾಕ್ ಮಾಡದೇ ನಿಮಗೆ ಸೂಕ್ತವಾದ ಜಾಹೀರಾತುಗಳನ್ನು ತೋರಿಸಲು ಇದು ಆ್ಯಪ್‌ಗಳಿಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"ನೀವು ಯಾವುದೇ ನಿರ್ಬಂಧಿತ ಆಸಕ್ತಿಗಳನ್ನು ಹೊಂದಿಲ್ಲ"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"ಆ್ಯಪ್‌ಗಳು ನಿಮ್ಮ ಆಸಕ್ತಿಗಳನ್ನು ಅಂದಾಜು ಮಾಡಬಲ್ಲವು ಮತ್ತು ಅವುಗಳನ್ನು Android ನಲ್ಲಿ ತಾತ್ಕಾಲಿಕವಾಗಿ ಉಳಿಸಬಲ್ಲವು. ನಂತರ ಈ ಆಸಕ್ತಿಗಳನ್ನು ಆಧರಿಸಿ ಮತ್ತೊಂದು ಆ್ಯಪ್ ನಿಮಗೆ ಜಾಹೀರಾತೊಂದನ್ನು ತೋರಿಸಬಹುದು.\n\nನೀವು ಆ್ಯಪ್ ಒಂದನ್ನು ನಿರ್ಬಂಧಿಸಿದರೆ, ಅದು ಯಾವುದೇ ಆಸಕ್ತಿಗಳನ್ನು ಅಂದಾಜು ಮಾಡುವುದಿಲ್ಲ. ನೀವು ಅದರ ಮೇಲಿನ ನಿರ್ಬಂಧವನ್ನು ತೆಗೆದುಹಾಕದ ಹೊರತು ಅದನ್ನು ಈ ಆ್ಯಪ್‌ಗಳ ಪಟ್ಟಿಗೆ ಸೇರಿಸಲಾಗುವುದಿಲ್ಲ. ಆ್ಯಪ್ ಈಗಾಗಲೇ ಅಂದಾಜು ಮಾಡಿರುವ ಆಸಕ್ತಿಗಳನ್ನು ಅಳಿಸಲಾಗುತ್ತದೆ, ಆದರೆ ನಿಮಗೆ ಈಗಲೂ ಕೆಲವು ಸಂಬಂಧಿತ ಜಾಹೀರಾತುಗಳು ಕಾಣಿಸಬಹುದು."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"ನೀವು ನಿರ್ಬಂಧಿಸಿದ ಆ್ಯಪ್‌ಗಳು"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"ಆ್ಯಪ್‌ಗಳು ಅಂದಾಜು ಮಾಡಿರುವ ಆಸಕ್ತಿಗಳನ್ನು ರೀಸೆಟ್ ಮಾಡಿ"</string>
@@ -88,7 +88,25 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"ಗೌಪ್ಯತೆ ಸ್ಯಾಂಡ್‌ಬಾಕ್ಸ್"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android ಜಾಹೀರಾತುಗಳ ಗೌಪ್ಯತೆಯ ಬೀಟಾ ಹೊಸ ಫೀಚರ್‌ಗಳನ್ನು ಒದಗಿಸುತ್ತಿದ್ದು ಅವುಗಳನ್ನು ಬಳಸಿಕೊಂಡು ಆ್ಯಪ್‌ಗಳು ನಿಮಗೆ ಇಷ್ಟವಾಗಬಹುದಾದ ಜಾಹೀರಾತುಗಳನ್ನು ತೋರಿಸಬಹುದು. ಈ ತಂತ್ರಜ್ಞಾನಗಳು ಸಾಧನ ಗುರುತಿಸುವಿಕೆಗಳನ್ನು ಬಳಸುವುದಿಲ್ಲ.\n\nಆ್ಯಪ್‌ಗಳು ನಿಮಗೆ ಯಾವ ಪ್ರಕಾರದ ಜಾಹೀರಾತುಗಳು ಇಷ್ಟವಾಗುತ್ತವೆ ಎಂಬುದನ್ನು ಅಂದಾಜು ಮಾಡಬಲ್ಲವು ಮತ್ತು ಈ ಆಸಕ್ತಿಗಳನ್ನು ನಿಮ್ಮ ಸಾಧನದಲ್ಲಿ ತಾತ್ಕಾಲಿಕವಾಗಿ ಉಳಿಸಬಲ್ಲವು. ಇತರ ಡೆವಲಪರ್‌ಗಳ ವೆಬ್‌ಸೈಟ್‌ಗಳು ಮತ್ತು ಆ್ಯಪ್‌ಗಳಾದ್ಯಂತ ನಿಮ್ಮ ಚಟುವಟಿಕೆಯನ್ನು ಟ್ರ್ಯಾಕ್ ಮಾಡದೇ ನಿಮಗೆ ಸೂಕ್ತವಾದ ಜಾಹೀರಾತುಗಳನ್ನು ತೋರಿಸಲು ಇದು ಆ್ಯಪ್‌ಗಳಿಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"ನೀವು ಯಾವುದೇ ನಿರ್ಬಂಧಿತ ಆ್ಯಪ್‌ಗಳನ್ನು ಹೊಂದಿಲ್ಲ"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"ನೀವು ಯಾವುದೇ ನಿರ್ಬಂಧಿತ ಆಸಕ್ತಿಗಳನ್ನು ಹೊಂದಿಲ್ಲ"</string>
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"ರದ್ದುಮಾಡಿ"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"ಪ್ರೈವೆಸಿ ಸ್ಯಾಂಡ್‌ಬಾಕ್ಸ್ ಅನ್ನು ಆಫ್ ಮಾಡುವುದೇ?"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"ನೀವು ಮನಸ್ಸು ಬದಲಾಯಿಸಿದರೆ ಅಥವಾ Android ನ ಜಾಹೀರಾತುಗಳ ಗೌಪ್ಯತೆ ಬೀಟಾ ಕುರಿತು ಇನ್ನಷ್ಟು ತಿಳಿದುಕೊಳ್ಳಲು ಬಯಸಿದರೆ, ನಿಮ್ಮ ಗೌಪ್ಯತೆ ಸೆಟ್ಟಿಂಗ್‌ಗಳಿಗೆ ಹೋಗಿ"</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"ಆಫ್ ಮಾಡಿ"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"<xliff:g id="TOPIC">%1$s</xliff:g> ಅನ್ನು ನಿರ್ಬಂಧಿಸುವುದೇ?"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"ಈ ಆಸಕ್ತಿಯನ್ನು ನಿರ್ಬಂಧಿಸಲಾಗುತ್ತದೆ ಮತ್ತು ಅದನ್ನು ನೀವು ಮರಳಿ ಸೇರಿಸದ ಹೊರತು ಮತ್ತೆ ನಿಮ್ಮ ಪಟ್ಟಿಗೆ ಸೇರಿಸಲಾಗುವುದಿಲ್ಲ. ನಿಮಗೆ ಆಗಲೂ ಕೆಲವು ಸಂಬಂಧಿತ ಜಾಹೀರಾತುಗಳು ಕಾಣಿಸಬಹುದು."</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"ನಿರ್ಬಂಧಿಸಿ"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"<xliff:g id="TOPIC">%1$s</xliff:g> ನ ನಿರ್ಬಂಧವನ್ನು ತೆಗೆದುಹಾಕಲಾಗಿದೆ"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android ಈ ಆಸಕ್ತಿಯನ್ನು ಮತ್ತೆ ನಿಮ್ಮ ಪಟ್ಟಿಗೆ ಸೇರಿಸಬಹುದು, ಆದರೆ ಅದು ತಕ್ಷಣವೇ ಗೋಚರಿಸದೇ ಇರಬಹುದು"</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"ಸರಿ"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"ನಿಮ್ಮ ಎಲ್ಲಾ ಆಸಕ್ತಿಗಳನ್ನು ಮರುಹೊಂದಿಸುವುದೇ?"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"ನಿಮ್ಮ ಪಟ್ಟಿಯನ್ನು ತೆರವುಗೊಳಿಸಲಾಗುತ್ತದೆ ಹಾಗೂ ಇನ್ನು ಮುಂದೆ ಹೊಸ ಆಸಕ್ತಿಗಳನ್ನು ಅಂದಾಜು ಮಾಡಲಾಗುತ್ತದೆ. ತೆರವುಗೊಳಿಸಲಾದ ಆಸಕ್ತಿಗಳಿಗೆ ಸಂಬಂಧಿಸಿದ ಕೆಲವು ಜಾಹೀರಾತುಗಳು ಈಗಲೂ ನಿಮಗೆ ಕಾಣಿಸಬಹುದು."</string>
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"ಮರುಹೊಂದಿಸಿ"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g> ಅನ್ನು ನಿರ್ಬಂಧಿಸುವುದೇ?"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"ಈ ಆ್ಯಪ್ ಪ್ರೈವೆಸಿ ಸ್ಯಾಂಡ್‌ಬಾಕ್ಸ್‌ಗಾಗಿ ಆಸಕ್ತಿಗಳನ್ನು ಅಂದಾಜು ಮಾಡುವುದಿಲ್ಲ ಮತ್ತು ನೀವು ಅದಕ್ಕೆ ವಿಧಿಸಿರುವ ನಿರ್ಬಂಧವನ್ನು ತೆಗೆದುಹಾಕದ ಹೊರತು ಮತ್ತೆ ನಿಮ್ಮ ಪಟ್ಟಿಗೆ ಸೇರಿಸಲಾಗುವುದಿಲ್ಲ.\n\nಈ ಆ್ಯಪ್‌ನಿಂದ ಈಗಾಗಲೇ ಅಂದಾಜಿಸಲಾದ ಆಸಕ್ತಿಗಳನ್ನು ಅಳಿಸಲಾಗುತ್ತದೆ, ಆದರೂ ಸಹ ನಿಮಗೆ ಕೆಲವು ಸಂಬಂಧಿತ ಜಾಹೀರಾತುಗಳು ಕಾಣಬಹುದು."</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> ನ ನಿರ್ಬಂಧವನ್ನು ತೆಗೆದುಹಾಕಲಾಗಿದೆ"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"ಈ ಆ್ಯಪ್ ನಿಮಗಾಗಿ ಆಸಕ್ತಿಗಳನ್ನು ಮತ್ತೊಮ್ಮೆ ಅಂದಾಜು ಮಾಡಬಹುದು, ಆದರೆ ಇದು ತಕ್ಷಣವೇ ನಿಮ್ಮ ಪಟ್ಟಿಯಲ್ಲಿ ಕಾಣಿಸದೇ ಇರಬಹುದು. ನಿಮಗೆ ಸಂಬಂಧಿತ ಜಾಹೀರಾತುಗಳು ಕಾಣಲು ಸ್ವಲ್ಪ ಸಮಯ ತೆಗೆದುಕೊಳ್ಳಬಹುದು."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"ಆ್ಯಪ್‌ಗಳಿಂದ ರಚಿಸಲಾದ ಆಸಕ್ತಿಗಳನ್ನು ಮರುಹೊಂದಿಸುವುದೇ?"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"ನಿಮ್ಮ ಪಟ್ಟಿಯಲ್ಲಿರುವ ಆ್ಯಪ್‌ಗಳು ಅಂದಾಜು ಮಾಡಿರುವ ಆಸಕ್ತಿಗಳನ್ನು ಪ್ರೈವೆಸಿ ಸ್ಯಾಂಡ್‌ಬಾಕ್ಸ್‌ನಿಂದ ಅಳಿಸಲಾಗುತ್ತದೆ ಹಾಗೂ ಆ್ಯಪ್‌ಗಳು ಇನ್ನು ಮುಂದೆ ಹೊಸ ಆಸಕ್ತಿಗಳನ್ನು ಅಂದಾಜು ಮಾಡುತ್ತವೆ. ನಿಮಗೆ ಈಗಲೂ ಕೆಲವು ಸಂಬಂಧಿತ ಜಾಹೀರಾತುಗಳು ಕಾಣಿಸಬಹುದು."</string>
     <string name="topic10001" msgid="1636806320891333775">"ಕಲೆ &amp; ಮನರಂಜನೆ"</string>
     <string name="topic10002" msgid="1226367977754287428">"ನಟನೆ &amp; ಥೇಟರ್"</string>
     <string name="topic10003" msgid="6949890838957814881">"ಆನಿಮೇ &amp; ಮಾಂಗ"</string>

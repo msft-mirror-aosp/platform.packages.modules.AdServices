@@ -30,35 +30,72 @@ import android.content.Context;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.service.common.FledgeMaintenanceTasksWorker;
 import com.android.adservices.service.topics.TopicsWorker;
+import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import java.util.List;
+import java.util.Objects;
+
 /** Maintenance job to clean up. */
 public final class MaintenanceJobService extends JobService {
+
+    private FledgeMaintenanceTasksWorker mFledgeMaintenanceTasksWorker;
+
+    /** Injects a {@link FledgeMaintenanceTasksWorker to be used during testing} */
+    @VisibleForTesting
+    public void injectFledgeMaintenanceTasksWorker(
+            @NonNull FledgeMaintenanceTasksWorker fledgeMaintenanceTasksWorker) {
+        mFledgeMaintenanceTasksWorker = fledgeMaintenanceTasksWorker;
+    }
 
     @Override
     public boolean onStartJob(JobParameters params) {
         LogUtil.d("MaintenanceJobService.onStartJob");
 
-        if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
-            LogUtil.e("Topics API is disabled, skipping and cancelling MaintenanceJobService");
+        if (FlagsFactory.getFlags().getTopicsKillSwitch()
+                && FlagsFactory.getFlags().getFledgeSelectAdsKillSwitch()) {
+            LogUtil.e(
+                    "Both Topics and Select Ads are disabled, skipping and cancelling"
+                            + " MaintenanceJobService");
             return skipAndCancelBackgroundJob(params);
         }
 
-        ListenableFuture<Void> appReconciliationFuture =
-                Futures.submit(
-                        () -> TopicsWorker.getInstance(this).reconcileApplicationUpdate(this),
-                        AdServicesExecutors.getBackgroundExecutor());
+        ListenableFuture<Void> appReconciliationFuture;
+        if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
+            LogUtil.d("Topics API is disabled, skipping Topics Job");
+            appReconciliationFuture = Futures.immediateFuture(null);
+        } else {
+            appReconciliationFuture =
+                    Futures.submit(
+                            () -> TopicsWorker.getInstance(this).reconcileApplicationUpdate(this),
+                            AdServicesExecutors.getBackgroundExecutor());
+        }
+
+        ListenableFuture<Void> fledgeMaintenanceTasksFuture;
+        if (FlagsFactory.getFlags().getFledgeSelectAdsKillSwitch()) {
+            LogUtil.d("SelectAds API is disabled, skipping SelectAds Job");
+            fledgeMaintenanceTasksFuture = Futures.immediateFuture(null);
+        } else {
+            fledgeMaintenanceTasksFuture =
+                    Futures.submit(
+                            this::doAdSelectionDataMaintenanceTasks,
+                            AdServicesExecutors.getBackgroundExecutor());
+        }
+
+        ListenableFuture<List<Void>> futuresList =
+                Futures.allAsList(fledgeMaintenanceTasksFuture, appReconciliationFuture);
 
         Futures.addCallback(
-                appReconciliationFuture,
-                new FutureCallback<Void>() {
+                futuresList,
+                new FutureCallback<List<Void>>() {
                     @Override
-                    public void onSuccess(Void result) {
-                        LogUtil.d("App Update Reconciliation is done!");
+                    public void onSuccess(List<Void> result) {
+                        LogUtil.d("PP API jobs are done!");
                         jobFinished(params, /* wantsReschedule = */ false);
                     }
 
@@ -79,7 +116,8 @@ public final class MaintenanceJobService extends JobService {
         return false;
     }
 
-    private static void schedule(
+    @VisibleForTesting
+    static void schedule(
             Context context,
             @NonNull JobScheduler jobScheduler,
             long maintenanceJobPeriodMs,
@@ -89,6 +127,7 @@ public final class MaintenanceJobService extends JobService {
                                 MAINTENANCE_JOB_ID,
                                 new ComponentName(context, MaintenanceJobService.class))
                         .setRequiresCharging(true)
+                        .setPersisted(true)
                         .setPeriodic(maintenanceJobPeriodMs, maintenanceJobFlexMs)
                         .build();
 
@@ -105,8 +144,11 @@ public final class MaintenanceJobService extends JobService {
      * @return a {@code boolean} to indicate if the service job is actually scheduled.
      */
     public static boolean scheduleIfNeeded(Context context, boolean forceSchedule) {
-        if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
-            LogUtil.e("Topics API is disabled, skip scheduling the MaintenanceJobService");
+        if (FlagsFactory.getFlags().getTopicsKillSwitch()
+                && FlagsFactory.getFlags().getFledgeSelectAdsKillSwitch()) {
+            LogUtil.e(
+                    "Both Topics and Select Ads are disabled, skipping scheduling"
+                            + " MaintenanceJobService");
             return false;
         }
 
@@ -147,5 +189,18 @@ public final class MaintenanceJobService extends JobService {
 
         // Returning false means that this job has completed its work.
         return false;
+    }
+
+    private FledgeMaintenanceTasksWorker getFledgeMaintenanceTasksWorker() {
+        if (!Objects.isNull(mFledgeMaintenanceTasksWorker)) {
+            return mFledgeMaintenanceTasksWorker;
+        }
+        mFledgeMaintenanceTasksWorker = FledgeMaintenanceTasksWorker.create(this);
+        return mFledgeMaintenanceTasksWorker;
+    }
+
+    private void doAdSelectionDataMaintenanceTasks() {
+        LogUtil.v("Performing Ad Selection maintenance tasks");
+        getFledgeMaintenanceTasksWorker().clearExpiredAdSelectionData();
     }
 }

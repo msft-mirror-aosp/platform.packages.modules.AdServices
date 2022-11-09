@@ -23,7 +23,11 @@ import android.os.OutcomeReceiver;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.runner.AndroidJUnit4;
 
+import com.android.compatibility.common.util.ShellUtils;
+
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -35,6 +39,26 @@ import java.util.concurrent.Executors;
 public class AppSetIdManagerTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final Context sContext = ApplicationProvider.getApplicationContext();
+
+    @Before
+    public void setup() {
+        overrideAppSetIdKillSwitch(true);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        overrideAppSetIdKillSwitch(false);
+    }
+
+    // Override appsetid related kill switch to ignore the effect of actual PH values.
+    // If shouldOverride = true, override appsetid related kill switch to OFF to allow adservices
+    // If shouldOverride = false, override appsetid related kill switch to meaningless value so that
+    // PhFlags will use the default value.
+    private void overrideAppSetIdKillSwitch(boolean shouldOverride) {
+        String overrideString = shouldOverride ? "false" : "null";
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.appsetid_kill_switch " + overrideString);
+    }
 
     @Test
     public void testAppSetIdManager() throws Exception {
@@ -55,6 +79,6 @@ public class AppSetIdManagerTest {
         appSetIdManager.getAppSetId(CALLBACK_EXECUTOR, callback);
         AppSetId resultAppSetId = future.get();
         Assert.assertNotNull(resultAppSetId.getId());
-        Assert.assertEquals(0, resultAppSetId.getScope());
+        Assert.assertNotNull(resultAppSetId.getScope());
     }
 }

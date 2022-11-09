@@ -125,9 +125,8 @@ public class AdServicesCommonServiceImpl extends
                                         + mFlags.getAdServicesEnabled());
                         if (mFlags.getAdServicesEnabled() && adServicesEntryPointEnabled) {
                             ConsentNotificationJobService.schedule(mContext, adIdEnabled);
-                            if (ConsentManager.getInstance(mContext)
-                                    .getConsent(mContext.getPackageManager())
-                                    .isGiven()) {
+                            if (ConsentManager.getInstance(mContext).getConsent().isGiven()) {
+                                PackageChangedReceiver.enableReceiver(mContext);
                                 BackgroundJobsManager.scheduleAllBackgroundJobs(mContext);
                             }
                         }

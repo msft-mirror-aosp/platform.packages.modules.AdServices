@@ -136,9 +136,9 @@ public class SdkFledge extends SandboxedSdkProvider {
                         + "' } };\n"
                         + "}";
 
-        String biddingLogicJs =
+        String biddingLogicJsBuyer1 =
                 "function generateBid(ad, auction_signals, per_buyer_signals,"
-                        + " trusted_bidding_signals, contextual_signals, user_signals,"
+                        + " trusted_bidding_signals, contextual_signals,"
                         + " custom_audience_signals) { \n"
                         + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
                         + "}\n"
@@ -146,6 +146,19 @@ public class SdkFledge extends SandboxedSdkProvider {
                         + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
                         + " return {'status': 0, 'results': {'reporting_uri': '"
                         + getUri(BUYER_1.toString(), BUYER_REPORTING_PATH).toString()
+                        + "' } };\n"
+                        + "}";
+
+        String biddingLogicJsBuyer2 =
+                "function generateBid(ad, auction_signals, per_buyer_signals,"
+                        + " trusted_bidding_signals, contextual_signals,"
+                        + " custom_audience_signals) { \n"
+                        + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
+                        + "}\n"
+                        + "function reportWin(ad_selection_signals, per_buyer_signals,"
+                        + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
+                        + " return {'status': 0, 'results': {'reporting_uri': '"
+                        + getUri(BUYER_2.toString(), BUYER_REPORTING_PATH).toString()
                         + "' } };\n"
                         + "}";
 
@@ -186,14 +199,14 @@ public class SdkFledge extends SandboxedSdkProvider {
                     new AddCustomAudienceOverrideRequest.Builder()
                             .setBuyer(customAudience1.getBuyer())
                             .setName(customAudience1.getName())
-                            .setBiddingLogicJs(biddingLogicJs)
+                            .setBiddingLogicJs(biddingLogicJsBuyer1)
                             .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                             .build();
             AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest2 =
                     new AddCustomAudienceOverrideRequest.Builder()
                             .setBuyer(customAudience2.getBuyer())
                             .setName(customAudience2.getName())
-                            .setBiddingLogicJs(biddingLogicJs)
+                            .setBiddingLogicJs(biddingLogicJsBuyer2)
                             .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                             .build();
 

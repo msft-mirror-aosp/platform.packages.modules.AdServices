@@ -19,6 +19,7 @@ package android.adservices.adselection;
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE;
 
 import android.adservices.common.AdServicesStatusUtils;
+import android.adservices.common.CallerMetadata;
 import android.adservices.common.FledgeErrorResponse;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
@@ -28,6 +29,7 @@ import android.content.Context;
 import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
+import android.os.SystemClock;
 import android.os.TransactionTooLargeException;
 
 import com.android.adservices.AdServicesCommon;
@@ -135,10 +137,13 @@ public class AdSelectionManager {
 
         try {
             final AdSelectionService service = getService();
-            service.runAdSelection(
+            service.selectAds(
                     new AdSelectionInput.Builder()
                             .setAdSelectionConfig(adSelectionConfig)
                             .setCallerPackageName(getCallerPackageName())
+                            .build(),
+                    new CallerMetadata.Builder()
+                            .setBinderElapsedTimestamp(SystemClock.elapsedRealtime())
                             .build(),
                     new AdSelectionCallback.Stub() {
                         @Override

@@ -38,10 +38,12 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
 import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.adservices.service.measurement.WebUtil;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -64,16 +66,16 @@ import java.util.List;
 @RunWith(MockitoJUnitRunner.class)
 public class AggregateReportingJobHandlerTest {
     private static final EnrollmentData ENROLLMENT = new EnrollmentData.Builder()
-            .setAttributionReportingUrl(List.of("https://ad-tech.com"))
+            .setAttributionReportingUrl(List.of(WebUtil.validUrl("https://ad-tech.test")))
             .build();
-    private static final Uri REPORTING_URI = Uri.parse("https://ad-tech.com");
+    private static final Uri REPORTING_URI = WebUtil.validUri("https://ad-tech.test");
     private static final String ENROLLMENT_ID = "enrollment-id";
 
     private static final String CLEARTEXT_PAYLOAD =
             "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1,\"value\":2}]}";
 
-    private static final Long SOURCE_DEBUG_KEY = 237865L;
-    private static final Long TRIGGER_DEBUG_KEY = 928762L;
+    private static final UnsignedLong SOURCE_DEBUG_KEY = new UnsignedLong(237865L);
+    private static final UnsignedLong TRIGGER_DEBUG_KEY = new UnsignedLong(928762L);
 
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     DatastoreManager mDatastoreManager;
@@ -86,6 +88,7 @@ public class AggregateReportingJobHandlerTest {
 
     AggregateReportingJobHandler mAggregateReportingJobHandler;
     AggregateReportingJobHandler mSpyAggregateReportingJobHandler;
+    AggregateReportingJobHandler mSpyDebugAggregateReportingJobHandler;
 
     class FakeDatasoreManager extends DatastoreManager {
 
@@ -118,6 +121,11 @@ public class AggregateReportingJobHandlerTest {
         mAggregateReportingJobHandler = new AggregateReportingJobHandler(
                 mEnrollmentDao, mDatastoreManager, mockKeyManager);
         mSpyAggregateReportingJobHandler = Mockito.spy(mAggregateReportingJobHandler);
+        mSpyDebugAggregateReportingJobHandler =
+                Mockito.spy(
+                        new AggregateReportingJobHandler(
+                                        mEnrollmentDao, mDatastoreManager, mockKeyManager)
+                                .setIsDebugInstance(true));
     }
 
     @Test
@@ -147,13 +155,57 @@ public class AggregateReportingJobHandlerTest {
                 .when(mSpyAggregateReportingJobHandler)
                 .createReportJsonPayload(Mockito.any(), Mockito.any(), Mockito.any());
 
-        doNothing().when(mMeasurementDao).markAggregateReportDelivered(aggregateReport.getId());
+        doNothing()
+                .when(mMeasurementDao)
+                .markAggregateReportStatus(
+                        aggregateReport.getId(), AggregateReport.Status.DELIVERED);
         Assert.assertEquals(
                 AdServicesStatusUtils.STATUS_SUCCESS,
                 mSpyAggregateReportingJobHandler.performReport(
                         aggregateReport.getId(), AggregateCryptoFixture.getKey()));
 
-        verify(mMeasurementDao, times(1)).markAggregateReportDelivered(any());
+        verify(mMeasurementDao, times(1)).markAggregateReportStatus(any(), anyInt());
+        verify(mTransaction, times(2)).begin();
+        verify(mTransaction, times(2)).end();
+    }
+
+    @Test
+    public void testSendReportForPendingDebugReportSuccess()
+            throws DatastoreException, IOException, JSONException {
+        AggregateReport aggregateReport =
+                new AggregateReport.Builder()
+                        .setId("aggregateReportId")
+                        .setStatus(AggregateReport.Status.PENDING)
+                        .setDebugReportStatus(AggregateReport.DebugReportStatus.PENDING)
+                        .setEnrollmentId(ENROLLMENT_ID)
+                        .setSourceDebugKey(SOURCE_DEBUG_KEY)
+                        .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
+                        .build();
+        JSONObject aggregateReportBody =
+                new AggregateReportBody.Builder()
+                        .setReportId(aggregateReport.getId())
+                        .setDebugCleartextPayload(CLEARTEXT_PAYLOAD)
+                        .build()
+                        .toJson(AggregateCryptoFixture.getKey());
+
+        when(mMeasurementDao.getAggregateReport(aggregateReport.getId()))
+                .thenReturn(aggregateReport);
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyDebugAggregateReportingJobHandler)
+                .makeHttpPostRequest(Mockito.any(), Mockito.any());
+        doReturn(aggregateReportBody)
+                .when(mSpyDebugAggregateReportingJobHandler)
+                .createReportJsonPayload(Mockito.any(), Mockito.any(), Mockito.any());
+
+        doNothing()
+                .when(mMeasurementDao)
+                .markAggregateDebugReportDelivered(aggregateReport.getId());
+        Assert.assertEquals(
+                AdServicesStatusUtils.STATUS_SUCCESS,
+                mSpyDebugAggregateReportingJobHandler.performReport(
+                        aggregateReport.getId(), AggregateCryptoFixture.getKey()));
+
+        verify(mMeasurementDao, times(1)).markAggregateDebugReportDelivered(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }
@@ -184,13 +236,16 @@ public class AggregateReportingJobHandlerTest {
                 .when(mSpyAggregateReportingJobHandler)
                 .createReportJsonPayload(Mockito.any(), Mockito.any(), Mockito.any());
 
-        doNothing().when(mMeasurementDao).markAggregateReportDelivered(aggregateReport.getId());
+        doNothing()
+                .when(mMeasurementDao)
+                .markAggregateReportStatus(
+                        aggregateReport.getId(), AggregateReport.Status.DELIVERED);
         Assert.assertEquals(
                 AdServicesStatusUtils.STATUS_SUCCESS,
                 mSpyAggregateReportingJobHandler.performReport(
                         aggregateReport.getId(), AggregateCryptoFixture.getKey()));
 
-        verify(mMeasurementDao, times(1)).markAggregateReportDelivered(any());
+        verify(mMeasurementDao, times(1)).markAggregateReportStatus(any(), anyInt());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }
@@ -221,13 +276,16 @@ public class AggregateReportingJobHandlerTest {
                 .when(mSpyAggregateReportingJobHandler)
                 .createReportJsonPayload(Mockito.any(), Mockito.any(), Mockito.any());
 
-        doNothing().when(mMeasurementDao).markAggregateReportDelivered(aggregateReport.getId());
+        doNothing()
+                .when(mMeasurementDao)
+                .markAggregateReportStatus(
+                        aggregateReport.getId(), AggregateReport.Status.DELIVERED);
         Assert.assertEquals(
                 AdServicesStatusUtils.STATUS_SUCCESS,
                 mSpyAggregateReportingJobHandler.performReport(
                         aggregateReport.getId(), AggregateCryptoFixture.getKey()));
 
-        verify(mMeasurementDao, times(1)).markAggregateReportDelivered(any());
+        verify(mMeasurementDao, times(1)).markAggregateReportStatus(any(), anyInt());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }
@@ -259,13 +317,16 @@ public class AggregateReportingJobHandlerTest {
                 .when(mSpyAggregateReportingJobHandler)
                 .createReportJsonPayload(Mockito.any(), Mockito.any(), Mockito.any());
 
-        doNothing().when(mMeasurementDao).markAggregateReportDelivered(aggregateReport.getId());
+        doNothing()
+                .when(mMeasurementDao)
+                .markAggregateReportStatus(
+                        aggregateReport.getId(), AggregateReport.Status.DELIVERED);
         Assert.assertEquals(
                 AdServicesStatusUtils.STATUS_SUCCESS,
                 mSpyAggregateReportingJobHandler.performReport(
                         aggregateReport.getId(), AggregateCryptoFixture.getKey()));
 
-        verify(mMeasurementDao, times(1)).markAggregateReportDelivered(any());
+        verify(mMeasurementDao, times(1)).markAggregateReportStatus(any(), anyInt());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }
@@ -300,7 +361,7 @@ public class AggregateReportingJobHandlerTest {
                 mSpyAggregateReportingJobHandler.performReport(
                         aggregateReport.getId(), AggregateCryptoFixture.getKey()));
 
-        verify(mMeasurementDao, never()).markAggregateReportDelivered(any());
+        verify(mMeasurementDao, never()).markAggregateReportStatus(any(), anyInt());
         verify(mTransaction, times(1)).begin();
         verify(mTransaction, times(1)).end();
     }
@@ -322,7 +383,7 @@ public class AggregateReportingJobHandlerTest {
                 mSpyAggregateReportingJobHandler.performReport(
                         aggregateReport.getId(), AggregateCryptoFixture.getKey()));
 
-        verify(mMeasurementDao, never()).markAggregateReportDelivered(any());
+        verify(mMeasurementDao, never()).markAggregateReportStatus(any(), anyInt());
         verify(mTransaction, times(1)).begin();
         verify(mTransaction, times(1)).end();
     }
@@ -379,7 +440,7 @@ public class AggregateReportingJobHandlerTest {
                 mSpyAggregateReportingJobHandler.performScheduledPendingReportsInWindow(
                         1000, 1100));
 
-        verify(mMeasurementDao, times(2)).markAggregateReportDelivered(any());
+        verify(mMeasurementDao, times(2)).markAggregateReportStatus(any(), anyInt());
         verify(mTransaction, times(5)).begin();
         verify(mTransaction, times(5)).end();
     }
@@ -424,7 +485,7 @@ public class AggregateReportingJobHandlerTest {
                 mSpyAggregateReportingJobHandler.performScheduledPendingReportsInWindow(
                         1000, 1100));
 
-        verify(mMeasurementDao, never()).markAggregateReportDelivered(any());
+        verify(mMeasurementDao, never()).markAggregateReportStatus(any(), anyInt());
     }
 
     @Test
@@ -445,7 +506,7 @@ public class AggregateReportingJobHandlerTest {
                 mSpyAggregateReportingJobHandler.performReport(
                         aggregateReport.getId(), AggregateCryptoFixture.getKey()));
 
-        verify(mMeasurementDao, never()).markAggregateReportDelivered(any());
+        verify(mMeasurementDao, never()).markAggregateReportStatus(any(), anyInt());
         verify(mTransaction, times(1)).begin();
         verify(mTransaction, times(1)).end();
     }

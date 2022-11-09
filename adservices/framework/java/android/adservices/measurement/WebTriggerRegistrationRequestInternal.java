@@ -29,7 +29,7 @@ import java.util.Objects;
  * @hide
  */
 public class WebTriggerRegistrationRequestInternal implements Parcelable {
-    /** Creator for Paracelable (via reflection). */
+    /** Creator for Parcelable (via reflection). */
     @NonNull
     public static final Creator<WebTriggerRegistrationRequestInternal> CREATOR =
             new Creator<WebTriggerRegistrationRequestInternal>() {
@@ -45,18 +45,26 @@ public class WebTriggerRegistrationRequestInternal implements Parcelable {
             };
     /** Holds input to measurement trigger registration calls from web context. */
     @NonNull private final WebTriggerRegistrationRequest mTriggerRegistrationRequest;
-    /** Holds package info of where the request is coming from. */
-    @NonNull private final String mPackageName;
+    /** Holds app package info of where the request is coming from. */
+    @NonNull private final String mAppPackageName;
+    /** Holds sdk package info of where the request is coming from. */
+    @NonNull private final String mSdkPackageName;
+    /** AD ID Permission Granted. */
+    private final boolean mIsAdIdPermissionGranted;
 
     private WebTriggerRegistrationRequestInternal(@NonNull Builder builder) {
         mTriggerRegistrationRequest = builder.mTriggerRegistrationRequest;
-        mPackageName = builder.mPackageName;
+        mAppPackageName = builder.mAppPackageName;
+        mSdkPackageName = builder.mSdkPackageName;
+        mIsAdIdPermissionGranted = builder.mIsAdIdPermissionGranted;
     }
 
     private WebTriggerRegistrationRequestInternal(Parcel in) {
         Objects.requireNonNull(in);
         mTriggerRegistrationRequest = WebTriggerRegistrationRequest.CREATOR.createFromParcel(in);
-        mPackageName = in.readString();
+        mAppPackageName = in.readString();
+        mSdkPackageName = in.readString();
+        mIsAdIdPermissionGranted = in.readBoolean();
     }
 
     /** Getter for {@link #mTriggerRegistrationRequest}. */
@@ -64,9 +72,19 @@ public class WebTriggerRegistrationRequestInternal implements Parcelable {
         return mTriggerRegistrationRequest;
     }
 
-    /** Getter for {@link #mPackageName}. */
-    public String getPackageName() {
-        return mPackageName;
+    /** Getter for {@link #mAppPackageName}. */
+    public String getAppPackageName() {
+        return mAppPackageName;
+    }
+
+    /** Getter for {@link #mSdkPackageName}. */
+    public String getSdkPackageName() {
+        return mSdkPackageName;
+    }
+
+    /** Getter for {@link #mIsAdIdPermissionGranted}. */
+    public boolean isAdIdPermissionGranted() {
+        return mIsAdIdPermissionGranted;
     }
 
     @Override
@@ -75,12 +93,18 @@ public class WebTriggerRegistrationRequestInternal implements Parcelable {
         if (!(o instanceof WebTriggerRegistrationRequestInternal)) return false;
         WebTriggerRegistrationRequestInternal that = (WebTriggerRegistrationRequestInternal) o;
         return Objects.equals(mTriggerRegistrationRequest, that.mTriggerRegistrationRequest)
-                && Objects.equals(mPackageName, that.mPackageName);
+                && Objects.equals(mAppPackageName, that.mAppPackageName)
+                && Objects.equals(mSdkPackageName, that.mSdkPackageName)
+                && Objects.equals(mIsAdIdPermissionGranted, that.mIsAdIdPermissionGranted);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mTriggerRegistrationRequest, mPackageName);
+        return Objects.hash(
+                mTriggerRegistrationRequest,
+                mAppPackageName,
+                mSdkPackageName,
+                mIsAdIdPermissionGranted);
     }
 
     @Override
@@ -92,35 +116,52 @@ public class WebTriggerRegistrationRequestInternal implements Parcelable {
     public void writeToParcel(@NonNull Parcel out, int flags) {
         Objects.requireNonNull(out);
         mTriggerRegistrationRequest.writeToParcel(out, flags);
-        out.writeString(mPackageName);
+        out.writeString(mAppPackageName);
+        out.writeString(mSdkPackageName);
+        out.writeBoolean(mIsAdIdPermissionGranted);
     }
 
     /** Builder for {@link WebTriggerRegistrationRequestInternal}. */
     public static final class Builder {
         /** External trigger registration request from client app SDK. */
         @NonNull private final WebTriggerRegistrationRequest mTriggerRegistrationRequest;
-        /** Package name used for the registration. Used to determine the registrant. */
-        @NonNull private final String mPackageName;
+        /** Package name of the app used for the registration. Used to determine the registrant. */
+        @NonNull private final String mAppPackageName;
+        /** Package name of the sdk used for the registration. */
+        @NonNull private final String mSdkPackageName;
+        /** AD ID Permission Granted. */
+        private boolean mIsAdIdPermissionGranted;
 
         /**
          * Builder constructor for {@link WebTriggerRegistrationRequestInternal}.
          *
          * @param triggerRegistrationRequest external trigger registration request
-         * @param packageName that is calling PP API
+         * @param appPackageName app package name that is calling PP API
+         * @param sdkPackageName sdk package name that is calling PP API
          */
         public Builder(
                 @NonNull WebTriggerRegistrationRequest triggerRegistrationRequest,
-                @NonNull String packageName) {
+                @NonNull String appPackageName,
+                @NonNull String sdkPackageName) {
             Objects.requireNonNull(triggerRegistrationRequest);
-            Objects.requireNonNull(packageName);
+            Objects.requireNonNull(appPackageName);
+            Objects.requireNonNull(sdkPackageName);
             mTriggerRegistrationRequest = triggerRegistrationRequest;
-            mPackageName = packageName;
+            mAppPackageName = appPackageName;
+            mSdkPackageName = sdkPackageName;
         }
 
         /** Pre-validates parameters and builds {@link WebTriggerRegistrationRequestInternal}. */
         @NonNull
         public WebTriggerRegistrationRequestInternal build() {
             return new WebTriggerRegistrationRequestInternal(this);
+        }
+
+        /** See {@link WebTriggerRegistrationRequestInternal#isAdIdPermissionGranted()}. */
+        public WebTriggerRegistrationRequestInternal.Builder setAdIdPermissionGranted(
+                boolean isAdIdPermissionGranted) {
+            mIsAdIdPermissionGranted = isAdIdPermissionGranted;
+            return this;
         }
     }
 }

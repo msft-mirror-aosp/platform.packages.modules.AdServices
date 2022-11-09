@@ -8,8 +8,8 @@
             "id": "S1",
             "eventId": 1,
             "sourceType": "navigation",
-            "publisher": "android-app://example1.com",
-            "appDestination": "android-app://example2.com",
+            "publisher": "android-app://example1.test",
+            "appDestination": "android-app://example2.test",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -18,26 +18,64 @@
             "registrant": "android-app://com.example.abc"
           }
         ],
-        "triggers": [],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "android-app://example2.test",
+            "enrollmentId": "enrollment-id-3",
+            "status": 0,
+            "triggerTime": 8640000002,
+            "registrant": "android-app://not.delete.candidate",
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ]
+          }
+        ],
         "event_reports": [
           {
             "id": "id",
-            "sourceId": 1,
-            "attributionDestination": "android-app://example2.com",
+            "sourceEventId": 1,
+            "attributionDestination": "android-app://example2.test",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8640000002,
             "status": 0,
             "reportTime": -1,
             "triggerPriority": 101,
-            "sourceType": "navigation"
+            "sourceType": "navigation",
+            "sourceId": "S1",
+            "triggerId": "T1"
           }
         ],
         "attributions": []
       },
       "output": {
         "sources": [],
-        "triggers": [],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "android-app://example2.test",
+            "enrollmentId": "enrollment-id-3",
+            "status": 0,
+            "triggerTime": 8640000002,
+            "registrant": "android-app://not.delete.candidate",
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ]
+          }
+        ],
         "event_reports": [],
         "attributions": []
       },
@@ -51,8 +89,8 @@
             "id": "S1",
             "eventId": 1,
             "sourceType": "navigation",
-            "publisher": "android-app://example1.com",
-            "appDestination": "android-app://example2.com",
+            "publisher": "android-app://example1.test",
+            "appDestination": "android-app://example2.test",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -64,8 +102,8 @@
             "id": "S2",
             "eventId": 1,
             "sourceType": "navigation",
-            "publisher": "android-app://example1.com",
-            "appDestination": "android-app://example2.com",
+            "publisher": "android-app://example1.test",
+            "appDestination": "android-app://example2.test",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -78,8 +116,8 @@
         "event_reports": [
           {
             "id": "id",
-            "sourceId": 1,
-            "attributionDestination": "android-app://no-match.com",
+            "sourceEventId": 1,
+            "attributionDestination": "android-app://no-match.test",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8640000002,
@@ -97,8 +135,8 @@
             "id": "S2",
             "eventId": 1,
             "sourceType": "navigation",
-            "publisher": "android-app://example1.com",
-            "appDestination": "android-app://example2.com",
+            "publisher": "android-app://example1.test",
+            "appDestination": "android-app://example2.test",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -111,8 +149,8 @@
         "event_reports": [
           {
             "id": "id",
-            "sourceId": 1,
-            "attributionDestination": "android-app://no-match.com",
+            "sourceEventId": 1,
+            "attributionDestination": "android-app://no-match.test",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8640000002,
@@ -134,8 +172,8 @@
             "id": "S2",
             "eventId": 1,
             "sourceType": "navigation",
-            "publisher": "android-app://example1.com",
-            "appDestination": "android-app://example2.com",
+            "publisher": "android-app://example1.test",
+            "appDestination": "android-app://example2.test",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -147,7 +185,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://example2.com",
+            "attributionDestination": "android-app://example2.test",
             "enrollmentId": "enrollment-id-3",
             "status": 0,
             "triggerTime": 8640000002,
@@ -164,7 +202,7 @@
           },
           {
             "id": "T2",
-            "attributionDestination": "android-app://example2.com",
+            "attributionDestination": "android-app://example2.test",
             "enrollmentId": "enrollment-id-3",
             "status": 0,
             "triggerTime": 8640000002,
@@ -183,8 +221,8 @@
         "event_reports": [
           {
             "id": "id",
-            "sourceId": 1,
-            "attributionDestination": "android-app://no-match.com",
+            "sourceEventId": 1,
+            "attributionDestination": "android-app://no-match.test",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8640000002,
@@ -202,8 +240,8 @@
             "id": "S2",
             "eventId": 1,
             "sourceType": "navigation",
-            "publisher": "android-app://example1.com",
-            "appDestination": "android-app://example2.com",
+            "publisher": "android-app://example1.test",
+            "appDestination": "android-app://example2.test",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -215,7 +253,7 @@
         "triggers": [
           {
             "id": "T2",
-            "attributionDestination": "android-app://example2.com",
+            "attributionDestination": "android-app://example2.test",
             "enrollmentId": "enrollment-id-3",
             "status": 0,
             "triggerTime": 8640000002,
@@ -234,8 +272,8 @@
         "event_reports": [
           {
             "id": "id",
-            "sourceId": 1,
-            "attributionDestination": "android-app://no-match.com",
+            "sourceEventId": 1,
+            "attributionDestination": "android-app://no-match.test",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8640000002,
@@ -257,8 +295,8 @@
             "id": "S2",
             "eventId": 1,
             "sourceType": "navigation",
-            "publisher": "android-app://example1.com",
-            "appDestination": "android-app://example2.com",
+            "publisher": "android-app://example1.test",
+            "appDestination": "android-app://example2.test",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -270,7 +308,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://example2.com",
+            "attributionDestination": "android-app://example2.test",
             "enrollmentId": "enrollment-id-3",
             "status": 0,
             "triggerTime": 8640000002,
@@ -289,7 +327,7 @@
         "event_reports": [
           {
             "id": "R1",
-            "sourceId": 1,
+            "sourceEventId": 1,
             "attributionDestination": "android-app://remove.me",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
@@ -301,7 +339,7 @@
           },
           {
             "id": "R2",
-            "sourceId": 1,
+            "sourceEventId": 1,
             "attributionDestination": "android-app://remove.me",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
@@ -313,7 +351,7 @@
           },
           {
             "id": "R3",
-            "sourceId": 1,
+            "sourceEventId": 1,
             "attributionDestination": "android-app://dont.remove.me",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
@@ -332,8 +370,8 @@
             "id": "S2",
             "eventId": 1,
             "sourceType": "navigation",
-            "publisher": "android-app://example1.com",
-            "appDestination": "android-app://example2.com",
+            "publisher": "android-app://example1.test",
+            "appDestination": "android-app://example2.test",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -345,7 +383,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://example2.com",
+            "attributionDestination": "android-app://example2.test",
             "enrollmentId": "enrollment-id-3",
             "status": 0,
             "triggerTime": 8640000002,
@@ -364,7 +402,7 @@
         "event_reports": [
           {
             "id": "R3",
-            "sourceId": 1,
+            "sourceEventId": 1,
             "attributionDestination": "android-app://dont.remove.me",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
@@ -439,8 +477,8 @@
             "id": "S1",
             "eventId": 1,
             "sourceType": "navigation",
-            "publisher": "android-app://example1.com",
-            "appDestination": "android-app://example2.com",
+            "publisher": "android-app://example1.test",
+            "appDestination": "android-app://example2.test",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -453,8 +491,8 @@
         "event_reports": [
           {
             "id": "id",
-            "sourceId": 1,
-            "attributionDestination": "android-app://example2.com",
+            "sourceEventId": 1,
+            "attributionDestination": "android-app://example2.test",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8640000002,
@@ -503,8 +541,8 @@
             "id": "S1",
             "eventId": 1,
             "sourceType": "navigation",
-            "publisher": "android-app://example1.com",
-            "appDestination": "android-app://example2.com",
+            "publisher": "android-app://example1.test",
+            "appDestination": "android-app://example2.test",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -517,8 +555,8 @@
         "event_reports": [
           {
             "id": "id",
-            "sourceId": 1,
-            "attributionDestination": "android-app://example2.com",
+            "sourceEventId": 1,
+            "attributionDestination": "android-app://example2.test",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8640000002,
@@ -551,7 +589,7 @@
             "id": "S1",
             "eventId": 1,
             "sourceType": "navigation",
-            "publisher": "android-app://example1.com",
+            "publisher": "android-app://example1.test",
             "appDestination": "android-app://remove.me",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,

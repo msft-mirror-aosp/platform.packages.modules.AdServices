@@ -22,7 +22,7 @@
       android:id="@+id/topics_client_button"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
-      android:text="@string/button_name"
+      android:text="@string/topics_button_name"
       app:layout_constraintBottom_toBottomOf="parent"
       app:layout_constraintEnd_toEndOf="parent"
       app:layout_constraintHorizontal_bias="0.497"
@@ -30,6 +30,20 @@
       app:layout_constraintTop_toTopOf="parent"
       app:layout_constraintVertical_bias="0.130" 
       android:layout_below="@+id/settings_app_launch_button" />
+
+  <Button
+      android:id="@+id/topics_preview_button"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="@string/topics_preview_button_name"
+      app:layout_constraintBottom_toBottomOf="parent"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintHorizontal_bias="0.497"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toTopOf="parent"
+      app:layout_constraintVertical_bias="0.200"
+      android:layout_below="@+id/topics_client_button" />
+
 
   <TextView
       android:id="@+id/textView"
@@ -42,6 +56,6 @@
       app:layout_constraintHorizontal_bias="0.301"
       app:layout_constraintStart_toStartOf="parent"
       app:layout_constraintTop_toTopOf="parent"
-      app:layout_constraintVertical_bias="0.400"
-      android:layout_below="@+id/topics_client_button"/>
+      app:layout_constraintVertical_bias="0.500"
+      android:layout_below="@+id/topics_preview_button"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

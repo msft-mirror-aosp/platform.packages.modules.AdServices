@@ -22,10 +22,12 @@ import static org.junit.Assert.assertThrows;
 
 import org.junit.Test;
 
+import java.util.UUID;
+
 public class AttributionTest {
     private static final String ID = "AR1";
-    private static final String DESTINATION_ORIGIN = "https://destination.com/origin";
-    private static final String DESTINATION_SITE = "https://destination.com";
+    private static final String DESTINATION_ORIGIN = "https://destination.test/origin";
+    private static final String DESTINATION_SITE = "https://destination.test";
     private static final String PUBLISHER_ORIGIN = "android-app://com.publisher/abc";
     private static final String PUBLISHER_SITE = "android-app://com.publisher";
     private static final String REGISTRANT = "android-app://com.registrant";
@@ -33,6 +35,8 @@ public class AttributionTest {
     private static final long TRIGGER_TIME = 10000L;
     private static final String SOME_OTHER_STRING = "some_other";
     private static final long SOME_OTHER_LONG = 1L;
+    private static final String SOURCE_ID = UUID.randomUUID().toString();
+    private static final String TRIGGER_ID = UUID.randomUUID().toString();
 
     @Test
     public void equals_pass() {
@@ -74,6 +78,12 @@ public class AttributionTest {
                 createExampleAttributionBuilder().build());
         assertNotEquals(
                 createExampleAttributionBuilder().setTriggerTime(SOME_OTHER_LONG).build(),
+                createExampleAttributionBuilder().build());
+        assertNotEquals(
+                createExampleAttributionBuilder().setSourceId(SOME_OTHER_STRING).build(),
+                createExampleAttributionBuilder().build());
+        assertNotEquals(
+                createExampleAttributionBuilder().setTriggerId(SOME_OTHER_STRING).build(),
                 createExampleAttributionBuilder().build());
     }
 
@@ -128,6 +138,15 @@ public class AttributionTest {
                         .build()
                         .hashCode(),
                 createExampleAttributionBuilder().build().hashCode());
+        assertNotEquals(
+                createExampleAttributionBuilder().setSourceId(SOME_OTHER_STRING).build().hashCode(),
+                createExampleAttributionBuilder().build().hashCode());
+        assertNotEquals(
+                createExampleAttributionBuilder()
+                        .setTriggerId(SOME_OTHER_STRING)
+                        .build()
+                        .hashCode(),
+                createExampleAttributionBuilder().build().hashCode());
     }
 
     @Test
@@ -150,6 +169,8 @@ public class AttributionTest {
         assertEquals(
                 ENROLLMENT_ID,
                 createExampleAttributionBuilder().build().getEnrollmentId());
+        assertEquals(SOURCE_ID, createExampleAttributionBuilder().build().getSourceId());
+        assertEquals(TRIGGER_ID, createExampleAttributionBuilder().build().getTriggerId());
     }
 
     @Test
@@ -186,6 +207,8 @@ public class AttributionTest {
                 .setDestinationOrigin(DESTINATION_ORIGIN)
                 .setDestinationSite(DESTINATION_SITE)
                 .setSourceOrigin(PUBLISHER_ORIGIN)
-                .setSourceSite(PUBLISHER_SITE);
+                .setSourceSite(PUBLISHER_SITE)
+                .setSourceId(SOURCE_ID)
+                .setTriggerId(TRIGGER_ID);
     }
 }

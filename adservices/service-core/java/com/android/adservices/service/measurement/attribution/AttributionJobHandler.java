@@ -16,6 +16,9 @@
 
 package com.android.adservices.service.measurement.attribution;
 
+import static com.android.adservices.service.measurement.PrivacyParams.AGGREGATE_MAX_REPORT_DELAY;
+import static com.android.adservices.service.measurement.PrivacyParams.AGGREGATE_MIN_REPORT_DELAY;
+
 import android.annotation.NonNull;
 import android.net.Uri;
 import android.util.Pair;
@@ -28,6 +31,7 @@ import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.EventTrigger;
+import com.android.adservices.service.measurement.FilterData;
 import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SystemHealthParams;
@@ -35,7 +39,6 @@ import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateAttributionData;
-import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 import com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution;
 import com.android.adservices.service.measurement.aggregation.AggregatePayloadGenerator;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
@@ -49,7 +52,7 @@ import org.json.JSONObject;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.concurrent.TimeUnit;
@@ -58,8 +61,6 @@ import java.util.stream.Collectors;
 class AttributionJobHandler {
 
     private static final String API_VERSION = "0.1";
-    private static final long MIN_TIME_MS = TimeUnit.MINUTES.toMillis(10L);
-    private static final long MAX_TIME_MS = TimeUnit.MINUTES.toMillis(60L);
     private final DatastoreManager mDatastoreManager;
 
     AttributionJobHandler(DatastoreManager datastoreManager) {
@@ -142,6 +143,20 @@ class AttributionJobHandler {
 
     private boolean maybeGenerateAggregateReport(Source source, Trigger trigger,
             IMeasurementDao measurementDao) throws DatastoreException {
+        int numReports =
+                measurementDao.getNumAggregateReportsPerDestination(
+                        trigger.getAttributionDestination(), trigger.getDestinationType());
+
+        if (numReports >= SystemHealthParams.MAX_AGGREGATE_REPORTS_PER_DESTINATION) {
+            LogUtil.d(
+                    String.format(Locale.ENGLISH,
+                            "Aggregate reports for destination %1$s exceeds system health limit of"
+                                    + " %2$d.",
+                            trigger.getAttributionDestination(),
+                            SystemHealthParams.MAX_AGGREGATE_REPORTS_PER_DESTINATION));
+            return false;
+        }
+
         try {
             Optional<AggregatableAttributionSource> aggregateAttributionSource =
                     source.parseAggregateSource();
@@ -164,13 +179,19 @@ class AttributionJobHandler {
                         return false;
                     }
 
-                    long randomTime = (long) ((Math.random() * (MAX_TIME_MS - MIN_TIME_MS))
-                            + MIN_TIME_MS);
+                    long randomTime = (long) ((Math.random()
+                            * (AGGREGATE_MAX_REPORT_DELAY - AGGREGATE_MIN_REPORT_DELAY))
+                            + AGGREGATE_MIN_REPORT_DELAY);
+                    int debugReportStatus = AggregateReport.DebugReportStatus.NONE;
+                    if (source.getDebugKey() != null || trigger.getDebugKey() != null) {
+                        debugReportStatus = AggregateReport.DebugReportStatus.PENDING;
+                    }
                     AggregateReport aggregateReport =
                             new AggregateReport.Builder()
-                                    // TODO: Unused field, incorrect value; cleanup
+                                    // TODO: b/254855494 unused field, incorrect value; cleanup
                                     .setPublisher(source.getRegistrant())
-                                    .setAttributionDestination(trigger.getAttributionDestination())
+                                    .setAttributionDestination(
+                                            trigger.getAttributionDestinationBaseUri())
                                     .setSourceRegistrationTime(
                                             roundDownToDay(source.getEventTime()))
                                     .setScheduledReportTime(trigger.getTriggerTime() + randomTime)
@@ -183,7 +204,12 @@ class AttributionJobHandler {
                                                     .setContributions(contributions.get())
                                                     .build())
                                     .setStatus(AggregateReport.Status.PENDING)
+                                    .setDebugReportStatus(debugReportStatus)
                                     .setApiVersion(API_VERSION)
+                                    .setSourceDebugKey(source.getDebugKey())
+                                    .setTriggerDebugKey(trigger.getDebugKey())
+                                    .setSourceId(source.getId())
+                                    .setTriggerId(trigger.getId())
                                     .build();
 
                     measurementDao.updateSourceAggregateContributions(source);
@@ -223,7 +249,9 @@ class AttributionJobHandler {
         matchingSources.remove(0);
         if (!matchingSources.isEmpty()) {
             matchingSources.forEach((s) -> s.setStatus(Source.Status.IGNORED));
-            measurementDao.updateSourceStatus(matchingSources, Source.Status.IGNORED);
+            List<String> sourceIds =
+                    matchingSources.stream().map(Source::getId).collect(Collectors.toList());
+            measurementDao.updateSourceStatus(sourceIds, Source.Status.IGNORED);
         }
         return Optional.of(selectedSource);
     }
@@ -231,6 +259,24 @@ class AttributionJobHandler {
     private boolean maybeGenerateEventReport(
             Source source, Trigger trigger, IMeasurementDao measurementDao)
             throws DatastoreException {
+        if (trigger.getEventTriggers() == null) {
+            return false;
+        }
+
+        int numReports =
+                measurementDao.getNumEventReportsPerDestination(
+                        trigger.getAttributionDestination(), trigger.getDestinationType());
+
+        if (numReports >= SystemHealthParams.MAX_EVENT_REPORTS_PER_DESTINATION) {
+            LogUtil.d(
+                    String.format(Locale.ENGLISH,
+                            "Event reports for destination %1$s exceeds system health limit of"
+                                    + " %2$d.",
+                            trigger.getAttributionDestination(),
+                            SystemHealthParams.MAX_EVENT_REPORTS_PER_DESTINATION));
+            return false;
+        }
+
         // Do not generate event reports for source which have attributionMode != Truthfully.
         // TODO: Handle attribution rate limit consideration for non-truthful cases.
         if (source.getAttributionMode() != Source.AttributionMode.TRUTHFULLY) {
@@ -317,21 +363,23 @@ class AttributionJobHandler {
             IMeasurementDao measurementDao)
             throws DatastoreException {
         trigger.setStatus(Trigger.Status.ATTRIBUTED);
-        measurementDao.updateTriggerStatus(trigger);
+        measurementDao.updateTriggerStatus(
+                Collections.singletonList(trigger.getId()), Trigger.Status.ATTRIBUTED);
         measurementDao.insertAttribution(createAttribution(source, trigger));
     }
 
     private void ignoreTrigger(Trigger trigger, IMeasurementDao measurementDao)
             throws DatastoreException {
         trigger.setStatus(Trigger.Status.IGNORED);
-        measurementDao.updateTriggerStatus(trigger);
+        measurementDao.updateTriggerStatus(
+                Collections.singletonList(trigger.getId()), Trigger.Status.IGNORED);
     }
 
     private boolean hasAttributionQuota(Source source, Trigger trigger,
             IMeasurementDao measurementDao) throws DatastoreException {
         long attributionCount =
                 measurementDao.getAttributionsPerRateLimitWindow(source, trigger);
-        return attributionCount < PrivacyParams.MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
+        return attributionCount < PrivacyParams.getMaxAttributionPerRateLimitWindow();
     }
 
     private boolean isWithinReportLimit(
@@ -353,45 +401,22 @@ class AttributionJobHandler {
      * @return true for a match, false otherwise
      */
     private boolean doTopLevelFiltersMatch(@NonNull Source source, @NonNull Trigger trigger) {
-        String triggerFilters = trigger.getFilters();
-        String sourceFilters = source.getAggregateFilterData();
-        if (triggerFilters == null
-                || sourceFilters == null
-                || triggerFilters.isEmpty()
-                || sourceFilters.isEmpty()) {
-            // Nothing to match
-            return true;
-        }
-
         try {
-            AggregateFilterData sourceFiltersData = extractFilterMap(sourceFilters);
-            AggregateFilterData triggerFiltersData = extractFilterMap(triggerFilters);
-            return Filter.isFilterMatch(sourceFiltersData, triggerFiltersData, true);
+            FilterData sourceFilters = source.parseFilterData();
+            FilterData triggerFilters = extractFilterMap(trigger.getFilters());
+            FilterData triggerNotFilters = extractFilterMap(trigger.getNotFilters());
+            return Filter.isFilterMatch(sourceFilters, triggerFilters, true)
+                    && Filter.isFilterMatch(sourceFilters, triggerNotFilters, false);
         } catch (JSONException e) {
             // If JSON is malformed, we shall consider as not matched.
-            LogUtil.e(e, "Malformed JSON string.");
+            LogUtil.e(e, "doTopLevelFiltersMatch: JSON parse failed.");
             return false;
         }
     }
 
     private Optional<EventTrigger> findFirstMatchingEventTrigger(Source source, Trigger trigger) {
         try {
-            String sourceFilters = source.getAggregateFilterData();
-
-            AggregateFilterData sourceFiltersData;
-            if (sourceFilters == null || sourceFilters.isEmpty()) {
-                // Initialize an empty map to add source_type to it later
-                sourceFiltersData = new AggregateFilterData.Builder().build();
-            } else {
-                sourceFiltersData = extractFilterMap(sourceFilters);
-            }
-
-            // Add source type
-            appendToAggregateFilterData(
-                    sourceFiltersData,
-                    "source_type",
-                    Collections.singletonList(source.getSourceType().getValue()));
-
+            FilterData sourceFiltersData = source.parseFilterData();
             List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
             return eventTriggers.stream()
                     .filter(
@@ -406,7 +431,7 @@ class AttributionJobHandler {
     }
 
     private boolean doEventLevelFiltersMatch(
-            AggregateFilterData sourceFiltersData, EventTrigger eventTrigger) {
+            FilterData sourceFiltersData, EventTrigger eventTrigger) {
         if (eventTrigger.getFilterData().isPresent()
                 && !Filter.isFilterMatch(
                         sourceFiltersData, eventTrigger.getFilterData().get(), true)) {
@@ -422,17 +447,12 @@ class AttributionJobHandler {
         return true;
     }
 
-    private AggregateFilterData extractFilterMap(String object) throws JSONException {
-        JSONObject sourceFilterObject = new JSONObject(object);
-        return new AggregateFilterData.Builder()
-                .buildAggregateFilterData(sourceFilterObject)
+    private static FilterData extractFilterMap(String str) throws JSONException {
+        String json = (str == null || str.isEmpty()) ? "{}" : str;
+        JSONObject filterObject = new JSONObject(json);
+        return new FilterData.Builder()
+                .buildFilterData(filterObject)
                 .build();
-    }
-
-    private void appendToAggregateFilterData(
-            AggregateFilterData filterData, String key, List<String> value) {
-        Map<String, List<String>> attributeFilterMap = filterData.getAttributionFilterMap();
-        attributeFilterMap.put(key, value);
     }
 
     private static OptionalInt validateAndGetUpdatedAggregateContributions(
@@ -473,7 +493,7 @@ class AttributionJobHandler {
                             trigger.getTriggerTime());
 
             return count < PrivacyParams
-                    .MAX_DISTINCT_ENROLLMENTS_PER_PUBLISHER_X_DESTINATION_IN_ATTRIBUTION;
+                    .getMaxDistinctEnrollmentsPerPublisherXDestinationInAttribution();
         } else {
             LogUtil.d("isEnrollmentWithinPrivacyBounds: getPublisherAndDestinationTopPrivateDomains"
                     + " failed. %s %s", source.getPublisher(), trigger.getAttributionDestination());
@@ -528,6 +548,8 @@ class AttributionJobHandler {
                 .setEnrollmentId(trigger.getEnrollmentId())
                 .setTriggerTime(trigger.getTriggerTime())
                 .setRegistrant(trigger.getRegistrant().toString())
+                .setSourceId(source.getId())
+                .setTriggerId(trigger.getId())
                 .build();
     }
 
