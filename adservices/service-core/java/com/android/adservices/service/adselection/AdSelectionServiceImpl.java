@@ -303,7 +303,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         mLightweightExecutor.execute(
                 () -> {
                     OutcomeSelectionRunner runner =
-                            new OutcomeSelectionRunner(mLightweightExecutor);
+                            new OutcomeSelectionRunner(
+                                    mAdSelectionEntryDao,
+                                    mBackgroundExecutor,
+                                    mLightweightExecutor);
                     runner.runOutcomeSelection(inputParams, callback);
                 });
     }
