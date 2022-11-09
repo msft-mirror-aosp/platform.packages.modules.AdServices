@@ -26,6 +26,12 @@ import com.android.adservices.data.measurement.MeasurementTables;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.Web;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 /** Migrates Measurement DB from user version 2 to 3. */
@@ -160,6 +166,7 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
         for (String sql : ALTER_STATEMENTS_VER_3) {
             db.execSQL(sql);
         }
+        migrateSourceData(db);
         migrateEventReportData(db);
     }
 
@@ -174,6 +181,49 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
             while (cursor.moveToNext()) {
                 updateEventReport(db, cursor);
             }
+        }
+    }
+
+    private static void migrateSourceData(SQLiteDatabase db) {
+        try (Cursor cursor =
+                db.query(
+                        MeasurementTables.SourceContract.TABLE,
+                        new String[] {
+                            MeasurementTables.SourceContract.ID,
+                            MeasurementTables.SourceContract.AGGREGATE_SOURCE
+                        },
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null)) {
+            while (cursor.moveToNext()) {
+                String id =
+                        cursor.getString(
+                                cursor.getColumnIndex(MeasurementTables.SourceContract.ID));
+                String aggregateSourceV2 =
+                        cursor.getString(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.SourceContract.AGGREGATE_SOURCE));
+                String aggregateSourceV3 = convertAggregateSource(aggregateSourceV2);
+                updateAggregateSource(db, id, aggregateSourceV3);
+            }
+        }
+    }
+
+    private static void updateAggregateSource(
+            SQLiteDatabase db, String id, String aggregateSourceV3) {
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.SourceContract.AGGREGATE_SOURCE, aggregateSourceV3);
+        long rowCount =
+                db.update(
+                        MeasurementTables.SourceContract.TABLE,
+                        values,
+                        MeasurementTables.SourceContract.ID + " = ?",
+                        new String[] {id});
+        if (rowCount != 1) {
+            LogUtil.d("MeasurementDbMigratorV3: failed to update aggregate source record.");
         }
     }
 
@@ -216,5 +266,25 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
             return Optional.of(topPrivateDomainAndScheme.get().toString());
         }
         return Optional.empty();
+    }
+
+    private static String convertAggregateSource(String aggregateSourceStringV2) {
+        if (aggregateSourceStringV2 == null) {
+            return null;
+        }
+        try {
+            JSONArray jsonArray = new JSONArray(aggregateSourceStringV2);
+            Map<String, String> aggregateSourceMap = new HashMap<>();
+            for (int i = 0; i < jsonArray.length(); i++) {
+                JSONObject jsonObject = jsonArray.getJSONObject(i);
+                String key = jsonObject.getString("id");
+                String value = jsonObject.getString("key_piece");
+                aggregateSourceMap.put(key, value);
+            }
+            return new JSONObject(aggregateSourceMap).toString();
+        } catch (JSONException e) {
+            LogUtil.e(e, "Aggregate source parsing failed when migrating from V2 to V3.");
+            return null;
+        }
     }
 }

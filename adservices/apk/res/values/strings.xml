@@ -208,6 +208,8 @@
     <string name="settingsUI_topics_view_info_text2">Android’s ads privacy beta provides new features that apps can use to show you ads you might like. These technologies don’t use device identifiers.\n\nAndroid can estimate the kinds of ads you might be interested in, and save these interests temporarily on your device. This allows apps to show you relevant ads, without tracking your activity across websites and apps from other developers.</string>
     <!-- Text to show if there are no topics. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_topics_view_no_blocked_topics_text">You have no blocked interests</string>
+    <!-- Info text for toast displayed after topics are reset. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_topics_are_reset">Interests are reset</string>
 
     <!-- Settings App UI apps view strings ****************************************************-->
     <!-- Title text of the apps view. [CHAR LIMIT=NONE] -->
@@ -276,6 +278,8 @@
     <string name="settingsUI_dialog_reset_app_message">Interests estimated by the apps on your list will be deleted from the Privacy Sandbox, and the apps will estimate new interests going forward. You may still see some related ads.</string>
     <!-- Text for the button in a dialog to reset all apps. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_dialog_reset_app_positive_text" translatable="false">@string/settingsUI_dialog_reset_topic_positive_text</string>
+    <!-- Info text for toast displayed after apps are reset. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_apps_are_reset" translatable="false">@string/settingsUI_topics_are_reset</string>
 
     <!-- All Topics strings *********************************************************************-->
     <!-- Text for the topic name for topic Arts &amp; Entertainment. [CHAR LIMIT=NONE] -->

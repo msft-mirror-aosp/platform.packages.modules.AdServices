@@ -46,7 +46,9 @@ public class AggregateReportingJobHandlerWrapper {
             EnrollmentDao enrollmentDao,
             DatastoreManager datastoreManager,
             long windowStartTime,
-            long windowEndTime) throws IOException, JSONException {
+            long windowEndTime,
+            boolean isDebugInstance)
+            throws IOException, JSONException {
         // Setup encryption manager to return valid public keys
         ArgumentCaptor<Integer> captorNumberOfKeys = ArgumentCaptor.forClass(Integer.class);
         AggregateEncryptionKeyManager mockEncryptionManager =
@@ -63,8 +65,10 @@ public class AggregateReportingJobHandlerWrapper {
 
         // Set up aggregate reporting job handler spy
         AggregateReportingJobHandler aggregateReportingJobHandler =
-                Mockito.spy(new AggregateReportingJobHandler(
-                        enrollmentDao, datastoreManager, mockEncryptionManager));
+                Mockito.spy(
+                        new AggregateReportingJobHandler(
+                                        enrollmentDao, datastoreManager, mockEncryptionManager)
+                                .setIsDebugInstance(isDebugInstance));
         Mockito.doReturn(200).when(aggregateReportingJobHandler)
                 .makeHttpPostRequest(any(), any());
 

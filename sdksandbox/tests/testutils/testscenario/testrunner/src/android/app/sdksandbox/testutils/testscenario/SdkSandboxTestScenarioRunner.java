@@ -20,13 +20,12 @@ import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.Context;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
+import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
 import android.view.View;
 
-import androidx.test.annotation.UiThreadTest;
+import androidx.annotation.Nullable;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -41,6 +40,17 @@ import java.lang.reflect.Method;
 public abstract class SdkSandboxTestScenarioRunner extends SandboxedSdkProvider {
     private static final String TAG = SdkSandboxTestScenarioRunner.class.getName();
 
+    private Object mTestInstance;
+    private @Nullable IBinder mBinder;
+
+    /**
+     * This API allows you to provide a separate test class to execute tests against. It will
+     * default to the class instance it is already attached to.
+     */
+    public Object getTestInstance() {
+        return this;
+    }
+
     public View beforeEachTest(Context windowContext, Bundle params, int width, int height) {
         return new View(windowContext);
     }
@@ -52,6 +62,9 @@ public abstract class SdkSandboxTestScenarioRunner extends SandboxedSdkProvider 
 
     @Override
     public final SandboxedSdk onLoadSdk(Bundle params) {
+        mTestInstance = getTestInstance();
+        mBinder = params.getBinder(ISdkSandboxTestExecutor.TEST_AUTHOR_DEFINED_BINDER);
+
         ISdkSandboxTestExecutor.Stub testExecutor =
                 new ISdkSandboxTestExecutor.Stub() {
                     public void executeTest(
@@ -71,24 +84,7 @@ public abstract class SdkSandboxTestScenarioRunner extends SandboxedSdkProvider 
                                 testMethod = findTest(testName, /*throwException*/ true);
                             }
 
-                            if (testMethod.isAnnotationPresent(UiThreadTest.class)) {
-                                // The method reference has to be final before being
-                                // used inside a lambda to ensure the variant stays the
-                                // same
-                                final Method method = testMethod;
-                                final boolean params = hasParams;
-                                new Handler(Looper.getMainLooper())
-                                        .post(
-                                                () -> {
-                                                    invokeTestMethod(
-                                                            method,
-                                                            params,
-                                                            testParams,
-                                                            resultCallback);
-                                                });
-                            } else {
-                                invokeTestMethod(testMethod, hasParams, testParams, resultCallback);
-                            }
+                            invokeTestMethod(testMethod, hasParams, testParams, resultCallback);
                         } catch (NoSuchMethodException error) {
                             try {
                                 resultCallback.onError(getStackTrace(error));
@@ -102,10 +98,15 @@ public abstract class SdkSandboxTestScenarioRunner extends SandboxedSdkProvider 
         return new SandboxedSdk(testExecutor);
     }
 
+    @Nullable
+    protected IBinder getCustomInterface() {
+        return mBinder;
+    }
+
     private Method findTest(String testName, boolean throwException, Class<?>... parameterTypes)
             throws NoSuchMethodException {
         try {
-            return this.getClass().getMethod(testName, parameterTypes);
+            return mTestInstance.getClass().getMethod(testName, parameterTypes);
         } catch (NoSuchMethodException error) {
             if (throwException) {
                 throw error;
@@ -121,9 +122,9 @@ public abstract class SdkSandboxTestScenarioRunner extends SandboxedSdkProvider 
             final ISdkSandboxResultCallback resultCallback) {
         try {
             if (hasParams) {
-                method.invoke(this, params);
+                method.invoke(mTestInstance, params);
             } else {
-                method.invoke(this);
+                method.invoke(mTestInstance);
             }
             resultCallback.onResult();
         } catch (Exception error) {

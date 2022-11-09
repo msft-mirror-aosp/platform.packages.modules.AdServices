@@ -27,6 +27,7 @@ import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
 import static com.android.adservices.service.adselection.ImpressionReporter.REPORT_IMPRESSION_THROTTLED;
 import static com.android.adservices.service.adselection.ImpressionReporter.UNABLE_TO_FIND_AD_SELECTION_WITH_GIVEN_ID;
+import static com.android.adservices.service.adselection.OutcomeSelectionRunner.AD_OUTCOMES_LIST_INPUT_CANNOT_BE_EMPTY_MSG;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
@@ -46,18 +47,25 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
+import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
+import android.adservices.adselection.AdSelectionFromOutcomesInput;
+import android.adservices.adselection.AdSelectionOutcome;
+import android.adservices.adselection.AdSelectionOutcomeFixture;
 import android.adservices.adselection.AdSelectionOverrideCallback;
+import android.adservices.adselection.AdSelectionResponse;
 import android.adservices.adselection.CustomAudienceSignalsFixture;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.CallerMetadata;
 import android.adservices.common.CallingAppUidSupplierProcessImpl;
 import android.adservices.common.CommonFixture;
 import android.adservices.common.FledgeErrorResponse;
@@ -66,6 +74,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Process;
 import android.os.RemoteException;
+import android.os.SystemClock;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
@@ -122,6 +131,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -150,6 +160,12 @@ public class AdSelectionServiceImplTest {
                             + "\t\"render_uri_1\": \"signals_for_1\",\n"
                             + "\t\"render_uri_2\": \"signals_for_2\"\n"
                             + "}");
+    private static final AdSelectionOutcome SAMPLE_AD_OUTCOME =
+            AdSelectionOutcomeFixture.anAdSelectionOutcome();
+    private static final AdSelectionSignals SAMPLE_SELECTION_SIGNALS_BID_FLOOR =
+            AdSelectionSignals.fromString("{bidFloor: 10}");
+    private static final Uri SAMPLE_SELECTION_LOGIC_URI =
+            Uri.parse("https://my.uri.com/finalWinnerSelectionLogic");
     // Auto-generated variable names are too long for lint check
     private static final int SHORT_API_NAME_OVERRIDE =
             AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
@@ -261,6 +277,76 @@ public class AdSelectionServiceImplTest {
         if (mStaticMockSession != null) {
             mStaticMockSession.finishMocking();
         }
+    }
+
+    @Test
+    public void testSelectAdsFromOutcomesSuccess() throws Exception {
+        List<AdSelectionOutcome> adOutcomes = Collections.singletonList(SAMPLE_AD_OUTCOME);
+
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mAppImportanceFilter,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        CONTEXT,
+                        mConsentManagerMock,
+                        mAdServicesLoggerMock,
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAllowListsFilterSpy);
+
+        SelectFinalWinnerAdTestCallback callback =
+                callSelectAdsFromOutcome(
+                        adSelectionService,
+                        adOutcomes,
+                        SAMPLE_SELECTION_SIGNALS_BID_FLOOR,
+                        SAMPLE_SELECTION_LOGIC_URI);
+
+        assertThat(callback.mIsSuccess).isTrue();
+        assertNull(callback.mAdSelectionResponse);
+    }
+
+    @Test
+    public void testOutcomeSelectionEmptyOutcomeListFailure() throws Exception {
+        List<AdSelectionOutcome> adOutcomes = Collections.emptyList();
+
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mAppImportanceFilter,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        CONTEXT,
+                        mConsentManagerMock,
+                        mAdServicesLoggerMock,
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAllowListsFilterSpy);
+
+        SelectFinalWinnerAdTestCallback callback =
+                callSelectAdsFromOutcome(
+                        adSelectionService,
+                        adOutcomes,
+                        SAMPLE_SELECTION_SIGNALS_BID_FLOOR,
+                        SAMPLE_SELECTION_LOGIC_URI);
+
+        assertThat(callback.mIsSuccess).isFalse();
+
+        assertTrue(
+                callback.mFledgeErrorResponse
+                        .getErrorMessage()
+                        .contains(AD_OUTCOMES_LIST_INPUT_CANNOT_BE_EMPTY_MSG));
     }
 
     @Test
@@ -3468,8 +3554,10 @@ public class AdSelectionServiceImplTest {
      */
     private void resetThrottlerToNoRateLimits() {
         Throttler.destroyExistingThrottler();
-        final double noRateLimit = -1;
-        Throttler.getInstance(noRateLimit);
+        final float noRateLimit = -1;
+        Flags mockNoRateLimitFlags = mock(Flags.class);
+        doReturn(noRateLimit).when(mockNoRateLimitFlags).getSdkRequestPermitsPerSecond();
+        Throttler.getInstance(mockNoRateLimitFlags);
     }
 
     private AdSelectionOverrideTestCallback callResetAllOverrides(
@@ -3511,6 +3599,41 @@ public class AdSelectionServiceImplTest {
                 .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
 
         adSelectionService.reportImpression(requestParams, callback);
+        resultLatch.await();
+        return callback;
+    }
+
+    private SelectFinalWinnerAdTestCallback callSelectAdsFromOutcome(
+            AdSelectionServiceImpl adSelectionService,
+            List<AdSelectionOutcome> adOutcomes,
+            AdSelectionSignals selectionSignals,
+            Uri selectionLogicUri)
+            throws Exception {
+        // Counted down in 1) callback
+        CountDownLatch resultLatch = new CountDownLatch(1);
+        SelectFinalWinnerAdTestCallback callback = new SelectFinalWinnerAdTestCallback(resultLatch);
+
+        //        // Wait for the logging call, which happens after the callback
+        //        Answer<Void> countDownAnswer =
+        //                unused -> {
+        //                    resultLatch.countDown();
+        //                    return null;
+        //                };
+        //        doAnswer(countDownAnswer)
+        //                .when(mAdServicesLoggerMock)
+        //                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+
+        adSelectionService.selectAds(
+                new AdSelectionFromOutcomesInput.Builder()
+                        .setAdOutcomes(adOutcomes)
+                        .setSelectionSignals(selectionSignals)
+                        .setSelectionUri(selectionLogicUri)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
+                        .build(),
+                new CallerMetadata.Builder()
+                        .setBinderElapsedTimestamp(SystemClock.elapsedRealtime())
+                        .build(),
+                callback);
         resultLatch.await();
         return callback;
     }
@@ -3565,6 +3688,34 @@ public class AdSelectionServiceImplTest {
 
         @Override
         public void onFailure(FledgeErrorResponse fledgeErrorResponse) throws RemoteException {
+            mFledgeErrorResponse = fledgeErrorResponse;
+            mCountDownLatch.countDown();
+        }
+    }
+
+    private static class SelectFinalWinnerAdTestCallback extends AdSelectionCallback.Stub {
+
+        final CountDownLatch mCountDownLatch;
+        boolean mIsSuccess = false;
+        AdSelectionResponse mAdSelectionResponse;
+        FledgeErrorResponse mFledgeErrorResponse;
+
+        SelectFinalWinnerAdTestCallback(CountDownLatch countDownLatch) {
+            mCountDownLatch = countDownLatch;
+            mAdSelectionResponse = null;
+            mFledgeErrorResponse = null;
+        }
+
+        @Override
+        public void onSuccess(AdSelectionResponse adSelectionResponse) throws RemoteException {
+            mIsSuccess = true;
+            mAdSelectionResponse = adSelectionResponse;
+            mCountDownLatch.countDown();
+        }
+
+        @Override
+        public void onFailure(FledgeErrorResponse fledgeErrorResponse) throws RemoteException {
+            mIsSuccess = false;
             mFledgeErrorResponse = fledgeErrorResponse;
             mCountDownLatch.countDown();
         }

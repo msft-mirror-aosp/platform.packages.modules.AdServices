@@ -61,13 +61,13 @@ public final class DebugReportingJobService extends JobService {
                                     EnrollmentDao.getInstance(getApplicationContext()),
                                     DatastoreManagerFactory.getDatastoreManager(
                                             getApplicationContext()))
-                            .setDebugReport(true)
+                            .setIsDebugInstance(true)
                             .performScheduledPendingReportsInWindow(0, 0);
                     new AggregateReportingJobHandler(
                                     EnrollmentDao.getInstance(getApplicationContext()),
                                     DatastoreManagerFactory.getDatastoreManager(
                                             getApplicationContext()))
-                            .setDebugReport(true)
+                            .setIsDebugInstance(true)
                             .performScheduledPendingReportsInWindow(0, 0);
                     jobFinished(params, false);
                 });
