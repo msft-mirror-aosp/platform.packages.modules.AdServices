@@ -5,10 +5,6 @@ package android.adservices {
     method public static boolean isAdServicesStateEnabled();
   }
 
-  public class AdServicesVersion {
-    field public static final int API_VERSION;
-  }
-
 }
 
 package android.adservices.adid {
