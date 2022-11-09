@@ -202,8 +202,8 @@ public class MainActivity extends Activity {
                                     sizeInMb = Integer.parseInt(input.getText().toString());
                                 } catch (Exception ignore) {
                                 }
-                                if (sizeInMb <= 0) {
-                                    makeToast("Please provide positive integer value");
+                                if (sizeInMb <= 0 || sizeInMb > 100) {
+                                    makeToast("Please provide a value between 1 and 100");
                                     return;
                                 }
                                 IBinder binder = mSandboxedSdk.getInterface();
