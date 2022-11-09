@@ -1331,6 +1331,22 @@ public interface Flags extends Dumpable {
         return UI_DIALOGS_FEATURE_ENABLED;
     }
 
+    /**
+     * GA UX enabled. It contains features that have to be enabled at the same time:
+     *
+     * <ul>
+     *   <li>Updated consent landing page
+     *   <li>Consent per API (instead of aggregated one)
+     *   <li>Separate page to control Measurement API
+     * </ul>
+     */
+    boolean GA_UX_FEATURE_ENABLED = false;
+
+    /** Returns if the GA UX feature is enabled. */
+    default boolean getGaUxFeatureEnabled() {
+        return GA_UX_FEATURE_ENABLED;
+    }
+
     long ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS = (int) TimeUnit.HOURS.toMillis(1);
     /** Returns the interval in which to run Registration Job Queue Service. */
     default long getRegistrationJobQueueIntervalMs() {

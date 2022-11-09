@@ -20,7 +20,6 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
 
-
 import com.android.internal.util.Preconditions;
 
 import java.util.Objects;

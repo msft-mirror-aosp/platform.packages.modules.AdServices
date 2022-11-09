@@ -64,6 +64,8 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
     // Needs to be at least 20s since that's how long we delay reconcile on SdkSandboxManagerService
     private static final long WAIT_FOR_RECONCILE_MS = 30000;
+    // Time to wait after installing a package to process package_added broadcast
+    private static final long WAIT_TO_PROCESS_PACKAGE_ADDED_BROADCAST = 2000;
 
     private final SecondaryUserUtils mUserUtils = new SecondaryUserUtils(this);
     private final AdoptableStorageUtils mAdoptableUtils = new AdoptableStorageUtils(this);
@@ -631,6 +633,9 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     public void testSdkDataPackageDirectory_SharedStorageIsUsable() throws Exception {
         installPackage(TEST_APP_STORAGE_APK);
 
+        // Allow some extra time for broadcast to propagate and sdk data to be created
+        Thread.sleep(WAIT_TO_PROCESS_PACKAGE_ADDED_BROADCAST);
+
         // Verify that shared storage exist
         final String sharedCePath =
                 getSdkDataInternalPath(0, TEST_APP_STORAGE_PACKAGE, SHARED_DIR, true);
@@ -655,14 +660,19 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     public void testSdkDataPackageDirectory_CreateMissingSdkSubDirsWhenPackageDirEmpty()
             throws Exception {
         installPackage(TEST_APP_STORAGE_APK);
-        final String cePackagePath =
-                getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, true);
+
+        // Allow some extra time for broadcast to propagate and sdk data to be created
+        Thread.sleep(WAIT_TO_PROCESS_PACKAGE_ADDED_BROADCAST);
+
+        // Now delete the sdk data sub-dirs so that package directory is empty
+        final String cePackagePath = getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, true);
         final String dePackagePath =
                 getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, false);
         final List<String> ceSdkDirsBeforeLoadingSdksList = getSubDirs(cePackagePath,
                 /*includeRandomSuffix=*/true);
         final List<String> deSdkDirsBeforeLoadingSdksList = getSubDirs(dePackagePath,
                 /*includeRandomSuffix=*/true);
+        assertThat(getDevice().getChildren(cePackagePath)).asList().isNotEmpty();
         // Delete the sdk sub directories
         for (String child : ceSdkDirsBeforeLoadingSdksList) {
             getDevice().deleteFile(cePackagePath + "/" + child);
@@ -671,6 +681,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
             getDevice().deleteFile(dePackagePath + "/" + child);
         }
         assertThat(getDevice().getChildren(cePackagePath)).asList().isEmpty();
+
         runPhase("loadSdk");
 
         final List<String> ceSdkDirsAfterLoadingSdksList = getSubDirs(cePackagePath,
@@ -687,6 +698,10 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     public void testSdkDataPackageDirectory_CreateMissingSdkSubDirsWhenPackageDirMissing()
             throws Exception {
         installPackage(TEST_APP_STORAGE_APK);
+
+        // Allow some extra time for broadcast to propagate and sdk data to be created
+        Thread.sleep(WAIT_TO_PROCESS_PACKAGE_ADDED_BROADCAST);
+
         final String cePackagePath =
                 getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, true);
         final String dePackagePath =
@@ -737,6 +752,10 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     public void testSdkDataPackageDirectory_ReuseExistingRandomSuffixInReconcile()
             throws Exception {
         installPackage(TEST_APP_STORAGE_APK);
+
+        // Allow some extra time for broadcast to propagate and sdk data to be created
+        Thread.sleep(WAIT_TO_PROCESS_PACKAGE_ADDED_BROADCAST);
+
         final String cePackagePath = getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, true);
         final String dePackagePath = getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, false);
         final List<String> ceSdkDirsBeforeLoadingSdksList =
@@ -840,8 +859,8 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     public void testSdkDataSubDirectory_PerSdkStorageIsUsable() throws Exception {
         installPackage(TEST_APP_STORAGE_APK);
 
-        // LoadSdk to ensure per-sdk storage is available. This also reduces flakiness
-        runPhase("loadSdk");
+        // Allow some extra time for broadcast to propagate and sdk data to be created
+        Thread.sleep(WAIT_TO_PROCESS_PACKAGE_ADDED_BROADCAST);
 
         // Verify that per-sdk storage exist
         final String perSdkStorage =

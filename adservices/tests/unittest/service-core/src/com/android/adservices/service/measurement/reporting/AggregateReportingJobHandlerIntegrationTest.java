@@ -26,6 +26,7 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DbState;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.adservices.service.measurement.WebUtil;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
@@ -49,7 +50,7 @@ import java.util.Objects;
 @RunWith(Parameterized.class)
 public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbIntegrationTest {
     private static final EnrollmentData ENROLLMENT = new EnrollmentData.Builder()
-            .setAttributionReportingUrl(List.of("https://ad-tech.com"))
+            .setAttributionReportingUrl(List.of(WebUtil.validUrl("https://ad-tech.test")))
             .build();
     private final JSONObject mParam;
     private final EnrollmentDao mEnrollmentDao;

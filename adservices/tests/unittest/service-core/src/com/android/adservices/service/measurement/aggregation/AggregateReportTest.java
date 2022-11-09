@@ -45,7 +45,7 @@ public final class AggregateReportTest {
         return new AggregateReport.Builder()
                 .setId("1")
                 .setPublisher(Uri.parse("android-app://com.example.abc"))
-                .setAttributionDestination(Uri.parse("https://example.com/aS"))
+                .setAttributionDestination(Uri.parse("https://example.test/aS"))
                 .setSourceRegistrationTime(5L)
                 .setScheduledReportTime(1L)
                 .setEnrollmentId("enrollment-id")
@@ -65,7 +65,7 @@ public final class AggregateReportTest {
         return new AggregateReport.Builder()
                 .setId("1")
                 .setPublisher(Uri.parse("android-app://com.example.abc"))
-                .setAttributionDestination(Uri.parse("https://example.com/aS"))
+                .setAttributionDestination(Uri.parse("https://example.test/aS"))
                 .setSourceRegistrationTime(5L)
                 .setScheduledReportTime(1L)
                 .setEnrollmentId("enrollment-id")
@@ -84,7 +84,7 @@ public final class AggregateReportTest {
         return new AggregateReport.Builder()
                 .setId("1")
                 .setPublisher(Uri.parse("android-app://com.example.abc"))
-                .setAttributionDestination(Uri.parse("https://example.com/aS"))
+                .setAttributionDestination(Uri.parse("https://example.test/aS"))
                 .setSourceRegistrationTime(5L)
                 .setScheduledReportTime(1L)
                 .setEnrollmentId("enrollment-id")
@@ -104,7 +104,7 @@ public final class AggregateReportTest {
         AggregateReport attributionReport = createAttributionReport();
         assertEquals("1", attributionReport.getId());
         assertEquals(Uri.parse("android-app://com.example.abc"), attributionReport.getPublisher());
-        assertEquals(Uri.parse("https://example.com/aS"),
+        assertEquals(Uri.parse("https://example.test/aS"),
                 attributionReport.getAttributionDestination());
         assertEquals(5L, attributionReport.getSourceRegistrationTime());
         assertEquals(1L, attributionReport.getScheduledReportTime());
@@ -129,7 +129,7 @@ public final class AggregateReportTest {
         assertEquals("1", attributionReport.getId());
         assertEquals(Uri.parse("android-app://com.example.abc"), attributionReport.getPublisher());
         assertEquals(
-                Uri.parse("https://example.com/aS"), attributionReport.getAttributionDestination());
+                Uri.parse("https://example.test/aS"), attributionReport.getAttributionDestination());
         assertEquals(5L, attributionReport.getSourceRegistrationTime());
         assertEquals(1L, attributionReport.getScheduledReportTime());
         assertEquals("enrollment-id", attributionReport.getEnrollmentId());
@@ -153,8 +153,8 @@ public final class AggregateReportTest {
         AggregateReport attributionReport = createAttributionReportSingleTriggerDebugKey();
         assertEquals("1", attributionReport.getId());
         assertEquals(Uri.parse("android-app://com.example.abc"), attributionReport.getPublisher());
-        assertEquals(
-                Uri.parse("https://example.com/aS"), attributionReport.getAttributionDestination());
+        assertEquals(Uri.parse("https://example.test/aS"),
+                attributionReport.getAttributionDestination());
         assertEquals(5L, attributionReport.getSourceRegistrationTime());
         assertEquals(1L, attributionReport.getScheduledReportTime());
         assertEquals("enrollment-id", attributionReport.getEnrollmentId());
@@ -213,7 +213,7 @@ public final class AggregateReportTest {
                 new AggregateReport.Builder()
                         .setId("1")
                         .setPublisher(Uri.parse("android-app://com.example.abc"))
-                        .setAttributionDestination(Uri.parse("https://example.com/aS"))
+                        .setAttributionDestination(Uri.parse("https://example.test/aS"))
                         .setSourceRegistrationTime(1L)
                         .setScheduledReportTime(1L)
                         .setEnrollmentId("another-enrollment-id")
