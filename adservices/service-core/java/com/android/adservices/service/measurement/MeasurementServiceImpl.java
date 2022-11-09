@@ -146,6 +146,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             @NonNull CallerMetadata callerMetadata,
             @NonNull IMeasurementCallback callback) {
         Objects.requireNonNull(request);
+        Objects.requireNonNull(callerMetadata);
         Objects.requireNonNull(callback);
 
         final long serviceStartTime = mClock.elapsedRealtime();
@@ -161,7 +162,6 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                     STATUS_RATE_LIMIT_REACHED);
             return;
         }
-
         final int callerUid = Binder.getCallingUidOrThrow();
         final boolean attributionPermission = PermissionHelper.hasAttributionPermission(mContext);
         sBackgroundExecutor.execute(
@@ -202,6 +202,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             @NonNull CallerMetadata callerMetadata,
             @NonNull IMeasurementCallback callback) {
         Objects.requireNonNull(request);
+        Objects.requireNonNull(callerMetadata);
         Objects.requireNonNull(callback);
 
         final long serviceStartTime = mClock.elapsedRealtime();
@@ -266,6 +267,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             @NonNull CallerMetadata callerMetadata,
             @NonNull IMeasurementCallback callback) {
         Objects.requireNonNull(request);
+        Objects.requireNonNull(callerMetadata);
         Objects.requireNonNull(callback);
 
         final long serviceStartTime = mClock.elapsedRealtime();
@@ -326,6 +328,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             @NonNull CallerMetadata callerMetadata,
             @NonNull IMeasurementCallback callback) {
         Objects.requireNonNull(request);
+        Objects.requireNonNull(callerMetadata);
         Objects.requireNonNull(callback);
 
         final long serviceStartTime = mClock.elapsedRealtime();
@@ -378,6 +381,8 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             @NonNull StatusParam statusParam,
             @NonNull CallerMetadata callerMetadata,
             @NonNull IMeasurementApiStatusCallback callback) {
+        Objects.requireNonNull(statusParam);
+        Objects.requireNonNull(callerMetadata);
         Objects.requireNonNull(callback);
 
         final long serviceStartTime = mClock.elapsedRealtime();

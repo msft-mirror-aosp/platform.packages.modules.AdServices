@@ -190,7 +190,7 @@ public abstract class AbstractDbIntegrationTest {
         if (json.length() <= 10) {
             throw new IOException("json length less than 11 characters.");
         }
-        JSONObject obj = new JSONObject(json);
+        JSONObject obj = new JSONObject(json.replaceAll("\\.test(?=[\"\\/])", ".com"));
         JSONArray testArray = obj.getJSONArray("testCases");
 
         List<Object[]> testCases = new ArrayList<>();
