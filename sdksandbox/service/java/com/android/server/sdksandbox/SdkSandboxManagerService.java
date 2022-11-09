@@ -228,8 +228,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 final String packageName = intent.getData().getSchemeSpecificPart();
                 final int uid = intent.getIntExtra(Intent.EXTRA_UID, -1);
                 final CallingInfo callingInfo = new CallingInfo(uid, packageName);
-                // TODO(b/223386213): We could miss broadcast or app might be started before we
-                // handle broadcast.
                 mHandler.post(() -> mSdkSandboxStorageManager.onPackageAddedOrUpdated(callingInfo));
             }
         };

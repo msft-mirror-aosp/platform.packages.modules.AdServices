@@ -653,6 +653,9 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         // Install first before creating the user
         installPackage(TEST_APP_STORAGE_APK, "--user all");
 
+        // Allow some extra time for broadcast to propagate and sdk data to be created
+        Thread.sleep(WAIT_TO_PROCESS_PACKAGE_ADDED_BROADCAST);
+
         int secondaryUserId = mUserUtils.createAndStartSecondaryUser();
 
         // Data directories should not exist as the package is not installed on new user
@@ -671,10 +674,15 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         // Install the app on new user
         installPackage(TEST_APP_STORAGE_APK);
 
+        // Allow some extra time for broadcast to propagate and sdk data to be created
+        Thread.sleep(WAIT_TO_PROCESS_PACKAGE_ADDED_BROADCAST);
+
         assertThat(getDevice().isDirectory(ceAppPath)).isTrue();
         assertThat(getDevice().isDirectory(deAppPath)).isTrue();
         assertThat(getDevice().isDirectory(cePath)).isTrue();
         assertThat(getDevice().isDirectory(dePath)).isTrue();
+
+        mUserUtils.removeSecondaryUserIfNecessary(/*waitForUserDataDeletion=*/ true);
     }
 
     @Test
