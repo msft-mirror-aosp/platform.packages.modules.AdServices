@@ -110,6 +110,7 @@ public class SdkSandboxManagerServiceUnitTest {
     private Context mSpyContext;
     private SdkSandboxManagerService.Injector mInjector;
     private int mClientAppUid;
+    private PackageManagerLocal mPmLocal;
 
     private static final String CLIENT_PACKAGE_NAME = "com.android.client";
     private static final String SDK_NAME = "com.android.codeprovider";
@@ -169,12 +170,14 @@ public class SdkSandboxManagerServiceUnitTest {
         mProvider = new FakeSdkSandboxProvider(mSdkSandboxService);
 
         // Populate LocalManagerRegistry
-        ExtendedMockito.doReturn(Mockito.mock(PackageManagerLocal.class))
+        mPmLocal = Mockito.mock(PackageManagerLocal.class);
+        ExtendedMockito.doReturn(mPmLocal)
                 .when(() -> LocalManagerRegistry.getManager(PackageManagerLocal.class));
 
         mInjector = Mockito.spy(new InjectorForTest());
 
         mService = new SdkSandboxManagerService(mSpyContext, mProvider, mInjector);
+        mService.forceEnableSandbox();
 
         mClientAppUid = Process.myUid();
     }
@@ -450,6 +453,24 @@ public class SdkSandboxManagerServiceUnitTest {
 
         // Verify that sandbox was initialized
         assertThat(mSdkSandboxService.getInitializationCount()).isEqualTo(1);
+    }
+
+    @Test
+    public void testLoadSdk_sdkDataPrepared_onlyOnce() throws Exception {
+        loadSdk(SDK_NAME);
+        loadSdk(SDK_PROVIDER_RESOURCES_SDK_NAME);
+
+        // Verify that sandbox was initialized
+        Mockito.verify(mPmLocal, Mockito.times(1))
+                .reconcileSdkData(
+                        Mockito.nullable(String.class),
+                        Mockito.anyString(),
+                        Mockito.anyList(),
+                        Mockito.anyInt(),
+                        Mockito.anyInt(),
+                        Mockito.anyInt(),
+                        Mockito.anyString(),
+                        Mockito.anyInt());
     }
 
     @Test
@@ -1831,13 +1852,15 @@ public class SdkSandboxManagerServiceUnitTest {
 
     @Test
     public void testIsDisabled() {
-        mService.clearSdkSandboxState();
+        mService.forceEnableSandbox();
         mSdkSandboxService.setIsDisabledResponse(false);
         assertThat(mService.isSdkSandboxDisabled(mSdkSandboxService)).isFalse();
 
         mService.clearSdkSandboxState();
         mSdkSandboxService.setIsDisabledResponse(true);
         assertThat(mService.isSdkSandboxDisabled(mSdkSandboxService)).isTrue();
+
+        mService.forceEnableSandbox();
     }
 
     @Test
@@ -1874,6 +1897,17 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
+    public void testOtherPropertyChangeDoesNotAffectKillSwitch() {
+        SdkSandboxManagerService.SdkSandboxSettingsListener listener =
+                mService.getSdkSandboxSettingsListener();
+        assertThat(listener.isKillSwitchEnabled()).isFalse();
+        listener.onPropertiesChanged(
+                new DeviceConfig.Properties(
+                        DeviceConfig.NAMESPACE_ADSERVICES, Map.of("other_property", "true")));
+        assertThat(listener.isKillSwitchEnabled()).isFalse();
+    }
+
+    @Test
     public void testKillswitchStopsSandbox() throws Exception {
         disableKillUid();
         SdkSandboxManagerService.SdkSandboxSettingsListener listener =
@@ -1882,7 +1916,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 new DeviceConfig.Properties(
                         DeviceConfig.NAMESPACE_ADSERVICES,
                         Map.of(PROPERTY_DISABLE_SANDBOX, "false")));
-        mService.getSdkSandboxSettingsListener().reset();
+        mService.getSdkSandboxSettingsListener().setKillSwitchState(false);
         loadSdk(SDK_NAME);
         listener.onPropertiesChanged(
                 new DeviceConfig.Properties(
@@ -1899,7 +1933,7 @@ public class SdkSandboxManagerServiceUnitTest {
         disableForegroundCheck();
         SdkSandboxManagerService.SdkSandboxSettingsListener listener =
                 mService.getSdkSandboxSettingsListener();
-        listener.reset();
+        listener.setKillSwitchState(true);
         // Sleep needed to avoid deadlock.
         // TODO(b/257255118): Remove this sleep.
         Thread.sleep(500);
