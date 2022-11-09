@@ -1582,13 +1582,19 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         @Override
         public List<SandboxedSdk> getSandboxedSdks(String clientPackageName)
                 throws RemoteException {
-            // TODO(b/242039497): Add authorisation checks
-            // TODO(b/247592493): Add test
+            // TODO(b/258195148): Write multiuser tests
+            // TODO(b/242039497): Add authorisation checks to make sure only the sandbox calls this
+            //  API.
+            int uid = Binder.getCallingUid();
+            if (Process.isSdkSandboxUid(uid)) {
+                uid = Process.getAppUidForSdkSandboxUid(uid);
+            }
+            CallingInfo callingInfo = new CallingInfo(uid, clientPackageName);
             final List<SandboxedSdk> sandboxedSdks = new ArrayList<>();
             synchronized (mLock) {
                 for (int i = mAppAndRemoteSdkLinks.size() - 1; i >= 0; i--) {
                     AppAndRemoteSdkLink link = mAppAndRemoteSdkLinks.valueAt(i);
-                    if (link.mCallingInfo.getPackageName().equals(clientPackageName)) {
+                    if (link.mCallingInfo.equals(callingInfo)) {
                         sandboxedSdks.add(link.mSandboxedSdk);
                     }
                 }
