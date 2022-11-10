@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package android.sdksandbox.test.scenario;
+package android.sdksandbox.test.scenario.sampleclient;
 
 import android.platform.test.microbenchmark.Microbenchmark;
 import android.platform.test.rule.DropCachesRule;
