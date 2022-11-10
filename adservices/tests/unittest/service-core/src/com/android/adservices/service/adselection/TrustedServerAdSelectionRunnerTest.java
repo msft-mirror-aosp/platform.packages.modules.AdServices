@@ -60,8 +60,8 @@ import com.android.adservices.service.proto.SellerFrontEndGrpc.SellerFrontEndFut
 import com.android.adservices.service.proto.SellerFrontendService.SelectWinningAdRequest;
 import com.android.adservices.service.proto.SellerFrontendService.SelectWinningAdRequest.SelectWinningAdRawRequest;
 import com.android.adservices.service.proto.SellerFrontendService.SelectWinningAdResponse;
+import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.adservices.service.stats.ApiServiceLatencyCalculator;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
@@ -155,7 +155,7 @@ public class TrustedServerAdSelectionRunnerTest {
     @Mock private SellerFrontEndFutureStub mStub;
     private SellerFrontEndFutureStub mStubWithCompression =
             Mockito.mock(SellerFrontEndFutureStub.class, "mStubWithCompression");
-    @Mock private ApiServiceLatencyCalculator mApiServiceLatencyCalculator;
+    @Mock private AdSelectionExecutionLogger mAdSelectionExecutionLogger;
 
     @Before
     public void setUp() {
@@ -213,7 +213,7 @@ public class TrustedServerAdSelectionRunnerTest {
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilter,
                         mJsFetcher,
-                        mApiServiceLatencyCalculator);
+                        mAdSelectionExecutionLogger);
         AdSelectionOrchestrationResult adSelectionOrchestrationResult =
                 invokeRunAdSelection(
                         mAdSelectionRunner,
@@ -274,7 +274,7 @@ public class TrustedServerAdSelectionRunnerTest {
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilter,
                         mJsFetcher,
-                        mApiServiceLatencyCalculator);
+                        mAdSelectionExecutionLogger);
 
         // Add CA name to bidding data keys and later verify we don't send it to the server.
         DBCustomAudience customAudience = createDBCustomAudience(BUYER_1);
@@ -337,7 +337,7 @@ public class TrustedServerAdSelectionRunnerTest {
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilter,
                         mJsFetcher,
-                        mApiServiceLatencyCalculator);
+                        mAdSelectionExecutionLogger);
 
         // Add CA name to bidding data keys and later verify we don't send it to the server.
         DBCustomAudience customAudience = createDBCustomAudience(BUYER_1);
@@ -405,7 +405,7 @@ public class TrustedServerAdSelectionRunnerTest {
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilter,
                         mJsFetcher,
-                        mApiServiceLatencyCalculator);
+                        mAdSelectionExecutionLogger);
 
         invokeRunAdSelection(
                 mAdSelectionRunner,
@@ -457,7 +457,7 @@ public class TrustedServerAdSelectionRunnerTest {
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilter,
                         mJsFetcher,
-                        mApiServiceLatencyCalculator);
+                        mAdSelectionExecutionLogger);
         invokeRunAdSelection(
                 mAdSelectionRunner,
                 adSelectionConfig,
