@@ -23,16 +23,23 @@ import static org.junit.Assert.assertTrue;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.AdSelectionOutcomeFixture;
 import android.adservices.adselection.CustomAudienceSignalsFixture;
+import android.adservices.common.CallerMetadata;
+import android.content.Context;
 import android.net.Uri;
+import android.os.Process;
+import android.os.SystemClock;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
-import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelection;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -43,71 +50,59 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 public class OutcomeSelectionRunnerTest {
     // Time allowed by current test async calls to respond
     private static final int RESPONSE_TIMEOUT_SECONDS = 3;
 
-    private static final Uri BIDDING_LOGIC_URI_1 = Uri.parse("http://www.domain.com/logic/1");
-    private static final Uri BIDDING_LOGIC_URI_2 = Uri.parse("http://www.domain.com/logic/2");
-
-    private static final Uri RENDER_URI = Uri.parse("http://www.domain.com/advert/");
-
-    private static final Instant ACTIVATION_TIME = Instant.now();
-
-    private static final long AD_SELECTION_ID_1 = 1;
-    private static final long AD_SELECTION_ID_2 = 2;
-    private static final long AD_SELECTION_ID_3 = 3;
-    private static final String CONTEXTUAL_SIGNALS = "contextual_signals";
-
-    private static final double BID_1 = 10;
-    private static final double BID_2 = 20;
-    private static final double BID_3 = 30;
-
-    private static final String CALLER_PACKAGE_NAME_1 = "callerPackageName1";
-    private static final String CALLER_PACKAGE_NAME_2 = "callerPackageName2";
-
-    public static final CustomAudienceSignals CUSTOM_AUDIENCE_SIGNALS =
-            CustomAudienceSignalsFixture.aCustomAudienceSignals();
-
     public static final DBAdSelection DB_AD_SELECTION_1 =
             new DBAdSelection.Builder()
-                    .setAdSelectionId(AD_SELECTION_ID_1)
-                    .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
-                    .setContextualSignals(CONTEXTUAL_SIGNALS)
-                    .setBiddingLogicUri(BIDDING_LOGIC_URI_1)
-                    .setWinningAdRenderUri(RENDER_URI)
-                    .setWinningAdBid(BID_1)
-                    .setCreationTimestamp(ACTIVATION_TIME)
-                    .setCallerPackageName(CALLER_PACKAGE_NAME_1)
+                    .setAdSelectionId(1)
+                    .setCustomAudienceSignals(CustomAudienceSignalsFixture.aCustomAudienceSignals())
+                    .setContextualSignals("contextual_signals")
+                    .setBiddingLogicUri(Uri.parse("http://www.domain.com/logic/1"))
+                    .setWinningAdRenderUri(Uri.parse("http://www.domain.com/advert/"))
+                    .setWinningAdBid(10)
+                    .setCreationTimestamp(Instant.now())
+                    .setCallerPackageName("callerPackageName1")
                     .build();
 
     public static final DBAdSelection DB_AD_SELECTION_2 =
             new DBAdSelection.Builder()
-                    .setAdSelectionId(AD_SELECTION_ID_2)
-                    .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
-                    .setContextualSignals(CONTEXTUAL_SIGNALS)
-                    .setBiddingLogicUri(BIDDING_LOGIC_URI_2)
-                    .setWinningAdRenderUri(RENDER_URI)
-                    .setWinningAdBid(BID_2)
-                    .setCreationTimestamp(ACTIVATION_TIME)
-                    .setCallerPackageName(CALLER_PACKAGE_NAME_2)
+                    .setAdSelectionId(2)
+                    .setCustomAudienceSignals(CustomAudienceSignalsFixture.aCustomAudienceSignals())
+                    .setContextualSignals("contextual_signals")
+                    .setBiddingLogicUri(Uri.parse("http://www.domain.com/logic/2"))
+                    .setWinningAdRenderUri(Uri.parse("http://www.domain.com/advert/"))
+                    .setWinningAdBid(20)
+                    .setCreationTimestamp(Instant.now())
+                    .setCallerPackageName("callerPackageName2")
                     .build();
 
     public static final DBAdSelection DB_AD_SELECTION_3 =
             new DBAdSelection.Builder()
-                    .setAdSelectionId(AD_SELECTION_ID_3)
-                    .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
-                    .setContextualSignals(CONTEXTUAL_SIGNALS)
-                    .setBiddingLogicUri(BIDDING_LOGIC_URI_2)
-                    .setWinningAdRenderUri(RENDER_URI)
-                    .setWinningAdBid(BID_3)
-                    .setCreationTimestamp(ACTIVATION_TIME)
-                    .setCallerPackageName(CALLER_PACKAGE_NAME_2)
+                    .setAdSelectionId(3)
+                    .setCustomAudienceSignals(CustomAudienceSignalsFixture.aCustomAudienceSignals())
+                    .setContextualSignals("contextual_signals")
+                    .setBiddingLogicUri(Uri.parse("http://www.domain.com/logic/2"))
+                    .setWinningAdRenderUri(Uri.parse("http://www.domain.com/advert/"))
+                    .setWinningAdBid(30)
+                    .setCreationTimestamp(Instant.now())
+                    .setCallerPackageName("callerPackageName2")
                     .build();
 
+    private final Context mContext = ApplicationProvider.getApplicationContext();
+    private static final int CALLER_UID = Process.myUid();
     private AdSelectionEntryDao mAdSelectionEntryDao;
     private OutcomeSelectionRunner mOutcomeSelectionRunner;
+    private final AdServicesLogger mAdServicesLoggerMock =
+            ExtendedMockito.mock(AdServicesLoggerImpl.class);
+
+    private final CallerMetadata mCallerMetadata =
+            new CallerMetadata.Builder()
+                    .setBinderElapsedTimestamp(SystemClock.elapsedRealtime())
+                    .build();
 
     @Before
     public void setup() {
@@ -120,9 +115,11 @@ public class OutcomeSelectionRunnerTest {
 
         mOutcomeSelectionRunner =
                 new OutcomeSelectionRunner(
+                        CALLER_UID,
                         mAdSelectionEntryDao,
                         AdServicesExecutors.getBackgroundExecutor(),
-                        AdServicesExecutors.getLightWeightExecutor());
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        mAdServicesLoggerMock);
     }
 
     @Test
@@ -143,22 +140,30 @@ public class OutcomeSelectionRunnerTest {
                         AdSelectionOutcomeFixture.anAdSelectionOutcome(
                                 DB_AD_SELECTION_3.getAdSelectionId()));
 
-        Map<Long, Double> adOutcomeBidPair =
+        List<AdSelectionIdWithBid> adSelectionIdWithBidList =
                 mOutcomeSelectionRunner
-                        .retrieveAdSelectionIdToBidMap(adOutcomes)
+                        .retrieveAdSelectionIdWithBidList(adOutcomes)
                         .get(RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        LogUtil.i("asdf: " + adSelectionIdWithBidList);
+
+        Map<Long, Double> helperMap =
+                adSelectionIdWithBidList.stream()
+                        .collect(
+                                Collectors.toMap(
+                                        AdSelectionIdWithBid::getAdSelectionId,
+                                        AdSelectionIdWithBid::getBid));
 
         for (DBAdSelection selection : adSelectionResults) {
             assertTrue(
                     String.format(
                             "Ad selection id %s is missing from db results",
                             selection.getAdSelectionId()),
-                    adOutcomeBidPair.containsKey(selection.getAdSelectionId()));
+                    helperMap.containsKey(selection.getAdSelectionId()));
             assertEquals(
                     String.format(
                             "Bid values are not equal for ad selection id %s",
                             selection.getAdSelectionId()),
-                    adOutcomeBidPair.get(selection.getAdSelectionId()),
+                    helperMap.get(selection.getAdSelectionId()),
                     selection.getWinningAdBid(),
                     0.0);
         }
@@ -179,17 +184,24 @@ public class OutcomeSelectionRunnerTest {
                         AdSelectionOutcomeFixture.anAdSelectionOutcome(
                                 DB_AD_SELECTION_3.getAdSelectionId()));
 
-        Map<Long, Double> adOutcomeBidPair =
+        List<AdSelectionIdWithBid> adSelectionIdWithBidList =
                 mOutcomeSelectionRunner
-                        .retrieveAdSelectionIdToBidMap(adOutcomes)
+                        .retrieveAdSelectionIdWithBidList(adOutcomes)
                         .get(RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        Map<Long, Double> helperMap =
+                adSelectionIdWithBidList.stream()
+                        .collect(
+                                Collectors.toMap(
+                                        AdSelectionIdWithBid::getAdSelectionId,
+                                        AdSelectionIdWithBid::getBid));
 
         for (DBAdSelection selection : adSelectionResults) {
             assertFalse(
                     String.format(
                             "Ad selection id %s is missing from db results",
                             selection.getAdSelectionId()),
-                    adOutcomeBidPair.containsKey(selection.getAdSelectionId()));
+                    helperMap.containsKey(selection.getAdSelectionId()));
         }
     }
 }
