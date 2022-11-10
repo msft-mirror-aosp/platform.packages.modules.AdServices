@@ -228,8 +228,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 final String packageName = intent.getData().getSchemeSpecificPart();
                 final int uid = intent.getIntExtra(Intent.EXTRA_UID, -1);
                 final CallingInfo callingInfo = new CallingInfo(uid, packageName);
-                // TODO(b/223386213): We could miss broadcast or app might be started before we
-                // handle broadcast.
                 mHandler.post(() -> mSdkSandboxStorageManager.onPackageAddedOrUpdated(callingInfo));
             }
         };
@@ -385,8 +383,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER,
                 callingUid);
 
-        // TODO(b/232924025): Sdk data should be prepared once per sandbox instantiation
-        mSdkSandboxStorageManager.prepareSdkDataOnLoad(callingInfo);
         final long token = Binder.clearCallingIdentity();
         try {
             loadSdkWithClearIdentity(
@@ -663,10 +659,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             link = mAppAndRemoteSdkLinks.get(appAndSdkInfo);
         }
         if (link == null) {
+            LogUtil.d(
+                    TAG,
+                    callingInfo + " requested surface package, but could not find SDK " + sdkName);
             handleSurfacePackageError(
                     callingInfo,
                     REQUEST_SURFACE_PACKAGE_SDK_NOT_LOADED,
-                    "SDK is not loaded",
+                    "SDK " + sdkName + " is not loaded",
                     timeSystemServerReceivedCallFromApp,
                     SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX,
                     /*successAtStage*/ false,
@@ -897,6 +896,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
 
         final long startTimeForLoadingSandbox = mInjector.getCurrentTime();
+
+        // Prepare sdk data directories before starting the sandbox. If sdk data package directory
+        // is missing, starting the sandbox process would crash as we will fail to mount data_mirror
+        // for sdk-data isolation.
+        mSdkSandboxStorageManager.prepareSdkDataOnLoad(callingInfo);
+
         startSdkSandbox(
                 callingInfo,
                 new SandboxBindingCallback() {
@@ -1057,7 +1062,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     void clearSdkSandboxState() {
         synchronized (mLock) {
             mCheckedVisibilityPatch = false;
-            getSdkSandboxSettingsListener().reset();
+            getSdkSandboxSettingsListener().setKillSwitchState(true);
         }
     }
 
@@ -1070,7 +1075,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         synchronized (mLock) {
             mCheckedVisibilityPatch = true;
             mHasVisibilityPatch = true;
-            getSdkSandboxSettingsListener().reset();
+            getSdkSandboxSettingsListener().setKillSwitchState(false);
         }
     }
 
@@ -1089,11 +1094,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         @GuardedBy("mLock")
         private boolean mIsKillSwitchEnabled =
                 DeviceConfig.getBoolean(
-                        DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_DISABLE_SDK_SANDBOX, false);
-
-        // This is required so that the sandbox is not re-enabled in the same boot.
-        @GuardedBy("mLock")
-        private boolean mKillSwitchBecameEnabled = false;
+                        DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_DISABLE_SDK_SANDBOX, true);
 
         SdkSandboxSettingsListener(Context context) {
             mContext = context;
@@ -1112,28 +1113,39 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
 
         @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
-        void reset() {
+        void setKillSwitchState(boolean enabled) {
             synchronized (mLock) {
                 DeviceConfig.setProperty(
                         DeviceConfig.NAMESPACE_ADSERVICES,
                         PROPERTY_DISABLE_SDK_SANDBOX,
-                        "false",
+                        Boolean.toString(enabled),
                         false);
-                mIsKillSwitchEnabled = false;
-                mKillSwitchBecameEnabled = false;
+                mIsKillSwitchEnabled = enabled;
             }
+        }
+
+        @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+        void unregisterPropertiesListener() {
+            DeviceConfig.removeOnPropertiesChangedListener(this);
         }
 
         @Override
         public void onPropertiesChanged(@NonNull DeviceConfig.Properties properties) {
             synchronized (mLock) {
-                if (!mIsKillSwitchEnabled && !mKillSwitchBecameEnabled) {
-                    mIsKillSwitchEnabled =
-                            properties.getBoolean(PROPERTY_DISABLE_SDK_SANDBOX, false);
-                    if (mIsKillSwitchEnabled) {
-                        mKillSwitchBecameEnabled = true;
-                        synchronized (SdkSandboxManagerService.this.mLock) {
-                            stopAllSandboxesLocked();
+                for (String name : properties.getKeyset()) {
+                    if (name == null) {
+                        continue;
+                    }
+
+                    if (name.equals(PROPERTY_DISABLE_SDK_SANDBOX)) {
+                        boolean killSwitchPreviouslyEnabled = mIsKillSwitchEnabled;
+                        mIsKillSwitchEnabled =
+                                properties.getBoolean(PROPERTY_DISABLE_SDK_SANDBOX, true);
+                        if (mIsKillSwitchEnabled && !killSwitchPreviouslyEnabled) {
+                            Log.i(TAG, "SDK sandbox killswitch has become enabled");
+                            synchronized (SdkSandboxManagerService.this.mLock) {
+                                stopAllSandboxesLocked();
+                            }
                         }
                     }
                 }
@@ -1237,6 +1249,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             ISdkSandboxService service) {
 
         if (isSdkSandboxDisabled(service)) {
+            Log.e(TAG, "SDK cannot be loaded because SDK sandbox is disabled");
             link.handleLoadSdkException(
                     new LoadSdkException(LOAD_SDK_SDK_SANDBOX_DISABLED, SANDBOX_DISABLED_MSG),
                     -1,
@@ -1572,13 +1585,19 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         @Override
         public List<SandboxedSdk> getSandboxedSdks(String clientPackageName)
                 throws RemoteException {
-            // TODO(b/242039497): Add authorisation checks
-            // TODO(b/247592493): Add test
+            // TODO(b/258195148): Write multiuser tests
+            // TODO(b/242039497): Add authorisation checks to make sure only the sandbox calls this
+            //  API.
+            int uid = Binder.getCallingUid();
+            if (Process.isSdkSandboxUid(uid)) {
+                uid = Process.getAppUidForSdkSandboxUid(uid);
+            }
+            CallingInfo callingInfo = new CallingInfo(uid, clientPackageName);
             final List<SandboxedSdk> sandboxedSdks = new ArrayList<>();
             synchronized (mLock) {
                 for (int i = mAppAndRemoteSdkLinks.size() - 1; i >= 0; i--) {
                     AppAndRemoteSdkLink link = mAppAndRemoteSdkLinks.valueAt(i);
-                    if (link.mCallingInfo.getPackageName().equals(clientPackageName)) {
+                    if (link.mCallingInfo.equals(callingInfo)) {
                         sandboxedSdks.add(link.mSandboxedSdk);
                     }
                 }
@@ -1777,7 +1796,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                                         handleSurfacePackageError(
                                                 mCallingInfo,
                                                 REQUEST_SURFACE_PACKAGE_SDK_NOT_LOADED,
-                                                "SDK is not loaded",
+                                                "SDK " + mSdkName + " is not loaded",
                                                 /*timeSystemServerReceivedCallFromSandbox=*/ -1,
                                                 SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED,
                                                 /*successAtStage=*/ false,
@@ -1858,10 +1877,16 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                             });
                 }
             } catch (DeadObjectException e) {
+                LogUtil.d(
+                        TAG,
+                        mCallingInfo
+                                + " requested surface package from SDK "
+                                + mSdkName
+                                + " but sandbox is not alive");
                 handleSurfacePackageError(
                         mCallingInfo,
                         REQUEST_SURFACE_PACKAGE_SDK_NOT_LOADED,
-                        "SDK is not loaded",
+                        "SDK " + mSdkName + " is not loaded",
                         /*timeSystemServerReceivedCallFromSandbox=*/ -1,
                         SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED,
                         /*successAtStage=*/ false,
@@ -2073,7 +2098,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 for (int i = 0; i < mCallingInfosWithDeathRecipients.size(); i++) {
                     final CallingInfo callingInfo = mCallingInfosWithDeathRecipients.keyAt(i);
                     if (callingInfo.getUid() == uid) {
-                        // Stop the sandbox when the app goes to the background.
+                        LogUtil.d(
+                                TAG,
+                                "App with uid "
+                                        + uid
+                                        + " has gone to the background, unbinding sandbox");
+                        // Unbind the sandbox when the app goes to the background to lower its
+                        // priority.
                         mServiceProvider.unbindService(callingInfo, false);
                     }
                 }

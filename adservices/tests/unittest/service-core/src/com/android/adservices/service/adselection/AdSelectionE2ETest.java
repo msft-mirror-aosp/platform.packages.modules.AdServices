@@ -22,6 +22,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 
+import static com.android.adservices.data.adselection.AdSelectionDatabase.DATABASE_NAME;
 import static com.android.adservices.service.adselection.AdSelectionRunner.AD_SELECTION_THROTTLED;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_AD_SELECTION_FAILURE;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_BUYERS_AVAILABLE;
@@ -31,13 +32,17 @@ import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR
 import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.MISSING_SCORING_LOGIC;
 import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.MISSING_TRUSTED_SCORING_SIGNALS;
 import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.SCORING_TIMED_OUT;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.DB_AD_SELECTION_FILE_SIZE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.isA;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.mock;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
@@ -97,6 +102,7 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.RunAdSelectionProcessReportedStats;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
@@ -116,6 +122,7 @@ import org.mockito.MockitoSession;
 import org.mockito.Spy;
 import org.mockito.quality.Strictness;
 
+import java.io.File;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -201,7 +208,8 @@ public class AdSelectionE2ETest {
     FledgeAllowListsFilter mFledgeAllowListsFilterSpy =
             new FledgeAllowListsFilter(mFlags, mAdServicesLoggerMock);
 
-    private Context mContext = ApplicationProvider.getApplicationContext();
+    @Spy private Context mContext = ApplicationProvider.getApplicationContext();
+    @Mock private File mMockDBAdSelectionFile;
 
     @Spy
     FledgeAuthorizationFilter mFledgeAuthorizationFilterSpy =
@@ -318,6 +326,8 @@ public class AdSelectionE2ETest {
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
                         .build();
+        when(mContext.getDatabasePath(DATABASE_NAME)).thenReturn(mMockDBAdSelectionFile);
+        when(mMockDBAdSelectionFile.length()).thenReturn(DB_AD_SELECTION_FILE_SIZE);
     }
 
     @After
@@ -333,6 +343,14 @@ public class AdSelectionE2ETest {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         // Logger calls come after the callback is returned
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(any());
         CountDownLatch loggerLatch = new CountDownLatch(1);
         doAnswer(
                         unusedInvocation -> {
@@ -367,7 +385,7 @@ public class AdSelectionE2ETest {
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
-
+        runAdSelectionProcessLoggerLatch.await();
         loggerLatch.await();
         assertCallbackIsSuccessful(resultsCallback);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
@@ -375,7 +393,9 @@ public class AdSelectionE2ETest {
         assertEquals(
                 AD_URI_PREFIX + BUYER_2 + "/ad3",
                 resultsCallback.mAdSelectionResponse.getRenderUri().toString());
-
+        verify(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(
+                        isA(RunAdSelectionProcessReportedStats.class));
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
@@ -389,6 +409,14 @@ public class AdSelectionE2ETest {
         doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent();
 
         // Logger calls come after the callback is returned
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(any());
         CountDownLatch loggerLatch = new CountDownLatch(1);
         doAnswer(
                         unusedInvocation -> {
@@ -423,6 +451,7 @@ public class AdSelectionE2ETest {
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+        runAdSelectionProcessLoggerLatch.await();
         loggerLatch.await();
         assertCallbackIsSuccessful(resultsCallback);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
@@ -430,7 +459,9 @@ public class AdSelectionE2ETest {
         assertEquals(
                 Uri.EMPTY.toString(),
                 resultsCallback.mAdSelectionResponse.getRenderUri().toString());
-
+        verify(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(
+                        isA(RunAdSelectionProcessReportedStats.class));
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
@@ -1703,6 +1734,15 @@ public class AdSelectionE2ETest {
                 .assertAppCanUsePpapi(
                         MY_APP_PACKAGE_NAME, AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS);
         // Logger calls come after the callback is returned
+
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(any());
         CountDownLatch loggerLatch = new CountDownLatch(1);
         doAnswer(
                         unusedInvocation -> {
@@ -1725,14 +1765,16 @@ public class AdSelectionE2ETest {
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(
                         mAdSelectionService, invalidAdSelectionConfig, CALLER_PACKAGE_NAME);
-
+        runAdSelectionProcessLoggerLatch.await();
         loggerLatch.await();
         assertFalse(resultsCallback.mIsSuccess);
 
         FledgeErrorResponse response = resultsCallback.mFledgeErrorResponse;
         assertEquals(
                 "Error response code mismatch", STATUS_INVALID_ARGUMENT, response.getStatusCode());
-
+        verify(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(
+                        isA(RunAdSelectionProcessReportedStats.class));
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
@@ -1934,6 +1976,14 @@ public class AdSelectionE2ETest {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         // Logger calls come after the callback is returned
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(any());
         CountDownLatch loggerLatch = new CountDownLatch(1);
         doAnswer(
                         unusedInvocation -> {
@@ -1971,6 +2021,7 @@ public class AdSelectionE2ETest {
                         mAdSelectionService,
                         mAdSelectionConfig,
                         CALLER_PACKAGE_NAME + "invalidPackageName");
+        runAdSelectionProcessLoggerLatch.await();
         loggerLatch.await();
         Assert.assertFalse(resultsCallback.mIsSuccess);
 
@@ -1986,6 +2037,9 @@ public class AdSelectionE2ETest {
                                 .SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE));
         // TODO(b/242139312): Remove atLeastOnce once this the double logging is addressed and
         //  update third argument value.
+        verify(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(
+                        isA(RunAdSelectionProcessReportedStats.class));
         verify(mAdServicesLoggerMock, Mockito.atLeastOnce())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
@@ -2010,6 +2064,14 @@ public class AdSelectionE2ETest {
                         MY_APP_PACKAGE_NAME, AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS);
 
         // Logger calls come after the callback is returned
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(any());
         CountDownLatch loggerLatch = new CountDownLatch(1);
         doAnswer(
                         unusedInvocation -> {
@@ -2044,6 +2106,7 @@ public class AdSelectionE2ETest {
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+        runAdSelectionProcessLoggerLatch.await();
         loggerLatch.await();
         Assert.assertFalse(resultsCallback.mIsSuccess);
 
@@ -2059,6 +2122,9 @@ public class AdSelectionE2ETest {
                         AdSelectionRunner.AD_SELECTION_ERROR_PATTERN,
                         AdSelectionRunner.ERROR_AD_SELECTION_FAILURE,
                         AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE));
+        verify(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(
+                        isA(RunAdSelectionProcessReportedStats.class));
         // TODO(b/242139312): Remove atLeastOnce once this the double logging is addressed and
         //   update third argument value.
         verify(mAdServicesLoggerMock, Mockito.atLeastOnce())
@@ -2101,6 +2167,14 @@ public class AdSelectionE2ETest {
                         mFledgeAllowListsFilterSpy);
 
         // Logger calls come after the callback is returned
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(any());
         CountDownLatch loggerLatch = new CountDownLatch(1);
         doAnswer(
                         unusedInvocation -> {
@@ -2135,6 +2209,7 @@ public class AdSelectionE2ETest {
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+        runAdSelectionProcessLoggerLatch.await();
         loggerLatch.await();
         Assert.assertFalse(resultsCallback.mIsSuccess);
 
@@ -2150,6 +2225,9 @@ public class AdSelectionE2ETest {
                         AdSelectionRunner.AD_SELECTION_ERROR_PATTERN,
                         AdSelectionRunner.ERROR_AD_SELECTION_FAILURE,
                         AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE));
+        verify(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(
+                        isA(RunAdSelectionProcessReportedStats.class));
         // TODO(b/242139312): Remove atLeastOnce once this the double logging is addressed and
         //  update third argument value.
         verify(mAdServicesLoggerMock, Mockito.atLeastOnce())
@@ -2218,6 +2296,14 @@ public class AdSelectionE2ETest {
                         mFledgeAllowListsFilterSpy);
 
         // Logger calls come after the callback is returned
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(any());
         CountDownLatch loggerLatch = new CountDownLatch(1);
         doAnswer(
                         unusedInvocation -> {
@@ -2259,7 +2345,7 @@ public class AdSelectionE2ETest {
         AdSelectionTestCallback resultsCallbackSecondCall =
                 invokeRunAdSelection(
                         adSelectionServiceWithThrottling, mAdSelectionConfig, CALLER_PACKAGE_NAME);
-
+        runAdSelectionProcessLoggerLatch.await();
         loggerLatch.await();
         assertCallbackIsSuccessful(resultsCallbackFirstCall);
         long resultSelectionId = resultsCallbackFirstCall.mAdSelectionResponse.getAdSelectionId();
@@ -2291,8 +2377,10 @@ public class AdSelectionE2ETest {
      */
     private void resetThrottlerToNoRateLimits() {
         Throttler.destroyExistingThrottler();
-        final double noRateLimit = -1;
-        Throttler.getInstance(noRateLimit);
+        final float noRateLimit = -1;
+        Flags mockNoRateLimitFlags = mock(Flags.class);
+        doReturn(noRateLimit).when(mockNoRateLimitFlags).getSdkRequestPermitsPerSecond();
+        Throttler.getInstance(mockNoRateLimitFlags);
     }
 
     @Test
@@ -2335,6 +2423,14 @@ public class AdSelectionE2ETest {
                         mFledgeAllowListsFilterSpy);
 
         // Logger calls come after the callback is returned
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(any());
         CountDownLatch loggerLatch = new CountDownLatch(1);
         doAnswer(
                         unusedInvocation -> {
@@ -2369,7 +2465,7 @@ public class AdSelectionE2ETest {
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
-
+        runAdSelectionProcessLoggerLatch.await();
         loggerLatch.await();
         assertCallbackIsSuccessful(resultsCallback);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
@@ -2377,7 +2473,9 @@ public class AdSelectionE2ETest {
         assertEquals(
                 AD_URI_PREFIX + BUYER_2 + "/ad3",
                 resultsCallback.mAdSelectionResponse.getRenderUri().toString());
-
+        verify(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(
+                        isA(RunAdSelectionProcessReportedStats.class));
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
@@ -2491,7 +2589,7 @@ public class AdSelectionE2ETest {
                         .setCallerPackageName(callerPackageName)
                         .build();
 
-        adSelectionService.runAdSelection(input, mMockCallerMetadata, adSelectionTestCallback);
+        adSelectionService.selectAds(input, mMockCallerMetadata, adSelectionTestCallback);
         adSelectionTestCallback.mCountDownLatch.await();
         return adSelectionTestCallback;
     }
