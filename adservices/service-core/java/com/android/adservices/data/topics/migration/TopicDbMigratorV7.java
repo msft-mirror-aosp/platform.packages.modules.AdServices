@@ -16,7 +16,7 @@
 
 package com.android.adservices.data.topics.migration;
 
-import static com.android.adservices.data.DbHelper.DATABASE_VERSION_V5;
+import static com.android.adservices.data.DbHelper.DATABASE_VERSION_V7;
 
 import android.database.sqlite.SQLiteDatabase;
 
@@ -24,16 +24,16 @@ import com.android.adservices.data.topics.TopicsTables;
 import com.android.internal.annotations.VisibleForTesting;
 
 /**
- * Migrator to perform DB schema change to version 5 in Topics API. Version 5 is to add
+ * Migrator to perform DB schema change to version 7 in Topics API. Version 7 is to add
  * TopicContributors Table.
  */
-public class TopicDbMigratorV5 extends AbstractTopicsDbMigrator {
+public class TopicDbMigratorV7 extends AbstractTopicsDbMigrator {
     private static final String[] QUERIES_TO_PERFORM = {
         TopicsTables.CREATE_TABLE_TOPIC_CONTRIBUTORS
     };
 
-    public TopicDbMigratorV5() {
-        super(DATABASE_VERSION_V5);
+    public TopicDbMigratorV7() {
+        super(DATABASE_VERSION_V7);
     }
 
     @Override

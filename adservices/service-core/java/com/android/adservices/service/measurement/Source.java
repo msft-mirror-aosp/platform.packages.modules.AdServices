@@ -83,6 +83,7 @@ public class Source {
     private long mInstallCooldownWindow;
     private @Nullable UnsignedLong mDebugKey;
     private boolean mIsInstallAttributed;
+    private boolean mIsDebugReporting;
     private String mFilterData;
     private String mAggregateSource;
     private int mAggregateContributions;
@@ -133,6 +134,7 @@ public class Source {
         mPublisherType = EventSurfaceType.APP;
         mAttributionMode = AttributionMode.UNASSIGNED;
         mIsInstallAttributed = false;
+        mIsDebugReporting = false;
     }
 
     /** Class for storing fake report data. */
@@ -319,6 +321,7 @@ public class Source {
                 && Objects.equals(mDedupKeys, source.mDedupKeys)
                 && Objects.equals(mRegistrant, source.mRegistrant)
                 && mAttributionMode == source.mAttributionMode
+                && mIsDebugReporting == source.mIsDebugReporting
                 && Objects.equals(mFilterData, source.mFilterData)
                 && Objects.equals(mAggregateSource, source.mAggregateSource)
                 && mAggregateContributions == source.mAggregateContributions
@@ -538,6 +541,11 @@ public class Source {
         return mIsInstallAttributed;
     }
 
+    /** Is Ad Tech Opt-in to Debug Reporting {@link Source}. */
+    public boolean isDebugReporting() {
+        return mIsDebugReporting;
+    }
+
     /**
      * Returns aggregate filter data string used for aggregation. aggregate filter data json is a
      * JSONObject in Attribution-Reporting-Register-Source header.
@@ -748,7 +756,7 @@ public class Source {
             return this;
         }
 
-        /** See {@link Source#getEnrollmentId()} ()}. */
+        /** See {@link Source#getEnrollmentId()}. */
         @NonNull
         public Builder setEnrollmentId(@NonNull String enrollmentId) {
             mBuilding.mEnrollmentId = enrollmentId;
@@ -777,9 +785,15 @@ public class Source {
             return this;
         }
 
-        /** See {@link Source#getDebugKey()} ()}. */
+        /** See {@link Source#getDebugKey()}. */
         public Builder setDebugKey(@Nullable UnsignedLong debugKey) {
             mBuilding.mDebugKey = debugKey;
+            return this;
+        }
+
+        /** See {@link Source#isDebugReporting()}. */
+        public Builder setIsDebugReporting(boolean isDebugReporting) {
+            mBuilding.mIsDebugReporting = isDebugReporting;
             return this;
         }
 
