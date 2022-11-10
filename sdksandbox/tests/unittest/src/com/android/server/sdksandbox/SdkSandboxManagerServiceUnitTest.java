@@ -184,6 +184,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
     @After
     public void tearDown() {
+        mService.getSdkSandboxSettingsListener().unregisterPropertiesListener();
         mStaticMockSession.finishMocking();
     }
 
