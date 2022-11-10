@@ -33,6 +33,7 @@ import androidx.test.filters.SmallTest;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.AsyncRegistration;
+import com.android.adservices.service.measurement.WebUtil;
 import com.android.adservices.service.measurement.util.AsyncRedirect;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.MeasurementRegistrationResponseStats;
@@ -58,7 +59,7 @@ import java.util.stream.IntStream;
 @RunWith(MockitoJUnitRunner.class)
 public final class FetcherUtilTest {
     private static final String LONG_FILTER_STRING = "12345678901234567890123456";
-    private static final Uri REGISTRATION_URI = Uri.parse("https://foo.com");
+    private static final Uri REGISTRATION_URI = WebUtil.validUri("https://foo.test");
     @Mock Flags mFlags;
     @Mock AdServicesLogger mLogger;
 

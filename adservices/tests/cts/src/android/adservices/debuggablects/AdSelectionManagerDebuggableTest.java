@@ -20,7 +20,6 @@ import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.AddAdSelectionOverrideRequest;
 import android.adservices.adselection.RemoveAdSelectionOverrideRequest;
-import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.adselection.TestAdSelectionClient;
 import android.adservices.common.AdSelectionSignals;
 import android.os.Process;
@@ -51,7 +50,6 @@ public class AdSelectionManagerDebuggableTest extends ForegroundDebuggableCtsTes
     private static final AdSelectionConfig AD_SELECTION_CONFIG =
             AdSelectionConfigFixture.anAdSelectionConfig();
 
-    private AdSelectionClient mAdSelectionClient;
     private TestAdSelectionClient mTestAdSelectionClient;
 
     private boolean mHasAccessToDevOverrides;
@@ -62,11 +60,6 @@ public class AdSelectionManagerDebuggableTest extends ForegroundDebuggableCtsTes
     public void setup() {
         assertForegroundActivityStarted();
 
-        mAdSelectionClient =
-                new AdSelectionClient.Builder()
-                        .setContext(sContext)
-                        .setExecutor(CALLBACK_EXECUTOR)
-                        .build();
         mTestAdSelectionClient =
                 new TestAdSelectionClient.Builder()
                         .setContext(sContext)
@@ -138,12 +131,6 @@ public class AdSelectionManagerDebuggableTest extends ForegroundDebuggableCtsTes
     @Test
     public void testResetAllOverridesSucceeds() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
-
-        AdSelectionClient adSelectionClient =
-                new AdSelectionClient.Builder()
-                        .setContext(sContext)
-                        .setExecutor(CALLBACK_EXECUTOR)
-                        .build();
 
         ListenableFuture<Void> result =
                 mTestAdSelectionClient.resetAllAdSelectionConfigRemoteOverrides();

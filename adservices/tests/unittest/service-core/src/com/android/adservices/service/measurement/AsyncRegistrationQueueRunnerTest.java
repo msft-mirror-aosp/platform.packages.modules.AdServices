@@ -95,25 +95,26 @@ import javax.net.ssl.HttpsURLConnection;
 /** Unit tests for {@link AsyncRegistrationQueueRunnerTest} */
 public class AsyncRegistrationQueueRunnerTest {
     private static final Context sDefaultContext = ApplicationProvider.getApplicationContext();
+    private static final boolean DEFAULT_AD_ID_PERMISSION = false;
     private static final String DEFAULT_ENROLLMENT_ID = "enrollment_id";
     private static final Uri DEFAULT_REGISTRANT = Uri.parse("android-app://com.registrant");
     private static final Uri DEFAULT_VERIFIED_DESTINATION = Uri.parse("android-app://com.example");
     private static final String SDK_PACKAGE_NAME = "sdk.package.name";
     private static final Uri APP_TOP_ORIGIN =
             Uri.parse("android-app://" + sDefaultContext.getPackageName());
-    private static final Uri WEB_TOP_ORIGIN = Uri.parse("https://example.com");
-    private static final Uri REGISTRATION_URI = Uri.parse("https://foo.com/bar?ad=134");
-    private static final String LIST_TYPE_REDIRECT_URI_1 = "https://foo.com";
-    private static final String LIST_TYPE_REDIRECT_URI_2 = "https://bar.com";
-    private static final String LOCATION_TYPE_REDIRECT_URI = "https://baz.com";
-    private static final Uri WEB_DESTINATION = Uri.parse("https://web-destination.com");
+    private static final Uri WEB_TOP_ORIGIN = WebUtil.validUri("https://example.test");
+    private static final Uri REGISTRATION_URI = WebUtil.validUri("https://foo.test/bar?ad=134");
+    private static final String LIST_TYPE_REDIRECT_URI_1 = WebUtil.validUrl("https://foo.test");
+    private static final String LIST_TYPE_REDIRECT_URI_2 = WebUtil.validUrl("https://bar.test");
+    private static final String LOCATION_TYPE_REDIRECT_URI = WebUtil.validUrl("https://baz.test");
+    private static final Uri WEB_DESTINATION = WebUtil.validUri("https://web-destination.test");
     private static final Uri APP_DESTINATION = Uri.parse("android-app://com.app_destination");
     private static final Source SOURCE_1 =
             SourceFixture.getValidSourceBuilder()
                     .setEventId(new UnsignedLong(1L))
                     .setPublisher(APP_TOP_ORIGIN)
                     .setAppDestination(Uri.parse("android-app://com.destination1"))
-                    .setWebDestination(Uri.parse("https://web-destination1.com"))
+                    .setWebDestination(WebUtil.validUri("https://web-destination1.test"))
                     .setEnrollmentId(DEFAULT_ENROLLMENT_ID)
                     .setRegistrant(Uri.parse("android-app://com.example"))
                     .setEventTime(new Random().nextLong())
@@ -123,11 +124,13 @@ public class AsyncRegistrationQueueRunnerTest {
                     .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                     .setDebugKey(new UnsignedLong(47823478789L))
                     .build();
-    private static final Uri DEFAULT_WEB_DESTINATION = Uri.parse("https://def-web-destination.com");
-    private static final Uri ALT_WEB_DESTINATION = Uri.parse("https://alt-web-destination.com");
+    private static final Uri DEFAULT_WEB_DESTINATION =
+            WebUtil.validUri("https://def-web-destination.test");
+    private static final Uri ALT_WEB_DESTINATION =
+            WebUtil.validUri("https://alt-web-destination.test");
     private static final Uri ALT_APP_DESTINATION =
             Uri.parse("android-app://com.alt-app_destination");
-    private static final String DEFAULT_REGISTRATION = "https://foo.com";
+    private static final String DEFAULT_REGISTRATION = WebUtil.validUrl("https://foo.test");
     private static final Uri DEFAULT_OS_DESTINATION =
             Uri.parse("android-app://com.def-os-destination");
     private static final WebSourceParams DEFAULT_REGISTRATION_PARAM_LIST =
@@ -216,8 +219,8 @@ public class AsyncRegistrationQueueRunnerTest {
                     asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
                     AsyncRedirect asyncRedirect = invocation.getArgument(2);
                     asyncRedirect.addToRedirects(List.of(
-                            Uri.parse("https://example.com/sF1"),
-                            Uri.parse("https://example.com/sF2")));
+                            WebUtil.validUri("https://example.test/sF1"),
+                            WebUtil.validUri("https://example.test/sF2")));
                     return Optional.of(mMockedSource);
                 };
         doAnswer(answerAsyncSourceFetcher)
@@ -226,7 +229,7 @@ public class AsyncRegistrationQueueRunnerTest {
 
         Source.FakeReport sf =
                 new Source.FakeReport(
-                        new UnsignedLong(1L), 1L, Uri.parse("https://example.com/sF"));
+                        new UnsignedLong(1L), 1L, WebUtil.validUri("https://example.test/sF"));
         List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
         when(mMockedSource.assignAttributionModeAndGenerateFakeReports())
                 .thenReturn(eventReportList);
@@ -592,7 +595,7 @@ public class AsyncRegistrationQueueRunnerTest {
 
         Source.FakeReport sf =
                 new Source.FakeReport(
-                        new UnsignedLong(1L), 1L, Uri.parse("https://example.com/sF"));
+                        new UnsignedLong(1L), 1L, WebUtil.validUri("https://example.test/sF"));
         List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
         when(mMockedSource.assignAttributionModeAndGenerateFakeReports())
                 .thenReturn(eventReportList);
@@ -627,8 +630,8 @@ public class AsyncRegistrationQueueRunnerTest {
                     asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.SERVER_UNAVAILABLE);
                     AsyncRedirect asyncRedirect = invocation.getArgument(2);
                     asyncRedirect.addToRedirects(List.of(
-                            Uri.parse("https://example.com/sF1"),
-                            Uri.parse("https://example.com/sF2")));
+                            WebUtil.validUri("https://example.test/sF1"),
+                            WebUtil.validUri("https://example.test/sF2")));
                     return Optional.empty();
                 };
         doAnswer(answerAsyncSourceFetcher)
@@ -637,7 +640,7 @@ public class AsyncRegistrationQueueRunnerTest {
 
         Source.FakeReport sf =
                 new Source.FakeReport(
-                        new UnsignedLong(1L), 1L, Uri.parse("https://example.com/sF"));
+                        new UnsignedLong(1L), 1L, WebUtil.validUri("https://example.test/sF"));
         List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
         when(mMockedSource.assignAttributionModeAndGenerateFakeReports())
                 .thenReturn(eventReportList);
@@ -680,8 +683,8 @@ public class AsyncRegistrationQueueRunnerTest {
                     asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.NETWORK_ERROR);
                     AsyncRedirect asyncRedirect = invocation.getArgument(2);
                     asyncRedirect.addToRedirects(List.of(
-                            Uri.parse("https://example.com/sF1"),
-                            Uri.parse("https://example.com/sF2")));
+                            WebUtil.validUri("https://example.test/sF1"),
+                            WebUtil.validUri("https://example.test/sF2")));
                     return Optional.empty();
                 };
         doAnswer(answerAsyncSourceFetcher)
@@ -690,7 +693,7 @@ public class AsyncRegistrationQueueRunnerTest {
 
         Source.FakeReport sf =
                 new Source.FakeReport(
-                        new UnsignedLong(1L), 1L, Uri.parse("https://example.com/sF"));
+                        new UnsignedLong(1L), 1L, WebUtil.validUri("https://example.test/sF"));
         List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
         when(mMockedSource.assignAttributionModeAndGenerateFakeReports())
                 .thenReturn(eventReportList);
@@ -769,8 +772,8 @@ public class AsyncRegistrationQueueRunnerTest {
                     asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
                     AsyncRedirect asyncRedirect = invocation.getArgument(2);
                     asyncRedirect.addToRedirects(List.of(
-                            Uri.parse("https://example.com/sF1"),
-                            Uri.parse("https://example.com/sF2")));
+                            WebUtil.validUri("https://example.test/sF1"),
+                            WebUtil.validUri("https://example.test/sF2")));
                     return Optional.of(mMockedTrigger);
                 };
         doAnswer(answerAsyncTriggerFetcher)
@@ -839,8 +842,8 @@ public class AsyncRegistrationQueueRunnerTest {
                     asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.SERVER_UNAVAILABLE);
                     AsyncRedirect asyncRedirect = invocation.getArgument(2);
                     asyncRedirect.addToRedirects(List.of(
-                            Uri.parse("https://example.com/sF1"),
-                            Uri.parse("https://example.com/sF2")));
+                            WebUtil.validUri("https://example.test/sF1"),
+                            WebUtil.validUri("https://example.test/sF2")));
                     return Optional.of(mMockedSource);
                 };
         doAnswer(answerAsyncTriggerFetcher)
@@ -883,8 +886,8 @@ public class AsyncRegistrationQueueRunnerTest {
                     asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.NETWORK_ERROR);
                     AsyncRedirect asyncRedirect = invocation.getArgument(2);
                     asyncRedirect.addToRedirects(List.of(
-                            Uri.parse("https://example.com/sF1"),
-                            Uri.parse("https://example.com/sF2")));
+                            WebUtil.validUri("https://example.test/sF1"),
+                            WebUtil.validUri("https://example.test/sF2")));
                     return Optional.of(mMockedSource);
                 };
         doAnswer(answerAsyncTriggerFetcher)
@@ -927,8 +930,8 @@ public class AsyncRegistrationQueueRunnerTest {
                     asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.PARSING_ERROR);
                     AsyncRedirect asyncRedirect = invocation.getArgument(2);
                     asyncRedirect.addToRedirects(List.of(
-                            Uri.parse("https://example.com/sF1"),
-                            Uri.parse("https://example.com/sF2")));
+                            WebUtil.validUri("https://example.test/sF1"),
+                            WebUtil.validUri("https://example.test/sF2")));
                     return Optional.empty();
                 };
         doAnswer(answerAsyncTriggerFetcher)
@@ -970,7 +973,7 @@ public class AsyncRegistrationQueueRunnerTest {
 
         Source.FakeReport sf =
                 new Source.FakeReport(
-                        new UnsignedLong(1L), 1L, Uri.parse("https://example.com/sF"));
+                        new UnsignedLong(1L), 1L, WebUtil.validUri("https://example.test/sF"));
         List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
         when(mMockedSource.assignAttributionModeAndGenerateFakeReports())
                 .thenReturn(eventReportList);
@@ -1010,7 +1013,7 @@ public class AsyncRegistrationQueueRunnerTest {
 
         Source.FakeReport sf =
                 new Source.FakeReport(
-                        new UnsignedLong(1L), 1L, Uri.parse("https://example.com/sF"));
+                        new UnsignedLong(1L), 1L, WebUtil.validUri("https://example.test/sF"));
         List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
         when(mMockedSource.assignAttributionModeAndGenerateFakeReports())
                 .thenReturn(eventReportList);
@@ -1099,7 +1102,7 @@ public class AsyncRegistrationQueueRunnerTest {
 
         Source.FakeReport sf =
                 new Source.FakeReport(
-                        new UnsignedLong(1L), 1L, Uri.parse("https://example.com/sF"));
+                        new UnsignedLong(1L), 1L, WebUtil.validUri("https://example.test/sF"));
         List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
         when(mMockedSource.assignAttributionModeAndGenerateFakeReports())
                 .thenReturn(eventReportList);
@@ -1781,7 +1784,7 @@ public class AsyncRegistrationQueueRunnerTest {
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         AsyncSourceFetcher mFetcher = spy(new AsyncSourceFetcher(mEnrollmentDao, mFlags, mLogger));
         doReturn(mUrlConnection1).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
-        doReturn(mUrlConnection2).when(mFetcher).openUrl(new URL("https://foo-redirect.com"));
+        doReturn(mUrlConnection2).when(mFetcher).openUrl(new URL("https://foo-redirect.test"));
         when(mUrlConnection1.getResponseCode()).thenReturn(200);
         when(mUrlConnection2.getResponseCode()).thenReturn(200);
         when(mUrlConnection1.getHeaderFields())
@@ -1801,7 +1804,7 @@ public class AsyncRegistrationQueueRunnerTest {
                                                 + "\""
                                                 + "}"),
                                 "Attribution-Reporting-Redirect",
-                                List.of("https://foo-redirect.com")));
+                                List.of("https://foo-redirect.test")));
         when(mUrlConnection2.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1905,7 +1908,12 @@ public class AsyncRegistrationQueueRunnerTest {
         ArgumentCaptor<DatastoreManager.ThrowingCheckedConsumer> consumerArgCaptor =
                 ArgumentCaptor.forClass(DatastoreManager.ThrowingCheckedConsumer.class);
         EnqueueAsyncRegistration.webSourceRegistrationRequest(
-                request, APP_TOP_ORIGIN, 100, mEnrollmentDao, datastoreManager);
+                request,
+                DEFAULT_AD_ID_PERMISSION,
+                APP_TOP_ORIGIN,
+                100,
+                mEnrollmentDao,
+                datastoreManager);
 
         // Execution
         asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker(2L, (short) 5);

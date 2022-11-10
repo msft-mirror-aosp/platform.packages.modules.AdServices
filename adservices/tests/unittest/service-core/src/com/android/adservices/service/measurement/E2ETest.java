@@ -149,6 +149,8 @@ public abstract class E2ETest {
         String TIMESTAMP_KEY = "timestamp";
         String EVENT_REPORT_OBJECTS_KEY = "event_level_results";
         String AGGREGATE_REPORT_OBJECTS_KEY = "aggregatable_results";
+        String DEBUG_EVENT_REPORT_OBJECTS_KEY = "debug_event_level_results";
+        String DEBUG_AGGREGATE_REPORT_OBJECTS_KEY = "debug_aggregatable_results";
         String INSTALLS_KEY = "installs";
         String UNINSTALLS_KEY = "uninstalls";
         String INSTALLS_URI_KEY = "uri";
@@ -533,7 +535,9 @@ public abstract class E2ETest {
 
     private static boolean areEqual(ReportObjects p1, ReportObjects p2) throws JSONException {
         if (p1.mEventReportObjects.size() != p2.mEventReportObjects.size()
-                || p1.mAggregateReportObjects.size() != p2.mAggregateReportObjects.size()) {
+                || p1.mAggregateReportObjects.size() != p2.mAggregateReportObjects.size()
+                || p1.mDebugAggregateReportObjects.size() != p2.mDebugAggregateReportObjects.size()
+                || p1.mDebugEventReportObjects.size() != p2.mDebugEventReportObjects.size()) {
             return false;
         }
         for (int i = 0; i < p1.mEventReportObjects.size(); i++) {
@@ -548,6 +552,20 @@ public abstract class E2ETest {
                 return false;
             }
         }
+        for (int i = 0; i < p1.mDebugEventReportObjects.size(); i++) {
+            if (!areEqualEventReportJsons(
+                    p1.mDebugEventReportObjects.get(i), p2.mDebugEventReportObjects.get(i))) {
+                return false;
+            }
+        }
+        for (int i = 0; i < p1.mDebugAggregateReportObjects.size(); i++) {
+            if (!areEqualAggregateReportJsons(
+                    p1.mDebugAggregateReportObjects.get(i),
+                    p2.mDebugAggregateReportObjects.get(i))) {
+                return false;
+            }
+        }
+
         return true;
     }
 
@@ -561,13 +579,22 @@ public abstract class E2ETest {
                             + " known in advance.)\n\n"
                             + "Event report objects:\n"
                             + "%s\n\n"
+                            + "Debug Event report objects:\n"
+                            + "%s\n\n"
                             + "Expected aggregate report objects: %s\n\n"
-                            + "Actual aggregate report objects: %s\n",
+                            + "Actual aggregate report objects: %s\n"
+                            + "Expected debug aggregate report objects: %s\n\n"
+                            + "Actual debug aggregate report objects: %s\n",
                         prettify(
                                 expectedOutput.mEventReportObjects,
                                 actualOutput.mEventReportObjects),
+                        prettify(
+                                expectedOutput.mDebugEventReportObjects,
+                                actualOutput.mDebugEventReportObjects),
                         expectedOutput.mAggregateReportObjects,
-                        actualOutput.mAggregateReportObjects)
+                        actualOutput.mAggregateReportObjects,
+                        expectedOutput.mDebugAggregateReportObjects,
+                        actualOutput.mDebugAggregateReportObjects)
                 + getDatastoreState();
     }
 
@@ -900,7 +927,32 @@ public abstract class E2ETest {
             }
         }
 
-        return new ReportObjects(eventReportObjects, aggregateReportObjects);
+        List<JSONObject> debugEventReportObjects = new ArrayList<>();
+        if (!output.isNull(TestFormatJsonMapping.DEBUG_EVENT_REPORT_OBJECTS_KEY)) {
+            JSONArray debugEventReportObjectsArray =
+                    output.getJSONArray(TestFormatJsonMapping.DEBUG_EVENT_REPORT_OBJECTS_KEY);
+            for (int i = 0; i < debugEventReportObjectsArray.length(); i++) {
+                JSONObject obj = debugEventReportObjectsArray.getJSONObject(i);
+                String adTechDomain = obj.getString(TestFormatJsonMapping.REPORT_TO_KEY);
+                debugEventReportObjects.add(
+                        obj.put(TestFormatJsonMapping.REPORT_TO_KEY, adTechDomain));
+            }
+        }
+
+        List<JSONObject> debugAggregateReportObjects = new ArrayList<>();
+        if (!output.isNull(TestFormatJsonMapping.DEBUG_AGGREGATE_REPORT_OBJECTS_KEY)) {
+            JSONArray debugAggregateReportObjectsArray =
+                    output.getJSONArray(TestFormatJsonMapping.DEBUG_AGGREGATE_REPORT_OBJECTS_KEY);
+            for (int i = 0; i < debugAggregateReportObjectsArray.length(); i++) {
+                debugAggregateReportObjects.add(debugAggregateReportObjectsArray.getJSONObject(i));
+            }
+        }
+
+        return new ReportObjects(
+                eventReportObjects,
+                aggregateReportObjects,
+                debugEventReportObjects,
+                debugAggregateReportObjects);
     }
 
     /**
@@ -920,9 +972,11 @@ public abstract class E2ETest {
 
     abstract void processAction(RegisterWebSource sourceRegistration) throws IOException;
 
-    abstract void processAction(RegisterTrigger triggerRegistration) throws IOException;
+    abstract void processAction(RegisterTrigger triggerRegistration)
+            throws IOException, JSONException;
 
-    abstract void processAction(RegisterWebTrigger triggerRegistration) throws IOException;
+    abstract void processAction(RegisterWebTrigger triggerRegistration)
+            throws IOException, JSONException;
 
     abstract void processAction(InstallApp installApp);
 
@@ -933,6 +987,11 @@ public abstract class E2ETest {
         sortEventReportObjects(OutputType.ACTUAL, mActualOutput.mEventReportObjects);
         sortAggregateReportObjects(OutputType.EXPECTED, mExpectedOutput.mAggregateReportObjects);
         sortAggregateReportObjects(OutputType.ACTUAL, mActualOutput.mAggregateReportObjects);
+        sortEventReportObjects(OutputType.EXPECTED, mExpectedOutput.mDebugEventReportObjects);
+        sortEventReportObjects(OutputType.ACTUAL, mActualOutput.mDebugEventReportObjects);
+        sortAggregateReportObjects(
+                OutputType.EXPECTED, mExpectedOutput.mDebugAggregateReportObjects);
+        sortAggregateReportObjects(OutputType.ACTUAL, mActualOutput.mDebugAggregateReportObjects);
         Assert.assertTrue(getTestFailureMessage(mExpectedOutput, mActualOutput),
                 areEqual(mExpectedOutput, mActualOutput));
     }
