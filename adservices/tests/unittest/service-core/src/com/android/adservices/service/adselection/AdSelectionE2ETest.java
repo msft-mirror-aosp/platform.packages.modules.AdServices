@@ -1389,12 +1389,13 @@ public class AdSelectionE2ETest {
     }
 
     @Test
-    public void testRunAdSelectionBiddingTimesOutPartiallyBuyer() throws Exception {
+    public void testRunAdSelectionImposesPerBuyerBiddingTimeout() throws Exception {
         doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         Long lenientPerBuyerTimeOutLimit = 50000L;
         Long tightPerBuyerTimeOutLimit = 2000L;
+        int largeCACountForBuyer = 300;
 
         Flags flagsWithLenientBuyerBiddingLimits =
                 new Flags() {
@@ -1457,7 +1458,6 @@ public class AdSelectionE2ETest {
         participatingBuyers.add(BUYER_2);
         participatingBuyers.add(BUYER_3);
 
-        int largeCACountForBuyer = 300;
         for (int i = 1; i <= largeCACountForBuyer; i++) {
             DBCustomAudience dBCustomAudienceX =
                     createDBCustomAudience(
@@ -1546,6 +1546,11 @@ public class AdSelectionE2ETest {
                     @Override
                     public long getAdSelectionOverallTimeoutMs() {
                         return lenientPerBuyerTimeOutLimit * 3;
+                    }
+
+                    @Override
+                    public int getAdSelectionMaxConcurrentBiddingCount() {
+                        return 1;
                     }
                 };
 

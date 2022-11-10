@@ -147,8 +147,8 @@ public final class PhFlags implements Flags {
             "fledge_background_fetch_max_response_size_b";
 
     // FLEDGE Ad Selection keys
-    static final String KEY_FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT =
-            "fledge_ad_selection_concurrent_bidding_count";
+    static final String KEY_FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT =
+            "fledge_ad_selection_max_concurrent_bidding_count";
     static final String KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS =
             "fledge_ad_selection_bidding_timeout_per_ca_ms";
     static final String KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS =
@@ -834,11 +834,11 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public int getAdSelectionConcurrentBiddingCount() {
+    public int getAdSelectionMaxConcurrentBiddingCount() {
         return DeviceConfig.getInt(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT,
-                /* defaultValue */ FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT);
+                /* flagName */ KEY_FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT,
+                /* defaultValue */ FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT);
     }
 
     @Override
@@ -1992,9 +1992,9 @@ public final class PhFlags implements Flags {
                         + getFledgeBackgroundFetchMaxResponseSizeB());
         writer.println(
                 "\t"
-                        + KEY_FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT
+                        + KEY_FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT
                         + " = "
-                        + getAdSelectionConcurrentBiddingCount());
+                        + getAdSelectionMaxConcurrentBiddingCount());
         writer.println(
                 "\t"
                         + KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS

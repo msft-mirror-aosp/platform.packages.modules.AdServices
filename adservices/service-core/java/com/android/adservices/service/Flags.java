@@ -472,11 +472,11 @@ public interface Flags extends Dumpable {
         return FLEDGE_BACKGROUND_FETCH_MAX_RESPONSE_SIZE_B;
     }
 
-    int FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT = 6;
+    int FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT = 6;
 
     /** Returns the number of CA that can be bid in parallel for one Ad Selection */
-    default int getAdSelectionConcurrentBiddingCount() {
-        return FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT;
+    default int getAdSelectionMaxConcurrentBiddingCount() {
+        return FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT;
     }
 
     // TODO(b/240647148): Limits are increased temporarily, re-evaluate these numbers after
