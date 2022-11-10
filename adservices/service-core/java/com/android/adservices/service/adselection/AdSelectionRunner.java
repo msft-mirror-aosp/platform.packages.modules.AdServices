@@ -70,6 +70,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  * Orchestrator that runs the Ads Auction/Bidding and Scoring logic The class expects the caller to
@@ -321,14 +322,14 @@ public abstract class AdSelectionRunner {
     private DBAdSelection closeFailedAdSelectionWithRuntimeException(RuntimeException e) {
         LogUtil.v("Close failed ad selection and rethrow the RuntimeException %s.", e.toString());
         int resultCode = AdServicesLoggerUtil.getResultCodeFromException(e);
-        mAdSelectionExecutionLogger.close(null, resultCode);
+        mAdSelectionExecutionLogger.close(resultCode);
         throw e;
     }
 
     @Nullable
     private DBAdSelection closeFailedAdSelectionWithAdServicesException(AdServicesException e) {
         int resultCode = AdServicesLoggerUtil.getResultCodeFromException(e);
-        mAdSelectionExecutionLogger.close(null, resultCode);
+        mAdSelectionExecutionLogger.close(resultCode);
         LogUtil.v(
                 "Close failed ad selection and wrap the AdServicesException with"
                         + " an RuntimeException with message: %s and log with resultCode : %d",
@@ -338,7 +339,7 @@ public abstract class AdSelectionRunner {
 
     @NonNull
     private DBAdSelection closeSuccessfulAdSelection(@NonNull DBAdSelection dbAdSelection) {
-        mAdSelectionExecutionLogger.close(dbAdSelection, AdServicesStatusUtils.STATUS_SUCCESS);
+        mAdSelectionExecutionLogger.close(AdServicesStatusUtils.STATUS_SUCCESS);
         return dbAdSelection;
     }
 
@@ -435,7 +436,6 @@ public abstract class AdSelectionRunner {
             @NonNull final AdSelectionConfig adSelectionConfig,
             @NonNull final String callerPackageName) {
         LogUtil.v("Beginning Ad Selection Orchestration");
-
         ListenableFuture<List<DBCustomAudience>> buyerCustomAudience =
                 getBuyersCustomAudience(adSelectionConfig);
         ListenableFuture<AdSelectionOrchestrationResult> dbAdSelection =
@@ -473,23 +473,57 @@ public abstract class AdSelectionRunner {
 
     private ListenableFuture<List<DBCustomAudience>> getBuyersCustomAudience(
             final AdSelectionConfig adSelectionConfig) {
-        return mBackgroundExecutorService.submit(
-                () -> {
-                    Preconditions.checkArgument(
-                            !adSelectionConfig.getCustomAudienceBuyers().isEmpty(),
-                            ERROR_NO_BUYERS_AVAILABLE);
-                    List<DBCustomAudience> buyerCustomAudience =
-                            mCustomAudienceDao.getActiveCustomAudienceByBuyers(
-                                    adSelectionConfig.getCustomAudienceBuyers(),
-                                    mClock.instant(),
-                                    mFlags.getFledgeCustomAudienceActiveTimeWindowInMs());
-                    if (buyerCustomAudience == null || buyerCustomAudience.isEmpty()) {
-                        // TODO(b/233296309) : Remove this exception after adding contextual
-                        // ads
-                        throw new IllegalStateException(ERROR_NO_CA_AVAILABLE);
-                    }
-                    return buyerCustomAudience;
-                });
+        try {
+            return mBackgroundExecutorService.submit(
+                    () -> {
+                        Preconditions.checkArgument(
+                                !adSelectionConfig.getCustomAudienceBuyers().isEmpty(),
+                                ERROR_NO_BUYERS_AVAILABLE);
+                        // Set start of bidding stage.
+                        mAdSelectionExecutionLogger.startBiddingProcess(
+                                countBuyersRequested(adSelectionConfig));
+                        List<DBCustomAudience> buyerCustomAudience =
+                                mCustomAudienceDao.getActiveCustomAudienceByBuyers(
+                                        adSelectionConfig.getCustomAudienceBuyers(),
+                                        mClock.instant(),
+                                        mFlags.getFledgeCustomAudienceActiveTimeWindowInMs());
+                        if (buyerCustomAudience == null || buyerCustomAudience.isEmpty()) {
+                            // TODO(b/233296309) : Remove this exception after adding contextual
+                            // ads
+                            IllegalStateException e =
+                                    new IllegalStateException(ERROR_NO_CA_AVAILABLE);
+                            // Set end of the bidding stage.
+                            mAdSelectionExecutionLogger.endBiddingProcess(
+                                    null, AdServicesLoggerUtil.getResultCodeFromException(e));
+                            throw e;
+                        }
+                        // end successful get-buyers-custom-audience process.
+                        mAdSelectionExecutionLogger.endGetBuyersCustomAudience(
+                                countBuyersFromCustomAudiences(buyerCustomAudience));
+                        return buyerCustomAudience;
+                    });
+        } catch (Exception e) {
+            // Bidding stage fails early during fetching buyers custom audience.
+            mAdSelectionExecutionLogger.endBiddingProcess(
+                    null, AdServicesLoggerUtil.getResultCodeFromException(e));
+            throw e;
+        }
+    }
+
+    private int countBuyersRequested(@NonNull AdSelectionConfig adSelectionConfig) {
+        Objects.requireNonNull(adSelectionConfig);
+        return adSelectionConfig.getCustomAudienceBuyers().stream()
+                .collect(Collectors.toSet())
+                .size();
+    }
+
+    private int countBuyersFromCustomAudiences(
+            @NonNull List<DBCustomAudience> buyerCustomAudience) {
+        Objects.requireNonNull(buyerCustomAudience);
+        return buyerCustomAudience.stream()
+                .map(a -> a.getBuyer())
+                .collect(Collectors.toSet())
+                .size();
     }
 
     private ListenableFuture<DBAdSelection> persistAdSelection(
@@ -507,7 +541,7 @@ public abstract class AdSelectionRunner {
                             .setCreationTimestamp(mClock.instant())
                             .setCallerPackageName(callerPackageName);
                     dbAdSelection = dbAdSelectionBuilder.build();
-                    mAdSelectionExecutionLogger.startPersistAdSelection();
+                    mAdSelectionExecutionLogger.startPersistAdSelection(dbAdSelection);
                     mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
                     mAdSelectionEntryDao.persistBuyerDecisionLogic(
                             new DBBuyerDecisionLogic.Builder()
