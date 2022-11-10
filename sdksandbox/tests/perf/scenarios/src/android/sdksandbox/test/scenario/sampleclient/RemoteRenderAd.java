@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package android.sdksandbox.test.scenario;
+package android.sdksandbox.test.scenario.sampleclient;
 
 import android.os.SystemClock;
 import android.platform.test.scenario.annotation.Scenario;
@@ -29,8 +29,10 @@ import java.util.concurrent.TimeUnit;
 
 @Scenario
 @RunWith(JUnit4.class)
-public class LoadSdk {
+public class RemoteRenderAd {
 
+    private static final int NUMBER_OF_ADS = 3;
+    private static final int TIME_BETWEEN_RENDERS_S = 2;
     private SdkSandboxTestHelper mSdkSandboxTestHelper = new SdkSandboxTestHelper();
 
     @AfterClass
@@ -41,12 +43,17 @@ public class LoadSdk {
     @Before
     public void setup() throws Exception {
         mSdkSandboxTestHelper.openClientApp();
+        mSdkSandboxTestHelper.loadSandboxSdk();
     }
 
     @Test
-    public void testLoadSdk() {
-        mSdkSandboxTestHelper.loadSandboxSdk();
+    public void testRemoteRenderAd() {
 
+        // Loop to remote render ad multiple times sequentially
+        for (int i = 0; i < NUMBER_OF_ADS; i++) {
+            mSdkSandboxTestHelper.remoteRenderAd();
+            SystemClock.sleep(TimeUnit.SECONDS.toMillis(TIME_BETWEEN_RENDERS_S));
+        }
         SystemClock.sleep(TimeUnit.SECONDS.toMillis(2));
     }
 }
