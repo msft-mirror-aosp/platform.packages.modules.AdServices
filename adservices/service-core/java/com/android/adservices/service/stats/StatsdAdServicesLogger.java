@@ -191,7 +191,7 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
     public void logGetTopicsReportedStats(GetTopicsReportedStats stats) {
         AdServicesStatsLog.write(
                 AD_SERVICES_GET_TOPICS_REPORTED,
-                stats.getTopicIds().stream().mapToInt(Integer::intValue).toArray(),
+                new int[] {}, // TODO(b/256649873): Log empty topic ids until the long term solution.
                 stats.getDuplicateTopicCount(),
                 stats.getFilteredBlockedTopicCount());
     }
