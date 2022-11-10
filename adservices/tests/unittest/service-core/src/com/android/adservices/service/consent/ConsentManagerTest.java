@@ -237,7 +237,8 @@ public class ConsentManagerTest {
                 () -> EpochJobService.scheduleIfNeeded(any(Context.class), eq(false)));
         ExtendedMockito.verify(() -> MddJobService.scheduleIfNeeded(any(Context.class), eq(false)));
         ExtendedMockito.verify(
-                () -> MaintenanceJobService.scheduleIfNeeded(any(Context.class), eq(false)));
+                () -> MaintenanceJobService.scheduleIfNeeded(any(Context.class), eq(false)),
+                times(2));
         ExtendedMockito.verify(
                 () -> AggregateReportingJobService.scheduleIfNeeded(any(Context.class), eq(false)));
         ExtendedMockito.verify(
@@ -903,5 +904,30 @@ public class ConsentManagerTest {
 
         verify(mAdServicesLoggerImpl, times(1)).logUIStats(any());
         verify(mAdServicesLoggerImpl, times(1)).logUIStats(expectedUIStats);
+    }
+
+    @Test
+    public void testGetInitializedConsentPerApi_aggregatedConsentInitializedAndGiven() {
+        mConsentManager.enable(mContextSpy);
+
+        assertTrue(mConsentManager.getConsent(AdServicesApiType.TOPICS).isGiven());
+        assertTrue(mConsentManager.getConsent(AdServicesApiType.MEASUREMENTS).isGiven());
+        assertTrue(mConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven());
+    }
+
+    @Test
+    public void testGetInitializedConsentPerApi_aggregatedConsentInitializedAndRevoked() {
+        mConsentManager.disable(mContextSpy);
+
+        assertFalse(mConsentManager.getConsent(AdServicesApiType.TOPICS).isGiven());
+        assertFalse(mConsentManager.getConsent(AdServicesApiType.MEASUREMENTS).isGiven());
+        assertFalse(mConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven());
+    }
+
+    @Test
+    public void testGetInitializedConsentPerApi_aggregatedConsentNotInitialized() {
+        assertFalse(mConsentManager.getConsent(AdServicesApiType.TOPICS).isGiven());
+        assertFalse(mConsentManager.getConsent(AdServicesApiType.MEASUREMENTS).isGiven());
+        assertFalse(mConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven());
     }
 }
