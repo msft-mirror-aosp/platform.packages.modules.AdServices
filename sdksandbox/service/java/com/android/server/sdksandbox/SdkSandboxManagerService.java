@@ -228,8 +228,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 final String packageName = intent.getData().getSchemeSpecificPart();
                 final int uid = intent.getIntExtra(Intent.EXTRA_UID, -1);
                 final CallingInfo callingInfo = new CallingInfo(uid, packageName);
-                // TODO(b/223386213): We could miss broadcast or app might be started before we
-                // handle broadcast.
                 mHandler.post(() -> mSdkSandboxStorageManager.onPackageAddedOrUpdated(callingInfo));
             }
         };
@@ -898,6 +896,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
 
         final long startTimeForLoadingSandbox = mInjector.getCurrentTime();
+
+        // Prepare sdk data directories before starting the sandbox. If sdk data package directory
+        // is missing, starting the sandbox process would crash as we will fail to mount data_mirror
+        // for sdk-data isolation.
+        mSdkSandboxStorageManager.prepareSdkDataOnLoad(callingInfo);
+
         startSdkSandbox(
                 callingInfo,
                 new SandboxBindingCallback() {
@@ -1120,14 +1124,29 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
         }
 
+        @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+        void unregisterPropertiesListener() {
+            DeviceConfig.removeOnPropertiesChangedListener(this);
+        }
+
         @Override
         public void onPropertiesChanged(@NonNull DeviceConfig.Properties properties) {
             synchronized (mLock) {
-                boolean killSwitchPreviouslyEnabled = mIsKillSwitchEnabled;
-                mIsKillSwitchEnabled = properties.getBoolean(PROPERTY_DISABLE_SDK_SANDBOX, true);
-                if (mIsKillSwitchEnabled && !killSwitchPreviouslyEnabled) {
-                    synchronized (SdkSandboxManagerService.this.mLock) {
-                        stopAllSandboxesLocked();
+                for (String name : properties.getKeyset()) {
+                    if (name == null) {
+                        continue;
+                    }
+
+                    if (name.equals(PROPERTY_DISABLE_SDK_SANDBOX)) {
+                        boolean killSwitchPreviouslyEnabled = mIsKillSwitchEnabled;
+                        mIsKillSwitchEnabled =
+                                properties.getBoolean(PROPERTY_DISABLE_SDK_SANDBOX, true);
+                        if (mIsKillSwitchEnabled && !killSwitchPreviouslyEnabled) {
+                            Log.i(TAG, "SDK sandbox killswitch has become enabled");
+                            synchronized (SdkSandboxManagerService.this.mLock) {
+                                stopAllSandboxesLocked();
+                            }
+                        }
                     }
                 }
             }
@@ -1200,8 +1219,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private void onSandboxStart(CallingInfo callingInfo, ISdkSandboxService service)
             throws RemoteException {
-        mSdkSandboxStorageManager.prepareSdkDataOnLoad(callingInfo);
-
         service.initialize(new SdkToServiceLink());
 
         notifySyncManagerSandboxStarted(callingInfo);
@@ -1232,6 +1249,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             ISdkSandboxService service) {
 
         if (isSdkSandboxDisabled(service)) {
+            Log.e(TAG, "SDK cannot be loaded because SDK sandbox is disabled");
             link.handleLoadSdkException(
                     new LoadSdkException(LOAD_SDK_SDK_SANDBOX_DISABLED, SANDBOX_DISABLED_MSG),
                     -1,
@@ -1567,13 +1585,19 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         @Override
         public List<SandboxedSdk> getSandboxedSdks(String clientPackageName)
                 throws RemoteException {
-            // TODO(b/242039497): Add authorisation checks
-            // TODO(b/247592493): Add test
+            // TODO(b/258195148): Write multiuser tests
+            // TODO(b/242039497): Add authorisation checks to make sure only the sandbox calls this
+            //  API.
+            int uid = Binder.getCallingUid();
+            if (Process.isSdkSandboxUid(uid)) {
+                uid = Process.getAppUidForSdkSandboxUid(uid);
+            }
+            CallingInfo callingInfo = new CallingInfo(uid, clientPackageName);
             final List<SandboxedSdk> sandboxedSdks = new ArrayList<>();
             synchronized (mLock) {
                 for (int i = mAppAndRemoteSdkLinks.size() - 1; i >= 0; i--) {
                     AppAndRemoteSdkLink link = mAppAndRemoteSdkLinks.valueAt(i);
-                    if (link.mCallingInfo.getPackageName().equals(clientPackageName)) {
+                    if (link.mCallingInfo.equals(callingInfo)) {
                         sandboxedSdks.add(link.mSandboxedSdk);
                     }
                 }

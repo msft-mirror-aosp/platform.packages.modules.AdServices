@@ -184,6 +184,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
     @After
     public void tearDown() {
+        mService.getSdkSandboxSettingsListener().unregisterPropertiesListener();
         mStaticMockSession.finishMocking();
     }
 
@@ -1893,6 +1894,17 @@ public class SdkSandboxManagerServiceUnitTest {
                 new DeviceConfig.Properties(
                         DeviceConfig.NAMESPACE_ADSERVICES,
                         Map.of(PROPERTY_DISABLE_SANDBOX, "false")));
+        assertThat(listener.isKillSwitchEnabled()).isFalse();
+    }
+
+    @Test
+    public void testOtherPropertyChangeDoesNotAffectKillSwitch() {
+        SdkSandboxManagerService.SdkSandboxSettingsListener listener =
+                mService.getSdkSandboxSettingsListener();
+        assertThat(listener.isKillSwitchEnabled()).isFalse();
+        listener.onPropertiesChanged(
+                new DeviceConfig.Properties(
+                        DeviceConfig.NAMESPACE_ADSERVICES, Map.of("other_property", "true")));
         assertThat(listener.isKillSwitchEnabled()).isFalse();
     }
 

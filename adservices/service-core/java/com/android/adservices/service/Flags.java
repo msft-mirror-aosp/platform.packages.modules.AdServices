@@ -24,6 +24,8 @@ import android.util.Dumpable;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.service.adselection.AdOutcomeSelectorImpl;
+
 import com.google.common.collect.ImmutableList;
 
 import java.io.PrintWriter;
@@ -482,6 +484,7 @@ public interface Flags extends Dumpable {
     long FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS = 5000;
     long FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS = 10000;
     long FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS = 5000;
+    long FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS = 5000;
     // For *on device* ad selection.
     long FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS = 10000;
     long FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS = 10_000;
@@ -501,6 +504,14 @@ public interface Flags extends Dumpable {
     /** Returns the timeout constant in milliseconds that limits the scoring */
     default long getAdSelectionScoringTimeoutMs() {
         return FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
+    }
+
+    /**
+     * Returns the timeout constant in milliseconds that limits the {@link
+     * AdOutcomeSelectorImpl#runAdOutcomeSelector}
+     */
+    default long getAdSelectionSelectingOutcomeTimeoutMs() {
+        return FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
     }
 
     /**
@@ -1329,6 +1340,22 @@ public interface Flags extends Dumpable {
     /** Returns if the UI Dialogs feature is enabled. */
     default boolean getUIDialogsFeatureEnabled() {
         return UI_DIALOGS_FEATURE_ENABLED;
+    }
+
+    /**
+     * GA UX enabled. It contains features that have to be enabled at the same time:
+     *
+     * <ul>
+     *   <li>Updated consent landing page
+     *   <li>Consent per API (instead of aggregated one)
+     *   <li>Separate page to control Measurement API
+     * </ul>
+     */
+    boolean GA_UX_FEATURE_ENABLED = false;
+
+    /** Returns if the GA UX feature is enabled. */
+    default boolean getGaUxFeatureEnabled() {
+        return GA_UX_FEATURE_ENABLED;
     }
 
     long ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS = (int) TimeUnit.HOURS.toMillis(1);

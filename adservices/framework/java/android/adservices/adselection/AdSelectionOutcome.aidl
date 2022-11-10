@@ -14,32 +14,12 @@
  * limitations under the License.
  */
 
-package android.adservices;
-
-import android.annotation.SuppressLint;
+package android.adservices.adselection;
 
 /**
- * This class specifies the current version of the AdServices API.
+ * This interface defines the results of a call made to selectAdOutcomes API.
+ * A AdSelectionOutcome is a Parcelable object that contains an AdSelectionId and a RenderUri.
  *
- * @removed
+ * {@hide}
  */
-public class AdServicesVersion {
-
-    /**
-     * @hide
-     */
-    public AdServicesVersion() {}
-
-    /**
-     * The API version of this AdServices API.
-     * This vaviable need to be initialized in  static {} , otherwise javac
-     * would inline these constants and they won't be updatable.
-     */
-    @SuppressLint("CompileTimeConstant")
-    public static final int API_VERSION;
-
-    static {
-        API_VERSION = 2;
-    }
-}
-
+parcelable AdSelectionOutcome;

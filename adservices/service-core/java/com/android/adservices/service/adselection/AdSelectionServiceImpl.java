@@ -23,6 +23,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
+import android.adservices.adselection.AdSelectionFromOutcomesInput;
 import android.adservices.adselection.AdSelectionInput;
 import android.adservices.adselection.AdSelectionOverrideCallback;
 import android.adservices.adselection.AdSelectionService;
@@ -33,6 +34,7 @@ import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CallerMetadata;
 import android.annotation.NonNull;
 import android.content.Context;
+import android.os.RemoteException;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -274,6 +276,39 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mFledgeAllowListsFilter,
                         adSelectionExecutionLogger);
         runner.runAdSelection(inputParams, callback);
+    }
+
+    /**
+     * Returns an ultimate winner ad of given list of previous winner ads.
+     *
+     * @param inputParams includes list of outcomes, signals and uri to download selection logic
+     * @param callerMetadata caller's metadata for stat logging
+     * @param callback delivers the results via OutcomeReceiver
+     * @throws RemoteException thrown in case callback fails
+     */
+    public void selectAds(
+            @NonNull AdSelectionFromOutcomesInput inputParams,
+            @NonNull CallerMetadata callerMetadata,
+            @NonNull AdSelectionCallback callback)
+            throws RemoteException {
+        Objects.requireNonNull(inputParams);
+        Objects.requireNonNull(callerMetadata);
+        Objects.requireNonNull(callback);
+
+        // TODO(257211190) Caller permissions must be checked in the binder thread, before anything
+        // mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
+
+        // TODO(257134800): Add telemetry
+
+        mLightweightExecutor.execute(
+                () -> {
+                    OutcomeSelectionRunner runner =
+                            new OutcomeSelectionRunner(
+                                    mAdSelectionEntryDao,
+                                    mBackgroundExecutor,
+                                    mLightweightExecutor);
+                    runner.runOutcomeSelection(inputParams, callback);
+                });
     }
 
     @Override
