@@ -16,6 +16,7 @@
 
 package src.android.adservices.test.scenario.adservices.fledge;
 
+import android.Manifest;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.clients.adselection.AdSelectionClient;
@@ -29,9 +30,11 @@ import android.adservices.test.scenario.adservices.utils.MockWebServerRuleFactor
 import android.content.Context;
 import android.net.Uri;
 import android.platform.test.scenario.annotation.Scenario;
+import android.provider.DeviceConfig;
 import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.compatibility.common.util.ShellUtils;
 
@@ -116,6 +119,29 @@ public class SelectAdsLatency {
 
     @BeforeClass
     public static void setupBeforeClass() {
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "fledge_ad_selection_bidding_timeout_per_ca_ms",
+                "120000",
+                false);
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "fledge_ad_selection_scoring_timeout_ms",
+                "120000",
+                false);
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "fledge_ad_selection_overall_timeout_ms",
+                "120000",
+                false);
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "fledge_ad_selection_bidding_timeout_per_buyer_ms",
+                "120000",
+                false);
         ShellUtils.runShellCommand("su 0 killall -9 com.google.android.adservices.api");
     }
 
