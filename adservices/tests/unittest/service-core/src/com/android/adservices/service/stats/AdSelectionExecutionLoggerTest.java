@@ -17,11 +17,20 @@
 package com.android.adservices.service.stats;
 
 import static com.android.adservices.data.adselection.AdSelectionDatabase.DATABASE_NAME;
+import static com.android.adservices.service.stats.AdSelectionExecutionLogger.MISSING_END_GET_BUYERS_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.stats.AdSelectionExecutionLogger.MISSING_END_PERSIST_AD_SELECTION;
+import static com.android.adservices.service.stats.AdSelectionExecutionLogger.MISSING_GET_BUYERS_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.stats.AdSelectionExecutionLogger.MISSING_PERSIST_AD_SELECTION;
+import static com.android.adservices.service.stats.AdSelectionExecutionLogger.MISSING_START_BIDDING_STAGE;
 import static com.android.adservices.service.stats.AdSelectionExecutionLogger.MISSING_START_PERSIST_AD_SELECTION;
+import static com.android.adservices.service.stats.AdSelectionExecutionLogger.MISSING_START_RUN_AD_BIDDING;
+import static com.android.adservices.service.stats.AdSelectionExecutionLogger.RATIO_OF_CAS_UNSET;
+import static com.android.adservices.service.stats.AdSelectionExecutionLogger.REPEATED_END_BIDDING_STAGE;
+import static com.android.adservices.service.stats.AdSelectionExecutionLogger.REPEATED_END_GET_BUYERS_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.stats.AdSelectionExecutionLogger.REPEATED_END_PERSIST_AD_SELECTION;
+import static com.android.adservices.service.stats.AdSelectionExecutionLogger.REPEATED_START_BIDDING_STAGE;
 import static com.android.adservices.service.stats.AdSelectionExecutionLogger.REPEATED_START_PERSIST_AD_SELECTION;
+import static com.android.adservices.service.stats.AdSelectionExecutionLogger.REPEATED_START_RUN_AD_BIDDING;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -29,12 +38,19 @@ import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import android.adservices.adselection.AdBiddingOutcomeFixture;
+import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.common.AdServicesStatusUtils;
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CallerMetadata;
 import android.content.Context;
 import android.net.Uri;
+import android.util.Pair;
 
+import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.adselection.DBAdSelection;
+import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.service.adselection.AdBiddingOutcome;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -44,20 +60,34 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class AdSelectionExecutionLoggerTest {
 
-    private static final long BINDER_ELAPSED_TIMESTAMP = 100L;
+    private static final long BINDER_ELAPSED_TIMESTAMP = 90L;
+    private static final int BINDER_LATENCY_MS = 2;
     public static final CallerMetadata sCallerMetadata =
             new CallerMetadata.Builder()
                     .setBinderElapsedTimestamp(BINDER_ELAPSED_TIMESTAMP)
                     .build();
-    public static final long START_ELAPSED_TIMESTAMP = 105L;
+    public static final long START_ELAPSED_TIMESTAMP =
+            BINDER_ELAPSED_TIMESTAMP + (long) BINDER_LATENCY_MS / 2;
+    public static final long BIDDING_STAGE_START_TIMESTAMP = START_ELAPSED_TIMESTAMP + 1L;
+    public static final int GET_BUYERS_CUSTOM_AUDIENCE_LATENCY_MS = 1;
+    public static final long GET_BUYERS_CUSTOM_AUDIENCE_END_TIMESTAMP =
+            BIDDING_STAGE_START_TIMESTAMP + GET_BUYERS_CUSTOM_AUDIENCE_LATENCY_MS;
+    public static final long RUN_AD_BIDDING_START_TIMESTAMP = BIDDING_STAGE_START_TIMESTAMP + 1L;
+    public static final int RUN_AD_BIDDING_LATENCY_MS = 1;
+    public static final long RUN_AD_BIDDING_END_TIMESTAMP =
+            RUN_AD_BIDDING_START_TIMESTAMP + RUN_AD_BIDDING_LATENCY_MS;
+    public static final long BIDDING_STAGE_END_TIMESTAMP = RUN_AD_BIDDING_END_TIMESTAMP;
+    public static final long TOTAL_BIDDING_STAGE_LATENCY_IN_MS =
+            BIDDING_STAGE_END_TIMESTAMP - BIDDING_STAGE_START_TIMESTAMP;
     public static final long PERSIST_AD_SELECTION_START_TIMESTAMP = 107L;
     public static final long PERSIST_AD_SELECTION_END_TIMESTAMP = 109L;
     public static final long STOP_ELAPSED_TIMESTAMP = 110L;
-    private static final int BINDER_LATENCY_MS =
-            (int) ((START_ELAPSED_TIMESTAMP - BINDER_ELAPSED_TIMESTAMP) * 2);
     public static final int RUN_AD_SELECTION_INTERNAL_FINAL_LATENCY_MS =
             (int) (STOP_ELAPSED_TIMESTAMP - START_ELAPSED_TIMESTAMP);
     public static final int RUN_AD_SELECTION_OVERALL_LATENCY_MS =
@@ -68,7 +98,39 @@ public class AdSelectionExecutionLoggerTest {
     public static final boolean IS_RMKT_ADS_WON = true;
     private static final Uri DECISION_LOGIC_URI =
             Uri.parse("https://developer.android.com/test/decisions_logic_uris");
-
+    public static final int NUM_BUYERS_REQUESTED = 5;
+    public static final int NUM_BUYERS_FETCHED = 3;
+    private static final List<AdTechIdentifier> BUYERS =
+            Arrays.asList(
+                    AdSelectionConfigFixture.BUYER_1,
+                    AdSelectionConfigFixture.BUYER_2,
+                    AdSelectionConfigFixture.BUYER_3);
+    private static final List<DBCustomAudience> CUSTOM_AUDIENCES =
+            DBCustomAudienceFixture.getListOfBuyersCustomAudiences(BUYERS);
+    private static final double BID1 = 1.0;
+    private static final double BID2 = 2.0;
+    private static final double BID3 = 3.0;
+    private static final List<Pair<AdTechIdentifier, Double>> buyersAndBids =
+            Arrays.asList(
+                    Pair.create(AdSelectionConfigFixture.BUYER_1, BID1),
+                    Pair.create(AdSelectionConfigFixture.BUYER_2, BID2),
+                    Pair.create(AdSelectionConfigFixture.BUYER_3, BID3));
+    private static final int NUM_OF_ADS_ENTERING_BIDDING =
+            CUSTOM_AUDIENCES.stream().map(a -> a.getAds().size()).reduce(0, (a, b) -> (a + b));
+    private static final int NUM_OF_CAS_ENTERING_BIDDING = CUSTOM_AUDIENCES.size();
+    private static final List<AdBiddingOutcome> AD_BIDDING_OUTCOMES =
+            AdBiddingOutcomeFixture.getListOfAdBiddingOutcomes(buyersAndBids);
+    private static final int NUM_OF_CAS_POST_BIDDING =
+            AD_BIDDING_OUTCOMES.stream()
+                    .map(
+                            a ->
+                                    a.getCustomAudienceBiddingInfo()
+                                            .getCustomAudienceSignals()
+                                            .hashCode())
+                    .collect(Collectors.toSet())
+                    .size();
+    private static final float RATIO_OF_CAS_SELECTING_RMKT_ADS =
+            ((float) NUM_OF_CAS_POST_BIDDING) / NUM_OF_CAS_ENTERING_BIDDING;
     @Mock private Context mContextMock;
     @Mock private File mMockDBAdSelectionFile;
     @Mock private Clock mMockClock;
@@ -79,34 +141,79 @@ public class AdSelectionExecutionLoggerTest {
     ArgumentCaptor<RunAdSelectionProcessReportedStats>
             mRunAdSelectionProcessReportedStatsArgumentCaptor;
 
+    @Captor
+    ArgumentCaptor<RunAdBiddingProcessReportedStats>
+            mRunAdBiddingProcessReportedStatsArgumentCaptor;
+
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
+        when(mMockDBAdSelection.getBiddingLogicUri()).thenReturn(DECISION_LOGIC_URI);
     }
 
     @Test
-    public void testAdSelectionExecutionLogger_Success() {
+    public void testAdSelectionExecutionLogger_SuccessAdSelection() {
         when(mMockClock.elapsedRealtime())
                 .thenReturn(
                         START_ELAPSED_TIMESTAMP,
+                        BIDDING_STAGE_START_TIMESTAMP,
+                        GET_BUYERS_CUSTOM_AUDIENCE_END_TIMESTAMP,
+                        RUN_AD_BIDDING_START_TIMESTAMP,
+                        RUN_AD_BIDDING_END_TIMESTAMP,
                         PERSIST_AD_SELECTION_START_TIMESTAMP,
                         PERSIST_AD_SELECTION_END_TIMESTAMP,
                         STOP_ELAPSED_TIMESTAMP);
         when(mContextMock.getDatabasePath(DATABASE_NAME)).thenReturn(mMockDBAdSelectionFile);
         when(mMockDBAdSelectionFile.length()).thenReturn(DB_AD_SELECTION_FILE_SIZE);
-        when(mMockDBAdSelection.getBiddingLogicUri()).thenReturn(DECISION_LOGIC_URI);
         // Start the Ad selection execution logger and set start state of the process.
         AdSelectionExecutionLogger adSelectionExecutionLogger =
                 new AdSelectionExecutionLogger(
                         sCallerMetadata, mMockClock, mContextMock, mAdServicesLoggerMock);
+        // Set start and end state of the subcomponent get-BUYERS-custom-audience process.
+        adSelectionExecutionLogger.startBiddingProcess(NUM_BUYERS_REQUESTED);
+        adSelectionExecutionLogger.endGetBuyersCustomAudience(NUM_BUYERS_FETCHED);
+        // Set the start and end state of the subcomponent run-ad-bidding process.
+        adSelectionExecutionLogger.startRunAdBidding(CUSTOM_AUDIENCES);
+        adSelectionExecutionLogger.endBiddingProcess(
+                AD_BIDDING_OUTCOMES, AdServicesStatusUtils.STATUS_SUCCESS);
         // Set start state of the subcomponent persist-ad-selection process.
-        adSelectionExecutionLogger.startPersistAdSelection();
+        adSelectionExecutionLogger.startPersistAdSelection(mMockDBAdSelection);
         // Set end state of the subcomponent persist-ad-selection process.
         adSelectionExecutionLogger.endPersistAdSelection();
         // Close the Ad selection execution logger and log the data into the AdServicesLogger.
         int resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
-        adSelectionExecutionLogger.close(mMockDBAdSelection, resultCode);
+        adSelectionExecutionLogger.close(resultCode);
 
+        // Verify the logging of the RunAdBiddingProcessReportedStats.
+        verify(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(
+                        mRunAdBiddingProcessReportedStatsArgumentCaptor.capture());
+        RunAdBiddingProcessReportedStats runAdBiddingProcessReportedStats =
+                mRunAdBiddingProcessReportedStatsArgumentCaptor.getValue();
+        assertThat(runAdBiddingProcessReportedStats.getGetBuyersCustomAudienceLatencyInMills())
+                .isEqualTo(GET_BUYERS_CUSTOM_AUDIENCE_LATENCY_MS);
+        assertThat(runAdBiddingProcessReportedStats.getGetBuyersCustomAudienceResultCode())
+                .isEqualTo(resultCode);
+        assertThat(runAdBiddingProcessReportedStats.getNumBuyersRequested())
+                .isEqualTo(NUM_BUYERS_REQUESTED);
+        assertThat(runAdBiddingProcessReportedStats.getNumBuyersFetched())
+                .isEqualTo(NUM_BUYERS_FETCHED);
+        assertThat(runAdBiddingProcessReportedStats.getNumOfAdsEnteringBidding())
+                .isEqualTo(NUM_OF_ADS_ENTERING_BIDDING);
+        assertThat(runAdBiddingProcessReportedStats.getNumOfCasEnteringBidding())
+                .isEqualTo(NUM_OF_CAS_ENTERING_BIDDING);
+        assertThat(runAdBiddingProcessReportedStats.getNumOfCasPostBidding())
+                .isEqualTo(NUM_OF_CAS_POST_BIDDING);
+        assertThat(runAdBiddingProcessReportedStats.getRatioOfCasSelectingRmktAds())
+                .isEqualTo(RATIO_OF_CAS_SELECTING_RMKT_ADS);
+        assertThat(runAdBiddingProcessReportedStats.getRunAdBiddingLatencyInMillis())
+                .isEqualTo(RUN_AD_BIDDING_LATENCY_MS);
+        assertThat(runAdBiddingProcessReportedStats.getRunAdBiddingResultCode())
+                .isEqualTo(resultCode);
+        assertThat(runAdBiddingProcessReportedStats.getTotalAdBiddingStageLatencyInMillis())
+                .isEqualTo(TOTAL_BIDDING_STAGE_LATENCY_IN_MS);
+
+        // Verify the logging of the RunAdSelectionProcessReportedStats.
         verify(mAdServicesLoggerMock)
                 .logRunAdSelectionProcessReportedStats(
                         mRunAdSelectionProcessReportedStatsArgumentCaptor.capture());
@@ -130,6 +237,326 @@ public class AdSelectionExecutionLoggerTest {
     }
 
     @Test
+    public void testAdSelectionExecutionLogger_redundantStartOfGetBuyersCustomAudience() {
+        when(mMockClock.elapsedRealtime())
+                .thenReturn(START_ELAPSED_TIMESTAMP, BIDDING_STAGE_START_TIMESTAMP);
+        AdSelectionExecutionLogger adSelectionExecutionLogger =
+                new AdSelectionExecutionLogger(
+                        sCallerMetadata, mMockClock, mContextMock, mAdServicesLoggerMock);
+        // Set start state of the subcomponent get-buyers-custom-audience process.
+        adSelectionExecutionLogger.startBiddingProcess(NUM_BUYERS_REQUESTED);
+
+        Throwable throwable =
+                assertThrows(
+                        IllegalStateException.class,
+                        () -> adSelectionExecutionLogger.startBiddingProcess(NUM_BUYERS_REQUESTED));
+        assertThat(throwable.getMessage()).contains(REPEATED_START_BIDDING_STAGE);
+    }
+
+    @Test
+    public void testAdSelectionExecutionLogger_redundantEndOfGetBuyersCustomAudience() {
+        when(mMockClock.elapsedRealtime())
+                .thenReturn(
+                        START_ELAPSED_TIMESTAMP,
+                        BIDDING_STAGE_START_TIMESTAMP,
+                        GET_BUYERS_CUSTOM_AUDIENCE_END_TIMESTAMP);
+        AdSelectionExecutionLogger adSelectionExecutionLogger =
+                new AdSelectionExecutionLogger(
+                        sCallerMetadata, mMockClock, mContextMock, mAdServicesLoggerMock);
+        adSelectionExecutionLogger.startBiddingProcess(NUM_BUYERS_REQUESTED);
+        adSelectionExecutionLogger.endGetBuyersCustomAudience(NUM_BUYERS_FETCHED);
+        Throwable throwable =
+                assertThrows(
+                        IllegalStateException.class,
+                        () ->
+                                adSelectionExecutionLogger.endGetBuyersCustomAudience(
+                                        NUM_BUYERS_FETCHED));
+        assertThat(throwable.getMessage()).contains(REPEATED_END_GET_BUYERS_CUSTOM_AUDIENCE);
+    }
+
+    @Test
+    public void testAdSelectionExecutionLogger_missingStartBiddingStage() {
+        when(mMockClock.elapsedRealtime()).thenReturn(START_ELAPSED_TIMESTAMP);
+        AdSelectionExecutionLogger adSelectionExecutionLogger =
+                new AdSelectionExecutionLogger(
+                        sCallerMetadata, mMockClock, mContextMock, mAdServicesLoggerMock);
+        Throwable throwable =
+                assertThrows(
+                        IllegalStateException.class,
+                        () ->
+                                adSelectionExecutionLogger.endGetBuyersCustomAudience(
+                                        NUM_BUYERS_FETCHED));
+        assertThat(throwable.getMessage()).contains(MISSING_START_BIDDING_STAGE);
+    }
+
+    @Test
+    public void testAdSelectionExecutionLogger_missingGetBuyersCustomAudience() {
+        when(mMockClock.elapsedRealtime())
+                .thenReturn(START_ELAPSED_TIMESTAMP, RUN_AD_BIDDING_START_TIMESTAMP);
+        // Start the Ad selection execution logger and set start state of the process.
+        AdSelectionExecutionLogger adSelectionExecutionLogger =
+                new AdSelectionExecutionLogger(
+                        sCallerMetadata, mMockClock, mContextMock, mAdServicesLoggerMock);
+        Throwable throwable =
+                assertThrows(
+                        IllegalStateException.class,
+                        () -> adSelectionExecutionLogger.startRunAdBidding(CUSTOM_AUDIENCES));
+        assertThat(throwable.getMessage()).contains(MISSING_GET_BUYERS_CUSTOM_AUDIENCE);
+    }
+
+    @Test
+    public void testAdSelectionExecutionLogger_redundantStartRunAdBidding() {
+        when(mMockClock.elapsedRealtime())
+                .thenReturn(
+                        START_ELAPSED_TIMESTAMP,
+                        BIDDING_STAGE_START_TIMESTAMP,
+                        GET_BUYERS_CUSTOM_AUDIENCE_END_TIMESTAMP,
+                        RUN_AD_BIDDING_START_TIMESTAMP);
+        // Start the Ad selection execution logger and set start state of the process.
+        AdSelectionExecutionLogger adSelectionExecutionLogger =
+                new AdSelectionExecutionLogger(
+                        sCallerMetadata, mMockClock, mContextMock, mAdServicesLoggerMock);
+        adSelectionExecutionLogger.startBiddingProcess(NUM_BUYERS_REQUESTED);
+        adSelectionExecutionLogger.endGetBuyersCustomAudience(NUM_BUYERS_FETCHED);
+        adSelectionExecutionLogger.startRunAdBidding(CUSTOM_AUDIENCES);
+        Throwable throwable =
+                assertThrows(
+                        IllegalStateException.class,
+                        () -> adSelectionExecutionLogger.startRunAdBidding(CUSTOM_AUDIENCES));
+        assertThat(throwable.getMessage()).contains(REPEATED_START_RUN_AD_BIDDING);
+    }
+
+    @Test
+    public void testAdSelectionExecutionLogger_missingStartOfBiddingWithEndBiddingStage() {
+        when(mMockClock.elapsedRealtime()).thenReturn(START_ELAPSED_TIMESTAMP);
+        // Start the Ad selection execution logger and set start state of the process.
+        AdSelectionExecutionLogger adSelectionExecutionLogger =
+                new AdSelectionExecutionLogger(
+                        sCallerMetadata, mMockClock, mContextMock, mAdServicesLoggerMock);
+        Throwable throwable =
+                assertThrows(
+                        IllegalStateException.class,
+                        () ->
+                                adSelectionExecutionLogger.endBiddingProcess(
+                                        AD_BIDDING_OUTCOMES, AdServicesStatusUtils.STATUS_SUCCESS));
+        assertThat(throwable.getMessage()).contains(MISSING_START_BIDDING_STAGE);
+    }
+
+    @Test
+    public void testAdSelectionExecutionLogger_missingEndOfGetBuyersCAsWithEndRunAdBidding() {
+        when(mMockClock.elapsedRealtime())
+                .thenReturn(START_ELAPSED_TIMESTAMP, BIDDING_STAGE_START_TIMESTAMP);
+        // Start the Ad selection execution logger and set start state of the process.
+        AdSelectionExecutionLogger adSelectionExecutionLogger =
+                new AdSelectionExecutionLogger(
+                        sCallerMetadata, mMockClock, mContextMock, mAdServicesLoggerMock);
+        adSelectionExecutionLogger.startBiddingProcess(NUM_BUYERS_REQUESTED);
+        Throwable throwable =
+                assertThrows(
+                        IllegalStateException.class,
+                        () ->
+                                adSelectionExecutionLogger.endBiddingProcess(
+                                        AD_BIDDING_OUTCOMES, AdServicesStatusUtils.STATUS_SUCCESS));
+        assertThat(throwable.getMessage()).contains(MISSING_END_GET_BUYERS_CUSTOM_AUDIENCE);
+    }
+
+    @Test
+    public void testAdSelectionExecutionLogger_missingStartOfRunAdBiddingWithEndRunAdBidding() {
+        when(mMockClock.elapsedRealtime())
+                .thenReturn(
+                        START_ELAPSED_TIMESTAMP,
+                        BIDDING_STAGE_START_TIMESTAMP,
+                        GET_BUYERS_CUSTOM_AUDIENCE_END_TIMESTAMP);
+        // Start the Ad selection execution logger and set start state of the process.
+        AdSelectionExecutionLogger adSelectionExecutionLogger =
+                new AdSelectionExecutionLogger(
+                        sCallerMetadata, mMockClock, mContextMock, mAdServicesLoggerMock);
+        adSelectionExecutionLogger.startBiddingProcess(NUM_BUYERS_REQUESTED);
+        adSelectionExecutionLogger.endGetBuyersCustomAudience(NUM_BUYERS_FETCHED);
+        Throwable throwable =
+                assertThrows(
+                        IllegalStateException.class,
+                        () ->
+                                adSelectionExecutionLogger.endBiddingProcess(
+                                        AD_BIDDING_OUTCOMES, AdServicesStatusUtils.STATUS_SUCCESS));
+        assertThat(throwable.getMessage()).contains(MISSING_START_RUN_AD_BIDDING);
+    }
+
+    @Test
+    public void testAdSelectionExecutionLogger_redundantEndRunAdBidding() {
+        when(mMockClock.elapsedRealtime())
+                .thenReturn(
+                        START_ELAPSED_TIMESTAMP,
+                        BIDDING_STAGE_START_TIMESTAMP,
+                        GET_BUYERS_CUSTOM_AUDIENCE_END_TIMESTAMP,
+                        RUN_AD_BIDDING_START_TIMESTAMP,
+                        RUN_AD_BIDDING_END_TIMESTAMP);
+        // Start the Ad selection execution logger and set start state of the process.
+        AdSelectionExecutionLogger adSelectionExecutionLogger =
+                new AdSelectionExecutionLogger(
+                        sCallerMetadata, mMockClock, mContextMock, mAdServicesLoggerMock);
+        adSelectionExecutionLogger.startBiddingProcess(NUM_BUYERS_REQUESTED);
+        adSelectionExecutionLogger.endGetBuyersCustomAudience(NUM_BUYERS_FETCHED);
+        adSelectionExecutionLogger.startRunAdBidding(CUSTOM_AUDIENCES);
+        adSelectionExecutionLogger.endBiddingProcess(
+                AD_BIDDING_OUTCOMES, AdServicesStatusUtils.STATUS_SUCCESS);
+        Throwable throwable =
+                assertThrows(
+                        IllegalStateException.class,
+                        () ->
+                                adSelectionExecutionLogger.endBiddingProcess(
+                                        AD_BIDDING_OUTCOMES, AdServicesStatusUtils.STATUS_SUCCESS));
+        assertThat(throwable.getMessage()).contains(REPEATED_END_BIDDING_STAGE);
+    }
+
+    @Test
+    public void testAdSelectionExecutionLogger_failedGetBuyersCustomAudience() {
+        when(mMockClock.elapsedRealtime())
+                .thenReturn(
+                        START_ELAPSED_TIMESTAMP,
+                        BIDDING_STAGE_START_TIMESTAMP,
+                        BIDDING_STAGE_END_TIMESTAMP);
+
+        // Start the Ad selection execution logger and set start state of the process.
+        AdSelectionExecutionLogger adSelectionExecutionLogger =
+                new AdSelectionExecutionLogger(
+                        sCallerMetadata, mMockClock, mContextMock, mAdServicesLoggerMock);
+        // Set start and end state of the subcomponent get-BUYERS-custom-audience process.
+        adSelectionExecutionLogger.startBiddingProcess(NUM_BUYERS_REQUESTED);
+        int resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+        adSelectionExecutionLogger.endBiddingProcess(null, resultCode);
+
+        // Verify the logging of the RunAdBiddingProcessReportedStats.
+        verify(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(
+                        mRunAdBiddingProcessReportedStatsArgumentCaptor.capture());
+        RunAdBiddingProcessReportedStats runAdBiddingProcessReportedStats =
+                mRunAdBiddingProcessReportedStatsArgumentCaptor.getValue();
+        assertThat(runAdBiddingProcessReportedStats.getGetBuyersCustomAudienceLatencyInMills())
+                .isEqualTo(TOTAL_BIDDING_STAGE_LATENCY_IN_MS);
+        assertThat(runAdBiddingProcessReportedStats.getGetBuyersCustomAudienceResultCode())
+                .isEqualTo(resultCode);
+        assertThat(runAdBiddingProcessReportedStats.getNumBuyersRequested())
+                .isEqualTo(NUM_BUYERS_REQUESTED);
+        assertThat(runAdBiddingProcessReportedStats.getNumBuyersFetched())
+                .isEqualTo(AdServicesStatusUtils.STATUS_UNSET);
+        assertThat(runAdBiddingProcessReportedStats.getNumOfAdsEnteringBidding())
+                .isEqualTo(AdServicesStatusUtils.STATUS_UNSET);
+        assertThat(runAdBiddingProcessReportedStats.getNumOfCasEnteringBidding())
+                .isEqualTo(AdServicesStatusUtils.STATUS_UNSET);
+        assertThat(runAdBiddingProcessReportedStats.getNumOfCasPostBidding())
+                .isEqualTo(AdServicesStatusUtils.STATUS_UNSET);
+        assertThat(runAdBiddingProcessReportedStats.getRatioOfCasSelectingRmktAds())
+                .isEqualTo(RATIO_OF_CAS_UNSET);
+        assertThat(runAdBiddingProcessReportedStats.getRunAdBiddingLatencyInMillis())
+                .isEqualTo(AdServicesStatusUtils.STATUS_UNSET);
+        assertThat(runAdBiddingProcessReportedStats.getRunAdBiddingResultCode())
+                .isEqualTo(AdServicesStatusUtils.STATUS_UNSET);
+        assertThat(runAdBiddingProcessReportedStats.getTotalAdBiddingStageLatencyInMillis())
+                .isEqualTo(TOTAL_BIDDING_STAGE_LATENCY_IN_MS);
+    }
+
+    @Test
+    public void testAdSelectionExecutionLogger_emptyFetchedCustomAudiences() {
+        when(mMockClock.elapsedRealtime())
+                .thenReturn(
+                        START_ELAPSED_TIMESTAMP,
+                        BIDDING_STAGE_START_TIMESTAMP,
+                        GET_BUYERS_CUSTOM_AUDIENCE_END_TIMESTAMP,
+                        BIDDING_STAGE_END_TIMESTAMP);
+
+        // Start the Ad selection execution logger and set start state of the process.
+        AdSelectionExecutionLogger adSelectionExecutionLogger =
+                new AdSelectionExecutionLogger(
+                        sCallerMetadata, mMockClock, mContextMock, mAdServicesLoggerMock);
+        // Set start and end state of the subcomponent get-BUYERS-custom-audience process.
+        adSelectionExecutionLogger.startBiddingProcess(NUM_BUYERS_REQUESTED);
+        adSelectionExecutionLogger.endGetBuyersCustomAudience(NUM_BUYERS_FETCHED);
+        int resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+        adSelectionExecutionLogger.endBiddingProcess(null, resultCode);
+
+        // Verify the logging of the RunAdBiddingProcessReportedStats.
+        verify(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(
+                        mRunAdBiddingProcessReportedStatsArgumentCaptor.capture());
+        RunAdBiddingProcessReportedStats runAdBiddingProcessReportedStats =
+                mRunAdBiddingProcessReportedStatsArgumentCaptor.getValue();
+        assertThat(runAdBiddingProcessReportedStats.getGetBuyersCustomAudienceLatencyInMills())
+                .isEqualTo(GET_BUYERS_CUSTOM_AUDIENCE_LATENCY_MS);
+        assertThat(runAdBiddingProcessReportedStats.getGetBuyersCustomAudienceResultCode())
+                .isEqualTo(AdServicesStatusUtils.STATUS_SUCCESS);
+        assertThat(runAdBiddingProcessReportedStats.getNumBuyersRequested())
+                .isEqualTo(NUM_BUYERS_REQUESTED);
+        assertThat(runAdBiddingProcessReportedStats.getNumBuyersFetched())
+                .isEqualTo(NUM_BUYERS_FETCHED);
+        assertThat(runAdBiddingProcessReportedStats.getNumOfAdsEnteringBidding())
+                .isEqualTo(AdServicesStatusUtils.STATUS_UNSET);
+        assertThat(runAdBiddingProcessReportedStats.getNumOfCasEnteringBidding())
+                .isEqualTo(AdServicesStatusUtils.STATUS_UNSET);
+        assertThat(runAdBiddingProcessReportedStats.getNumOfCasPostBidding())
+                .isEqualTo(AdServicesStatusUtils.STATUS_UNSET);
+        assertThat(runAdBiddingProcessReportedStats.getRatioOfCasSelectingRmktAds())
+                .isEqualTo(RATIO_OF_CAS_UNSET);
+        assertThat(runAdBiddingProcessReportedStats.getRunAdBiddingLatencyInMillis())
+                .isEqualTo(AdServicesStatusUtils.STATUS_UNSET);
+        assertThat(runAdBiddingProcessReportedStats.getRunAdBiddingResultCode())
+                .isEqualTo(AdServicesStatusUtils.STATUS_UNSET);
+        assertThat(runAdBiddingProcessReportedStats.getTotalAdBiddingStageLatencyInMillis())
+                .isEqualTo(TOTAL_BIDDING_STAGE_LATENCY_IN_MS);
+    }
+
+    @Test
+    public void testAdSelectionExecutionLogger_FailedDuringRunAdBidding() {
+        when(mMockClock.elapsedRealtime())
+                .thenReturn(
+                        START_ELAPSED_TIMESTAMP,
+                        BIDDING_STAGE_START_TIMESTAMP,
+                        GET_BUYERS_CUSTOM_AUDIENCE_END_TIMESTAMP,
+                        RUN_AD_BIDDING_START_TIMESTAMP,
+                        BIDDING_STAGE_END_TIMESTAMP);
+
+        // Start the Ad selection execution logger and set start state of the process.
+        AdSelectionExecutionLogger adSelectionExecutionLogger =
+                new AdSelectionExecutionLogger(
+                        sCallerMetadata, mMockClock, mContextMock, mAdServicesLoggerMock);
+        // Set start and end state of the subcomponent get-BUYERS-custom-audience process.
+        adSelectionExecutionLogger.startBiddingProcess(NUM_BUYERS_REQUESTED);
+        adSelectionExecutionLogger.endGetBuyersCustomAudience(NUM_BUYERS_FETCHED);
+        adSelectionExecutionLogger.startRunAdBidding(CUSTOM_AUDIENCES);
+        int resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+        adSelectionExecutionLogger.endBiddingProcess(null, resultCode);
+
+        // Verify the logging of the RunAdBiddingProcessReportedStats.
+        verify(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(
+                        mRunAdBiddingProcessReportedStatsArgumentCaptor.capture());
+        RunAdBiddingProcessReportedStats runAdBiddingProcessReportedStats =
+                mRunAdBiddingProcessReportedStatsArgumentCaptor.getValue();
+        assertThat(runAdBiddingProcessReportedStats.getGetBuyersCustomAudienceLatencyInMills())
+                .isEqualTo(GET_BUYERS_CUSTOM_AUDIENCE_LATENCY_MS);
+        assertThat(runAdBiddingProcessReportedStats.getGetBuyersCustomAudienceResultCode())
+                .isEqualTo(AdServicesStatusUtils.STATUS_SUCCESS);
+        assertThat(runAdBiddingProcessReportedStats.getNumBuyersRequested())
+                .isEqualTo(NUM_BUYERS_REQUESTED);
+        assertThat(runAdBiddingProcessReportedStats.getNumBuyersFetched())
+                .isEqualTo(NUM_BUYERS_FETCHED);
+        assertThat(runAdBiddingProcessReportedStats.getNumOfAdsEnteringBidding())
+                .isEqualTo(NUM_OF_ADS_ENTERING_BIDDING);
+        assertThat(runAdBiddingProcessReportedStats.getNumOfCasEnteringBidding())
+                .isEqualTo(NUM_OF_CAS_ENTERING_BIDDING);
+        assertThat(runAdBiddingProcessReportedStats.getNumOfCasPostBidding())
+                .isEqualTo(AdServicesStatusUtils.STATUS_UNSET);
+        assertThat(runAdBiddingProcessReportedStats.getRatioOfCasSelectingRmktAds())
+                .isEqualTo(RATIO_OF_CAS_UNSET);
+        assertThat(runAdBiddingProcessReportedStats.getRunAdBiddingLatencyInMillis())
+                .isEqualTo((int) (BIDDING_STAGE_END_TIMESTAMP - RUN_AD_BIDDING_START_TIMESTAMP));
+        assertThat(runAdBiddingProcessReportedStats.getRunAdBiddingResultCode())
+                .isEqualTo(resultCode);
+        assertThat(runAdBiddingProcessReportedStats.getTotalAdBiddingStageLatencyInMillis())
+                .isEqualTo(TOTAL_BIDDING_STAGE_LATENCY_IN_MS);
+    }
+
+    @Test
     public void testAdSelectionExecutionLogger_redundantStartOfPersistAdSelection() {
         when(mMockClock.elapsedRealtime())
                 .thenReturn(START_ELAPSED_TIMESTAMP, PERSIST_AD_SELECTION_START_TIMESTAMP);
@@ -137,12 +564,14 @@ public class AdSelectionExecutionLoggerTest {
                 new AdSelectionExecutionLogger(
                         sCallerMetadata, mMockClock, mContextMock, mAdServicesLoggerMock);
         // Set start state of the subcomponent persist-ad-selection process.
-        adSelectionExecutionLogger.startPersistAdSelection();
+        adSelectionExecutionLogger.startPersistAdSelection(mMockDBAdSelection);
 
         Throwable throwable =
                 assertThrows(
                         IllegalStateException.class,
-                        () -> adSelectionExecutionLogger.startPersistAdSelection());
+                        () ->
+                                adSelectionExecutionLogger.startPersistAdSelection(
+                                        mMockDBAdSelection));
         assertThat(throwable.getMessage()).contains(REPEATED_START_PERSIST_AD_SELECTION);
     }
 
@@ -159,7 +588,7 @@ public class AdSelectionExecutionLoggerTest {
                 new AdSelectionExecutionLogger(
                         sCallerMetadata, mMockClock, mContextMock, mAdServicesLoggerMock);
         // Set start and end states of the subcomponent persist-ad-selection process.
-        adSelectionExecutionLogger.startPersistAdSelection();
+        adSelectionExecutionLogger.startPersistAdSelection(mMockDBAdSelection);
         adSelectionExecutionLogger.endPersistAdSelection();
 
         Throwable throwable =
@@ -195,14 +624,14 @@ public class AdSelectionExecutionLoggerTest {
                 new AdSelectionExecutionLogger(
                         sCallerMetadata, mMockClock, mContextMock, mAdServicesLoggerMock);
         // Set start state of the subcomponent persist-ad-selection process.
-        adSelectionExecutionLogger.startPersistAdSelection();
+        adSelectionExecutionLogger.startPersistAdSelection(mMockDBAdSelection);
         // Close the Ad selection execution logger and log the data into the AdServicesLogger.
         Throwable throwable =
                 assertThrows(
                         IllegalStateException.class,
                         () ->
                                 adSelectionExecutionLogger.close(
-                                        mMockDBAdSelection, AdServicesStatusUtils.STATUS_SUCCESS));
+                                        AdServicesStatusUtils.STATUS_SUCCESS));
         assertThat(throwable.getMessage()).contains(MISSING_END_PERSIST_AD_SELECTION);
     }
 
@@ -221,7 +650,7 @@ public class AdSelectionExecutionLoggerTest {
                         IllegalStateException.class,
                         () ->
                                 adSelectionExecutionLogger.close(
-                                        mMockDBAdSelection, AdServicesStatusUtils.STATUS_SUCCESS));
+                                        AdServicesStatusUtils.STATUS_SUCCESS));
         assertThat(throwable.getMessage()).contains(MISSING_PERSIST_AD_SELECTION);
     }
 
@@ -234,7 +663,7 @@ public class AdSelectionExecutionLoggerTest {
                 new AdSelectionExecutionLogger(
                         sCallerMetadata, mMockClock, mContextMock, mAdServicesLoggerMock);
         int resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
-        adSelectionExecutionLogger.close(null, resultCode);
+        adSelectionExecutionLogger.close(resultCode);
 
         verify(mAdServicesLoggerMock)
                 .logRunAdSelectionProcessReportedStats(
@@ -266,10 +695,10 @@ public class AdSelectionExecutionLoggerTest {
         AdSelectionExecutionLogger adSelectionExecutionLogger =
                 new AdSelectionExecutionLogger(
                         sCallerMetadata, mMockClock, mContextMock, mAdServicesLoggerMock);
-        adSelectionExecutionLogger.startPersistAdSelection();
+        adSelectionExecutionLogger.startPersistAdSelection(mMockDBAdSelection);
 
         int resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
-        adSelectionExecutionLogger.close(null, resultCode);
+        adSelectionExecutionLogger.close(resultCode);
 
         verify(mAdServicesLoggerMock)
                 .logRunAdSelectionProcessReportedStats(
@@ -277,11 +706,11 @@ public class AdSelectionExecutionLoggerTest {
         RunAdSelectionProcessReportedStats runAdSelectionProcessReportedStats =
                 mRunAdSelectionProcessReportedStatsArgumentCaptor.getValue();
         assertThat(runAdSelectionProcessReportedStats.getIsRemarketingAdsWon())
-                .isEqualTo(IS_RMKT_ADS_WON_UNSET);
+                .isEqualTo(IS_RMKT_ADS_WON);
         assertThat(runAdSelectionProcessReportedStats.getDBAdSelectionSizeInBytes())
                 .isEqualTo(DB_AD_SELECTION_SIZE_IN_BYTES_UNSET);
         assertThat(runAdSelectionProcessReportedStats.getPersistAdSelectionLatencyInMillis())
-                .isEqualTo(AdServicesStatusUtils.STATUS_UNSET);
+                .isEqualTo((int) (STOP_ELAPSED_TIMESTAMP - PERSIST_AD_SELECTION_START_TIMESTAMP));
         assertThat(runAdSelectionProcessReportedStats.getPersistAdSelectionResultCode())
                 .isEqualTo(resultCode);
         assertThat(runAdSelectionProcessReportedStats.getRunAdSelectionLatencyInMillis())

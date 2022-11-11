@@ -1734,7 +1734,6 @@ public class AdSelectionE2ETest {
                 .assertAppCanUsePpapi(
                         MY_APP_PACKAGE_NAME, AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS);
         // Logger calls come after the callback is returned
-
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(1);
         doAnswer(
                         unusedInvocation -> {
