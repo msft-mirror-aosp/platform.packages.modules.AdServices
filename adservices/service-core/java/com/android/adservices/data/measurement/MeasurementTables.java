@@ -198,7 +198,7 @@ public final class MeasurementTables {
                     + " INTEGER, "
                     + AsyncRegistrationContract.REGISTRANT
                     + " TEXT, "
-                    + AsyncRegistrationContract.REQUEST_TIME
+                    + MeasurementTablesDeprecated.AsyncRegistration.SCHEDULED_TIME
                     + " INTEGER, "
                     + AsyncRegistrationContract.RETRY_COUNT
                     + " INTEGER, "
