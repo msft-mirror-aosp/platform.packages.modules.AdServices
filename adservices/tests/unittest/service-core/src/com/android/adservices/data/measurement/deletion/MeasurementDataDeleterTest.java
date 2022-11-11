@@ -20,6 +20,7 @@ import static com.android.adservices.data.measurement.deletion.MeasurementDataDe
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -44,12 +45,12 @@ import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.TriggerFixture;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
-import com.android.adservices.service.measurement.aggregation.AggregateAttributionData;
 import com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.aggregation.AggregateReportFixture;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
+import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -77,17 +78,6 @@ public class MeasurementDataDeleterTest {
                             .setValue(87)
                             .build());
 
-    private static final AggregateReport AGGREGATE_REPORT_1 =
-            AggregateReportFixture.getValidAggregateReportBuilder()
-                    .setId("reportId1")
-                    .setAggregateAttributionData(
-                            new AggregateAttributionData.Builder()
-                                    .setId(1L)
-                                    .setContributions(CONTRIBUTIONS_1)
-                                    .build())
-                    .setSourceId("source1")
-                    .setTriggerId("trigger1")
-                    .build();
 
     private static final List<AggregateHistogramContribution> CONTRIBUTIONS_2 =
             Arrays.asList(
@@ -100,17 +90,37 @@ public class MeasurementDataDeleterTest {
                             .setValue(3454)
                             .build());
 
-    private static final AggregateReport AGGREGATE_REPORT_2 =
-            AggregateReportFixture.getValidAggregateReportBuilder()
-                    .setId("reportId2")
-                    .setAggregateAttributionData(
-                            new AggregateAttributionData.Builder()
-                                    .setId(2L)
-                                    .setContributions(CONTRIBUTIONS_2)
-                                    .build())
-                    .setSourceId("source2")
-                    .setTriggerId("trigger2")
-                    .build();
+    private static final AggregateReport AGGREGATE_REPORT_1;
+    private static final AggregateReport AGGREGATE_REPORT_2;
+
+    static {
+        AggregateReport localAggregateReport1;
+        AggregateReport localAggregateReport2;
+        try {
+            localAggregateReport1 =
+                    AggregateReportFixture.getValidAggregateReportBuilder()
+                            .setId("reportId1")
+                            .setDebugCleartextPayload(
+                                    AggregateReport.generateDebugPayload(CONTRIBUTIONS_1))
+                            .setSourceId("source1")
+                            .setTriggerId("trigger1")
+                            .build();
+            localAggregateReport2 =
+                    AggregateReportFixture.getValidAggregateReportBuilder()
+                            .setId("reportId2")
+                            .setDebugCleartextPayload(
+                                    AggregateReport.generateDebugPayload(CONTRIBUTIONS_2))
+                            .setSourceId("source2")
+                            .setTriggerId("trigger2")
+                            .build();
+        } catch (JSONException e) {
+            localAggregateReport1 = null;
+            localAggregateReport2 = null;
+            fail("Failed to create aggregate report.");
+        }
+        AGGREGATE_REPORT_1 = localAggregateReport1;
+        AGGREGATE_REPORT_2 = localAggregateReport2;
+    }
 
     private static final Instant START = Instant.ofEpochMilli(5000);
     private static final Instant END = Instant.ofEpochMilli(10000);
