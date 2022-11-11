@@ -20,6 +20,8 @@ import android.annotation.SuppressLint;
 
 /**
  * Information about the current AdServices API version.
+ *
+ * @removed
  */
 public class AdServicesVersion {
 
