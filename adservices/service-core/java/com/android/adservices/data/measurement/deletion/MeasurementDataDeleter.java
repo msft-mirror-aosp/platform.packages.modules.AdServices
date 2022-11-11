@@ -122,7 +122,7 @@ public class MeasurementDataDeleter {
 
             Source source = dao.getSource(report.getSourceId());
             int aggregateHistogramContributionsSum =
-                    report.getAggregateAttributionData().getContributions().stream()
+                    report.extractAggregateHistogramContributions().stream()
                             .mapToInt(AggregateHistogramContribution::getValue)
                             .sum();
 
