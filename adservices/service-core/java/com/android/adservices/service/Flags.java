@@ -1360,7 +1360,7 @@ public interface Flags extends Dumpable {
 
     long ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS = (int) TimeUnit.HOURS.toMillis(1);
     /** Returns the interval in which to run Registration Job Queue Service. */
-    default long getRegistrationJobQueueIntervalMs() {
+    default long getAsyncRegistrationJobQueueIntervalMs() {
         return ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS;
     }
 
@@ -1375,7 +1375,7 @@ public interface Flags extends Dumpable {
      * the Global Kill Switch, Measurement Kill Switch, or the Registration Job Queue Kill Switch
      * value is true.
      */
-    default boolean getRegistrationJobQueueKillSwitch() {
+    default boolean getAsyncRegistrationJobQueueKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
         return getGlobalKillSwitch()
                 || getMeasurementKillSwitch()
