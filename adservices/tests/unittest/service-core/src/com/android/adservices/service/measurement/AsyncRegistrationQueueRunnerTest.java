@@ -1299,7 +1299,7 @@ public class AsyncRegistrationQueueRunnerTest {
                 ArgumentCaptor.forClass(Attribution.class);
 
         // Execution
-        asyncRegistrationQueueRunner.insertSourcesFromTransaction(source, mMeasurementDao);
+        asyncRegistrationQueueRunner.insertSourceFromTransaction(source, mMeasurementDao);
 
         // Assertion
         verify(mMeasurementDao).insertSource(source);
@@ -1345,7 +1345,7 @@ public class AsyncRegistrationQueueRunnerTest {
                 ArgumentCaptor.forClass(Attribution.class);
 
         // Execution
-        asyncRegistrationQueueRunner.insertSourcesFromTransaction(source, mMeasurementDao);
+        asyncRegistrationQueueRunner.insertSourceFromTransaction(source, mMeasurementDao);
 
         // Assertion
         verify(mMeasurementDao).insertSource(source);
@@ -1396,7 +1396,7 @@ public class AsyncRegistrationQueueRunnerTest {
         doAnswer(falseAttributionAnswer).when(source).assignAttributionModeAndGenerateFakeReports();
 
         // Execution
-        asyncRegistrationQueueRunner.insertSourcesFromTransaction(source, mMeasurementDao);
+        asyncRegistrationQueueRunner.insertSourceFromTransaction(source, mMeasurementDao);
 
         // Assertion
         verify(mMeasurementDao).insertSource(source);
@@ -1452,7 +1452,7 @@ public class AsyncRegistrationQueueRunnerTest {
                 ArgumentCaptor.forClass(Attribution.class);
 
         // Execution
-        asyncRegistrationQueueRunner.insertSourcesFromTransaction(source, mMeasurementDao);
+        asyncRegistrationQueueRunner.insertSourceFromTransaction(source, mMeasurementDao);
 
         // Assertion
         verify(mMeasurementDao).insertSource(source);
