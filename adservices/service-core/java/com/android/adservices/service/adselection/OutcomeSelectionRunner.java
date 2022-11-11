@@ -32,7 +32,6 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -56,10 +55,6 @@ public class OutcomeSelectionRunner {
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
     @NonNull protected final ListeningExecutorService mBackgroundExecutorService;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
-
-    @VisibleForTesting
-    static final String AD_OUTCOMES_LIST_INPUT_CANNOT_BE_EMPTY_MSG =
-            "Ad outcomes list should at least have one element inside";
 
     public OutcomeSelectionRunner(
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
@@ -150,7 +145,7 @@ public class OutcomeSelectionRunner {
     }
 
     private void notifyFailureToCaller(Throwable t, AdSelectionCallback callback) {
-        // TODO(257678151): Implement more informative failure handling
+        // TODO(b/257678151): Implement more informative failure handling
         try {
             LogUtil.e("Notify caller of error: " + t);
             callback.onFailure(
@@ -163,11 +158,34 @@ public class OutcomeSelectionRunner {
         }
     }
 
-    private Void validateRequest(AdSelectionFromOutcomesInput adSelectionOutcome) {
-        // TODO(258020359): Implement validators for AdSelectionFromOutcomesInput
-        Preconditions.checkArgument(
-                !adSelectionOutcome.getAdOutcomes().isEmpty(),
-                new IllegalArgumentException(AD_OUTCOMES_LIST_INPUT_CANNOT_BE_EMPTY_MSG));
+    /**
+     * Validates the {@link AdSelectionFromOutcomesInput} request.
+     *
+     * @param inputParams the input to be validated
+     * @throws IllegalArgumentException if the provided {@code inputParams} is not valid
+     * @return an ignorable {@code null}
+     */
+    private Void validateRequest(@NonNull AdSelectionFromOutcomesInput inputParams) {
+        // TODO(b/258020359): Implement validators for AdSelectionFromOutcomesInput
+        validateInputParams(inputParams);
+        return null;
+    }
+
+    /**
+     * Validates the {@link AdSelectionFromOutcomesInput} from the request.
+     *
+     * @param inputParams the adSelectionConfig to be validated
+     * @throws IllegalArgumentException if the provided {@code adSelectionConfig} is not valid
+     * @return an ignorable {@code null}
+     */
+    private Void validateInputParams(@NonNull AdSelectionFromOutcomesInput inputParams)
+            throws IllegalArgumentException {
+        Objects.requireNonNull(inputParams);
+
+        AdSelectionFromOutcomesInputValidator validator =
+                new AdSelectionFromOutcomesInputValidator(mAdSelectionEntryDao);
+        validator.validate(inputParams);
+
         return null;
     }
 
