@@ -232,7 +232,10 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                     mapBuyerToCustomAudience(customAudiences);
             PerBuyerBiddingRunner buyerBidRunner =
                     new PerBuyerBiddingRunner(
-                            mAdBidGenerator, mScheduledExecutor, mBackgroundExecutorService);
+                            mAdBidGenerator,
+                            mScheduledExecutor,
+                            mBackgroundExecutorService,
+                            mFlags);
 
             LogUtil.v("Invoking bidding for #%d buyers", buyerToCustomAudienceMap.size());
             return FluentFuture.from(
@@ -351,7 +354,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
     }
 
     private int getParallelBiddingCount() {
-        int parallelBiddingCountConfigValue = mFlags.getAdSelectionConcurrentBiddingCount();
+        int parallelBiddingCountConfigValue = mFlags.getAdSelectionMaxConcurrentBiddingCount();
         int numberOfAvailableProcessors = Runtime.getRuntime().availableProcessors();
         return Math.min(parallelBiddingCountConfigValue, numberOfAvailableProcessors);
     }
