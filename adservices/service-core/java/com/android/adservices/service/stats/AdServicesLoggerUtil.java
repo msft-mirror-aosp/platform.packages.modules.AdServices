@@ -26,7 +26,6 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 
-import android.adservices.exceptions.AdServicesException;
 import android.os.LimitExceededException;
 
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -43,9 +42,7 @@ public class AdServicesLoggerUtil {
     /** @return the resultCode corresponding to the type of exception to be used in logging. */
     public static int getResultCodeFromException(Throwable t) {
         int resultCode;
-        if (t.getCause() instanceof AdServicesException) {
-            resultCode = STATUS_INTERNAL_ERROR;
-        } else if (t instanceof AppImportanceFilter.WrongCallingApplicationStateException) {
+        if (t instanceof AppImportanceFilter.WrongCallingApplicationStateException) {
             resultCode = STATUS_BACKGROUND_CALLER;
         } else if (t instanceof UncheckedTimeoutException) {
             resultCode = STATUS_TIMEOUT;
@@ -54,12 +51,12 @@ public class AdServicesLoggerUtil {
             resultCode = STATUS_CALLER_NOT_ALLOWED;
         } else if (t instanceof FledgeAuthorizationFilter.CallerMismatchException) {
             resultCode = STATUS_UNAUTHORIZED;
+        } else if (t instanceof JSSandboxIsNotAvailableException) {
+            resultCode = STATUS_JS_SANDBOX_UNAVAILABLE;
         } else if (t instanceof IllegalArgumentException) {
             resultCode = STATUS_INVALID_ARGUMENT;
         } else if (t instanceof LimitExceededException) {
             resultCode = STATUS_RATE_LIMIT_REACHED;
-        } else if (t instanceof JSSandboxIsNotAvailableException) {
-            resultCode = STATUS_JS_SANDBOX_UNAVAILABLE;
         } else if (t instanceof ConsentManager.RevokedConsentException) {
             resultCode = STATUS_USER_CONSENT_REVOKED;
         } else {

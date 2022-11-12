@@ -121,7 +121,10 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
 
         AsyncFunction<String, List<Double>> getScoresFromLogic =
                 adScoringLogic -> {
-                    return getAdScores(adScoringLogic, adBiddingOutcomes, adSelectionConfig);
+                    ListenableFuture<List<Double>> result =
+                            getAdScores(adScoringLogic, adBiddingOutcomes, adSelectionConfig);
+
+                    return result;
                 };
 
         ListenableFuture<List<Double>> adScores =
@@ -146,7 +149,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
 
     @Nullable
     private List<AdScoringOutcome> handleTimeoutError(TimeoutException e) {
-        LogUtil.e(e, "Scoring exceeded time limit");
+        LogUtil.e(e, SCORING_TIMED_OUT);
         throw new UncheckedTimeoutException(SCORING_TIMED_OUT);
     }
 

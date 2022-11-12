@@ -45,6 +45,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
@@ -62,7 +63,14 @@ import java.util.stream.Collectors;
  */
 public class AdSelectionScriptEngine {
 
+    private static final String JS_EXECUTION_STATUS_UNSUCCESSFUL =
+            "Outcome selection script failed with status '%s' or returned unexpected result '%s'";
+
+    private static final String JS_EXECUTION_RESULT_INVALID =
+            "Result of outcome selection script result is invalid: %s";
+
     // TODO: (b/228094391): Put these common constants in a separate class
+    private static final String SCRIPT_ARGUMENT_NAME_IGNORED = "ignored";
     public static final String FUNCTION_NAMES_ARG_NAME = "__rb_functionNames";
     public static final String RESULTS_FIELD_NAME = "results";
     public static final String STATUS_FIELD_NAME = "status";
@@ -81,10 +89,10 @@ public class AdSelectionScriptEngine {
     public static final String SELLER_SIGNALS_ARG_NAME = "__rb_seller_signals";
     public static final String TRUSTED_SCORING_SIGNALS_ARG_NAME = "__rb_trusted_scoring_signals";
     /**
-     * Template for the batch invocation function. The two tokens to expand are the list of
+     * Template for the iterative invocation function. The two tokens to expand are the list of
      * parameters and the invocation of the actual per-ad function.
      */
-    public static final String AD_SELECTION_BATCH_PROCESSING_JS =
+    public static final String AD_SELECTION_ITERATIVE_PROCESSING_JS =
             "function "
                     + JSScriptEngine.ENTRY_POINT_FUNC_NAME
                     + "(%s) {\n"
@@ -106,6 +114,29 @@ public class AdSelectionScriptEngine {
                     + "   } \n"
                     + "   if (status != 0) break;\n"
                     + "   results.push(script_result);\n"
+                    + "  }\n"
+                    + "  return { 'status': status, 'results': results};\n"
+                    + "};";
+
+    /**
+     * Template for the batch invocation function. The two tokens to expand are the list of
+     * parameters and the invocation of the actual per-ad function.
+     */
+    public static final String AD_SELECTION_BATCH_PROCESSING_JS =
+            "function "
+                    + JSScriptEngine.ENTRY_POINT_FUNC_NAME
+                    + "(%s) {\n"
+                    + "  let status = 0;\n"
+                    + "  const results = []; \n"
+                    + "  const script_result = %s;\n"
+                    + "  if (script_result === Object(script_result) && \n"
+                    + "      'status' in script_result && \n"
+                    + "      'result' in script_result) {\n"
+                    + "    status = script_result.status;\n"
+                    + "    results.push(script_result.result)\n"
+                    + "  } else {\n"
+                    + "    // invalid script\n"
+                    + "    status = -1;\n"
                     + "  }\n"
                     + "  return { 'status': status, 'results': results};\n"
                     + "};";
@@ -180,7 +211,7 @@ public class AdSelectionScriptEngine {
             adDataArguments.add(AdDataArgument.asScriptArgument("ignored", currAd));
         }
         return transform(
-                runAuctionScript(
+                runAuctionScriptIterative(
                         generateBidJS, adDataArguments.build(), signals, this::callGenerateBid),
                 this::handleGenerateBidsOutput,
                 mExecutor);
@@ -228,11 +259,55 @@ public class AdSelectionScriptEngine {
         ImmutableList.Builder<JSScriptArgument> adWithBidArguments = new ImmutableList.Builder<>();
         for (AdWithBid currAdWithBid : adsWithBid) {
             // Ad with bids are going to be in an array their individual name is ignored.
-            adWithBidArguments.add(AdWithBidArgument.asScriptArgument("ignored", currAdWithBid));
+            adWithBidArguments.add(
+                    AdWithBidArgument.asScriptArgument(
+                            SCRIPT_ARGUMENT_NAME_IGNORED, currAdWithBid));
         }
         return transform(
-                runAuctionScript(scoreAdJS, adWithBidArguments.build(), args, this::callScoreAd),
+                runAuctionScriptIterative(
+                        scoreAdJS, adWithBidArguments.build(), args, this::callScoreAd),
                 this::handleScoreAdsOutput,
+                mExecutor);
+    }
+
+    /**
+     * Runs selection logic on map of {@code long} ad selection id {@code double} bid
+     *
+     * @return either one of the ad selection ids passed in {@code adSelectionIdBidPairs} or {@code
+     *     null}
+     * @throws JSONException if any input or the result is failed to parse
+     * @throws IllegalStateException If JS script fails to run or returns an illegal results (i.e.
+     *     two ad selection ids or empty)
+     */
+    public ListenableFuture<Long> selectOutcome(
+            @NonNull String selectionLogic,
+            @NonNull Map<Long, Double> adSelectionIdBidPairs,
+            @NonNull AdSelectionSignals selectionSignals)
+            throws JSONException, IllegalStateException {
+        Objects.requireNonNull(selectionLogic);
+        Objects.requireNonNull(adSelectionIdBidPairs);
+        Objects.requireNonNull(selectionSignals);
+
+        ImmutableList<JSScriptArgument> args =
+                ImmutableList.<JSScriptArgument>builder()
+                        .add(jsonArg("selection_signals", selectionSignals.toString()))
+                        .build();
+        LogUtil.v("Other args creates " + args);
+
+        ImmutableList.Builder<JSScriptArgument> adSelectionIdWithBidArguments =
+                new ImmutableList.Builder<>();
+        for (Map.Entry<Long, Double> curr : adSelectionIdBidPairs.entrySet()) {
+            // Ad with bids are going to be in an array their individual name is ignored.
+            adSelectionIdWithBidArguments.add(
+                    SelectAdsFromOutcomesArgument.asScriptArgument(
+                            SCRIPT_ARGUMENT_NAME_IGNORED, curr));
+        }
+        ImmutableList<JSScriptArgument> advertArgs = adSelectionIdWithBidArguments.build();
+        LogUtil.v("Advert args created " + advertArgs);
+
+        return transform(
+                runAuctionScriptBatch(selectionLogic, advertArgs, args, this::callSelectOutcome),
+                this::handleSelectOutcomesOutput,
                 mExecutor);
     }
 
@@ -289,32 +364,121 @@ public class AdSelectionScriptEngine {
     }
 
     /**
+     * Parses the output from the invocation of the {@code selectOutcome} JS function on a list of
+     * ad selection ids {@link Double} with associated bids {@link Double}. The script output has
+     * been pre-parsed into an {@link AuctionScriptResult} object that will contain the script
+     * status code and the results as a list. This handler expects a single result in the {@code
+     * results} or an empty list which is also valid as long as {@code status} is {@link
+     * #JS_SCRIPT_STATUS_SUCCESS}
+     *
+     * <p>The method will return a status code is not {@link #JS_SCRIPT_STATUS_SUCCESS} if there has
+     * been any problem executing JS script or parsing the JS response.
+     *
+     * @throws IllegalStateException is thrown in case the status is not success or the results has
+     *     more than one item.
+     */
+    private Long handleSelectOutcomesOutput(AuctionScriptResult scriptResults)
+            throws IllegalStateException {
+
+        if (scriptResults.status != JS_SCRIPT_STATUS_SUCCESS
+                || scriptResults.results.length() != 1) {
+            String errorMsg =
+                    String.format(
+                            JS_EXECUTION_STATUS_UNSUCCESSFUL,
+                            scriptResults.status,
+                            scriptResults.results);
+            LogUtil.v(errorMsg);
+            throw new IllegalStateException(errorMsg);
+        }
+
+        if (scriptResults.results.isNull(0)) {
+            return null;
+        }
+
+        try {
+            JSONObject resultOutcomeJson = scriptResults.results.getJSONObject(0);
+            return resultOutcomeJson.optLong(SelectAdsFromOutcomesArgument.ID_FIELD_NAME);
+        } catch (JSONException e) {
+            String errorMsg = String.format(JS_EXECUTION_RESULT_INVALID, scriptResults.results);
+            LogUtil.v(errorMsg);
+            throw new IllegalStateException(errorMsg);
+        }
+    }
+
+    /**
      * Runs the function call generated by {@code auctionFunctionCallGenerator} in the JS script
-     * {@see jsScript} for the list of {code ads} provided. The function will be called by a
+     * {@code jsScript} for the list of {code ads} provided. The function will be called by a
      * generated extra function that is responsible for iterating through all arguments and causing
-     * an early failure if the result of any of the function invocations is not an object containing
-     * a 'status' field or the value of the 'status' is not 0. In case of success status is 0, if
-     * the result doesn't have a status field, status is -1 otherwise the status is the non-zero
-     * status returned by the failed invocation. The 'results' field contains the JSON array with
-     * the results of the function invocations. The parameter {@code auctionFunctionCallGenerator}
-     * is responsible for generating the call to the auction function by splitting the advert data
+     * an early failure if the result of the function invocations is not an object containing a
+     * 'status' field or the value of the 'status' is not 0. In case of success status is 0, if the
+     * result doesn't have a status field, status is -1 otherwise the status is the non-zero status
+     * returned by the failed invocation. The 'results' field contains the JSON array with the
+     * results of the function invocations. The parameter {@code auctionFunctionCallGenerator} is
+     * responsible for generating the call to the auction function by splitting the advert data
      *
      * <p>The inner function call generated by {@code auctionFunctionCallGenerator} will receive for
-     * every call one of the ads or ads with bid and the extra arguments specified using {@see
+     * every call one of the ads or ads with bid and the extra arguments specified using {@code
      * otherArgs} in the order they are specified.
      *
      * @return A future with the result of the function or failing with {@link
-     *     IllegalArgumentException} if the script is not valid, doesn't contain {@see
+     *     IllegalArgumentException} if the script is not valid, doesn't contain {@code
      *     auctionFunctionName}.
      */
-    ListenableFuture<AuctionScriptResult> runAuctionScript(
+    ListenableFuture<AuctionScriptResult> runAuctionScriptIterative(
             String jsScript,
             List<JSScriptArgument> ads,
             List<JSScriptArgument> otherArgs,
             Function<List<JSScriptArgument>, String> auctionFunctionCallGenerator) {
         try {
             return transform(
-                    callAuctionScript(jsScript, ads, otherArgs, auctionFunctionCallGenerator),
+                    callAuctionScript(
+                            jsScript,
+                            ads,
+                            otherArgs,
+                            auctionFunctionCallGenerator,
+                            AD_SELECTION_ITERATIVE_PROCESSING_JS),
+                    this::parseAuctionScriptResult,
+                    mExecutor);
+        } catch (JSONException e) {
+            throw new JSExecutionException(
+                    "Illegal result returned by our internal iterative calling function.", e);
+        }
+    }
+
+    /**
+     * Runs the function call generated by {@code auctionFunctionCallGenerator} in the JS script
+     * {@code jsScript} for the list of {@code ads} provided. The function will be called by a
+     * generated extra function that is responsible for calling the JS script.
+     *
+     * <p>If the result of the function invocations is not an object containing a 'status' or
+     * 'results' field, or the value of the 'status' is not 0 then will return failure status.
+     *
+     * <p>In case of success status is 0. The 'results' field contains the JSON array with the
+     * results of the function invocations. The parameter {@code auctionFunctionCallGenerator} is
+     * responsible for generating the call to the auction function by passing the list of advert
+     * data
+     *
+     * <p>The inner function call generated by {@code auctionFunctionCallGenerator} will receive the
+     * list of ads and the extra arguments specified using {@code otherArgs} in the order they are
+     * specified.
+     *
+     * @return A future with the result of the function or failing with {@link
+     *     IllegalArgumentException} if the script is not valid, doesn't contain {@code
+     *     auctionFunctionName}.
+     */
+    ListenableFuture<AuctionScriptResult> runAuctionScriptBatch(
+            String jsScript,
+            List<JSScriptArgument> ads,
+            List<JSScriptArgument> otherArgs,
+            Function<List<JSScriptArgument>, String> auctionFunctionCallGenerator) {
+        try {
+            return transform(
+                    callAuctionScript(
+                            jsScript,
+                            ads,
+                            otherArgs,
+                            auctionFunctionCallGenerator,
+                            AD_SELECTION_BATCH_PROCESSING_JS),
                     this::parseAuctionScriptResult,
                     mExecutor);
         } catch (JSONException e) {
@@ -384,10 +548,14 @@ public class AdSelectionScriptEngine {
             String jsScript,
             List<JSScriptArgument> adverts,
             List<JSScriptArgument> otherArgs,
-            Function<List<JSScriptArgument>, String> auctionFunctionCallGenerator)
+            Function<List<JSScriptArgument>, String> auctionFunctionCallGenerator,
+            String adSelectionProcessorJS)
             throws JSONException {
         ImmutableList.Builder<JSScriptArgument> advertsArg = ImmutableList.builder();
         advertsArg.addAll(adverts);
+        LogUtil.v(
+                "script: %s%nadverts: %s%nother args: %s%nprocessor script: %s%n",
+                jsScript, advertsArg, otherArgs, adSelectionProcessorJS);
 
         List<JSScriptArgument> allArgs =
                 ImmutableList.<JSScriptArgument>builder()
@@ -403,11 +571,12 @@ public class AdSelectionScriptEngine {
                         ? IsolateSettings.forMaxHeapSizeEnforcementEnabled(
                                 mMaxHeapSizeBytesSupplier.get())
                         : IsolateSettings.forMaxHeapSizeEnforcementDisabled();
+
         return mJsEngine.evaluate(
                 jsScript
                         + "\n"
                         + String.format(
-                                AD_SELECTION_BATCH_PROCESSING_JS,
+                                adSelectionProcessorJS,
                                 argPassing,
                                 auctionFunctionCallGenerator.apply(otherArgs)),
                 allArgs,
@@ -436,6 +605,14 @@ public class AdSelectionScriptEngine {
             callArgs.append(String.format(",%s", currArg.name()));
         }
         return String.format("scoreAd(%s)", callArgs.toString());
+    }
+
+    private String callSelectOutcome(List<JSScriptArgument> otherArgs) {
+        StringBuilder callArgs = new StringBuilder(ADS_ARG_NAME);
+        for (JSScriptArgument currArg : otherArgs) {
+            callArgs.append(String.format(",%s", currArg.name()));
+        }
+        return String.format("selectOutcome(%s)", callArgs);
     }
 
     static class AuctionScriptResult {

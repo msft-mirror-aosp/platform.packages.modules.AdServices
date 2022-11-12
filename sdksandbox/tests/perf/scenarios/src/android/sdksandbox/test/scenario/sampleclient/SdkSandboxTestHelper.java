@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package android.sdksandbox.test.scenario;
+package android.sdksandbox.test.scenario.sampleclient;
 
 import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
 

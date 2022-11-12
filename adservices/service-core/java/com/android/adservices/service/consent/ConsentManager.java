@@ -63,6 +63,7 @@ public class ConsentManager {
     private static final String NOTIFICATION_DISPLAYED_ONCE = "NOTIFICATION-DISPLAYED-ONCE";
     private static final String CONSENT_ALREADY_INITIALIZED_KEY = "CONSENT-ALREADY-INITIALIZED";
     private static final String CONSENT_KEY = "CONSENT";
+    private static final String CONSENT_PER_API_FORMAT = "CONSENT-FOR-%s-API";
     private static final String ERROR_MESSAGE_DATASTORE_IO_EXCEPTION_WHILE_SET_CONTENT =
             "setConsent method failed due to IOException thrown by Datastore.";
     private static final int STORAGE_VERSION = 1;
@@ -206,6 +207,26 @@ public class ConsentManager {
         try {
             init();
             return AdServicesApiConsent.getConsent(mDatastore.get(CONSENT_KEY));
+        } catch (NullPointerException | IllegalArgumentException | IOException e) {
+            LogUtil.e(e, ERROR_MESSAGE_DATASTORE_EXCEPTION_WHILE_GET_CONTENT);
+            return AdServicesApiConsent.REVOKED;
+        }
+    }
+
+    /**
+     * Retrieves the consent per API.
+     *
+     * @param apiType apiType for which the consent should be provided
+     * @return {@link AdServicesApiConsent} providing information whether the consent was given or
+     *     revoked.
+     */
+    public AdServicesApiConsent getConsent(AdServicesApiType apiType) {
+        if (mFlags.getConsentManagerDebugMode()) {
+            return AdServicesApiConsent.GIVEN;
+        }
+        try {
+            init(apiType);
+            return AdServicesApiConsent.getConsent(mDatastore.get(getConsentKeyPerApi(apiType)));
         } catch (NullPointerException | IllegalArgumentException | IOException e) {
             LogUtil.e(e, ERROR_MESSAGE_DATASTORE_EXCEPTION_WHILE_GET_CONTENT);
             return AdServicesApiConsent.REVOKED;
@@ -451,6 +472,11 @@ public class ConsentManager {
         mDatastore.put(CONSENT_KEY, state.isGiven());
     }
 
+    private void setConsent(AdServicesApiConsent state, AdServicesApiType apiType)
+            throws IOException {
+        mDatastore.put(getConsentKeyPerApi(apiType), state.isGiven());
+    }
+
     void init() throws IOException {
         initializeStorage();
         if (mDatastore.get(CONSENT_ALREADY_INITIALIZED_KEY) == null
@@ -458,6 +484,33 @@ public class ConsentManager {
             mDatastore.put(NOTIFICATION_DISPLAYED_ONCE, false);
             mDatastore.put(CONSENT_ALREADY_INITIALIZED_KEY, true);
         }
+    }
+
+    /*
+    Method to initialize the datastore and the ConsentManager itself, but also prepare the
+    consent-per-api if upgrade happens. If that's the case, there is a chance that the aggregated
+    consent was already initialized (set to GIVEN or REVOKED) and the consents-per-api weren't.
+    Init method detects such situations and update the consents accordingly.
+     */
+    void init(AdServicesApiType apiType) throws IOException {
+        init();
+        Boolean aggregatedConsent = mDatastore.get(CONSENT_KEY);
+        // if consent wasn't initialized at all, noop
+        if (aggregatedConsent == null) {
+            return;
+        }
+
+        String consentPerApiKey = getConsentKeyPerApi(apiType);
+        // if consent per api was already initialized, noop
+        if (mDatastore.get(consentPerApiKey) != null) {
+            return;
+        }
+
+        mDatastore.put(consentPerApiKey, aggregatedConsent);
+    }
+
+    private String getConsentKeyPerApi(AdServicesApiType apiType) {
+        return String.format(CONSENT_PER_API_FORMAT, apiType.name());
     }
 
     private void initializeStorage() throws IOException {
