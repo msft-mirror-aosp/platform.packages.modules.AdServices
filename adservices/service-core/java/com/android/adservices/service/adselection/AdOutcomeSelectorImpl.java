@@ -87,7 +87,7 @@ public class AdOutcomeSelectorImpl implements AdOutcomeSelector {
     /**
      * Compares ads based on their bids and selection signals.
      *
-     * @param adSelectionIdBidPairs list of ad selection id and bid pairs
+     * @param adSelectionIdBidMap list of ad selection id and bid pairs
      * @param selectionSignals signals provided by seller for running ad Selection
      * @param selectionLogicUri uri pointing to the JS logic
      * @return a Future of {@code Long} {code @AdSelectionId} of the winner. If no winner then
@@ -95,12 +95,13 @@ public class AdOutcomeSelectorImpl implements AdOutcomeSelector {
      */
     @Override
     public FluentFuture<Long> runAdOutcomeSelector(
-            @NonNull Map<Long, Double> adSelectionIdBidPairs,
+            @NonNull Map<Long, Double> adSelectionIdBidMap,
             @NonNull AdSelectionSignals selectionSignals,
             @NonNull Uri selectionLogicUri) {
-        Objects.requireNonNull(adSelectionIdBidPairs);
+        Objects.requireNonNull(adSelectionIdBidMap);
         Objects.requireNonNull(selectionSignals);
         Objects.requireNonNull(selectionLogicUri);
+
         FluentFuture<String> selectionLogicJsFuture =
                 FluentFuture.from(getAdOutcomeSelectorLogic(selectionLogicUri));
 
@@ -108,7 +109,7 @@ public class AdOutcomeSelectorImpl implements AdOutcomeSelector {
                 selectionLogicJsFuture.transformAsync(
                         selectionLogic ->
                                 mAdSelectionScriptEngine.selectOutcome(
-                                        selectionLogic, adSelectionIdBidPairs, selectionSignals),
+                                        selectionLogic, adSelectionIdBidMap, selectionSignals),
                         mLightweightExecutorService);
 
         return selectedOutcomeFuture

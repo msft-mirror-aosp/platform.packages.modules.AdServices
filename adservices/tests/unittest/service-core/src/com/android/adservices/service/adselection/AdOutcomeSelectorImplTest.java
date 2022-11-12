@@ -203,7 +203,7 @@ public class AdOutcomeSelectorImplTest {
     }
 
     @Test
-    public void testAdOutcomeSelectorTimeout() throws Exception {
+    public void testAdOutcomeSelectorTimeoutFailure() throws Exception {
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDefaultDispatcher);
         Flags flagsWithSmallerLimits =
                 new Flags() {
@@ -234,6 +234,11 @@ public class AdOutcomeSelectorImplTest {
                                                         adverts, signals, uri)));
         Assert.assertTrue(exception.getCause() instanceof UncheckedTimeoutException);
         Assert.assertEquals(exception.getCause().getMessage(), OUTCOME_SELECTION_TIMED_OUT);
+        mMockWebServerRule.verifyMockServerRequests(
+                server,
+                1, // Gets one call that causes the timeout
+                Collections.singletonList(WATERFALL_MEDIATION_LOGIC_PATH),
+                mRequestMatcherExactMatch);
     }
 
     private ListenableFuture<Long> getOutcomeWithDelay(Long outcomeId, @NonNull Flags flags) {
