@@ -49,6 +49,7 @@ import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_OFF_DEVIC
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
+import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.FLEDGE_BACKGROUND_FETCH_ELIGIBLE_UPDATE_BASE_INTERVAL_S;
 import static com.android.adservices.service.Flags.FLEDGE_BACKGROUND_FETCH_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_BACKGROUND_FETCH_JOB_FLEX_MS;
@@ -132,6 +133,7 @@ import static com.android.adservices.service.Flags.TOPICS_PERCENTAGE_FOR_RANDOM_
 import static com.android.adservices.service.PhFlags.KEY_ADID_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_ADSERVICES_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_APPSETID_KILL_SWITCH;
+import static com.android.adservices.service.PhFlags.KEY_ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS;
 import static com.android.adservices.service.PhFlags.KEY_CLASSIFIER_DESCRIPTION_MAX_LENGTH;
 import static com.android.adservices.service.PhFlags.KEY_CLASSIFIER_DESCRIPTION_MAX_WORDS;
 import static com.android.adservices.service.PhFlags.KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES;
@@ -158,6 +160,7 @@ import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_OFF
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
+import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_BACKGROUND_FETCH_ELIGIBLE_UPDATE_BASE_INTERVAL_S;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_BACKGROUND_FETCH_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_BACKGROUND_FETCH_JOB_FLEX_MS;
@@ -230,7 +233,6 @@ import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_REGISTRATIO
 import static com.android.adservices.service.PhFlags.KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY;
 import static com.android.adservices.service.PhFlags.KEY_PPAPI_APP_ALLOW_LIST;
 import static com.android.adservices.service.PhFlags.KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST;
-import static com.android.adservices.service.PhFlags.KEY_REGISTRATION_JOB_QUEUE_INTERVAL_MS;
 import static com.android.adservices.service.PhFlags.KEY_SDK_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.PhFlags.KEY_TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.service.PhFlags.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
@@ -693,6 +695,23 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getAdSelectionScoringTimeoutMs()).isEqualTo(phOverrideValue);
+    }
+
+    @Test
+    public void testGetAdSelectionSelectingOutcomeTimeoutMs() {
+        // without any overriding, the value is hard coded constant
+        assertThat(FlagsFactory.getFlags().getAdSelectionSelectingOutcomeTimeoutMs())
+                .isEqualTo(FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS);
+
+        final int phOverrideValue = 5;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS,
+                Integer.toString(phOverrideValue),
+                false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getAdSelectionSelectingOutcomeTimeoutMs()).isEqualTo(phOverrideValue);
     }
 
     @Test
@@ -2625,7 +2644,7 @@ public class PhFlagsTest {
     @Test
     public void testGetMeasurementRegistrationJobQueueKillSwitch() {
         // without any overrides the Registration Job Queue kill switch should be off
-        assertThat(FlagsFactory.getFlags().getRegistrationJobQueueKillSwitch())
+        assertThat(FlagsFactory.getFlags().getAsyncRegistrationJobQueueKillSwitch())
                 .isEqualTo(MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH);
 
         // Now overriding with the value from PH.
@@ -2637,13 +2656,13 @@ public class PhFlagsTest {
                 /* makeDefault */ false);
 
         Flags phFlags = FlagsFactory.getFlags();
-        assertThat(phFlags.getRegistrationJobQueueKillSwitch()).isEqualTo(phOverrideValue);
+        assertThat(phFlags.getAsyncRegistrationJobQueueKillSwitch()).isEqualTo(phOverrideValue);
     }
 
     @Test
     public void testGetMeasurementRegistrationJobQueueKillSwitch_measurementOverride() {
         // without any overrides the Registration Job Queue kill switch should be off
-        assertThat(FlagsFactory.getFlags().getRegistrationJobQueueKillSwitch())
+        assertThat(FlagsFactory.getFlags().getAsyncRegistrationJobQueueKillSwitch())
                 .isEqualTo(MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH);
 
         // Now overriding with the value from PH.
@@ -2655,13 +2674,13 @@ public class PhFlagsTest {
                 false);
 
         Flags phFlags = FlagsFactory.getFlags();
-        assertThat(phFlags.getRegistrationJobQueueKillSwitch()).isEqualTo(phOverrideValue);
+        assertThat(phFlags.getAsyncRegistrationJobQueueKillSwitch()).isEqualTo(phOverrideValue);
     }
 
     @Test
     public void testGetMeasurementRegistrationJobQueueKillSwitch_globalOverride() {
         // without any overrides the Registration Job Queue kill switch should be off
-        assertThat(FlagsFactory.getFlags().getRegistrationJobQueueKillSwitch())
+        assertThat(FlagsFactory.getFlags().getAsyncRegistrationJobQueueKillSwitch())
                 .isEqualTo(MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH);
 
         // Now overriding with the value from PH.
@@ -2673,7 +2692,7 @@ public class PhFlagsTest {
                 false);
 
         Flags phFlags = FlagsFactory.getFlags();
-        assertThat(phFlags.getRegistrationJobQueueKillSwitch()).isEqualTo(phOverrideValue);
+        assertThat(phFlags.getAsyncRegistrationJobQueueKillSwitch()).isEqualTo(phOverrideValue);
     }
 
     @Test
@@ -3163,18 +3182,18 @@ public class PhFlagsTest {
 
     @Test
     public void testGetRegistrationJobQueueIntervalMs() {
-        assertThat(FlagsFactory.getFlags().getRegistrationJobQueueIntervalMs())
+        assertThat(FlagsFactory.getFlags().getAsyncRegistrationJobQueueIntervalMs())
                 .isEqualTo(ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS);
 
         final long phOverridingValue = 1L;
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_REGISTRATION_JOB_QUEUE_INTERVAL_MS,
+                KEY_ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS,
                 Long.toString(phOverridingValue),
                 /* makeDefault */ false);
 
         Flags phFlags = FlagsFactory.getFlags();
-        assertThat(phFlags.getRegistrationJobQueueIntervalMs()).isEqualTo(phOverridingValue);
+        assertThat(phFlags.getAsyncRegistrationJobQueueIntervalMs()).isEqualTo(phOverridingValue);
     }
 
     @Test

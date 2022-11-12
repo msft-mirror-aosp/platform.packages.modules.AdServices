@@ -153,6 +153,8 @@ public final class PhFlags implements Flags {
             "fledge_ad_selection_bidding_timeout_per_ca_ms";
     static final String KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS =
             "fledge_ad_selection_scoring_timeout_ms";
+    static final String KEY_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS =
+            "fledge_ad_selection_selecting_outcome_timeout_ms";
     static final String KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS =
             "fledge_ad_selection_overall_timeout_ms";
     static final String KEY_FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S =
@@ -296,8 +298,8 @@ public final class PhFlags implements Flags {
     static final String KEY_OFF_DEVICE_AD_SELECTION_ENABLED = "enable_off_device_ad_selection";
 
     // Interval in which to run Registration Job Queue Service.
-    static final String KEY_REGISTRATION_JOB_QUEUE_INTERVAL_MS =
-            "key_registration_job_queue_interval_ms";
+    static final String KEY_ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS =
+            "key_async_registration_job_queue_interval_ms";
 
     // Feature Flags
     static final String KEY_ENABLE_TOPIC_CONTRIBUTORS_CHECK = "enable_topic_contributors_check";
@@ -317,11 +319,11 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public long getRegistrationJobQueueIntervalMs() {
+    public long getAsyncRegistrationJobQueueIntervalMs() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_REGISTRATION_JOB_QUEUE_INTERVAL_MS,
+                /* flagName */ KEY_ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS,
                 /* defaultValue */ ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS);
     }
 
@@ -864,6 +866,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public long getAdSelectionSelectingOutcomeTimeoutMs() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS,
+                /* defaultValue */ FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS);
+    }
+
+    @Override
     public long getAdSelectionOverallTimeoutMs() {
         return DeviceConfig.getLong(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -1165,7 +1175,7 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getRegistrationJobQueueKillSwitch() {
+    public boolean getAsyncRegistrationJobQueueKillSwitch() {
         // We check the Global Killswitch first then Measurement Killswitch.
         // As a result, it overrides all other killswitches.
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
@@ -2000,6 +2010,11 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS
                         + " = "
                         + getAdSelectionScoringTimeoutMs());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS
+                        + " = "
+                        + getAdSelectionSelectingOutcomeTimeoutMs());
         writer.println(
                 "\t"
                         + KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS
