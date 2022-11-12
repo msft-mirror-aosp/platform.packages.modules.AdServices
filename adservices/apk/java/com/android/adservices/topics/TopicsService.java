@@ -31,6 +31,7 @@ import com.android.adservices.service.MaintenanceJobService;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.common.Throttler;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.Clock;
@@ -92,7 +93,11 @@ public class TopicsService extends Service {
     }
 
     private boolean hasUserConsent() {
-        return ConsentManager.getInstance(this).getConsent().isGiven();
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            return ConsentManager.getInstance(this).getConsent(AdServicesApiType.TOPICS).isGiven();
+        } else {
+            return ConsentManager.getInstance(this).getConsent().isGiven();
+        }
     }
 
     @Override

@@ -41,6 +41,7 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.measurement.reporting.DebugReportingJobService;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -263,6 +264,7 @@ public class AttributionJobServiceTest {
                 ExtendedMockito.mockitoSession()
                         .spyStatic(AttributionJobService.class)
                         .spyStatic(DatastoreManagerFactory.class)
+                        .spyStatic(DebugReportingJobService.class)
                         .spyStatic(FlagsFactory.class)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
@@ -278,6 +280,8 @@ public class AttributionJobServiceTest {
             ExtendedMockito.doReturn(mMockDatastoreManager)
                     .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
             ExtendedMockito.doNothing().when(() -> AttributionJobService.schedule(any(), any()));
+            ExtendedMockito.doNothing()
+                    .when(() -> DebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
             // Execute
             execute.run();

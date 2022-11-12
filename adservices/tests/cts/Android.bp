@@ -22,6 +22,7 @@ android_test {
     libs: [
         "android.test.runner",
         "android.test.base",
+        "framework-adservices.impl",
     ],
     srcs: ["src/**/*.java",],
     // Tag this module as a cts test artifact
@@ -39,7 +40,6 @@ android_test {
         "compatibility-device-util-axt",
         "ctstestrunner-axt",
         "cts-wm-util",
-        "framework-adservices.impl",
         "adservices-clients",
         "adservices-test-fixtures",
         "testng",
@@ -54,6 +54,7 @@ android_test {
     libs: [
         "android.test.runner",
         "android.test.base",
+        "framework-adservices.impl",
     ],
     srcs: ["src/**/*.java"],
     // Tag this module as a cts test artifact
@@ -73,7 +74,6 @@ android_test {
         "compatibility-device-util-axt",
         "ctstestrunner-axt",
         "cts-wm-util",
-        "framework-adservices.impl",
         "adservices-clients",
         "adservices-test-fixtures",
         "testng",
