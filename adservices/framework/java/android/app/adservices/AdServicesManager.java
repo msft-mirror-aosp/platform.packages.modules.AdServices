@@ -25,6 +25,8 @@ import android.os.RemoteException;
 
 import com.android.adservices.LogUtil;
 
+import java.util.Objects;
+
 /**
  * AdServices Manager to handle the internal communication between PPAPI process and AdServices
  * System Service.
@@ -45,9 +47,47 @@ public class AdServicesManager {
     }
 
     /** Return the User Consent */
-    public void getConsent() {
+    public ConsentParcel getConsent() {
         try {
-            mService.getConsent();
+            return mService.getConsent();
+        } catch (RemoteException e) {
+            LogUtil.e("Failed to get User Consent.", e);
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Set the User Consent */
+    public void setConsent(@NonNull ConsentParcel consentParcel) {
+        Objects.requireNonNull(consentParcel);
+        try {
+            mService.setConsent(consentParcel);
+        } catch (RemoteException e) {
+            LogUtil.e("Failed to set User Consent.", e);
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Saves information to the storage that notification was displayed for the first time to the
+     * user.
+     */
+    public void recordNotificationDisplayed() {
+        try {
+            mService.recordNotificationDisplayed();
+        } catch (RemoteException e) {
+            LogUtil.e("Failed to set User Consent.", e);
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Returns information whether Consent Notification was displayed or not.
+     *
+     * @return true if Consent Notification was displayed, otherwise false.
+     */
+    public boolean wasNotificationDisplayed() {
+        try {
+            return mService.wasNotificationDisplayed();
         } catch (RemoteException e) {
             LogUtil.e("Failed to get User Consent.", e);
             throw e.rethrowFromSystemServer();
