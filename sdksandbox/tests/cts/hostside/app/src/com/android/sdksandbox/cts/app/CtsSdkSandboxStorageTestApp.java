@@ -41,7 +41,7 @@ import org.junit.runners.JUnit4;
 import java.util.Set;
 
 @RunWith(JUnit4.class)
-public class SdkSandboxStorageTestApp {
+public class CtsSdkSandboxStorageTestApp {
 
     private static final String SDK_NAME = "com.android.sdksandbox.cts.provider.storagetest";
 

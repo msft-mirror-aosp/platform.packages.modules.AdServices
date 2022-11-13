@@ -179,6 +179,93 @@ public class AdSelectionManager {
     }
 
     /**
+     * Selects an ad from the results of previously ran ad selections.
+     *
+     * <p>The input {@code adSelectionFromOutcomesConfig} is provided by the Ads SDK and the {@link
+     * AdSelectionFromOutcomesConfig} object is transferred via a Binder call. For this reason, the
+     * total size of these objects is bound to the Android IPC limitations. Failures to transfer the
+     * {@link AdSelectionFromOutcomesConfig} will throws an {@link TransactionTooLargeException}.
+     *
+     * <p>The output is passed by the receiver, which either returns an {@link AdSelectionOutcome}
+     * for a successful run, or an {@link Exception} includes the type of the exception thrown and
+     * the corresponding error message.
+     *
+     * <p>The input {@code adSelectionFromOutcomesConfig} contains:
+     * <li>{@code Seller} is required to be a registered {@link
+     *     android.adservices.common.AdTechIdentifier}. Otherwise, {@link IllegalStateException}
+     *     will be thrown.
+     * <li>{@code List of ad selection ids} should exist and come from {@link
+     *     AdSelectionManager#selectAds} calls originated from the same application. Otherwise,
+     *     {@link IllegalArgumentException} for input validation will raise listing violating ad
+     *     selection ids.
+     * <li>{@code Selection logic URI} should match the {@code seller} host. Otherwise, {@link
+     *     IllegalArgumentException} will be thrown.
+     *
+     *     <p>If the {@link IllegalArgumentException} is thrown, it is caused by invalid input
+     *     argument the API received to run the ad selection.
+     *
+     *     <p>If the {@link IllegalStateException} is thrown with error message "Failure of
+     *     AdSelection services.", it is caused by an internal failure of the ad selection service.
+     *
+     * @hide
+     */
+    public void selectAds(
+            @NonNull AdSelectionFromOutcomesConfig adSelectionFromOutcomesConfig,
+            @NonNull @CallbackExecutor Executor executor,
+            @NonNull OutcomeReceiver<AdSelectionOutcome, Exception> receiver) {
+        Objects.requireNonNull(adSelectionFromOutcomesConfig);
+        Objects.requireNonNull(executor);
+        Objects.requireNonNull(receiver);
+
+        try {
+            final AdSelectionService service = getService();
+            service.selectAdsFromOutcomes(
+                    new AdSelectionFromOutcomesInput.Builder()
+                            .setAdSelectionFromOutcomesConfig(adSelectionFromOutcomesConfig)
+                            .setCallerPackageName(getCallerPackageName())
+                            .build(),
+                    new CallerMetadata.Builder()
+                            .setBinderElapsedTimestamp(SystemClock.elapsedRealtime())
+                            .build(),
+                    new AdSelectionCallback.Stub() {
+                        @Override
+                        public void onSuccess(AdSelectionResponse resultParcel) {
+                            executor.execute(
+                                    () -> {
+                                        if (resultParcel == null) {
+                                            receiver.onResult(null);
+                                        } else {
+                                            receiver.onResult(
+                                                    new AdSelectionOutcome.Builder()
+                                                            .setAdSelectionId(
+                                                                    resultParcel.getAdSelectionId())
+                                                            .setRenderUri(
+                                                                    resultParcel.getRenderUri())
+                                                            .build());
+                                        }
+                                    });
+                        }
+
+                        @Override
+                        public void onFailure(FledgeErrorResponse failureParcel) {
+                            executor.execute(
+                                    () -> {
+                                        receiver.onError(
+                                                AdServicesStatusUtils.asException(failureParcel));
+                                    });
+                        }
+                    });
+        } catch (NullPointerException e) {
+            LogUtil.e(e, "Unable to find the AdSelection service.");
+            receiver.onError(
+                    new IllegalStateException("Unable to find the AdSelection service.", e));
+        } catch (RemoteException e) {
+            LogUtil.e(e, "Failure of AdSelection service.");
+            receiver.onError(new IllegalStateException("Failure of AdSelection service.", e));
+        }
+    }
+
+    /**
      * Report the given impression. The {@link ReportImpressionRequest} is provided by the Ads SDK.
      * The receiver either returns a {@code void} for a successful run, or an {@link Exception}
      * indicates the error.

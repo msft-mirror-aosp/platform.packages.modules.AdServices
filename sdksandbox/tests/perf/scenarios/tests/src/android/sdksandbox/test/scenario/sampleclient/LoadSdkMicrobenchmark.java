@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package android.sdksandbox.test.scenario;
+package android.sdksandbox.test.scenario.sampleclient;
 
 import android.platform.test.microbenchmark.Microbenchmark;
 import android.platform.test.rule.DropCachesRule;
@@ -24,7 +24,7 @@ import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 
 @RunWith(Microbenchmark.class)
-public class RemoteRenderAdMicrobenchmark extends RemoteRenderAd {
+public class LoadSdkMicrobenchmark extends LoadSdk {
     @Rule
     public RuleChain rules =
             RuleChain.outerRule(new KillAppsRule("com.android.sdksandboxclient"))

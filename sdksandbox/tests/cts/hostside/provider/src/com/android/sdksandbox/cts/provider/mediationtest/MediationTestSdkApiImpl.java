@@ -13,20 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package android.sdksandbox.test.scenario;
 
-import android.platform.test.microbenchmark.Microbenchmark;
-import android.platform.test.rule.DropCachesRule;
-import android.platform.test.rule.KillAppsRule;
+package com.android.sdksandbox.cts.provider.mediationtest;
 
-import org.junit.Rule;
-import org.junit.rules.RuleChain;
-import org.junit.runner.RunWith;
+import android.app.sdksandbox.SandboxedSdk;
+import android.app.sdksandbox.sdkprovider.SdkSandboxController;
+import android.content.Context;
 
-@RunWith(Microbenchmark.class)
-public class LoadSdkMicrobenchmark extends LoadSdk {
-    @Rule
-    public RuleChain rules =
-            RuleChain.outerRule(new KillAppsRule("com.android.sdksandboxclient"))
-                    .around(new DropCachesRule());
+import java.util.List;
+
+public class MediationTestSdkApiImpl extends IMediationTestSdkApi.Stub {
+    private final Context mContext;
+
+    public MediationTestSdkApiImpl(Context sdkContext) {
+        mContext = sdkContext;
+    }
+
+    @Override
+    public List<SandboxedSdk> getSandboxedSdks() {
+        return mContext.getSystemService(SdkSandboxController.class).getSandboxedSdks();
+    }
 }

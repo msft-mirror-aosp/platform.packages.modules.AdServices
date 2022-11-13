@@ -184,6 +184,7 @@ public final class MeasurementImpl {
             boolean enqueueStatus =
                     EnqueueAsyncRegistration.webSourceRegistrationRequest(
                             sourceRegistrationRequest,
+                            request.isAdIdPermissionGranted(),
                             getRegistrant(request.getAppPackageName()),
                             requestTime,
                             mEnrollmentDao,
@@ -216,6 +217,7 @@ public final class MeasurementImpl {
             boolean enqueueStatus =
                     EnqueueAsyncRegistration.webTriggerRegistrationRequest(
                             triggerRegistrationRequest,
+                            request.isAdIdPermissionGranted(),
                             getRegistrant(request.getAppPackageName()),
                             requestTime,
                             mEnrollmentDao,

@@ -99,8 +99,7 @@ public class AsyncSourceFetcher {
             boolean shouldOverrideDestinationAppSource,
             Source.Builder result,
             boolean isWebSource,
-            boolean isAllowDebugKey,
-            boolean isAdIdPermissionGranted)
+            boolean isDebugKeyAllowed)
             throws JSONException {
         final boolean hasRequiredParams =
                 hasRequiredParams(json, shouldValidateDestinationWebSource);
@@ -134,9 +133,7 @@ public class AsyncSourceFetcher {
         if (!json.isNull(SourceHeaderContract.PRIORITY)) {
             result.setPriority(json.getLong(SourceHeaderContract.PRIORITY));
         }
-        boolean isWebAllow = isWebSource && isAllowDebugKey && isAdIdPermissionGranted;
-        boolean isAppAllow = !isWebSource && isAdIdPermissionGranted;
-        if (!json.isNull(SourceHeaderContract.DEBUG_KEY) && (isWebAllow || isAppAllow)) {
+        if (!json.isNull(SourceHeaderContract.DEBUG_KEY) && (isDebugKeyAllowed)) {
             try {
                 result.setDebugKey(
                         new UnsignedLong(json.getString(SourceHeaderContract.DEBUG_KEY)));
@@ -232,8 +229,7 @@ public class AsyncSourceFetcher {
             @NonNull Map<String, List<String>> headers,
             @NonNull List<Source> sources,
             boolean isWebSource,
-            boolean isAllowDebugKey,
-            boolean isAdIdPermissionGranted) {
+            boolean isDebugKeyAllowed) {
         Source.Builder result = new Source.Builder();
         result.setPublisher(publisher);
         result.setEnrollmentId(enrollmentId);
@@ -261,8 +257,7 @@ public class AsyncSourceFetcher {
                             shouldOverrideDestinationAppSource,
                             result,
                             isWebSource,
-                            isAllowDebugKey,
-                            isAdIdPermissionGranted);
+                            isDebugKeyAllowed);
             if (!isValid) {
                 return false;
             }
@@ -341,8 +336,7 @@ public class AsyncSourceFetcher {
                 asyncRedirect,
                 asyncRegistration.getType() == AsyncRegistration.RegistrationType.WEB_SOURCE,
                 asyncRegistration.getDebugKeyAllowed(),
-                asyncFetchStatus,
-                asyncRegistration.getDebugKeyAllowed());
+                asyncFetchStatus);
         if (out.isEmpty()) {
             return Optional.empty();
         } else {
@@ -365,9 +359,8 @@ public class AsyncSourceFetcher {
             @AsyncRegistration.RedirectType int redirectType,
             @NonNull AsyncRedirect asyncRedirect,
             boolean isWebSource,
-            boolean isAllowDebugKey,
-            @Nullable AsyncFetchStatus asyncFetchStatus,
-            boolean isAdIdPermissionGranted) {
+            boolean isDebugKeyAllowed,
+            @Nullable AsyncFetchStatus asyncFetchStatus) {
         // Require https.
         if (!registrationUri.getScheme().equals("https")) {
             asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.PARSING_ERROR);
@@ -429,8 +422,7 @@ public class AsyncSourceFetcher {
                             headers,
                             sourceOut,
                             isWebSource,
-                            isAllowDebugKey,
-                            isAdIdPermissionGranted);
+                            isDebugKeyAllowed);
             if (!parsed) {
                 asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.PARSING_ERROR);
                 LogUtil.d("Failed to parse");

@@ -27,7 +27,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(DeviceJUnit4ClassRunner.class)
-public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
+public final class SdkSandboxMediationHostTest extends BaseHostJUnit4Test {
 
     private static final String TEST_APP_PACKAGE_NAME = "com.android.sdksandbox.cts.app";
     private static final String TEST_APP_APK_NAME = "CtsSdkSandboxHostTestApp.apk";
@@ -42,7 +42,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         assertThat(
                         runDeviceTests(
                                 TEST_APP_PACKAGE_NAME,
-                                TEST_APP_PACKAGE_NAME + ".SdkSandboxStorageTestApp",
+                                TEST_APP_PACKAGE_NAME + ".SdkSandboxMediationTestApp",
                                 phase))
                 .isTrue();
     }
@@ -58,33 +58,14 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
-    public void testSharedPreferences_IsSyncedFromAppToSandbox() throws Exception {
+    public void testGetSandboxedSdk_GetsAllSdksLoadedInTheSandbox() throws Exception {
         installPackage(TEST_APP_APK_NAME);
-        runPhase("testSharedPreferences_IsSyncedFromAppToSandbox");
+        runPhase("testGetSandboxedSdk_GetsAllSdksLoadedInTheSandbox");
     }
 
     @Test
-    public void testSharedPreferences_SyncPropagatesUpdates() throws Exception {
+    public void testGetSandboxedSdk_MultipleSdks() throws Exception {
         installPackage(TEST_APP_APK_NAME);
-        runPhase("testSharedPreferences_SyncPropagatesUpdates");
-    }
-
-    @Test
-    public void testSharedPreferences_SyncStartedBeforeLoadingSdk() throws Exception {
-        installPackage(TEST_APP_APK_NAME);
-        runPhase("testSharedPreferences_SyncStartedBeforeLoadingSdk");
-    }
-
-    @Test
-    public void testSharedPreferences_SyncRemoveKeys() throws Exception {
-        installPackage(TEST_APP_APK_NAME);
-        runPhase("testSharedPreferences_SyncRemoveKeys");
-    }
-
-    @Test
-    public void testSharedPreferences_SyncedDataClearedOnSandboxRestart() throws Exception {
-        installPackage(TEST_APP_APK_NAME);
-        runPhase("testSharedPreferences_IsSyncedFromAppToSandbox");
-        runPhase("testSharedPreferences_SyncedDataClearedOnSandboxRestart");
+        runPhase("testGetSandboxedSdk_MultipleSdks");
     }
 }
