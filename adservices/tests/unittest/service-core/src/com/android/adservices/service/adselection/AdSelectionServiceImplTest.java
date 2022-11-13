@@ -25,9 +25,9 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZE
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
+import static com.android.adservices.service.adselection.AdSelectionFromOutcomesInputValidator.AD_OUTCOMES_CANNOT_BE_NULL_OR_EMPTY;
 import static com.android.adservices.service.adselection.ImpressionReporter.REPORT_IMPRESSION_THROTTLED;
 import static com.android.adservices.service.adselection.ImpressionReporter.UNABLE_TO_FIND_AD_SELECTION_WITH_GIVEN_ID;
-import static com.android.adservices.service.adselection.OutcomeSelectionRunner.AD_OUTCOMES_LIST_INPUT_CANNOT_BE_EMPTY_MSG;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
@@ -281,8 +281,9 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testSelectAdsFromOutcomesSuccess() throws Exception {
-        List<AdSelectionOutcome> adOutcomes = Collections.singletonList(SAMPLE_AD_OUTCOME);
-
+        AdSelectionOutcome adOutcomeInDb =
+                AdSelectionOutcomeFixture.anAdSelectionOutcomeInDB(mAdSelectionEntryDao);
+        List<AdSelectionOutcome> adOutcomes = Collections.singletonList(adOutcomeInDb);
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
@@ -346,7 +347,7 @@ public class AdSelectionServiceImplTest {
         assertTrue(
                 callback.mFledgeErrorResponse
                         .getErrorMessage()
-                        .contains(AD_OUTCOMES_LIST_INPUT_CANNOT_BE_EMPTY_MSG));
+                        .contains(AD_OUTCOMES_CANNOT_BE_NULL_OR_EMPTY));
     }
 
     @Test

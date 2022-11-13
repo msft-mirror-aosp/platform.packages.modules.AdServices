@@ -190,8 +190,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         } catch (NullPointerException exception) {
             int overallLatencyMs = adSelectionExecutionLogger.getRunAdSelectionOverallLatencyInMs();
             LogUtil.v(
-                    "The runAdSelection() arguments should not be null, failed with overall"
-                            + "latency %d in ms.",
+                    "The selectAds(AdSelectionConfig) arguments should not be null, failed with"
+                            + " overall latency %d in ms.",
                     overallLatencyMs);
             mAdServicesLogger.logFledgeApiCallStats(
                     apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, overallLatencyMs);
@@ -291,22 +291,36 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull CallerMetadata callerMetadata,
             @NonNull AdSelectionCallback callback)
             throws RemoteException {
-        Objects.requireNonNull(inputParams);
-        Objects.requireNonNull(callerMetadata);
-        Objects.requireNonNull(callback);
-
-        // TODO(257211190) Caller permissions must be checked in the binder thread, before anything
-        // mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
+        // TODO (b/249843968): Change API name when the new name is available
+        int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
+        // Caller permissions must be checked in the binder thread, before anything else
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
 
         // TODO(257134800): Add telemetry
+        try {
+            Objects.requireNonNull(inputParams);
+            Objects.requireNonNull(callerMetadata);
+            Objects.requireNonNull(callback);
+        } catch (NullPointerException e) {
+            LogUtil.v(
+                    "The selectAds(AdSelectionFromOutcomesConfig) arguments should not be null,"
+                            + " failed");
+            mAdServicesLogger.logFledgeApiCallStats(
+                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, 0);
+            // Rethrow because we want to fail fast
+            throw e;
+        }
 
+        int callerUid = getCallingUid(apiName);
         mLightweightExecutor.execute(
                 () -> {
                     OutcomeSelectionRunner runner =
                             new OutcomeSelectionRunner(
+                                    callerUid,
                                     mAdSelectionEntryDao,
                                     mBackgroundExecutor,
-                                    mLightweightExecutor);
+                                    mLightweightExecutor,
+                                    mAdServicesLogger);
                     runner.runOutcomeSelection(inputParams, callback);
                 });
     }

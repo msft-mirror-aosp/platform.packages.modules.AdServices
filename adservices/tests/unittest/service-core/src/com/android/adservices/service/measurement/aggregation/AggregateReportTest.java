@@ -29,6 +29,8 @@ import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.junit.Test;
 
+import java.math.BigInteger;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -40,6 +42,18 @@ public final class AggregateReportTest {
     private static final UnsignedLong TRIGGER_DEBUG_KEY = new UnsignedLong(928762L);
     private static final String SOURCE_ID = UUID.randomUUID().toString();
     private static final String TRIGGER_ID = UUID.randomUUID().toString();
+    private static final String DEBUG_CLEARTEXT_PAYLOAD =
+            "{"
+                    + "\"operation\": \"histogram\","
+                    + "\"data\": [{"
+                    + "\"bucket\": 1369,"
+                    + "\"value\": 32768"
+                    + "},"
+                    + "{"
+                    + "\"bucket\": 3461,"
+                    + "\"value\": 1664"
+                    + "}]"
+                    + "}";
 
     private AggregateReport createAttributionReport() {
         return new AggregateReport.Builder()
@@ -49,7 +63,7 @@ public final class AggregateReportTest {
                 .setSourceRegistrationTime(5L)
                 .setScheduledReportTime(1L)
                 .setEnrollmentId("enrollment-id")
-                .setDebugCleartextPayload(" key: 1369, value: 32768; key: 3461, value: 1664;")
+                .setDebugCleartextPayload(DEBUG_CLEARTEXT_PAYLOAD)
                 .setAggregateAttributionData(new AggregateAttributionData.Builder().build())
                 .setStatus(AggregateReport.Status.PENDING)
                 .setDebugReportStatus(AggregateReport.DebugReportStatus.PENDING)
@@ -69,7 +83,7 @@ public final class AggregateReportTest {
                 .setSourceRegistrationTime(5L)
                 .setScheduledReportTime(1L)
                 .setEnrollmentId("enrollment-id")
-                .setDebugCleartextPayload(" key: 1369, value: 32768; key: 3461, value: 1664;")
+                .setDebugCleartextPayload(DEBUG_CLEARTEXT_PAYLOAD)
                 .setAggregateAttributionData(new AggregateAttributionData.Builder().build())
                 .setStatus(AggregateReport.Status.PENDING)
                 .setDebugReportStatus(AggregateReport.DebugReportStatus.PENDING)
@@ -88,7 +102,7 @@ public final class AggregateReportTest {
                 .setSourceRegistrationTime(5L)
                 .setScheduledReportTime(1L)
                 .setEnrollmentId("enrollment-id")
-                .setDebugCleartextPayload(" key: 1369, value: 32768; key: 3461, value: 1664;")
+                .setDebugCleartextPayload(DEBUG_CLEARTEXT_PAYLOAD)
                 .setAggregateAttributionData(new AggregateAttributionData.Builder().build())
                 .setStatus(AggregateReport.Status.PENDING)
                 .setDebugReportStatus(AggregateReport.DebugReportStatus.PENDING)
@@ -109,8 +123,7 @@ public final class AggregateReportTest {
         assertEquals(5L, attributionReport.getSourceRegistrationTime());
         assertEquals(1L, attributionReport.getScheduledReportTime());
         assertEquals("enrollment-id", attributionReport.getEnrollmentId());
-        assertEquals(" key: 1369, value: 32768; key: 3461, value: 1664;",
-                attributionReport.getDebugCleartextPayload());
+        assertEquals(DEBUG_CLEARTEXT_PAYLOAD, attributionReport.getDebugCleartextPayload());
         assertNotNull(attributionReport.getAggregateAttributionData());
         assertEquals(AggregateReport.Status.PENDING, attributionReport.getStatus());
         assertEquals(
@@ -129,13 +142,12 @@ public final class AggregateReportTest {
         assertEquals("1", attributionReport.getId());
         assertEquals(Uri.parse("android-app://com.example.abc"), attributionReport.getPublisher());
         assertEquals(
-                Uri.parse("https://example.test/aS"), attributionReport.getAttributionDestination());
+                Uri.parse("https://example.test/aS"),
+                attributionReport.getAttributionDestination());
         assertEquals(5L, attributionReport.getSourceRegistrationTime());
         assertEquals(1L, attributionReport.getScheduledReportTime());
         assertEquals("enrollment-id", attributionReport.getEnrollmentId());
-        assertEquals(
-                " key: 1369, value: 32768; key: 3461, value: 1664;",
-                attributionReport.getDebugCleartextPayload());
+        assertEquals(DEBUG_CLEARTEXT_PAYLOAD, attributionReport.getDebugCleartextPayload());
         assertNotNull(attributionReport.getAggregateAttributionData());
         assertEquals(AggregateReport.Status.PENDING, attributionReport.getStatus());
         assertEquals(
@@ -158,9 +170,7 @@ public final class AggregateReportTest {
         assertEquals(5L, attributionReport.getSourceRegistrationTime());
         assertEquals(1L, attributionReport.getScheduledReportTime());
         assertEquals("enrollment-id", attributionReport.getEnrollmentId());
-        assertEquals(
-                " key: 1369, value: 32768; key: 3461, value: 1664;",
-                attributionReport.getDebugCleartextPayload());
+        assertEquals(DEBUG_CLEARTEXT_PAYLOAD, attributionReport.getDebugCleartextPayload());
         assertNotNull(attributionReport.getAggregateAttributionData());
         assertEquals(AggregateReport.Status.PENDING, attributionReport.getStatus());
         assertEquals(
@@ -231,5 +241,60 @@ public final class AggregateReportTest {
         assertNotEquals(attributionReport1.hashCode(), attributionReport2.hashCode());
         assertNotEquals(attributionReport1, attributionReport2);
         assertNotEquals(attributionReportSet1, attributionReportSet2);
+    }
+
+    @Test
+    public void extractAggregateHistogramContributions_withDebugPayload_canReverseConvert() {
+        // Setup
+        AggregateReport aggregateReport = createAttributionReport();
+        AggregateHistogramContribution expectedContribution1 =
+                new AggregateHistogramContribution.Builder()
+                        .setKey(new BigInteger("1369"))
+                        .setValue(32768)
+                        .build();
+        AggregateHistogramContribution expectedContribution2 =
+                new AggregateHistogramContribution.Builder()
+                        .setKey(new BigInteger("3461"))
+                        .setValue(1664)
+                        .build();
+
+        // Execution
+        List<AggregateHistogramContribution> contributions =
+                aggregateReport.extractAggregateHistogramContributions();
+
+        // Assertion
+        assertEquals(2, contributions.size());
+        assertEquals(expectedContribution1, contributions.get(0));
+        assertEquals(expectedContribution2, contributions.get(1));
+    }
+
+    @Test
+    public void extractAggregateHistogramContributions_withInvalidDebugPayload_returnsEmptyList() {
+        // Setup
+        AggregateReport aggregateReport =
+                new AggregateReport.Builder()
+                        .setId("1")
+                        .setPublisher(Uri.parse("android-app://com.example.abc"))
+                        .setAttributionDestination(Uri.parse("https://example.test/aS"))
+                        .setSourceRegistrationTime(5L)
+                        .setScheduledReportTime(1L)
+                        .setEnrollmentId("enrollment-id")
+                        // invalid debug cleartext payload
+                        .setDebugCleartextPayload("some_invalid_debug_cleartext_payload")
+                        .setStatus(AggregateReport.Status.PENDING)
+                        .setDebugReportStatus(AggregateReport.DebugReportStatus.PENDING)
+                        .setApiVersion("1452")
+                        .setSourceDebugKey(SOURCE_DEBUG_KEY)
+                        .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
+                        .setSourceId(SOURCE_ID)
+                        .setTriggerId(TRIGGER_ID)
+                        .build();
+
+        // Execution
+        List<AggregateHistogramContribution> contributions =
+                aggregateReport.extractAggregateHistogramContributions();
+
+        // Assertion
+        assertEquals(0, contributions.size());
     }
 }

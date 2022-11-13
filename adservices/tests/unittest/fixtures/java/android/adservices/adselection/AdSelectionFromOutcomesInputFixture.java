@@ -41,11 +41,20 @@ public class AdSelectionFromOutcomesInputFixture {
     }
 
     public static AdSelectionFromOutcomesInput anAdSelectionFromOutcomesInput(
-            List<AdSelectionOutcome> adOutcomes) {
+            final List<AdSelectionOutcome> adOutcomes) {
         return new AdSelectionFromOutcomesInput.Builder()
                 .setAdOutcomes(adOutcomes)
                 .setSelectionSignals(SAMPLE_SELECTION_SIGNALS)
                 .setSelectionUri(SAMPLE_SELECTION_LOGIC_URI)
+                .setCallerPackageName(CALLER_PACKAGE_NAME)
+                .build();
+    }
+
+    public static AdSelectionFromOutcomesInput anAdSelectionFromOutcomesInput(final Uri uri) {
+        return new AdSelectionFromOutcomesInput.Builder()
+                .setAdOutcomes(Collections.singletonList(SAMPLE_AD_OUTCOME))
+                .setSelectionSignals(SAMPLE_SELECTION_SIGNALS)
+                .setSelectionUri(uri)
                 .setCallerPackageName(CALLER_PACKAGE_NAME)
                 .build();
     }

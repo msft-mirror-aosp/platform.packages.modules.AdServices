@@ -278,6 +278,6 @@ public class AsyncRegistrationQueueJobServiceTest {
     private void toggleKillSwitch(boolean value) {
         Flags mockFlags = Mockito.mock(Flags.class);
         ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
-        ExtendedMockito.doReturn(value).when(mockFlags).getRegistrationJobQueueKillSwitch();
+        ExtendedMockito.doReturn(value).when(mockFlags).getAsyncRegistrationJobQueueKillSwitch();
     }
 }
