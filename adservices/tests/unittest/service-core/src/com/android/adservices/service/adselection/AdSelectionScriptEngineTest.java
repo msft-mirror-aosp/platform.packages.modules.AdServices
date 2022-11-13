@@ -52,8 +52,8 @@ import org.junit.Test;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -89,6 +89,21 @@ public class AdSelectionScriptEngineTest {
     private static final double AD_BID_2 = 11.0;
     private static final long AD_SELECTION_ID_3 = 1234567L;
     private static final double AD_BID_3 = 12.0;
+    private static final AdSelectionIdWithBid AD_SELECTION_ID_WITH_BID_1 =
+            AdSelectionIdWithBid.builder()
+                    .setAdSelectionId(AD_SELECTION_ID_1)
+                    .setBid(AD_BID_1)
+                    .build();
+    private static final AdSelectionIdWithBid AD_SELECTION_ID_WITH_BID_2 =
+            AdSelectionIdWithBid.builder()
+                    .setAdSelectionId(AD_SELECTION_ID_1)
+                    .setBid(AD_BID_1)
+                    .build();
+    private static final AdSelectionIdWithBid AD_SELECTION_ID_WITH_BID_3 =
+            AdSelectionIdWithBid.builder()
+                    .setAdSelectionId(AD_SELECTION_ID_1)
+                    .setBid(AD_BID_1)
+                    .build();
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(1);
     IsolateSettings mIsolateSettings = IsolateSettings.forMaxHeapSizeEnforcementDisabled();
     private final AdSelectionScriptEngine mAdSelectionScriptEngine =
@@ -313,9 +328,9 @@ public class AdSelectionScriptEngineTest {
                                 + "    return {'status': 0, 'result': (outcome_1p.bid >"
                                 + " selection_signals.bid_floor) ? outcome_1p : null};\n"
                                 + "}",
-                        Map.of(AD_SELECTION_ID_1, AD_BID_1),
+                        Collections.singletonList(AD_SELECTION_ID_WITH_BID_1),
                         AdSelectionSignals.fromString("{bid_floor: 9}"));
-        assertThat(result).isEqualTo(AD_SELECTION_ID_1);
+        assertThat(result).isEqualTo(AD_SELECTION_ID_WITH_BID_1.getAdSelectionId());
     }
 
     @Test
@@ -330,7 +345,7 @@ public class AdSelectionScriptEngineTest {
                                 + "    return {'status': 0, 'result': (outcome_1p.bid >"
                                 + " selection_signals.bid_floor) ? outcome_1p : null};\n"
                                 + "}",
-                        Map.of(AD_SELECTION_ID_1, AD_BID_1),
+                        Collections.singletonList(AD_SELECTION_ID_WITH_BID_1),
                         AdSelectionSignals.fromString("{bid_floor: 11}"));
         assertThat(result).isNull();
     }
@@ -350,12 +365,12 @@ public class AdSelectionScriptEngineTest {
                                 + "    }\n"
                                 + "    return {'status': 0, 'result': winner_outcome};\n"
                                 + "}",
-                        Map.of(
-                                AD_SELECTION_ID_1, AD_BID_1,
-                                AD_SELECTION_ID_2, AD_BID_2,
-                                AD_SELECTION_ID_3, AD_BID_3),
+                        List.of(
+                                AD_SELECTION_ID_WITH_BID_1,
+                                AD_SELECTION_ID_WITH_BID_2,
+                                AD_SELECTION_ID_WITH_BID_3),
                         AdSelectionSignals.EMPTY);
-        assertThat(result).isEqualTo(AD_SELECTION_ID_3);
+        assertThat(result).isEqualTo(AD_SELECTION_ID_WITH_BID_3.getAdSelectionId());
     }
 
     @Test
@@ -368,13 +383,10 @@ public class AdSelectionScriptEngineTest {
                                         "function selectOutcome(outcomes, selection_signals) {\n"
                                                 + "    return {'status': 0, 'result': outcomes};\n"
                                                 + "}",
-                                        Map.of(
-                                                AD_SELECTION_ID_1,
-                                                AD_BID_1,
-                                                AD_SELECTION_ID_2,
-                                                AD_BID_2,
-                                                AD_SELECTION_ID_3,
-                                                AD_BID_3),
+                                        List.of(
+                                                AD_SELECTION_ID_WITH_BID_1,
+                                                AD_SELECTION_ID_WITH_BID_2,
+                                                AD_SELECTION_ID_WITH_BID_3),
                                         AdSelectionSignals.EMPTY));
         Assert.assertTrue(exception.getCause() instanceof IllegalStateException);
     }
@@ -463,7 +475,7 @@ public class AdSelectionScriptEngineTest {
 
     private Long selectOutcome(
             String jsScript,
-            Map<Long, Double> adSelectionIdWithBids,
+            List<AdSelectionIdWithBid> adSelectionIdWithBids,
             AdSelectionSignals selectionSignals)
             throws Exception {
         return waitForFuture(

@@ -50,7 +50,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 import java.util.Collections;
-import java.util.Map;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -127,7 +127,12 @@ public class AdOutcomeSelectorImplTest {
     public void testAdOutcomeSelectorReturnsOutcomeSuccess() throws Exception {
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDefaultDispatcher);
 
-        Map<Long, Double> adverts = Map.of(AD_SELECTION_ID, AD_BID);
+        List<AdSelectionIdWithBid> adverts =
+                Collections.singletonList(
+                        AdSelectionIdWithBid.builder()
+                                .setAdSelectionId(AD_SELECTION_ID)
+                                .setBid(AD_BID)
+                                .build());
         AdSelectionSignals signals = AdSelectionSignals.EMPTY;
         Uri uri = mMockWebServerRule.uriForPath(WATERFALL_MEDIATION_LOGIC_PATH);
 
@@ -151,7 +156,12 @@ public class AdOutcomeSelectorImplTest {
     public void testAdOutcomeSelectorReturnsNullSuccess() throws Exception {
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDefaultDispatcher);
 
-        Map<Long, Double> adverts = Map.of(AD_SELECTION_ID, AD_BID);
+        List<AdSelectionIdWithBid> adverts =
+                Collections.singletonList(
+                        AdSelectionIdWithBid.builder()
+                                .setAdSelectionId(AD_SELECTION_ID)
+                                .setBid(AD_BID)
+                                .build());
         AdSelectionSignals signals = AdSelectionSignals.EMPTY;
         Uri uri = mMockWebServerRule.uriForPath(WATERFALL_MEDIATION_LOGIC_PATH);
 
@@ -175,7 +185,12 @@ public class AdOutcomeSelectorImplTest {
     public void testAdOutcomeSelectorJsonException() throws Exception {
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDefaultDispatcher);
 
-        Map<Long, Double> adverts = Map.of(AD_SELECTION_ID, AD_BID);
+        List<AdSelectionIdWithBid> adverts =
+                Collections.singletonList(
+                        AdSelectionIdWithBid.builder()
+                                .setAdSelectionId(AD_SELECTION_ID)
+                                .setBid(AD_BID)
+                                .build());
         AdSelectionSignals signals = AdSelectionSignals.EMPTY;
         Uri uri = mMockWebServerRule.uriForPath(WATERFALL_MEDIATION_LOGIC_PATH);
 
@@ -213,7 +228,12 @@ public class AdOutcomeSelectorImplTest {
                     }
                 };
 
-        Map<Long, Double> adverts = Map.of(AD_SELECTION_ID, AD_BID);
+        List<AdSelectionIdWithBid> adverts =
+                Collections.singletonList(
+                        AdSelectionIdWithBid.builder()
+                                .setAdSelectionId(AD_SELECTION_ID)
+                                .setBid(AD_BID)
+                                .build());
         AdSelectionSignals signals = AdSelectionSignals.EMPTY;
         Uri uri = mMockWebServerRule.uriForPath(WATERFALL_MEDIATION_LOGIC_PATH);
 
