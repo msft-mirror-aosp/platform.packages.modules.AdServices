@@ -42,8 +42,8 @@ import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_TOP
 import static com.android.adservices.service.Flags.ENFORCE_ISOLATE_MAX_HEAP_SIZE;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
-import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S;
+import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED;
@@ -154,8 +154,8 @@ import static com.android.adservices.service.PhFlags.KEY_ENROLLMENT_BLOCKLIST_ID
 import static com.android.adservices.service.PhFlags.KEY_FLEDE_AD_SELECTION_OFF_DEVICE_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
-import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S;
+import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
@@ -630,20 +630,20 @@ public class PhFlagsTest {
     }
 
     @Test
-    public void testGetAdSelectionConcurrentBiddingCount() {
+    public void testGetAdSelectionMaxConcurrentBiddingCount() {
         // without any overriding, the value is hard coded constant
-        assertThat(FlagsFactory.getFlags().getAdSelectionConcurrentBiddingCount())
-                .isEqualTo(FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT);
+        assertThat(FlagsFactory.getFlags().getAdSelectionMaxConcurrentBiddingCount())
+                .isEqualTo(FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT);
 
         final int phOverrideValue = 4;
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT,
+                KEY_FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT,
                 Integer.toString(phOverrideValue),
                 false);
 
         Flags phFlags = FlagsFactory.getFlags();
-        assertThat(phFlags.getAdSelectionConcurrentBiddingCount()).isEqualTo(phOverrideValue);
+        assertThat(phFlags.getAdSelectionMaxConcurrentBiddingCount()).isEqualTo(phOverrideValue);
     }
 
     @Test
