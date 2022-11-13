@@ -284,9 +284,7 @@ public class AdSelectionExecutionLogger extends ApiServiceLatencyCalculator {
         mAdServicesLogger.logRunAdSelectionProcessReportedStats(runAdSelectionProcessReportedStats);
     }
 
-    /**
-     * @return the overall latency in milliseconds of runAdSelection called by the client interface.
-     */
+    /** @return the overall latency in milliseconds of selectAds called by the client interface. */
     public int getRunAdSelectionOverallLatencyInMs() {
         return getBinderLatencyInMs(mBinderElapsedTimestamp)
                 + getApiServiceInternalFinalLatencyInMs();

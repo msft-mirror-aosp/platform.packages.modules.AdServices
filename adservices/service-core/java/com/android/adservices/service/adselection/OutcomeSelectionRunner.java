@@ -16,22 +16,27 @@
 
 package com.android.adservices.service.adselection;
 
-import static android.adservices.common.AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionFromOutcomesInput;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.AdSelectionResponse;
 import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
+import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
 import android.net.Uri;
 import android.os.RemoteException;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesLoggerUtil;
+import com.android.internal.annotations.VisibleForTesting;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -39,9 +44,8 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
@@ -52,21 +56,38 @@ import java.util.stream.Collectors;
  * <p>Class takes in an executor on which it runs the OutcomeSelection logic
  */
 public class OutcomeSelectionRunner {
+    @VisibleForTesting static final String AD_SELECTION_FROM_OUTCOMES_ERROR_PATTERN = "%s: %s";
+
+    @VisibleForTesting
+    static final String ERROR_AD_SELECTION_FROM_OUTCOMES_FAILURE =
+            "Encountered failure during Ad Selection";
+
+    @VisibleForTesting
+    static final String AD_OUTCOMES_LIST_INPUT_CANNOT_BE_EMPTY_MSG =
+            "Ad outcomes list should at least have one element inside";
+
+    private final int mCallerUid;
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
     @NonNull protected final ListeningExecutorService mBackgroundExecutorService;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
+    @NonNull protected final AdServicesLogger mAdServicesLogger;
 
     public OutcomeSelectionRunner(
+            int callerUid,
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
             @NonNull final ExecutorService backgroundExecutorService,
-            @NonNull final ExecutorService lightweightExecutorService) {
+            @NonNull final ExecutorService lightweightExecutorService,
+            @NonNull final AdServicesLogger adServicesLogger) {
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(lightweightExecutorService);
+        Objects.requireNonNull(adServicesLogger);
 
+        mCallerUid = callerUid;
         mAdSelectionEntryDao = adSelectionEntryDao;
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
+        mAdServicesLogger = adServicesLogger;
     }
 
     /**
@@ -105,7 +126,17 @@ public class OutcomeSelectionRunner {
 
                         @Override
                         public void onFailure(Throwable t) {
-                            notifyFailureToCaller(t, callback);
+                            if (t instanceof ConsentManager.RevokedConsentException) {
+                                notifyEmptySuccessToCaller(
+                                        callback,
+                                        AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED);
+                            } else {
+                                if (t.getCause() instanceof AdServicesException) {
+                                    notifyFailureToCaller(t.getCause(), callback);
+                                } else {
+                                    notifyFailureToCaller(t, callback);
+                                }
+                            }
                         }
                     },
                     mLightweightExecutorService);
@@ -121,13 +152,14 @@ public class OutcomeSelectionRunner {
             @NonNull AdSelectionSignals selectionSignals,
             @NonNull Uri selectionUri) {
         // TODO(249843968): Implement outcome selection service orchestration
-        FluentFuture<Map<Long, Double>> outcomeIdBidPairsFuture =
-                FluentFuture.from(retrieveAdSelectionIdToBidMap(adOutcomes));
+        FluentFuture<List<AdSelectionIdWithBid>> outcomeIdBidPairsFuture =
+                FluentFuture.from(retrieveAdSelectionIdWithBidList(adOutcomes));
 
         return mLightweightExecutorService.submit(() -> null);
     }
 
     private void notifySuccessToCaller(AdSelectionOutcome result, AdSelectionCallback callback) {
+        int resultCode = AdServicesStatusUtils.STATUS_UNSET;
         try {
             if (result == null) {
                 callback.onSuccess(null);
@@ -139,22 +171,55 @@ public class OutcomeSelectionRunner {
                                 .build());
             }
         } catch (RemoteException e) {
-            LogUtil.e(e, "Encountered exception during callback");
-            throw new IllegalStateException(e);
+            LogUtil.e(e, "Encountered exception during notifying AdSelectionCallback");
+            resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
+        } finally {
+            LogUtil.v("Ad Selection from outcomes completed and attempted notifying success");
+            mAdServicesLogger.logFledgeApiCallStats(
+                    AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN, resultCode, 0);
         }
     }
 
+    /** Sends a successful response to the caller that represents a silent failure. */
+    private void notifyEmptySuccessToCaller(@NonNull AdSelectionCallback callback, int resultCode) {
+        try {
+            callback.onSuccess(null);
+        } catch (RemoteException e) {
+            LogUtil.e(e, "Encountered exception during notifying AdSelectionCallback");
+            resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
+        } finally {
+            LogUtil.v(
+                    "Ad Selection from outcomes completed, attempted notifying success for a"
+                            + " silent failure");
+            mAdServicesLogger.logFledgeApiCallStats(
+                    AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN, resultCode, 0);
+        }
+    }
+
+    /** Sends a failure notification to the caller */
     private void notifyFailureToCaller(Throwable t, AdSelectionCallback callback) {
-        // TODO(b/257678151): Implement more informative failure handling
+        int resultCode = AdServicesStatusUtils.STATUS_UNSET;
         try {
             LogUtil.e("Notify caller of error: " + t);
-            callback.onFailure(
+            resultCode = AdServicesLoggerUtil.getResultCodeFromException(t);
+            FledgeErrorResponse selectionFailureResponse =
                     new FledgeErrorResponse.Builder()
-                            .setErrorMessage(t.getMessage())
-                            .setStatusCode(STATUS_UNKNOWN_ERROR)
-                            .build());
+                            .setErrorMessage(
+                                    String.format(
+                                            AD_SELECTION_FROM_OUTCOMES_ERROR_PATTERN,
+                                            ERROR_AD_SELECTION_FROM_OUTCOMES_FAILURE,
+                                            t.getMessage()))
+                            .setStatusCode(resultCode)
+                            .build();
+            LogUtil.e(t, "Ad Selection failure: ");
+            callback.onFailure(selectionFailureResponse);
         } catch (RemoteException e) {
-            LogUtil.e("Failed to notify caller: " + e);
+            LogUtil.e(e, "Encountered exception during notifying AdSelectionCallback");
+            resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
+        } finally {
+            LogUtil.v("Ad Selection From Outcomes failed");
+            mAdServicesLogger.logFledgeApiCallStats(
+                    AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN, resultCode, 0);
         }
     }
 
@@ -191,9 +256,9 @@ public class OutcomeSelectionRunner {
 
     /** Retrieves winner ad bids using ad selection ids of already run ad selections' outcomes. */
     @VisibleForTesting
-    ListenableFuture<Map<Long, Double>> retrieveAdSelectionIdToBidMap(
+    ListenableFuture<List<AdSelectionIdWithBid>> retrieveAdSelectionIdWithBidList(
             List<AdSelectionOutcome> adOutcomes) {
-        Map<Long, Double> retrievedIdBidPairs = new HashMap<>();
+        List<AdSelectionIdWithBid> adSelectionIdWithBidList = new ArrayList<>();
         return mBackgroundExecutorService.submit(
                 () -> {
                     List<Long> adOutcomeIds =
@@ -203,9 +268,12 @@ public class OutcomeSelectionRunner {
                     mAdSelectionEntryDao.getAdSelectionEntities(adOutcomeIds).parallelStream()
                             .forEach(
                                     e ->
-                                            retrievedIdBidPairs.put(
-                                                    e.getAdSelectionId(), e.getWinningAdBid()));
-                    return retrievedIdBidPairs;
+                                            adSelectionIdWithBidList.add(
+                                                    AdSelectionIdWithBid.builder()
+                                                            .setAdSelectionId(e.getAdSelectionId())
+                                                            .setBid(e.getWinningAdBid())
+                                                            .build()));
+                    return adSelectionIdWithBidList;
                 });
     }
 }
