@@ -47,8 +47,12 @@ public class AdServicesSettingsMainFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
         setupViewModel();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
         initActionListeners();
     }
 
