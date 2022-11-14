@@ -32,7 +32,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 
-import java.util.Map;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -95,7 +95,7 @@ public class AdOutcomeSelectorImpl implements AdOutcomeSelector {
      */
     @Override
     public FluentFuture<Long> runAdOutcomeSelector(
-            @NonNull Map<Long, Double> adSelectionIdBidMap,
+            @NonNull List<AdSelectionIdWithBid> adSelectionIdBidMap,
             @NonNull AdSelectionSignals selectionSignals,
             @NonNull Uri selectionLogicUri) {
         Objects.requireNonNull(adSelectionIdBidMap);

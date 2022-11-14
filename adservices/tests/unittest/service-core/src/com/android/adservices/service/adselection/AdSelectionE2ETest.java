@@ -170,6 +170,36 @@ public class AdSelectionE2ETest {
                     + "  return {'status': 0, 'score': bid };\n"
                     + "}";
 
+    private static final String SELECTION_PICK_HIGHEST_LOGIC_JS_PATH =
+            "/selectionPickHighestLogicJS/";
+    private static final String SELECTION_PICK_NONE_LOGIC_JS_PATH = "/selectionPickNoneLogicJS/";
+    private static final String SELECTION_WATERFALL_LOGIC_JS_PATH = "/selectionWaterfallLogicJS/";
+    private static final String SELECTION_PICK_HIGHEST_LOGIC_JS =
+            "function selectOutcome(outcomes, selection_signals) {\n"
+                    + "    let max_bid = 0;\n"
+                    + "    let winner_outcome = null;\n"
+                    + "    for (let outcome of outcomes) {\n"
+                    + "        if (outcome.bid > max_bid) {\n"
+                    + "            max_bid = outcome.bid;\n"
+                    + "            winner_outcome = outcome;\n"
+                    + "        }\n"
+                    + "    }\n"
+                    + "    return {'status': 0, 'result': winner_outcome};\n"
+                    + "}";
+    private static final String SELECTION_PICK_NONE_LOGIC_JS =
+            "function selectOutcome(outcomes, selection_signals) {\n"
+                    + "    return {'status': 0, 'result': null};\n"
+                    + "}";
+    private static final String SELECTION_WATERFALL_LOGIC_JS =
+            "function selectOutcome(outcomes, selection_signals) {\n"
+                    + "    if (outcomes.length != 1 || selection_signals.bid_floor =="
+                    + " undefined) return null;\n"
+                    + "\n"
+                    + "    const outcome_1p = outcomes[0];\n"
+                    + "    return {'status': 0, 'result': (outcome_1p.bid >"
+                    + " selection_signals.bid_floor) ? outcome_1p : null};\n"
+                    + "}";
+
     private static final AdTechIdentifier TRUSTED_BIDDING_SIGNALS =
             AdTechIdentifier.fromString(
                     "{\n"
@@ -296,6 +326,12 @@ public class AdSelectionE2ETest {
                         } else if ((BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS)
                                 .equals(request.getPath())) {
                             return new MockResponse().setBody(TRUSTED_BIDDING_SIGNALS.toString());
+                        } else if (request.getPath().equals(SELECTION_PICK_HIGHEST_LOGIC_JS_PATH)) {
+                            return new MockResponse().setBody(SELECTION_PICK_HIGHEST_LOGIC_JS);
+                        } else if (request.getPath().equals(SELECTION_PICK_NONE_LOGIC_JS_PATH)) {
+                            return new MockResponse().setBody(SELECTION_PICK_NONE_LOGIC_JS);
+                        } else if (request.getPath().equals(SELECTION_WATERFALL_LOGIC_JS_PATH)) {
+                            return new MockResponse().setBody(SELECTION_WATERFALL_LOGIC_JS);
                         }
 
                         // The seller params vary based on runtime, so we are returning trusted
@@ -384,7 +420,7 @@ public class AdSelectionE2ETest {
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         runAdSelectionProcessLoggerLatch.await();
         loggerLatch.await();
         assertCallbackIsSuccessful(resultsCallback);
@@ -450,7 +486,7 @@ public class AdSelectionE2ETest {
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         runAdSelectionProcessLoggerLatch.await();
         loggerLatch.await();
         assertCallbackIsSuccessful(resultsCallback);
@@ -533,9 +569,7 @@ public class AdSelectionE2ETest {
                         .build();
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
-
-
+                invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
 
         assertCallbackIsSuccessful(resultsCallback);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
@@ -625,7 +659,7 @@ public class AdSelectionE2ETest {
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
 
         assertCallbackIsSuccessful(resultsCallback);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
@@ -678,7 +712,7 @@ public class AdSelectionE2ETest {
                 dBCustomAudienceExpired,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_3));
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         assertCallbackIsSuccessful(resultsCallback);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
         assertTrue(mAdSelectionEntryDaoSpy.doesAdSelectionIdExist(resultSelectionId));
@@ -737,7 +771,7 @@ public class AdSelectionE2ETest {
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_3));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         assertCallbackFailed(resultsCallback);
         assertEquals(
                 resultsCallback.mFledgeErrorResponse.getStatusCode(),
@@ -758,7 +792,7 @@ public class AdSelectionE2ETest {
         // Do not populate CustomAudience DAO
         mMockWebServerRule.startMockWebServer(mDispatcher);
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         assertCallbackFailed(resultsCallback);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(), ERROR_NO_CA_AVAILABLE);
@@ -785,7 +819,7 @@ public class AdSelectionE2ETest {
 
         mMockWebServerRule.startMockWebServer(mDispatcher);
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         assertCallbackFailed(resultsCallback);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(), ERROR_NO_BUYERS_AVAILABLE);
@@ -821,7 +855,7 @@ public class AdSelectionE2ETest {
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         assertCallbackIsSuccessful(resultsCallback);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
         assertTrue(mAdSelectionEntryDaoSpy.doesAdSelectionIdExist(resultSelectionId));
@@ -907,7 +941,7 @@ public class AdSelectionE2ETest {
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         assertCallbackFailed(resultsCallback);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(),
@@ -974,7 +1008,7 @@ public class AdSelectionE2ETest {
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         assertCallbackFailed(resultsCallback);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(),
@@ -1041,7 +1075,7 @@ public class AdSelectionE2ETest {
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         assertCallbackFailed(resultsCallback);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(), MISSING_SCORING_LOGIC);
@@ -1108,7 +1142,7 @@ public class AdSelectionE2ETest {
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         assertCallbackIsSuccessful(resultsCallback);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
         assertTrue(mAdSelectionEntryDaoSpy.doesAdSelectionIdExist(resultSelectionId));
@@ -1184,7 +1218,7 @@ public class AdSelectionE2ETest {
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         assertCallbackIsSuccessful(resultsCallback);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
         assertTrue(mAdSelectionEntryDaoSpy.doesAdSelectionIdExist(resultSelectionId));
@@ -1260,7 +1294,7 @@ public class AdSelectionE2ETest {
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         assertCallbackFailed(resultsCallback);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(), ERROR_NO_WINNING_AD_FOUND);
@@ -1381,7 +1415,7 @@ public class AdSelectionE2ETest {
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         assertCallbackIsSuccessful(resultsCallback);
         assertEquals(
                 AD_URI_PREFIX + BUYER_2 + "/ad3",
@@ -1389,12 +1423,13 @@ public class AdSelectionE2ETest {
     }
 
     @Test
-    public void testRunAdSelectionBiddingTimesOutPartiallyBuyer() throws Exception {
+    public void testRunAdSelectionImposesPerBuyerBiddingTimeout() throws Exception {
         doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         Long lenientPerBuyerTimeOutLimit = 50000L;
         Long tightPerBuyerTimeOutLimit = 2000L;
+        int largeCACountForBuyer = 300;
 
         Flags flagsWithLenientBuyerBiddingLimits =
                 new Flags() {
@@ -1457,7 +1492,6 @@ public class AdSelectionE2ETest {
         participatingBuyers.add(BUYER_2);
         participatingBuyers.add(BUYER_3);
 
-        int largeCACountForBuyer = 300;
         for (int i = 1; i <= largeCACountForBuyer; i++) {
             DBCustomAudience dBCustomAudienceX =
                     createDBCustomAudience(
@@ -1507,7 +1541,7 @@ public class AdSelectionE2ETest {
                         mFledgeAllowListsFilterSpy);
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
 
         assertCallbackIsSuccessful(resultsCallback);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
@@ -1547,6 +1581,11 @@ public class AdSelectionE2ETest {
                     public long getAdSelectionOverallTimeoutMs() {
                         return lenientPerBuyerTimeOutLimit * 3;
                     }
+
+                    @Override
+                    public int getAdSelectionMaxConcurrentBiddingCount() {
+                        return 1;
+                    }
                 };
 
         // Create an instance of AdSelection Service with tight dependencies
@@ -1569,7 +1608,7 @@ public class AdSelectionE2ETest {
                         mFledgeAllowListsFilterSpy);
 
         resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
 
         assertCallbackIsSuccessful(resultsCallback);
         resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
@@ -1708,7 +1747,7 @@ public class AdSelectionE2ETest {
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         Assert.assertFalse(resultsCallback.mIsSuccess);
 
         FledgeErrorResponse response = resultsCallback.mFledgeErrorResponse;
@@ -1762,8 +1801,7 @@ public class AdSelectionE2ETest {
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(
-                        mAdSelectionService, invalidAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, invalidAdSelectionConfig, CALLER_PACKAGE_NAME);
         runAdSelectionProcessLoggerLatch.await();
         loggerLatch.await();
         assertFalse(resultsCallback.mIsSuccess);
@@ -1836,7 +1874,7 @@ public class AdSelectionE2ETest {
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         assertCallbackFailed(resultsCallback);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(),
@@ -1892,7 +1930,7 @@ public class AdSelectionE2ETest {
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         assertCallbackFailed(resultsCallback);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(),
@@ -1959,7 +1997,7 @@ public class AdSelectionE2ETest {
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         assertCallbackIsSuccessful(resultsCallback);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
         assertTrue(mAdSelectionEntryDaoSpy.doesAdSelectionIdExist(resultSelectionId));
@@ -2016,7 +2054,7 @@ public class AdSelectionE2ETest {
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(
+                invokeSelectAds(
                         mAdSelectionService,
                         mAdSelectionConfig,
                         CALLER_PACKAGE_NAME + "invalidPackageName");
@@ -2104,7 +2142,7 @@ public class AdSelectionE2ETest {
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         runAdSelectionProcessLoggerLatch.await();
         loggerLatch.await();
         Assert.assertFalse(resultsCallback.mIsSuccess);
@@ -2207,7 +2245,7 @@ public class AdSelectionE2ETest {
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         runAdSelectionProcessLoggerLatch.await();
         loggerLatch.await();
         Assert.assertFalse(resultsCallback.mIsSuccess);
@@ -2337,12 +2375,12 @@ public class AdSelectionE2ETest {
 
         // First call to Ad Selection should succeed
         AdSelectionTestCallback resultsCallbackFirstCall =
-                invokeRunAdSelection(
+                invokeSelectAds(
                         adSelectionServiceWithThrottling, mAdSelectionConfig, CALLER_PACKAGE_NAME);
 
         // Immediately made subsequent call should fail
         AdSelectionTestCallback resultsCallbackSecondCall =
-                invokeRunAdSelection(
+                invokeSelectAds(
                         adSelectionServiceWithThrottling, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         runAdSelectionProcessLoggerLatch.await();
         loggerLatch.await();
@@ -2463,7 +2501,7 @@ public class AdSelectionE2ETest {
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         runAdSelectionProcessLoggerLatch.await();
         loggerLatch.await();
         assertCallbackIsSuccessful(resultsCallback);
@@ -2572,7 +2610,7 @@ public class AdSelectionE2ETest {
                 actualErrorMassage.contains(expectedErrorReason));
     }
 
-    private AdSelectionTestCallback invokeRunAdSelection(
+    private AdSelectionTestCallback invokeSelectAds(
             AdSelectionServiceImpl adSelectionService,
             AdSelectionConfig adSelectionConfig,
             String callerPackageName)
