@@ -79,6 +79,7 @@ import android.webkit.WebViewUpdateService;
 import com.android.adservices.AdServicesCommon;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.sdksandbox.IComputeSdkStorageCallback;
 import com.android.sdksandbox.ILoadSdkInSandboxCallback;
 import com.android.sdksandbox.IRequestSurfacePackageFromSdkCallback;
 import com.android.sdksandbox.ISdkSandboxDisabledCallback;
@@ -845,6 +846,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             // Once bound service has been set, sync manager is notified.
             notifySyncManagerSandboxStarted(mCallingInfo);
 
+            try {
+                computeSdkStorage(mCallingInfo, mService);
+            } catch (RemoteException e) {
+                Log.e(TAG, "Error while computing sdk storage for CallingInfo: " + mCallingInfo);
+            }
+
             if (!mHasConnectedBefore) {
                 final int timeToLoadSandbox =
                         (int) (mInjector.getCurrentTime() - mStartTimeForLoadingSandbox);
@@ -1299,6 +1306,34 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     boolean isSdkSandboxServiceRunning(CallingInfo callingInfo) {
         return mServiceProvider.getBoundServiceForApp(callingInfo) != null;
+    }
+
+    private void computeSdkStorage(CallingInfo callingInfo, ISdkSandboxService service)
+            throws RemoteException {
+        final List<StorageDirInfo> sharedStorageDirsInfo =
+                mSdkSandboxStorageManager.getInternalStorageDirInfo(callingInfo);
+        final List<StorageDirInfo> sdkStorageDirsInfo =
+                mSdkSandboxStorageManager.getSdkStorageDirInfo(callingInfo);
+
+        service.computeSdkStorage(
+                getListOfStoragePaths(sharedStorageDirsInfo),
+                getListOfStoragePaths(sdkStorageDirsInfo),
+                new IComputeSdkStorageCallback.Stub() {
+                    @Override
+                    public void onStorageInfoComputed(float sharedStorageKb, float sdkStorageKb) {
+                        // TODO(b/257952392): Store the storage information in memory in system
+                    }
+                });
+    }
+
+    private List<String> getListOfStoragePaths(List<StorageDirInfo> storageDirInfos) {
+        final List<String> paths = new ArrayList<>();
+
+        for (int i = 0; i < storageDirInfos.size(); i++) {
+            paths.add(storageDirInfos.get(i).getCeDataDir());
+            paths.add(storageDirInfos.get(i).getDeDataDir());
+        }
+        return paths;
     }
 
     private void notifySyncManagerSandboxStarted(CallingInfo callingInfo) {
