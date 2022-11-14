@@ -29,6 +29,7 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
+import com.android.adservices.service.Flags;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
@@ -53,7 +54,7 @@ public class PerBuyerBiddingRunnerTest {
     private static final String AD_URI_PREFIX = "http://www.domain.com/adverts/123/";
     private static final String FAST_SUFFIX = "FAST";
     private static final String SLOW_SUFFIX = "SLOW";
-    private static final long SHORT_SLEEP_MS = 10L;
+    private static final long SHORT_SLEEP_MS = 1L;
     private static final long LONG_SLEEP_MS = 10000L;
     private static final long PER_BUYER_TIMEOUT_MS = 1000L;
     private static final AdSelectionConfig AD_SELECTION_CONFIG =
@@ -75,6 +76,14 @@ public class PerBuyerBiddingRunnerTest {
     private ResponseMatcher mSlowResponseMatcher = new ResponseMatcher(SLOW_SUFFIX);
     private ResponseMatcher mFastResponseMatcher = new ResponseMatcher(FAST_SUFFIX);
 
+    private Flags mFlags =
+            new Flags() {
+                @Override
+                public int getAdSelectionMaxConcurrentBiddingCount() {
+                    return 1;
+                }
+            };
+
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
@@ -82,7 +91,10 @@ public class PerBuyerBiddingRunnerTest {
         mDBCustomAudienceList = new ArrayList<>();
         mPerBuyerBiddingRunner =
                 new PerBuyerBiddingRunner(
-                        mAdBidGeneratorMock, mScheduledExecutor, mBackgroundExecutorService);
+                        mAdBidGeneratorMock,
+                        mScheduledExecutor,
+                        mBackgroundExecutorService,
+                        mFlags);
 
         ExtendedMockito.doReturn(createDelayedBiddingOutcome(SHORT_SLEEP_MS))
                 .when(mAdBidGeneratorMock)
@@ -99,6 +111,20 @@ public class PerBuyerBiddingRunnerTest {
                         ExtendedMockito.any(AdSelectionSignals.class),
                         ExtendedMockito.any(AdSelectionSignals.class),
                         ExtendedMockito.any(AdSelectionSignals.class));
+    }
+
+    @Test
+    public void testListPartitioning() {
+        List<Integer> numbers_100 = generateList(100);
+        Assert.assertEquals(5, mPerBuyerBiddingRunner.partitionList(numbers_100, 5).size());
+        Assert.assertEquals(6, mPerBuyerBiddingRunner.partitionList(numbers_100, 6).size());
+
+        List<Integer> numbers_10 = generateList(10);
+        Assert.assertEquals(10, mPerBuyerBiddingRunner.partitionList(numbers_10, 12).size());
+        Assert.assertEquals(10, mPerBuyerBiddingRunner.partitionList(numbers_10, 10).size());
+        Assert.assertEquals(5, mPerBuyerBiddingRunner.partitionList(numbers_10, 6).size());
+        Assert.assertEquals(5, mPerBuyerBiddingRunner.partitionList(numbers_10, -6).size());
+        Assert.assertEquals(1, mPerBuyerBiddingRunner.partitionList(numbers_10, 0).size());
     }
 
     @Test
@@ -215,6 +241,14 @@ public class PerBuyerBiddingRunnerTest {
                 .setBiddingLogicUri(Uri.parse("https://www.example.com/logic"))
                 .setAds(ads)
                 .build();
+    }
+
+    private List<Integer> generateList(int size) {
+        List<Integer> numbers = new ArrayList<>();
+        for (int i = 0; i < size; i++) {
+            numbers.add(i);
+        }
+        return numbers;
     }
 
     private static class ResponseMatcher implements ArgumentMatcher<DBCustomAudience> {

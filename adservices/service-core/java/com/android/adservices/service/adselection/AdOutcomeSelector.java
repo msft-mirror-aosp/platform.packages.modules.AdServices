@@ -22,7 +22,7 @@ import android.net.Uri;
 
 import com.google.common.util.concurrent.FluentFuture;
 
-import java.util.Map;
+import java.util.List;
 
 /**
  * Interface that selects ad outcome from list of ad outcomes that have been winners of {@link
@@ -37,7 +37,7 @@ public interface AdOutcomeSelector {
      *     returns null
      */
     FluentFuture<Long> runAdOutcomeSelector(
-            @NonNull Map<Long, Double> adSelectionIdBidMap,
+            @NonNull List<AdSelectionIdWithBid> adSelectionIdWithBids,
             @NonNull AdSelectionSignals selectionSignals,
             @NonNull Uri selectionLogicUri);
 }

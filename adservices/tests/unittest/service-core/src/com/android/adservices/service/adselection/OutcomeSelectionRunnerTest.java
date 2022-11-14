@@ -20,14 +20,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import android.adservices.adselection.AdSelectionOutcome;
-import android.adservices.adselection.AdSelectionOutcomeFixture;
 import android.adservices.adselection.CustomAudienceSignalsFixture;
-import android.adservices.common.CallerMetadata;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Process;
-import android.os.SystemClock;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
@@ -37,6 +33,8 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.DBAdSelection;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -95,14 +93,24 @@ public class OutcomeSelectionRunnerTest {
     private final Context mContext = ApplicationProvider.getApplicationContext();
     private static final int CALLER_UID = Process.myUid();
     private AdSelectionEntryDao mAdSelectionEntryDao;
+    private final AdServicesHttpsClient mAdServicesHttpsClient =
+            new AdServicesHttpsClient(AdServicesExecutors.getBlockingExecutor());
     private OutcomeSelectionRunner mOutcomeSelectionRunner;
+    private final Flags mFlags =
+            new Flags() {
+                @Override
+                public long getAdSelectionSelectingOutcomeTimeoutMs() {
+                    return 300;
+                }
+
+                @Override
+                public boolean getDisableFledgeEnrollmentCheck() {
+                    return true;
+                }
+            };
+
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
-
-    private final CallerMetadata mCallerMetadata =
-            new CallerMetadata.Builder()
-                    .setBinderElapsedTimestamp(SystemClock.elapsedRealtime())
-                    .build();
 
     @Before
     public void setup() {
@@ -119,7 +127,11 @@ public class OutcomeSelectionRunnerTest {
                         mAdSelectionEntryDao,
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
-                        mAdServicesLoggerMock);
+                        AdServicesExecutors.getScheduler(),
+                        mAdServicesHttpsClient,
+                        mAdServicesLoggerMock,
+                        mContext,
+                        mFlags);
     }
 
     @Test
@@ -131,18 +143,15 @@ public class OutcomeSelectionRunnerTest {
             mAdSelectionEntryDao.persistAdSelection(selection);
         }
 
-        List<AdSelectionOutcome> adOutcomes =
+        List<Long> adOutcomeIds =
                 List.of(
-                        AdSelectionOutcomeFixture.anAdSelectionOutcome(
-                                DB_AD_SELECTION_1.getAdSelectionId()),
-                        AdSelectionOutcomeFixture.anAdSelectionOutcome(
-                                DB_AD_SELECTION_2.getAdSelectionId()),
-                        AdSelectionOutcomeFixture.anAdSelectionOutcome(
-                                DB_AD_SELECTION_3.getAdSelectionId()));
+                        DB_AD_SELECTION_1.getAdSelectionId(),
+                        DB_AD_SELECTION_2.getAdSelectionId(),
+                        DB_AD_SELECTION_3.getAdSelectionId());
 
         List<AdSelectionIdWithBid> adSelectionIdWithBidList =
                 mOutcomeSelectionRunner
-                        .retrieveAdSelectionIdWithBidList(adOutcomes)
+                        .retrieveAdSelectionIdWithBidList(adOutcomeIds)
                         .get(RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         LogUtil.i("asdf: " + adSelectionIdWithBidList);
 
@@ -175,18 +184,15 @@ public class OutcomeSelectionRunnerTest {
         List<DBAdSelection> adSelectionResults =
                 List.of(DB_AD_SELECTION_1, DB_AD_SELECTION_2, DB_AD_SELECTION_3);
 
-        List<AdSelectionOutcome> adOutcomes =
+        List<Long> adOutcomeIds =
                 List.of(
-                        AdSelectionOutcomeFixture.anAdSelectionOutcome(
-                                DB_AD_SELECTION_1.getAdSelectionId()),
-                        AdSelectionOutcomeFixture.anAdSelectionOutcome(
-                                DB_AD_SELECTION_2.getAdSelectionId()),
-                        AdSelectionOutcomeFixture.anAdSelectionOutcome(
-                                DB_AD_SELECTION_3.getAdSelectionId()));
+                        DB_AD_SELECTION_1.getAdSelectionId(),
+                        DB_AD_SELECTION_2.getAdSelectionId(),
+                        DB_AD_SELECTION_3.getAdSelectionId());
 
         List<AdSelectionIdWithBid> adSelectionIdWithBidList =
                 mOutcomeSelectionRunner
-                        .retrieveAdSelectionIdWithBidList(adOutcomes)
+                        .retrieveAdSelectionIdWithBidList(adOutcomeIds)
                         .get(RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
         Map<Long, Double> helperMap =

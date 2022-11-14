@@ -19,19 +19,22 @@ package com.android.adservices.service.adselection;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 
 import android.adservices.adselection.AdSelectionCallback;
+import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.adservices.adselection.AdSelectionFromOutcomesInput;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.AdSelectionResponse;
-import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
-import android.net.Uri;
+import android.content.Context;
 import android.os.RemoteException;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.data.adselection.DBAdSelectionEntry;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
@@ -48,7 +51,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
-import java.util.stream.Collectors;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 /**
  * Orchestrator that runs the logic retrieved on a list of outcomes and signals.
@@ -68,26 +71,56 @@ public class OutcomeSelectionRunner {
 
     private final int mCallerUid;
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
-    @NonNull protected final ListeningExecutorService mBackgroundExecutorService;
+    @NonNull private final ListeningExecutorService mBackgroundExecutorService;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
+    @NonNull private final ScheduledThreadPoolExecutor mScheduledExecutor;
+    @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
     @NonNull protected final AdServicesLogger mAdServicesLogger;
+    @NonNull private final Context mContext;
+    @NonNull private final Flags mFlags;
+
+    @NonNull private final AdOutcomeSelector mAdOutcomeSelector;
 
     public OutcomeSelectionRunner(
             int callerUid,
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
             @NonNull final ExecutorService backgroundExecutorService,
             @NonNull final ExecutorService lightweightExecutorService,
-            @NonNull final AdServicesLogger adServicesLogger) {
+            @NonNull final ScheduledThreadPoolExecutor scheduledExecutor,
+            @NonNull final AdServicesHttpsClient adServicesHttpsClient,
+            @NonNull final AdServicesLogger adServicesLogger,
+            @NonNull final Context context,
+            @NonNull final Flags flags) {
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(lightweightExecutorService);
+        Objects.requireNonNull(scheduledExecutor);
+        Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(adServicesLogger);
+        Objects.requireNonNull(context);
+        Objects.requireNonNull(flags);
 
         mCallerUid = callerUid;
         mAdSelectionEntryDao = adSelectionEntryDao;
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
+        mScheduledExecutor = scheduledExecutor;
+        mAdServicesHttpsClient = adServicesHttpsClient;
         mAdServicesLogger = adServicesLogger;
+        mContext = context;
+        mFlags = flags;
+
+        mAdOutcomeSelector =
+                new AdOutcomeSelectorImpl(
+                        new AdSelectionScriptEngine(
+                                mContext,
+                                () -> flags.getEnforceIsolateMaxHeapSize(),
+                                () -> flags.getIsolateMaxHeapSizeBytes()),
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        mAdServicesHttpsClient,
+                        mFlags);
     }
 
     /**
@@ -111,9 +144,7 @@ public class OutcomeSelectionRunner {
                             .transformAsync(
                                     ignoredVoid ->
                                             orchestrateOutcomeSelection(
-                                                    inputParams.getAdOutcomes(),
-                                                    inputParams.getSelectionSignals(),
-                                                    inputParams.getSelectionLogicUri()),
+                                                    inputParams.getAdSelectionFromOutcomesConfig()),
                                     mLightweightExecutorService);
 
             Futures.addCallback(
@@ -148,14 +179,27 @@ public class OutcomeSelectionRunner {
     }
 
     private ListenableFuture<AdSelectionOutcome> orchestrateOutcomeSelection(
-            @NonNull List<AdSelectionOutcome> adOutcomes,
-            @NonNull AdSelectionSignals selectionSignals,
-            @NonNull Uri selectionUri) {
-        // TODO(249843968): Implement outcome selection service orchestration
+            @NonNull AdSelectionFromOutcomesConfig config) {
+        // TODO(b/249843968): Implement outcome selection service orchestration
         FluentFuture<List<AdSelectionIdWithBid>> outcomeIdBidPairsFuture =
-                FluentFuture.from(retrieveAdSelectionIdWithBidList(adOutcomes));
+                FluentFuture.from(retrieveAdSelectionIdWithBidList(config.getAdSelectionIds()));
 
-        return mLightweightExecutorService.submit(() -> null);
+        FluentFuture<Long> selectedOutcomeFuture =
+                outcomeIdBidPairsFuture.transformAsync(
+                        outcomeIdBids ->
+                                mAdOutcomeSelector.runAdOutcomeSelector(
+                                        outcomeIdBids,
+                                        config.getSelectionSignals(),
+                                        config.getSelectionLogicUri()),
+                        mLightweightExecutorService);
+
+        // TODO(b/258864198): Eliminate second db call when AdSelectionIdWithBid is available
+        return selectedOutcomeFuture.transformAsync(
+                selectedOutcome ->
+                        (selectedOutcome != null)
+                                ? retrieveAdSelectionOutcomeFromAdSelectionId(selectedOutcome)
+                                : Futures.immediateFuture(null),
+                mLightweightExecutorService);
     }
 
     private void notifySuccessToCaller(AdSelectionOutcome result, AdSelectionCallback callback) {
@@ -247,9 +291,9 @@ public class OutcomeSelectionRunner {
             throws IllegalArgumentException {
         Objects.requireNonNull(inputParams);
 
-        AdSelectionFromOutcomesInputValidator validator =
-                new AdSelectionFromOutcomesInputValidator(mAdSelectionEntryDao);
-        validator.validate(inputParams);
+        AdSelectionFromOutcomesConfigValidator validator =
+                new AdSelectionFromOutcomesConfigValidator(mAdSelectionEntryDao);
+        validator.validate(inputParams.getAdSelectionFromOutcomesConfig());
 
         return null;
     }
@@ -257,14 +301,10 @@ public class OutcomeSelectionRunner {
     /** Retrieves winner ad bids using ad selection ids of already run ad selections' outcomes. */
     @VisibleForTesting
     ListenableFuture<List<AdSelectionIdWithBid>> retrieveAdSelectionIdWithBidList(
-            List<AdSelectionOutcome> adOutcomes) {
+            List<Long> adOutcomeIds) {
         List<AdSelectionIdWithBid> adSelectionIdWithBidList = new ArrayList<>();
         return mBackgroundExecutorService.submit(
                 () -> {
-                    List<Long> adOutcomeIds =
-                            adOutcomes.parallelStream()
-                                    .map(AdSelectionOutcome::getAdSelectionId)
-                                    .collect(Collectors.toList());
                     mAdSelectionEntryDao.getAdSelectionEntities(adOutcomeIds).parallelStream()
                             .forEach(
                                     e ->
@@ -274,6 +314,21 @@ public class OutcomeSelectionRunner {
                                                             .setBid(e.getWinningAdBid())
                                                             .build()));
                     return adSelectionIdWithBidList;
+                });
+    }
+
+    /** Retrieves winner ad bids using ad selection ids of already run ad selections' outcomes. */
+    @VisibleForTesting
+    ListenableFuture<AdSelectionOutcome> retrieveAdSelectionOutcomeFromAdSelectionId(
+            Long adSelectionIds) {
+        return mBackgroundExecutorService.submit(
+                () -> {
+                    DBAdSelectionEntry entry =
+                            mAdSelectionEntryDao.getAdSelectionEntityById(adSelectionIds);
+                    return new AdSelectionOutcome.Builder()
+                            .setAdSelectionId(entry.getAdSelectionId())
+                            .setRenderUri(entry.getWinningAdRenderUri())
+                            .build();
                 });
     }
 }

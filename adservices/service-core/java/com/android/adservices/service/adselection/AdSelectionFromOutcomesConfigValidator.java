@@ -16,10 +16,13 @@
 
 package com.android.adservices.service.adselection;
 
+import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.adservices.adselection.AdSelectionFromOutcomesInput;
-import android.adservices.adselection.AdSelectionOutcome;
+import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.net.Uri;
+
+import androidx.annotation.Nullable;
 
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.DBAdSelectionEntry;
@@ -35,8 +38,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /** Runs validations on {@link AdSelectionFromOutcomesInput} object */
-public class AdSelectionFromOutcomesInputValidator
-        implements Validator<AdSelectionFromOutcomesInput> {
+public class AdSelectionFromOutcomesConfigValidator
+        implements Validator<AdSelectionFromOutcomesConfig> {
 
     @VisibleForTesting
     static final String INPUT_PARAM_CANNOT_BE_NULL = "AdSelectionFromOutcomesInput cannot be null";
@@ -61,63 +64,92 @@ public class AdSelectionFromOutcomesInputValidator
     @VisibleForTesting
     static final String AD_SELECTION_IDS_DONT_EXIST = "Ad Selection Ids don't exist: %s";
 
+    @VisibleForTesting
+    static final String URI_SHOULD_HAVE_PRESENT_HOST =
+            "The AdSelectionFromOutcomesConfig selectionLogicUri should have a valid host.";
+
+    @VisibleForTesting
+    static final String SELLER_AND_URI_HOST_ARE_INCONSISTENT =
+            "The seller hostname \"%s\" and the seller-provided "
+                    + "hostname \"%s\" are not "
+                    + "consistent in AdSelectionFromOutcomesConfig selection Logic Uri.";
+
+    @VisibleForTesting static final String HTTPS_PREFIX = "https://";
     private static final String HTTPS_SCHEME = "https";
 
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
 
-    public AdSelectionFromOutcomesInputValidator(@NonNull AdSelectionEntryDao adSelectionEntryDao) {
+    public AdSelectionFromOutcomesConfigValidator(
+            @NonNull AdSelectionEntryDao adSelectionEntryDao) {
         mAdSelectionEntryDao = adSelectionEntryDao;
     }
 
     /** Validates the object and populate the violations. */
     @Override
     public void addValidation(
-            @NonNull AdSelectionFromOutcomesInput inputParam,
+            @NonNull AdSelectionFromOutcomesConfig config,
             @NonNull ImmutableCollection.Builder<String> violations) {
-        Objects.requireNonNull(inputParam, INPUT_PARAM_CANNOT_BE_NULL);
+        Objects.requireNonNull(config, INPUT_PARAM_CANNOT_BE_NULL);
 
-        violations.addAll(validateAdOutcomes(inputParam.getAdOutcomes()));
-        violations.addAll(validateSelectionLogicUri(inputParam.getSelectionLogicUri()));
+        violations.addAll(validateAdSelectionIds(config.getAdSelectionIds()));
+        violations.addAll(
+                validateSelectionLogicUri(config.getSeller(), config.getSelectionLogicUri()));
     }
 
-    private ImmutableList<String> validateAdOutcomes(@NonNull List<AdSelectionOutcome> adOutcomes) {
+    private ImmutableList<String> validateAdSelectionIds(@NonNull List<Long> adSelectionIds) {
         ImmutableList.Builder<String> violations = new ImmutableList.Builder<>();
-        if (Objects.isNull(adOutcomes) || adOutcomes.isEmpty()) {
+        if (Objects.isNull(adSelectionIds) || adSelectionIds.isEmpty()) {
             violations.add(AD_OUTCOMES_CANNOT_BE_NULL_OR_EMPTY);
         }
         List<Long> notExistIds;
-        if ((notExistIds = validateExistenceOfAdSelectionIds(adOutcomes)).size() > 0) {
+        if ((notExistIds = validateExistenceOfAdSelectionIds(adSelectionIds)).size() > 0) {
             violations.add(String.format(AD_SELECTION_IDS_DONT_EXIST, notExistIds));
         }
         return violations.build();
     }
 
-    private ImmutableList<String> validateSelectionLogicUri(@NonNull Uri selectionLogicUri) {
+    private ImmutableList<String> validateSelectionLogicUri(
+            @NonNull AdTechIdentifier seller, @NonNull Uri selectionLogicUri) {
         ImmutableList.Builder<String> violations = new ImmutableList.Builder<>();
+
         if (Objects.isNull(selectionLogicUri) || selectionLogicUri.toString().isEmpty()) {
             violations.add(SELECTION_LOGIC_URI_CANNOT_BE_NULL_OR_EMPTY);
         }
-        // TODO(b/258719980): Validate seller against selection Logic Uri
+
         if (!selectionLogicUri.isAbsolute()) {
             violations.add(URI_IS_NOT_ABSOLUTE);
         } else if (!selectionLogicUri.getScheme().equals(HTTPS_SCHEME)) {
             violations.add(URI_IS_NOT_HTTPS);
         }
+
+        String sellerHost = Uri.parse(HTTPS_PREFIX + seller).getHost();
+        String uriHost = selectionLogicUri.getHost();
+        if (isStringNullOrEmpty(uriHost)) {
+            violations.add(URI_SHOULD_HAVE_PRESENT_HOST);
+        } else if (!seller.toString().isEmpty()
+                && !Objects.isNull(sellerHost)
+                && !sellerHost.isEmpty()
+                && !uriHost.equalsIgnoreCase(sellerHost)) {
+            violations.add(
+                    String.format(SELLER_AND_URI_HOST_ARE_INCONSISTENT, sellerHost, uriHost));
+        }
         return violations.build();
     }
 
     private ImmutableList<Long> validateExistenceOfAdSelectionIds(
-            @NonNull List<AdSelectionOutcome> adOutcomes) {
+            @NonNull List<Long> adOutcomeIds) {
+        Objects.requireNonNull(adOutcomeIds);
+
         ImmutableList.Builder<Long> notExistingIds = new ImmutableList.Builder<>();
-        List<Long> adOutcomeIds =
-                adOutcomes.stream()
-                        .map(AdSelectionOutcome::getAdSelectionId)
-                        .collect(Collectors.toList());
         Set<Long> existingIds =
                 mAdSelectionEntryDao.getAdSelectionEntities(adOutcomeIds).stream()
                         .map(DBAdSelectionEntry::getAdSelectionId)
                         .collect(Collectors.toSet());
         adOutcomeIds.stream().filter(e -> !existingIds.contains(e)).forEach(notExistingIds::add);
         return notExistingIds.build();
+    }
+
+    private boolean isStringNullOrEmpty(@Nullable String str) {
+        return Objects.isNull(str) || str.isEmpty();
     }
 }
