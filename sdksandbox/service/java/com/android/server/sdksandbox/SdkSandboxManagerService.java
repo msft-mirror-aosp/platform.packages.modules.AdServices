@@ -153,6 +153,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private Injector mInjector;
 
+    private final SdkSandboxPulledAtoms mSdkSandboxPulledAtoms;
+
     // The device must have a change that allows the Webview provider to be visible in order for the
     // sandbox to be enabled.
     @GuardedBy("mLock")
@@ -183,16 +185,20 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     @VisibleForTesting
     SdkSandboxManagerService(Context context, SdkSandboxServiceProvider provider) {
-        this(context, provider, new Injector());
+        this(context, provider, new Injector(), new SdkSandboxPulledAtoms());
     }
 
     SdkSandboxManagerService(
-            Context context, SdkSandboxServiceProvider provider, Injector injector) {
+            Context context,
+            SdkSandboxServiceProvider provider,
+            Injector injector,
+            SdkSandboxPulledAtoms sdkSandboxPulledAtoms) {
         mContext = context;
         mServiceProvider = provider;
         mInjector = injector;
         mActivityManager = mContext.getSystemService(ActivityManager.class);
         mLocalManager = new LocalImpl();
+        mSdkSandboxPulledAtoms = sdkSandboxPulledAtoms;
 
         PackageManagerLocal packageManagerLocal =
                 LocalManagerRegistry.getManager(PackageManagerLocal.class);
@@ -208,6 +214,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         mAdServicesPackageName = resolveAdServicesPackage();
         mSdkSandboxSettingsListener = new SdkSandboxSettingsListener(mContext);
         mSdkSandboxSettingsListener.registerObserver();
+        mSdkSandboxPulledAtoms.initialize(mContext);
     }
 
     private void registerBroadcastReceivers() {
@@ -1401,8 +1408,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 getListOfStoragePaths(sdkStorageDirsInfo),
                 new IComputeSdkStorageCallback.Stub() {
                     @Override
-                    public void onStorageInfoComputed(float sharedStorageKb, float sdkStorageKb) {
-                        // TODO(b/257952392): Store the storage information in memory in system
+                    public void onStorageInfoComputed(int sharedStorageKb, int sdkStorageKb) {
+                        mSdkSandboxPulledAtoms.logStorage(
+                                callingInfo.getUid(), sharedStorageKb, sdkStorageKb);
                     }
                 });
     }
@@ -1653,6 +1661,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         @Override
         public void onStart() {
             publishBinderService(SDK_SANDBOX_SERVICE, mService);
+
             LocalManagerRegistry.addManager(
                     SdkSandboxManagerLocal.class, mService.getLocalManager());
         }
