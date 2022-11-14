@@ -50,7 +50,7 @@
 
     <test class="com.android.tradefed.testtype.HostTest" >
         <option name="class"
-                value="com.android.sdksandbox.cts.host.SdkSandboxStorageHostTest" />
+                value="com.android.sdksandbox.cts.host.CtsSdkSandboxStorageHostTest" />
     </test>
 
     <test class="com.android.tradefed.testtype.HostTest" >

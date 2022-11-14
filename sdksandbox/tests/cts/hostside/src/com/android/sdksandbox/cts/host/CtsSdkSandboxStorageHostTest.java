@@ -27,7 +27,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(DeviceJUnit4ClassRunner.class)
-public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
+public final class CtsSdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
     private static final String TEST_APP_PACKAGE_NAME = "com.android.sdksandbox.cts.app";
     private static final String TEST_APP_APK_NAME = "CtsSdkSandboxHostTestApp.apk";
@@ -42,7 +42,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         assertThat(
                         runDeviceTests(
                                 TEST_APP_PACKAGE_NAME,
-                                TEST_APP_PACKAGE_NAME + ".SdkSandboxStorageTestApp",
+                                TEST_APP_PACKAGE_NAME + ".CtsSdkSandboxStorageTestApp",
                                 phase))
                 .isTrue();
     }

@@ -17,9 +17,11 @@
 package com.android.adservices.service.adselection;
 
 import android.adservices.adselection.AdSelectionConfig;
+import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.util.Pair;
@@ -39,10 +41,12 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesLoggerUtil;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.base.Function;
 import com.google.common.util.concurrent.AsyncFunction;
+import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -187,34 +191,26 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final String callerPackageName,
             ListenableFuture<List<DBCustomAudience>> buyerCustomAudience) {
         AsyncFunction<List<DBCustomAudience>, List<AdBiddingOutcome>> bidAds =
-                buyerCAs -> {
-                    return runAdBidding(buyerCAs, adSelectionConfig);
-                };
+                buyerCAs -> runAdBidding(buyerCAs, adSelectionConfig);
 
         ListenableFuture<List<AdBiddingOutcome>> biddingOutcome =
                 Futures.transformAsync(buyerCustomAudience, bidAds, mLightweightExecutorService);
 
         AsyncFunction<List<AdBiddingOutcome>, List<AdScoringOutcome>> mapBidsToScores =
-                bids -> {
-                    return runAdScoring(bids, adSelectionConfig);
-                };
+                bids -> runAdScoring(bids, adSelectionConfig);
 
         ListenableFuture<List<AdScoringOutcome>> scoredAds =
                 Futures.transformAsync(
                         biddingOutcome, mapBidsToScores, mLightweightExecutorService);
 
         Function<List<AdScoringOutcome>, AdScoringOutcome> reduceScoresToWinner =
-                scores -> {
-                    return getWinningOutcome(scores);
-                };
+                scores -> getWinningOutcome(scores);
 
         ListenableFuture<AdScoringOutcome> winningOutcome =
                 Futures.transform(scoredAds, reduceScoresToWinner, mLightweightExecutorService);
 
         Function<AdScoringOutcome, AdSelectionOrchestrationResult> mapWinnerToDBResult =
-                scoringWinner -> {
-                    return createAdSelectionResult(scoringWinner);
-                };
+                scoringWinner -> createAdSelectionResult(scoringWinner);
 
         ListenableFuture<AdSelectionOrchestrationResult> dbAdSelectionBuilder =
                 Futures.transform(winningOutcome, mapWinnerToDBResult, mLightweightExecutorService);
@@ -225,30 +221,64 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
     private ListenableFuture<List<AdBiddingOutcome>> runAdBidding(
             @NonNull final List<DBCustomAudience> customAudiences,
             @NonNull final AdSelectionConfig adSelectionConfig) {
-        if (customAudiences.isEmpty()) {
-            LogUtil.w("Cannot invoke bidding on empty list of CAs");
-            return Futures.immediateFailedFuture(new Throwable("No CAs found for selection"));
+        try {
+            if (customAudiences.isEmpty()) {
+                LogUtil.w("Cannot invoke bidding on empty list of CAs");
+                endSilentFailedBidding(new RuntimeException("No CAs found for selection."));
+                return Futures.immediateFailedFuture(new Throwable("No CAs found for selection"));
+            }
+            mAdSelectionExecutionLogger.startRunAdBidding(customAudiences);
+            Map<AdTechIdentifier, List<DBCustomAudience>> buyerToCustomAudienceMap =
+                    mapBuyerToCustomAudience(customAudiences);
+            PerBuyerBiddingRunner buyerBidRunner =
+                    new PerBuyerBiddingRunner(
+                            mAdBidGenerator,
+                            mScheduledExecutor,
+                            mBackgroundExecutorService,
+                            mFlags);
+
+            LogUtil.v("Invoking bidding for #%d buyers", buyerToCustomAudienceMap.size());
+            return FluentFuture.from(
+                            Futures.successfulAsList(
+                                    buyerToCustomAudienceMap.entrySet().parallelStream()
+                                            .map(
+                                                    entry ->
+                                                            buyerBidRunner.runBidding(
+                                                                    entry.getKey(),
+                                                                    entry.getValue(),
+                                                                    mFlags
+                                                                            .getAdSelectionBiddingTimeoutPerBuyerMs(),
+                                                                    adSelectionConfig))
+                                            .flatMap(List::stream)
+                                            .collect(Collectors.toList())))
+                    .transform(this::endSuccessfulBidding, mLightweightExecutorService)
+                    .catching(
+                            RuntimeException.class,
+                            this::endFailedBidding,
+                            mLightweightExecutorService);
+        } catch (RuntimeException e) {
+            endFailedBidding(e);
+            throw e;
         }
+    }
 
-        Map<AdTechIdentifier, List<DBCustomAudience>> buyerToCustomAudienceMap =
-                mapBuyerToCustomAudience(customAudiences);
-        PerBuyerBiddingRunner buyerBidRunner =
-                new PerBuyerBiddingRunner(
-                        mAdBidGenerator, mScheduledExecutor, mBackgroundExecutorService);
+    @NonNull
+    private List<AdBiddingOutcome> endSuccessfulBidding(@NonNull List<AdBiddingOutcome> result) {
+        Objects.requireNonNull(result);
+        mAdSelectionExecutionLogger.endBiddingProcess(result, AdServicesStatusUtils.STATUS_SUCCESS);
+        return result;
+    }
 
-        LogUtil.v("Invoking bidding for #%d buyers", buyerToCustomAudienceMap.size());
-        return Futures.successfulAsList(
-                buyerToCustomAudienceMap.entrySet().parallelStream()
-                        .map(
-                                entry -> {
-                                    return buyerBidRunner.runBidding(
-                                            entry.getKey(),
-                                            entry.getValue(),
-                                            mFlags.getAdSelectionBiddingTimeoutPerBuyerMs(),
-                                            adSelectionConfig);
-                                })
-                        .flatMap(List::stream)
-                        .collect(Collectors.toList()));
+    private void endSilentFailedBidding(RuntimeException e) {
+        mAdSelectionExecutionLogger.endBiddingProcess(
+                null, AdServicesLoggerUtil.getResultCodeFromException(e));
+    }
+
+    @Nullable
+    private List<AdBiddingOutcome> endFailedBidding(RuntimeException e) {
+        mAdSelectionExecutionLogger.endBiddingProcess(
+                null, AdServicesLoggerUtil.getResultCodeFromException(e));
+        throw e;
     }
 
     @SuppressLint("DefaultLocale")
@@ -324,7 +354,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
     }
 
     private int getParallelBiddingCount() {
-        int parallelBiddingCountConfigValue = mFlags.getAdSelectionConcurrentBiddingCount();
+        int parallelBiddingCountConfigValue = mFlags.getAdSelectionMaxConcurrentBiddingCount();
         int numberOfAvailableProcessors = Runtime.getRuntime().availableProcessors();
         return Math.min(parallelBiddingCountConfigValue, numberOfAvailableProcessors);
     }

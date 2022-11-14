@@ -24,6 +24,8 @@ import android.util.Dumpable;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.service.adselection.AdOutcomeSelectorImpl;
+
 import com.google.common.collect.ImmutableList;
 
 import java.io.PrintWriter;
@@ -470,11 +472,11 @@ public interface Flags extends Dumpable {
         return FLEDGE_BACKGROUND_FETCH_MAX_RESPONSE_SIZE_B;
     }
 
-    int FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT = 6;
+    int FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT = 6;
 
     /** Returns the number of CA that can be bid in parallel for one Ad Selection */
-    default int getAdSelectionConcurrentBiddingCount() {
-        return FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT;
+    default int getAdSelectionMaxConcurrentBiddingCount() {
+        return FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT;
     }
 
     // TODO(b/240647148): Limits are increased temporarily, re-evaluate these numbers after
@@ -482,6 +484,7 @@ public interface Flags extends Dumpable {
     long FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS = 5000;
     long FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS = 10000;
     long FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS = 5000;
+    long FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS = 5000;
     // For *on device* ad selection.
     long FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS = 10000;
     long FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS = 10_000;
@@ -501,6 +504,14 @@ public interface Flags extends Dumpable {
     /** Returns the timeout constant in milliseconds that limits the scoring */
     default long getAdSelectionScoringTimeoutMs() {
         return FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
+    }
+
+    /**
+     * Returns the timeout constant in milliseconds that limits the {@link
+     * AdOutcomeSelectorImpl#runAdOutcomeSelector}
+     */
+    default long getAdSelectionSelectingOutcomeTimeoutMs() {
+        return FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
     }
 
     /**
@@ -1349,7 +1360,7 @@ public interface Flags extends Dumpable {
 
     long ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS = (int) TimeUnit.HOURS.toMillis(1);
     /** Returns the interval in which to run Registration Job Queue Service. */
-    default long getRegistrationJobQueueIntervalMs() {
+    default long getAsyncRegistrationJobQueueIntervalMs() {
         return ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS;
     }
 
@@ -1364,7 +1375,7 @@ public interface Flags extends Dumpable {
      * the Global Kill Switch, Measurement Kill Switch, or the Registration Job Queue Kill Switch
      * value is true.
      */
-    default boolean getRegistrationJobQueueKillSwitch() {
+    default boolean getAsyncRegistrationJobQueueKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
         return getGlobalKillSwitch()
                 || getMeasurementKillSwitch()

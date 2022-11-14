@@ -20,6 +20,7 @@ package com.android.adservices.service.adselection;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdWithBid;
@@ -51,6 +52,7 @@ import org.junit.Test;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -81,6 +83,27 @@ public class AdSelectionScriptEngineTest {
                     AdSelectionSignals.EMPTY);
     private static final List<CustomAudienceSignals> CUSTOM_AUDIENCE_SIGNALS_LIST =
             ImmutableList.of(CUSTOM_AUDIENCE_SIGNALS_1, CUSTOM_AUDIENCE_SIGNALS_2);
+    private static final long AD_SELECTION_ID_1 = 12345L;
+    private static final double AD_BID_1 = 10.0;
+    private static final long AD_SELECTION_ID_2 = 123456L;
+    private static final double AD_BID_2 = 11.0;
+    private static final long AD_SELECTION_ID_3 = 1234567L;
+    private static final double AD_BID_3 = 12.0;
+    private static final AdSelectionIdWithBid AD_SELECTION_ID_WITH_BID_1 =
+            AdSelectionIdWithBid.builder()
+                    .setAdSelectionId(AD_SELECTION_ID_1)
+                    .setBid(AD_BID_1)
+                    .build();
+    private static final AdSelectionIdWithBid AD_SELECTION_ID_WITH_BID_2 =
+            AdSelectionIdWithBid.builder()
+                    .setAdSelectionId(AD_SELECTION_ID_1)
+                    .setBid(AD_BID_1)
+                    .build();
+    private static final AdSelectionIdWithBid AD_SELECTION_ID_WITH_BID_3 =
+            AdSelectionIdWithBid.builder()
+                    .setAdSelectionId(AD_SELECTION_ID_1)
+                    .setBid(AD_BID_1)
+                    .build();
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(1);
     IsolateSettings mIsolateSettings = IsolateSettings.forMaxHeapSizeEnforcementDisabled();
     private final AdSelectionScriptEngine mAdSelectionScriptEngine =
@@ -294,6 +317,81 @@ public class AdSelectionScriptEngineTest {
     }
 
     @Test
+    public void testSelectOutcomeWaterfallMediationLogicReturnAdJsSuccess() throws Exception {
+        final Long result =
+                selectOutcome(
+                        "function selectOutcome(outcomes, selection_signals) {\n"
+                                + "    if (outcomes.length != 1 || selection_signals.bid_floor =="
+                                + " undefined) return null;\n"
+                                + "\n"
+                                + "    const outcome_1p = outcomes[0];\n"
+                                + "    return {'status': 0, 'result': (outcome_1p.bid >"
+                                + " selection_signals.bid_floor) ? outcome_1p : null};\n"
+                                + "}",
+                        Collections.singletonList(AD_SELECTION_ID_WITH_BID_1),
+                        AdSelectionSignals.fromString("{bid_floor: 9}"));
+        assertThat(result).isEqualTo(AD_SELECTION_ID_WITH_BID_1.getAdSelectionId());
+    }
+
+    @Test
+    public void testSelectOutcomeWaterfallMediationLogicReturnNullJsSuccess() throws Exception {
+        final Long result =
+                selectOutcome(
+                        "function selectOutcome(outcomes, selection_signals) {\n"
+                                + "    if (outcomes.length != 1 || selection_signals.bid_floor =="
+                                + " undefined) return null;\n"
+                                + "\n"
+                                + "    const outcome_1p = outcomes[0];\n"
+                                + "    return {'status': 0, 'result': (outcome_1p.bid >"
+                                + " selection_signals.bid_floor) ? outcome_1p : null};\n"
+                                + "}",
+                        Collections.singletonList(AD_SELECTION_ID_WITH_BID_1),
+                        AdSelectionSignals.fromString("{bid_floor: 11}"));
+        assertThat(result).isNull();
+    }
+
+    @Test
+    public void testSelectOutcomeOpenBiddingMediationLogicJsSuccess() throws Exception {
+        final Long result =
+                selectOutcome(
+                        "function selectOutcome(outcomes, selection_signals) {\n"
+                                + "    let max_bid = 0;\n"
+                                + "    let winner_outcome = null;\n"
+                                + "    for (let outcome of outcomes) {\n"
+                                + "        if (outcome.bid > max_bid) {\n"
+                                + "            max_bid = outcome.bid;\n"
+                                + "            winner_outcome = outcome;\n"
+                                + "        }\n"
+                                + "    }\n"
+                                + "    return {'status': 0, 'result': winner_outcome};\n"
+                                + "}",
+                        List.of(
+                                AD_SELECTION_ID_WITH_BID_1,
+                                AD_SELECTION_ID_WITH_BID_2,
+                                AD_SELECTION_ID_WITH_BID_3),
+                        AdSelectionSignals.EMPTY);
+        assertThat(result).isEqualTo(AD_SELECTION_ID_WITH_BID_3.getAdSelectionId());
+    }
+
+    @Test
+    public void testSelectOutcomeReturningMultipleIdsFailure() {
+        ExecutionException exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () ->
+                                selectOutcome(
+                                        "function selectOutcome(outcomes, selection_signals) {\n"
+                                                + "    return {'status': 0, 'result': outcomes};\n"
+                                                + "}",
+                                        List.of(
+                                                AD_SELECTION_ID_WITH_BID_1,
+                                                AD_SELECTION_ID_WITH_BID_2,
+                                                AD_SELECTION_ID_WITH_BID_3),
+                                        AdSelectionSignals.EMPTY));
+        Assert.assertTrue(exception.getCause() instanceof IllegalStateException);
+    }
+
+    @Test
     public void testCanRunScriptWithStringInterpolationTokenInIt() throws Exception {
         AdData advert = new AdData(Uri.parse("http://www.domain.com/adverts/123"), "{}");
         final AuctionScriptResult result =
@@ -375,6 +473,19 @@ public class AdSelectionScriptEngineTest {
                 });
     }
 
+    private Long selectOutcome(
+            String jsScript,
+            List<AdSelectionIdWithBid> adSelectionIdWithBids,
+            AdSelectionSignals selectionSignals)
+            throws Exception {
+        return waitForFuture(
+                () -> {
+                    Log.i(TAG, "Calling selectOutcome");
+                    return mAdSelectionScriptEngine.selectOutcome(
+                            jsScript, adSelectionIdWithBids, selectionSignals);
+                });
+    }
+
     private AuctionScriptResult callAuctionEngine(
             String jsScript,
             String auctionFunctionCall,
@@ -388,7 +499,7 @@ public class AdSelectionScriptEngineTest {
         return waitForFuture(
                 () -> {
                     Log.i(TAG, "Calling Auction Script Engine");
-                    return mAdSelectionScriptEngine.runAuctionScript(
+                    return mAdSelectionScriptEngine.runAuctionScriptIterative(
                             jsScript,
                             adDataArgs.build(),
                             otherArgs,

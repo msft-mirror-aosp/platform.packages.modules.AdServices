@@ -13,20 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package android.sdksandbox.test.scenario;
 
-import android.platform.test.microbenchmark.Microbenchmark;
-import android.platform.test.rule.DropCachesRule;
-import android.platform.test.rule.KillAppsRule;
+package android.adservices.adselection;
 
-import org.junit.Rule;
-import org.junit.rules.RuleChain;
-import org.junit.runner.RunWith;
-
-@RunWith(Microbenchmark.class)
-public class RemoteRenderAdMicrobenchmark extends RemoteRenderAd {
-    @Rule
-    public RuleChain rules =
-            RuleChain.outerRule(new KillAppsRule("com.android.sdksandboxclient"))
-                    .around(new DropCachesRule());
-}
+/**
+ * This defines the AdSelectionFromOutcomesConfig class, a configuration created by SDKs which
+ * contains information used in the {@link selectAds} API.
+ *
+ * {@hide}
+ */
+parcelable AdSelectionFromOutcomesConfig;

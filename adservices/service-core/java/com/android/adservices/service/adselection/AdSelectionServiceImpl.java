@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__FLEDGE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
@@ -190,11 +192,11 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         } catch (NullPointerException exception) {
             int overallLatencyMs = adSelectionExecutionLogger.getRunAdSelectionOverallLatencyInMs();
             LogUtil.v(
-                    "The runAdSelection() arguments should not be null, failed with overall"
-                            + "latency %d in ms.",
+                    "The selectAds(AdSelectionConfig) arguments should not be null, failed with"
+                            + " overall latency %d in ms.",
                     overallLatencyMs);
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, overallLatencyMs);
+                    apiName, STATUS_INVALID_ARGUMENT, overallLatencyMs);
             // Rethrow because we want to fail fast
             throw exception;
         }
@@ -286,24 +288,48 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
      * @param callback delivers the results via OutcomeReceiver
      * @throws RemoteException thrown in case callback fails
      */
-    public void selectAds(
+    @Override
+    public void selectAdsFromOutcomes(
             @NonNull AdSelectionFromOutcomesInput inputParams,
             @NonNull CallerMetadata callerMetadata,
             @NonNull AdSelectionCallback callback)
             throws RemoteException {
-        Objects.requireNonNull(inputParams);
-        Objects.requireNonNull(callerMetadata);
-        Objects.requireNonNull(callback);
+        // TODO (b/258604183): This endpoint suppose to be an overload of selectAds but .aidl
+        //  doesn't allow overloading. Investigation where to go from here
+        int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 
-        // TODO(257211190) Caller permissions must be checked in the binder thread, before anything
-        // mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
+        // Caller permissions must be checked in the binder thread, before anything else
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
 
         // TODO(257134800): Add telemetry
+        try {
+            Objects.requireNonNull(inputParams);
+            Objects.requireNonNull(callerMetadata);
+            Objects.requireNonNull(callback);
+        } catch (NullPointerException e) {
+            LogUtil.v(
+                    "The selectAds(AdSelectionFromOutcomesConfig) arguments should not be null,"
+                            + " failed");
+            mAdServicesLogger.logFledgeApiCallStats(
+                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, 0);
+            // Rethrow because we want to fail fast
+            throw e;
+        }
 
+        int callerUid = getCallingUid(apiName);
         mLightweightExecutor.execute(
                 () -> {
                     OutcomeSelectionRunner runner =
-                            new OutcomeSelectionRunner(mLightweightExecutor);
+                            new OutcomeSelectionRunner(
+                                    callerUid,
+                                    mAdSelectionEntryDao,
+                                    mBackgroundExecutor,
+                                    mLightweightExecutor,
+                                    mScheduledExecutor,
+                                    mAdServicesHttpsClient,
+                                    mAdServicesLogger,
+                                    mContext,
+                                    mFlags);
                     runner.runOutcomeSelection(inputParams, callback);
                 });
     }
@@ -321,8 +347,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             Objects.requireNonNull(requestParams);
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, 0);
+            mAdServicesLogger.logFledgeApiCallStats(apiName, STATUS_INVALID_ARGUMENT, 0);
             // Rethrow because we want to fail fast
             throw exception;
         }
@@ -365,8 +390,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             Objects.requireNonNull(decisionLogicJS);
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, 0);
+            mAdServicesLogger.logFledgeApiCallStats(apiName, STATUS_INVALID_ARGUMENT, 0);
             // Rethrow because we want to fail fast
             throw exception;
         }
@@ -420,8 +444,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             Objects.requireNonNull(adSelectionConfig);
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, 0);
+            mAdServicesLogger.logFledgeApiCallStats(apiName, STATUS_INVALID_ARGUMENT, 0);
             // Rethrow because we want to fail fast
             throw exception;
         }
@@ -463,8 +486,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         try {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, 0);
+            mAdServicesLogger.logFledgeApiCallStats(apiName, STATUS_INVALID_ARGUMENT, 0);
             // Rethrow because we want to fail fast
             throw exception;
         }

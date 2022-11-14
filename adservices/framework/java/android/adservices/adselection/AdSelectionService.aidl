@@ -22,8 +22,12 @@ import android.adservices.adselection.ReportImpressionInput;
 import android.adservices.adselection.AdSelectionInput;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.AdSelectionOverrideCallback;
+import android.adservices.adselection.AdSelectionOutcome;
+import android.adservices.adselection.AdSelectionFromOutcomesInput;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.CallerMetadata;
+
+import android.net.Uri;
 
 /**
   * This is the Ad Selection Service, which defines the interface used for the Ad selection workflow
@@ -55,7 +59,7 @@ interface AdSelectionService {
     * The (@link AdSelectionCallback} returns {@link FledgeErrorResponse} if the asynchronous call
     * fails.
     * If the ad selection is successful, the {@link AdSelectionResponse} contains
-    * {@link AdSelectionId} and {@link AdData}
+    * {@link AdSelectionId} and {@link RenderUri}
     * If the ad selection fails, the response contains only
     * {@link FledgeErrorResponse#RESULT_INTERNAL_ERROR} if an internal server error is encountered,
     * or {@link FledgeErrorResponse#RESULT_INVALID_ARGUMENT} if:
@@ -66,7 +70,51 @@ interface AdSelectionService {
     *
     * {@hide}
     */
-    void selectAds(in AdSelectionInput request, in CallerMetadata callerMetadata, in AdSelectionCallback callback);
+    void selectAds(
+        in AdSelectionInput request,
+        in CallerMetadata callerMetadata,
+        in AdSelectionCallback callback);
+
+    /**
+    * This method allows to select an ad from a list of ads that are winner outcomes of separate
+    * runAdSelection. This method will execute a given logic and signals on given list of ads and
+    * will return either one or none of the ads.
+    *
+    * {@code adOutcomes} is a list of {@link AdSelectionOutcome} where each element is a winner from
+    * a call to {@code runAdSelection} method.
+    * {@code selectionSignals} contains any signals ad-tech wish to use during the decision making.
+    * {@code selectionLogicUri} points to a decision logic for selection. There are two types;
+    * <lu>
+    *     <li>
+    *         An HTTPS url to download the java script logic from.
+    *     </li>
+    *     <li>
+    *         A uri that points to the pre-built logics.
+    *     </li>
+    * </lu>
+    *
+    *
+    * The (@link AdSelectionCallback} returns {@link AdSelectionResponse} if the asynchronous call
+    * succeeds.
+    * The (@link AdSelectionCallback} returns {@link FledgeErrorResponse} if the asynchronous call
+    * fails.
+    *
+    * If the outcome selection is successful, the {@link AdSelectionResponse} contains
+    * {@link AdSelectionId} and {@link RenderUri}
+    * If the ad selection fails, the response contains only
+    * {@link FledgeErrorResponse#RESULT_INTERNAL_ERROR} if an internal server error is encountered,
+    * or {@link FledgeErrorResponse#RESULT_INVALID_ARGUMENT} if:
+    * 1. The supplied list of {@link AdSelectionOutcomes} is invalid or
+    * 2. The supplied {@link SelectionLogicUri} is invalid.
+    *
+    * Otherwise, this call fails to send the response to the callback and throws a RemoteException.
+    *
+    * {@hide}
+    */
+    void selectAdsFromOutcomes(
+        in AdSelectionFromOutcomesInput inputParams,
+        in CallerMetadata callerMetadata,
+        in AdSelectionCallback callback);
 
     /**
     * Notifies PPAPI that there is a new impression to report for the
