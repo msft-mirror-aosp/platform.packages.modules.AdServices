@@ -16,11 +16,13 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
 
 import static com.android.adservices.data.adselection.AdSelectionDatabase.DATABASE_NAME;
 import static com.android.adservices.service.adselection.AdSelectionFromOutcomesConfigValidator.HTTPS_PREFIX;
 import static com.android.adservices.service.adselection.AdSelectionFromOutcomesConfigValidator.SELLER_AND_URI_HOST_ARE_INCONSISTENT;
+import static com.android.adservices.service.adselection.OutcomeSelectionRunner.SELECTED_OUTCOME_MUST_BE_ONE_OF_THE_INPUTS;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.DB_AD_SELECTION_FILE_SIZE;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
@@ -101,6 +103,7 @@ public class AdSelectionFromOutcomesE2ETest {
     private static final String SELECTION_PICK_HIGHEST_LOGIC_JS_PATH = "/selectionPickHighestJS/";
     private static final String SELECTION_PICK_NONE_LOGIC_JS_PATH = "/selectionPickNoneJS/";
     private static final String SELECTION_WATERFALL_LOGIC_JS_PATH = "/selectionWaterfallJS/";
+    private static final String SELECTION_FAULTY_LOGIC_JS_PATH = "/selectionFaultyJS/";
     private static final String SELECTION_PICK_HIGHEST_LOGIC_JS =
             "function selectOutcome(outcomes, selection_signals) {\n"
                     + "    let max_bid = 0;\n"
@@ -125,6 +128,11 @@ public class AdSelectionFromOutcomesE2ETest {
                     + "    const outcome_1p = outcomes[0];\n"
                     + "    return {'status': 0, 'result': (outcome_1p.bid >"
                     + " selection_signals.bid_floor) ? outcome_1p : null};\n"
+                    + "}";
+    private static final String SELECTION_FAULTY_LOGIC_JS =
+            "function selectOutcome(outcomes, selection_signals) {\n"
+                    + "    return {'status': 0, 'result': {\"id\": outcomes[0].id + 1, \"bid\": "
+                    + "outcomes[0].bid}};\n"
                     + "}";
     private static final String BID_FLOOR_SELECTION_SIGNAL_TEMPLATE = "{\"bid_floor\":%s}";
 
@@ -234,6 +242,8 @@ public class AdSelectionFromOutcomesE2ETest {
                                 return new MockResponse().setBody(SELECTION_PICK_NONE_LOGIC_JS);
                             case SELECTION_WATERFALL_LOGIC_JS_PATH:
                                 return new MockResponse().setBody(SELECTION_WATERFALL_LOGIC_JS);
+                            case SELECTION_FAULTY_LOGIC_JS_PATH:
+                                return new MockResponse().setBody(SELECTION_FAULTY_LOGIC_JS);
                             default:
                                 return new MockResponse().setResponseCode(404);
                         }
@@ -337,7 +347,7 @@ public class AdSelectionFromOutcomesE2ETest {
     }
 
     @Test
-    public void testSelectAdsFromOutcomesPickNoneSuccess() throws Exception {
+    public void testSelectAdsFromOutcomesReturnsNullSuccess() throws Exception {
         doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
@@ -406,6 +416,39 @@ public class AdSelectionFromOutcomesE2ETest {
                                 mMockWebServerRule.uriForPath(selectionLogicPath).getHost()));
         mMockWebServerRule.verifyMockServerRequests(
                 server, 0, Collections.emptyList(), String::equals);
+    }
+
+    @Test
+    public void testSelectAdsFromOutcomesJsReturnsFaultyAdSelectionIdFailure() throws Exception {
+        doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+        MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
+        final String selectionLogicPath = SELECTION_FAULTY_LOGIC_JS_PATH;
+
+        Map<Long, Double> adSelectionIdToBidMap =
+                Map.of(
+                        AD_SELECTION_ID_1, 10.0,
+                        AD_SELECTION_ID_2, 20.0,
+                        AD_SELECTION_ID_3, 30.0);
+        persistAdSelectionEntryDaoResults(adSelectionIdToBidMap);
+
+        AdSelectionFromOutcomesConfig config =
+                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
+                        List.of(AD_SELECTION_ID_1, AD_SELECTION_ID_2, AD_SELECTION_ID_3),
+                        AdSelectionSignals.EMPTY,
+                        mMockWebServerRule.uriForPath(selectionLogicPath));
+
+        AdSelectionFromOutcomesE2ETest.AdSelectionFromOutcomesTestCallback resultsCallback =
+                invokeSelectAdsFromOutcomes(mAdSelectionService, config, CALLER_PACKAGE_NAME);
+
+        assertThat(resultsCallback.mIsSuccess).isFalse();
+        assertThat(resultsCallback.mFledgeErrorResponse).isNotNull();
+        assertThat(resultsCallback.mFledgeErrorResponse.getStatusCode())
+                .isEqualTo(STATUS_INTERNAL_ERROR);
+        assertThat(resultsCallback.mFledgeErrorResponse.getErrorMessage())
+                .contains(SELECTED_OUTCOME_MUST_BE_ONE_OF_THE_INPUTS);
+        mMockWebServerRule.verifyMockServerRequests(
+                server, 1, Collections.singletonList(selectionLogicPath), String::equals);
     }
 
     private AdSelectionFromOutcomesE2ETest.AdSelectionFromOutcomesTestCallback

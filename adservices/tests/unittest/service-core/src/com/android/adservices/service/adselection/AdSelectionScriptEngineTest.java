@@ -89,20 +89,24 @@ public class AdSelectionScriptEngineTest {
     private static final double AD_BID_2 = 11.0;
     private static final long AD_SELECTION_ID_3 = 1234567L;
     private static final double AD_BID_3 = 12.0;
-    private static final AdSelectionIdWithBid AD_SELECTION_ID_WITH_BID_1 =
-            AdSelectionIdWithBid.builder()
+    private static final Uri AD_RENDER_URI = Uri.parse("test.com/");
+    private static final AdSelectionIdWithBidAndRenderUri AD_SELECTION_ID_WITH_BID_1 =
+            AdSelectionIdWithBidAndRenderUri.builder()
                     .setAdSelectionId(AD_SELECTION_ID_1)
                     .setBid(AD_BID_1)
+                    .setRenderUri(AD_RENDER_URI)
                     .build();
-    private static final AdSelectionIdWithBid AD_SELECTION_ID_WITH_BID_2 =
-            AdSelectionIdWithBid.builder()
-                    .setAdSelectionId(AD_SELECTION_ID_1)
-                    .setBid(AD_BID_1)
+    private static final AdSelectionIdWithBidAndRenderUri AD_SELECTION_ID_WITH_BID_2 =
+            AdSelectionIdWithBidAndRenderUri.builder()
+                    .setAdSelectionId(AD_SELECTION_ID_2)
+                    .setBid(AD_BID_2)
+                    .setRenderUri(AD_RENDER_URI)
                     .build();
-    private static final AdSelectionIdWithBid AD_SELECTION_ID_WITH_BID_3 =
-            AdSelectionIdWithBid.builder()
-                    .setAdSelectionId(AD_SELECTION_ID_1)
-                    .setBid(AD_BID_1)
+    private static final AdSelectionIdWithBidAndRenderUri AD_SELECTION_ID_WITH_BID_3 =
+            AdSelectionIdWithBidAndRenderUri.builder()
+                    .setAdSelectionId(AD_SELECTION_ID_3)
+                    .setBid(AD_BID_3)
+                    .setRenderUri(AD_RENDER_URI)
                     .build();
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(1);
     IsolateSettings mIsolateSettings = IsolateSettings.forMaxHeapSizeEnforcementDisabled();
@@ -475,14 +479,14 @@ public class AdSelectionScriptEngineTest {
 
     private Long selectOutcome(
             String jsScript,
-            List<AdSelectionIdWithBid> adSelectionIdWithBids,
+            List<AdSelectionIdWithBidAndRenderUri> adSelectionIdWithBidAndRenderUris,
             AdSelectionSignals selectionSignals)
             throws Exception {
         return waitForFuture(
                 () -> {
                     Log.i(TAG, "Calling selectOutcome");
                     return mAdSelectionScriptEngine.selectOutcome(
-                            jsScript, adSelectionIdWithBids, selectionSignals);
+                            jsScript, adSelectionIdWithBidAndRenderUris, selectionSignals);
                 });
     }
 
