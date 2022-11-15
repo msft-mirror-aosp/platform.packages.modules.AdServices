@@ -170,7 +170,7 @@ public class AdOutcomeSelectorImpl implements AdOutcomeSelector {
         return jsLogicFuture.catching(
                 Exception.class,
                 e -> {
-                    LogUtil.e(e, "Exception encountered when fetching scoring logic");
+                    LogUtil.e(e, "Exception encountered when fetching outcome selection logic");
                     throw new IllegalStateException(MISSING_SCORING_LOGIC);
                 },
                 mLightweightExecutorService);
