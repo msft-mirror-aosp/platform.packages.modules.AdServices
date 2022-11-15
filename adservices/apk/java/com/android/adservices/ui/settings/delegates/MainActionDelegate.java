@@ -21,10 +21,12 @@ import android.view.View;
 import androidx.lifecycle.Observer;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.PhFlags;
 import com.android.adservices.ui.settings.DialogManager;
 import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
 import com.android.adservices.ui.settings.activities.AppsActivity;
+import com.android.adservices.ui.settings.activities.MeasurementActivity;
 import com.android.adservices.ui.settings.activities.TopicsActivity;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragment;
 import com.android.adservices.ui.settings.viewmodels.MainViewModel;
@@ -34,13 +36,13 @@ import com.android.settingslib.widget.MainSwitchBar;
  * Delegate class that helps AdServices Settings fragments to respond to all view model/user events.
  */
 public class MainActionDelegate extends BaseActionDelegate {
-    private final AdServicesSettingsMainActivity mAdservicesSettingsMainActivity;
+    private final AdServicesSettingsMainActivity mAdServicesSettingsMainActivity;
     private final MainViewModel mMainViewModel;
 
     public MainActionDelegate(
             AdServicesSettingsMainActivity mainSettingsActivity, MainViewModel mainViewModel) {
         super(mainSettingsActivity);
-        mAdservicesSettingsMainActivity = mainSettingsActivity;
+        mAdServicesSettingsMainActivity = mainSettingsActivity;
         mMainViewModel = mainViewModel;
 
         listenToMainViewModelUiEvents();
@@ -60,31 +62,38 @@ public class MainActionDelegate extends BaseActionDelegate {
                             case SWITCH_OFF_PRIVACY_SANDBOX_BETA:
                                 if (PhFlags.getInstance().getUIDialogsFeatureEnabled()) {
                                     DialogManager.showOptOutDialog(
-                                            mAdservicesSettingsMainActivity, mMainViewModel);
+                                            mAdServicesSettingsMainActivity, mMainViewModel);
                                 } else {
                                     mMainViewModel.setConsent(false);
                                 }
                                 break;
                             case DISPLAY_APPS_FRAGMENT:
                                 logUIAction(ActionEnum.MANAGE_APPS_SELECTED);
-                                mAdservicesSettingsMainActivity.startActivity(
+                                mAdServicesSettingsMainActivity.startActivity(
                                         new Intent(
-                                                mAdservicesSettingsMainActivity,
+                                                mAdServicesSettingsMainActivity,
                                                 AppsActivity.class));
                                 break;
                             case DISPLAY_TOPICS_FRAGMENT:
                                 logUIAction(ActionEnum.MANAGE_TOPICS_SELECTED);
-                                mAdservicesSettingsMainActivity.startActivity(
+                                mAdServicesSettingsMainActivity.startActivity(
                                         new Intent(
-                                                mAdservicesSettingsMainActivity,
+                                                mAdServicesSettingsMainActivity,
                                                 TopicsActivity.class));
+                                break;
+                            case DISPLAY_MEASUREMENT_FRAGMENT:
+                                logUIAction(ActionEnum.MANAGE_MEASUREMENT_SELECTED);
+                                mAdServicesSettingsMainActivity.startActivity(
+                                        new Intent(
+                                                mAdServicesSettingsMainActivity,
+                                                MeasurementActivity.class));
                                 break;
                         }
                     } finally {
                         mMainViewModel.uiEventHandled();
                     }
                 };
-        mMainViewModel.getUiEvents().observe(mAdservicesSettingsMainActivity, observer);
+        mMainViewModel.getUiEvents().observe(mAdServicesSettingsMainActivity, observer);
     }
 
     /**
@@ -93,15 +102,19 @@ public class MainActionDelegate extends BaseActionDelegate {
      * @param fragment the fragment to be initialized.
      */
     public void initMainFragment(AdServicesSettingsMainFragment fragment) {
-        mAdservicesSettingsMainActivity.setTitle(R.string.settingsUI_main_view_title);
+        mAdServicesSettingsMainActivity.setTitle(R.string.settingsUI_main_view_title);
         configureConsentSwitch(fragment);
         configureTopicsButton(fragment);
         configureAppsButton(fragment);
+        // Hide the point entry of Measurement in Main page behind the GaUxFeature Flag
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            configureMeasurementButton(fragment);
+        }
     }
 
     private void configureConsentSwitch(AdServicesSettingsMainFragment fragment) {
         MainSwitchBar mainSwitchBar =
-                mAdservicesSettingsMainActivity.findViewById(R.id.main_switch_bar);
+                mAdServicesSettingsMainActivity.findViewById(R.id.main_switch_bar);
 
         mMainViewModel.getConsent().observe(fragment, mainSwitchBar::setChecked);
 
@@ -119,5 +132,12 @@ public class MainActionDelegate extends BaseActionDelegate {
         View appsButton = fragment.requireView().findViewById(R.id.apps_preference);
 
         appsButton.setOnClickListener(preference -> mMainViewModel.appsButtonClickHandler());
+    }
+
+    private void configureMeasurementButton(AdServicesSettingsMainFragment fragment) {
+        View measurementButton = fragment.requireView().findViewById(R.id.measurement_preference);
+        measurementButton.setVisibility(View.VISIBLE);
+        measurementButton.setOnClickListener(
+                preference -> mMainViewModel.measurementClickHandler());
     }
 }

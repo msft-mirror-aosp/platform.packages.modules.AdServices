@@ -26,6 +26,7 @@ import androidx.lifecycle.MutableLiveData;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsAppsFragment;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragment;
+import com.android.adservices.ui.settings.fragments.AdServicesSettingsMeasurementFragment;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsTopicsFragment;
 import com.android.settingslib.widget.MainSwitchBar;
 
@@ -45,6 +46,7 @@ public class MainViewModel extends AndroidViewModel {
         SWITCH_OFF_PRIVACY_SANDBOX_BETA,
         DISPLAY_TOPICS_FRAGMENT,
         DISPLAY_APPS_FRAGMENT,
+        DISPLAY_MEASUREMENT_FRAGMENT,
     }
 
     public MainViewModel(@NonNull Application application) {
@@ -103,6 +105,11 @@ public class MainViewModel extends AndroidViewModel {
     /** Triggers {@link AdServicesSettingsAppsFragment}. */
     public void appsButtonClickHandler() {
         mEventTrigger.postValue(MainViewModelUiEvent.DISPLAY_APPS_FRAGMENT);
+    }
+
+    /** Triggers {@link AdServicesSettingsMeasurementFragment} */
+    public void measurementClickHandler() {
+        mEventTrigger.postValue(MainViewModelUiEvent.DISPLAY_MEASUREMENT_FRAGMENT);
     }
 
     /**
