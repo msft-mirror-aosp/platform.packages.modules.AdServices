@@ -28,7 +28,6 @@
 
     <target_preparer class="com.android.tradefed.targetprep.DeviceSetup" >
         <option name="force-skip-system-props" value="true" />
-        <option name="disable-device-config-sync" value="true" />
     </target_preparer>
 
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">
@@ -39,6 +38,10 @@
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
         <option name="run-command" value="cmd sdk_sandbox set-state --enabled" />
         <option name="teardown-command" value="cmd sdk_sandbox set-state --reset" />
+
+        <!-- Temporarily disable Device Config sync -->
+        <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />
+        <option name="teardown-command" value="device_config set_sync_disabled_for_tests none" />
     </target_preparer>
 
     <object type="module_controller"

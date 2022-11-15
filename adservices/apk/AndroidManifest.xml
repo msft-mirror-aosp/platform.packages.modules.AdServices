@@ -158,6 +158,17 @@
             </intent-filter>
         </activity>
 
+        <!-- Activity for the ads measurement view of AdServices Settings UI-->
+        <activity
+            android:name="com.android.adservices.ui.settings.activities.MeasurementActivity"
+            android:exported="true"
+            android:theme="@style/Theme.SubSettingsBase">
+            <intent-filter android:priority="1">
+                <action android:name="android.adservices.ui.MEASUREMENT" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
         <!-- Activity for Adservices Detailed Notification UI -->
         <activity
             android:name="com.android.adservices.ui.notifications.ConsentNotificationActivity"
