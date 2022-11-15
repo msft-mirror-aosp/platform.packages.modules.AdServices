@@ -52,7 +52,7 @@ public class SdkSandboxTestHelper {
         }
 
         // wait until loadSdk
-        SystemClock.sleep(TimeUnit.SECONDS.toMillis(1));
+        SystemClock.sleep(TimeUnit.SECONDS.toMillis(2));
 
         assertThat(getLoadSdkButton().getText()).isEqualTo("Unload SDK");
     }
