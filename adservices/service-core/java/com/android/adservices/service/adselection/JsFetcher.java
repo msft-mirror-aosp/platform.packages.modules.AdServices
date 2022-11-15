@@ -31,6 +31,8 @@ import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
+import java.util.Objects;
+
 /** Class to fetch JavaScript code both on and off device. */
 public class JsFetcher {
     @VisibleForTesting
@@ -46,6 +48,11 @@ public class JsFetcher {
             @NonNull ListeningExecutorService lightweightExecutorService,
             @NonNull CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper,
             @NonNull AdServicesHttpsClient adServicesHttpsClient) {
+        Objects.requireNonNull(backgroundExecutorService);
+        Objects.requireNonNull(lightweightExecutorService);
+        Objects.requireNonNull(customAudienceDevOverridesHelper);
+        Objects.requireNonNull(adServicesHttpsClient);
+
         mBackgroundExecutorService = backgroundExecutorService;
         mCustomAudienceDevOverridesHelper = customAudienceDevOverridesHelper;
         mAdServicesHttpsClient = adServicesHttpsClient;
