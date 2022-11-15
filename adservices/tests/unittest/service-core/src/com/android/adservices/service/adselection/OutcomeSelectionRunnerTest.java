@@ -28,7 +28,6 @@ import android.os.Process;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
@@ -149,18 +148,17 @@ public class OutcomeSelectionRunnerTest {
                         DB_AD_SELECTION_2.getAdSelectionId(),
                         DB_AD_SELECTION_3.getAdSelectionId());
 
-        List<AdSelectionIdWithBid> adSelectionIdWithBidList =
+        List<AdSelectionIdWithBidAndRenderUri> adSelectionIdWithBidAndRenderUriList =
                 mOutcomeSelectionRunner
                         .retrieveAdSelectionIdWithBidList(adOutcomeIds)
                         .get(RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        LogUtil.i("asdf: " + adSelectionIdWithBidList);
 
         Map<Long, Double> helperMap =
-                adSelectionIdWithBidList.stream()
+                adSelectionIdWithBidAndRenderUriList.stream()
                         .collect(
                                 Collectors.toMap(
-                                        AdSelectionIdWithBid::getAdSelectionId,
-                                        AdSelectionIdWithBid::getBid));
+                                        AdSelectionIdWithBidAndRenderUri::getAdSelectionId,
+                                        AdSelectionIdWithBidAndRenderUri::getBid));
 
         for (DBAdSelection selection : adSelectionResults) {
             assertTrue(
@@ -190,17 +188,17 @@ public class OutcomeSelectionRunnerTest {
                         DB_AD_SELECTION_2.getAdSelectionId(),
                         DB_AD_SELECTION_3.getAdSelectionId());
 
-        List<AdSelectionIdWithBid> adSelectionIdWithBidList =
+        List<AdSelectionIdWithBidAndRenderUri> adSelectionIdWithBidAndRenderUriList =
                 mOutcomeSelectionRunner
                         .retrieveAdSelectionIdWithBidList(adOutcomeIds)
                         .get(RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
         Map<Long, Double> helperMap =
-                adSelectionIdWithBidList.stream()
+                adSelectionIdWithBidAndRenderUriList.stream()
                         .collect(
                                 Collectors.toMap(
-                                        AdSelectionIdWithBid::getAdSelectionId,
-                                        AdSelectionIdWithBid::getBid));
+                                        AdSelectionIdWithBidAndRenderUri::getAdSelectionId,
+                                        AdSelectionIdWithBidAndRenderUri::getBid));
 
         for (DBAdSelection selection : adSelectionResults) {
             assertFalse(

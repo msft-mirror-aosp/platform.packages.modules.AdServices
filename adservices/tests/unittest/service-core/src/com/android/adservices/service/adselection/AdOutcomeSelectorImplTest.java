@@ -57,8 +57,10 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 public class AdOutcomeSelectorImplTest {
     private static final long AD_SELECTION_ID = 12345L;
+    private static final long FAULTY_AD_SELECTION_ID = 123456L;
     private static final double AD_BID = 10.0;
-    private static final String WATERFALL_MEDIATION_LOGIC_PATH = "/waterfallMediationJs/";
+    private static final Uri AD_RENDER_URI = Uri.parse("test.com");
+    private static final String SELECTION_LOGIC_JS_PATH = "/selectionLogicJsPath/";
 
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
 
@@ -69,7 +71,7 @@ public class AdOutcomeSelectorImplTest {
     private ListeningExecutorService mBlockingExecutorService;
     private ScheduledThreadPoolExecutor mSchedulingExecutor;
     private AdServicesHttpsClient mWebClient;
-    private String mWaterfallMediationLogicJs;
+    private String mSelectionLogicJs;
 
     private AdOutcomeSelector mAdOutcomeSelector;
     private Flags mFlags;
@@ -87,7 +89,7 @@ public class AdOutcomeSelectorImplTest {
         mSchedulingExecutor = AdServicesExecutors.getScheduler();
         mWebClient = new AdServicesHttpsClient(AdServicesExecutors.getBlockingExecutor());
 
-        mWaterfallMediationLogicJs =
+        mSelectionLogicJs =
                 "function selectOutcome(outcomes, selection_signals) {\n"
                         + "    return {'status': 0, 'result': outcomes[0]};\n"
                         + "}";
@@ -96,8 +98,8 @@ public class AdOutcomeSelectorImplTest {
                 new Dispatcher() {
                     @Override
                     public MockResponse dispatch(RecordedRequest request) {
-                        if (request.getPath().equals(WATERFALL_MEDIATION_LOGIC_PATH)) {
-                            return new MockResponse().setBody(mWaterfallMediationLogicJs);
+                        if (request.getPath().equals(SELECTION_LOGIC_JS_PATH)) {
+                            return new MockResponse().setBody(mSelectionLogicJs);
                         }
                         return new MockResponse().setResponseCode(404);
                     }
@@ -127,18 +129,19 @@ public class AdOutcomeSelectorImplTest {
     public void testAdOutcomeSelectorReturnsOutcomeSuccess() throws Exception {
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDefaultDispatcher);
 
-        List<AdSelectionIdWithBid> adverts =
+        List<AdSelectionIdWithBidAndRenderUri> adverts =
                 Collections.singletonList(
-                        AdSelectionIdWithBid.builder()
+                        AdSelectionIdWithBidAndRenderUri.builder()
                                 .setAdSelectionId(AD_SELECTION_ID)
                                 .setBid(AD_BID)
+                                .setRenderUri(AD_RENDER_URI)
                                 .build());
         AdSelectionSignals signals = AdSelectionSignals.EMPTY;
-        Uri uri = mMockWebServerRule.uriForPath(WATERFALL_MEDIATION_LOGIC_PATH);
+        Uri uri = mMockWebServerRule.uriForPath(SELECTION_LOGIC_JS_PATH);
 
         Mockito.when(
                         mMockAdSelectionScriptEngine.selectOutcome(
-                                mWaterfallMediationLogicJs, adverts, signals))
+                                mSelectionLogicJs, adverts, signals))
                 .thenReturn(Futures.immediateFuture(AD_SELECTION_ID));
 
         Long selectedOutcomeId =
@@ -147,7 +150,7 @@ public class AdOutcomeSelectorImplTest {
         mMockWebServerRule.verifyMockServerRequests(
                 server,
                 1,
-                Collections.singletonList(WATERFALL_MEDIATION_LOGIC_PATH),
+                Collections.singletonList(SELECTION_LOGIC_JS_PATH),
                 mRequestMatcherExactMatch);
         assertEquals(AD_SELECTION_ID, (long) selectedOutcomeId);
     }
@@ -156,18 +159,19 @@ public class AdOutcomeSelectorImplTest {
     public void testAdOutcomeSelectorReturnsNullSuccess() throws Exception {
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDefaultDispatcher);
 
-        List<AdSelectionIdWithBid> adverts =
+        List<AdSelectionIdWithBidAndRenderUri> adverts =
                 Collections.singletonList(
-                        AdSelectionIdWithBid.builder()
+                        AdSelectionIdWithBidAndRenderUri.builder()
                                 .setAdSelectionId(AD_SELECTION_ID)
                                 .setBid(AD_BID)
+                                .setRenderUri(AD_RENDER_URI)
                                 .build());
         AdSelectionSignals signals = AdSelectionSignals.EMPTY;
-        Uri uri = mMockWebServerRule.uriForPath(WATERFALL_MEDIATION_LOGIC_PATH);
+        Uri uri = mMockWebServerRule.uriForPath(SELECTION_LOGIC_JS_PATH);
 
         Mockito.when(
                         mMockAdSelectionScriptEngine.selectOutcome(
-                                mWaterfallMediationLogicJs, adverts, signals))
+                                mSelectionLogicJs, adverts, signals))
                 .thenReturn(Futures.immediateFuture(null));
 
         Long selectedOutcomeId =
@@ -176,7 +180,7 @@ public class AdOutcomeSelectorImplTest {
         mMockWebServerRule.verifyMockServerRequests(
                 server,
                 1,
-                Collections.singletonList(WATERFALL_MEDIATION_LOGIC_PATH),
+                Collections.singletonList(SELECTION_LOGIC_JS_PATH),
                 mRequestMatcherExactMatch);
         assertNull(selectedOutcomeId);
     }
@@ -185,19 +189,20 @@ public class AdOutcomeSelectorImplTest {
     public void testAdOutcomeSelectorJsonException() throws Exception {
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDefaultDispatcher);
 
-        List<AdSelectionIdWithBid> adverts =
+        List<AdSelectionIdWithBidAndRenderUri> adverts =
                 Collections.singletonList(
-                        AdSelectionIdWithBid.builder()
+                        AdSelectionIdWithBidAndRenderUri.builder()
                                 .setAdSelectionId(AD_SELECTION_ID)
                                 .setBid(AD_BID)
+                                .setRenderUri(AD_RENDER_URI)
                                 .build());
         AdSelectionSignals signals = AdSelectionSignals.EMPTY;
-        Uri uri = mMockWebServerRule.uriForPath(WATERFALL_MEDIATION_LOGIC_PATH);
+        Uri uri = mMockWebServerRule.uriForPath(SELECTION_LOGIC_JS_PATH);
 
         String jsonExceptionMessage = "Badly formatted JSON";
         Mockito.when(
                         mMockAdSelectionScriptEngine.selectOutcome(
-                                mWaterfallMediationLogicJs, adverts, signals))
+                                mSelectionLogicJs, adverts, signals))
                 .thenThrow(new JSONException(jsonExceptionMessage));
 
         ExecutionException exception =
@@ -213,7 +218,7 @@ public class AdOutcomeSelectorImplTest {
         mMockWebServerRule.verifyMockServerRequests(
                 server,
                 1,
-                Collections.singletonList(WATERFALL_MEDIATION_LOGIC_PATH),
+                Collections.singletonList(SELECTION_LOGIC_JS_PATH),
                 mRequestMatcherExactMatch);
     }
 
@@ -228,18 +233,19 @@ public class AdOutcomeSelectorImplTest {
                     }
                 };
 
-        List<AdSelectionIdWithBid> adverts =
+        List<AdSelectionIdWithBidAndRenderUri> adverts =
                 Collections.singletonList(
-                        AdSelectionIdWithBid.builder()
+                        AdSelectionIdWithBidAndRenderUri.builder()
                                 .setAdSelectionId(AD_SELECTION_ID)
                                 .setBid(AD_BID)
+                                .setRenderUri(AD_RENDER_URI)
                                 .build());
         AdSelectionSignals signals = AdSelectionSignals.EMPTY;
-        Uri uri = mMockWebServerRule.uriForPath(WATERFALL_MEDIATION_LOGIC_PATH);
+        Uri uri = mMockWebServerRule.uriForPath(SELECTION_LOGIC_JS_PATH);
 
         Mockito.when(
                         mMockAdSelectionScriptEngine.selectOutcome(
-                                mWaterfallMediationLogicJs, adverts, signals))
+                                mSelectionLogicJs, adverts, signals))
                 .thenAnswer(
                         (invocation) ->
                                 getOutcomeWithDelay(AD_SELECTION_ID, flagsWithSmallerLimits));
@@ -257,7 +263,7 @@ public class AdOutcomeSelectorImplTest {
         mMockWebServerRule.verifyMockServerRequests(
                 server,
                 1, // Gets one call that causes the timeout
-                Collections.singletonList(WATERFALL_MEDIATION_LOGIC_PATH),
+                Collections.singletonList(SELECTION_LOGIC_JS_PATH),
                 mRequestMatcherExactMatch);
     }
 
