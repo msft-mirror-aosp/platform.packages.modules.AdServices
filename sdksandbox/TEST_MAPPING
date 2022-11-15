@@ -1,5 +1,5 @@
 {
-   "mainline-presubmit": [
+  "mainline-presubmit": [
     // Install com.google.android.adservices.apex and run the corresponding test.
     {
       "name": "CtsSdkSandboxHostSideTests[com.google.android.adservices.apex]"
@@ -40,7 +40,7 @@
       "name": "SdkSandboxManagerDisabledTests[com.google.android.adservices.apex]"
     },
     {
-     "name": "SdkSandboxPerfScenarioTests[com.google.android.adservices.apex]"
+      "name": "SdkSandboxPerfScenarioTests[com.google.android.adservices.apex]"
     }
   ],
   "mainline-postsubmit": [
@@ -100,6 +100,60 @@
   "sdksandbox-postsubmit": [
     {
       "name": "CtsAccelerationTestCases"
+    },
+    {
+      "name": "CtsAccessibilityServiceTestCases"
+    },
+    {
+      "name": "CtsAccessibilityTestCases"
+    },
+    {
+      "name": "CtsActivityManagerBackgroundActivityTestCases"
+    },
+    {
+      "name": "CtsActivityRecognitionTestCases"
+    },
+    {
+      "name": "CtsAlarmManagerTestCases"
+    },
+    {
+      "name": "CtsAmbientContextServiceTestCases"
+    },
+    {
+      "name": "CtsAndroidAppTestCases"
+    },
+    {
+      "name": "CtsAnimationTestCases"
+    },
+    {
+      "name": "CtsAppEnumerationTestCases"
+    },
+    {
+      "name": "CtsAppExitTestCases"
+    },
+    {
+      "name": "CtsAppOps2TestCases"
+    },
+    {
+      "name": "CtsAppOpsTestCases"
+    },
+    {
+      "name": "CtsAppSearchTestCases"
+    },
+    {
+      "name": "CtsAppTestCases"
+    },
+    {
+      "name": "CtsAppWidgetTestCases"
+    },
+    {
+      "name": "CtsAutoFillServiceTestCases"
+    },
+    {
+      "name": "CtsBackupTestCases"
+    },
+    {
+      "name": "CtsBatterySavingTestCases"
     }
   ]
 }
