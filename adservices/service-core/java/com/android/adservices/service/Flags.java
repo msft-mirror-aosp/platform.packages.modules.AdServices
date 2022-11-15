@@ -1160,9 +1160,53 @@ public interface Flags extends Dumpable {
      */
     float SDK_REQUEST_PERMITS_PER_SECOND = 1; // allow max 1 request to any PP API per second.
 
+    /**
+     * PP API Rate Limit for ad id. This is the max allowed QPS for one API client to one PP API.
+     * Negative Value means skipping the rate limiting checking.
+     */
+    float ADID_REQUEST_PERMITS_PER_SECOND = 5;
+
+    /**
+     * PP API Rate Limit for app set id. This is the max allowed QPS for one API client to one PP
+     * API. Negative Value means skipping the rate limiting checking.
+     */
+    float APPSETID_REQUEST_PERMITS_PER_SECOND = 5;
+
+    /**
+     * PP API Rate Limit for measurement register source. This is the max allowed QPS for one API
+     * client to one PP API. Negative Value means skipping the rate limiting checking.
+     */
+    float MEASUREMENT_REGISTER_SOURCE_REQUEST_PERMITS_PER_SECOND = 5;
+
+    /**
+     * PP API Rate Limit for measurement register web source. This is the max allowed QPS for one
+     * API client to one PP API. Negative Value means skipping the rate limiting checking.
+     */
+    float MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND = 5;
+
     /** Returns the Sdk Request Permits Per Second. */
     default float getSdkRequestPermitsPerSecond() {
         return SDK_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the Ad id Request Permits Per Second. */
+    default float getAdIdRequestPermitsPerSecond() {
+        return ADID_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the App Set Ad Request Permits Per Second. */
+    default float getAppSetIdRequestPermitsPerSecond() {
+        return APPSETID_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the Measurement Register Source Request Permits Per Second. */
+    default float getMeasurementRegisterSourceRequestPermitsPerSecond() {
+        return MEASUREMENT_REGISTER_SOURCE_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the Measurement Register Web Source Request Permits Per Second. */
+    default float getMeasurementRegisterWebSourceRequestPermitsPerSecond() {
+        return MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND;
     }
 
     // Flags for ad tech enrollment enforcement
