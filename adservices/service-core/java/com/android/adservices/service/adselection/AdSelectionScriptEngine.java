@@ -280,11 +280,11 @@ public class AdSelectionScriptEngine {
      */
     public ListenableFuture<Long> selectOutcome(
             @NonNull String selectionLogic,
-            @NonNull List<AdSelectionIdWithBid> adSelectionIdWithBids,
+            @NonNull List<AdSelectionIdWithBidAndRenderUri> adSelectionIdWithBidAndRenderUris,
             @NonNull AdSelectionSignals selectionSignals)
             throws JSONException, IllegalStateException {
         Objects.requireNonNull(selectionLogic);
-        Objects.requireNonNull(adSelectionIdWithBids);
+        Objects.requireNonNull(adSelectionIdWithBidAndRenderUris);
         Objects.requireNonNull(selectionSignals);
 
         ImmutableList<JSScriptArgument> args =
@@ -295,7 +295,7 @@ public class AdSelectionScriptEngine {
 
         ImmutableList.Builder<JSScriptArgument> adSelectionIdWithBidArguments =
                 new ImmutableList.Builder<>();
-        for (AdSelectionIdWithBid curr : adSelectionIdWithBids) {
+        for (AdSelectionIdWithBidAndRenderUri curr : adSelectionIdWithBidAndRenderUris) {
             // Ad with bids are going to be in an array their individual name is ignored.
             adSelectionIdWithBidArguments.add(
                     SelectAdsFromOutcomesArgument.asScriptArgument(

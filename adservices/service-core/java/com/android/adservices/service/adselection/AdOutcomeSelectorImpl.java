@@ -95,10 +95,10 @@ public class AdOutcomeSelectorImpl implements AdOutcomeSelector {
      */
     @Override
     public FluentFuture<Long> runAdOutcomeSelector(
-            @NonNull List<AdSelectionIdWithBid> adSelectionIdBidMap,
+            @NonNull List<AdSelectionIdWithBidAndRenderUri> adSelectionIdWithBidAndRenderUris,
             @NonNull AdSelectionSignals selectionSignals,
             @NonNull Uri selectionLogicUri) {
-        Objects.requireNonNull(adSelectionIdBidMap);
+        Objects.requireNonNull(adSelectionIdWithBidAndRenderUris);
         Objects.requireNonNull(selectionSignals);
         Objects.requireNonNull(selectionLogicUri);
 
@@ -109,7 +109,9 @@ public class AdOutcomeSelectorImpl implements AdOutcomeSelector {
                 selectionLogicJsFuture.transformAsync(
                         selectionLogic ->
                                 mAdSelectionScriptEngine.selectOutcome(
-                                        selectionLogic, adSelectionIdBidMap, selectionSignals),
+                                        selectionLogic,
+                                        adSelectionIdWithBidAndRenderUris,
+                                        selectionSignals),
                         mLightweightExecutorService);
 
         return selectedOutcomeFuture

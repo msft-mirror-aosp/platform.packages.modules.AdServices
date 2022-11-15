@@ -30,14 +30,14 @@ import java.util.List;
  */
 public interface AdOutcomeSelector {
     /**
-     * @param adSelectionIdBidMap list of ad selection id and bid pairs
+     * @param adSelectionIdWithBidAndRenderUris list of ad selection id and bid pairs
      * @param selectionSignals signals provided by seller for running ad Selection
      * @param selectionLogicUri uri pointing to the JS logic
      * @return a Future of {@code Long} {code @AdSelectionId} of the winner. If no winner then
      *     returns null
      */
     FluentFuture<Long> runAdOutcomeSelector(
-            @NonNull List<AdSelectionIdWithBid> adSelectionIdWithBids,
+            @NonNull List<AdSelectionIdWithBidAndRenderUri> adSelectionIdWithBidAndRenderUris,
             @NonNull AdSelectionSignals selectionSignals,
             @NonNull Uri selectionLogicUri);
 }
