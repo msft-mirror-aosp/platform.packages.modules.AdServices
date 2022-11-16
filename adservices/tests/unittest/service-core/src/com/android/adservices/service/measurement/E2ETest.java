@@ -763,7 +763,10 @@ public abstract class E2ETest {
             inputStreams.get(i).close();
             String json = new String(buffer, StandardCharsets.UTF_8);
 
-            JSONObject testObj = new JSONObject(json.replaceAll("\\.test(?=[\"\\/])", ".com"));
+            JSONObject testObj = new JSONObject(
+                    json.replaceAll("\\.test(?=[\"\\/])", ".com")
+                            // Remove comments (present in interop JSON)
+                            .replaceAll("^\\s*\\/\\/.+\\n", ""));
             String name = filenames[i];
             JSONObject input = testObj.getJSONObject(TestFormatJsonMapping.TEST_INPUT_KEY);
             JSONObject output = testObj.getJSONObject(TestFormatJsonMapping.TEST_OUTPUT_KEY);
