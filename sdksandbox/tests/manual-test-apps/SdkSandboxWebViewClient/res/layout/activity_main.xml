@@ -40,6 +40,31 @@
             style="?android:attr/buttonBarButtonStyle"
             android:text="@string/request_surface_package" />
 
+        <LinearLayout
+            android:id="@+id/url_input_field"
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <EditText
+                android:id="@+id/url_input_textbox"
+                android:layout_weight="1"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:hint="@string/url_hint"
+                android:singleLine="true"/>
+
+            <Button
+                android:id="@+id/submit_url_button"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:layout_alignParentRight="true"
+                style="?android:attr/buttonBarButtonStyle"
+                android:text="@string/submit_url" />
+
+        </LinearLayout>
+
     </LinearLayout>
 
     <SurfaceView

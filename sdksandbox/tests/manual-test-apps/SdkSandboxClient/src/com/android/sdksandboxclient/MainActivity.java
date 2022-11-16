@@ -140,7 +140,7 @@ public class MainActivity extends Activity {
                                 public void onResult(SandboxedSdk sandboxedSdk) {
                                     makeToast("All SDKs Loaded successfully!");
                                     // TODO(b/253449573): Add constant string for unload Sdk.
-                                    mLoadButton.setText("Unload SDK");
+                                    mLoadButton.setText("Unload SDKs");
                                 }
 
                                 @Override
