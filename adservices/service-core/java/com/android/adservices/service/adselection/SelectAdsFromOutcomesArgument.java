@@ -33,9 +33,9 @@ public class SelectAdsFromOutcomesArgument {
     static final String BID_FIELD_NAME = "bid";
 
     /** Parses Json object for ad selection id and bid to {@code Pair< Long, Double >} */
-    public static AdSelectionIdWithBid parseJsonResponse(JSONObject jsonObject) {
+    public static AdSelectionIdWithBidAndRenderUri parseJsonResponse(JSONObject jsonObject) {
         try {
-            return AdSelectionIdWithBid.builder()
+            return AdSelectionIdWithBidAndRenderUri.builder()
                     .setAdSelectionId(jsonObject.getLong(ID_FIELD_NAME))
                     .setBid(jsonObject.getDouble(BID_FIELD_NAME))
                     .build();
@@ -46,10 +46,10 @@ public class SelectAdsFromOutcomesArgument {
 
     /** Converts {@code Pair< Long, Double >} object to Json object */
     public static JSScriptArgument asScriptArgument(
-            String name, AdSelectionIdWithBid adSelectionIdWithBid) {
+            String name, AdSelectionIdWithBidAndRenderUri adSelectionIdWithBidAndRenderUri) {
         return recordArg(
                 name,
-                numericArg(ID_FIELD_NAME, adSelectionIdWithBid.getAdSelectionId()),
-                numericArg(BID_FIELD_NAME, adSelectionIdWithBid.getBid()));
+                numericArg(ID_FIELD_NAME, adSelectionIdWithBidAndRenderUri.getAdSelectionId()),
+                numericArg(BID_FIELD_NAME, adSelectionIdWithBidAndRenderUri.getBid()));
     }
 }

@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.adselection;
 
+import android.net.Uri;
+
 import com.google.auto.value.AutoValue;
 
 /**
@@ -23,17 +25,20 @@ import com.google.auto.value.AutoValue;
  * Ads that have already been through Auction thus have bids
  */
 @AutoValue
-public abstract class AdSelectionIdWithBid {
+public abstract class AdSelectionIdWithBidAndRenderUri {
 
     /** @return score from scoring logic JS */
     public abstract Long getAdSelectionId();
 
-    /** @return ad data with its bid value */
+    /** @return ad selection id's bid value */
     public abstract Double getBid();
+
+    /** @return ad selection id's render uri value */
+    public abstract Uri getRenderUri();
 
     /** @return generic builder */
     static Builder builder() {
-        return new AutoValue_AdSelectionIdWithBid.Builder();
+        return new AutoValue_AdSelectionIdWithBidAndRenderUri.Builder();
     }
 
     @AutoValue.Builder
@@ -42,6 +47,8 @@ public abstract class AdSelectionIdWithBid {
 
         abstract Builder setBid(Double bid);
 
-        abstract AdSelectionIdWithBid build();
+        abstract Builder setRenderUri(Uri renderUri);
+
+        abstract AdSelectionIdWithBidAndRenderUri build();
     }
 }
