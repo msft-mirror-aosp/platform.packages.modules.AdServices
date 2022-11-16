@@ -81,6 +81,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Məxfilik Sendboksu"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android\'in reklam məxfiliyi beta versiyası bəyəndiyiniz reklamları göstərmək üçün tətbiqlərin istifadə edə biləcəyi yeni funksiyalar təqdim edir. Bu texnologiyalar cihaz identifikatorlarından istifadə etmir.\n\nAndroid sizi maraqlandıra biləcək reklam növlərini təxmin edə və maraqlarınızı müvəqqəti olaraq cihazınızda saxlaya bilər. Bu, tətbiqlərə vebsaytlar və digər tərtibatçıların tətbiqlərində fəaliyyətinizi izləmədən sizə müvafiq reklamlar göstərməyə imkan verir."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Bloklanmış maraqlarınız yoxdur"</string>
+    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
+    <skip />
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Tətbiqlər maraqlarınızı təxmin edilə və onları Android\'də müvəqqəti saxlaya bilər. Daha sonra fərqli tətbiq sizə bu maraqlara əsaslanan reklam göstərə bilər.\n\nTətbiqi bloklasanız, başqa maraqları təxmin etməyəcək. Onu blokdan çıxarmasanız, yenidən bu tətbiq siyahısına əlavə edilməyəcək. Tətbiq tərəfindən artıq təxmin edilən maraqlar silinəcək, lakin siz hələ də bəzi əlaqəli reklamları görə bilərsiniz."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Blok etdiyiniz tətbiqlər"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Tətbiqlər tərəfindən təxmin edilən maraqları sıfırlayın"</string>
