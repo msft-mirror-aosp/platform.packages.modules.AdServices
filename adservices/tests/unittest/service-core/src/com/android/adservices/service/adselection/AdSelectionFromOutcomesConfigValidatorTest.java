@@ -57,6 +57,7 @@ public class AdSelectionFromOutcomesConfigValidatorTest {
             String.format(
                     "Invalid object of type %s. The violations are:",
                     AdSelectionFromOutcomesConfig.class.getName());
+    private static final String CALLER_PACKAGE_NAME = "com.caller.package";
 
     private AdSelectionEntryDao mAdSelectionEntryDao;
     private AdSelectionFromOutcomesConfigValidator mValidator;
@@ -70,7 +71,9 @@ public class AdSelectionFromOutcomesConfigValidatorTest {
                         .build()
                         .adSelectionEntryDao();
 
-        mValidator = new AdSelectionFromOutcomesConfigValidator(mAdSelectionEntryDao);
+        mValidator =
+                new AdSelectionFromOutcomesConfigValidator(
+                        mAdSelectionEntryDao, CALLER_PACKAGE_NAME);
     }
 
     @Test
@@ -207,7 +210,6 @@ public class AdSelectionFromOutcomesConfigValidatorTest {
         final Uri renderUri = Uri.parse("https://www.domain.com/advert/");
         final Instant activationTime = Instant.now();
         final String contextualSignals = "contextual_signals";
-        final String callerPackageName1 = "callerPackageName1";
         final CustomAudienceSignals customAudienceSignals =
                 CustomAudienceSignalsFixture.aCustomAudienceSignals();
 
@@ -221,7 +223,7 @@ public class AdSelectionFromOutcomesConfigValidatorTest {
                             .setWinningAdRenderUri(renderUri)
                             .setWinningAdBid(adOutcomeId * 10.0)
                             .setCreationTimestamp(activationTime)
-                            .setCallerPackageName(callerPackageName1)
+                            .setCallerPackageName(CALLER_PACKAGE_NAME)
                             .build();
             mAdSelectionEntryDao.persistAdSelection(dbAdSelectionEntry);
         }

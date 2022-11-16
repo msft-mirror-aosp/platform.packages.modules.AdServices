@@ -57,7 +57,6 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 public class AdOutcomeSelectorImplTest {
     private static final long AD_SELECTION_ID = 12345L;
-    private static final long FAULTY_AD_SELECTION_ID = 123456L;
     private static final double AD_BID = 10.0;
     private static final Uri AD_RENDER_URI = Uri.parse("test.com");
     private static final String SELECTION_LOGIC_JS_PATH = "/selectionLogicJsPath/";
