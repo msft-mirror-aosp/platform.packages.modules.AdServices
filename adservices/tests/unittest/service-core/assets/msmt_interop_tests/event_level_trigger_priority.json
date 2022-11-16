@@ -1,5 +1,5 @@
 {
-  "description": "2nd trigger with the same deduplication key is not attributed",
+  "description": "Trigger priority for event-level reports",
   "input": {
     "sources": [
       {
@@ -34,7 +34,7 @@
               "event_trigger_data": [
                 {
                   "trigger_data": "1",
-                  "deduplication_key": "1"
+                  "priority": "1"
                 }
               ]
             }
@@ -54,7 +54,7 @@
               "event_trigger_data": [
                 {
                   "trigger_data": "2",
-                  "deduplication_key": "1"
+                  "priority": "1"
                 }
               ]
             }
@@ -74,12 +74,94 @@
               "event_trigger_data": [
                 {
                   "trigger_data": "3",
-                  "deduplication_key": "2"
+                  "priority": "1"
                 }
               ]
             }
           }
         }]
+      },
+      {
+        "timestamp": "1643235577000",
+        "registration_request": {
+          "attribution_src_url": "https://reporter.test/register-trigger",
+          "destination_origin": "https://destination.test"
+        },
+        "responses": [{
+          "url": "https://reporter.test/register-trigger",
+          "response": {
+            "Attribution-Reporting-Register-Trigger": {
+              "event_trigger_data": [
+                {
+                  "trigger_data": "4",
+                  "priority": "1"
+                }
+              ]
+            }
+          }
+        }]
+      },
+      {
+        "timestamp": "1643235578000",
+        "registration_request": {
+          "attribution_src_url": "https://reporter.test/register-trigger",
+          "destination_origin": "https://destination.test"
+        },
+        "responses": [{
+          "url": "https://reporter.test/register-trigger",
+          "response": {
+            "Attribution-Reporting-Register-Trigger": {
+              "event_trigger_data": [
+                {
+                  "trigger_data": "5",
+                  "priority": "2"
+                }
+              ]
+            }
+          }
+        }]
+      },
+      {
+        "timestamp": "1643404774000",
+        "registration_request": {
+          "attribution_src_url": "https://reporter.test/register-trigger",
+          "destination_origin": "https://destination.test"
+        },
+        "responses": [{
+          "url": "https://reporter.test/register-trigger",
+          "response": {
+            "Attribution-Reporting-Register-Trigger": {
+              "event_trigger_data": [
+                {
+                  "trigger_data": "6",
+                  "priority": "3"
+                }
+              ]
+            }
+          }
+        }]
+      },
+      {
+        "timestamp": "1643408374000",
+        "registration_request": {
+          "attribution_src_url": "https://reporter.test/register-trigger",
+          "destination_origin": "https://destination.test"
+        },
+        "responses": [
+          {
+            "url": "https://reporter.test/register-trigger",
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "event_trigger_data": [
+                  {
+                    "trigger_data": "7",
+                    "priority": "3"
+                  }
+                ]
+              }
+            }
+          }
+        ]
       }
     ]
   },
@@ -102,7 +184,18 @@
           "randomized_trigger_rate": 0.0024,
           "source_event_id": "123",
           "source_type": "navigation",
-          "trigger_data": "3"
+          "trigger_data": "5"
+        },
+        "report_url": "https://reporter.test/.well-known/attribution-reporting/report-event-attribution",
+        "report_time": "1643411973000"
+      },
+      {
+        "payload": {
+          "attribution_destination": "https://destination.test",
+          "randomized_trigger_rate": 0.0024,
+          "source_event_id": "123",
+          "source_type": "navigation",
+          "trigger_data": "6"
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-event-attribution",
         "report_time": "1643411973000"
