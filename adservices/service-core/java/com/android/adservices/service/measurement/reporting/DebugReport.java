@@ -18,6 +18,9 @@ package com.android.adservices.service.measurement.reporting;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.Objects;
 
 /** Debug Report. */
@@ -73,6 +76,14 @@ public final class DebugReport {
     /** AdTech enrollment ID. */
     public String getEnrollmentId() {
         return mEnrollmentId;
+    }
+
+    /** Generate the JSON serialization of the debug report payload. */
+    public JSONObject toPayloadJson() throws JSONException {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("type", mType);
+        jsonObject.put("body", mBody);
+        return jsonObject;
     }
 
     /** A builder for {@link DebugReport}. */

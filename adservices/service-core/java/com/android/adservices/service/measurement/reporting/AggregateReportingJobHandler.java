@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.measurement.reporting;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__EVENT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__AGGREGATE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MESUREMENT_REPORTS_UPLOADED;
 
 import android.adservices.common.AdServicesStatusUtils;
@@ -222,12 +222,12 @@ public class AggregateReportingJobHandler {
         return aggregateReportSender.sendReport(adTechDomain, aggregateReportBody);
     }
 
-    private static void logReportingStats(int resultCode) {
+    private void logReportingStats(int resultCode) {
         AdServicesLoggerImpl.getInstance()
                 .logMeasurementReports(
                         new MeasurementReportsStats.Builder()
                                 .setCode(AD_SERVICES_MESUREMENT_REPORTS_UPLOADED)
-                                .setType(AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__EVENT)
+                                .setType(AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__AGGREGATE)
                                 .setResultCode(resultCode)
                                 .build());
     }
