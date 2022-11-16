@@ -36,6 +36,7 @@ import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
+import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FluentFuture;
@@ -181,7 +182,8 @@ public class AdSelectionScriptEngine {
             @NonNull AdSelectionSignals perBuyerSignals,
             @NonNull AdSelectionSignals trustedBiddingSignals,
             @NonNull AdSelectionSignals contextualSignals,
-            @NonNull CustomAudienceSignals customAudienceSignals)
+            @NonNull CustomAudienceSignals customAudienceSignals,
+            @NonNull RunAdBiddingPerCAExecutionLogger runAdBiddingPerCAExecutionLogger)
             throws JSONException {
         Objects.requireNonNull(generateBidJS);
         Objects.requireNonNull(ads);
@@ -190,6 +192,7 @@ public class AdSelectionScriptEngine {
         Objects.requireNonNull(trustedBiddingSignals);
         Objects.requireNonNull(contextualSignals);
         Objects.requireNonNull(customAudienceSignals);
+        Objects.requireNonNull(runAdBiddingPerCAExecutionLogger);
 
         ImmutableList<JSScriptArgument> signals =
                 ImmutableList.<JSScriptArgument>builder()
@@ -211,10 +214,15 @@ public class AdSelectionScriptEngine {
             // Ads are going to be in an array their individual name is ignored.
             adDataArguments.add(AdDataArgument.asScriptArgument("ignored", currAd));
         }
+        runAdBiddingPerCAExecutionLogger.startGenerateBids();
         return transform(
                 runAuctionScriptIterative(
                         generateBidJS, adDataArguments.build(), signals, this::callGenerateBid),
-                this::handleGenerateBidsOutput,
+                result -> {
+                    List<AdWithBid> bids = handleGenerateBidsOutput(result);
+                    runAdBiddingPerCAExecutionLogger.endGenerateBids();
+                    return bids;
+                },
                 mExecutor);
     }
 

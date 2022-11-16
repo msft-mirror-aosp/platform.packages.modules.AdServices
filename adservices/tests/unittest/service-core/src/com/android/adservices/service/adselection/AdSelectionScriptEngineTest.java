@@ -44,6 +44,7 @@ import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
+import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -123,12 +124,11 @@ public class AdSelectionScriptEngineTest {
                     () -> mIsolateSettings.getMaxHeapSizeBytes());
 
     @Mock private AdSelectionExecutionLogger mAdSelectionExecutionLoggerMock;
+    @Mock private RunAdBiddingPerCAExecutionLogger mRunAdBiddingPerCAExecutionLoggerMock;
 
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        doNothing().when(mAdSelectionExecutionLoggerMock).startScoreAds();
-        doNothing().when(mAdSelectionExecutionLoggerMock).endScoreAds();
     }
 
     @Test
@@ -222,6 +222,16 @@ public class AdSelectionScriptEngineTest {
         final AdData ad2 =
                 new AdData(Uri.parse("http://www.domain.com/adverts/456"), "{\"result\":2.1}");
         List<AdData> ads = ImmutableList.of(ad1, ad2);
+        doNothing().when(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
+        // Logger calls come after the callback is returned
+        CountDownLatch loggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            loggerLatch.countDown();
+                            return null;
+                        })
+                .when(mRunAdBiddingPerCAExecutionLoggerMock)
+                .endGenerateBids();
         final List<AdWithBid> result =
                 generateBids(
                         "function generateBid(ad, auction_signals, per_buyer_signals,"
@@ -235,6 +245,9 @@ public class AdSelectionScriptEngineTest {
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         CUSTOM_AUDIENCE_SIGNALS_1);
+        loggerLatch.await();
+        verify(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
+        verify(mRunAdBiddingPerCAExecutionLoggerMock).endGenerateBids();
         assertThat(result).containsExactly(new AdWithBid(ad1, 1.1), new AdWithBid(ad2, 2.1));
     }
 
@@ -245,6 +258,16 @@ public class AdSelectionScriptEngineTest {
         final AdData ad2 =
                 new AdData(Uri.parse("http://www.domain.com/adverts/456"), "{\"result\":2.1}");
         List<AdData> ads = ImmutableList.of(ad1, ad2);
+        doNothing().when(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
+        // Logger calls come after the callback is returned
+        CountDownLatch loggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            loggerLatch.countDown();
+                            return null;
+                        })
+                .when(mRunAdBiddingPerCAExecutionLoggerMock)
+                .endGenerateBids();
         final List<AdWithBid> result =
                 generateBids(
                         "function generateBid(ad, auction_signals, per_buyer_signals,"
@@ -258,7 +281,10 @@ public class AdSelectionScriptEngineTest {
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         CUSTOM_AUDIENCE_SIGNALS_1);
+        loggerLatch.await();
         assertThat(result).isEmpty();
+        verify(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
+        verify(mRunAdBiddingPerCAExecutionLoggerMock).endGenerateBids();
     }
 
     @Test
@@ -268,6 +294,16 @@ public class AdSelectionScriptEngineTest {
         final AdData ad2 =
                 new AdData(Uri.parse("http://www.domain.com/adverts/456"), "{\"result\":2.1}");
         List<AdData> ads = ImmutableList.of(ad1, ad2);
+        doNothing().when(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
+        // Logger calls come after the callback is returned
+        CountDownLatch loggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            loggerLatch.countDown();
+                            return null;
+                        })
+                .when(mRunAdBiddingPerCAExecutionLoggerMock)
+                .endGenerateBids();
         final List<AdWithBid> result =
                 generateBids(
                         // The response for the second add doesn't include the bid so we cannot
@@ -284,7 +320,10 @@ public class AdSelectionScriptEngineTest {
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         CUSTOM_AUDIENCE_SIGNALS_1);
+        loggerLatch.await();
         assertThat(result).isEmpty();
+        verify(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
+        verify(mRunAdBiddingPerCAExecutionLoggerMock).endGenerateBids();
     }
 
     @Test
@@ -295,15 +334,9 @@ public class AdSelectionScriptEngineTest {
                 new AdData(Uri.parse("http://www.domain.com/adverts/456"), "{\"result\":2.1}");
         List<AdWithBid> adWithBids =
                 ImmutableList.of(new AdWithBid(ad1, 100), new AdWithBid(ad2, 200));
+        doNothing().when(mAdSelectionExecutionLoggerMock).startScoreAds();
         // Logger calls come after the callback is returned
-        CountDownLatch loggerLatch = new CountDownLatch(2);
-        doAnswer(
-                        unusedInvocation -> {
-                            loggerLatch.countDown();
-                            return null;
-                        })
-                .when(mAdSelectionExecutionLoggerMock)
-                .startScoreAds();
+        CountDownLatch loggerLatch = new CountDownLatch(1);
         doAnswer(
                         unusedInvocation -> {
                             loggerLatch.countDown();
@@ -338,15 +371,9 @@ public class AdSelectionScriptEngineTest {
                 new AdData(Uri.parse("http://www.domain.com/adverts/456"), "{\"result\":2.1}");
         List<AdWithBid> adWithBids =
                 ImmutableList.of(new AdWithBid(ad1, 100), new AdWithBid(ad2, 200));
+        doNothing().when(mAdSelectionExecutionLoggerMock).startScoreAds();
         // Logger calls come after the callback is returned
-        CountDownLatch loggerLatch = new CountDownLatch(2);
-        doAnswer(
-                        unusedInvocation -> {
-                            loggerLatch.countDown();
-                            return null;
-                        })
-                .when(mAdSelectionExecutionLoggerMock)
-                .startScoreAds();
+        CountDownLatch loggerLatch = new CountDownLatch(1);
         doAnswer(
                         unusedInvocation -> {
                             loggerLatch.countDown();
@@ -503,7 +530,8 @@ public class AdSelectionScriptEngineTest {
                             perBuyerSignals,
                             trustedBiddingSignals,
                             contextualSignals,
-                            customAudienceSignals);
+                            customAudienceSignals,
+                            mRunAdBiddingPerCAExecutionLoggerMock);
                 });
     }
 
