@@ -528,7 +528,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     private void unloadSdkWithClearIdentity(
             CallingInfo callingInfo, String sdkName, long timeSystemServerReceivedCallFromApp) {
         final UnloadSdkRemoveLinksToSdkResponse response =
-                removeLinksToSdk(callingInfo, sdkName, timeSystemServerReceivedCallFromApp);
+                removeLinksToSdk(callingInfo, sdkName, true, timeSystemServerReceivedCallFromApp);
         if (response.shouldStopSandbox()) {
             stopSdkSandboxService(
                     callingInfo, "Caller " + callingInfo + " has no remaining SDKS loaded.");
@@ -590,7 +590,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 mUidImportanceListener.stopListening();
             }
             mSyncDataCallbacks.remove(callingInfo);
-            removeAllSdkLinks(callingInfo);
+            removeAllSdkLinksOnAppDeath(callingInfo);
             stopSdkSandboxService(callingInfo, "Caller " + callingInfo + " has died");
         }
     }
@@ -1326,9 +1326,17 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
     }
 
-    /** Clean up all internal data structures related to {@code callingInfo} of the app */
+    /**
+     * Cleans up all internal data structures related to {@code callingInfo} of the app. Called on
+     * app death.
+     */
+    private void removeAllSdkLinksOnAppDeath(CallingInfo callingInfo) {
+        removeLinksToSdk(callingInfo, null, false, /*timeSystemServerReceivedCallFromApp=*/ -1);
+    }
+
+    /** Cleans up all internal data structures related to {@code callingInfo} of the app */
     private void removeAllSdkLinks(CallingInfo callingInfo) {
-        removeLinksToSdk(callingInfo, null, /*timeSystemServerReceivedCallFromApp=*/ -1);
+        removeLinksToSdk(callingInfo, null, true, /*timeSystemServerReceivedCallFromApp=*/ -1);
     }
 
     /**
@@ -1343,12 +1351,19 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     private UnloadSdkRemoveLinksToSdkResponse removeLinksToSdk(
             CallingInfo callingInfo,
             @Nullable String sdkName,
+            boolean shouldUnloadSdks,
             long timeSystemServerReceivedCallFromApp) {
         synchronized (mLock) {
+            // Create empty response. If SDKs do not need to be unloaded due to app death, nothing
+            // will be logged anyway.
+            UnloadSdkRemoveLinksToSdkResponse response = new UnloadSdkRemoveLinksToSdkResponse();
+            response.setShouldStopSandbox(false);
             // Unload required SDKs
-            UnloadSdkRemoveLinksToSdkResponse response =
-                    unloadSdksForAppLocked(
-                            callingInfo, sdkName, timeSystemServerReceivedCallFromApp);
+            if (shouldUnloadSdks) {
+                response =
+                        unloadSdksForAppLocked(
+                                callingInfo, sdkName, timeSystemServerReceivedCallFromApp);
+            }
 
             // Clean up
             ArrayList<Pair<CallingInfo, String>> linksToDelete = new ArrayList<>();
