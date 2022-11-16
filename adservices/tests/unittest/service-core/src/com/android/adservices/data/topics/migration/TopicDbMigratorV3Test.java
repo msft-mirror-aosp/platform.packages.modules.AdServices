@@ -28,7 +28,7 @@ import com.android.adservices.data.topics.TopicsTables;
 
 import org.junit.Test;
 
-/** Unit tests for {@link com.android.adservices.data.topics.migration.TopicDbMigratorV3} */
+/** Unit tests for {@link TopicDbMigratorV5} */
 public class TopicDbMigratorV3Test {
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     // The database is created with V2 and will migrate to V3.
@@ -50,7 +50,7 @@ public class TopicDbMigratorV3Test {
         // In normal DB upgrade, the DB will commit the change automatically.
         db.beginTransaction();
         // Upgrade the db V3 by using TopicDbMigratorV3
-        new TopicDbMigratorV3().performMigration(db);
+        new TopicDbMigratorV5().performMigration(db);
         // Commit the schema change
         db.setTransactionSuccessful();
         db.endTransaction();
