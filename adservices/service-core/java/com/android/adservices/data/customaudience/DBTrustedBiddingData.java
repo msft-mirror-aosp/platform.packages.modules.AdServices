@@ -40,6 +40,8 @@ import java.util.Optional;
 @TypeConverters(DBTrustedBiddingData.Converters.class)
 public class DBTrustedBiddingData {
 
+    public static final String QUERY_PARAM_KEYS = "keys";
+
     @ColumnInfo(name = "uri")
     @NonNull
     private final Uri mUri;
