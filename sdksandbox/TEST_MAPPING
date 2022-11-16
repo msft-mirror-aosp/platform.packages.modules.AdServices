@@ -96,5 +96,10 @@
     {
       "name": "SdkSandboxStorageHostTest"
     }
+  ],
+  "sdksandbox-postsubmit": [
+    {
+      "name": "CtsAccelerationTestCases"
+    }
   ]
 }
