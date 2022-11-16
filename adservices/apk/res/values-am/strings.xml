@@ -81,6 +81,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"የግላዊነት Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"የAndroid ማስታወቂያዎች የግላዊነት ቅድመ ይሁንታ መተግበሪያዎች እርስዎ ሊወዷቸው የሚችሏቸው ማስታወቂያዎችን ለእርስዎ ለማሳየት ሊጠቀሙባቸው የሚችሉ አዲስ ባህሪያትን ያቀርባል። እነዚህ ቴክኖሎጂዎች የመሣሪያ ለዪዎችን አይጠቀሙም።\n\nAndroid እርስዎ ሊፈልጓቸው የሚችሉ የማስታወቂያ አይነቶችን መገመት እና እነዚህን ዝንባሌዎች በመሣሪያዎ ላይ በጊዜያዊነት ማስቀመጥ ይችላል። ይህ መተግበሪያዎች በሌሎች ገንቢዎች በተሰሩ ድር ጣቢያዎች እና መተግበሪያዎች ላይ እርስዎ የሚኖርዎትን እንቅስቃሴ ሳይከታተሉ ተዛማጅነት ያላቸው ማስታወቂያዎችን ለእርስዎ እንዲያሳዩ ያስችላቸዋል።"</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"ምንም የታገዱ ዝንባሌዎች የሉዎትም"</string>
+    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
+    <skip />
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"መተግበሪያዎች የእርስዎን ዝንባሌዎች መገመት እና እነዚህን Android ላይ በጊዜያዊነት ማስቀመጥ ይችላሉ። በኋላ የተለየ መተግበሪያ በእነዚህ ዝንባሌዎች ላይ ተመስርቶ ማስታወቂያ ለእርስዎ ማሳየት ይችላል።\n\nአንድን መተግበሪያ ካገዱ ተጨማሪ ዝንባሌዎችን አይገምትም። እርስዎ እገዳውን ካላነሱ በስተቀር ወደዚህ የመተግበሪያዎች ዝርዝር ተመልሶ አይታከልም። በመተግበሪያው አስቀድመው የተገመቱ ዝንባሌዎች ይሰረዛሉ ነገር ግን አሁንም አንዳንድ ተዛማጅ ማስታወቂያዎችን ሊያዩ ይችላሉ።"</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"እርስዎ ያገዷቸው መተግበሪያዎች"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"በመተግበሪያዎች የተገመቱ ዝንባሌዎችን ዳግም አስጀምር"</string>

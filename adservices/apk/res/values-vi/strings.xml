@@ -81,6 +81,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Hộp cát về quyền riêng tư"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Bản beta về quyền riêng tư trong quảng cáo của Android cung cấp các tính năng mới mà ứng dụng có thể dùng để hiển thị những quảng cáo bạn có thể thích. Các công nghệ này không sử dụng số nhận dạng thiết bị.\n\nAndroid có thể ước tính các loại quảng cáo mà bạn có thể quan tâm và tạm thời lưu những sở thích này trên thiết bị của bạn. Điều này cho phép các ứng dụng hiển thị những quảng cáo có liên quan mà không cần theo dõi hoạt động của bạn trên các trang web cũng như ứng dụng từ nhà phát triển khác."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Bạn không có sở thích nào bị chặn"</string>
+    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
+    <skip />
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Các ứng dụng có thể ước tính sở thích của bạn và tạm thời lưu những sở thích này trong Android. Sau đó, một ứng dụng khác có thể hiển thị cho bạn quảng cáo dựa trên những sở thích này.\n\nNếu bạn chặn một ứng dụng, ứng dụng đó sẽ không ước tính thêm sở thích nào nữa. Ứng dụng bị chặn sẽ không được thêm lại vào danh sách ứng dụng này trừ khi bạn bỏ chặn. Các sở thích đã được ứng dụng ước tính sẽ bị xóa, nhưng bạn vẫn có thể thấy một số quảng cáo có liên quan."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Các ứng dụng bạn đã chặn"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Đặt lại sở thích do ứng dụng ước tính"</string>

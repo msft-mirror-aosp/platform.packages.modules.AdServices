@@ -81,6 +81,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privaatsuse liivakast"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Androidi reklaamide privaatsuse beetaprogramm pakub uusi funktsioone, mida rakendused saavad kasutada selleks, et näidata teile reklaame, mis teile meeldida võivad. Need tehnoloogiad ei kasuta seadmete identifikaatoreid.\n\nAndroid saab prognoosida, millised reklaamid teile huvi pakkuda võivad, ja salvestada need huvid ajutiselt teie seadmesse. See võimaldab rakendustel teile asjakohaseid reklaame näidata ilma teie tegevust muude arendajate veebisaitidel või rakendustes jälgimata."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Teil ei ole blokeeritud huvisid"</string>
+    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
+    <skip />
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Rakendused saavad teie huvisid prognoosida ja need ajutiselt Androidi salvestada. Hiljem saab muu rakendus teile nende huvide alusel reklaami näidata.\n\nKui blokeerite rakenduse, ei prognoosi see enam teie huvisid. Seda ei lisata rakenduste loendisse uuesti enne, kui selle deblokeerite. Rakenduse prognoositud huvid kustutatakse, ent võite siiski näha mõningaid seotud reklaame."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Teie blokeeritud rakendused"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Lähtesta rakenduste prognoositud huvid"</string>
