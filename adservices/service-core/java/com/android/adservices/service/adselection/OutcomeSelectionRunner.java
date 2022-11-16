@@ -32,7 +32,6 @@ import android.os.RemoteException;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
-import com.android.adservices.data.adselection.DBAdSelectionEntry;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
@@ -66,8 +65,8 @@ public class OutcomeSelectionRunner {
             "Encountered failure during Ad Selection";
 
     @VisibleForTesting
-    static final String AD_OUTCOMES_LIST_INPUT_CANNOT_BE_EMPTY_MSG =
-            "Ad outcomes list should at least have one element inside";
+    static final String SELECTED_OUTCOME_MUST_BE_ONE_OF_THE_INPUTS =
+            "Outcome selection must return a valid ad selection id";
 
     private final int mCallerUid;
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
@@ -181,10 +180,10 @@ public class OutcomeSelectionRunner {
     private ListenableFuture<AdSelectionOutcome> orchestrateOutcomeSelection(
             @NonNull AdSelectionFromOutcomesConfig config) {
         // TODO(b/249843968): Implement outcome selection service orchestration
-        FluentFuture<List<AdSelectionIdWithBid>> outcomeIdBidPairsFuture =
+        FluentFuture<List<AdSelectionIdWithBidAndRenderUri>> outcomeIdBidPairsFuture =
                 FluentFuture.from(retrieveAdSelectionIdWithBidList(config.getAdSelectionIds()));
 
-        FluentFuture<Long> selectedOutcomeFuture =
+        FluentFuture<Long> selectedAdSelectionIdFuture =
                 outcomeIdBidPairsFuture.transformAsync(
                         outcomeIdBids ->
                                 mAdOutcomeSelector.runAdOutcomeSelector(
@@ -193,11 +192,11 @@ public class OutcomeSelectionRunner {
                                         config.getSelectionLogicUri()),
                         mLightweightExecutorService);
 
-        // TODO(b/258864198): Eliminate second db call when AdSelectionIdWithBid is available
-        return selectedOutcomeFuture.transformAsync(
-                selectedOutcome ->
-                        (selectedOutcome != null)
-                                ? retrieveAdSelectionOutcomeFromAdSelectionId(selectedOutcome)
+        return selectedAdSelectionIdFuture.transformAsync(
+                selectedId ->
+                        (selectedId != null)
+                                ? convertAdSelectionIdToAdSelectionOutcome(
+                                        outcomeIdBidPairsFuture, selectedId)
                                 : Futures.immediateFuture(null),
                 mLightweightExecutorService);
     }
@@ -300,35 +299,47 @@ public class OutcomeSelectionRunner {
 
     /** Retrieves winner ad bids using ad selection ids of already run ad selections' outcomes. */
     @VisibleForTesting
-    ListenableFuture<List<AdSelectionIdWithBid>> retrieveAdSelectionIdWithBidList(
+    ListenableFuture<List<AdSelectionIdWithBidAndRenderUri>> retrieveAdSelectionIdWithBidList(
             List<Long> adOutcomeIds) {
-        List<AdSelectionIdWithBid> adSelectionIdWithBidList = new ArrayList<>();
+        List<AdSelectionIdWithBidAndRenderUri> adSelectionIdWithBidAndRenderUriList =
+                new ArrayList<>();
         return mBackgroundExecutorService.submit(
                 () -> {
                     mAdSelectionEntryDao.getAdSelectionEntities(adOutcomeIds).parallelStream()
                             .forEach(
                                     e ->
-                                            adSelectionIdWithBidList.add(
-                                                    AdSelectionIdWithBid.builder()
+                                            adSelectionIdWithBidAndRenderUriList.add(
+                                                    AdSelectionIdWithBidAndRenderUri.builder()
                                                             .setAdSelectionId(e.getAdSelectionId())
                                                             .setBid(e.getWinningAdBid())
+                                                            .setRenderUri(e.getWinningAdRenderUri())
                                                             .build()));
-                    return adSelectionIdWithBidList;
+                    return adSelectionIdWithBidAndRenderUriList;
                 });
     }
 
     /** Retrieves winner ad bids using ad selection ids of already run ad selections' outcomes. */
     @VisibleForTesting
-    ListenableFuture<AdSelectionOutcome> retrieveAdSelectionOutcomeFromAdSelectionId(
-            Long adSelectionIds) {
-        return mBackgroundExecutorService.submit(
-                () -> {
-                    DBAdSelectionEntry entry =
-                            mAdSelectionEntryDao.getAdSelectionEntityById(adSelectionIds);
-                    return new AdSelectionOutcome.Builder()
-                            .setAdSelectionId(entry.getAdSelectionId())
-                            .setRenderUri(entry.getWinningAdRenderUri())
-                            .build();
-                });
+    ListenableFuture<AdSelectionOutcome> convertAdSelectionIdToAdSelectionOutcome(
+            FluentFuture<List<AdSelectionIdWithBidAndRenderUri>>
+                    adSelectionIdWithBidAndRenderUrisFuture,
+            Long adSelectionId) {
+        LogUtil.i("Converting ad selection id: <%s> to AdSelectionOutcome.");
+        return adSelectionIdWithBidAndRenderUrisFuture.transformAsync(
+                idWithBidAndUris -> idWithBidAndUris.stream()
+                        .filter(e -> Objects.equals(e.getAdSelectionId(), adSelectionId))
+                        .findFirst()
+                        .map(
+                                e ->
+                                        Futures.immediateFuture(
+                                                new AdSelectionOutcome.Builder()
+                                                        .setAdSelectionId(e.getAdSelectionId())
+                                                        .setRenderUri(e.getRenderUri())
+                                                        .build()))
+                        .orElse(
+                                Futures.immediateFailedFuture(
+                                        new IllegalStateException(
+                                                SELECTED_OUTCOME_MUST_BE_ONE_OF_THE_INPUTS))),
+                mLightweightExecutorService);
     }
 }

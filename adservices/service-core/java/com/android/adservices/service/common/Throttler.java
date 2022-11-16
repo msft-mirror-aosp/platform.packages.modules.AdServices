@@ -147,11 +147,16 @@ public class Throttler {
     /** Configures permits per second per {@link ApiKey} */
     private void setRateLimitPerApiMap(Flags flags) {
         final double defaultPermitsPerSecond = flags.getSdkRequestPermitsPerSecond();
+        final double adIdPermitsPerSecond = flags.getAdIdRequestPermitsPerSecond();
+        final double appSetIdPermitsPerSecond = flags.getAppSetIdRequestPermitsPerSecond();
+        final double registerSource = flags.getMeasurementRegisterSourceRequestPermitsPerSecond();
+        final double registerWebSource =
+                flags.getMeasurementRegisterWebSourceRequestPermitsPerSecond();
 
         mRateLimitPerApiMap.put(ApiKey.UNKNOWN, defaultPermitsPerSecond);
 
-        mRateLimitPerApiMap.put(ApiKey.ADID_API_APP_PACKAGE_NAME, defaultPermitsPerSecond);
-        mRateLimitPerApiMap.put(ApiKey.APPSETID_API_APP_PACKAGE_NAME, defaultPermitsPerSecond);
+        mRateLimitPerApiMap.put(ApiKey.ADID_API_APP_PACKAGE_NAME, adIdPermitsPerSecond);
+        mRateLimitPerApiMap.put(ApiKey.APPSETID_API_APP_PACKAGE_NAME, appSetIdPermitsPerSecond);
 
         mRateLimitPerApiMap.put(ApiKey.FLEDGE_API_JOIN_CUSTOM_AUDIENCE, defaultPermitsPerSecond);
         mRateLimitPerApiMap.put(ApiKey.FLEDGE_API_LEAVE_CUSTOM_AUDIENCE, defaultPermitsPerSecond);
@@ -160,10 +165,9 @@ public class Throttler {
 
         mRateLimitPerApiMap.put(
                 ApiKey.MEASUREMENT_API_DELETION_REGISTRATION, defaultPermitsPerSecond);
-        mRateLimitPerApiMap.put(ApiKey.MEASUREMENT_API_REGISTER_SOURCE, defaultPermitsPerSecond);
+        mRateLimitPerApiMap.put(ApiKey.MEASUREMENT_API_REGISTER_SOURCE, registerSource);
         mRateLimitPerApiMap.put(ApiKey.MEASUREMENT_API_REGISTER_TRIGGER, defaultPermitsPerSecond);
-        mRateLimitPerApiMap.put(
-                ApiKey.MEASUREMENT_API_REGISTER_WEB_SOURCE, defaultPermitsPerSecond);
+        mRateLimitPerApiMap.put(ApiKey.MEASUREMENT_API_REGISTER_WEB_SOURCE, registerWebSource);
         mRateLimitPerApiMap.put(
                 ApiKey.MEASUREMENT_API_REGISTER_WEB_TRIGGER, defaultPermitsPerSecond);
 

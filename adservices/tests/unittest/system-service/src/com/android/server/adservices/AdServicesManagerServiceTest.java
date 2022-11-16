@@ -117,13 +117,12 @@ public class AdServicesManagerServiceTest {
         BroadcastReceiver receiver = argumentReceiver.getValue();
         assertThat(receiver).isNotNull();
 
-        assertThat(argumentIntentFilter.getValue().getAction(0))
-                .isEqualTo(Intent.ACTION_PACKAGE_FULLY_REMOVED);
-        assertThat(argumentIntentFilter.getValue().getAction(1))
-                .isEqualTo(Intent.ACTION_PACKAGE_DATA_CLEARED);
-        assertThat(argumentIntentFilter.getValue().getAction(2))
-                .isEqualTo(Intent.ACTION_PACKAGE_ADDED);
-        assertThat(argumentIntentFilter.getValue().getDataScheme(0)).isEqualTo("package");
+        IntentFilter intentFilter = argumentIntentFilter.getValue();
+        assertThat(intentFilter.hasAction(Intent.ACTION_PACKAGE_FULLY_REMOVED)).isTrue();
+        assertThat(intentFilter.hasAction(Intent.ACTION_PACKAGE_DATA_CLEARED)).isTrue();
+        assertThat(intentFilter.hasAction(Intent.ACTION_PACKAGE_ADDED)).isTrue();
+        assertThat(intentFilter.countActions()).isEqualTo(3);
+        assertThat(intentFilter.getDataScheme(0)).isEqualTo("package");
 
         assertThat(argumentPermission.getValue()).isNull();
         assertThat(argumentHandler.getValue()).isNotNull();
