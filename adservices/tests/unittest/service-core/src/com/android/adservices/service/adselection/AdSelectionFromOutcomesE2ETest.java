@@ -20,6 +20,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ER
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
 
 import static com.android.adservices.data.adselection.AdSelectionDatabase.DATABASE_NAME;
+import static com.android.adservices.service.adselection.AdSelectionFromOutcomesConfigValidator.AD_SELECTION_IDS_DONT_EXIST;
 import static com.android.adservices.service.adselection.AdSelectionFromOutcomesConfigValidator.HTTPS_PREFIX;
 import static com.android.adservices.service.adselection.AdSelectionFromOutcomesConfigValidator.SELLER_AND_URI_HOST_ARE_INCONSISTENT;
 import static com.android.adservices.service.adselection.OutcomeSelectionRunner.SELECTED_OUTCOME_MUST_BE_ONE_OF_THE_INPUTS;
@@ -419,6 +420,49 @@ public class AdSelectionFromOutcomesE2ETest {
     }
 
     @Test
+    public void testSelectAdsFromOutcomesAdSelectionIdOwnedByDifferentCallerPackageFailure()
+            throws Exception {
+        doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+        MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
+        final String selectionLogicPath = "/unreachableLogicJS/";
+
+        long adSelectionId1 = 12345L;
+        long adSelectionId2 = 123456L;
+        long adSelectionId3 = 1234567L;
+
+        Map<Long, Double> adSelectionIdToBidMap =
+                Map.of(
+                        adSelectionId1, 10.0,
+                        adSelectionId2, 20.0);
+        persistAdSelectionEntryDaoResults(adSelectionIdToBidMap);
+        // Intentionally persisting adSelectionId3 with a different caller package name
+        persistAdSelectionEntryDaoResults(
+                Collections.singletonMap(adSelectionId3, 30.0), "com.another.package");
+
+        AdSelectionFromOutcomesConfig config =
+                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
+                        List.of(adSelectionId1, adSelectionId2, adSelectionId3),
+                        AdSelectionSignals.EMPTY,
+                        mMockWebServerRule.uriForPath(selectionLogicPath));
+
+        AdSelectionFromOutcomesE2ETest.AdSelectionFromOutcomesTestCallback resultsCallback =
+                invokeSelectAdsFromOutcomes(mAdSelectionService, config, CALLER_PACKAGE_NAME);
+
+        assertThat(resultsCallback.mIsSuccess).isFalse();
+        assertThat(resultsCallback.mFledgeErrorResponse).isNotNull();
+        assertThat(resultsCallback.mFledgeErrorResponse.getStatusCode())
+                .isEqualTo(STATUS_INVALID_ARGUMENT);
+        assertThat(resultsCallback.mFledgeErrorResponse.getErrorMessage())
+                .contains(
+                        String.format(
+                                AD_SELECTION_IDS_DONT_EXIST,
+                                Collections.singletonList(adSelectionId3)));
+        mMockWebServerRule.verifyMockServerRequests(
+                server, 0, Collections.emptyList(), String::equals);
+    }
+
+    @Test
     public void testSelectAdsFromOutcomesJsReturnsFaultyAdSelectionIdFailure() throws Exception {
         doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
@@ -476,11 +520,15 @@ public class AdSelectionFromOutcomesE2ETest {
     }
 
     private void persistAdSelectionEntryDaoResults(Map<Long, Double> adSelectionIdToBidMap) {
+        persistAdSelectionEntryDaoResults(adSelectionIdToBidMap, CALLER_PACKAGE_NAME);
+    }
+
+    private void persistAdSelectionEntryDaoResults(
+            Map<Long, Double> adSelectionIdToBidMap, String callerPackageName) {
         final Uri biddingLogicUri1 = Uri.parse("https://www.domain.com/logic/1");
         final Uri renderUri = Uri.parse("https://www.domain.com/advert/");
         final Instant activationTime = Instant.now();
         final String contextualSignals = "contextual_signals";
-        final String callerPackageName1 = "callerPackageName1";
         final CustomAudienceSignals customAudienceSignals =
                 CustomAudienceSignalsFixture.aCustomAudienceSignals();
 
@@ -494,7 +542,7 @@ public class AdSelectionFromOutcomesE2ETest {
                             .setWinningAdRenderUri(renderUri)
                             .setWinningAdBid(entry.getValue())
                             .setCreationTimestamp(activationTime)
-                            .setCallerPackageName(callerPackageName1)
+                            .setCallerPackageName(callerPackageName)
                             .build();
             mAdSelectionEntryDaoSpy.persistAdSelection(dbAdSelectionEntry);
         }
