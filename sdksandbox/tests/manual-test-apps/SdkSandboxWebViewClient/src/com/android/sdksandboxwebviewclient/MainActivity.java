@@ -28,15 +28,19 @@ import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.RequestSurfacePackageException;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
+import android.app.sdksandbox.interfaces.IWebViewSdkApi;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.OutcomeReceiver;
+import android.os.RemoteException;
 import android.util.Log;
 import android.view.SurfaceControlViewHost.SurfacePackage;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 public class MainActivity extends Activity {
@@ -49,8 +53,12 @@ public class MainActivity extends Activity {
     private SdkSandboxManager mSdkSandboxManager;
     private Button mLoadButton;
     private Button mRenderButton;
+    private Button mSubmitUrlButton;
+    private EditText mUrlInputTextbox;
+    private LinearLayout mUrlInputField;
     private SurfaceView mRenderedView;
     private SandboxedSdk mSandboxedSdk;
+    private IWebViewSdkApi mWebViewProxy;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -64,9 +72,15 @@ public class MainActivity extends Activity {
 
         mLoadButton = findViewById(R.id.load_code_button);
         mRenderButton = findViewById(R.id.request_surface_button);
+        mUrlInputTextbox = findViewById(R.id.url_input_textbox);
+        mSubmitUrlButton = findViewById(R.id.submit_url_button);
+        mUrlInputField = findViewById(R.id.url_input_field);
+
+        mUrlInputField.setVisibility(View.GONE);
 
         registerLoadSdkProviderButton();
         registerLoadSurfacePackageButton();
+        registerSubmitUrlButton();
     }
 
     private void registerLoadSdkProviderButton() {
@@ -87,6 +101,9 @@ public class MainActivity extends Activity {
                                 public void onResult(SandboxedSdk sandboxedSdk) {
                                     mSdksLoaded = true;
                                     mSandboxedSdk = sandboxedSdk;
+                                    mWebViewProxy =
+                                            IWebViewSdkApi.Stub.asInterface(
+                                                    mSandboxedSdk.getInterface());
                                     makeToast("SDK Loaded successfully!");
                                     mLoadButton.setText(
                                             getResources().getString(R.string.unload_sdk));
@@ -103,9 +120,15 @@ public class MainActivity extends Activity {
     }
 
     private void resetStateForLoadSdkButton() {
+        try {
+            mWebViewProxy.destroy();
+        } catch (RemoteException e) {
+            Log.e(TAG, e.getMessage());
+        }
         mSdkSandboxManager.unloadSdk(SDK_NAME);
         mRenderedView.setVisibility(View.INVISIBLE);
         mLoadButton.setText(getResources().getString(R.string.load_sdk));
+        mUrlInputField.setVisibility(View.GONE);
         mSdksLoaded = false;
     }
 
@@ -129,6 +152,19 @@ public class MainActivity extends Activity {
                 });
     }
 
+    private void registerSubmitUrlButton() {
+        mSubmitUrlButton.setOnClickListener(
+                v -> {
+                    String url = mUrlInputTextbox.getText().toString();
+                    try {
+                        mWebViewProxy.loadUrl(url);
+                    } catch (RemoteException e) {
+                        Log.e(TAG, e.getMessage());
+                        makeToast("Cannot load URL : " + e.getMessage());
+                    }
+                });
+    }
+
     private Bundle getRequestSurfacePackageParams() {
         Bundle params = new Bundle();
         params.putInt(EXTRA_WIDTH_IN_PIXELS, mRenderedView.getWidth());
@@ -147,6 +183,7 @@ public class MainActivity extends Activity {
 
         @Override
         public void onResult(Bundle result) {
+            mUrlInputField.setVisibility(View.VISIBLE);
             sHandler.post(
                     () -> {
                         SurfacePackage surfacePackage =

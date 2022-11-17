@@ -20,4 +20,6 @@
     <string name="load_sdk">Load SDK</string>
     <string name="unload_sdk">Unload SDK</string>
     <string name="request_surface_package">Request Surface Package</string>
+    <string name="url_hint">Enter Url Here</string>
+    <string name="submit_url">Load</string>
 </resources>
