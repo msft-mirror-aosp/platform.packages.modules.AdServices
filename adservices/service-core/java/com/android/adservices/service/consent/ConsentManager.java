@@ -61,12 +61,13 @@ public class ConsentManager {
     private static final String ERROR_MESSAGE_DATASTORE_EXCEPTION_WHILE_GET_CONTENT =
             "getConsent method failed. Revoked consent is returned as fallback.";
     private static final String NOTIFICATION_DISPLAYED_ONCE = "NOTIFICATION-DISPLAYED-ONCE";
-    private static final String CONSENT_ALREADY_INITIALIZED_KEY = "CONSENT-ALREADY-INITIALIZED";
     private static final String CONSENT_KEY = "CONSENT";
     private static final String ERROR_MESSAGE_DATASTORE_IO_EXCEPTION_WHILE_SET_CONTENT =
             "setConsent method failed due to IOException thrown by Datastore.";
-    private static final int STORAGE_VERSION = 1;
-    private static final String STORAGE_XML_IDENTIFIER = "ConsentManagerStorageIdentifier.xml";
+    // Internal datastore version
+    public static final int STORAGE_VERSION = 1;
+    // Internal datastore filename
+    public static final String STORAGE_XML_IDENTIFIER = "ConsentManagerStorageIdentifier.xml";
 
     private static volatile ConsentManager sConsentManager;
     private final Flags mFlags;
@@ -99,6 +100,7 @@ public class ConsentManager {
         Objects.requireNonNull(customAudienceDao);
 
         mTopicsWorker = topicsWorker;
+        // TODO(b/259664512): don't create the datastore in ctor, provide it from outside instead
         mDatastore = new BooleanFileDatastore(context, STORAGE_XML_IDENTIFIER, STORAGE_VERSION);
         mAppConsentDao = appConsentDao;
         mEnrollmentDao = enrollmentDao;
@@ -452,19 +454,16 @@ public class ConsentManager {
     }
 
     void init() throws IOException {
-        initializeStorage();
-        if (mDatastore.get(CONSENT_ALREADY_INITIALIZED_KEY) == null
-                || mDatastore.get(CONSENT_KEY) == null) {
-            mDatastore.put(NOTIFICATION_DISPLAYED_ONCE, false);
-            mDatastore.put(CONSENT_ALREADY_INITIALIZED_KEY, true);
-        }
-    }
-
-    private void initializeStorage() throws IOException {
         if (!mInitialized) {
             synchronized (ConsentManager.class) {
                 if (!mInitialized) {
                     mDatastore.initialize();
+                    // TODO(b/259607624): implement a method in the datastore which would support
+                    // this exact scenario - if the value is null, return default value provided
+                    // in the parameter (similar to SP apply etc.)
+                    if (mDatastore.get(NOTIFICATION_DISPLAYED_ONCE) == null) {
+                        mDatastore.put(NOTIFICATION_DISPLAYED_ONCE, false);
+                    }
                     mInitialized = true;
                 }
             }

@@ -116,9 +116,12 @@ public class ConsentNotificationTrigger {
             return;
         }
 
-        // if the device is not an EU device and notifications are not disabled, set the consent
+        // For the ROW devices, set the consent to GIVEN (enabled).
+        // For the EU devices, set the consent to REVOKED (disabled)
         if (!isEuDevice) {
             ConsentManager.getInstance(context).enable(context);
+        } else {
+            ConsentManager.getInstance(context).disable(context);
         }
 
         createNotificationChannel(context);
