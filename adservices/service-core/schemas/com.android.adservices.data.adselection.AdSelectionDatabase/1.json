@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "4410f85d4543ed441bdc968315b345f6",
+    "identityHash": "87946d4783de24c4fc59c51822306bcb",
     "entities": [
       {
         "tableName": "ad_selection",
@@ -169,12 +169,50 @@
         },
         "indices": [],
         "foreignKeys": []
+      },
+      {
+        "tableName": "ad_selection_from_outcomes_overrides",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`ad_selection_from_outcomes_config_id` TEXT NOT NULL, `app_package_name` TEXT NOT NULL, `selection_logic` TEXT NOT NULL, `selection_signals` TEXT NOT NULL, PRIMARY KEY(`ad_selection_from_outcomes_config_id`))",
+        "fields": [
+          {
+            "fieldPath": "adSelectionFromOutcomesConfigId",
+            "columnName": "ad_selection_from_outcomes_config_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "appPackageName",
+            "columnName": "app_package_name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "selectionLogicJS",
+            "columnName": "selection_logic",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "selectionSignals",
+            "columnName": "selection_signals",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "ad_selection_from_outcomes_config_id"
+          ],
+          "autoGenerate": false
+        },
+        "indices": [],
+        "foreignKeys": []
       }
     ],
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '4410f85d4543ed441bdc968315b345f6')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '87946d4783de24c4fc59c51822306bcb')"
     ]
   }
 }
