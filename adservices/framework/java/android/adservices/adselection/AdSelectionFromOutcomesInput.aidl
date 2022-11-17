@@ -21,6 +21,6 @@ package android.adservices.adselection;
  * An AdComparisonInput is a Parcelable object that contains a list of AdSelectionOutcome,
  * an selectionSignals, selectionLogicUri and a callerPackageName.
  *
- *
+ * {@hide}
  */
 parcelable AdSelectionFromOutcomesInput;
