@@ -49,10 +49,30 @@ package android.adservices.adselection {
     method @NonNull public android.adservices.adselection.AdSelectionConfig.Builder setTrustedScoringSignalsUri(@NonNull android.net.Uri);
   }
 
+  public final class AdSelectionFromOutcomesConfig implements android.os.Parcelable {
+    method public int describeContents();
+    method @NonNull public java.util.List<java.lang.Long> getAdSelectionIds();
+    method @NonNull public android.net.Uri getSelectionLogicUri();
+    method @NonNull public android.adservices.common.AdSelectionSignals getSelectionSignals();
+    method @NonNull public android.adservices.common.AdTechIdentifier getSeller();
+    method public void writeToParcel(@NonNull android.os.Parcel, int);
+    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.adselection.AdSelectionFromOutcomesConfig> CREATOR;
+  }
+
+  public static final class AdSelectionFromOutcomesConfig.Builder {
+    ctor public AdSelectionFromOutcomesConfig.Builder();
+    method @NonNull public android.adservices.adselection.AdSelectionFromOutcomesConfig build();
+    method @NonNull public android.adservices.adselection.AdSelectionFromOutcomesConfig.Builder setAdSelectionIds(@NonNull java.util.List<java.lang.Long>);
+    method @NonNull public android.adservices.adselection.AdSelectionFromOutcomesConfig.Builder setSelectionLogicUri(@NonNull android.net.Uri);
+    method @NonNull public android.adservices.adselection.AdSelectionFromOutcomesConfig.Builder setSelectionSignals(@NonNull android.adservices.common.AdSelectionSignals);
+    method @NonNull public android.adservices.adselection.AdSelectionFromOutcomesConfig.Builder setSeller(@NonNull android.adservices.common.AdTechIdentifier);
+  }
+
   public class AdSelectionManager {
     method @NonNull public android.adservices.adselection.TestAdSelectionManager getTestAdSelectionManager();
     method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE) public void reportImpression(@NonNull android.adservices.adselection.ReportImpressionRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
     method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE) public void selectAds(@NonNull android.adservices.adselection.AdSelectionConfig, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<android.adservices.adselection.AdSelectionOutcome,java.lang.Exception>);
+    method public void selectAds(@NonNull android.adservices.adselection.AdSelectionFromOutcomesConfig, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<android.adservices.adselection.AdSelectionOutcome,java.lang.Exception>);
   }
 
   public class AdSelectionOutcome {
