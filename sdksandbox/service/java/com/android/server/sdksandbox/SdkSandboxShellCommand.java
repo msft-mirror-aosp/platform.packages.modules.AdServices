@@ -154,7 +154,7 @@ class SdkSandboxShellCommand extends BasicShellCommandHandler {
         }
 
         @Override
-        public void onBindingFailed(LoadSdkException e) {
+        public void onBindingFailed(LoadSdkException e, long time) {
             mLatch.countDown();
         }
 
@@ -195,7 +195,8 @@ class SdkSandboxShellCommand extends BasicShellCommandHandler {
         LatchSandboxServiceConnectionCallback callback =
                 new LatchSandboxServiceConnectionCallback();
 
-        mService.startSdkSandbox(mCallingInfo, callback, -1);
+        mService.addSandboxBindingCallback(mCallingInfo, callback);
+        mService.startSdkSandbox(mCallingInfo, -1);
         if (callback.isSuccessful()) {
             ISdkSandboxService service = callback.getService();
             if (mService.isSdkSandboxDisabled(service)) {
