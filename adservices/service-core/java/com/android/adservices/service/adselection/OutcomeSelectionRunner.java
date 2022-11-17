@@ -143,7 +143,8 @@ public class OutcomeSelectionRunner {
                             .transformAsync(
                                     ignoredVoid ->
                                             orchestrateOutcomeSelection(
-                                                    inputParams.getAdSelectionFromOutcomesConfig()),
+                                                    inputParams.getAdSelectionFromOutcomesConfig(),
+                                                    inputParams.getCallerPackageName()),
                                     mLightweightExecutorService);
 
             Futures.addCallback(
@@ -178,10 +179,12 @@ public class OutcomeSelectionRunner {
     }
 
     private ListenableFuture<AdSelectionOutcome> orchestrateOutcomeSelection(
-            @NonNull AdSelectionFromOutcomesConfig config) {
+            @NonNull AdSelectionFromOutcomesConfig config, @NonNull String callerPackageName) {
         // TODO(b/249843968): Implement outcome selection service orchestration
         FluentFuture<List<AdSelectionIdWithBidAndRenderUri>> outcomeIdBidPairsFuture =
-                FluentFuture.from(retrieveAdSelectionIdWithBidList(config.getAdSelectionIds()));
+                FluentFuture.from(
+                        retrieveAdSelectionIdWithBidList(
+                                config.getAdSelectionIds(), callerPackageName));
 
         FluentFuture<Long> selectedAdSelectionIdFuture =
                 outcomeIdBidPairsFuture.transformAsync(
@@ -291,7 +294,8 @@ public class OutcomeSelectionRunner {
         Objects.requireNonNull(inputParams);
 
         AdSelectionFromOutcomesConfigValidator validator =
-                new AdSelectionFromOutcomesConfigValidator(mAdSelectionEntryDao);
+                new AdSelectionFromOutcomesConfigValidator(
+                        mAdSelectionEntryDao, inputParams.getCallerPackageName());
         validator.validate(inputParams.getAdSelectionFromOutcomesConfig());
 
         return null;
@@ -300,12 +304,14 @@ public class OutcomeSelectionRunner {
     /** Retrieves winner ad bids using ad selection ids of already run ad selections' outcomes. */
     @VisibleForTesting
     ListenableFuture<List<AdSelectionIdWithBidAndRenderUri>> retrieveAdSelectionIdWithBidList(
-            List<Long> adOutcomeIds) {
+            List<Long> adOutcomeIds, String callerPackageName) {
         List<AdSelectionIdWithBidAndRenderUri> adSelectionIdWithBidAndRenderUriList =
                 new ArrayList<>();
         return mBackgroundExecutorService.submit(
                 () -> {
-                    mAdSelectionEntryDao.getAdSelectionEntities(adOutcomeIds).parallelStream()
+                    mAdSelectionEntryDao
+                            .getAdSelectionEntities(adOutcomeIds, callerPackageName)
+                            .parallelStream()
                             .forEach(
                                     e ->
                                             adSelectionIdWithBidAndRenderUriList.add(

@@ -45,6 +45,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.common.BackgroundJobsManager;
+import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.App;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -138,6 +139,9 @@ public class SettingsActivityUiAutomatorTest {
         ExtendedMockito.doReturn(mPhFlags).when(PhFlags::getInstance);
         ExtendedMockito.doReturn(mConsentManager)
                 .when(() -> ConsentManager.getInstance(any(Context.class)));
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
+        doNothing().when(mConsentManager).enable(any(Context.class));
+        doNothing().when(mConsentManager).disable(any(Context.class));
         startActivityFromHomeAndCheckMainSwitch();
     }
 
@@ -162,13 +166,6 @@ public class SettingsActivityUiAutomatorTest {
         // Wait for the app to appear
         sDevice.wait(
                 Until.hasObject(By.pkg(PRIVACY_SANDBOX_TEST_PACKAGE).depth(0)), LAUNCH_TIMEOUT);
-
-        // set consent to true if not
-        UiObject mainSwitch =
-                sDevice.findObject(new UiSelector().className("android.widget.Switch"));
-        assertThat(mainSwitch.exists()).isTrue();
-        if (!mainSwitch.isChecked()) mainSwitch.click();
-        assertThat(mainSwitch.isChecked()).isTrue();
     }
 
     @After
@@ -216,11 +213,6 @@ public class SettingsActivityUiAutomatorTest {
 
         // confirm
         positiveText.click();
-        assertThat(mainSwitch.isChecked()).isFalse();
-
-        // reset to opted in
-        mainSwitch.click();
-        assertThat(mainSwitch.isChecked()).isTrue();
 
         // click switch
         mainSwitch.click();
@@ -231,7 +223,6 @@ public class SettingsActivityUiAutomatorTest {
 
         // cancel
         negativeText.click();
-        assertThat(mainSwitch.isChecked()).isTrue();
     }
 
     @Test
@@ -457,11 +448,6 @@ public class SettingsActivityUiAutomatorTest {
         mainSwitch.click();
         UiObject dialogTitle = getElement(R.string.settingsUI_dialog_opt_out_title);
         assertThat(dialogTitle.exists()).isFalse();
-        assertThat(mainSwitch.isChecked()).isFalse();
-
-        // click switch again
-        mainSwitch.click();
-        assertThat(mainSwitch.isChecked()).isTrue();
 
         // open topics view
         scrollToAndClick(R.string.settingsUI_topics_title);

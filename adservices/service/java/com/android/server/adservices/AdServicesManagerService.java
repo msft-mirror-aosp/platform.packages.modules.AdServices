@@ -15,6 +15,9 @@
  */
 package com.android.server.adservices;
 
+import static android.app.adservices.AdServicesManager.AD_SERVICES_SYSTEM_SERVICE;
+
+import android.app.adservices.IAdServicesManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -23,6 +26,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.RemoteException;
 import android.os.UserHandle;
 import android.provider.DeviceConfig;
 import android.util.Log;
@@ -32,10 +36,8 @@ import com.android.server.SystemService;
 
 import java.util.List;
 
-/**
- * @hide
- */
-public class AdServicesManagerService {
+/** @hide */
+public class AdServicesManagerService extends IAdServicesManager.Stub {
     private static final String TAG = "AdServicesManagerService";
 
     /**
@@ -85,6 +87,12 @@ public class AdServicesManagerService {
         registerPackagedChangedBroadcastReceivers();
     }
 
+    @Override
+    public void getConsent() throws RemoteException {
+        Log.d(TAG, "AdServicesManagerService.getConsent() is invoked!");
+        // TODO(b/258679209): implement this.
+    }
+
     /** @hide */
     public static class Lifecycle extends SystemService {
         private AdServicesManagerService mService;
@@ -98,6 +106,7 @@ public class AdServicesManagerService {
         /** @hide */
         @Override
         public void onStart() {
+            publishBinderService(AD_SERVICES_SYSTEM_SERVICE, mService);
             Log.d(TAG, "AdServicesManagerService started!");
         }
     }

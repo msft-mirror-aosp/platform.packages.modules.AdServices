@@ -2205,6 +2205,35 @@ public class SdkSandboxManagerServiceUnitTest {
                                 mClientAppUid));
     }
 
+    @Test
+    public void testUnloadSdkNotCalledOnAppDeath() throws Exception {
+        disableKillUid();
+        disableForegroundCheck();
+        disableNetworkPermissionChecks();
+        FakeLoadSdkCallbackBinder callback = Mockito.spy(new FakeLoadSdkCallbackBinder());
+        Mockito.doReturn(Mockito.mock(Binder.class)).when(callback).asBinder();
+
+        ArgumentCaptor<IBinder.DeathRecipient> deathRecipient =
+                ArgumentCaptor.forClass(IBinder.DeathRecipient.class);
+
+        mService.loadSdk(
+                TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER, new Bundle(), callback);
+        mSdkSandboxService.sendLoadCodeSuccessful();
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+
+        Mockito.verify(callback.asBinder())
+                .linkToDeath(deathRecipient.capture(), ArgumentMatchers.eq(0));
+
+        // App Died
+        deathRecipient.getValue().binderDied();
+
+        Mockito.verify(mSdkSandboxService, Mockito.never())
+                .unloadSdk(
+                        Mockito.anyString(),
+                        Mockito.any(IUnloadSdkCallback.class),
+                        Mockito.any(SandboxLatencyInfo.class));
+    }
+
     private SandboxLatencyInfo getFakedSandboxLatencies() {
         final SandboxLatencyInfo sandboxLatencyInfo =
                 new SandboxLatencyInfo(TIME_SYSTEM_SERVER_CALLED_SANDBOX);
