@@ -184,6 +184,7 @@ public class MeasurementDaoTest {
             assertEquals(validSource.getFilterData(), source.getFilterData());
             assertEquals(validSource.getAggregateContributions(),
                     source.getAggregateContributions());
+            assertEquals(validSource.isDebugReporting(), source.isDebugReporting());
         }
     }
 

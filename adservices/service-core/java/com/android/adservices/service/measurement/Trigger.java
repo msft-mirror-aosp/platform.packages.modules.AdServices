@@ -60,6 +60,7 @@ public class Trigger {
     private Uri mRegistrant;
     private String mAggregateTriggerData;
     private String mAggregateValues;
+    private boolean mIsDebugReporting;
     private AggregatableAttributionTrigger mAggregatableAttributionTrigger;
     private String mFilters;
     private String mNotFilters;
@@ -78,6 +79,7 @@ public class Trigger {
         mStatus = Status.PENDING;
         // Making this default explicit since it anyway occur on an uninitialised int field.
         mDestinationType = EventSurfaceType.APP;
+        mIsDebugReporting = false;
     }
 
     @Override
@@ -94,6 +96,7 @@ public class Trigger {
                 && Objects.equals(mDebugKey, trigger.mDebugKey)
                 && Objects.equals(mEventTriggers, trigger.mEventTriggers)
                 && mStatus == trigger.mStatus
+                && mIsDebugReporting == trigger.mIsDebugReporting
                 && Objects.equals(mRegistrant, trigger.mRegistrant)
                 && Objects.equals(mAggregateTriggerData, trigger.mAggregateTriggerData)
                 && Objects.equals(mAggregateValues, trigger.mAggregateValues)
@@ -239,6 +242,11 @@ public class Trigger {
      */
     public String getFilters() {
         return mFilters;
+    }
+
+    /** Is Ad Tech Opt-in to Debug Reporting {@link Trigger}. */
+    public boolean isDebugReporting() {
+        return mIsDebugReporting;
     }
 
     /**
@@ -456,6 +464,12 @@ public class Trigger {
         @NonNull
         public Builder setFilters(@Nullable String filters) {
             mBuilding.mFilters = filters;
+            return this;
+        }
+
+        /** See {@link Trigger#isDebugReporting()} */
+        public Trigger.Builder setIsDebugReporting(boolean isDebugReporting) {
+            mBuilding.mIsDebugReporting = isDebugReporting;
             return this;
         }
 
