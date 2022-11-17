@@ -460,11 +460,38 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
+    public void testLoadSdk_sandboxIsInitializedAfterRestart() throws Exception {
+        loadSdk(SDK_NAME);
+        restartAndSetSandboxService();
+        // Restarting creates and sets a new sandbox service. Verify that the new one has been
+        // initialized.
+        assertThat(mSdkSandboxService.getInitializationCount()).isEqualTo(1);
+    }
+
+    @Test
     public void testLoadSdk_sdkDataPrepared_onlyOnce() throws Exception {
         loadSdk(SDK_NAME);
         loadSdk(SDK_PROVIDER_RESOURCES_SDK_NAME);
 
-        // Verify that sandbox was initialized
+        // Verify that SDK data was prepared.
+        Mockito.verify(mPmLocal, Mockito.times(1))
+                .reconcileSdkData(
+                        Mockito.nullable(String.class),
+                        Mockito.anyString(),
+                        Mockito.anyList(),
+                        Mockito.anyInt(),
+                        Mockito.anyInt(),
+                        Mockito.anyInt(),
+                        Mockito.anyString(),
+                        Mockito.anyInt());
+    }
+
+    @Test
+    public void testLoadSdk_sdkDataPreparedAfterSandboxRestart() throws Exception {
+        loadSdk(SDK_NAME);
+        restartAndSetSandboxService();
+
+        // Verify that SDK data was prepared for the newly restarted sandbox.
         Mockito.verify(mPmLocal, Mockito.times(1))
                 .reconcileSdkData(
                         Mockito.nullable(String.class),
@@ -676,6 +703,30 @@ public class SdkSandboxManagerServiceUnitTest {
 
         // Check that death is recorded correctly
         assertThat(lifecycleCallback.isSdkSandboxDeathDetected()).isTrue();
+    }
+
+    @Test
+    public void testSdkSandboxProcessDeathCallback_AfterRestartingSandbox() throws Exception {
+        loadSdk(SDK_NAME);
+
+        // Register for sandbox death event
+        FakeSdkSandboxProcessDeathCallbackBinder lifecycleCallback1 =
+                new FakeSdkSandboxProcessDeathCallbackBinder();
+        mService.addSdkSandboxProcessDeathCallback(
+                TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER, lifecycleCallback1);
+        killSandbox();
+        assertThat(lifecycleCallback1.isSdkSandboxDeathDetected()).isTrue();
+
+        restartAndSetSandboxService();
+
+        // Register for sandbox death event again and verify that death is detected.
+        FakeSdkSandboxProcessDeathCallbackBinder lifecycleCallback2 =
+                new FakeSdkSandboxProcessDeathCallbackBinder();
+        mService.addSdkSandboxProcessDeathCallback(
+                TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER, lifecycleCallback2);
+        assertThat(lifecycleCallback2.isSdkSandboxDeathDetected()).isFalse();
+        killSandbox();
+        assertThat(lifecycleCallback2.isSdkSandboxDeathDetected()).isTrue();
     }
 
     @Test
@@ -2267,20 +2318,38 @@ public class SdkSandboxManagerServiceUnitTest {
         }
     }
 
+    // Restart sandbox which creates a new sandbox service binder.
+    private void restartAndSetSandboxService() throws Exception {
+        mSdkSandboxService = mProvider.restartSandbox();
+    }
+
     /** Fake service provider that returns local instance of {@link SdkSandboxServiceProvider} */
     private static class FakeSdkSandboxProvider implements SdkSandboxServiceProvider {
-        private final ISdkSandboxService mSdkSandboxService;
+        private FakeSdkSandboxService mSdkSandboxService;
         private final ArrayMap<CallingInfo, ISdkSandboxService> mService = new ArrayMap<>();
 
         // When set to true, this will fail the bindService call
         private boolean mFailBinding = false;
 
-        FakeSdkSandboxProvider(ISdkSandboxService service) {
+        private ServiceConnection mServiceConnection = null;
+
+        FakeSdkSandboxProvider(FakeSdkSandboxService service) {
             mSdkSandboxService = service;
         }
 
         public void disableBinding() {
             mFailBinding = true;
+        }
+
+        public FakeSdkSandboxService restartSandbox() {
+            mServiceConnection.onServiceDisconnected(null);
+
+            // Create a new sandbox service.
+            mSdkSandboxService = Mockito.spy(FakeSdkSandboxService.class);
+
+            // Call onServiceConnected() again with the new fake sandbox service.
+            mServiceConnection.onServiceConnected(null, mSdkSandboxService.asBinder());
+            return mSdkSandboxService;
         }
 
         @Override
@@ -2295,6 +2364,7 @@ public class SdkSandboxManagerServiceUnitTest {
             }
             mService.put(callingInfo, mSdkSandboxService);
             serviceConnection.onServiceConnected(null, mSdkSandboxService.asBinder());
+            mServiceConnection = serviceConnection;
         }
 
         @Override
