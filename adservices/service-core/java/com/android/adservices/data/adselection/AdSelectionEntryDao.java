@@ -303,7 +303,7 @@ public interface AdSelectionEntryDao {
      * @return ad selection override result if exists.
      */
     @Query(
-            "SELECT selection_logic FROM ad_selection_from_outcomes_overrides WHERE "
+            "SELECT selection_logic_js FROM ad_selection_from_outcomes_overrides WHERE "
                     + "ad_selection_from_outcomes_config_id = :adSelectionFromOutcomesConfigId "
                     + "AND app_package_name = :appPackageName")
     @Nullable
