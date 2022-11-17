@@ -296,6 +296,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             throws RemoteException {
         // TODO (b/258604183): This endpoint suppose to be an overload of selectAds but .aidl
         //  doesn't allow overloading. Investigation where to go from here
+
+        // TODO(b/258836148): Use proper short name for this endpoint when there is one created
         int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 
         // Caller permissions must be checked in the binder thread, before anything else
@@ -328,6 +330,11 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                     mScheduledExecutor,
                                     mAdServicesHttpsClient,
                                     mAdServicesLogger,
+                                    mFledgeAuthorizationFilter,
+                                    mAppImportanceFilter,
+                                    () -> Throttler.getInstance(mFlags),
+                                    mFledgeAllowListsFilter,
+                                    mConsentManager,
                                     mContext,
                                     mFlags);
                     runner.runOutcomeSelection(inputParams, callback);
