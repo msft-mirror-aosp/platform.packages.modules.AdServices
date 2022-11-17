@@ -18,7 +18,6 @@ package com.android.adservices.data.measurement.migration;
 
 import android.database.sqlite.SQLiteDatabase;
 
-import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.MeasurementTables;
 
 /** Migrates Measurement DB from user version 5 to 6. */
@@ -41,19 +40,18 @@ public class MeasurementDbMigratorV6 extends AbstractMeasurementDbMigrator {
 
     @Override
     protected void performMigration(SQLiteDatabase db) {
-        if (MigrationHelpers.isColumnPresent(
+        if (!MigrationHelpers.isColumnPresent(
                         db,
                         MeasurementTables.SourceContract.TABLE,
                         MeasurementTables.SourceContract.DEBUG_REPORTING)
-                || MigrationHelpers.isColumnPresent(
+                && !MigrationHelpers.isColumnPresent(
                         db,
                         MeasurementTables.TriggerContract.TABLE,
                         MeasurementTables.TriggerContract.DEBUG_REPORTING)) {
-            LogUtil.w("Debug reporting column exists.");
-            return;
+            for (String sql : ALTER_STATEMENTS_VER_6) {
+                db.execSQL(sql);
+            }
         }
-        for (String sql : ALTER_STATEMENTS_VER_6) {
-            db.execSQL(sql);
-        }
+        db.execSQL(MeasurementTables.CREATE_TABLE_DEBUG_REPORT_LATEST);
     }
 }
