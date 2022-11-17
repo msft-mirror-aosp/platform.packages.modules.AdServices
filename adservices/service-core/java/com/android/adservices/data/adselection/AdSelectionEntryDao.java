@@ -153,6 +153,34 @@ public interface AdSelectionEntryDao {
     List<DBAdSelectionEntry> getAdSelectionEntities(List<Long> adSelectionIds);
 
     /**
+     * Get the ad selection entries with a batch of ad_selection_ids.
+     *
+     * @param adSelectionIds are the list of keys to query the corresponding ad selection entries.
+     * @return ad selection entries if exists.
+     */
+    @Query(
+            "SELECT ad_selection.ad_selection_id AS"
+                + " ad_selection_id,ad_selection.custom_audience_signals_owner as"
+                + " custom_audience_signals_owner, ad_selection.custom_audience_signals_buyer as"
+                + " custom_audience_signals_buyer, ad_selection.custom_audience_signals_name as"
+                + " custom_audience_signals_name,"
+                + " ad_selection.custom_audience_signals_activation_time as"
+                + " custom_audience_signals_activation_time,"
+                + " ad_selection.custom_audience_signals_expiration_time as"
+                + " custom_audience_signals_expiration_time,"
+                + " ad_selection.custom_audience_signals_user_bidding_signals as"
+                + " custom_audience_signals_user_bidding_signals, ad_selection.contextual_signals"
+                + " AS contextual_signals,ad_selection.winning_ad_render_uri AS"
+                + " winning_ad_render_uri,ad_selection.winning_ad_bid AS winning_ad_bid,"
+                + " ad_selection.creation_timestamp as creation_timestamp,"
+                + " buyer_decision_logic.buyer_decision_logic_js AS buyer_decision_logic_js FROM"
+                + " ad_selection LEFT JOIN buyer_decision_logic ON ad_selection.bidding_logic_uri"
+                + " = buyer_decision_logic.bidding_logic_uri WHERE ad_selection.ad_selection_id IN"
+                + " (:adSelectionIds) AND ad_selection.caller_package_name = :callerPackageName")
+    List<DBAdSelectionEntry> getAdSelectionEntities(
+            List<Long> adSelectionIds, String callerPackageName);
+
+    /**
      * Get ad selection JS override by its unique key and the package name of the app that created
      * the override.
      *

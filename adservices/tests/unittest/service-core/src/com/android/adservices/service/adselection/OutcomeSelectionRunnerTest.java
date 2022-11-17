@@ -53,6 +53,8 @@ public class OutcomeSelectionRunnerTest {
     // Time allowed by current test async calls to respond
     private static final int RESPONSE_TIMEOUT_SECONDS = 3;
 
+    private static final String CALLER_PACKAGE_NAME_1 = "callerPackageName1";
+    private static final String CALLER_PACKAGE_NAME_2 = "callerPackageName2";
     public static final DBAdSelection DB_AD_SELECTION_1 =
             new DBAdSelection.Builder()
                     .setAdSelectionId(1)
@@ -62,7 +64,7 @@ public class OutcomeSelectionRunnerTest {
                     .setWinningAdRenderUri(Uri.parse("http://www.domain.com/advert/"))
                     .setWinningAdBid(10)
                     .setCreationTimestamp(Instant.now())
-                    .setCallerPackageName("callerPackageName1")
+                    .setCallerPackageName(CALLER_PACKAGE_NAME_1)
                     .build();
 
     public static final DBAdSelection DB_AD_SELECTION_2 =
@@ -74,7 +76,7 @@ public class OutcomeSelectionRunnerTest {
                     .setWinningAdRenderUri(Uri.parse("http://www.domain.com/advert/"))
                     .setWinningAdBid(20)
                     .setCreationTimestamp(Instant.now())
-                    .setCallerPackageName("callerPackageName2")
+                    .setCallerPackageName(CALLER_PACKAGE_NAME_1)
                     .build();
 
     public static final DBAdSelection DB_AD_SELECTION_3 =
@@ -86,7 +88,19 @@ public class OutcomeSelectionRunnerTest {
                     .setWinningAdRenderUri(Uri.parse("http://www.domain.com/advert/"))
                     .setWinningAdBid(30)
                     .setCreationTimestamp(Instant.now())
-                    .setCallerPackageName("callerPackageName2")
+                    .setCallerPackageName(CALLER_PACKAGE_NAME_1)
+                    .build();
+
+    public static final DBAdSelection DB_AD_SELECTION_DIFFERENT_OWNER =
+            new DBAdSelection.Builder()
+                    .setAdSelectionId(4)
+                    .setCustomAudienceSignals(CustomAudienceSignalsFixture.aCustomAudienceSignals())
+                    .setContextualSignals("contextual_signals")
+                    .setBiddingLogicUri(Uri.parse("http://www.domain.com/logic/2"))
+                    .setWinningAdRenderUri(Uri.parse("http://www.domain.com/advert/"))
+                    .setWinningAdBid(30)
+                    .setCreationTimestamp(Instant.now())
+                    .setCallerPackageName(CALLER_PACKAGE_NAME_2)
                     .build();
 
     private final Context mContext = ApplicationProvider.getApplicationContext();
@@ -136,9 +150,9 @@ public class OutcomeSelectionRunnerTest {
     @Test
     public void testRetrieveOutcomesAndBidsFromDbSuccess()
             throws ExecutionException, InterruptedException, TimeoutException {
-        List<DBAdSelection> adSelectionResults =
+        List<DBAdSelection> adSelectionResultsInDb =
                 List.of(DB_AD_SELECTION_1, DB_AD_SELECTION_2, DB_AD_SELECTION_3);
-        for (DBAdSelection selection : adSelectionResults) {
+        for (DBAdSelection selection : adSelectionResultsInDb) {
             mAdSelectionEntryDao.persistAdSelection(selection);
         }
 
@@ -150,7 +164,7 @@ public class OutcomeSelectionRunnerTest {
 
         List<AdSelectionIdWithBidAndRenderUri> adSelectionIdWithBidAndRenderUriList =
                 mOutcomeSelectionRunner
-                        .retrieveAdSelectionIdWithBidList(adOutcomeIds)
+                        .retrieveAdSelectionIdWithBidList(adOutcomeIds, CALLER_PACKAGE_NAME_1)
                         .get(RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
         Map<Long, Double> helperMap =
@@ -160,7 +174,7 @@ public class OutcomeSelectionRunnerTest {
                                         AdSelectionIdWithBidAndRenderUri::getAdSelectionId,
                                         AdSelectionIdWithBidAndRenderUri::getBid));
 
-        for (DBAdSelection selection : adSelectionResults) {
+        for (DBAdSelection selection : adSelectionResultsInDb) {
             assertTrue(
                     String.format(
                             "Ad selection id %s is missing from db results",
@@ -179,8 +193,11 @@ public class OutcomeSelectionRunnerTest {
     @Test
     public void testIgnoresAdSelectionIdsNotInDbSuccess()
             throws ExecutionException, InterruptedException, TimeoutException {
-        List<DBAdSelection> adSelectionResults =
-                List.of(DB_AD_SELECTION_1, DB_AD_SELECTION_2, DB_AD_SELECTION_3);
+        List<DBAdSelection> adSelectionResultsInDb = List.of(DB_AD_SELECTION_1, DB_AD_SELECTION_2);
+        for (DBAdSelection selection : adSelectionResultsInDb) {
+            mAdSelectionEntryDao.persistAdSelection(selection);
+        }
+        List<DBAdSelection> adSelectionResultsNotInDb = List.of(DB_AD_SELECTION_3);
 
         List<Long> adOutcomeIds =
                 List.of(
@@ -190,7 +207,7 @@ public class OutcomeSelectionRunnerTest {
 
         List<AdSelectionIdWithBidAndRenderUri> adSelectionIdWithBidAndRenderUriList =
                 mOutcomeSelectionRunner
-                        .retrieveAdSelectionIdWithBidList(adOutcomeIds)
+                        .retrieveAdSelectionIdWithBidList(adOutcomeIds, CALLER_PACKAGE_NAME_1)
                         .get(RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
         Map<Long, Double> helperMap =
@@ -200,10 +217,68 @@ public class OutcomeSelectionRunnerTest {
                                         AdSelectionIdWithBidAndRenderUri::getAdSelectionId,
                                         AdSelectionIdWithBidAndRenderUri::getBid));
 
-        for (DBAdSelection selection : adSelectionResults) {
-            assertFalse(
+        for (DBAdSelection selection : adSelectionResultsInDb) {
+            assertTrue(
                     String.format(
                             "Ad selection id %s is missing from db results",
+                            selection.getAdSelectionId()),
+                    helperMap.containsKey(selection.getAdSelectionId()));
+        }
+        for (DBAdSelection selection : adSelectionResultsNotInDb) {
+            assertFalse(
+                    String.format(
+                            "Ad selection id %s should not be retrieved",
+                            selection.getAdSelectionId()),
+                    helperMap.containsKey(selection.getAdSelectionId()));
+        }
+    }
+
+    @Test
+    public void testIgnoresAdSelectionIdsInDbOwnedByDifferentAppAreNotReadSuccess()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        List<DBAdSelection> adSelectionResultsInDb =
+                List.of(DB_AD_SELECTION_1, DB_AD_SELECTION_2, DB_AD_SELECTION_3);
+        for (DBAdSelection selection : adSelectionResultsInDb) {
+            mAdSelectionEntryDao.persistAdSelection(selection);
+        }
+
+        List<DBAdSelection> adSelectionResultsInDbDifferentOwner =
+                List.of(DB_AD_SELECTION_DIFFERENT_OWNER);
+        for (DBAdSelection selection : adSelectionResultsInDbDifferentOwner) {
+            mAdSelectionEntryDao.persistAdSelection(selection);
+        }
+
+        List<Long> adOutcomeIds =
+                List.of(
+                        DB_AD_SELECTION_1.getAdSelectionId(),
+                        DB_AD_SELECTION_2.getAdSelectionId(),
+                        DB_AD_SELECTION_3.getAdSelectionId(),
+                        DB_AD_SELECTION_DIFFERENT_OWNER.getAdSelectionId());
+
+        List<AdSelectionIdWithBidAndRenderUri> adSelectionIdWithBidAndRenderUriList =
+                mOutcomeSelectionRunner
+                        .retrieveAdSelectionIdWithBidList(adOutcomeIds, CALLER_PACKAGE_NAME_1)
+                        .get(RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        Map<Long, Double> helperMap =
+                adSelectionIdWithBidAndRenderUriList.stream()
+                        .collect(
+                                Collectors.toMap(
+                                        AdSelectionIdWithBidAndRenderUri::getAdSelectionId,
+                                        AdSelectionIdWithBidAndRenderUri::getBid));
+
+        for (DBAdSelection selection : adSelectionResultsInDb) {
+            assertTrue(
+                    String.format(
+                            "Ad selection id %s is missing from db results",
+                            selection.getAdSelectionId()),
+                    helperMap.containsKey(selection.getAdSelectionId()));
+        }
+        for (DBAdSelection selection : adSelectionResultsInDbDifferentOwner) {
+            assertFalse(
+                    String.format(
+                            "Ad selection id %s is owned by a different app should not be"
+                                    + " retrieved",
                             selection.getAdSelectionId()),
                     helperMap.containsKey(selection.getAdSelectionId()));
         }

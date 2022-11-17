@@ -78,10 +78,15 @@ public class AdSelectionFromOutcomesConfigValidator
     private static final String HTTPS_SCHEME = "https";
 
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
+    @NonNull private final String mCallerPackageName;
 
     public AdSelectionFromOutcomesConfigValidator(
-            @NonNull AdSelectionEntryDao adSelectionEntryDao) {
+            @NonNull AdSelectionEntryDao adSelectionEntryDao, @NonNull String callerPackageName) {
+        Objects.requireNonNull(adSelectionEntryDao);
+        Objects.requireNonNull(callerPackageName);
+
         mAdSelectionEntryDao = adSelectionEntryDao;
+        mCallerPackageName = callerPackageName;
     }
 
     /** Validates the object and populate the violations. */
@@ -101,6 +106,11 @@ public class AdSelectionFromOutcomesConfigValidator
         if (Objects.isNull(adSelectionIds) || adSelectionIds.isEmpty()) {
             violations.add(AD_OUTCOMES_CANNOT_BE_NULL_OR_EMPTY);
         }
+
+        // TODO(b/258912806): Current behavior is to fail if any ad selection ids are absent in the
+        // db or
+        //  owned by another caller package. Investigate if this behavior needs changing due to
+        // security reasons.
         List<Long> notExistIds;
         if ((notExistIds = validateExistenceOfAdSelectionIds(adSelectionIds)).size() > 0) {
             violations.add(String.format(AD_SELECTION_IDS_DONT_EXIST, notExistIds));
@@ -142,7 +152,9 @@ public class AdSelectionFromOutcomesConfigValidator
 
         ImmutableList.Builder<Long> notExistingIds = new ImmutableList.Builder<>();
         Set<Long> existingIds =
-                mAdSelectionEntryDao.getAdSelectionEntities(adOutcomeIds).stream()
+                mAdSelectionEntryDao
+                        .getAdSelectionEntities(adOutcomeIds, mCallerPackageName)
+                        .stream()
                         .map(DBAdSelectionEntry::getAdSelectionId)
                         .collect(Collectors.toSet());
         adOutcomeIds.stream().filter(e -> !existingIds.contains(e)).forEach(notExistingIds::add);
