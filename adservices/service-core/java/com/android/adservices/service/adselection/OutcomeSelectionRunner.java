@@ -44,6 +44,8 @@ import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
 import com.android.internal.annotations.VisibleForTesting;
@@ -127,6 +129,7 @@ public class OutcomeSelectionRunner {
             @NonNull final Supplier<Throttler> throttlerSupplier,
             @NonNull final FledgeAllowListsFilter fledgeAllowListsFilter,
             @NonNull final ConsentManager consentManager,
+            @NonNull final DevContext devContext,
             @NonNull final Context context,
             @NonNull final Flags flags) {
         Objects.requireNonNull(adSelectionEntryDao);
@@ -140,6 +143,7 @@ public class OutcomeSelectionRunner {
         Objects.requireNonNull(throttlerSupplier);
         Objects.requireNonNull(fledgeAllowListsFilter);
         Objects.requireNonNull(consentManager);
+        Objects.requireNonNull(devContext);
         Objects.requireNonNull(context);
         Objects.requireNonNull(flags);
 
@@ -168,6 +172,7 @@ public class OutcomeSelectionRunner {
                         mBackgroundExecutorService,
                         mScheduledExecutor,
                         mAdServicesHttpsClient,
+                        new AdSelectionDevOverridesHelper(devContext, adSelectionEntryDao),
                         mFlags);
     }
 
@@ -287,10 +292,7 @@ public class OutcomeSelectionRunner {
         FluentFuture<Long> selectedAdSelectionIdFuture =
                 outcomeIdBidPairsFuture.transformAsync(
                         outcomeIdBids ->
-                                mAdOutcomeSelector.runAdOutcomeSelector(
-                                        outcomeIdBids,
-                                        config.getSelectionSignals(),
-                                        config.getSelectionLogicUri()),
+                                mAdOutcomeSelector.runAdOutcomeSelector(outcomeIdBids, config),
                         mLightweightExecutorService);
 
         return selectedAdSelectionIdFuture.transformAsync(
