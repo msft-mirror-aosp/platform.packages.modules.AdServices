@@ -20,6 +20,7 @@ import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.ReportImpressionInput;
 import android.adservices.adselection.AdSelectionInput;
+import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.AdSelectionOverrideCallback;
 import android.adservices.adselection.AdSelectionOutcome;
@@ -180,5 +181,45 @@ interface AdSelectionService {
     * or if the calling application manifest is not setting Android:debuggable to true.
     */
     void resetAllAdSelectionConfigRemoteOverrides(
+        in AdSelectionOverrideCallback callback);
+
+   /**
+    * This method is intended to be called before {@code selectAdsFromOutcomes}
+    * using the same {@link AdSelectionFromOutcomesConfig} in order to configure
+    * PPAPI to avoid to fetch info from remote servers and use the
+    * data provided.
+    *
+    * The call will throw a SecurityException if the API hasn't been enabled
+    * by developer options or by an adb command or if the calling
+    * application manifest is not setting Android:debuggable to true.
+    */
+    void overrideAdSelectionFromOutcomesConfigRemoteInfo(
+        in AdSelectionFromOutcomesConfig adSelectionFromOutcomesConfig,
+        in String selectionLogicJs,
+        in AdSelectionSignals selectionSignals,
+        in AdSelectionOverrideCallback callback);
+
+   /**
+    * Deletes any override created by calling
+    * {@code overrideAdSelectionFromOutcomesConfigRemoteInfo} for the given
+    * AdSelectionFromOutcomesConfig
+    *
+    * The call will throw a SecurityException if:
+    * the API hasn't been enabled by developer options or by an adb command
+    * or if the calling application manifest is not setting Android:debuggable to true.
+    */
+    void removeAdSelectionFromOutcomesConfigRemoteInfoOverride(
+        in AdSelectionFromOutcomesConfig adSelectionFromOutcomesConfig,
+        in AdSelectionOverrideCallback callback);
+
+   /**
+    * Deletes any override created by calling
+    * {@code overrideAdSelectionFromOutcomesConfigRemoteInfo} from this application
+    *
+    * The call will throw a SecurityException if:
+    * the API hasn't been enabled by developer options or by an adb command
+    * or if the calling application manifest is not setting Android:debuggable to true.
+    */
+    void resetAllAdSelectionFromOutcomesConfigRemoteOverrides(
         in AdSelectionOverrideCallback callback);
 }

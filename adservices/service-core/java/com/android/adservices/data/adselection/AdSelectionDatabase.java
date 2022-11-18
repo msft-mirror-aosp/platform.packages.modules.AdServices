@@ -31,7 +31,12 @@ import java.util.Objects;
 
 /** Room based database for Ad Selection. */
 @Database(
-        entities = {DBAdSelection.class, DBBuyerDecisionLogic.class, DBAdSelectionOverride.class},
+        entities = {
+            DBAdSelection.class,
+            DBBuyerDecisionLogic.class,
+            DBAdSelectionOverride.class,
+            DBAdSelectionFromOutcomesOverride.class
+        },
         version = AdSelectionDatabase.DATABASE_VERSION)
 @TypeConverters({FledgeRoomConverters.class})
 public abstract class AdSelectionDatabase extends RoomDatabase {

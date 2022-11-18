@@ -67,7 +67,7 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
     private static final String[] UPDATE_ASYNC_REGISTRATION_TABLE_QUERIES = {
         String.format(
                 "DROP TABLE IF EXISTS %1$s", MeasurementTables.AsyncRegistrationContract.TABLE),
-        MeasurementTables.CREATE_TABLE_ASYNC_REGISTRATION_V2,
+        MeasurementTables.CREATE_TABLE_ASYNC_REGISTRATION_LATEST,
     };
     private static final String[] ADD_EVENT_REPORT_COLUMNS_VER_3 = {
         MeasurementTables.EventReportContract.SOURCE_ID,
@@ -139,7 +139,7 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
                 db,
                 MeasurementTables.EventReportContract.TABLE,
                 EVENT_REPORT_CONTRACT_BACKUP,
-                MeasurementTables.CREATE_TABLE_EVENT_REPORT_V3);
+                MeasurementTables.CREATE_TABLE_EVENT_REPORT_LATEST);
         MigrationHelpers.addTextColumnIfAbsent(
                 db,
                 MeasurementTables.TriggerContract.TABLE,
@@ -153,7 +153,7 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
                 db,
                 MeasurementTables.AggregateReport.TABLE,
                 AGGREGATE_REPORT_CONTRACT_BACKUP,
-                MeasurementTables.CREATE_TABLE_AGGREGATE_REPORT_V3);
+                MeasurementTables.CREATE_TABLE_AGGREGATE_REPORT_LATEST);
     }
 
     private static void alterAttributionTable(SQLiteDatabase db) {
@@ -163,7 +163,7 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
                 db,
                 MeasurementTables.AttributionContract.TABLE,
                 ATTRIBUTION_CONTRACT_BACKUP,
-                MeasurementTables.CREATE_TABLE_ATTRIBUTION_V3);
+                MeasurementTables.CREATE_TABLE_ATTRIBUTION_LATEST);
     }
 
     private static void migrateEventReportData(SQLiteDatabase db) {

@@ -148,6 +148,9 @@ public class AsyncTriggerFetcher {
                 }
                 result.setNotFilters(notFilters.toString());
             }
+            if (!json.isNull(TriggerHeaderContract.DEBUG_REPORTING)) {
+                result.setIsDebugReporting(json.optBoolean(TriggerHeaderContract.DEBUG_REPORTING));
+            }
             if (!json.isNull(TriggerHeaderContract.DEBUG_KEY) && (isDebugKeyAllowed)) {
                 try {
                     result.setDebugKey(
@@ -423,5 +426,6 @@ public class AsyncTriggerFetcher {
         String AGGREGATABLE_TRIGGER_DATA = "aggregatable_trigger_data";
         String AGGREGATABLE_VALUES = "aggregatable_values";
         String DEBUG_KEY = "debug_key";
+        String DEBUG_REPORTING = "debug_reporting";
     }
 }

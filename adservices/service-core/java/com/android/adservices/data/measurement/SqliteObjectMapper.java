@@ -141,6 +141,10 @@ public class SqliteObjectMapper {
                 builder::setAggregateContributions);
         setUnsignedLongColumn(cursor, MeasurementTables.SourceContract.DEBUG_KEY,
                 builder::setDebugKey);
+        setBooleanColumn(
+                cursor,
+                MeasurementTables.SourceContract.DEBUG_REPORTING,
+                builder::setIsDebugReporting);
         return builder.build();
     }
 
@@ -174,6 +178,10 @@ public class SqliteObjectMapper {
                 builder::setNotFilters);
         setUnsignedLongColumn(cursor, MeasurementTables.TriggerContract.DEBUG_KEY,
                 builder::setDebugKey);
+        setBooleanColumn(
+                cursor,
+                MeasurementTables.TriggerContract.DEBUG_REPORTING,
+                builder::setIsDebugReporting);
         return builder.build();
     }
 

@@ -25,8 +25,7 @@ import java.util.Objects;
 
 /**
  * Represents input parameters to the {@link
- * com.android.adservices.service.adselection.AdSelectionServiceImpl#selectAdsFromOutcomes}
- * selectAds API.
+ * com.android.adservices.service.adselection.AdSelectionServiceImpl#selectAdsFromOutcomes} API.
  *
  * @hide
  */
