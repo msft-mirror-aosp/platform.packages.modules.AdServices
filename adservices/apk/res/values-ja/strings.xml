@@ -81,6 +81,7 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"プライバシー サンドボックス"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android の広告のプライバシー（ベータ版）は、アプリがユーザーにおすすめの広告を表示する場合に役立つ新しい機能を提供しています。これらの技術でデバイス識別子が使用されることはありません。\n\nAndroid により、ユーザーが興味や関心を持ちそうな広告の種類が推定され、その興味 / 関心がデバイスに一時的に保存されます。これにより、アプリは、他のデベロッパーのウェブサイトやアプリでユーザーのアクティビティを追跡することなく、関連性の高い広告を表示できます。"</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"ブロック中の興味 / 関心はありません"</string>
+    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"興味 / 関心をリセットしました"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"アプリはユーザーの興味 / 関心を推定し、Android で一時的に保存することができます。後で、別のアプリがこれらの興味 / 関心に基づいて広告を表示することができます。\n\nブロックしたアプリは、今後、興味 / 関心を推定しなくなります。ブロックを解除しない限り、そのアプリがこのアプリのリストに再び追加されることはありません。ブロックしたアプリですでに推定された興味 / 関心は削除されますが、一部の関連する広告は引き続き表示されることがあります。"</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"ブロックしたアプリ"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"アプリが推定した興味 / 関心をリセット"</string>
