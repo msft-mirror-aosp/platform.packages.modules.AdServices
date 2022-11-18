@@ -224,20 +224,13 @@ public class OutcomeSelectionRunnerTest {
         GenericListMatcher matcher = new GenericListMatcher(adSelectionIdWithBidAndRenderUris);
         doReturn(FluentFuture.from(Futures.immediateFuture(AD_SELECTION_ID_1)))
                 .when(mAdOutcomeSelectorMock)
-                .runAdOutcomeSelector(
-                        argThat(matcher),
-                        eq(config.getSelectionSignals()),
-                        eq(config.getSelectionLogicUri()));
+                .runAdOutcomeSelector(argThat(matcher), eq(config));
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelectionFromOutcomes(
                         mOutcomeSelectionRunner, config, MY_APP_PACKAGE_NAME);
 
-        verify(mAdOutcomeSelectorMock, only())
-                .runAdOutcomeSelector(
-                        argThat(matcher),
-                        eq(config.getSelectionSignals()),
-                        eq(config.getSelectionLogicUri()));
+        verify(mAdOutcomeSelectorMock, only()).runAdOutcomeSelector(argThat(matcher), eq(config));
         assertTrue(resultsCallback.mIsSuccess);
         assertEquals(AD_SELECTION_ID_1, resultsCallback.mAdSelectionResponse.getAdSelectionId());
         assertEquals(RENDER_URI_1, resultsCallback.mAdSelectionResponse.getRenderUri());
@@ -274,7 +267,7 @@ public class OutcomeSelectionRunnerTest {
                 invokeRunAdSelectionFromOutcomes(
                         mOutcomeSelectionRunner, config, MY_APP_PACKAGE_NAME);
 
-        verify(mAdOutcomeSelectorMock, never()).runAdOutcomeSelector(any(), any(), any());
+        verify(mAdOutcomeSelectorMock, never()).runAdOutcomeSelector(any(), any());
         assertFalse(resultsCallback.mIsSuccess);
         assertEquals(STATUS_INVALID_ARGUMENT, resultsCallback.mFledgeErrorResponse.getStatusCode());
         assertTrue(
@@ -316,7 +309,7 @@ public class OutcomeSelectionRunnerTest {
                 invokeRunAdSelectionFromOutcomes(
                         mOutcomeSelectionRunner, config, MY_APP_PACKAGE_NAME);
 
-        verify(mAdOutcomeSelectorMock, never()).runAdOutcomeSelector(any(), any(), any());
+        verify(mAdOutcomeSelectorMock, never()).runAdOutcomeSelector(any(), any());
         assertTrue(resultsCallback.mIsSuccess);
         assertNull(resultsCallback.mAdSelectionResponse);
         verify(mAdServicesLoggerMock)
