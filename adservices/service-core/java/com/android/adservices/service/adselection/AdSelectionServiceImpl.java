@@ -308,7 +308,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         // TODO(257134800): Add telemetry
         try {
             Objects.requireNonNull(inputParams);
-            Objects.requireNonNull(callerMetadata);
             Objects.requireNonNull(callback);
         } catch (NullPointerException e) {
             LogUtil.v(
@@ -320,6 +319,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             throw e;
         }
 
+        DevContext devContext = mDevContextFilter.createDevContext();
         int callerUid = getCallingUid(apiName);
         mLightweightExecutor.execute(
                 () -> {
@@ -337,6 +337,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                     () -> Throttler.getInstance(mFlags),
                                     mFledgeAllowListsFilter,
                                     mConsentManager,
+                                    devContext,
                                     mContext,
                                     mFlags);
                     runner.runOutcomeSelection(inputParams, callback);

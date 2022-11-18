@@ -310,6 +310,20 @@ public interface AdSelectionEntryDao {
     String getSelectionLogicOverride(String adSelectionFromOutcomesConfigId, String appPackageName);
 
     /**
+     * Get ad selection from outcomes signals override by its unique key and the package name of the
+     * app that created the override.
+     *
+     * @return ad selection from outcomes override result if exists.
+     */
+    @Query(
+            "SELECT selection_signals FROM ad_selection_from_outcomes_overrides WHERE"
+                    + " ad_selection_from_outcomes_config_id = :adSelectionFromOutcomesConfigId "
+                    + "AND app_package_name = :appPackageName")
+    @Nullable
+    String getSelectionSignalsOverride(
+            String adSelectionFromOutcomesConfigId, String appPackageName);
+
+    /**
      * Clean up selected ad selection from outcomes override data by its {@code
      * adSelectionFromOutcomesConfigId}
      *
@@ -328,8 +342,4 @@ public interface AdSelectionEntryDao {
             "DELETE FROM ad_selection_from_outcomes_overrides WHERE app_package_name = "
                     + ":appPackageName")
     void removeAllAdSelectionFromOutcomesOverrides(String appPackageName);
-
-    /** Clean up all ad selection from outcomes override data */
-    @Query("SELECT * FROM ad_selection_from_outcomes_overrides")
-    List<DBAdSelectionFromOutcomesOverride> getAllAdSelectionFromOutcomesOverrides();
 }
