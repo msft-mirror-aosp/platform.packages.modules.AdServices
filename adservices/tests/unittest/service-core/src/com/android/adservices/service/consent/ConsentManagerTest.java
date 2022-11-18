@@ -148,7 +148,10 @@ public class ConsentManagerTest {
                         .startMocking();
 
         mDatastore =
-                new BooleanFileDatastore(mContextSpy, AppConsentDaoFixture.TEST_DATASTORE_NAME, 1);
+                new BooleanFileDatastore(
+                        mContextSpy,
+                        ConsentManager.STORAGE_XML_IDENTIFIER,
+                        ConsentManager.STORAGE_VERSION);
         mAppConsentDao = spy(new AppConsentDao(mDatastore, mPackageManagerMock));
         mDbHelper = DbTestUtil.getDbHelperForTest();
         mEnrollmentDao = spy(new EnrollmentDao(mContextSpy, mDbHelper));
