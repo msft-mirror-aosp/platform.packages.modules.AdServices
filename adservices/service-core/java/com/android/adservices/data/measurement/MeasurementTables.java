@@ -42,7 +42,8 @@ public final class MeasurementTables {
         MeasurementTables.AggregateReport.TABLE,
         MeasurementTables.AggregateEncryptionKey.TABLE,
         MeasurementTables.AttributionContract.TABLE,
-        MeasurementTables.AsyncRegistrationContract.TABLE
+        MeasurementTables.AsyncRegistrationContract.TABLE,
+        MeasurementTables.DebugReportContract.TABLE
     };
 
     /** Contract for asynchronous Registration. */
@@ -176,6 +177,15 @@ public final class MeasurementTables {
         String KEY_ID = "key_id";
         String PUBLIC_KEY = "public_key";
         String EXPIRY = "expiry";
+    }
+
+    /** Contract for debug reports. */
+    public interface DebugReportContract {
+        String TABLE = MSMT_TABLE_PREFIX + "debug_report";
+        String ID = "_id";
+        String TYPE = "type";
+        String BODY = "body";
+        String ENROLLMENT_ID = "enrollment_id";
     }
 
     public static final String CREATE_TABLE_ASYNC_REGISTRATION_V1 =
@@ -646,6 +656,20 @@ public final class MeasurementTables {
                     + " INTEGER "
                     + ")";
 
+    public static final String CREATE_TABLE_DEBUG_REPORT_LATEST =
+            "CREATE TABLE IF NOT EXISTS "
+                    + DebugReportContract.TABLE
+                    + " ("
+                    + DebugReportContract.ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + DebugReportContract.TYPE
+                    + " TEXT, "
+                    + DebugReportContract.BODY
+                    + " TEXT, "
+                    + DebugReportContract.ENROLLMENT_ID
+                    + " TEXT "
+                    + ")";
+
     public static final String[] CREATE_INDEXES = {
         "CREATE INDEX "
                 + INDEX_PREFIX
@@ -740,7 +764,8 @@ public final class MeasurementTables {
                             CREATE_TABLE_ATTRIBUTION_LATEST,
                             CREATE_TABLE_AGGREGATE_REPORT_LATEST,
                             CREATE_TABLE_AGGREGATE_ENCRYPTION_KEY_V1,
-                            CREATE_TABLE_ASYNC_REGISTRATION_LATEST));
+                            CREATE_TABLE_ASYNC_REGISTRATION_LATEST,
+                            CREATE_TABLE_DEBUG_REPORT_LATEST));
 
     // Private constructor to prevent instantiation.
     private MeasurementTables() {
