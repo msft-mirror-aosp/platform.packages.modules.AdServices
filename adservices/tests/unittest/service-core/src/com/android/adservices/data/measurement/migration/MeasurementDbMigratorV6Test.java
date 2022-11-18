@@ -54,6 +54,9 @@ public class MeasurementDbMigratorV6Test extends AbstractMeasurementDbMigratorTe
                 doesTableExistAndColumnCountMatch(db, MeasurementTables.SourceContract.TABLE, 23));
         assertTrue(
                 doesTableExistAndColumnCountMatch(db, MeasurementTables.TriggerContract.TABLE, 14));
+        assertTrue(
+                doesTableExistAndColumnCountMatch(
+                        db, MeasurementTables.DebugReportContract.TABLE, 4));
     }
 
     @Override

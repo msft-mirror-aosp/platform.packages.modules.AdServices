@@ -60,7 +60,6 @@ import java.util.List;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DbHelperTest {
-    private static final int UPDATED_DB_VERSION = 7;
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
 
     private MockitoSession mStaticMockSession;
@@ -143,7 +142,7 @@ public class DbHelperTest {
         Mockito.verify(topicDbMigratorV7, Mockito.never()).performMigration(db);
 
         // Positive case - target version 3 is in (oldVersion, newVersion]
-        dbHelper.onUpgrade(db, /* oldVersion */ 1, /* new Version */ UPDATED_DB_VERSION);
+        dbHelper.onUpgrade(db, /* oldVersion */ 1, /* new Version */ DATABASE_VERSION_V7);
         Mockito.verify(topicDbMigratorV7).performMigration(db);
     }
 
@@ -157,7 +156,8 @@ public class DbHelperTest {
         assertThat(dbHelperV2.supportsTopicContributorsTable()).isFalse();
 
         DbHelper dbHelperV3 =
-                new DbHelper(sContext, getDatabaseNameForTest(), /* dbVersion*/ UPDATED_DB_VERSION);
+                new DbHelper(
+                        sContext, getDatabaseNameForTest(), /* dbVersion*/ DATABASE_VERSION_V7);
         assertThat(dbHelperV3.supportsTopicContributorsTable()).isTrue();
     }
 
@@ -194,6 +194,7 @@ public class DbHelperTest {
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_aggregate_report", 14));
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_aggregate_encryption_key", 4));
         assertTrue(doesTableExistAndColumnCountMatch(db, "enrollment_data", 8));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_debug_report", 4));
         assertTrue(doesIndexExist(db, "idx_msmt_source_ad_ei_et"));
         assertTrue(doesIndexExist(db, "idx_msmt_source_p_ad_wd_s_et"));
         assertTrue(doesIndexExist(db, "idx_msmt_trigger_ad_ei_tt"));
