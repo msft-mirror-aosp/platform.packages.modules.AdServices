@@ -31,6 +31,7 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.service.common.AdServicesHttpsClient;
+import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 
@@ -73,7 +74,10 @@ public class JsFetcherTest {
     public void setUp() throws Exception {
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
-        mWebClient = new AdServicesHttpsClient(AdServicesExecutors.getBlockingExecutor());
+        mWebClient =
+                new AdServicesHttpsClient(
+                        AdServicesExecutors.getBlockingExecutor(),
+                        CacheProviderFactory.createNoOpCache());
         mDevContext = DevContext.createForDevOptionsDisabled();
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(

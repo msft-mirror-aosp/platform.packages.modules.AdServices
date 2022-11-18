@@ -25,6 +25,7 @@ import android.util.Dumpable;
 import androidx.annotation.Nullable;
 
 import com.android.adservices.service.adselection.AdOutcomeSelectorImpl;
+import com.android.adservices.service.common.cache.FledgeHttpCache;
 
 import com.google.common.collect.ImmutableList;
 
@@ -394,6 +395,10 @@ public interface Flags extends Dumpable {
     int FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS = 5 * 1000; // 5 seconds
     int FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS = 30 * 1000; // 30 seconds
     int FLEDGE_BACKGROUND_FETCH_MAX_RESPONSE_SIZE_B = 10 * 1024; // 10 KiB
+    boolean FLEDGE_ENABLE_HTTP_CACHING = true;
+    boolean FLEDGE_AD_SELECTION_ENABLE_JS_CACHING = true;
+    long FLEDGE_HTTP_CACHE_MAX_ENTRIES = 100;
+    long FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS = 2 * 24 * 60 * 60; // 2 days
 
     /** Returns {@code true} if the FLEDGE Background Fetch is enabled. */
     default boolean getFledgeBackgroundFetchEnabled() {
@@ -470,6 +475,26 @@ public interface Flags extends Dumpable {
      */
     default int getFledgeBackgroundFetchMaxResponseSizeB() {
         return FLEDGE_BACKGROUND_FETCH_MAX_RESPONSE_SIZE_B;
+    }
+
+    /** Returns boolean, if the caching is enabled for {@link FledgeHttpCache} */
+    default boolean getFledgeHttpCachingEnabled() {
+        return FLEDGE_ENABLE_HTTP_CACHING;
+    }
+
+    /** Returns boolean, if the caching is enabled for JS for bidding and scoring */
+    default boolean getFledgeJsCachingEnabled() {
+        return FLEDGE_AD_SELECTION_ENABLE_JS_CACHING;
+    }
+
+    /** Returns max number of entries that should be persisted in cache */
+    default long getFledgeHttpCacheMaxEntries() {
+        return FLEDGE_HTTP_CACHE_MAX_ENTRIES;
+    }
+
+    /** Returns the default max age of entries in cache */
+    default long getFledgeHttpCacheMaxAgeSeconds() {
+        return FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS;
     }
 
     int FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT = 6;

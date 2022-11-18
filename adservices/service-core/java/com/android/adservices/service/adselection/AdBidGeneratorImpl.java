@@ -179,7 +179,8 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                         customAudience.getBiddingLogicUri(),
                         customAudience.getOwner(),
                         customAudience.getBuyer(),
-                        customAudience.getName());
+                        customAudience.getName(),
+                        mFlags.getFledgeJsCachingEnabled());
 
         FluentFuture<Pair<AdWithBid, String>> adWithBidPair =
                 buyerDecisionLogic.transformAsync(
