@@ -14,13 +14,6 @@
  * limitations under the License.
  */
 
-package android.adservices.adselection;
+package android.adservices.test.scenario.adservices.fledge;
 
-/**
- * This interface defines the input to the compareAds API.
- * An AdComparisonInput is a Parcelable object that contains a list of AdSelectionOutcome,
- * an selectionSignals, selectionLogicUri and a callerPackageName.
- *
- * {@hide}
- */
-parcelable AdSelectionFromOutcomesInput;
+public class SelectAdsTestServerLatencyMicroBenchmark extends SelectAdsTestServerLatency {}

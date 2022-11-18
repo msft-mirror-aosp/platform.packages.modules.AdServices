@@ -19,12 +19,14 @@ package com.android.adservices.service.adselection;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__FLEDGE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_AD_SELECTION_CONFIG_REMOTE_OVERRIDES;
 
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
+import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.adservices.adselection.AdSelectionFromOutcomesInput;
 import android.adservices.adselection.AdSelectionInput;
 import android.adservices.adselection.AdSelectionOverrideCallback;
@@ -296,6 +298,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             throws RemoteException {
         // TODO (b/258604183): This endpoint suppose to be an overload of selectAds but .aidl
         //  doesn't allow overloading. Investigation where to go from here
+
+        // TODO(b/258836148): Use proper short name for this endpoint when there is one created
         int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 
         // Caller permissions must be checked in the binder thread, before anything else
@@ -328,6 +332,11 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                     mScheduledExecutor,
                                     mAdServicesHttpsClient,
                                     mAdServicesLogger,
+                                    mFledgeAuthorizationFilter,
+                                    mAppImportanceFilter,
+                                    () -> Throttler.getInstance(mFlags),
+                                    mFledgeAllowListsFilter,
+                                    mConsentManager,
                                     mContext,
                                     mFlags);
                     runner.runOutcomeSelection(inputParams, callback);
@@ -512,7 +521,138 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mFlags,
                         getCallingUid(apiName));
 
-        overrider.removeAllOverrides(callback);
+        overrider.removeAllOverridesForAdSelectionConfig(callback);
+    }
+
+    @Override
+    public void overrideAdSelectionFromOutcomesConfigRemoteInfo(
+            @NonNull AdSelectionFromOutcomesConfig config,
+            @NonNull String selectionLogicJs,
+            @NonNull AdSelectionSignals selectionSignals,
+            @NonNull AdSelectionOverrideCallback callback) {
+        int apiName = AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
+
+        // Caller permissions must be checked in the binder thread, before anything else
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
+
+        try {
+            Objects.requireNonNull(config);
+            Objects.requireNonNull(selectionLogicJs);
+            Objects.requireNonNull(selectionSignals);
+            Objects.requireNonNull(callback);
+        } catch (NullPointerException exception) {
+            mAdServicesLogger.logFledgeApiCallStats(
+                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, 0);
+            // Rethrow because we want to fail fast
+            throw exception;
+        }
+
+        DevContext devContext = mDevContextFilter.createDevContext();
+
+        if (!devContext.getDevOptionsEnabled()) {
+            mAdServicesLogger.logFledgeApiCallStats(
+                    apiName, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, 0);
+            throw new SecurityException(API_NOT_AUTHORIZED_MSG);
+        }
+
+        AdSelectionOverrider overrider =
+                new AdSelectionOverrider(
+                        devContext,
+                        mAdSelectionEntryDao,
+                        mLightweightExecutor,
+                        mBackgroundExecutor,
+                        mContext.getPackageManager(),
+                        mConsentManager,
+                        mAdServicesLogger,
+                        mAppImportanceFilter,
+                        mFlags,
+                        getCallingUid(apiName));
+
+        overrider.addOverride(config, selectionLogicJs, selectionSignals, callback);
+    }
+
+    @Override
+    public void removeAdSelectionFromOutcomesConfigRemoteInfoOverride(
+            @NonNull AdSelectionFromOutcomesConfig config,
+            @NonNull AdSelectionOverrideCallback callback) {
+        // Auto-generated variable name is too long for lint check
+        int apiName = AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
+
+        // Caller permissions must be checked in the binder thread, before anything else
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
+
+        try {
+            Objects.requireNonNull(config);
+            Objects.requireNonNull(callback);
+        } catch (NullPointerException exception) {
+            mAdServicesLogger.logFledgeApiCallStats(apiName, STATUS_INVALID_ARGUMENT, 0);
+            // Rethrow because we want to fail fast
+            throw exception;
+        }
+
+        DevContext devContext = mDevContextFilter.createDevContext();
+
+        if (!devContext.getDevOptionsEnabled()) {
+            mAdServicesLogger.logFledgeApiCallStats(
+                    apiName, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, 0);
+            throw new SecurityException(API_NOT_AUTHORIZED_MSG);
+        }
+
+        AdSelectionOverrider overrider =
+                new AdSelectionOverrider(
+                        devContext,
+                        mAdSelectionEntryDao,
+                        mLightweightExecutor,
+                        mBackgroundExecutor,
+                        mContext.getPackageManager(),
+                        mConsentManager,
+                        mAdServicesLogger,
+                        mAppImportanceFilter,
+                        mFlags,
+                        getCallingUid(apiName));
+
+        overrider.removeOverride(config, callback);
+    }
+
+    @Override
+    public void resetAllAdSelectionFromOutcomesConfigRemoteOverrides(
+            @NonNull AdSelectionOverrideCallback callback) {
+        // Auto-generated variable name is too long for lint check
+        int apiName = AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
+
+        // Caller permissions must be checked in the binder thread, before anything else
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
+
+        try {
+            Objects.requireNonNull(callback);
+        } catch (NullPointerException exception) {
+            mAdServicesLogger.logFledgeApiCallStats(apiName, STATUS_INVALID_ARGUMENT, 0);
+            // Rethrow because we want to fail fast
+            throw exception;
+        }
+
+        DevContext devContext = mDevContextFilter.createDevContext();
+
+        if (!devContext.getDevOptionsEnabled()) {
+            mAdServicesLogger.logFledgeApiCallStats(
+                    apiName, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, 0);
+            throw new SecurityException(API_NOT_AUTHORIZED_MSG);
+        }
+
+        AdSelectionOverrider overrider =
+                new AdSelectionOverrider(
+                        devContext,
+                        mAdSelectionEntryDao,
+                        mLightweightExecutor,
+                        mBackgroundExecutor,
+                        mContext.getPackageManager(),
+                        mConsentManager,
+                        mAdServicesLogger,
+                        mAppImportanceFilter,
+                        mFlags,
+                        getCallingUid(apiName));
+
+        overrider.removeAllOverridesForAdSelectionFromOutcomes(callback);
     }
 
     /** Close down method to be invoked when the PPAPI process is shut down. */

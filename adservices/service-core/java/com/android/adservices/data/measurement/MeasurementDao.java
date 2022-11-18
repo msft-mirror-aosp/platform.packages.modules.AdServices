@@ -107,6 +107,7 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.TriggerContract.NOT_FILTERS, trigger.getNotFilters());
         values.put(MeasurementTables.TriggerContract.DEBUG_KEY,
                 getNullableUnsignedLong(trigger.getDebugKey()));
+        values.put(MeasurementTables.TriggerContract.DEBUG_REPORTING, trigger.isDebugReporting());
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.TriggerContract.TABLE,
                         /*nullColumnHack=*/null, values);
@@ -269,6 +270,7 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.SourceContract.AGGREGATE_CONTRIBUTIONS, 0);
         values.put(MeasurementTables.SourceContract.DEBUG_KEY,
                 getNullableUnsignedLong(source.getDebugKey()));
+        values.put(MeasurementTables.SourceContract.DEBUG_REPORTING, source.isDebugReporting());
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.SourceContract.TABLE,
                         /*nullColumnHack=*/null, values);
