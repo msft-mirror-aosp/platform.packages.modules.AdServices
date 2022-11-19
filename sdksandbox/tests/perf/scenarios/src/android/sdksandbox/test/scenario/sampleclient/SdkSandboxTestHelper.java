@@ -57,7 +57,7 @@ public class SdkSandboxTestHelper {
         // wait until loadSdk.
         while (!sdkLoaded && retries < UI_RETRIES_WAIT_LOADSDK) {
             SystemClock.sleep(UI_WAIT_LOADSDK_MS);
-            if (getLoadSdkButton().getText().equals("Unload SDK")) {
+            if (getLoadSdkButton().getText().equals("Unload SDKs")) {
                 sdkLoaded = true;
             }
             retries++;

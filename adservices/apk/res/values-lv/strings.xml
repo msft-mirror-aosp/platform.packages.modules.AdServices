@@ -81,6 +81,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Konfidencialitātes smilškaste"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android reklāmu konfidencialitātes beta programma ietver jaunas funkcijas, ko lietotnes var izmantot, lai rādītu reklāmas, kas jums varētu interesēt. Šīs tehnoloģijas neizmanto ierīču identifikatorus.\n\nOperētājsistēma Android var aptuveni noteikt, kādas reklāmas jūs varētu interesēt, un šīs intereses var īslaicīgi saglabāt jūsu ierīcē. Tādējādi lietotnes var rādīt jums atbilstošas reklāmas, neizsekojot jūsu darbības tīmekļa vietnēs un citu izstrādātāju lietotnēs."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Jums nav bloķētu interešu"</string>
+    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
+    <skip />
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Lietotnēs var tikt aptuveni noteiktas jūsu intereses, un tās īslaicīgi var tikt saglabātas Android ierīcē. Vēlāk cita lietotne var jums rādīt uz šīm interesēm balstītu reklāmu.\n\nJa kādu lietotni bloķēsiet, tā vairs nevarēs noteikt jūsu intereses. Tā netiks pievienota šim lietotņu sarakstam, līdz to neatbloķēsiet. Intereses, kas lietotnē jau tika noteiktas, tiks dzēstas, taču jums joprojām var tikt rādītas dažas atbilstošas reklāmas."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Bloķētās lietotnes"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Atiestatīt lietotnēs noteiktās intereses"</string>

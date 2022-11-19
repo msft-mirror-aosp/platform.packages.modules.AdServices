@@ -49,7 +49,7 @@ public abstract class DBAdSelectionFromOutcomesOverride {
 
     /** @return The override javascript result */
     @AutoValue.CopyAnnotations
-    @ColumnInfo(name = "selection_logic")
+    @ColumnInfo(name = "selection_logic_js")
     @NonNull
     public abstract String getSelectionLogicJs();
 

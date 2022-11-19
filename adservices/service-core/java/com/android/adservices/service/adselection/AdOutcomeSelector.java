@@ -16,9 +16,8 @@
 
 package com.android.adservices.service.adselection;
 
-import android.adservices.common.AdSelectionSignals;
+import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.annotation.NonNull;
-import android.net.Uri;
 
 import com.google.common.util.concurrent.FluentFuture;
 
@@ -31,13 +30,11 @@ import java.util.List;
 public interface AdOutcomeSelector {
     /**
      * @param adSelectionIdWithBidAndRenderUris list of ad selection id and bid pairs
-     * @param selectionSignals signals provided by seller for running ad Selection
-     * @param selectionLogicUri uri pointing to the JS logic
+     * @param adSelectionFromOutcomesConfig {@link AdSelectionFromOutcomesConfig} instance
      * @return a Future of {@code Long} {code @AdSelectionId} of the winner. If no winner then
      *     returns null
      */
     FluentFuture<Long> runAdOutcomeSelector(
             @NonNull List<AdSelectionIdWithBidAndRenderUri> adSelectionIdWithBidAndRenderUris,
-            @NonNull AdSelectionSignals selectionSignals,
-            @NonNull Uri selectionLogicUri);
+            @NonNull AdSelectionFromOutcomesConfig adSelectionFromOutcomesConfig);
 }

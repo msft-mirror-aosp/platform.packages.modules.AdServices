@@ -209,7 +209,7 @@ public class AdSelectionDevOverridesHelper {
         if (!mDevContext.getDevOptionsEnabled()) {
             return null;
         }
-        return mAdSelectionEntryDao.getDecisionLogicOverride(
+        return mAdSelectionEntryDao.getSelectionLogicOverride(
                 calculateAdSelectionFromOutcomesConfigId(config),
                 mDevContext.getCallingAppPackageName());
     }
@@ -229,7 +229,7 @@ public class AdSelectionDevOverridesHelper {
             return null;
         }
         String overrideSignals =
-                mAdSelectionEntryDao.getSelectionLogicOverride(
+                mAdSelectionEntryDao.getSelectionSignalsOverride(
                         calculateAdSelectionFromOutcomesConfigId(config),
                         mDevContext.getCallingAppPackageName());
         return overrideSignals == null ? null : AdSelectionSignals.fromString(overrideSignals);

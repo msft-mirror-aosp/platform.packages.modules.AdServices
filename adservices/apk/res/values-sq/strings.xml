@@ -81,6 +81,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Versioni beta i Android për privatësinë e reklamave ofron veçori të reja që aplikacionet mund t\'i përdorin për të të shfaqur reklama që mund të të pëlqejnë. Këto teknologji nuk përdorin identifikuesit e pajisjes.\n\nAndroid mund të përllogarisë llojet e reklamave që mund të të interesojnë dhe t\'i ruajë këta interesa përkohësisht në pajisjen tënde. Kjo i lejon aplikacionet që të të shfaqin reklama të përshtatshme, pa e monitoruar aktivitetin tënd nëpër sajtet e uebit dhe aplikacionet nga zhvilluesit e tjerë."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Nuk ke asnjë interes të bllokuar"</string>
+    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
+    <skip />
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Aplikacionet mund t\'i përllogarisin interesat e tu dhe t\'i ruajnë ata përkohësisht me Android. Më vonë, një aplikacion tjetër mund të të shfaqë një reklamë bazuar në këta interesa.\n\nNëse e bllokon një aplikacion, ai nuk do të përllogarisë më interesa. Ai nuk do të shtohet më në këtë listë aplikacionesh, përveçse nëse e zhbllokon ti. Interesat e përllogaritur tashmë nga aplikacioni do të fshihen, por mund të shikosh përsëri disa reklama në lidhje me to."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Aplikacionet që ke bllokuar"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Rivendos interesat e përllogaritur nga aplikacionet"</string>

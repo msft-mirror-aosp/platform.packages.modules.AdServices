@@ -50,11 +50,14 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
+import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.adservices.adselection.AdSelectionFromOutcomesConfigFixture;
+import android.adservices.adselection.AdSelectionFromOutcomesInput;
 import android.adservices.adselection.AdSelectionOverrideCallback;
+import android.adservices.adselection.AdSelectionResponse;
 import android.adservices.adselection.CustomAudienceSignalsFixture;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
@@ -158,6 +161,10 @@ public class AdSelectionServiceImplTest {
                             + "}");
     private static final AdSelectionSignals DUMMY_SELECTION_SIGNALS =
             AdSelectionSignals.fromString("{\"selection\": \"signal_1\"}");
+
+    private static final long AD_SELECTION_ID_1 = 12345L;
+    private static final long AD_SELECTION_ID_2 = 123456L;
+    private static final long AD_SELECTION_ID_3 = 1234567L;
 
     // Auto-generated variable names are too long for lint check
     private static final int SHORT_API_NAME_OVERRIDE =
@@ -4270,6 +4277,108 @@ public class AdSelectionServiceImplTest {
                         anyInt());
     }
 
+    @Test
+    public void testOverrideAdSelectionConfigRemoteOverridesSuccess() throws Exception {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(
+                        DevContext.builder()
+                                .setDevOptionsEnabled(true)
+                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
+                                .build());
+
+        Map<Long, Double> adSelectionIdToBidMap =
+                Map.of(
+                        AD_SELECTION_ID_1, 10.0,
+                        AD_SELECTION_ID_2, 20.0,
+                        AD_SELECTION_ID_3, 30.0);
+        persistAdSelectionEntryDaoResults(adSelectionIdToBidMap);
+
+        AdSelectionFromOutcomesConfig config =
+                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
+                        List.of(AD_SELECTION_ID_1, AD_SELECTION_ID_2, AD_SELECTION_ID_3),
+                        AdSelectionSignals.EMPTY,
+                        Uri.parse("https://this.uri.isnt/called"));
+
+        final String selectionPickSmallestAdSelectionIdLogicJs =
+                "function selectOutcome(outcomes, selection_signals) {\n"
+                        + "    outcomes.sort(function(a, b) { return a.id - b.id;});\n"
+                        + "    return {'status': 0, 'result': outcomes[0]};\n"
+                        + "}";
+
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mAppImportanceFilter,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        CONTEXT,
+                        mConsentManagerMock,
+                        mAdServicesLoggerMock,
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAllowListsFilterSpy);
+
+        AdSelectionOverrideTestCallback overridesCallback =
+                callAddOverrideForSelectAds(
+                        adSelectionService,
+                        config,
+                        selectionPickSmallestAdSelectionIdLogicJs,
+                        AdSelectionSignals.EMPTY);
+
+        assertTrue(overridesCallback.mIsSuccess);
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionFromOutcomesOverrideExistForPackageName(
+                        AdSelectionDevOverridesHelper.calculateAdSelectionFromOutcomesConfigId(
+                                config),
+                        TEST_PACKAGE_NAME));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
+
+        AdSelectionFromOutcomesTestCallback selectionCallback =
+                invokeSelectAdsFromOutcomes(adSelectionService, config, TEST_PACKAGE_NAME);
+
+        assertTrue(selectionCallback.mIsSuccess);
+        assertEquals(AD_SELECTION_ID_1, selectionCallback.mAdSelectionResponse.getAdSelectionId());
+    }
+
+    private void persistAdSelectionEntryDaoResults(Map<Long, Double> adSelectionIdToBidMap) {
+        persistAdSelectionEntryDaoResults(adSelectionIdToBidMap, TEST_PACKAGE_NAME);
+    }
+
+    private void persistAdSelectionEntryDaoResults(
+            Map<Long, Double> adSelectionIdToBidMap, String callerPackageName) {
+        final Uri biddingLogicUri1 = Uri.parse("https://www.domain.com/logic/1");
+        final Uri renderUri = Uri.parse("https://www.domain.com/advert/");
+        final Instant activationTime = Instant.now();
+        final String contextualSignals = "contextual_signals";
+        final CustomAudienceSignals customAudienceSignals =
+                CustomAudienceSignalsFixture.aCustomAudienceSignals();
+
+        for (Map.Entry<Long, Double> entry : adSelectionIdToBidMap.entrySet()) {
+            final DBAdSelection dbAdSelectionEntry =
+                    new DBAdSelection.Builder()
+                            .setAdSelectionId(entry.getKey())
+                            .setCustomAudienceSignals(customAudienceSignals)
+                            .setContextualSignals(contextualSignals)
+                            .setBiddingLogicUri(biddingLogicUri1)
+                            .setWinningAdRenderUri(renderUri)
+                            .setWinningAdBid(entry.getValue())
+                            .setCreationTimestamp(activationTime)
+                            .setCallerPackageName(callerPackageName)
+                            .build();
+            mAdSelectionEntryDao.persistAdSelection(dbAdSelectionEntry);
+        }
+    }
+
     /**
      * Given Throttler is singleton, & shared across tests, this method should be invoked after
      * tests that impose restrictive rate limits.
@@ -4420,6 +4529,27 @@ public class AdSelectionServiceImplTest {
         return callback;
     }
 
+    private AdSelectionFromOutcomesTestCallback invokeSelectAdsFromOutcomes(
+            AdSelectionServiceImpl adSelectionService,
+            AdSelectionFromOutcomesConfig adSelectionFromOutcomesConfig,
+            String callerPackageName)
+            throws InterruptedException, RemoteException {
+
+        CountDownLatch countdownLatch = new CountDownLatch(1);
+        AdSelectionFromOutcomesTestCallback adSelectionTestCallback =
+                new AdSelectionFromOutcomesTestCallback(countdownLatch);
+
+        AdSelectionFromOutcomesInput input =
+                new AdSelectionFromOutcomesInput.Builder()
+                        .setAdSelectionFromOutcomesConfig(adSelectionFromOutcomesConfig)
+                        .setCallerPackageName(callerPackageName)
+                        .build();
+
+        adSelectionService.selectAdsFromOutcomes(input, null, adSelectionTestCallback);
+        adSelectionTestCallback.mCountDownLatch.await();
+        return adSelectionTestCallback;
+    }
+
     private ReportImpressionTestCallback callReportImpression(
             AdSelectionServiceImpl adSelectionService, ReportImpressionInput requestParams)
             throws Exception {
@@ -4492,6 +4622,34 @@ public class AdSelectionServiceImplTest {
 
         @Override
         public void onFailure(FledgeErrorResponse fledgeErrorResponse) throws RemoteException {
+            mFledgeErrorResponse = fledgeErrorResponse;
+            mCountDownLatch.countDown();
+        }
+    }
+
+    static class AdSelectionFromOutcomesTestCallback extends AdSelectionCallback.Stub {
+
+        final CountDownLatch mCountDownLatch;
+        boolean mIsSuccess = false;
+        AdSelectionResponse mAdSelectionResponse;
+        FledgeErrorResponse mFledgeErrorResponse;
+
+        AdSelectionFromOutcomesTestCallback(CountDownLatch countDownLatch) {
+            mCountDownLatch = countDownLatch;
+            mAdSelectionResponse = null;
+            mFledgeErrorResponse = null;
+        }
+
+        @Override
+        public void onSuccess(AdSelectionResponse adSelectionResponse) throws RemoteException {
+            mIsSuccess = true;
+            mAdSelectionResponse = adSelectionResponse;
+            mCountDownLatch.countDown();
+        }
+
+        @Override
+        public void onFailure(FledgeErrorResponse fledgeErrorResponse) throws RemoteException {
+            mIsSuccess = false;
             mFledgeErrorResponse = fledgeErrorResponse;
             mCountDownLatch.countDown();
         }

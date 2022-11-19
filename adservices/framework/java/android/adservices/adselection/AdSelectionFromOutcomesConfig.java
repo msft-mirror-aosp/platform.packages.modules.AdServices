@@ -28,12 +28,11 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Contains the configuration of the ad selection process that takes ad selection ids as inputs.
+ * Contains the configuration of the ad selection process that select a winner from a given list of
+ * ad selection ids.
  *
  * <p>Instances of this class are created by SDKs to be provided as arguments to the {@link
  * AdSelectionManager#selectAds} methods in {@link AdSelectionManager}.
- *
- * @hide
  */
 public final class AdSelectionFromOutcomesConfig implements Parcelable {
     @NonNull private final AdTechIdentifier mSeller;
@@ -80,21 +79,35 @@ public final class AdSelectionFromOutcomesConfig implements Parcelable {
         this.mSelectionLogicUri = Uri.CREATOR.createFromParcel(in);
     }
 
+    /** @return a AdTechIdentifier of the seller, for example "www.example-ssp.com" */
     @NonNull
     public AdTechIdentifier getSeller() {
         return mSeller;
     }
 
+    /**
+     * @return a list of ad selection ids passed by the SSP to participate in the ad selection from
+     *     outcomes process
+     */
     @NonNull
     public List<Long> getAdSelectionIds() {
         return mAdSelectionIds;
     }
 
+    /**
+     * @return JSON in an {@link AdSelectionSignals} object, fetched from the {@link
+     *     AdSelectionFromOutcomesConfig} and consumed by the JS logic fetched from the DSP {@code
+     *     SelectionLogicUri}.
+     */
     @NonNull
     public AdSelectionSignals getSelectionSignals() {
         return mSelectionSignals;
     }
 
+    /**
+     * @return the URI used to retrieve the JS code containing the seller/SSP {@code selectOutcome}
+     *     function used during the ad selection
+     */
     @NonNull
     public Uri getSelectionLogicUri() {
         return mSelectionLogicUri;
@@ -133,8 +146,6 @@ public final class AdSelectionFromOutcomesConfig implements Parcelable {
 
     /**
      * Builder for {@link AdSelectionFromOutcomesConfig} objects.
-     *
-     * @hide
      */
     public static final class Builder {
         @Nullable private AdTechIdentifier mSeller;
@@ -153,7 +164,7 @@ public final class AdSelectionFromOutcomesConfig implements Parcelable {
             return this;
         }
 
-        /** Sets the list of ad selection ids. */
+        /** Sets the list of {@code AdSelectionIds} to participate in the selection process. */
         @NonNull
         public AdSelectionFromOutcomesConfig.Builder setAdSelectionIds(
                 @NonNull List<Long> adSelectionIds) {
@@ -163,7 +174,10 @@ public final class AdSelectionFromOutcomesConfig implements Parcelable {
             return this;
         }
 
-        /** Sets the AdSelectionSignals. */
+        /**
+         * Sets the {@code SelectionSignals} to be consumed by the JS script downloaded from {@code
+         * SelectionLogicUri}
+         */
         @NonNull
         public AdSelectionFromOutcomesConfig.Builder setSelectionSignals(
                 @NonNull AdSelectionSignals selectionSignals) {
@@ -173,9 +187,12 @@ public final class AdSelectionFromOutcomesConfig implements Parcelable {
             return this;
         }
 
-        /** Sets the Uri. */
+        /**
+         * Sets the {@code SelectionLogicUri} to download the JS script that consumes the list of
+         * {@code AdSelectionIds} and {@code SelectionSignals}.
+         */
         @NonNull
-        public AdSelectionFromOutcomesConfig.Builder setSelectionUri(
+        public AdSelectionFromOutcomesConfig.Builder setSelectionLogicUri(
                 @NonNull Uri selectionLogicUri) {
             Objects.requireNonNull(selectionLogicUri);
 

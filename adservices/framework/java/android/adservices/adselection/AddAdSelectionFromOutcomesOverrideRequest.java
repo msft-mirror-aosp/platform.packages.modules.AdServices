@@ -30,7 +30,6 @@ import java.util.Objects;
  * the specific override, a {@code String} selectionLogicJs and {@code String} selectionSignals
  * field representing the override value
  *
- * @hide
  */
 public class AddAdSelectionFromOutcomesOverrideRequest {
     // TODO(b/254500329): use AdSelectionConfig when that change is checked in
@@ -55,7 +54,7 @@ public class AddAdSelectionFromOutcomesOverrideRequest {
     }
 
     /**
-     * @return an instance of {@link AdSelectionFromOutcomesInput}, the configuration of the ad
+     * @return an instance of {@link AdSelectionFromOutcomesConfig}, the configuration of the ad
      *     selection process. This configuration provides the data necessary to run Ad Selection
      *     flow that generates bids and scores to find a wining ad for rendering.
      */

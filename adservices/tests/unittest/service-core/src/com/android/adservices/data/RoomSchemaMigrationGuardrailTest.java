@@ -128,7 +128,7 @@ public class RoomSchemaMigrationGuardrailTest {
             EntityBundle newEntityBundle = newTables.get(tableName);
 
             for (FieldBundle oldFieldBundle : oldEntityBundle.getFields()) {
-                if (!newEntityBundle.getFields().contains(oldFieldBundle)) {
+                if (newEntityBundle.getFields().stream().noneMatch(oldFieldBundle::isSchemaEqual)) {
                     errors.add(
                             String.format(
                                     "Table %s and field %s: Missing field in new version or"
