@@ -35,8 +35,10 @@ import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
 import com.android.adservices.service.js.JSScriptEngine;
+import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -228,7 +230,8 @@ public class AdSelectionScriptEngine {
             @NonNull AdSelectionSignals sellerSignals,
             @NonNull AdSelectionSignals trustedScoringSignals,
             @NonNull AdSelectionSignals contextualSignals,
-            @NonNull List<CustomAudienceSignals> customAudienceSignalsList)
+            @NonNull List<CustomAudienceSignals> customAudienceSignalsList,
+            @NonNull AdSelectionExecutionLogger adSelectionExecutionLogger)
             throws JSONException {
         Objects.requireNonNull(scoreAdJS);
         Objects.requireNonNull(adsWithBid);
@@ -237,7 +240,7 @@ public class AdSelectionScriptEngine {
         Objects.requireNonNull(trustedScoringSignals);
         Objects.requireNonNull(contextualSignals);
         Objects.requireNonNull(customAudienceSignalsList);
-
+        Objects.requireNonNull(adSelectionExecutionLogger);
         ImmutableList<JSScriptArgument> args =
                 ImmutableList.<JSScriptArgument>builder()
                         .add(
@@ -262,11 +265,14 @@ public class AdSelectionScriptEngine {
                     AdWithBidArgument.asScriptArgument(
                             SCRIPT_ARGUMENT_NAME_IGNORED, currAdWithBid));
         }
-        return transform(
-                runAuctionScriptIterative(
-                        scoreAdJS, adWithBidArguments.build(), args, this::callScoreAd),
-                this::handleScoreAdsOutput,
-                mExecutor);
+        // Start scoreAds script execution process.
+        adSelectionExecutionLogger.startScoreAds();
+        return FluentFuture.from(
+                        runAuctionScriptIterative(
+                                scoreAdJS, adWithBidArguments.build(), args, this::callScoreAd))
+                .transform(
+                        result -> handleScoreAdsOutput(result, adSelectionExecutionLogger),
+                        mExecutor);
     }
 
     /**
@@ -347,19 +353,21 @@ public class AdSelectionScriptEngine {
      * The method will return an empty list of ads if the status code is not {@link
      * #JS_SCRIPT_STATUS_SUCCESS} or if there has been any problem parsing the JS response.
      */
-    private List<Double> handleScoreAdsOutput(AuctionScriptResult batchBidResult) {
+    private List<Double> handleScoreAdsOutput(
+            AuctionScriptResult batchBidResult,
+            AdSelectionExecutionLogger adSelectionExecutionLogger) {
+        ImmutableList.Builder<Double> result = ImmutableList.builder();
         if (batchBidResult.status != JS_SCRIPT_STATUS_SUCCESS) {
             LogUtil.v("Scoring script failed, returning empty result.");
-            return ImmutableList.of();
         } else {
-            ImmutableList.Builder<Double> result = ImmutableList.builder();
             for (int i = 0; i < batchBidResult.results.length(); i++) {
                 // If the output of the score for this advert is invalid JSON or doesn't have a
                 // score we are dropping the advert by scoring it with 0.
                 result.add(batchBidResult.results.optJSONObject(i).optDouble("score", 0.0));
             }
-            return result.build();
         }
+        adSelectionExecutionLogger.endScoreAds();
+        return result.build();
     }
 
     /**
