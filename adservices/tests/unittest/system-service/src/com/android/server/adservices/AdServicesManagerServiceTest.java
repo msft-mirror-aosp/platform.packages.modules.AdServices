@@ -20,8 +20,11 @@ import static com.android.server.adservices.PhFlags.KEY_ADSERVICES_SYSTEM_SERVIC
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import android.Manifest;
@@ -83,7 +86,7 @@ public class AdServicesManagerServiceTest {
 
         mUserInstanceManager =
                 new UserInstanceManager(
-                        /* adserviceBaseDir */ context.getFilesDir().getAbsolutePath());
+                        /* adservicesBaseDir */ context.getFilesDir().getAbsolutePath());
 
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
@@ -262,38 +265,67 @@ public class AdServicesManagerServiceTest {
     }
 
     @Test
-    public void testGetConsent_unSet() {
-        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
+    public void testGetConsent_unSet() throws IOException {
+        AdServicesManagerService service =
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+        // Since unit test cannot execute an IPC call currently, disable the permission check.
+        disableEnforceAdServicesManagerPermission(service);
+
         // Newly initialized ConsentManager has consent = false.
-        assertThat(mService.getConsent().isIsGiven()).isFalse();
+        assertThat(service.getConsent().isIsGiven()).isFalse();
     }
 
     @Test
     public void testGetAndSetConsent_null() throws IOException {
-        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
+        AdServicesManagerService service =
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+        // Since unit test cannot execute an IPC call currently, disable the permission check.
+        disableEnforceAdServicesManagerPermission(service);
 
-        mService.setConsent(new ConsentParcel.Builder().setIsGiven(null).build());
+        service.setConsent(new ConsentParcel.Builder().setIsGiven(null).build());
         // null means the consent is not given (false).
-        assertThat(mService.getConsent().isIsGiven()).isFalse();
+        assertThat(service.getConsent().isIsGiven()).isFalse();
     }
 
     @Test
     public void testGetAndSetConsent_nonNull() throws IOException {
-        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
-        mService.setConsent(new ConsentParcel.Builder().setIsGiven(false).build());
-        assertThat(mService.getConsent().isIsGiven()).isFalse();
+        AdServicesManagerService service =
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+        // Since unit test cannot execute an IPC call currently, disable the permission check.
+        disableEnforceAdServicesManagerPermission(service);
 
-        mService.setConsent(new ConsentParcel.Builder().setIsGiven(true).build());
-        assertThat(mService.getConsent().isIsGiven()).isTrue();
+        service.setConsent(new ConsentParcel.Builder().setIsGiven(false).build());
+        assertThat(service.getConsent().isIsGiven()).isFalse();
+
+        service.setConsent(new ConsentParcel.Builder().setIsGiven(true).build());
+        assertThat(service.getConsent().isIsGiven()).isTrue();
     }
 
     @Test
     public void testRecordNotificationDisplayed() throws IOException {
-        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
+        AdServicesManagerService service =
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+        // Since unit test cannot execute an IPC call currently, disable the permission check.
+        disableEnforceAdServicesManagerPermission(service);
+
         // First, the notification displayed is false.
-        assertThat(mService.wasNotificationDisplayed()).isFalse();
-        mService.recordNotificationDisplayed();
-        assertThat(mService.wasNotificationDisplayed()).isTrue();
+        assertThat(service.wasNotificationDisplayed()).isFalse();
+        service.recordNotificationDisplayed();
+        assertThat(service.wasNotificationDisplayed()).isTrue();
+    }
+
+    @Test
+    public void testEnforceAdServicesManagerPermission() {
+        AdServicesManagerService service =
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+
+        // Throw due to non-IPC call
+        assertThrows(SecurityException.class, service::getConsent);
+    }
+
+    // Since unit test cannot execute an IPC call, disable the permission check.
+    private void disableEnforceAdServicesManagerPermission(AdServicesManagerService service) {
+        doNothing().when(service).enforceAdServicesManagerPermission();
     }
 
     private void setupMockResolveInfo() {

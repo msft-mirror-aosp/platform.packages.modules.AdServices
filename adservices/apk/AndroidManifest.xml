@@ -91,6 +91,15 @@
         android:description="@string/permdesc_accessAdServicesState"
         android:protectionLevel="signature|configurator" />
 
+    <!-- Permission to allow calling AdServiceManager's APIs. -->
+    <permission android:name="android.permission.ACCESS_ADSERVICES_MANAGER"
+                android:label="@string/permlab_accessAdServicesManager"
+                android:description="@string/permdesc_accessAdServicesManager"
+                android:protectionLevel="signature" />
+
+    <!-- Allow AdServicesApk (PPAPI) to call AdService's system service. -->
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_MANAGER" />
+
     <uses-permission android:name="android.permission.ACCESS_PRIVILEGED_AD_ID" />
     <uses-permission android:name="android.permission.ACCESS_PRIVILEGED_APP_SET_ID" />
 
