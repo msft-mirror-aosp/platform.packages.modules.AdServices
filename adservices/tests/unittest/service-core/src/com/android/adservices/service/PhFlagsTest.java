@@ -28,6 +28,7 @@ import static com.android.adservices.service.Flags.CLASSIFIER_FORCE_USE_BUNDLED_
 import static com.android.adservices.service.Flags.CLASSIFIER_NUMBER_OF_TOP_LABELS;
 import static com.android.adservices.service.Flags.CLASSIFIER_THRESHOLD;
 import static com.android.adservices.service.Flags.DEFAULT_CLASSIFIER_TYPE;
+import static com.android.adservices.service.Flags.DEFAULT_CONSENT_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.Flags.DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.adservices.service.Flags.DISABLE_MEASUREMENT_ENROLLMENT_CHECK;
 import static com.android.adservices.service.Flags.DISABLE_TOPICS_ENROLLMENT_CHECK;
@@ -123,6 +124,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_REGISTER_WEB_SOUR
 import static com.android.adservices.service.Flags.MEASUREMENT_REGISTRATION_INPUT_EVENT_VALID_WINDOW_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
 import static com.android.adservices.service.Flags.NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY;
+import static com.android.adservices.service.Flags.PPAPI_AND_SYSTEM_SERVER;
 import static com.android.adservices.service.Flags.PPAPI_APP_ALLOW_LIST;
 import static com.android.adservices.service.Flags.PPAPI_APP_SIGNATURE_ALLOW_LIST;
 import static com.android.adservices.service.Flags.PRECOMPUTED_CLASSIFIER;
@@ -146,6 +148,7 @@ import static com.android.adservices.service.PhFlags.KEY_CLASSIFIER_FORCE_USE_BU
 import static com.android.adservices.service.PhFlags.KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS;
 import static com.android.adservices.service.PhFlags.KEY_CLASSIFIER_THRESHOLD;
 import static com.android.adservices.service.PhFlags.KEY_CLASSIFIER_TYPE;
+import static com.android.adservices.service.PhFlags.KEY_CONSENT_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.PhFlags.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.adservices.service.PhFlags.KEY_DISABLE_MEASUREMENT_ENROLLMENT_CHECK;
 import static com.android.adservices.service.PhFlags.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK;
@@ -3482,6 +3485,22 @@ public class PhFlagsTest {
 
         assertThat(phFlags.getEnrollmentBlocklist())
                 .containsNoneOf(enrollmentId1, enrollmentId2, enrollmentId3);
+    }
+
+    @Test
+    public void testGetConsentSourceOfTruth() {
+        assertThat(FlagsFactory.getFlags().getConsentSourceOfTruth())
+                .isEqualTo(DEFAULT_CONSENT_SOURCE_OF_TRUTH);
+
+        final int phOverridingValue = PPAPI_AND_SYSTEM_SERVER;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_CONSENT_SOURCE_OF_TRUTH,
+                Integer.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getConsentSourceOfTruth()).isEqualTo(phOverridingValue);
     }
 
     private void setEnrollmentBlocklist(String blocklistFlag) {
