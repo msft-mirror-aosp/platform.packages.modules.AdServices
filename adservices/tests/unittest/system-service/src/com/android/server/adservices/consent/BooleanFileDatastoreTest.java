@@ -35,7 +35,7 @@ import java.io.IOException;
 import java.util.Set;
 
 public class BooleanFileDatastoreTest {
-    private static final Context PPAPI_CONTEXT = ApplicationProvider.getApplicationContext();
+    private static final Context APPLICATION_CONTEXT = ApplicationProvider.getApplicationContext();
     private static final String FILENAME = "BooleanFileDatastoreTest.xml";
     private static final int DATASTORE_VERSION = 1;
     private static final String TEST_KEY = "key";
@@ -46,7 +46,9 @@ public class BooleanFileDatastoreTest {
     public void setup() throws IOException {
         mDatastore =
                 new BooleanFileDatastore(
-                        PPAPI_CONTEXT.getFilesDir().getAbsolutePath(), FILENAME, DATASTORE_VERSION);
+                        APPLICATION_CONTEXT.getFilesDir().getAbsolutePath(),
+                        FILENAME,
+                        DATASTORE_VERSION);
         mDatastore.initialize();
     }
 
