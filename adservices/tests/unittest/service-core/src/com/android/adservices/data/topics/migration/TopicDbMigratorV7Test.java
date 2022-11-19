@@ -28,17 +28,17 @@ import com.android.adservices.data.topics.TopicsTables;
 
 import org.junit.Test;
 
-/** Unit tests for {@link com.android.adservices.data.topics.migration.TopicDbMigratorV3} */
-public class TopicDbMigratorV3Test {
+/** Unit tests for {@link TopicDbMigratorV7} */
+public class TopicDbMigratorV7Test {
     private static final Context sContext = ApplicationProvider.getApplicationContext();
-    // The database is created with V2 and will migrate to V3.
-    private final TopicsDbHelperV2 mTopicsDbHelper = TopicsDbHelperV2.getInstance(sContext);
+    // The database is created with V6 and will migrate to V7.
+    private final TopicsDbHelperV6 mTopicsDbHelper = TopicsDbHelperV6.getInstance(sContext);
 
     @Test
-    public void testDbMigrationFromV2ToV3() {
+    public void testDbMigrationFromV6ToV7() {
         SQLiteDatabase db = mTopicsDbHelper.getWritableDatabase();
 
-        // TopicContributors table doesn't exist in V2
+        // TopicContributors table doesn't exist in V6
         assertThat(
                         DbTestUtil.doesTableExistAndColumnCountMatch(
                                 db,
@@ -49,13 +49,13 @@ public class TopicDbMigratorV3Test {
         // Use transaction here so that the changes in the performMigration is committed.
         // In normal DB upgrade, the DB will commit the change automatically.
         db.beginTransaction();
-        // Upgrade the db V3 by using TopicDbMigratorV3
-        new TopicDbMigratorV3().performMigration(db);
+        // Upgrade the db V7 by using TopicDbMigratorV7
+        new TopicDbMigratorV7().performMigration(db);
         // Commit the schema change
         db.setTransactionSuccessful();
         db.endTransaction();
 
-        // TopicContributors table exists in V3
+        // TopicContributors table exists in V7
         db = mTopicsDbHelper.getReadableDatabase();
         assertThat(
                         DbTestUtil.doesTableExistAndColumnCountMatch(

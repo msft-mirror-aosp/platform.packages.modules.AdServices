@@ -147,8 +147,8 @@ public final class PhFlags implements Flags {
             "fledge_background_fetch_max_response_size_b";
 
     // FLEDGE Ad Selection keys
-    static final String KEY_FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT =
-            "fledge_ad_selection_concurrent_bidding_count";
+    static final String KEY_FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT =
+            "fledge_ad_selection_max_concurrent_bidding_count";
     static final String KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS =
             "fledge_ad_selection_bidding_timeout_per_ca_ms";
     static final String KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS =
@@ -258,6 +258,13 @@ public final class PhFlags implements Flags {
 
     // Rate Limit keys
     static final String KEY_SDK_REQUEST_PERMITS_PER_SECOND = "sdk_request_permits_per_second";
+    static final String KEY_ADID_REQUEST_PERMITS_PER_SECOND = "adid_request_permits_per_second";
+    static final String KEY_APPSETID_REQUEST_PERMITS_PER_SECOND =
+            "appsetid_request_permits_per_second";
+    static final String KEY_MEASUREMENT_REGISTER_SOURCE_REQUEST_PERMITS_PER_SECOND =
+            "measurement_register_source_request_permits_per_second";
+    static final String KEY_MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND =
+            "measurement_register_web_source_request_permits_per_second";
 
     // Adservices enable status keys.
     static final String KEY_ADSERVICES_ENABLED = "adservice_enabled";
@@ -278,6 +285,9 @@ public final class PhFlags implements Flags {
 
     // Consent Manager debug mode keys.
     static final String KEY_CONSENT_MANAGER_DEBUG_MODE = "consent_manager_debug_mode";
+
+    // Source of truth to get consent for PPAPI
+    static final String KEY_CONSENT_SOURCE_OF_TRUTH = "consent_source_of_truth";
 
     // App/SDK AllowList/DenyList keys that have access to the web registration APIs
     static final String KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST = "web_context_client_allow_list";
@@ -834,11 +844,11 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public int getAdSelectionConcurrentBiddingCount() {
+    public int getAdSelectionMaxConcurrentBiddingCount() {
         return DeviceConfig.getInt(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT,
-                /* defaultValue */ FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT);
+                /* flagName */ KEY_FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT,
+                /* defaultValue */ FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT);
     }
 
     @Override
@@ -1347,29 +1357,56 @@ public final class PhFlags implements Flags {
     // Rate Limit Flags.
     @Override
     public float getSdkRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                KEY_SDK_REQUEST_PERMITS_PER_SECOND, SDK_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
+    public float getAdIdRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                KEY_ADID_REQUEST_PERMITS_PER_SECOND, ADID_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
+    public float getAppSetIdRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                KEY_APPSETID_REQUEST_PERMITS_PER_SECOND, APPSETID_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
+    public float getMeasurementRegisterSourceRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                KEY_MEASUREMENT_REGISTER_SOURCE_REQUEST_PERMITS_PER_SECOND,
+                MEASUREMENT_REGISTER_SOURCE_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
+    public float getMeasurementRegisterWebSourceRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                KEY_MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND,
+                MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    private float getPermitsPerSecond(String flagName, float defaultValue) {
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
         try {
-            String sdkPermitString =
-                    SystemProperties.get(getSystemPropertyName(KEY_SDK_REQUEST_PERMITS_PER_SECOND));
-            if (!TextUtils.isEmpty(sdkPermitString)) {
-                return parseFloat(sdkPermitString);
+            final String permitString = SystemProperties.get(getSystemPropertyName(flagName));
+            if (!TextUtils.isEmpty(permitString)) {
+                return parseFloat(permitString);
             }
         } catch (NumberFormatException e) {
-            LogUtil.e(e, "Failed to parse SdkRequestPermitsPerSecond");
-            return SDK_REQUEST_PERMITS_PER_SECOND;
+            LogUtil.e(e, "Failed to parse %s", flagName);
+            return defaultValue;
         }
 
-        float sdkRequestPermitsPerSecond =
-                DeviceConfig.getFloat(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        /* flagName */ KEY_SDK_REQUEST_PERMITS_PER_SECOND,
-                        /* defaultValue */ SDK_REQUEST_PERMITS_PER_SECOND);
+        final float permitsPerSecond =
+                DeviceConfig.getFloat(DeviceConfig.NAMESPACE_ADSERVICES, flagName, defaultValue);
 
-        if (sdkRequestPermitsPerSecond <= 0) {
-            throw new IllegalArgumentException("sdkRequestPermitsPerSecond should > 0");
+        if (permitsPerSecond <= 0) {
+            throw new IllegalArgumentException(flagName + " should > 0");
         }
-        return sdkRequestPermitsPerSecond;
+        return permitsPerSecond;
     }
 
     @Override
@@ -1601,6 +1638,14 @@ public final class PhFlags implements Flags {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(KEY_CONSENT_MANAGER_DEBUG_MODE),
                 /* defaultValue */ CONSENT_MANAGER_DEBUG_MODE);
+    }
+
+    @Override
+    public int getConsentSourceOfTruth() {
+        return DeviceConfig.getInt(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_CONSENT_SOURCE_OF_TRUTH,
+                /* defaultValue */ DEFAULT_CONSENT_SOURCE_OF_TRUTH);
     }
 
     @Override
@@ -1992,9 +2037,9 @@ public final class PhFlags implements Flags {
                         + getFledgeBackgroundFetchMaxResponseSizeB());
         writer.println(
                 "\t"
-                        + KEY_FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT
+                        + KEY_FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT
                         + " = "
-                        + getAdSelectionConcurrentBiddingCount());
+                        + getAdSelectionMaxConcurrentBiddingCount());
         writer.println(
                 "\t"
                         + KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS

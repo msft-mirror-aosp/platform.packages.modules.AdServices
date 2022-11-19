@@ -58,7 +58,7 @@ import java.util.Optional;
  * Unit test for {@link AttributionJobService
  */
 public class AttributionJobServiceTest {
-    private static final long WAIT_IN_MILLIS = 50L;
+    private static final long WAIT_IN_MILLIS = 1_000L;
 
     private DatastoreManager mMockDatastoreManager;
     private JobScheduler mMockJobScheduler;
@@ -145,8 +145,6 @@ public class AttributionJobServiceTest {
                             mockContext, /* forceSchedule = */ false);
 
                     // Validate
-                    // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
                     ExtendedMockito.verify(
                             () -> AttributionJobService.schedule(any(), any()), never());
                     verify(mMockJobScheduler, never())
@@ -176,8 +174,6 @@ public class AttributionJobServiceTest {
                             mockContext, /* forceSchedule = */ false);
 
                     // Validate
-                    // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
                     ExtendedMockito.verify(
                             () -> AttributionJobService.schedule(any(), any()), never());
                     verify(mMockJobScheduler, times(1))
@@ -206,8 +202,6 @@ public class AttributionJobServiceTest {
                     AttributionJobService.scheduleIfNeeded(mockContext, /* forceSchedule = */ true);
 
                     // Validate
-                    // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
                     ExtendedMockito.verify(
                             () -> AttributionJobService.schedule(any(), any()), times(1));
                     verify(mMockJobScheduler, times(1))
@@ -235,8 +229,6 @@ public class AttributionJobServiceTest {
                     AttributionJobService.scheduleIfNeeded(mockContext, false);
 
                     // Validate
-                    // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
                     ExtendedMockito.verify(
                             () -> AttributionJobService.schedule(any(), any()), times(1));
                     verify(mMockJobScheduler, times(1))
