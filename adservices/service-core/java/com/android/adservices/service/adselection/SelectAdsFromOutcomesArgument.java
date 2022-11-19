@@ -19,14 +19,10 @@ package com.android.adservices.service.adselection;
 import static com.android.adservices.service.js.JSScriptArgument.numericArg;
 import static com.android.adservices.service.js.JSScriptArgument.recordArg;
 
-import android.util.Pair;
-
 import com.android.adservices.service.js.JSScriptArgument;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.util.Map;
 
 /**
  * A wrapper class for {@code AdSelectionId} and {@code Bid} pair to support the conversion to JS
@@ -37,10 +33,12 @@ public class SelectAdsFromOutcomesArgument {
     static final String BID_FIELD_NAME = "bid";
 
     /** Parses Json object for ad selection id and bid to {@code Pair< Long, Double >} */
-    public static Pair<Long, Double> parseJsonResponse(JSONObject jsonObject) {
+    public static AdSelectionIdWithBidAndRenderUri parseJsonResponse(JSONObject jsonObject) {
         try {
-            return new Pair<>(
-                    jsonObject.getLong(ID_FIELD_NAME), jsonObject.getDouble(BID_FIELD_NAME));
+            return AdSelectionIdWithBidAndRenderUri.builder()
+                    .setAdSelectionId(jsonObject.getLong(ID_FIELD_NAME))
+                    .setBid(jsonObject.getDouble(BID_FIELD_NAME))
+                    .build();
         } catch (JSONException e) {
             throw new IllegalArgumentException("Invalid value for ad selection id, bid pair", e);
         }
@@ -48,10 +46,10 @@ public class SelectAdsFromOutcomesArgument {
 
     /** Converts {@code Pair< Long, Double >} object to Json object */
     public static JSScriptArgument asScriptArgument(
-            String name, Map.Entry<Long, Double> adSelectionIdBidPair) {
+            String name, AdSelectionIdWithBidAndRenderUri adSelectionIdWithBidAndRenderUri) {
         return recordArg(
                 name,
-                numericArg(ID_FIELD_NAME, adSelectionIdBidPair.getKey()),
-                numericArg(BID_FIELD_NAME, adSelectionIdBidPair.getValue()));
+                numericArg(ID_FIELD_NAME, adSelectionIdWithBidAndRenderUri.getAdSelectionId()),
+                numericArg(BID_FIELD_NAME, adSelectionIdWithBidAndRenderUri.getBid()));
     }
 }

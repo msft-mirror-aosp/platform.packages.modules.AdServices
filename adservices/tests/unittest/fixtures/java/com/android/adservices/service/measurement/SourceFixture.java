@@ -64,6 +64,7 @@ public final class SourceFixture {
                 .setAttributionMode(ValidSourceParams.ATTRIBUTION_MODE)
                 .setAggregateSource(ValidSourceParams.buildAggregateSource())
                 .setFilterData(ValidSourceParams.buildFilterData())
+                .setIsDebugReporting(true)
                 .build();
     }
 

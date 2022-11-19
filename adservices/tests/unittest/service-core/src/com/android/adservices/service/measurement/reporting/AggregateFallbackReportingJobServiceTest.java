@@ -137,8 +137,6 @@ public class AggregateFallbackReportingJobServiceTest {
                             mockContext, /* forceSchedule = */ false);
 
                     // Validate
-                    // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
                     ExtendedMockito.verify(
                             () -> AggregateFallbackReportingJobService.schedule(any(), any()),
                             never());
@@ -169,8 +167,6 @@ public class AggregateFallbackReportingJobServiceTest {
                             mockContext, /* forceSchedule = */ false);
 
                     // Validate
-                    // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
                     ExtendedMockito.verify(
                             () -> AggregateFallbackReportingJobService.schedule(any(), any()),
                             never());
@@ -201,8 +197,6 @@ public class AggregateFallbackReportingJobServiceTest {
                             mockContext, /* forceSchedule = */ true);
 
                     // Validate
-                    // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
                     ExtendedMockito.verify(
                             () -> AggregateFallbackReportingJobService.schedule(any(), any()),
                             times(1));
@@ -231,8 +225,6 @@ public class AggregateFallbackReportingJobServiceTest {
                     AggregateFallbackReportingJobService.scheduleIfNeeded(mockContext, false);
 
                     // Validate
-                    // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
                     ExtendedMockito.verify(
                             () -> AggregateFallbackReportingJobService.schedule(any(), any()),
                             times(1));

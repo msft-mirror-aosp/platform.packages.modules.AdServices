@@ -44,9 +44,11 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -58,9 +60,6 @@ import java.util.stream.Collectors;
  * call
  */
 public class AdBidGeneratorImpl implements AdBidGenerator {
-
-    @VisibleForTesting
-    static final String QUERY_PARAM_KEYS = "keys";
 
     @VisibleForTesting
     static final String MISSING_TRUSTED_BIDDING_SIGNALS = "Error fetching trusted bidding signals";
@@ -77,7 +76,6 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
     @NonNull private final ListeningExecutorService mBackgroundExecutorService;
     @NonNull private final ScheduledThreadPoolExecutor mScheduledExecutor;
     @NonNull private final AdSelectionScriptEngine mAdSelectionScriptEngine;
-    @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
     @NonNull private final CustomAudienceDevOverridesHelper mCustomAudienceDevOverridesHelper;
     @NonNull private final Flags mFlags;
     @NonNull private final JsFetcher mJsFetcher;
@@ -104,7 +102,6 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         mLightweightExecutorService = lightweightExecutorService;
         mBackgroundExecutorService = backgroundExecutorService;
         mScheduledExecutor = scheduledExecutor;
-        mAdServicesHttpsClient = adServicesHttpsClient;
         mCustomAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(devContext, customAudienceDao);
         mFlags = flags;
@@ -128,7 +125,6 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
             @NonNull ListeningExecutorService backgroundExecutorService,
             @NonNull ScheduledThreadPoolExecutor scheduledExecutor,
             @NonNull AdSelectionScriptEngine adSelectionScriptEngine,
-            @NonNull AdServicesHttpsClient adServicesHttpsClient,
             @NonNull CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper,
             @NonNull Flags flags,
             @NonNull IsolateSettings isolateSettings,
@@ -138,7 +134,6 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(scheduledExecutor);
         Objects.requireNonNull(adSelectionScriptEngine);
-        Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(customAudienceDevOverridesHelper);
         Objects.requireNonNull(flags);
         Objects.requireNonNull(isolateSettings);
@@ -149,7 +144,6 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         mBackgroundExecutorService = backgroundExecutorService;
         mScheduledExecutor = scheduledExecutor;
         mAdSelectionScriptEngine = adSelectionScriptEngine;
-        mAdServicesHttpsClient = adServicesHttpsClient;
         mCustomAudienceDevOverridesHelper = customAudienceDevOverridesHelper;
         mFlags = flags;
         mJsFetcher = jsFetcher;
@@ -159,10 +153,12 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
     @NonNull
     public FluentFuture<AdBiddingOutcome> runAdBiddingPerCA(
             @NonNull DBCustomAudience customAudience,
+            @NonNull Map<Uri, JSONObject> trustedBiddingDataPerBaseUri,
             @NonNull AdSelectionSignals adSelectionSignals,
             @NonNull AdSelectionSignals buyerSignals,
             @NonNull AdSelectionSignals contextualSignals) {
         Objects.requireNonNull(customAudience);
+        Objects.requireNonNull(trustedBiddingDataPerBaseUri);
         Objects.requireNonNull(adSelectionSignals);
         Objects.requireNonNull(buyerSignals);
         Objects.requireNonNull(contextualSignals);
@@ -194,7 +190,8 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                                     buyerSignals,
                                     contextualSignals,
                                     customAudienceSignals,
-                                    adSelectionSignals);
+                                    adSelectionSignals,
+                                    trustedBiddingDataPerBaseUri);
                         },
                         mLightweightExecutorService);
         return adWithBidPair
@@ -253,18 +250,13 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
 
     private FluentFuture<AdSelectionSignals> getTrustedBiddingSignals(
             @NonNull DBTrustedBiddingData trustedBiddingData,
+            @NonNull Map<Uri, JSONObject> trustedBiddingDataByBaseUri,
             @NonNull String owner,
             @NonNull AdTechIdentifier buyer,
             @NonNull String name) {
         Objects.requireNonNull(trustedBiddingData);
         final Uri trustedBiddingUri = trustedBiddingData.getUri();
         final List<String> trustedBiddingKeys = trustedBiddingData.getKeys();
-        final String keysQueryParams = String.join(",", trustedBiddingKeys);
-        final Uri trustedBiddingUriWithKeys =
-                Uri.parse(trustedBiddingUri.toString())
-                        .buildUpon()
-                        .appendQueryParameter(QUERY_PARAM_KEYS, keysQueryParams)
-                        .build();
 
         FluentFuture<AdSelectionSignals> trustedSignalsOverride =
                 FluentFuture.from(
@@ -278,11 +270,10 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                         jsOverride -> {
                             if (jsOverride == null) {
                                 LogUtil.v("Fetching trusted bidding Signals from server");
-                                return Futures.transform(
-                                        mAdServicesHttpsClient.fetchPayload(
-                                                trustedBiddingUriWithKeys),
-                                        s -> s == null ? null : AdSelectionSignals.fromString(s),
-                                        mLightweightExecutorService);
+                                return Futures.immediateFuture(
+                                        TrustedBiddingDataFetcher.extractKeys(
+                                                trustedBiddingDataByBaseUri.get(trustedBiddingUri),
+                                                trustedBiddingKeys));
                             } else {
                                 LogUtil.d(
                                         "Developer options enabled and override trusted signals"
@@ -301,9 +292,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                         mLightweightExecutorService);
     }
 
-    /**
-     * @return the {@link AdWithBid} with the best bid per CustomAudience.
-     */
+    /** @return the {@link AdWithBid} with the best bid per CustomAudience. */
     @NonNull
     @VisibleForTesting
     FluentFuture<Pair<AdWithBid, String>> runBidding(
@@ -312,10 +301,12 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
             @NonNull AdSelectionSignals buyerSignals,
             @NonNull AdSelectionSignals contextualSignals,
             @NonNull CustomAudienceSignals customAudienceSignals,
-            @NonNull AdSelectionSignals adSelectionSignals) {
+            @NonNull AdSelectionSignals adSelectionSignals,
+            @NonNull Map<Uri, JSONObject> trustedBiddingDataByBaseUri) {
         FluentFuture<AdSelectionSignals> trustedBiddingSignals =
                 getTrustedBiddingSignals(
                         customAudience.getTrustedBiddingData(),
+                        trustedBiddingDataByBaseUri,
                         customAudience.getOwner(),
                         customAudience.getBuyer(),
                         customAudience.getName());

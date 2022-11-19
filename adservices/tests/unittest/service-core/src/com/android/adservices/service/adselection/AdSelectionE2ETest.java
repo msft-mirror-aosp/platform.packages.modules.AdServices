@@ -56,6 +56,7 @@ import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.AdSelectionInput;
 import android.adservices.adselection.AdSelectionResponse;
+import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CallerMetadata;
@@ -69,7 +70,6 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.RemoteException;
 import android.os.SystemClock;
-import android.util.Log;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
@@ -106,11 +106,13 @@ import com.android.adservices.service.stats.RunAdSelectionProcessReportedStats;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.mockwebserver.Dispatcher;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
 import com.google.mockwebserver.RecordedRequest;
 
+import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -126,8 +128,10 @@ import java.io.File;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -137,7 +141,6 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
  * this test are invoked and used in real time.
  */
 public class AdSelectionE2ETest {
-    public static final String TAG = "adservices";
     private static final String ERROR_SCORE_AD_LOGIC_MISSING = "scoreAd is not defined";
 
     private static final AdTechIdentifier BUYER_1 = AdSelectionConfigFixture.BUYER_1;
@@ -170,6 +173,36 @@ public class AdSelectionE2ETest {
                     + "  return {'status': 0, 'score': bid };\n"
                     + "}";
 
+    private static final String SELECTION_PICK_HIGHEST_LOGIC_JS_PATH =
+            "/selectionPickHighestLogicJS/";
+    private static final String SELECTION_PICK_NONE_LOGIC_JS_PATH = "/selectionPickNoneLogicJS/";
+    private static final String SELECTION_WATERFALL_LOGIC_JS_PATH = "/selectionWaterfallLogicJS/";
+    private static final String SELECTION_PICK_HIGHEST_LOGIC_JS =
+            "function selectOutcome(outcomes, selection_signals) {\n"
+                    + "    let max_bid = 0;\n"
+                    + "    let winner_outcome = null;\n"
+                    + "    for (let outcome of outcomes) {\n"
+                    + "        if (outcome.bid > max_bid) {\n"
+                    + "            max_bid = outcome.bid;\n"
+                    + "            winner_outcome = outcome;\n"
+                    + "        }\n"
+                    + "    }\n"
+                    + "    return {'status': 0, 'result': winner_outcome};\n"
+                    + "}";
+    private static final String SELECTION_PICK_NONE_LOGIC_JS =
+            "function selectOutcome(outcomes, selection_signals) {\n"
+                    + "    return {'status': 0, 'result': null};\n"
+                    + "}";
+    private static final String SELECTION_WATERFALL_LOGIC_JS =
+            "function selectOutcome(outcomes, selection_signals) {\n"
+                    + "    if (outcomes.length != 1 || selection_signals.bid_floor =="
+                    + " undefined) return null;\n"
+                    + "\n"
+                    + "    const outcome_1p = outcomes[0];\n"
+                    + "    return {'status': 0, 'result': (outcome_1p.bid >"
+                    + " selection_signals.bid_floor) ? outcome_1p : null};\n"
+                    + "}";
+
     private static final AdTechIdentifier TRUSTED_BIDDING_SIGNALS =
             AdTechIdentifier.fromString(
                     "{\n"
@@ -180,8 +213,17 @@ public class AdSelectionE2ETest {
                             + "\t\"keys\": \"trusted bidding signal Values\"\n"
                             + "}");
 
-    private static final AdTechIdentifier TRUSTED_SCORING_SIGNALS =
-            AdTechIdentifier.fromString(
+    private static final Map<String, String> TRUSTED_BIDDING_SIGNALS_SERVER_DATA =
+            new ImmutableMap.Builder<String, String>()
+                    .put("example", "example")
+                    .put("valid", "Also valid")
+                    .put("list", "list")
+                    .put("of", "of")
+                    .put("keys", "trusted bidding signal Values")
+                    .build();
+
+    private static final AdSelectionSignals TRUSTED_SCORING_SIGNALS =
+            AdSelectionSignals.fromString(
                     "{\n"
                             + "\t\"render_uri_1\": \"signals_for_1\",\n"
                             + "\t\"render_uri_2\": \"signals_for_2\"\n"
@@ -293,9 +335,23 @@ public class AdSelectionE2ETest {
                                 || (BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2.toString())
                                         .equals(request.getPath())) {
                             return new MockResponse().setBody(READ_BID_FROM_AD_METADATA_JS);
-                        } else if ((BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS)
-                                .equals(request.getPath())) {
-                            return new MockResponse().setBody(TRUSTED_BIDDING_SIGNALS.toString());
+                        } else if (request.getPath().equals(SELECTION_PICK_HIGHEST_LOGIC_JS_PATH)) {
+                            return new MockResponse().setBody(SELECTION_PICK_HIGHEST_LOGIC_JS);
+                        } else if (request.getPath().equals(SELECTION_PICK_NONE_LOGIC_JS_PATH)) {
+                            return new MockResponse().setBody(SELECTION_PICK_NONE_LOGIC_JS);
+                        } else if (request.getPath().equals(SELECTION_WATERFALL_LOGIC_JS_PATH)) {
+                            return new MockResponse().setBody(SELECTION_WATERFALL_LOGIC_JS);
+                        } else if (request.getPath().startsWith(BUYER_TRUSTED_SIGNAL_URI_PATH)) {
+                            String[] keys =
+                                    Uri.parse(request.getPath())
+                                            .getQueryParameter(
+                                                    DBTrustedBiddingData.QUERY_PARAM_KEYS)
+                                            .split(",");
+                            Map<String, String> jsonMap = new HashMap<>();
+                            for (String key : keys) {
+                                jsonMap.put(key, TRUSTED_BIDDING_SIGNALS_SERVER_DATA.get(key));
+                            }
+                            return new MockResponse().setBody(new JSONObject(jsonMap).toString());
                         }
 
                         // The seller params vary based on runtime, so we are returning trusted
@@ -384,7 +440,7 @@ public class AdSelectionE2ETest {
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         runAdSelectionProcessLoggerLatch.await();
         loggerLatch.await();
         assertCallbackIsSuccessful(resultsCallback);
@@ -450,7 +506,7 @@ public class AdSelectionE2ETest {
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         runAdSelectionProcessLoggerLatch.await();
         loggerLatch.await();
         assertCallbackIsSuccessful(resultsCallback);
@@ -533,9 +589,7 @@ public class AdSelectionE2ETest {
                         .build();
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
-
-
+                invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
 
         assertCallbackIsSuccessful(resultsCallback);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
@@ -554,7 +608,6 @@ public class AdSelectionE2ETest {
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
 
         mMockWebServerRule.startMockWebServer(mDispatcher);
-
         DBCustomAudience dBCustomAudienceForBuyer1 =
                 createDBCustomAudience(
                         BUYER_1,
@@ -586,7 +639,8 @@ public class AdSelectionE2ETest {
                         .setName(dBCustomAudienceForBuyer2.getName())
                         .setAppPackageName(MY_APP_PACKAGE_NAME)
                         .setBiddingLogicJS(READ_BID_FROM_AD_METADATA_JS)
-                        .setTrustedBiddingData(TRUSTED_BIDDING_SIGNALS.toString())
+                        .setTrustedBiddingData(
+                                new JSONObject(TRUSTED_BIDDING_SIGNALS_SERVER_DATA).toString())
                         .build();
         mCustomAudienceDao.persistCustomAudienceOverride(dbCustomAudienceOverride);
 
@@ -625,7 +679,7 @@ public class AdSelectionE2ETest {
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
 
         assertCallbackIsSuccessful(resultsCallback);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
@@ -678,7 +732,7 @@ public class AdSelectionE2ETest {
                 dBCustomAudienceExpired,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_3));
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         assertCallbackIsSuccessful(resultsCallback);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
         assertTrue(mAdSelectionEntryDaoSpy.doesAdSelectionIdExist(resultSelectionId));
@@ -737,7 +791,7 @@ public class AdSelectionE2ETest {
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_3));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         assertCallbackFailed(resultsCallback);
         assertEquals(
                 resultsCallback.mFledgeErrorResponse.getStatusCode(),
@@ -758,7 +812,7 @@ public class AdSelectionE2ETest {
         // Do not populate CustomAudience DAO
         mMockWebServerRule.startMockWebServer(mDispatcher);
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         assertCallbackFailed(resultsCallback);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(), ERROR_NO_CA_AVAILABLE);
@@ -785,7 +839,7 @@ public class AdSelectionE2ETest {
 
         mMockWebServerRule.startMockWebServer(mDispatcher);
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         assertCallbackFailed(resultsCallback);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(), ERROR_NO_BUYERS_AVAILABLE);
@@ -821,7 +875,7 @@ public class AdSelectionE2ETest {
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         assertCallbackIsSuccessful(resultsCallback);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
         assertTrue(mAdSelectionEntryDaoSpy.doesAdSelectionIdExist(resultSelectionId));
@@ -868,9 +922,17 @@ public class AdSelectionE2ETest {
                                 || (BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2.toString())
                                         .equals(request.getPath())) {
                             return new MockResponse().setBody("");
-                        } else if ((BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS)
-                                .equals(request.getPath())) {
-                            return new MockResponse().setBody(TRUSTED_BIDDING_SIGNALS.toString());
+                        } else if (request.getPath().startsWith(BUYER_TRUSTED_SIGNAL_URI_PATH)) {
+                            String[] keys =
+                                    Uri.parse(request.getPath())
+                                            .getQueryParameter(
+                                                    DBTrustedBiddingData.QUERY_PARAM_KEYS)
+                                            .split(",");
+                            Map<String, String> jsonMap = new HashMap<>();
+                            for (String key : keys) {
+                                jsonMap.put(key, TRUSTED_BIDDING_SIGNALS_SERVER_DATA.get(key));
+                            }
+                            return new MockResponse().setBody(new JSONObject(jsonMap).toString());
                         }
 
                         // The seller params vary based on runtime, so we are returning trusted
@@ -907,7 +969,7 @@ public class AdSelectionE2ETest {
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         assertCallbackFailed(resultsCallback);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(),
@@ -935,9 +997,17 @@ public class AdSelectionE2ETest {
                                 || (BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2.toString())
                                         .equals(request.getPath())) {
                             return new MockResponse().setBody(READ_BID_FROM_AD_METADATA_JS);
-                        } else if ((BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS)
-                                .equals(request.getPath())) {
-                            return new MockResponse().setBody(TRUSTED_BIDDING_SIGNALS.toString());
+                        } else if (request.getPath().startsWith(BUYER_TRUSTED_SIGNAL_URI_PATH)) {
+                            String[] keys =
+                                    Uri.parse(request.getPath())
+                                            .getQueryParameter(
+                                                    DBTrustedBiddingData.QUERY_PARAM_KEYS)
+                                            .split(",");
+                            Map<String, String> jsonMap = new HashMap<>();
+                            for (String key : keys) {
+                                jsonMap.put(key, TRUSTED_BIDDING_SIGNALS_SERVER_DATA.get(key));
+                            }
+                            return new MockResponse().setBody(new JSONObject(jsonMap).toString());
                         }
 
                         // The seller params vary based on runtime, so we are returning trusted
@@ -974,7 +1044,7 @@ public class AdSelectionE2ETest {
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         assertCallbackFailed(resultsCallback);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(),
@@ -1002,9 +1072,17 @@ public class AdSelectionE2ETest {
                                 || (BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2.toString())
                                         .equals(request.getPath())) {
                             return new MockResponse().setBody(READ_BID_FROM_AD_METADATA_JS);
-                        } else if ((BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS)
-                                .equals(request.getPath())) {
-                            return new MockResponse().setBody(TRUSTED_BIDDING_SIGNALS.toString());
+                        } else if (request.getPath().startsWith(BUYER_TRUSTED_SIGNAL_URI_PATH)) {
+                            String[] keys =
+                                    Uri.parse(request.getPath())
+                                            .getQueryParameter(
+                                                    DBTrustedBiddingData.QUERY_PARAM_KEYS)
+                                            .split(",");
+                            Map<String, String> jsonMap = new HashMap<>();
+                            for (String key : keys) {
+                                jsonMap.put(key, TRUSTED_BIDDING_SIGNALS_SERVER_DATA.get(key));
+                            }
+                            return new MockResponse().setBody(new JSONObject(jsonMap).toString());
                         }
 
                         // The seller params vary based on runtime, so we are returning trusted
@@ -1041,7 +1119,7 @@ public class AdSelectionE2ETest {
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         assertCallbackFailed(resultsCallback);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(), MISSING_SCORING_LOGIC);
@@ -1069,9 +1147,17 @@ public class AdSelectionE2ETest {
                         } else if ((BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2.toString())
                                 .equals(request.getPath())) {
                             return new MockResponse().setBody("");
-                        } else if ((BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS)
-                                .equals(request.getPath())) {
-                            return new MockResponse().setBody(TRUSTED_BIDDING_SIGNALS.toString());
+                        } else if (request.getPath().startsWith(BUYER_TRUSTED_SIGNAL_URI_PATH)) {
+                            String[] keys =
+                                    Uri.parse(request.getPath())
+                                            .getQueryParameter(
+                                                    DBTrustedBiddingData.QUERY_PARAM_KEYS)
+                                            .split(",");
+                            Map<String, String> jsonMap = new HashMap<>();
+                            for (String key : keys) {
+                                jsonMap.put(key, TRUSTED_BIDDING_SIGNALS_SERVER_DATA.get(key));
+                            }
+                            return new MockResponse().setBody(new JSONObject(jsonMap).toString());
                         }
 
                         // The seller params vary based on runtime, so we are returning trusted
@@ -1108,7 +1194,7 @@ public class AdSelectionE2ETest {
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         assertCallbackIsSuccessful(resultsCallback);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
         assertTrue(mAdSelectionEntryDaoSpy.doesAdSelectionIdExist(resultSelectionId));
@@ -1145,9 +1231,17 @@ public class AdSelectionE2ETest {
                                 || (BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2.toString())
                                         .equals(request.getPath())) {
                             return new MockResponse().setBody(READ_BID_FROM_AD_METADATA_JS);
-                        } else if ((BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS)
-                                .equals(request.getPath())) {
-                            return new MockResponse().setBody(TRUSTED_BIDDING_SIGNALS.toString());
+                        } else if (request.getPath().startsWith(BUYER_TRUSTED_SIGNAL_URI_PATH)) {
+                            String[] keys =
+                                    Uri.parse(request.getPath())
+                                            .getQueryParameter(
+                                                    DBTrustedBiddingData.QUERY_PARAM_KEYS)
+                                            .split(",");
+                            Map<String, String> jsonMap = new HashMap<>();
+                            for (String key : keys) {
+                                jsonMap.put(key, TRUSTED_BIDDING_SIGNALS_SERVER_DATA.get(key));
+                            }
+                            return new MockResponse().setBody(new JSONObject(jsonMap).toString());
                         }
 
                         // The seller params vary based on runtime, so we are returning trusted
@@ -1184,7 +1278,7 @@ public class AdSelectionE2ETest {
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         assertCallbackIsSuccessful(resultsCallback);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
         assertTrue(mAdSelectionEntryDaoSpy.doesAdSelectionIdExist(resultSelectionId));
@@ -1221,9 +1315,17 @@ public class AdSelectionE2ETest {
                                 || (BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2.toString())
                                         .equals(request.getPath())) {
                             return new MockResponse().setBody(READ_BID_FROM_AD_METADATA_JS);
-                        } else if ((BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS)
-                                .equals(request.getPath())) {
-                            return new MockResponse().setBody(TRUSTED_BIDDING_SIGNALS.toString());
+                        } else if (request.getPath().startsWith(BUYER_TRUSTED_SIGNAL_URI_PATH)) {
+                            String[] keys =
+                                    Uri.parse(request.getPath())
+                                            .getQueryParameter(
+                                                    DBTrustedBiddingData.QUERY_PARAM_KEYS)
+                                            .split(",");
+                            Map<String, String> jsonMap = new HashMap<>();
+                            for (String key : keys) {
+                                jsonMap.put(key, TRUSTED_BIDDING_SIGNALS_SERVER_DATA.get(key));
+                            }
+                            return new MockResponse().setBody(new JSONObject(jsonMap).toString());
                         }
 
                         // The seller params vary based on runtime, so we are returning trusted
@@ -1260,7 +1362,7 @@ public class AdSelectionE2ETest {
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         assertCallbackFailed(resultsCallback);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(), ERROR_NO_WINNING_AD_FOUND);
@@ -1338,9 +1440,17 @@ public class AdSelectionE2ETest {
                         } else if ((BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2.toString())
                                 .equals(request.getPath())) {
                             return new MockResponse().setBody(READ_BID_FROM_AD_METADATA_JS);
-                        } else if ((BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS)
-                                .equals(request.getPath())) {
-                            return new MockResponse().setBody(TRUSTED_BIDDING_SIGNALS.toString());
+                        } else if (request.getPath().startsWith(BUYER_TRUSTED_SIGNAL_URI_PATH)) {
+                            String[] keys =
+                                    Uri.parse(request.getPath())
+                                            .getQueryParameter(
+                                                    DBTrustedBiddingData.QUERY_PARAM_KEYS)
+                                            .split(",");
+                            Map<String, String> jsonMap = new HashMap<>();
+                            for (String key : keys) {
+                                jsonMap.put(key, TRUSTED_BIDDING_SIGNALS_SERVER_DATA.get(key));
+                            }
+                            return new MockResponse().setBody(new JSONObject(jsonMap).toString());
                         }
 
                         // The seller params vary based on runtime, so we are returning trusted
@@ -1381,7 +1491,7 @@ public class AdSelectionE2ETest {
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         assertCallbackIsSuccessful(resultsCallback);
         assertEquals(
                 AD_URI_PREFIX + BUYER_2 + "/ad3",
@@ -1389,12 +1499,13 @@ public class AdSelectionE2ETest {
     }
 
     @Test
-    public void testRunAdSelectionBiddingTimesOutPartiallyBuyer() throws Exception {
+    public void testRunAdSelectionImposesPerBuyerBiddingTimeout() throws Exception {
         doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         Long lenientPerBuyerTimeOutLimit = 50000L;
         Long tightPerBuyerTimeOutLimit = 2000L;
+        int largeCACountForBuyer = 300;
 
         Flags flagsWithLenientBuyerBiddingLimits =
                 new Flags() {
@@ -1457,7 +1568,6 @@ public class AdSelectionE2ETest {
         participatingBuyers.add(BUYER_2);
         participatingBuyers.add(BUYER_3);
 
-        int largeCACountForBuyer = 300;
         for (int i = 1; i <= largeCACountForBuyer; i++) {
             DBCustomAudience dBCustomAudienceX =
                     createDBCustomAudience(
@@ -1507,7 +1617,7 @@ public class AdSelectionE2ETest {
                         mFledgeAllowListsFilterSpy);
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
 
         assertCallbackIsSuccessful(resultsCallback);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
@@ -1547,6 +1657,11 @@ public class AdSelectionE2ETest {
                     public long getAdSelectionOverallTimeoutMs() {
                         return lenientPerBuyerTimeOutLimit * 3;
                     }
+
+                    @Override
+                    public int getAdSelectionMaxConcurrentBiddingCount() {
+                        return 1;
+                    }
                 };
 
         // Create an instance of AdSelection Service with tight dependencies
@@ -1569,7 +1684,7 @@ public class AdSelectionE2ETest {
                         mFledgeAllowListsFilterSpy);
 
         resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
 
         assertCallbackIsSuccessful(resultsCallback);
         resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
@@ -1581,8 +1696,7 @@ public class AdSelectionE2ETest {
         int networkRequestCountWithTightTimeout =
                 server.getRequestCount() - networkRequestCountWithLenientTimeout;
 
-        Log.v(
-                TAG,
+        LogUtil.v(
                 String.format(
                         "Network calls with buyer timeout :%d, network calls with"
                                 + " lenient timeout :%d",
@@ -1667,9 +1781,17 @@ public class AdSelectionE2ETest {
                                 || (BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2.toString())
                                         .equals(request.getPath())) {
                             return new MockResponse().setBody(READ_BID_FROM_AD_METADATA_JS);
-                        } else if ((BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS)
-                                .equals(request.getPath())) {
-                            return new MockResponse().setBody(TRUSTED_BIDDING_SIGNALS.toString());
+                        } else if (request.getPath().startsWith(BUYER_TRUSTED_SIGNAL_URI_PATH)) {
+                            String[] keys =
+                                    Uri.parse(request.getPath())
+                                            .getQueryParameter(
+                                                    DBTrustedBiddingData.QUERY_PARAM_KEYS)
+                                            .split(",");
+                            Map<String, String> jsonMap = new HashMap<>();
+                            for (String key : keys) {
+                                jsonMap.put(key, TRUSTED_BIDDING_SIGNALS_SERVER_DATA.get(key));
+                            }
+                            return new MockResponse().setBody(new JSONObject(jsonMap).toString());
                         }
 
                         // The seller params vary based on runtime, so we are returning trusted
@@ -1708,7 +1830,7 @@ public class AdSelectionE2ETest {
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         Assert.assertFalse(resultsCallback.mIsSuccess);
 
         FledgeErrorResponse response = resultsCallback.mFledgeErrorResponse;
@@ -1762,8 +1884,7 @@ public class AdSelectionE2ETest {
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(
-                        mAdSelectionService, invalidAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, invalidAdSelectionConfig, CALLER_PACKAGE_NAME);
         runAdSelectionProcessLoggerLatch.await();
         loggerLatch.await();
         assertFalse(resultsCallback.mIsSuccess);
@@ -1836,7 +1957,7 @@ public class AdSelectionE2ETest {
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         assertCallbackFailed(resultsCallback);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(),
@@ -1860,9 +1981,17 @@ public class AdSelectionE2ETest {
                                 || (BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2.toString())
                                         .equals(request.getPath())) {
                             return new MockResponse().setBody(READ_BID_FROM_AD_METADATA_JS);
-                        } else if ((BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS)
-                                .equals(request.getPath())) {
-                            return new MockResponse().setBody(TRUSTED_BIDDING_SIGNALS.toString());
+                        } else if (request.getPath().startsWith(BUYER_TRUSTED_SIGNAL_URI_PATH)) {
+                            String[] keys =
+                                    Uri.parse(request.getPath())
+                                            .getQueryParameter(
+                                                    DBTrustedBiddingData.QUERY_PARAM_KEYS)
+                                            .split(",");
+                            Map<String, String> jsonMap = new HashMap<>();
+                            for (String key : keys) {
+                                jsonMap.put(key, TRUSTED_BIDDING_SIGNALS_SERVER_DATA.get(key));
+                            }
+                            return new MockResponse().setBody(new JSONObject(jsonMap).toString());
                         }
                         return new MockResponse().setResponseCode(404);
                     }
@@ -1892,7 +2021,7 @@ public class AdSelectionE2ETest {
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         assertCallbackFailed(resultsCallback);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(),
@@ -1917,9 +2046,17 @@ public class AdSelectionE2ETest {
                                 || (BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2.toString())
                                         .equals(request.getPath())) {
                             return new MockResponse().setBody(READ_BID_FROM_AD_METADATA_JS);
-                        } else if ((BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS)
-                                .equals(request.getPath())) {
-                            return new MockResponse().setBody(TRUSTED_BIDDING_SIGNALS.toString());
+                        } else if (request.getPath().startsWith(BUYER_TRUSTED_SIGNAL_URI_PATH)) {
+                            String[] keys =
+                                    Uri.parse(request.getPath())
+                                            .getQueryParameter(
+                                                    DBTrustedBiddingData.QUERY_PARAM_KEYS)
+                                            .split(",");
+                            Map<String, String> jsonMap = new HashMap<>();
+                            for (String key : keys) {
+                                jsonMap.put(key, TRUSTED_BIDDING_SIGNALS_SERVER_DATA.get(key));
+                            }
+                            return new MockResponse().setBody(new JSONObject(jsonMap).toString());
                         }
 
                         // The seller params vary based on runtime, so we are returning trusted
@@ -1959,7 +2096,7 @@ public class AdSelectionE2ETest {
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         assertCallbackIsSuccessful(resultsCallback);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
         assertTrue(mAdSelectionEntryDaoSpy.doesAdSelectionIdExist(resultSelectionId));
@@ -2016,7 +2153,7 @@ public class AdSelectionE2ETest {
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(
+                invokeSelectAds(
                         mAdSelectionService,
                         mAdSelectionConfig,
                         CALLER_PACKAGE_NAME + "invalidPackageName");
@@ -2104,7 +2241,7 @@ public class AdSelectionE2ETest {
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         runAdSelectionProcessLoggerLatch.await();
         loggerLatch.await();
         Assert.assertFalse(resultsCallback.mIsSuccess);
@@ -2207,7 +2344,7 @@ public class AdSelectionE2ETest {
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         runAdSelectionProcessLoggerLatch.await();
         loggerLatch.await();
         Assert.assertFalse(resultsCallback.mIsSuccess);
@@ -2337,12 +2474,12 @@ public class AdSelectionE2ETest {
 
         // First call to Ad Selection should succeed
         AdSelectionTestCallback resultsCallbackFirstCall =
-                invokeRunAdSelection(
+                invokeSelectAds(
                         adSelectionServiceWithThrottling, mAdSelectionConfig, CALLER_PACKAGE_NAME);
 
         // Immediately made subsequent call should fail
         AdSelectionTestCallback resultsCallbackSecondCall =
-                invokeRunAdSelection(
+                invokeSelectAds(
                         adSelectionServiceWithThrottling, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         runAdSelectionProcessLoggerLatch.await();
         loggerLatch.await();
@@ -2463,7 +2600,7 @@ public class AdSelectionE2ETest {
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         runAdSelectionProcessLoggerLatch.await();
         loggerLatch.await();
         assertCallbackIsSuccessful(resultsCallback);
@@ -2572,7 +2709,7 @@ public class AdSelectionE2ETest {
                 actualErrorMassage.contains(expectedErrorReason));
     }
 
-    private AdSelectionTestCallback invokeRunAdSelection(
+    private AdSelectionTestCallback invokeSelectAds(
             AdSelectionServiceImpl adSelectionService,
             AdSelectionConfig adSelectionConfig,
             String callerPackageName)

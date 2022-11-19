@@ -139,8 +139,6 @@ public class DebugReportingJobServiceTest {
                             mockContext, /* forceSchedule = */ false);
 
                     // Validate
-                    // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
                     ExtendedMockito.verify(
                             () -> DebugReportingJobService.schedule(any(), any()), never());
                     verify(mMockJobScheduler, never())
@@ -170,8 +168,6 @@ public class DebugReportingJobServiceTest {
                             mockContext, /* forceSchedule = */ false);
 
                     // Validate
-                    // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
                     ExtendedMockito.verify(
                             () -> DebugReportingJobService.schedule(any(), any()), never());
                     verify(mMockJobScheduler, times(1))
@@ -201,8 +197,6 @@ public class DebugReportingJobServiceTest {
                             mockContext, /* forceSchedule = */ true);
 
                     // Validate
-                    // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
                     ExtendedMockito.verify(
                             () -> DebugReportingJobService.schedule(any(), any()), times(1));
                     verify(mMockJobScheduler, times(1))
@@ -230,8 +224,6 @@ public class DebugReportingJobServiceTest {
                     DebugReportingJobService.scheduleIfNeeded(mockContext, false);
 
                     // Validate
-                    // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
                     ExtendedMockito.verify(
                             () -> DebugReportingJobService.schedule(any(), any()), times(1));
                     verify(mMockJobScheduler, times(1))

@@ -435,7 +435,7 @@ public class FledgeE2ETest {
 
         assertTrue(reportImpressionTestCallback.mIsSuccess);
         mMockWebServerRule.verifyMockServerRequests(
-                server, 0, Collections.emptyList(), mRequestMatcherPrefixMatch);
+                server, 0, ImmutableList.of(), mRequestMatcherPrefixMatch);
     }
 
     @Test
@@ -593,7 +593,7 @@ public class FledgeE2ETest {
 
         assertTrue(reportImpressionTestCallback.mIsSuccess);
         mMockWebServerRule.verifyMockServerRequests(
-                server, 0, Collections.emptyList(), mRequestMatcherPrefixMatch);
+                server, 0, ImmutableList.of(), mRequestMatcherPrefixMatch);
     }
 
     @Test
@@ -928,10 +928,6 @@ public class FledgeE2ETest {
                 invokeRunAdSelection(
                         mAdSelectionService, mAdSelectionConfig, CommonFixture.TEST_PACKAGE_NAME);
 
-        if (!resultsCallback.mIsSuccess) {
-            throw new RuntimeException(resultsCallback.mFledgeErrorResponse.getErrorMessage());
-        }
-
         assertTrue(resultsCallback.mIsSuccess);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
         assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
@@ -955,7 +951,7 @@ public class FledgeE2ETest {
 
         assertTrue(reportImpressionTestCallback.mIsSuccess);
         mMockWebServerRule.verifyMockServerRequests(
-                server, 0, Collections.emptyList(), mRequestMatcherPrefixMatch);
+                server, 0, ImmutableList.of(), mRequestMatcherPrefixMatch);
     }
 
     @Test
@@ -1175,9 +1171,6 @@ public class FledgeE2ETest {
                                 case BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_1:
                                 case BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_2:
                                     return new MockResponse().setBody(biddingLogicJs);
-                                case BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS:
-                                    return new MockResponse()
-                                            .setBody(TRUSTED_BIDDING_SIGNALS.toString());
                                 case SELLER_REPORTING_PATH: // Intentional fallthrough
                                 case BUYER_REPORTING_PATH:
                                     reportingResponseLatch.countDown();
@@ -1192,6 +1185,10 @@ public class FledgeE2ETest {
                                                     + SELLER_TRUSTED_SIGNAL_PARAMS)) {
                                 return new MockResponse()
                                         .setBody(TRUSTED_SCORING_SIGNALS.toString());
+                            }
+                            if (request.getPath().startsWith(BUYER_TRUSTED_SIGNAL_URI_PATH)) {
+                                return new MockResponse()
+                                        .setBody(TRUSTED_BIDDING_SIGNALS.toString());
                             }
                             return new MockResponse().setResponseCode(404);
                         });
@@ -1242,12 +1239,12 @@ public class FledgeE2ETest {
         reportingResponseLatch.await();
         mMockWebServerRule.verifyMockServerRequests(
                 server,
-                9,
+                8,
                 ImmutableList.of(
                         SELLER_DECISION_LOGIC_URI_PATH,
                         BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_1,
                         BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_2,
-                        BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS,
+                        BUYER_TRUSTED_SIGNAL_URI_PATH,
                         SELLER_TRUSTED_SIGNAL_URI_PATH + SELLER_TRUSTED_SIGNAL_PARAMS),
                 mRequestMatcherPrefixMatch);
     }
@@ -1333,9 +1330,6 @@ public class FledgeE2ETest {
                                 case BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_2:
                                     throw new IllegalStateException(
                                             "This should not be called without user consent");
-                                case BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS:
-                                    return new MockResponse()
-                                            .setBody(TRUSTED_BIDDING_SIGNALS.toString());
                                 case SELLER_REPORTING_PATH: // Intentional fallthrough
                                 case BUYER_REPORTING_PATH:
                                     reportingResponseLatch.countDown();
@@ -1350,6 +1344,10 @@ public class FledgeE2ETest {
                                                     + SELLER_TRUSTED_SIGNAL_PARAMS)) {
                                 return new MockResponse()
                                         .setBody(TRUSTED_SCORING_SIGNALS.toString());
+                            }
+                            if (request.getPath().startsWith(BUYER_TRUSTED_SIGNAL_URI_PATH)) {
+                                return new MockResponse()
+                                        .setBody(TRUSTED_BIDDING_SIGNALS.toString());
                             }
                             return new MockResponse().setResponseCode(404);
                         });
@@ -1400,7 +1398,7 @@ public class FledgeE2ETest {
                 ImmutableList.of(
                         SELLER_DECISION_LOGIC_URI_PATH,
                         BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_1,
-                        BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS,
+                        BUYER_TRUSTED_SIGNAL_URI_PATH,
                         SELLER_TRUSTED_SIGNAL_URI_PATH + SELLER_TRUSTED_SIGNAL_PARAMS),
                 mRequestMatcherPrefixMatch);
     }
@@ -1564,9 +1562,6 @@ public class FledgeE2ETest {
                                 case BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_1:
                                 case BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_2:
                                     return new MockResponse().setBody(biddingLogicJs);
-                                case BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS:
-                                    return new MockResponse()
-                                            .setBody(TRUSTED_BIDDING_SIGNALS.toString());
                                 case SELLER_REPORTING_PATH: // Intentional fallthrough
                                 case BUYER_REPORTING_PATH:
                                     reportingResponseLatch.countDown();
@@ -1581,6 +1576,10 @@ public class FledgeE2ETest {
                                                     + SELLER_TRUSTED_SIGNAL_PARAMS)) {
                                 return new MockResponse()
                                         .setBody(TRUSTED_SCORING_SIGNALS.toString());
+                            }
+                            if (request.getPath().startsWith(BUYER_TRUSTED_SIGNAL_URI_PATH)) {
+                                return new MockResponse()
+                                        .setBody(TRUSTED_BIDDING_SIGNALS.toString());
                             }
                             return new MockResponse().setResponseCode(404);
                         });
@@ -1633,11 +1632,11 @@ public class FledgeE2ETest {
         reportingResponseLatch.await();
         mMockWebServerRule.verifyMockServerRequests(
                 server,
-                9,
+                8,
                 ImmutableList.of(
                         SELLER_DECISION_LOGIC_URI_PATH,
                         BUYER_BIDDING_LOGIC_URI_PATH,
-                        BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS,
+                        BUYER_TRUSTED_SIGNAL_URI_PATH,
                         SELLER_TRUSTED_SIGNAL_URI_PATH + SELLER_TRUSTED_SIGNAL_PARAMS),
                 mRequestMatcherPrefixMatch);
     }
@@ -1710,9 +1709,6 @@ public class FledgeE2ETest {
                                     return new MockResponse().setBody(decisionLogicJs);
                                 case BUYER_BIDDING_LOGIC_URI_PATH:
                                     return new MockResponse().setBody(biddingLogicJs);
-                                case BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS:
-                                    return new MockResponse()
-                                            .setBody(TRUSTED_BIDDING_SIGNALS.toString());
                             }
 
                             // The seller params vary based on runtime, so we are returning trusted
@@ -1723,6 +1719,10 @@ public class FledgeE2ETest {
                                                     + SELLER_TRUSTED_SIGNAL_PARAMS)) {
                                 return new MockResponse()
                                         .setBody(TRUSTED_SCORING_SIGNALS.toString());
+                            }
+                            if (request.getPath().startsWith(BUYER_TRUSTED_SIGNAL_URI_PATH)) {
+                                return new MockResponse()
+                                        .setBody(TRUSTED_BIDDING_SIGNALS.toString());
                             }
                             return new MockResponse().setResponseCode(404);
                         });
@@ -1756,9 +1756,7 @@ public class FledgeE2ETest {
         mMockWebServerRule.verifyMockServerRequests(
                 server,
                 2,
-                ImmutableList.of(
-                        BUYER_BIDDING_LOGIC_URI_PATH,
-                        BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS),
+                ImmutableList.of(BUYER_BIDDING_LOGIC_URI_PATH, BUYER_TRUSTED_SIGNAL_URI_PATH),
                 mRequestMatcherPrefixMatch);
     }
 
