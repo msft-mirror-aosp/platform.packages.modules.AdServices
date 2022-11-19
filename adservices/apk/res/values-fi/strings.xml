@@ -81,6 +81,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Androidin mainosyksityisyyden betaohjelma tarjoaa uusia ominaisuuksia, joiden avulla sovellukset voivat näyttää mainoksia, joista saatat pitää. Nämä teknologiat eivät käytä laitetunnisteita.\n\nAndroid voi arvioida, millaisista mainoksista voisit olla kiinnostunut, ja tallentaa kiinnostuksen kohteet väliaikaisesti laitteellesi. Näin sovellukset voivat näyttää osuvia mainoksia seuraamatta toimintaasi verkkosivustoilla ja muiden kehittäjien sovelluksissa."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Sinulla ei ole estettyjä kiinnostuksen kohteita"</string>
+    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
+    <skip />
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Sovellukset voivat arvioida kiinnostuksen kohteitasi ja tallentaa ne väliaikaisesti Androidiin. Myöhemmin toinen sovellus voi näyttää sinulle kiinnostuksen kohteisiisi perustuvia mainoksia.\n\nJos estät sovelluksen, se ei enää arvioi kiinnostuksen kohteitasi. Sovellusta ei lisätä sovelluslistalle, ennen kuin kumoat eston. Sovelluksen aiemmin arvioimat kiinnostuksen kohteet poistetaan, muitta saatat yhä nähdä joitain siihen liittyviä mainoksia."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Estämäsi sovellukset"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Nollaa sovellusten arvioimat kiinnostuksen kohteet"</string>

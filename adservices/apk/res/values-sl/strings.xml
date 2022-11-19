@@ -81,6 +81,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Zasebni peskovnik"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Različica beta Androidove zasebnosti pri oglaševanju zagotavlja nove funkcije, s katerimi vam lahko aplikacije prikazujejo oglase, ki bi vam bili morda všeč. Te tehnologije ne uporabljajo identifikatorjev naprave.\n\nAndroid lahko predvidi, katere vrste oglasov bi vas morda zanimale, in ta zanimanja začasno shrani v vašo napravo. To aplikacijam omogoča, da vam prikazujejo ustrezne oglase, ne da bi spremljale vašo dejavnost na spletnih mestih in v aplikacijah drugih razvijalcev."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Nimate blokiranih zanimanj."</string>
+    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
+    <skip />
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Aplikacije lahko predvidijo vaša zanimanja in jih začasno shranijo v Android. Pozneje vam druga aplikacija lahko prikaže oglas na podlagi teh zanimanj.\n\nČe blokirate aplikacijo, ne bo predvidela nobenega zanimanja več. Aplikacija ne bo več dodana na ta seznam aplikacij, razen če jo odblokirate. Zanimanja, ki jih je aplikacija že predvidela, bodo izbrisana, vendar boste morda še vedno videli nekaj z njimi povezanih oglasov."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Blokirane aplikacije"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Ponastavi zanimanja, ki so jih predvidele aplikacije"</string>
