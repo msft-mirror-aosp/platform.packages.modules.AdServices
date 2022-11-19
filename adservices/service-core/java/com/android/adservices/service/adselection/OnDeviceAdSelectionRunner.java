@@ -16,8 +16,9 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+
 import android.adservices.adselection.AdSelectionConfig;
-import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
@@ -118,7 +119,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                         mAdServicesHttpsClient,
                         devContext,
                         mAdSelectionEntryDao,
-                        flags);
+                        flags,
+                        adSelectionExecutionLogger);
         mPerBuyerBiddingRunner =
                 new PerBuyerBiddingRunner(
                         new AdBidGeneratorImpl(
@@ -258,10 +260,11 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                     .transform(this::endSuccessfulBidding, mLightweightExecutorService)
                     .catching(
                             RuntimeException.class,
-                            this::endFailedBidding,
+                            this::endFailedBiddingWithRuntimeException,
                             mLightweightExecutorService);
-        } catch (RuntimeException e) {
-            endFailedBidding(e);
+        } catch (Exception e) {
+            mAdSelectionExecutionLogger.endBiddingProcess(
+                    null, AdServicesLoggerUtil.getResultCodeFromException(e));
             throw e;
         }
     }
@@ -269,7 +272,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
     @NonNull
     private List<AdBiddingOutcome> endSuccessfulBidding(@NonNull List<AdBiddingOutcome> result) {
         Objects.requireNonNull(result);
-        mAdSelectionExecutionLogger.endBiddingProcess(result, AdServicesStatusUtils.STATUS_SUCCESS);
+        mAdSelectionExecutionLogger.endBiddingProcess(result, STATUS_SUCCESS);
         return result;
     }
 
@@ -279,7 +282,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
     }
 
     @Nullable
-    private List<AdBiddingOutcome> endFailedBidding(RuntimeException e) {
+    private List<AdBiddingOutcome> endFailedBiddingWithRuntimeException(RuntimeException e) {
         mAdSelectionExecutionLogger.endBiddingProcess(
                 null, AdServicesLoggerUtil.getResultCodeFromException(e));
         throw e;
