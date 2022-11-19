@@ -16,6 +16,7 @@
 
 package com.android.server.adservices.consent;
 
+import static com.android.server.adservices.consent.ConsentManager.NOTIFICATION_DISPLAYED_ONCE;
 import static com.android.server.adservices.consent.ConsentManager.STORAGE_VERSION;
 import static com.android.server.adservices.consent.ConsentManager.STORAGE_XML_IDENTIFIER;
 
@@ -27,6 +28,7 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -50,13 +52,13 @@ public class ConsentManagerTest {
 
     @After
     public void tearDown() {
-        mDatastore.delete();
+        mDatastore.tearDownForTesting();
     }
 
     @Test
     public void testGetConsentDataStoreDir() {
         // The Data store is in folder with the following format.
-        // /data/system/adservices/consent/user_id/data_schema_version/
+        // /data/system/adservices/user_id/consent/data_schema_version/
         assertThat(
                         ConsentManager.getConsentDataStoreDir(
                                 /* baseDir */ "/data/system/adservices", /* userIdentifier */ 0))
@@ -65,6 +67,20 @@ public class ConsentManagerTest {
                         ConsentManager.getConsentDataStoreDir(
                                 /* baseDir */ "/data/system/adservices", /* userIdentifier */ 1))
                 .isEqualTo("/data/system/adservices/1/consent/1");
+    }
+
+    @Test
+    public void testCreateAndInitBooleanFileDatastore() {
+        BooleanFileDatastore datastore = null;
+        try {
+            datastore = ConsentManager.createAndInitBooleanFileDatastore(BASE_DIR);
+        } catch (IOException e) {
+            Assert.fail("Fail to create the DataStore");
+        }
+
+        // Assert that the DataStore is created and initialized with NOTIFICATION_DISPLAYED_ONCE
+        // is false.
+        assertThat(datastore.get(NOTIFICATION_DISPLAYED_ONCE)).isFalse();
     }
 
     @Test

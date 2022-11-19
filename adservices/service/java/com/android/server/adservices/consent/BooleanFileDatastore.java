@@ -361,10 +361,11 @@ public class BooleanFileDatastore {
     }
 
     @VisibleForTesting
-    void delete() {
+    void tearDownForTesting() {
         mWriteLock.lock();
         try {
             mAtomicFile.delete();
+            mLocalMap.clear();
         } finally {
             mWriteLock.unlock();
         }

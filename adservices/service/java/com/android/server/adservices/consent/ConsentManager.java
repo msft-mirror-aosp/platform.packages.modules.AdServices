@@ -40,7 +40,10 @@ public final class ConsentManager {
 
     public static final String ERROR_MESSAGE_DATASTORE_EXCEPTION_WHILE_GET_CONTENT =
             "getConsent method failed. Revoked consent is returned as fallback.";
-    private static final String NOTIFICATION_DISPLAYED_ONCE = "NOTIFICATION-DISPLAYED-ONCE";
+
+    @VisibleForTesting
+    static final String NOTIFICATION_DISPLAYED_ONCE = "NOTIFICATION-DISPLAYED-ONCE";
+
     private static final String CONSENT_KEY = "CONSENT";
 
     // Deprecate this since we store each version in its own folder.
@@ -138,6 +141,6 @@ public final class ConsentManager {
     /** tearDown method used for Testing only. */
     @VisibleForTesting
     public void tearDownForTesting() {
-        mDatastore.delete();
+        mDatastore.tearDownForTesting();
     }
 }
