@@ -52,10 +52,11 @@ import java.util.stream.Collectors;
  *
  * <p>Keys must be non-null, non-empty strings, and values must be booleans.
  *
+ * @threadsafe
  * @hide
  */
 public class BooleanFileDatastore {
-    public static final String VERSION_KEY = "app.android.adservices.consent.VERSION";
+    public static final String VERSION_KEY = "android.app.adservices.consent.VERSION";
     private final int mDatastoreVersion;
 
     private final ReadWriteLock mReadWriteLock = new ReentrantReadWriteLock();
