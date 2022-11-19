@@ -54,7 +54,7 @@ public class BooleanFileDatastoreTest {
 
     @After
     public void cleanup() {
-        mDatastore.delete();
+        mDatastore.tearDownForTesting();
     }
 
     @Test

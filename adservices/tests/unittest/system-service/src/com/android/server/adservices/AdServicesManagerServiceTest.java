@@ -42,6 +42,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -89,6 +90,12 @@ public class AdServicesManagerServiceTest {
                 .adoptShellPermissionIdentity(Manifest.permission.INTERACT_ACROSS_USERS_FULL);
 
         doReturn(mMockPackageManager).when(mSpyContext).getPackageManager();
+    }
+
+    @After
+    public void tearDown() {
+        // We need tear down this instance since it can have underlying persisted Data Store.
+        mUserInstanceManager.tearDownForTesting();
     }
 
     @Test
