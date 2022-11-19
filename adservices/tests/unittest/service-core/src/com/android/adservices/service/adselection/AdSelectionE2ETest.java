@@ -17,8 +17,10 @@
 package com.android.adservices.service.adselection;
 
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 
@@ -43,6 +45,8 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.isA;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.mock;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
@@ -102,6 +106,8 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.RunAdBiddingProcessReportedStats;
+import com.android.adservices.service.stats.RunAdScoringProcessReportedStats;
 import com.android.adservices.service.stats.RunAdSelectionProcessReportedStats;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -397,9 +403,22 @@ public class AdSelectionE2ETest {
     public void testRunAdSelectionSuccess() throws Exception {
         doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-
         // Logger calls come after the callback is returned
-        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(1);
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(any());
         doAnswer(
                         unusedInvocation -> {
                             runAdSelectionProcessLoggerLatch.countDown();
@@ -449,6 +468,10 @@ public class AdSelectionE2ETest {
         assertEquals(
                 AD_URI_PREFIX + BUYER_2 + "/ad3",
                 resultsCallback.mAdSelectionResponse.getRenderUri().toString());
+        verify(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(isA(RunAdBiddingProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(isA(RunAdScoringProcessReportedStats.class));
         verify(mAdServicesLoggerMock)
                 .logRunAdSelectionProcessReportedStats(
                         isA(RunAdSelectionProcessReportedStats.class));
@@ -529,6 +552,37 @@ public class AdSelectionE2ETest {
     public void testRunAdSelectionMultipleCAsSuccess() throws Exception {
         doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+        // Logger calls come after the callback is returned
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(any());
+        CountDownLatch loggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            loggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
 
         mMockWebServerRule.startMockWebServer(mDispatcher);
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
@@ -590,20 +644,63 @@ public class AdSelectionE2ETest {
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
-
+        runAdSelectionProcessLoggerLatch.await();
+        loggerLatch.await();
         assertCallbackIsSuccessful(resultsCallback);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
         assertTrue(mAdSelectionEntryDaoSpy.doesAdSelectionIdExist(resultSelectionId));
         assertEquals(
                 AD_URI_PREFIX + BUYER_2 + "/ad3",
                 resultsCallback.mAdSelectionResponse.getRenderUri().toString());
+        verify(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(isA(RunAdBiddingProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(isA(RunAdScoringProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(
+                        isA(RunAdSelectionProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(STATUS_SUCCESS),
+                        geq((int) BINDER_ELAPSED_TIME_MS));
     }
 
     @Test
     public void testRunAdSelectionSucceedsWithOverride() throws Exception {
         doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-
+        // Logger calls come after the callback is returned
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(any());
+        CountDownLatch loggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            loggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
 
@@ -680,20 +777,63 @@ public class AdSelectionE2ETest {
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
-
+        runAdSelectionProcessLoggerLatch.await();
+        loggerLatch.await();
         assertCallbackIsSuccessful(resultsCallback);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
         assertTrue(mAdSelectionEntryDaoSpy.doesAdSelectionIdExist(resultSelectionId));
         assertEquals(
                 AD_URI_PREFIX + BUYER_2 + "/ad3",
                 resultsCallback.mAdSelectionResponse.getRenderUri().toString());
+        verify(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(isA(RunAdBiddingProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(isA(RunAdScoringProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(
+                        isA(RunAdSelectionProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(STATUS_SUCCESS),
+                        geq((int) BINDER_ELAPSED_TIME_MS));
     }
 
     @Test
     public void testRunAdSelectionActiveCAs() throws Exception {
         doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-
+        // Logger calls come after the callback is returned
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(any());
+        CountDownLatch loggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            loggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
         mMockWebServerRule.startMockWebServer(mDispatcher);
         List<Double> bidsForBuyer1 = ImmutableList.of(0.9, 0.45);
         List<Double> bidsForBuyer2 = ImmutableList.of(1.1, 2.2);
@@ -733,19 +873,56 @@ public class AdSelectionE2ETest {
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_3));
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+        runAdSelectionProcessLoggerLatch.await();
+        loggerLatch.await();
         assertCallbackIsSuccessful(resultsCallback);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
         assertTrue(mAdSelectionEntryDaoSpy.doesAdSelectionIdExist(resultSelectionId));
         assertEquals(
                 AD_URI_PREFIX + BUYER_1 + "/ad1",
                 resultsCallback.mAdSelectionResponse.getRenderUri().toString());
+        verify(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(isA(RunAdBiddingProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(isA(RunAdScoringProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(
+                        isA(RunAdSelectionProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(STATUS_SUCCESS),
+                        geq((int) BINDER_ELAPSED_TIME_MS));
     }
 
     @Test
     public void testRunAdSelectionNoCAsActive() throws Exception {
         doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-
+        // Logger calls come after the callback is returned
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(2);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(any());
+        CountDownLatch loggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            loggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
         mMockWebServerRule.startMockWebServer(mDispatcher);
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
@@ -792,10 +969,10 @@ public class AdSelectionE2ETest {
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+        runAdSelectionProcessLoggerLatch.await();
+        loggerLatch.await();
         assertCallbackFailed(resultsCallback);
-        assertEquals(
-                resultsCallback.mFledgeErrorResponse.getStatusCode(),
-                AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
+        assertEquals(resultsCallback.mFledgeErrorResponse.getStatusCode(), STATUS_INTERNAL_ERROR);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(),
                 String.format(
@@ -803,25 +980,88 @@ public class AdSelectionE2ETest {
                         AdSelectionRunner.AD_SELECTION_ERROR_PATTERN,
                         AdSelectionRunner.ERROR_AD_SELECTION_FAILURE,
                         AdSelectionRunner.ERROR_NO_CA_AVAILABLE));
+        verify(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(isA(RunAdBiddingProcessReportedStats.class));
+        verify(mAdServicesLoggerMock, never()).logRunAdScoringProcessReportedStats(any());
+        verify(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(
+                        isA(RunAdSelectionProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(STATUS_INTERNAL_ERROR),
+                        geq((int) BINDER_ELAPSED_TIME_MS));
     }
 
     @Test
     public void testRunAdSelectionNoCAsFailure() throws Exception {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-
+        // Logger calls come after the callback is returned
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(2);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(any());
+        CountDownLatch loggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            loggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
         // Do not populate CustomAudience DAO
         mMockWebServerRule.startMockWebServer(mDispatcher);
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+        runAdSelectionProcessLoggerLatch.await();
+        loggerLatch.await();
         assertCallbackFailed(resultsCallback);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(), ERROR_NO_CA_AVAILABLE);
+        verify(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(isA(RunAdBiddingProcessReportedStats.class));
+        verify(mAdServicesLoggerMock, never()).logRunAdScoringProcessReportedStats(any());
+        verify(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(
+                        isA(RunAdSelectionProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(STATUS_INTERNAL_ERROR),
+                        geq((int) BINDER_ELAPSED_TIME_MS));
     }
 
     @Test
     public void testRunAdSelectionNoBuyersFailure() throws Exception {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-
+        // Logger calls come after the callback is returned
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(any());
+        CountDownLatch loggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            loggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
         // Do not populate buyers in AdSelectionConfig
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
@@ -840,16 +1080,58 @@ public class AdSelectionE2ETest {
         mMockWebServerRule.startMockWebServer(mDispatcher);
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+        runAdSelectionProcessLoggerLatch.await();
+        loggerLatch.await();
         assertCallbackFailed(resultsCallback);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(), ERROR_NO_BUYERS_AVAILABLE);
+        verify(mAdServicesLoggerMock, never()).logRunAdScoringProcessReportedStats(any());
+        verify(mAdServicesLoggerMock, never()).logRunAdBiddingProcessReportedStats(any());
+        verify(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(
+                        isA(RunAdSelectionProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(STATUS_INVALID_ARGUMENT),
+                        geq((int) BINDER_ELAPSED_TIME_MS));
     }
 
     @Test
     public void testRunAdSelectionPartialAdsExcludedBidding() throws Exception {
         doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-
+        // Logger calls come after the callback is returned
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(any());
+        CountDownLatch loggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            loggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
         mMockWebServerRule.startMockWebServer(mDispatcher);
         // Setting bids which are partially non-positive
         List<Double> bidsForBuyer1 = ImmutableList.of(-1.1, 2.2);
@@ -876,12 +1158,26 @@ public class AdSelectionE2ETest {
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+        runAdSelectionProcessLoggerLatch.await();
+        loggerLatch.await();
         assertCallbackIsSuccessful(resultsCallback);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
         assertTrue(mAdSelectionEntryDaoSpy.doesAdSelectionIdExist(resultSelectionId));
         assertEquals(
                 AD_URI_PREFIX + BUYER_1 + "/ad2",
                 resultsCallback.mAdSelectionResponse.getRenderUri().toString());
+        verify(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(isA(RunAdBiddingProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(isA(RunAdScoringProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(
+                        isA(RunAdSelectionProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(STATUS_SUCCESS),
+                        geq((int) BINDER_ELAPSED_TIME_MS));
     }
 
     private void assertCallbackIsSuccessful(AdSelectionTestCallback resultsCallback) {
@@ -905,7 +1201,30 @@ public class AdSelectionE2ETest {
     public void testRunAdSelectionMissingBiddingLogicFailure() throws Exception {
         doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-
+        // Logger calls come after the callback is returned
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(2);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(any());
+        CountDownLatch loggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            loggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
         // Setting bids->scores
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
@@ -970,17 +1289,60 @@ public class AdSelectionE2ETest {
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+        runAdSelectionProcessLoggerLatch.await();
+        loggerLatch.await();
         assertCallbackFailed(resultsCallback);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(),
                 ERROR_NO_VALID_BIDS_FOR_SCORING);
+        verify(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(isA(RunAdBiddingProcessReportedStats.class));
+        verify(mAdServicesLoggerMock, never()).logRunAdScoringProcessReportedStats(any());
+        verify(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(
+                        isA(RunAdSelectionProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(STATUS_INTERNAL_ERROR),
+                        geq((int) BINDER_ELAPSED_TIME_MS));
     }
 
     @Test
     public void testRunAdSelectionMissingScoringLogicFailure() throws Exception {
         doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-
+        // Logger calls come after the callback is returned
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(any());
+        CountDownLatch loggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            loggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
         // Setting bids->scores
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
@@ -1045,17 +1407,61 @@ public class AdSelectionE2ETest {
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+        runAdSelectionProcessLoggerLatch.await();
+        loggerLatch.await();
         assertCallbackFailed(resultsCallback);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(),
                 ERROR_SCORE_AD_LOGIC_MISSING);
+        verify(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(isA(RunAdBiddingProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(isA(RunAdScoringProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(
+                        isA(RunAdSelectionProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(STATUS_INTERNAL_ERROR),
+                        geq((int) BINDER_ELAPSED_TIME_MS));
     }
 
     @Test
     public void testRunAdSelectionErrorFetchingScoringLogicFailure() throws Exception {
         doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-
+        // Logger calls come after the callback is returned
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(any());
+        CountDownLatch loggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            loggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
         // Setting bids->scores
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
@@ -1120,16 +1526,60 @@ public class AdSelectionE2ETest {
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+        runAdSelectionProcessLoggerLatch.await();
+        loggerLatch.await();
         assertCallbackFailed(resultsCallback);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(), MISSING_SCORING_LOGIC);
+        verify(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(isA(RunAdBiddingProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(isA(RunAdScoringProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(
+                        isA(RunAdSelectionProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(STATUS_INTERNAL_ERROR),
+                        geq((int) BINDER_ELAPSED_TIME_MS));
     }
 
     @Test
     public void testRunAdSelectionPartialMissingBiddingLogic() throws Exception {
         doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-
+        // Logger calls come after the callback is returned
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(any());
+        CountDownLatch loggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            loggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
         // Setting bids->scores
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
@@ -1195,19 +1645,63 @@ public class AdSelectionE2ETest {
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+        runAdSelectionProcessLoggerLatch.await();
+        loggerLatch.await();
         assertCallbackIsSuccessful(resultsCallback);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
         assertTrue(mAdSelectionEntryDaoSpy.doesAdSelectionIdExist(resultSelectionId));
         assertEquals(
                 AD_URI_PREFIX + BUYER_1 + "/ad2",
                 resultsCallback.mAdSelectionResponse.getRenderUri().toString());
+        verify(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(isA(RunAdBiddingProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(isA(RunAdScoringProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(
+                        isA(RunAdSelectionProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(STATUS_SUCCESS),
+                        geq((int) BINDER_ELAPSED_TIME_MS));
     }
 
     @Test
     public void testRunAdSelectionPartialNonPositiveScoring() throws Exception {
         doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-
+        // Logger calls come after the callback is returned
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(any());
+        CountDownLatch loggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            loggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
         // Setting bids, in this case the odd bids will be made negative by scoring logic
         List<Double> bidsForBuyer1 = ImmutableList.of(1.0, 2.0);
         List<Double> bidsForBuyer2 = ImmutableList.of(3.0, 5.0, 7.0);
@@ -1279,19 +1773,63 @@ public class AdSelectionE2ETest {
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+        runAdSelectionProcessLoggerLatch.await();
+        loggerLatch.await();
         assertCallbackIsSuccessful(resultsCallback);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
         assertTrue(mAdSelectionEntryDaoSpy.doesAdSelectionIdExist(resultSelectionId));
         assertEquals(
                 AD_URI_PREFIX + BUYER_1 + "/ad2",
                 resultsCallback.mAdSelectionResponse.getRenderUri().toString());
+        verify(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(isA(RunAdBiddingProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(isA(RunAdScoringProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(
+                        isA(RunAdSelectionProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(STATUS_SUCCESS),
+                        geq((int) BINDER_ELAPSED_TIME_MS));
     }
 
     @Test
     public void testRunAdSelectionNonPositiveScoringFailure() throws Exception {
         doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-
+        // Logger calls come after the callback is returned
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(any());
+        CountDownLatch loggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            loggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
         // Setting bids, in this case the odd bids will be made negative by scoring logic
         List<Double> bidsForBuyer1 = ImmutableList.of(1.0, 9.0);
         List<Double> bidsForBuyer2 = ImmutableList.of(3.0, 5.0, 7.0);
@@ -1363,16 +1901,60 @@ public class AdSelectionE2ETest {
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+        runAdSelectionProcessLoggerLatch.await();
+        loggerLatch.await();
         assertCallbackFailed(resultsCallback);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(), ERROR_NO_WINNING_AD_FOUND);
+        verify(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(isA(RunAdBiddingProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(isA(RunAdScoringProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(
+                        isA(RunAdSelectionProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(STATUS_INTERNAL_ERROR),
+                        geq((int) BINDER_ELAPSED_TIME_MS));
     }
 
     @Test
     public void testRunAdSelectionBiddingTimesOutForCA() throws Exception {
         doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-
+        // Logger calls come after the callback is returned
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(any());
+        CountDownLatch loggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            loggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
         Flags flagsWithSmallerLimits =
                 new Flags() {
                     @Override
@@ -1492,17 +2074,61 @@ public class AdSelectionE2ETest {
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+        runAdSelectionProcessLoggerLatch.await();
+        loggerLatch.await();
         assertCallbackIsSuccessful(resultsCallback);
         assertEquals(
                 AD_URI_PREFIX + BUYER_2 + "/ad3",
                 resultsCallback.mAdSelectionResponse.getRenderUri().toString());
+        verify(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(isA(RunAdBiddingProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(isA(RunAdScoringProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(
+                        isA(RunAdSelectionProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(STATUS_SUCCESS),
+                        geq((int) BINDER_ELAPSED_TIME_MS));
     }
 
     @Test
     public void testRunAdSelectionImposesPerBuyerBiddingTimeout() throws Exception {
         doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-
+        // Logger calls come after the callback is returned
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(6);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(any());
+        CountDownLatch loggerLatch = new CountDownLatch(2);
+        doAnswer(
+                        unusedInvocation -> {
+                            loggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
         Long lenientPerBuyerTimeOutLimit = 50000L;
         Long tightPerBuyerTimeOutLimit = 2000L;
         int largeCACountForBuyer = 300;
@@ -1685,7 +2311,8 @@ public class AdSelectionE2ETest {
 
         resultsCallback =
                 invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
-
+        runAdSelectionProcessLoggerLatch.await();
+        loggerLatch.await();
         assertCallbackIsSuccessful(resultsCallback);
         resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
         assertTrue(mAdSelectionEntryDaoSpy.doesAdSelectionIdExist(resultSelectionId));
@@ -1708,13 +2335,55 @@ public class AdSelectionE2ETest {
                                 + " lenient timeout :%d",
                         networkRequestCountWithTightTimeout, networkRequestCountWithLenientTimeout),
                 networkRequestCountWithTightTimeout < networkRequestCountWithLenientTimeout);
+        verify(mAdServicesLoggerMock, times(2))
+                .logRunAdBiddingProcessReportedStats(isA(RunAdBiddingProcessReportedStats.class));
+        verify(mAdServicesLoggerMock, times(2))
+                .logRunAdScoringProcessReportedStats(isA(RunAdScoringProcessReportedStats.class));
+        verify(mAdServicesLoggerMock, times(2))
+                .logRunAdSelectionProcessReportedStats(
+                        isA(RunAdSelectionProcessReportedStats.class));
+        verify(mAdServicesLoggerMock, times(2))
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(STATUS_SUCCESS),
+                        geq((int) BINDER_ELAPSED_TIME_MS));
     }
 
     @Test
     public void testRunAdSelectionScoringTimesOut() throws Exception {
         doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-
+        // Logger calls come after the callback is returned
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(any());
+        CountDownLatch loggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            loggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
         Flags flagsWithSmallerLimits =
                 new Flags() {
                     @Override
@@ -1831,6 +2500,8 @@ public class AdSelectionE2ETest {
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+        runAdSelectionProcessLoggerLatch.await();
+        loggerLatch.await();
         Assert.assertFalse(resultsCallback.mIsSuccess);
 
         FledgeErrorResponse response = resultsCallback.mFledgeErrorResponse;
@@ -1839,6 +2510,18 @@ public class AdSelectionE2ETest {
                 "Error response code mismatch",
                 AdServicesStatusUtils.STATUS_TIMEOUT,
                 response.getStatusCode());
+        verify(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(isA(RunAdBiddingProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(isA(RunAdScoringProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(
+                        isA(RunAdSelectionProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(STATUS_TIMEOUT),
+                        geq((int) BINDER_ELAPSED_TIME_MS));
     }
 
     @Test
@@ -1906,7 +2589,30 @@ public class AdSelectionE2ETest {
     public void testRunAdSelectionMissingBiddingSignalsFailure() throws Exception {
         doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-
+        // Logger calls come after the callback is returned
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(2);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(any());
+        CountDownLatch loggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            loggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
         // Create a dispatcher without buyer trusted Signal end point
         Dispatcher missingBiddingSignalsDispatcher =
                 new Dispatcher() {
@@ -1958,17 +2664,60 @@ public class AdSelectionE2ETest {
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+        runAdSelectionProcessLoggerLatch.await();
+        loggerLatch.await();
         assertCallbackFailed(resultsCallback);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(),
                 ERROR_NO_VALID_BIDS_FOR_SCORING);
+        verify(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(isA(RunAdBiddingProcessReportedStats.class));
+        verify(mAdServicesLoggerMock, never()).logRunAdScoringProcessReportedStats(any());
+        verify(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(
+                        isA(RunAdSelectionProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(STATUS_INTERNAL_ERROR),
+                        geq((int) BINDER_ELAPSED_TIME_MS));
     }
 
     @Test
     public void testRunAdSelectionMissingScoringSignalsFailure() throws Exception {
         doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-
+        // Logger calls come after the callback is returned
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(any());
+        CountDownLatch loggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            loggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
         // Create a dispatcher without buyer trusted Signal end point
         Dispatcher missingScoringSignalsDispatcher =
                 new Dispatcher() {
@@ -2022,17 +2771,61 @@ public class AdSelectionE2ETest {
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+        runAdSelectionProcessLoggerLatch.await();
+        loggerLatch.await();
         assertCallbackFailed(resultsCallback);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(),
                 MISSING_TRUSTED_SCORING_SIGNALS);
+        verify(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(isA(RunAdBiddingProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(isA(RunAdScoringProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(
+                        isA(RunAdSelectionProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(STATUS_INTERNAL_ERROR),
+                        geq((int) BINDER_ELAPSED_TIME_MS));
     }
 
     @Test
     public void testRunAdSelectionMissingPartialBiddingSignalsSuccess() throws Exception {
         doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-
+        // Logger calls come after the callback is returned
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(any());
+        CountDownLatch loggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            loggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
         // Create a dispatcher with valid end points
         Dispatcher missingBiddingSignalsDispatcher =
                 new Dispatcher() {
@@ -2097,6 +2890,8 @@ public class AdSelectionE2ETest {
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+        runAdSelectionProcessLoggerLatch.await();
+        loggerLatch.await();
         assertCallbackIsSuccessful(resultsCallback);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
         assertTrue(mAdSelectionEntryDaoSpy.doesAdSelectionIdExist(resultSelectionId));
@@ -2104,13 +2899,24 @@ public class AdSelectionE2ETest {
         assertEquals(
                 AD_URI_PREFIX + BUYER_1 + "/ad2",
                 resultsCallback.mAdSelectionResponse.getRenderUri().toString());
+        verify(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(isA(RunAdBiddingProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(isA(RunAdScoringProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(
+                        isA(RunAdSelectionProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(STATUS_SUCCESS),
+                        geq((int) BINDER_ELAPSED_TIME_MS));
     }
 
     @Test
     public void testRunAdSelectionFailsWithInvalidPackageName() throws Exception {
         doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(1);
         doAnswer(
@@ -2559,7 +3365,21 @@ public class AdSelectionE2ETest {
                         mFledgeAllowListsFilterSpy);
 
         // Logger calls come after the callback is returned
-        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(1);
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(any());
         doAnswer(
                         unusedInvocation -> {
                             runAdSelectionProcessLoggerLatch.countDown();
@@ -2609,6 +3429,10 @@ public class AdSelectionE2ETest {
         assertEquals(
                 AD_URI_PREFIX + BUYER_2 + "/ad3",
                 resultsCallback.mAdSelectionResponse.getRenderUri().toString());
+        verify(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(isA(RunAdBiddingProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(isA(RunAdScoringProcessReportedStats.class));
         verify(mAdServicesLoggerMock)
                 .logRunAdSelectionProcessReportedStats(
                         isA(RunAdSelectionProcessReportedStats.class));

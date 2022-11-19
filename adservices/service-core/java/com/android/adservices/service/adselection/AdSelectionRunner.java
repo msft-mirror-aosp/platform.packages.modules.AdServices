@@ -17,6 +17,7 @@
 package com.android.adservices.service.adselection;
 
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_SELECT_ADS;
+import static com.android.adservices.service.stats.AdServicesLoggerUtil.getResultCodeFromException;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
 
 import android.adservices.adselection.AdSelectionCallback;
@@ -480,43 +481,34 @@ public abstract class AdSelectionRunner {
     private ListenableFuture<List<DBCustomAudience>> getBuyersCustomAudience(
             final AdSelectionConfig adSelectionConfig) {
         final int traceCookie = Tracing.beginAsyncSection(Tracing.GET_BUYERS_CUSTOM_AUDIENCE);
-        try {
-            return mBackgroundExecutorService.submit(
-                    () -> {
-                        Preconditions.checkArgument(
-                                !adSelectionConfig.getCustomAudienceBuyers().isEmpty(),
-                                ERROR_NO_BUYERS_AVAILABLE);
-                        // Set start of bidding stage.
-                        mAdSelectionExecutionLogger.startBiddingProcess(
-                                countBuyersRequested(adSelectionConfig));
-                        List<DBCustomAudience> buyerCustomAudience =
-                                mCustomAudienceDao.getActiveCustomAudienceByBuyers(
-                                        adSelectionConfig.getCustomAudienceBuyers(),
-                                        mClock.instant(),
-                                        mFlags.getFledgeCustomAudienceActiveTimeWindowInMs());
-                        if (buyerCustomAudience == null || buyerCustomAudience.isEmpty()) {
-                            // TODO(b/233296309) : Remove this exception after adding contextual
-                            // ads
-                            IllegalStateException e =
-                                    new IllegalStateException(ERROR_NO_CA_AVAILABLE);
-                            // Set end of the bidding stage.
-                            mAdSelectionExecutionLogger.endBiddingProcess(
-                                    null, AdServicesLoggerUtil.getResultCodeFromException(e));
-                            throw e;
-                        }
-                        // end successful get-buyers-custom-audience process.
-                        mAdSelectionExecutionLogger.endGetBuyersCustomAudience(
-                                countBuyersFromCustomAudiences(buyerCustomAudience));
-                        Tracing.endAsyncSection(Tracing.GET_BUYERS_CUSTOM_AUDIENCE, traceCookie);
-                        return buyerCustomAudience;
-                    });
-        } catch (Exception e) {
-            // Bidding stage fails early during fetching buyers custom audience.
-            mAdSelectionExecutionLogger.endBiddingProcess(
-                    null, AdServicesLoggerUtil.getResultCodeFromException(e));
-            Tracing.endAsyncSection(Tracing.GET_BUYERS_CUSTOM_AUDIENCE, traceCookie);
-            throw e;
-        }
+        return mBackgroundExecutorService.submit(
+                () -> {
+                    Preconditions.checkArgument(
+                            !adSelectionConfig.getCustomAudienceBuyers().isEmpty(),
+                            ERROR_NO_BUYERS_AVAILABLE);
+                    // Set start of bidding stage.
+                    mAdSelectionExecutionLogger.startBiddingProcess(
+                            countBuyersRequested(adSelectionConfig));
+                    List<DBCustomAudience> buyerCustomAudience =
+                            mCustomAudienceDao.getActiveCustomAudienceByBuyers(
+                                    adSelectionConfig.getCustomAudienceBuyers(),
+                                    mClock.instant(),
+                                    mFlags.getFledgeCustomAudienceActiveTimeWindowInMs());
+                    if (buyerCustomAudience == null || buyerCustomAudience.isEmpty()) {
+                        // TODO(b/233296309) : Remove this exception after adding contextual
+                        // ads
+                        IllegalStateException exception =
+                                new IllegalStateException(ERROR_NO_CA_AVAILABLE);
+                        mAdSelectionExecutionLogger.endBiddingProcess(
+                                null, getResultCodeFromException(exception));
+                        throw exception;
+                    }
+                    // end a successful get-buyers-custom-audience process.
+                    mAdSelectionExecutionLogger.endGetBuyersCustomAudience(
+                            countBuyersFromCustomAudiences(buyerCustomAudience));
+                    Tracing.endAsyncSection(Tracing.GET_BUYERS_CUSTOM_AUDIENCE, traceCookie);
+                    return buyerCustomAudience;
+                });
     }
 
     private int countBuyersRequested(@NonNull AdSelectionConfig adSelectionConfig) {
