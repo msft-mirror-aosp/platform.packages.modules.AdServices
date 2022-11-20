@@ -386,7 +386,6 @@ public class AdSelectionScriptEngine {
      */
     private Long handleSelectOutcomesOutput(AuctionScriptResult scriptResults)
             throws IllegalStateException {
-
         if (scriptResults.status != JS_SCRIPT_STATUS_SUCCESS
                 || scriptResults.results.length() != 1) {
             String errorMsg =
@@ -404,7 +403,9 @@ public class AdSelectionScriptEngine {
 
         try {
             JSONObject resultOutcomeJson = scriptResults.results.getJSONObject(0);
-            return resultOutcomeJson.optLong(SelectAdsFromOutcomesArgument.ID_FIELD_NAME);
+            // Use Long class to parse from string
+            return Long.valueOf(
+                    resultOutcomeJson.optString(SelectAdsFromOutcomesArgument.ID_FIELD_NAME));
         } catch (JSONException e) {
             String errorMsg = String.format(JS_EXECUTION_RESULT_INVALID, scriptResults.results);
             LogUtil.v(errorMsg);
