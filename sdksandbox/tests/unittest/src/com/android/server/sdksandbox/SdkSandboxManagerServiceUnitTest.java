@@ -25,6 +25,7 @@ import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_AP
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_SANDBOX_TO_APP;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_SANDBOX;
 
+import com.android.sdksandbox.IComputeSdkStorageCallback;
 import com.android.server.SystemService.TargetUser;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -2285,6 +2286,14 @@ public class SdkSandboxManagerServiceUnitTest {
                         Mockito.any(SandboxLatencyInfo.class));
     }
 
+    // TODO(b/257952392): Store the storage information in memory in system server
+    @Test
+    public void testLoadSdk_computeSdkStorage() throws Exception {
+        loadSdk(SDK_NAME);
+        // Assume sdk storage information calculated and sent
+        mSdkSandboxService.sendStorageInfoToSystemServer();
+    }
+
     private SandboxLatencyInfo getFakedSandboxLatencies() {
         final SandboxLatencyInfo sandboxLatencyInfo =
                 new SandboxLatencyInfo(TIME_SYSTEM_SERVER_CALLED_SANDBOX);
@@ -2403,6 +2412,7 @@ public class SdkSandboxManagerServiceUnitTest {
         private final ISdkSandboxManagerToSdkSandboxCallback mManagerToSdkCallback;
         private IRequestSurfacePackageFromSdkCallback mRequestSurfacePackageFromSdkCallback = null;
         private IUnloadSdkCallback mUnloadSdkCallback = null;
+        private IComputeSdkStorageCallback mComputeSdkStorageCallback = null;
 
         private boolean mSurfacePackageRequested = false;
         private int mInitializationCount = 0;
@@ -2456,6 +2466,14 @@ public class SdkSandboxManagerServiceUnitTest {
             }
         }
 
+        @Override
+        public void computeSdkStorage(
+                List<String> cePackagePaths,
+                List<String> dePackagePaths,
+                IComputeSdkStorageCallback callback) {
+            mComputeSdkStorageCallback = callback;
+        }
+
         @Nullable
         public Bundle getLastSyncData() {
             return mLastSyncUpdate.getData();
@@ -2482,6 +2500,10 @@ public class SdkSandboxManagerServiceUnitTest {
                     new SandboxedSdk(new Binder()),
                     mManagerToSdkCallback,
                     createSandboxLatencyInfo());
+        }
+
+        void sendStorageInfoToSystemServer() throws RemoteException {
+            mComputeSdkStorageCallback.onStorageInfoComputed(0F, 0F);
         }
 
         void sendLoadCodeError() throws Exception {
