@@ -78,6 +78,8 @@ package android.adservices.adselection {
   public class AdSelectionOutcome {
     method @NonNull public long getAdSelectionId();
     method @NonNull public android.net.Uri getRenderUri();
+    method public boolean hasOutcome();
+    field @NonNull public static final android.adservices.adselection.AdSelectionOutcome NO_OUTCOME;
   }
 
   public static final class AdSelectionOutcome.Builder {

@@ -19,7 +19,6 @@ package android.adservices.debuggablects;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 
 import android.Manifest;
@@ -90,7 +89,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     private static final String AD_URI_PREFIX = "/adverts/123/";
 
     private static final String SELLER_DECISION_LOGIC_URI_PATH = "/ssp/decision/logic/";
-    private static final String SELLER_SELECTION_LOGIC_URI_PATH = "/ssp/selection/logic/";
     private static final String BUYER_BIDDING_LOGIC_URI_PATH = "/buyer/bidding/logic/";
     private static final String SELLER_TRUSTED_SIGNAL_URI_PATH = "/kv/seller/signals/";
 
@@ -1263,7 +1261,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         .selectAds(config)
                         .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-        assertNull(selectionOutcome);
+        assertEquals(AdSelectionOutcome.NO_OUTCOME, selectionOutcome);
     }
 
     private String insertJsWait(long waitTime) {
