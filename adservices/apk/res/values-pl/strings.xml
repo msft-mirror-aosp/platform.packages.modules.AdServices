@@ -81,6 +81,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Piaskownica prywatności"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Wersja beta ustawień prywatności w reklamach na Androidzie oferuje nowe funkcje, których aplikacje mogą używać do wyświetlania Ci trafnie dobranych reklam. Te technologie nie korzystają z identyfikatorów urządzeń.\n\nAndroid może oszacować, jakie rodzaje reklam będą Ci odpowiadać, i tymczasowo zapisać Twoje zainteresowania na urządzeniu. Dzięki temu reklamy w aplikacjach będą lepiej dobrane, a Twoja aktywność na stronach internetowych i w aplikacjach innych deweloperów nie będzie śledzona."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Nie masz zablokowanych zainteresowań"</string>
+    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
+    <skip />
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Aplikacje mogą szacować Twoje zainteresowania i tymczasowo zapisywać je na Androidzie. Następnie inna aplikacja może pokazać Ci reklamy na tej podstawie.\n\nZablokowane aplikacje nie będą już szacować zainteresowań. Dopóki ich nie odblokujesz, nie pojawią się na liście aplikacji. Zainteresowania określone wcześniej przez te aplikacje zostaną usunięte, ale możliwe, że wciąż będą Ci się wyświetlać reklamy powiązane z tymi obszarami."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Zablokowane przez Ciebie aplikacje"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Zresetuj zainteresowania oszacowane przez aplikacje"</string>
