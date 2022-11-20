@@ -39,6 +39,7 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.reporting.DebugReport;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Web;
@@ -107,6 +108,7 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.TriggerContract.NOT_FILTERS, trigger.getNotFilters());
         values.put(MeasurementTables.TriggerContract.DEBUG_KEY,
                 getNullableUnsignedLong(trigger.getDebugKey()));
+        values.put(MeasurementTables.TriggerContract.DEBUG_REPORTING, trigger.isDebugReporting());
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.TriggerContract.TABLE,
                         /*nullColumnHack=*/null, values);
@@ -234,6 +236,29 @@ class MeasurementDao implements IMeasurementDao {
         }
     }
 
+    @Nullable
+    @Override
+    public DebugReport getDebugReport(String debugReportId) throws DatastoreException {
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                MeasurementTables.DebugReportContract.TABLE,
+                                null,
+                                MeasurementTables.DebugReportContract.ID + " = ? ",
+                                new String[] {debugReportId},
+                                null,
+                                null,
+                                null,
+                                null)) {
+            if (cursor.getCount() == 0) {
+                throw new DatastoreException("DebugReport retrieval failed. Id: " + debugReportId);
+            }
+            cursor.moveToNext();
+            return SqliteObjectMapper.constructDebugReportFromCursor(cursor);
+        }
+    }
+
     @Override
     public void insertSource(@NonNull Source source) throws DatastoreException {
         if (mDbFileMaxSizeLimitReachedSupplier.get()) {
@@ -269,6 +294,7 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.SourceContract.AGGREGATE_CONTRIBUTIONS, 0);
         values.put(MeasurementTables.SourceContract.DEBUG_KEY,
                 getNullableUnsignedLong(source.getDebugKey()));
+        values.put(MeasurementTables.SourceContract.DEBUG_REPORTING, source.isDebugReporting());
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.SourceContract.TABLE,
                         /*nullColumnHack=*/null, values);
@@ -485,6 +511,20 @@ class MeasurementDao implements IMeasurementDao {
                         new String[]{eventReport.getId()});
         if (rows != 1) {
             throw new DatastoreException("EventReport deletion failed.");
+        }
+    }
+
+    @Override
+    public void deleteDebugReport(DebugReport debugReport) throws DatastoreException {
+        long rows =
+                mSQLTransaction
+                        .getDatabase()
+                        .delete(
+                                MeasurementTables.DebugReportContract.TABLE,
+                                MeasurementTables.DebugReportContract.ID + " = ?",
+                                new String[] {debugReport.getId()});
+        if (rows != 1) {
+            throw new DatastoreException("DebugReport deletion failed.");
         }
     }
 
@@ -1481,6 +1521,26 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
+    public void insertDebugReport(DebugReport debugReport) throws DatastoreException {
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.DebugReportContract.ID, UUID.randomUUID().toString());
+        values.put(MeasurementTables.DebugReportContract.TYPE, debugReport.getType());
+        values.put(MeasurementTables.DebugReportContract.BODY, debugReport.getBody());
+        values.put(
+                MeasurementTables.DebugReportContract.ENROLLMENT_ID, debugReport.getEnrollmentId());
+        long rowId =
+                mSQLTransaction
+                        .getDatabase()
+                        .insert(
+                                MeasurementTables.DebugReportContract.TABLE,
+                                /*nullColumnHack=*/ null,
+                                values);
+        if (rowId == -1) {
+            throw new DatastoreException("Debug report payload insertion failed.");
+        }
+    }
+
+    @Override
     public List<String> getPendingAggregateReportIdsInWindow(long windowStartTime,
             long windowEndTime) throws DatastoreException {
         List<String> aggregateReports = new ArrayList<>();
@@ -1499,6 +1559,30 @@ class MeasurementDao implements IMeasurementDao {
                                 cursor.getColumnIndex(MeasurementTables.AggregateReport.ID)));
             }
             return aggregateReports;
+        }
+    }
+
+    @Override
+    public List<String> getDebugReportIds() throws DatastoreException {
+        List<String> debugReportIds = new ArrayList<>();
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                MeasurementTables.DebugReportContract.TABLE,
+                                /*columns=*/ null,
+                                null,
+                                null,
+                                /*groupBy=*/ null,
+                                /*having=*/ null,
+                                /*orderBy=*/ null,
+                                /*limit=*/ null)) {
+            while (cursor.moveToNext()) {
+                debugReportIds.add(
+                        cursor.getString(
+                                cursor.getColumnIndex(MeasurementTables.DebugReportContract.ID)));
+            }
+            return debugReportIds;
         }
     }
 

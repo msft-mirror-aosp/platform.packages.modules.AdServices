@@ -207,7 +207,6 @@ public class AdSelectionManager {
      *     <p>If the {@link IllegalStateException} is thrown with error message "Failure of
      *     AdSelection services.", it is caused by an internal failure of the ad selection service.
      *
-     * @hide
      */
     public void selectAds(
             @NonNull AdSelectionFromOutcomesConfig adSelectionFromOutcomesConfig,

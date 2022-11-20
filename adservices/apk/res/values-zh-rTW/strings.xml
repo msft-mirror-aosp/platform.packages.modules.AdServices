@@ -81,6 +81,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android 廣告隱私權 Beta 版提供全新功能，可讓應用程式用來向你顯示可能喜歡的廣告。這些技術並未使用裝置 ID。\n\nAndroid 可以推測你可能感興趣的廣告類別，並在裝置上暫時儲存你的興趣喜好。這樣一來，應用程式不必追蹤你在其他開發商的網站和應用程式內的活動，也能向你顯示貼近需求的廣告。"</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"你沒有封鎖任何興趣喜好"</string>
+    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
+    <skip />
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"應用程式可以推測你的興趣喜好，並暫時儲存在 Android 系統中。之後，其他應用程式可以根據這些興趣喜好向你顯示廣告。\n\n如果你封鎖某個應用程式，該應用程式就不會再推測興趣喜好。除非你解除封鎖，否則該應用程式不會再加入這份應用程式清單。系統將刪除這個應用程式已推測出的興趣喜好，不過你可能還是會看到某些相關的廣告。"</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"已封鎖的應用程式"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"重設應用程式推測的興趣喜好"</string>

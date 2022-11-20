@@ -658,6 +658,33 @@ public interface Flags extends Dumpable {
         return CONSENT_MANAGER_DEBUG_MODE;
     }
 
+    /** Available sources of truth to get consent for PPAPI. */
+    @IntDef(
+            flag = true,
+            value = {
+                PPAPI_ONLY,
+                SYSTEM_SERVER_ONLY,
+                PPAPI_AND_SYSTEM_SERVER,
+            })
+    @Retention(RetentionPolicy.SOURCE)
+    @interface ConsentSourceOfTruth {}
+
+    /** Write and read consent from PPAPI only */
+    int PPAPI_ONLY = 0;
+    /** Write and read consent from system server only. */
+    int SYSTEM_SERVER_ONLY = 1;
+    /** Write consent to both PPAPI and system server. Read consent from system server only. */
+    int PPAPI_AND_SYSTEM_SERVER = 2;
+
+    /* Consent source of truth intended to be used by default. */
+    @ConsentSourceOfTruth int DEFAULT_CONSENT_SOURCE_OF_TRUTH = PPAPI_ONLY;
+
+    /** Returns the consent source of truth currently used for PPAPI. */
+    @ConsentSourceOfTruth
+    default int getConsentSourceOfTruth() {
+        return DEFAULT_CONSENT_SOURCE_OF_TRUTH;
+    }
+
     // Group of All Killswitches
 
     /**
@@ -1160,9 +1187,53 @@ public interface Flags extends Dumpable {
      */
     float SDK_REQUEST_PERMITS_PER_SECOND = 1; // allow max 1 request to any PP API per second.
 
+    /**
+     * PP API Rate Limit for ad id. This is the max allowed QPS for one API client to one PP API.
+     * Negative Value means skipping the rate limiting checking.
+     */
+    float ADID_REQUEST_PERMITS_PER_SECOND = 5;
+
+    /**
+     * PP API Rate Limit for app set id. This is the max allowed QPS for one API client to one PP
+     * API. Negative Value means skipping the rate limiting checking.
+     */
+    float APPSETID_REQUEST_PERMITS_PER_SECOND = 5;
+
+    /**
+     * PP API Rate Limit for measurement register source. This is the max allowed QPS for one API
+     * client to one PP API. Negative Value means skipping the rate limiting checking.
+     */
+    float MEASUREMENT_REGISTER_SOURCE_REQUEST_PERMITS_PER_SECOND = 5;
+
+    /**
+     * PP API Rate Limit for measurement register web source. This is the max allowed QPS for one
+     * API client to one PP API. Negative Value means skipping the rate limiting checking.
+     */
+    float MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND = 5;
+
     /** Returns the Sdk Request Permits Per Second. */
     default float getSdkRequestPermitsPerSecond() {
         return SDK_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the Ad id Request Permits Per Second. */
+    default float getAdIdRequestPermitsPerSecond() {
+        return ADID_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the App Set Ad Request Permits Per Second. */
+    default float getAppSetIdRequestPermitsPerSecond() {
+        return APPSETID_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the Measurement Register Source Request Permits Per Second. */
+    default float getMeasurementRegisterSourceRequestPermitsPerSecond() {
+        return MEASUREMENT_REGISTER_SOURCE_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the Measurement Register Web Source Request Permits Per Second. */
+    default float getMeasurementRegisterWebSourceRequestPermitsPerSecond() {
+        return MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND;
     }
 
     // Flags for ad tech enrollment enforcement

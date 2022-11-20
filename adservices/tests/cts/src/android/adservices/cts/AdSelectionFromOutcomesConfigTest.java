@@ -70,7 +70,7 @@ public class AdSelectionFromOutcomesConfigTest {
                 () -> {
                     new AdSelectionFromOutcomesConfig.Builder()
                             .setSelectionSignals(SAMPLE_SELECTION_SIGNALS)
-                            .setSelectionUri(SAMPLE_SELECTION_LOGIC_URI_1)
+                            .setSelectionLogicUri(SAMPLE_SELECTION_LOGIC_URI_1)
                             .build();
                 });
     }
@@ -82,7 +82,7 @@ public class AdSelectionFromOutcomesConfigTest {
                 () -> {
                     new AdSelectionFromOutcomesConfig.Builder()
                             .setAdSelectionIds(Collections.singletonList(SAMPLE_AD_SELECTION_ID_1))
-                            .setSelectionUri(SAMPLE_SELECTION_LOGIC_URI_1)
+                            .setSelectionLogicUri(SAMPLE_SELECTION_LOGIC_URI_1)
                             .build();
                 });
     }

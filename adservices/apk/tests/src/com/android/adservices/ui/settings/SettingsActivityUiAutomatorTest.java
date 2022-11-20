@@ -41,9 +41,11 @@ import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.common.BackgroundJobsManager;
+import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.App;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -54,6 +56,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
@@ -72,6 +75,7 @@ public class SettingsActivityUiAutomatorTest {
     private MockitoSession mStaticMockSession;
     private PhFlags mPhFlags;
     private ConsentManager mConsentManager;
+    @Mock Flags mMockFlags;
 
     @Before
     public void setup() throws UiObjectNotFoundException, IOException {
@@ -85,8 +89,8 @@ public class SettingsActivityUiAutomatorTest {
                         .strictness(Strictness.WARN)
                         .initMocks(this)
                         .startMocking();
-        ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
-
+        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         // prepare objects used by static mocking
         mConsentManager =
                 spy(ConsentManager.getInstance(ApplicationProvider.getApplicationContext()));
@@ -135,7 +139,13 @@ public class SettingsActivityUiAutomatorTest {
         ExtendedMockito.doReturn(mPhFlags).when(PhFlags::getInstance);
         ExtendedMockito.doReturn(mConsentManager)
                 .when(() -> ConsentManager.getInstance(any(Context.class)));
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
+        doNothing().when(mConsentManager).enable(any(Context.class));
+        doNothing().when(mConsentManager).disable(any(Context.class));
+        startActivityFromHomeAndCheckMainSwitch();
+    }
 
+    private void startActivityFromHomeAndCheckMainSwitch() throws UiObjectNotFoundException {
         // Initialize UiDevice instance
         sDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
@@ -156,13 +166,6 @@ public class SettingsActivityUiAutomatorTest {
         // Wait for the app to appear
         sDevice.wait(
                 Until.hasObject(By.pkg(PRIVACY_SANDBOX_TEST_PACKAGE).depth(0)), LAUNCH_TIMEOUT);
-
-        // set consent to true if not
-        UiObject mainSwitch =
-                sDevice.findObject(new UiSelector().className("android.widget.Switch"));
-        assertThat(mainSwitch.exists()).isTrue();
-        if (!mainSwitch.isChecked()) mainSwitch.click();
-        assertThat(mainSwitch.isChecked()).isTrue();
     }
 
     @After
@@ -210,11 +213,6 @@ public class SettingsActivityUiAutomatorTest {
 
         // confirm
         positiveText.click();
-        assertThat(mainSwitch.isChecked()).isFalse();
-
-        // reset to opted in
-        mainSwitch.click();
-        assertThat(mainSwitch.isChecked()).isTrue();
 
         // click switch
         mainSwitch.click();
@@ -225,7 +223,6 @@ public class SettingsActivityUiAutomatorTest {
 
         // cancel
         negativeText.click();
-        assertThat(mainSwitch.isChecked()).isTrue();
     }
 
     @Test
@@ -397,6 +394,48 @@ public class SettingsActivityUiAutomatorTest {
     }
 
     @Test
+    public void resetMeasurementDialogTest() throws UiObjectNotFoundException {
+        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
+
+        startActivityFromHomeAndCheckMainSwitch();
+        // open measurement view
+        scrollToAndClick(R.string.settingsUI_measurement_view_title);
+
+        // click reset
+        scrollToAndClick(R.string.settingsUI_measurement_view_reset_title);
+        UiObject dialogTitle = getElement(R.string.settingsUI_dialog_reset_measurement_title);
+        UiObject positiveText =
+                getElement(R.string.settingsUI_dialog_reset_measurement_positive_text);
+        assertThat(dialogTitle.exists()).isTrue();
+        assertThat(positiveText.exists()).isTrue();
+
+        // click positive button and confirm mConsentManager.resetMeasurement is called
+        positiveText.click();
+        verify(mConsentManager).resetMeasurement();
+
+        // click reset again
+        scrollToAndClick(R.string.settingsUI_measurement_view_reset_title);
+        dialogTitle = getElement(R.string.settingsUI_dialog_reset_measurement_title);
+        UiObject negativeText = getElement(R.string.settingsUI_dialog_negative_text);
+        assertThat(dialogTitle.exists()).isTrue();
+        assertThat(negativeText.exists()).isTrue();
+
+        // click cancel and verify it has still only been called once
+        negativeText.click();
+        verify(mConsentManager).resetMeasurement();
+    }
+
+    @Test
+    public void disableMeasurementTest() throws UiObjectNotFoundException {
+        doReturn(false).when(mMockFlags).getGaUxFeatureEnabled();
+        // start the activity again to reflect the GaUxFeature flag change
+        startActivityFromHomeAndCheckMainSwitch();
+        // the entry point of ads measurement should be hidden
+        UiObject adsMeasurementTitle = getElement(R.string.settingsUI_measurement_view_title);
+        assertThat(adsMeasurementTitle.exists()).isFalse();
+    }
+
+    @Test
     public void disableDialogFeatureTest() throws UiObjectNotFoundException {
         doReturn(false).when(mPhFlags).getUIDialogsFeatureEnabled();
         UiObject mainSwitch =
@@ -407,11 +446,6 @@ public class SettingsActivityUiAutomatorTest {
         mainSwitch.click();
         UiObject dialogTitle = getElement(R.string.settingsUI_dialog_opt_out_title);
         assertThat(dialogTitle.exists()).isFalse();
-        assertThat(mainSwitch.isChecked()).isFalse();
-
-        // click switch again
-        mainSwitch.click();
-        assertThat(mainSwitch.isChecked()).isTrue();
 
         // open topics view
         scrollToAndClick(R.string.settingsUI_topics_title);

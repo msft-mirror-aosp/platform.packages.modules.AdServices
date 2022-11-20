@@ -97,11 +97,6 @@ public class SdkSandboxStorageManagerUnitTest {
     }
 
     @After
-    public void teardown() throws Exception {
-        FileUtils.deleteContents(new File(mTestDir));
-    }
-
-    @After
     public void tearDown() throws Exception {
         FileUtils.deleteContents(new File(mTestDir));
     }

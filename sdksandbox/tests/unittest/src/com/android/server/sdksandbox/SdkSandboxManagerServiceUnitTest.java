@@ -25,6 +25,7 @@ import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_AP
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_SANDBOX_TO_APP;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_SANDBOX;
 
+import com.android.sdksandbox.IComputeSdkStorageCallback;
 import com.android.server.SystemService.TargetUser;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -94,6 +95,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -427,16 +429,18 @@ public class SdkSandboxManagerServiceUnitTest {
                 TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER, new Bundle(), callback);
 
         // Kill the sandbox before the SDK can call the callback
-        ArgumentCaptor<IBinder.DeathRecipient> deathRecipientCaptor =
-                ArgumentCaptor.forClass(IBinder.DeathRecipient.class);
-        Mockito.verify(mSdkSandboxService.asBinder(), Mockito.atLeastOnce())
-                .linkToDeath(deathRecipientCaptor.capture(), ArgumentMatchers.eq(0));
-        IBinder.DeathRecipient deathRecipient = deathRecipientCaptor.getValue();
-        deathRecipient.binderDied();
+        killSandbox();
 
         assertThat(callback.isLoadSdkSuccessful()).isFalse();
         assertThat(callback.getLoadSdkErrorCode())
                 .isEqualTo(SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_AVAILABLE);
+    }
+
+    @Test
+    public void testSdkCanBeLoadedAfterSandboxDeath() throws Exception {
+        loadSdk(SDK_NAME);
+        killSandbox();
+        loadSdk(SDK_NAME);
     }
 
     @Test
@@ -457,11 +461,38 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
+    public void testLoadSdk_sandboxIsInitializedAfterRestart() throws Exception {
+        loadSdk(SDK_NAME);
+        restartAndSetSandboxService();
+        // Restarting creates and sets a new sandbox service. Verify that the new one has been
+        // initialized.
+        assertThat(mSdkSandboxService.getInitializationCount()).isEqualTo(1);
+    }
+
+    @Test
     public void testLoadSdk_sdkDataPrepared_onlyOnce() throws Exception {
         loadSdk(SDK_NAME);
         loadSdk(SDK_PROVIDER_RESOURCES_SDK_NAME);
 
-        // Verify that sandbox was initialized
+        // Verify that SDK data was prepared.
+        Mockito.verify(mPmLocal, Mockito.times(1))
+                .reconcileSdkData(
+                        Mockito.nullable(String.class),
+                        Mockito.anyString(),
+                        Mockito.anyList(),
+                        Mockito.anyInt(),
+                        Mockito.anyInt(),
+                        Mockito.anyInt(),
+                        Mockito.anyString(),
+                        Mockito.anyInt());
+    }
+
+    @Test
+    public void testLoadSdk_sdkDataPreparedAfterSandboxRestart() throws Exception {
+        loadSdk(SDK_NAME);
+        restartAndSetSandboxService();
+
+        // Verify that SDK data was prepared for the newly restarted sandbox.
         Mockito.verify(mPmLocal, Mockito.times(1))
                 .reconcileSdkData(
                         Mockito.nullable(String.class),
@@ -634,12 +665,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 surfacePackageCallback);
 
         // Kill the sandbox before the SDK can call the callback
-        ArgumentCaptor<IBinder.DeathRecipient> deathRecipientCaptor =
-                ArgumentCaptor.forClass(IBinder.DeathRecipient.class);
-        Mockito.verify(mSdkSandboxService.asBinder(), Mockito.atLeastOnce())
-                .linkToDeath(deathRecipientCaptor.capture(), ArgumentMatchers.eq(0));
-        IBinder.DeathRecipient deathRecipient = deathRecipientCaptor.getValue();
-        deathRecipient.binderDied();
+        killSandbox();
 
         assertThat(surfacePackageCallback.isRequestSurfacePackageSuccessful()).isFalse();
         assertThat(surfacePackageCallback.getSurfacePackageErrorCode())
@@ -657,13 +683,7 @@ public class SdkSandboxManagerServiceUnitTest {
         // Load SDK and start the sandbox
         loadSdk(SDK_NAME);
 
-        // Kill the sandbox
-        ArgumentCaptor<IBinder.DeathRecipient> deathRecipientCaptor =
-                ArgumentCaptor.forClass(IBinder.DeathRecipient.class);
-        Mockito.verify(mSdkSandboxService.asBinder(), Mockito.atLeastOnce())
-                .linkToDeath(deathRecipientCaptor.capture(), ArgumentMatchers.eq(0));
-        IBinder.DeathRecipient deathRecipient = deathRecipientCaptor.getValue();
-        deathRecipient.binderDied();
+        killSandbox();
 
         // Check that death is recorded correctly
         assertThat(lifecycleCallback.isSdkSandboxDeathDetected()).isTrue();
@@ -680,16 +700,34 @@ public class SdkSandboxManagerServiceUnitTest {
         mService.addSdkSandboxProcessDeathCallback(
                 TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER, lifecycleCallback);
 
-        // Kill the sandbox
-        ArgumentCaptor<IBinder.DeathRecipient> deathRecipientCaptor =
-                ArgumentCaptor.forClass(IBinder.DeathRecipient.class);
-        Mockito.verify(mSdkSandboxService.asBinder(), Mockito.atLeastOnce())
-                .linkToDeath(deathRecipientCaptor.capture(), ArgumentMatchers.eq(0));
-        IBinder.DeathRecipient deathRecipient = deathRecipientCaptor.getValue();
-        deathRecipient.binderDied();
+        killSandbox();
 
         // Check that death is recorded correctly
         assertThat(lifecycleCallback.isSdkSandboxDeathDetected()).isTrue();
+    }
+
+    @Test
+    public void testSdkSandboxProcessDeathCallback_AfterRestartingSandbox() throws Exception {
+        loadSdk(SDK_NAME);
+
+        // Register for sandbox death event
+        FakeSdkSandboxProcessDeathCallbackBinder lifecycleCallback1 =
+                new FakeSdkSandboxProcessDeathCallbackBinder();
+        mService.addSdkSandboxProcessDeathCallback(
+                TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER, lifecycleCallback1);
+        killSandbox();
+        assertThat(lifecycleCallback1.isSdkSandboxDeathDetected()).isTrue();
+
+        restartAndSetSandboxService();
+
+        // Register for sandbox death event again and verify that death is detected.
+        FakeSdkSandboxProcessDeathCallbackBinder lifecycleCallback2 =
+                new FakeSdkSandboxProcessDeathCallbackBinder();
+        mService.addSdkSandboxProcessDeathCallback(
+                TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER, lifecycleCallback2);
+        assertThat(lifecycleCallback2.isSdkSandboxDeathDetected()).isFalse();
+        killSandbox();
+        assertThat(lifecycleCallback2.isSdkSandboxDeathDetected()).isTrue();
     }
 
     @Test
@@ -709,13 +747,7 @@ public class SdkSandboxManagerServiceUnitTest {
         mService.addSdkSandboxProcessDeathCallback(
                 TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER, lifecycleCallback2);
 
-        // Kill the sandbox
-        ArgumentCaptor<IBinder.DeathRecipient> deathRecipientCaptor =
-                ArgumentCaptor.forClass(IBinder.DeathRecipient.class);
-        Mockito.verify(mSdkSandboxService.asBinder(), Mockito.atLeastOnce())
-                .linkToDeath(deathRecipientCaptor.capture(), ArgumentMatchers.eq(0));
-        IBinder.DeathRecipient deathRecipient = deathRecipientCaptor.getValue();
-        deathRecipient.binderDied();
+        killSandbox();
 
         // Check that death is recorded correctly
         assertThat(lifecycleCallback1.isSdkSandboxDeathDetected()).isTrue();
@@ -743,13 +775,7 @@ public class SdkSandboxManagerServiceUnitTest {
         mService.removeSdkSandboxProcessDeathCallback(
                 TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER, lifecycleCallback1);
 
-        // Kill the sandbox
-        ArgumentCaptor<IBinder.DeathRecipient> deathRecipientCaptor =
-                ArgumentCaptor.forClass(IBinder.DeathRecipient.class);
-        Mockito.verify(mSdkSandboxService.asBinder(), Mockito.atLeastOnce())
-                .linkToDeath(deathRecipientCaptor.capture(), ArgumentMatchers.eq(0));
-        IBinder.DeathRecipient deathRecipient = deathRecipientCaptor.getValue();
-        deathRecipient.binderDied();
+        killSandbox();
 
         // Check that death is recorded correctly
         assertThat(lifecycleCallback1.isSdkSandboxDeathDetected()).isFalse();
@@ -1046,17 +1072,8 @@ public class SdkSandboxManagerServiceUnitTest {
 
     @Test
     public void testUnloadSdkAfterKillingSandboxDoesNotThrowException() throws Exception {
-        disableKillUid();
-
         loadSdk(SDK_NAME);
-
-        // Kill the sandbox
-        ArgumentCaptor<IBinder.DeathRecipient> deathRecipientCaptor =
-                ArgumentCaptor.forClass(IBinder.DeathRecipient.class);
-        Mockito.verify(mSdkSandboxService.asBinder(), Mockito.atLeastOnce())
-                .linkToDeath(deathRecipientCaptor.capture(), ArgumentMatchers.eq(0));
-        IBinder.DeathRecipient deathRecipient = deathRecipientCaptor.getValue();
-        deathRecipient.binderDied();
+        killSandbox();
 
         // Unloading SDK should be a no-op
         mService.unloadSdk(TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER);
@@ -2240,6 +2257,43 @@ public class SdkSandboxManagerServiceUnitTest {
                                 mClientAppUid));
     }
 
+    @Test
+    public void testUnloadSdkNotCalledOnAppDeath() throws Exception {
+        disableKillUid();
+        disableForegroundCheck();
+        disableNetworkPermissionChecks();
+        FakeLoadSdkCallbackBinder callback = Mockito.spy(new FakeLoadSdkCallbackBinder());
+        Mockito.doReturn(Mockito.mock(Binder.class)).when(callback).asBinder();
+
+        ArgumentCaptor<IBinder.DeathRecipient> deathRecipient =
+                ArgumentCaptor.forClass(IBinder.DeathRecipient.class);
+
+        mService.loadSdk(
+                TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER, new Bundle(), callback);
+        mSdkSandboxService.sendLoadCodeSuccessful();
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+
+        Mockito.verify(callback.asBinder())
+                .linkToDeath(deathRecipient.capture(), ArgumentMatchers.eq(0));
+
+        // App Died
+        deathRecipient.getValue().binderDied();
+
+        Mockito.verify(mSdkSandboxService, Mockito.never())
+                .unloadSdk(
+                        Mockito.anyString(),
+                        Mockito.any(IUnloadSdkCallback.class),
+                        Mockito.any(SandboxLatencyInfo.class));
+    }
+
+    // TODO(b/257952392): Store the storage information in memory in system server
+    @Test
+    public void testLoadSdk_computeSdkStorage() throws Exception {
+        loadSdk(SDK_NAME);
+        // Assume sdk storage information calculated and sent
+        mSdkSandboxService.sendStorageInfoToSystemServer();
+    }
+
     private SandboxLatencyInfo getFakedSandboxLatencies() {
         final SandboxLatencyInfo sandboxLatencyInfo =
                 new SandboxLatencyInfo(TIME_SYSTEM_SERVER_CALLED_SANDBOX);
@@ -2262,20 +2316,49 @@ public class SdkSandboxManagerServiceUnitTest {
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
     }
 
+    private void killSandbox() throws Exception {
+        ArgumentCaptor<IBinder.DeathRecipient> deathRecipientCaptor =
+                ArgumentCaptor.forClass(IBinder.DeathRecipient.class);
+        Mockito.verify(mSdkSandboxService.asBinder(), Mockito.atLeastOnce())
+                .linkToDeath(deathRecipientCaptor.capture(), ArgumentMatchers.eq(0));
+        List<IBinder.DeathRecipient> deathRecipients = deathRecipientCaptor.getAllValues();
+        for (IBinder.DeathRecipient deathRecipient : deathRecipients) {
+            deathRecipient.binderDied();
+        }
+    }
+
+    // Restart sandbox which creates a new sandbox service binder.
+    private void restartAndSetSandboxService() throws Exception {
+        mSdkSandboxService = mProvider.restartSandbox();
+    }
+
     /** Fake service provider that returns local instance of {@link SdkSandboxServiceProvider} */
     private static class FakeSdkSandboxProvider implements SdkSandboxServiceProvider {
-        private final ISdkSandboxService mSdkSandboxService;
+        private FakeSdkSandboxService mSdkSandboxService;
         private final ArrayMap<CallingInfo, ISdkSandboxService> mService = new ArrayMap<>();
 
         // When set to true, this will fail the bindService call
         private boolean mFailBinding = false;
 
-        FakeSdkSandboxProvider(ISdkSandboxService service) {
+        private ServiceConnection mServiceConnection = null;
+
+        FakeSdkSandboxProvider(FakeSdkSandboxService service) {
             mSdkSandboxService = service;
         }
 
         public void disableBinding() {
             mFailBinding = true;
+        }
+
+        public FakeSdkSandboxService restartSandbox() {
+            mServiceConnection.onServiceDisconnected(null);
+
+            // Create a new sandbox service.
+            mSdkSandboxService = Mockito.spy(FakeSdkSandboxService.class);
+
+            // Call onServiceConnected() again with the new fake sandbox service.
+            mServiceConnection.onServiceConnected(null, mSdkSandboxService.asBinder());
+            return mSdkSandboxService;
         }
 
         @Override
@@ -2290,6 +2373,7 @@ public class SdkSandboxManagerServiceUnitTest {
             }
             mService.put(callingInfo, mSdkSandboxService);
             serviceConnection.onServiceConnected(null, mSdkSandboxService.asBinder());
+            mServiceConnection = serviceConnection;
         }
 
         @Override
@@ -2328,6 +2412,7 @@ public class SdkSandboxManagerServiceUnitTest {
         private final ISdkSandboxManagerToSdkSandboxCallback mManagerToSdkCallback;
         private IRequestSurfacePackageFromSdkCallback mRequestSurfacePackageFromSdkCallback = null;
         private IUnloadSdkCallback mUnloadSdkCallback = null;
+        private IComputeSdkStorageCallback mComputeSdkStorageCallback = null;
 
         private boolean mSurfacePackageRequested = false;
         private int mInitializationCount = 0;
@@ -2381,6 +2466,14 @@ public class SdkSandboxManagerServiceUnitTest {
             }
         }
 
+        @Override
+        public void computeSdkStorage(
+                List<String> cePackagePaths,
+                List<String> dePackagePaths,
+                IComputeSdkStorageCallback callback) {
+            mComputeSdkStorageCallback = callback;
+        }
+
         @Nullable
         public Bundle getLastSyncData() {
             return mLastSyncUpdate.getData();
@@ -2407,6 +2500,10 @@ public class SdkSandboxManagerServiceUnitTest {
                     new SandboxedSdk(new Binder()),
                     mManagerToSdkCallback,
                     createSandboxLatencyInfo());
+        }
+
+        void sendStorageInfoToSystemServer() throws RemoteException {
+            mComputeSdkStorageCallback.onStorageInfoComputed(0F, 0F);
         }
 
         void sendLoadCodeError() throws Exception {

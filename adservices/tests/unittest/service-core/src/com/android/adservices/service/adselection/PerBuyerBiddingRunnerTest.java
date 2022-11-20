@@ -33,6 +33,9 @@ import com.android.adservices.service.Flags;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.FluentFuture;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -64,6 +67,7 @@ public class PerBuyerBiddingRunnerTest {
     List<DBCustomAudience> mDBCustomAudienceList;
 
     @Mock AdBidGenerator mAdBidGeneratorMock;
+    @Mock TrustedBiddingDataFetcher mTrustedBiddingDataFetcherMock;
     @Mock AdBiddingOutcome mAdBiddingOutcome;
 
     private PerBuyerBiddingRunner mPerBuyerBiddingRunner;
@@ -92,14 +96,20 @@ public class PerBuyerBiddingRunnerTest {
         mPerBuyerBiddingRunner =
                 new PerBuyerBiddingRunner(
                         mAdBidGeneratorMock,
+                        mTrustedBiddingDataFetcherMock,
                         mScheduledExecutor,
                         mBackgroundExecutorService,
                         mFlags);
+
+        ExtendedMockito.doReturn(FluentFuture.from(Futures.immediateFuture(ImmutableMap.of())))
+                .when(mTrustedBiddingDataFetcherMock)
+                .getTrustedBiddingDataForBuyer(ExtendedMockito.any());
 
         ExtendedMockito.doReturn(createDelayedBiddingOutcome(SHORT_SLEEP_MS))
                 .when(mAdBidGeneratorMock)
                 .runAdBiddingPerCA(
                         ExtendedMockito.argThat(mFastResponseMatcher),
+                        ExtendedMockito.anyMap(),
                         ExtendedMockito.any(AdSelectionSignals.class),
                         ExtendedMockito.any(AdSelectionSignals.class),
                         ExtendedMockito.any(AdSelectionSignals.class));
@@ -108,6 +118,7 @@ public class PerBuyerBiddingRunnerTest {
                 .when(mAdBidGeneratorMock)
                 .runAdBiddingPerCA(
                         ExtendedMockito.argThat(mSlowResponseMatcher),
+                        ExtendedMockito.anyMap(),
                         ExtendedMockito.any(AdSelectionSignals.class),
                         ExtendedMockito.any(AdSelectionSignals.class),
                         ExtendedMockito.any(AdSelectionSignals.class));
