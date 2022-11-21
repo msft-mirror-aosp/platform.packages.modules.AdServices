@@ -16,15 +16,34 @@
 
 package android.app.adservices;
 
+import android.app.adservices.ConsentParcel;
+
 /**
   * Consent Service
-  * TODO(b/258679209): Update this API to get the real User Consent.
   *
   * {@hide}
   */
 interface IAdServicesManager {
     /**
-      * Get Consent
-      */
-    void getConsent();
+     * Get Consent
+     */
+    ConsentParcel getConsent();
+
+    /**
+     * Set Consent
+     */
+    void setConsent(in ConsentParcel consentParcel);
+
+    /**
+     * Saves information to the storage that notification was displayed for the first time to the
+     * user.
+     */
+    void recordNotificationDisplayed();
+
+    /**
+     * Returns information whether Consent Notification was displayed or not.
+     *
+     * @return true if Consent Notification was displayed, otherwise false.
+     */
+    boolean wasNotificationDisplayed();
 }

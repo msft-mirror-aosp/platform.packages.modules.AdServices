@@ -95,7 +95,6 @@ import android.webkit.WebView;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.DbTestUtil;
@@ -1849,7 +1848,6 @@ public class OnDeviceAdSelectionRunnerTest {
 
     @After
     public void tearDown() {
-        LogUtil.v("mAdSelectionEntryDao is null: %b", Objects.isNull(mAdSelectionEntryDao));
         mAdSelectionEntryDao.removeAdSelectionEntriesByIds(Arrays.asList(AD_SELECTION_ID));
         if (mStaticMockSession != null) {
             mStaticMockSession.finishMocking();
