@@ -66,6 +66,16 @@ public final class MockWebServerDispatcherFactory {
     public static final int BIDDING_SIGNALS_FETCH_DELAY_4GPLUS_p90_MS = 123;
     public static final int BIDDING_SIGNALS_FETCH_DELAY_4G_p50_MS = 105;
     public static final int BIDDING_SIGNALS_FETCH_DELAY_4G_p90_MS = 275;
+
+    // Estimated based on https://screenshot.googleplex.com/5PW2bQ8Azfyb9rS
+    // Assuming PP API has access to only 10% of bandwidth
+    public static final int BANDWIDTH_5G = 50;
+    public static final int BANDWIDTH_4G_PLUS = 16;
+    public static final int BANDWIDTH_4G = 6;
+
+    // Base throttling constant. Feel free to increase it to see more drastic throttling.
+    public static final int BASE_THROTTLING = 2;
+
     private static final String BUYER_REPORTING_PATH = "/reporting/buyer";
     private static final String SELLER_REPORTING_PATH = "/reporting/seller";
     private static final String BUYER_BIDDING_LOGIC_URI_PATH =
@@ -121,6 +131,7 @@ public final class MockWebServerDispatcherFactory {
                 BIDDING_SIGNALS_FETCH_DELAY_5G_p50_MS,
                 BIDDING_JS_EXECUTION_TIME_p50_MS,
                 SCORING_JS_EXECUTION_TIME_p50_MS,
+                BANDWIDTH_5G,
                 mockWebServerRule);
     }
 
@@ -132,6 +143,7 @@ public final class MockWebServerDispatcherFactory {
                 BIDDING_SIGNALS_FETCH_DELAY_5G_p90_MS,
                 BIDDING_JS_EXECUTION_TIME_p90_MS,
                 SCORING_JS_EXECUTION_TIME_p90_MS,
+                BANDWIDTH_5G,
                 mockWebServerRule);
     }
 
@@ -143,6 +155,7 @@ public final class MockWebServerDispatcherFactory {
                 BIDDING_SIGNALS_FETCH_DELAY_4GPLUS_p50_MS,
                 BIDDING_JS_EXECUTION_TIME_p50_MS,
                 SCORING_JS_EXECUTION_TIME_p50_MS,
+                BANDWIDTH_4G_PLUS,
                 mockWebServerRule);
     }
 
@@ -154,6 +167,7 @@ public final class MockWebServerDispatcherFactory {
                 BIDDING_SIGNALS_FETCH_DELAY_4GPLUS_p90_MS,
                 BIDDING_JS_EXECUTION_TIME_p90_MS,
                 SCORING_JS_EXECUTION_TIME_p90_MS,
+                BANDWIDTH_4G_PLUS,
                 mockWebServerRule);
     }
 
@@ -165,6 +179,7 @@ public final class MockWebServerDispatcherFactory {
                 BIDDING_SIGNALS_FETCH_DELAY_4G_p50_MS,
                 BIDDING_JS_EXECUTION_TIME_p50_MS,
                 SCORING_JS_EXECUTION_TIME_p50_MS,
+                BANDWIDTH_4G,
                 mockWebServerRule);
     }
 
@@ -176,6 +191,7 @@ public final class MockWebServerDispatcherFactory {
                 BIDDING_SIGNALS_FETCH_DELAY_4G_p90_MS,
                 BIDDING_JS_EXECUTION_TIME_p90_MS,
                 SCORING_JS_EXECUTION_TIME_p90_MS,
+                BANDWIDTH_4G,
                 mockWebServerRule);
     }
 
@@ -222,6 +238,85 @@ public final class MockWebServerDispatcherFactory {
                             .setBody(TRUSTED_BIDDING_SIGNALS.toString());
                 }
                 return new MockResponse().setResponseCode(404);
+            }
+        };
+    }
+
+    private static Dispatcher create(
+            int decisionLogicFetchDelayMs,
+            int biddingLogicFetchDelayMs,
+            int scoringSignalFetchDelayMs,
+            int biddingSignalFetchDelayMs,
+            int biddingLogicExecutionRunMs,
+            int scoringLogicExecutionRunMs,
+            int bandwidth,
+            MockWebServerRule mockWebServerRule) {
+
+        return new Dispatcher() {
+
+            private int mNumRequests = 0;
+
+            @Override
+            public MockResponse dispatch(RecordedRequest request) {
+                mNumRequests++;
+                if (DECISION_LOGIC_PATH.equals(request.getPath())) {
+                    return new MockResponse()
+                            .setBodyDelayTimeMs(
+                                    (int)
+                                            (decisionLogicFetchDelayMs
+                                                    * getThrottlingFactor(bandwidth, mNumRequests)))
+                            .setBody(
+                                    getDecisionLogicJS(
+                                            scoringLogicExecutionRunMs,
+                                            mockWebServerRule
+                                                    .uriForPath(SELLER_REPORTING_PATH)
+                                                    .toString()));
+                } else if (BUYER_BIDDING_LOGIC_URI_PATH.equals(request.getPath())) {
+                    return new MockResponse()
+                            .setBodyDelayTimeMs(
+                                    (int)
+                                            (biddingLogicFetchDelayMs
+                                                    * getThrottlingFactor(bandwidth, mNumRequests)))
+                            .setBody(
+                                    getBiddingLogicJS(
+                                            biddingLogicExecutionRunMs,
+                                            mockWebServerRule
+                                                    .uriForPath(BUYER_REPORTING_PATH)
+                                                    .toString()));
+                } else if (BUYER_REPORTING_PATH.equals(request.getPath())
+                        || SELLER_REPORTING_PATH.equals(request.getPath())) {
+                    return new MockResponse().setBody("");
+                } else if (request.getPath().startsWith(TRUSTED_SCORING_SIGNAL_PATH)) {
+                    return new MockResponse()
+                            .setBodyDelayTimeMs(
+                                    (int)
+                                            (scoringSignalFetchDelayMs
+                                                    * getThrottlingFactor(bandwidth, mNumRequests)))
+                            .setBody(TRUSTED_SCORING_SIGNALS.toString());
+                } else if (request.getPath().startsWith(TRUSTED_BIDDING_SIGNALS_PATH)) {
+                    return new MockResponse()
+                            .setBodyDelayTimeMs(
+                                    (int)
+                                            (biddingSignalFetchDelayMs
+                                                    * getThrottlingFactor(bandwidth, mNumRequests)))
+                            .setBody(TRUSTED_BIDDING_SIGNALS.toString());
+                }
+                return new MockResponse().setResponseCode(404);
+            }
+
+            private double getThrottlingFactor(int bandwidth, int numRequests) {
+                if (numRequests <= bandwidth) {
+                    return 1;
+                }
+                int numRequestsMod = numRequests % bandwidth;
+
+                // do not throttle if > bandwidth/2
+                if (numRequestsMod > (bandwidth / 2)) {
+                    return 1;
+                }
+
+                // otherwise, throttle to the equation (BASE_THROTTLING + ln(1+x))
+                return (BASE_THROTTLING + Math.log(1 + numRequestsMod));
             }
         };
     }
