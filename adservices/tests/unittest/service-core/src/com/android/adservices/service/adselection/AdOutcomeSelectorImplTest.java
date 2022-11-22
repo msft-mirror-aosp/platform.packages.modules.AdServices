@@ -37,6 +37,7 @@ import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdServicesHttpsClient;
+import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 
@@ -96,7 +97,10 @@ public class AdOutcomeSelectorImplTest {
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mBlockingExecutorService = AdServicesExecutors.getBlockingExecutor();
         mSchedulingExecutor = AdServicesExecutors.getScheduler();
-        mWebClient = new AdServicesHttpsClient(AdServicesExecutors.getBlockingExecutor());
+        mWebClient =
+                new AdServicesHttpsClient(
+                        AdServicesExecutors.getBlockingExecutor(),
+                        CacheProviderFactory.createNoOpCache());
 
         mSelectionLogicJs =
                 "function selectOutcome(outcomes, selection_signals) {\n"

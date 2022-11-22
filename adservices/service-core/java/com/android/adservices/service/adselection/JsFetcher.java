@@ -61,7 +61,7 @@ public class JsFetcher {
 
     /**
      * Fetch the buyer decision logic. Check locally to see if an override is present, otherwise
-     * fetch from server.
+     * fetch from server. Does not use caching by default
      *
      * @return buyer decision logic
      */
@@ -70,6 +70,21 @@ public class JsFetcher {
             @NonNull String owner,
             @NonNull AdTechIdentifier buyer,
             @NonNull String name) {
+        return getBuyerDecisionLogic(decisionLogicUri, owner, buyer, name, false);
+    }
+
+    /**
+     * Fetch the buyer decision logic. Check locally to see if an override is present, otherwise
+     * fetch from server. Makes use of caching optional.
+     *
+     * @return buyer decision logic
+     */
+    public FluentFuture<String> getBuyerDecisionLogic(
+            @NonNull final Uri decisionLogicUri,
+            @NonNull String owner,
+            @NonNull AdTechIdentifier buyer,
+            @NonNull String name,
+            boolean useCaching) {
         int traceCookie = Tracing.beginAsyncSection(Tracing.GET_BUYER_DECISION_LOGIC);
 
         FluentFuture<String> jsOverrideFuture =
@@ -86,7 +101,8 @@ public class JsFetcher {
                                 LogUtil.v(
                                         "Fetching buyer decision logic from server: %s",
                                         decisionLogicUri.toString());
-                                return mAdServicesHttpsClient.fetchPayload(decisionLogicUri);
+                                return mAdServicesHttpsClient.fetchPayload(
+                                        decisionLogicUri, useCaching);
                             } else {
                                 LogUtil.d(
                                         "Developer options enabled and an override JS is provided "
