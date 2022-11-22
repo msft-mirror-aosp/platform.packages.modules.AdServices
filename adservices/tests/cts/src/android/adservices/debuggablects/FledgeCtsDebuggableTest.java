@@ -1266,6 +1266,58 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         assertNull(selectionOutcome);
     }
 
+    @Test
+    public void testFledgeOutcomeSelectionFlow_timeoutFailure() throws Exception {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+
+        // Perform ad selection to persist two results
+        double bid1 = 10.0, bid2 = 15.0;
+        AdSelectionOutcome outcome1 =
+                runAdSelectionAsPreSteps(bid1, BUYER_1, BUYER_1_BIDDING_LOGIC_JS);
+        AdSelectionOutcome outcome2 =
+                runAdSelectionAsPreSteps(bid2, BUYER_2, BUYER_2_BIDDING_LOGIC_JS);
+
+        // Inputs for outcome selection
+        AdSelectionSignals selectionSignals = AdSelectionSignals.EMPTY;
+        Uri selectionUri =
+                Uri.parse(
+                        String.format(
+                                "https://%s%s",
+                                AdSelectionConfigFixture.SELLER, SELLER_DECISION_LOGIC_URI_PATH));
+        AdSelectionFromOutcomesConfig config =
+                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
+                        List.of(outcome1.getAdSelectionId(), outcome2.getAdSelectionId()),
+                        selectionSignals,
+                        selectionUri);
+
+        // Add overrides
+        String jsWaitMoreThanAllowedForOutcomeSelection = insertJsWait(20000);
+        String selectionLogicPickSmallestJs =
+                "function selectOutcome(outcomes, selection_signals) {\n"
+                        + "    outcomes.sort(function(a, b) { return b.bid - a.bid;});\n"
+                        + jsWaitMoreThanAllowedForOutcomeSelection
+                        + "    return {'status': 0, 'result': outcomes[0]};\n"
+                        + "}";
+        AddAdSelectionFromOutcomesOverrideRequest request =
+                new AddAdSelectionFromOutcomesOverrideRequest(
+                        config, selectionLogicPickSmallestJs, AdSelectionSignals.EMPTY);
+        mTestAdSelectionClient
+                .overrideAdSelectionFromOutcomesConfigRemoteInfo(request)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Running ad selection and asserting that the outcome is returned in < 10 seconds
+        Exception selectAdsException =
+                assertThrows(
+                        ExecutionException.class,
+                        () ->
+                                mAdSelectionClient
+                                        .selectAds(config)
+                                        .get(
+                                                API_RESPONSE_LONGER_TIMEOUT_SECONDS,
+                                                TimeUnit.SECONDS));
+        assertThat(selectAdsException.getCause()).isInstanceOf(TimeoutException.class);
+    }
+
     private String insertJsWait(long waitTime) {
         return "    const wait = (ms) => {\n"
                 + "       var start = new Date().getTime();\n"
