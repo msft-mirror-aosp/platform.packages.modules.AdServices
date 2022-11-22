@@ -19,9 +19,11 @@ package com.android.server.sdksandbox;
 import static com.google.common.truth.Truth.assertThat;
 
 import android.Manifest;
+import android.app.sdksandbox.LoadSdkException;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.os.Bundle;
 import android.os.Process;
 import android.os.UserHandle;
 
@@ -132,8 +134,10 @@ public class SdkSandboxShellCommandUnitTest {
         final SdkSandboxShellCommand cmd =
                 new SdkSandboxShellCommand(mService, mContext, new ShellInjector());
         mService.setIsSdkSandboxDisabledResponse(true);
+
         assertThat(cmd.exec(mService, mIn, mOut, mErr, new String[] {"start", DEBUGGABLE_PACKAGE}))
                 .isEqualTo(-1);
+
         Mockito.verify(mService)
                 .stopSdkSandboxService(
                         Mockito.any(CallingInfo.class),
@@ -164,9 +168,7 @@ public class SdkSandboxShellCommandUnitTest {
                         Mockito.any(UserHandle.class));
 
         Mockito.verify(mService, Mockito.never())
-                .startSdkSandbox(
-                        Mockito.any(CallingInfo.class),
-                        Mockito.any(SdkSandboxManagerService.SandboxBindingCallback.class));
+                .startSdkSandbox(Mockito.any(CallingInfo.class), Mockito.anyLong());
     }
 
     @Test
@@ -189,9 +191,7 @@ public class SdkSandboxShellCommandUnitTest {
         Mockito.verify(mService).isSdkSandboxServiceRunning(callingInfo);
 
         Mockito.verify(mService, Mockito.never())
-                .startSdkSandbox(
-                        Mockito.any(CallingInfo.class),
-                        Mockito.any(SdkSandboxManagerService.SandboxBindingCallback.class));
+                .startSdkSandbox(Mockito.any(CallingInfo.class), Mockito.anyLong());
     }
 
     @Test
@@ -214,9 +214,7 @@ public class SdkSandboxShellCommandUnitTest {
         Mockito.verify(mService).isSdkSandboxServiceRunning(callingInfo);
 
         Mockito.verify(mService)
-                .startSdkSandbox(
-                        Mockito.eq(callingInfo),
-                        Mockito.any(SdkSandboxManagerService.SandboxBindingCallback.class));
+                .startSdkSandbox(Mockito.eq(callingInfo), Mockito.anyLong());
     }
 
     @Test
@@ -241,9 +239,7 @@ public class SdkSandboxShellCommandUnitTest {
         Mockito.verify(mService).isSdkSandboxServiceRunning(callingInfo);
 
         Mockito.verify(mService)
-                .startSdkSandbox(
-                        Mockito.eq(callingInfo),
-                        Mockito.any(SdkSandboxManagerService.SandboxBindingCallback.class));
+                .startSdkSandbox(Mockito.eq(callingInfo), Mockito.anyLong());
     }
 
     @Test
@@ -346,17 +342,18 @@ public class SdkSandboxShellCommandUnitTest {
 
         private boolean mBindingSuccessful = true;
         private boolean mIsDisabledResponse = false;
+        private SandboxBindingCallback mCallback = null;
 
         FakeSdkSandboxManagerService(Context context, SdkSandboxServiceProvider provider) {
             super(context, provider);
         }
 
         @Override
-        void startSdkSandbox(CallingInfo callingInfo, SandboxBindingCallback callback) {
+        void startSdkSandbox(CallingInfo callingInfo, long time) {
             if (mBindingSuccessful) {
-                callback.onBindingSuccessful(Mockito.mock(ISdkSandboxService.class));
+                mCallback.onBindingSuccessful(Mockito.mock(ISdkSandboxService.class), -1);
             } else {
-                callback.onBindingFailed();
+                mCallback.onBindingFailed(new LoadSdkException(null, new Bundle()), -1);
             }
         }
 
@@ -372,6 +369,11 @@ public class SdkSandboxShellCommandUnitTest {
         @Override
         boolean isSdkSandboxDisabled(ISdkSandboxService boundService) {
             return mIsDisabledResponse;
+        }
+
+        @Override
+        void addSandboxBindingCallback(CallingInfo callingInfo, SandboxBindingCallback callback) {
+            mCallback = callback;
         }
 
         private void setIsSdkSandboxDisabledResponse(boolean response) {

@@ -81,6 +81,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"A versión beta de privacidade nos anuncios de Android ofrece novas funcións que poden utilizar as aplicacións para mostrarche anuncios que poderían gustarche. Estas tecnoloxías non utilizan identificadores de dispositivos.\n\nAndroid pode determinar os tipos de anuncios que poderían interesarche e gardar eses intereses de maneira temporal no teu dispositivo. Deste xeito, as aplicacións poden mostrarche anuncios relevantes sen facer un seguimento da túa actividade nos sitios web e nas aplicacións doutros programadores."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Non tes ningún interese bloqueado"</string>
+    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
+    <skip />
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"As aplicacións poden determinar cales son os teus intereses e gardalos de forma temporal en Android. Máis adiante, calquera delas pode mostrarche anuncios baseados neses intereses.\n\nSe bloqueas unha aplicación, deixará de suxerir cales son os teus intereses. Non se engadirá de novo a esta lista de aplicacións a menos que a desbloquees. Eliminaranse os intereses que xa determinase esa aplicación, aínda que é posible que sigas vendo algún anuncio relacionado."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Aplicacións que bloqueaches"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Restablecer intereses que determinan as aplicacións"</string>

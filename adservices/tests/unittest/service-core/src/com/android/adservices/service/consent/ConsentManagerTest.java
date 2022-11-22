@@ -38,6 +38,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import android.app.adservices.AdServicesManager;
+import android.app.adservices.IAdServicesManager;
 import android.app.job.JobScheduler;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
@@ -108,6 +110,7 @@ public class ConsentManagerTest {
     private AppConsentDao mAppConsentDao;
     private EnrollmentDao mEnrollmentDao;
     private DbHelper mDbHelper;
+    private AdServicesManager mAdServicesManager;
 
     @Mock private PackageManager mPackageManagerMock;
     @Mock private TopicsWorker mTopicsWorker;
@@ -121,6 +124,7 @@ public class ConsentManagerTest {
     @Mock private EpochManager mMockEpochManager;
     @Mock private Flags mMockFlags;
     @Mock private JobScheduler mJobSchedulerMock;
+    @Mock private IAdServicesManager mMockIAdServicesManager;
     private MockitoSession mStaticMockSession = null;
 
     @Before
@@ -148,10 +152,15 @@ public class ConsentManagerTest {
                         .startMocking();
 
         mDatastore =
-                new BooleanFileDatastore(mContextSpy, AppConsentDaoFixture.TEST_DATASTORE_NAME, 1);
+                new BooleanFileDatastore(
+                        mContextSpy,
+                        ConsentManager.STORAGE_XML_IDENTIFIER,
+                        ConsentManager.STORAGE_VERSION);
         mAppConsentDao = spy(new AppConsentDao(mDatastore, mPackageManagerMock));
         mDbHelper = DbTestUtil.getDbHelperForTest();
         mEnrollmentDao = spy(new EnrollmentDao(mContextSpy, mDbHelper));
+        mAdServicesManager = new AdServicesManager(mContextSpy, mMockIAdServicesManager);
+        doReturn(mAdServicesManager).when(mContextSpy).getSystemService(AdServicesManager.class);
 
         mConsentManager =
                 new ConsentManager(
@@ -162,6 +171,7 @@ public class ConsentManagerTest {
                         mMeasurementImpl,
                         mAdServicesLoggerImpl,
                         mCustomAudienceDaoMock,
+                        mAdServicesManager,
                         mMockFlags);
 
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
@@ -834,6 +844,7 @@ public class ConsentManagerTest {
                         mMeasurementImpl,
                         mAdServicesLoggerImpl,
                         mCustomAudienceDaoMock,
+                        mAdServicesManager,
                         mMockFlags);
         doNothing().when(mBlockedTopicsManager).blockTopic(any());
         doNothing().when(mBlockedTopicsManager).unblockTopic(any());
@@ -862,6 +873,7 @@ public class ConsentManagerTest {
                         mMeasurementImpl,
                         mAdServicesLoggerImpl,
                         mCustomAudienceDaoMock,
+                        mAdServicesManager,
                         mMockFlags);
 
         temporalConsentManager.enable(mContextSpy);
@@ -890,6 +902,7 @@ public class ConsentManagerTest {
                         mMeasurementImpl,
                         mAdServicesLoggerImpl,
                         mCustomAudienceDaoMock,
+                        mAdServicesManager,
                         mMockFlags);
 
         temporalConsentManager.enable(mContextSpy);

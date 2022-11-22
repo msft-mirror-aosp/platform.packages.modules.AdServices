@@ -81,6 +81,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"개인 정보 보호 샌드박스"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android의 광고 개인 정보 보호 베타는 앱에서 사용자가 좋아할 만한 광고를 표시할 수 있는 새로운 기능을 제공합니다. 이 새로운 기술은 기기 식별자를 사용하지 않습니다.\n\nAndroid는 사용자가 관심을 보일 만한 광고 종류를 추정하고 관심분야를 기기에 임시 저장합니다. 이렇게 하면 앱이 다른 개발자의 웹사이트/앱에서 이루어진 활동을 추적하지 않고도 관련성 있는 광고를 표시할 수 있습니다."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"차단한 관심분야가 없습니다."</string>
+    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
+    <skip />
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"앱에서 관심분야를 추정하고 Android를 통해 임시로 저장할 수 있습니다. 나중에 다른 앱이 이 관심분야를 토대로 광고를 표시할 수 있습니다\n\n특정 앱을 차단하면 그 앱은 더 이상 관심분야를 추정하지 않습니다. 차단을 해제하지 않는 한 앱은 목록에 다시 추가되지 않습니다. 차단된 앱에서 이미 추정한 관심분야는 삭제되지만 이와 관련된 일부 광고가 계속 표시될 수도 있습니다"</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"차단한 앱"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"앱에서 추정한 관심분야 초기화"</string>

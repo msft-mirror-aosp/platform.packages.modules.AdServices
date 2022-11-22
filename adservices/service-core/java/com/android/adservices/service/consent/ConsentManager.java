@@ -23,6 +23,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
 
 import android.annotation.NonNull;
+import android.app.adservices.AdServicesManager;
 import android.app.job.JobScheduler;
 import android.content.Context;
 
@@ -58,15 +59,15 @@ import java.util.stream.Collectors;
  * <p>For Beta the consent is given for all {@link AdServicesApiType} or for none.
  */
 public class ConsentManager {
-    private static final String ERROR_MESSAGE_DATASTORE_EXCEPTION_WHILE_GET_CONTENT =
+    private static final String ERROR_MESSAGE_WHILE_GET_CONTENT =
             "getConsent method failed. Revoked consent is returned as fallback.";
     private static final String NOTIFICATION_DISPLAYED_ONCE = "NOTIFICATION-DISPLAYED-ONCE";
-    private static final String CONSENT_ALREADY_INITIALIZED_KEY = "CONSENT-ALREADY-INITIALIZED";
     private static final String CONSENT_KEY = "CONSENT";
-    private static final String ERROR_MESSAGE_DATASTORE_IO_EXCEPTION_WHILE_SET_CONTENT =
-            "setConsent method failed due to IOException thrown by Datastore.";
-    private static final int STORAGE_VERSION = 1;
-    private static final String STORAGE_XML_IDENTIFIER = "ConsentManagerStorageIdentifier.xml";
+    private static final String ERROR_MESSAGE_WHILE_SET_CONTENT = "setConsent method failed.";
+    // Internal datastore version
+    public static final int STORAGE_VERSION = 1;
+    // Internal datastore filename
+    public static final String STORAGE_XML_IDENTIFIER = "ConsentManagerStorageIdentifier.xml";
 
     private static volatile ConsentManager sConsentManager;
     private final Flags mFlags;
@@ -81,6 +82,7 @@ public class ConsentManager {
     private final int mDeviceLoggingRegion;
     private final CustomAudienceDao mCustomAudienceDao;
     private final ExecutorService mExecutor;
+    private final AdServicesManager mAdServicesManager;
 
     ConsentManager(
             @NonNull Context context,
@@ -90,7 +92,8 @@ public class ConsentManager {
             @NonNull MeasurementImpl measurementImpl,
             @NonNull AdServicesLoggerImpl adServicesLoggerImpl,
             @NonNull CustomAudienceDao customAudienceDao,
-            Flags flags) {
+            @NonNull AdServicesManager adServicesManager,
+            @NonNull Flags flags) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(topicsWorker);
         Objects.requireNonNull(appConsentDao);
@@ -98,7 +101,9 @@ public class ConsentManager {
         Objects.requireNonNull(adServicesLoggerImpl);
         Objects.requireNonNull(customAudienceDao);
 
+        mAdServicesManager = adServicesManager;
         mTopicsWorker = topicsWorker;
+        // TODO(b/259664512): don't create the datastore in ctor, provide it from outside instead
         mDatastore = new BooleanFileDatastore(context, STORAGE_XML_IDENTIFIER, STORAGE_VERSION);
         mAppConsentDao = appConsentDao;
         mEnrollmentDao = enrollmentDao;
@@ -132,6 +137,7 @@ public class ConsentManager {
                                     MeasurementImpl.getInstance(context),
                                     AdServicesLoggerImpl.getInstance(),
                                     CustomAudienceDatabase.getInstance(context).customAudienceDao(),
+                                    context.getSystemService(AdServicesManager.class),
                                     FlagsFactory.getFlags());
                 }
             }
@@ -160,8 +166,7 @@ public class ConsentManager {
 
             setConsent(AdServicesApiConsent.GIVEN);
         } catch (IOException e) {
-            LogUtil.e(e, ERROR_MESSAGE_DATASTORE_IO_EXCEPTION_WHILE_SET_CONTENT);
-            throw new RuntimeException(ERROR_MESSAGE_DATASTORE_IO_EXCEPTION_WHILE_SET_CONTENT, e);
+            throw new RuntimeException(ERROR_MESSAGE_WHILE_SET_CONTENT, e);
         }
     }
 
@@ -193,8 +198,7 @@ public class ConsentManager {
 
             setConsent(AdServicesApiConsent.REVOKED);
         } catch (IOException e) {
-            LogUtil.e(e, ERROR_MESSAGE_DATASTORE_IO_EXCEPTION_WHILE_SET_CONTENT);
-            throw new RuntimeException(ERROR_MESSAGE_DATASTORE_IO_EXCEPTION_WHILE_SET_CONTENT, e);
+            throw new RuntimeException(ERROR_MESSAGE_WHILE_SET_CONTENT, e);
         }
     }
 
@@ -205,9 +209,17 @@ public class ConsentManager {
         }
         try {
             init();
+            // TODO(b/258679209): switch to use the Consent from the System Service.
+            if (mFlags.getConsentSourceOfTruth() != Flags.PPAPI_ONLY) {
+                mAdServicesManager.getConsent();
+            }
+
             return AdServicesApiConsent.getConsent(mDatastore.get(CONSENT_KEY));
-        } catch (NullPointerException | IllegalArgumentException | IOException e) {
-            LogUtil.e(e, ERROR_MESSAGE_DATASTORE_EXCEPTION_WHILE_GET_CONTENT);
+        } catch (NullPointerException
+                | IllegalArgumentException
+                | IOException
+                | SecurityException e) {
+            LogUtil.e(e, ERROR_MESSAGE_WHILE_GET_CONTENT);
             return AdServicesApiConsent.REVOKED;
         }
     }
@@ -452,19 +464,16 @@ public class ConsentManager {
     }
 
     void init() throws IOException {
-        initializeStorage();
-        if (mDatastore.get(CONSENT_ALREADY_INITIALIZED_KEY) == null
-                || mDatastore.get(CONSENT_KEY) == null) {
-            mDatastore.put(NOTIFICATION_DISPLAYED_ONCE, false);
-            mDatastore.put(CONSENT_ALREADY_INITIALIZED_KEY, true);
-        }
-    }
-
-    private void initializeStorage() throws IOException {
         if (!mInitialized) {
             synchronized (ConsentManager.class) {
                 if (!mInitialized) {
                     mDatastore.initialize();
+                    // TODO(b/259607624): implement a method in the datastore which would support
+                    // this exact scenario - if the value is null, return default value provided
+                    // in the parameter (similar to SP apply etc.)
+                    if (mDatastore.get(NOTIFICATION_DISPLAYED_ONCE) == null) {
+                        mDatastore.put(NOTIFICATION_DISPLAYED_ONCE, false);
+                    }
                     mInitialized = true;
                 }
             }

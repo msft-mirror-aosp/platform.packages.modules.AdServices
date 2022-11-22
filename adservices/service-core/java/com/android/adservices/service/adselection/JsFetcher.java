@@ -16,9 +16,11 @@
 
 package com.android.adservices.service.adselection;
 
+import android.adservices.adselection.Tracing;
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.net.Uri;
+import android.os.Trace;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.common.AdServicesHttpsClient;
@@ -28,6 +30,8 @@ import com.android.internal.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListeningExecutorService;
+
+import java.util.Objects;
 
 /** Class to fetch JavaScript code both on and off device. */
 public class JsFetcher {
@@ -44,6 +48,11 @@ public class JsFetcher {
             @NonNull ListeningExecutorService lightweightExecutorService,
             @NonNull CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper,
             @NonNull AdServicesHttpsClient adServicesHttpsClient) {
+        Objects.requireNonNull(backgroundExecutorService);
+        Objects.requireNonNull(lightweightExecutorService);
+        Objects.requireNonNull(customAudienceDevOverridesHelper);
+        Objects.requireNonNull(adServicesHttpsClient);
+
         mBackgroundExecutorService = backgroundExecutorService;
         mCustomAudienceDevOverridesHelper = customAudienceDevOverridesHelper;
         mAdServicesHttpsClient = adServicesHttpsClient;
@@ -61,6 +70,8 @@ public class JsFetcher {
             @NonNull String owner,
             @NonNull AdTechIdentifier buyer,
             @NonNull String name) {
+        int traceCookie = Tracing.beginAsyncSection(Tracing.GET_BUYER_DECISION_LOGIC);
+
         FluentFuture<String> jsOverrideFuture =
                 FluentFuture.from(
                         mBackgroundExecutorService.submit(
@@ -70,6 +81,7 @@ public class JsFetcher {
         return jsOverrideFuture
                 .transformAsync(
                         jsOverride -> {
+                            Trace.endAsyncSection(Tracing.GET_BUYER_DECISION_LOGIC, traceCookie);
                             if (jsOverride == null) {
                                 LogUtil.v(
                                         "Fetching buyer decision logic from server: %s",
@@ -87,6 +99,7 @@ public class JsFetcher {
                 .catching(
                         Exception.class,
                         e -> {
+                            Trace.endAsyncSection(Tracing.GET_BUYER_DECISION_LOGIC, traceCookie);
                             LogUtil.w(
                                     e, "Exception encountered when fetching buyer decision logic");
                             throw new IllegalStateException(MISSING_BIDDING_LOGIC);
