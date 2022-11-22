@@ -157,6 +157,8 @@ public final class PhFlags implements Flags {
             "fledge_ad_selection_selecting_outcome_timeout_ms";
     static final String KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS =
             "fledge_ad_selection_overall_timeout_ms";
+    static final String KEY_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS =
+            "fledge_ad_selection_from_outcomes_overall_timeout_ms";
     static final String KEY_FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S =
             "fledge_ad_selection_expiration_window_s";
     static final String KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS =
@@ -889,6 +891,14 @@ public final class PhFlags implements Flags {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS,
                 /* defaultValue */ FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS);
+    }
+
+    @Override
+    public long getAdSelectionFromOutcomesOverallTimeoutMs() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS,
+                /* defaultValue */ FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS);
     }
 
     @Override
@@ -2065,6 +2075,11 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS
                         + " = "
                         + getAdSelectionOverallTimeoutMs());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS
+                        + " = "
+                        + getAdSelectionFromOutcomesOverallTimeoutMs());
         writer.println(
                 "\t"
                         + KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS
