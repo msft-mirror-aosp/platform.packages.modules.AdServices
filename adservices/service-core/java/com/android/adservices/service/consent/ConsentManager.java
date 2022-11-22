@@ -42,6 +42,7 @@ import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.UIStats;
 import com.android.adservices.service.topics.TopicsWorker;
+import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
 
@@ -65,14 +66,15 @@ public class ConsentManager {
     private static final String CONSENT_KEY = "CONSENT";
     private static final String ERROR_MESSAGE_WHILE_SET_CONTENT = "setConsent method failed.";
     // Internal datastore version
-    public static final int STORAGE_VERSION = 1;
-    // Internal datastore filename
-    public static final String STORAGE_XML_IDENTIFIER = "ConsentManagerStorageIdentifier.xml";
+    @VisibleForTesting static final int STORAGE_VERSION = 1;
+    // Internal datastore filename. The name should be unique to avoid multiple threads or processes
+    // to update the same file.
+    @VisibleForTesting
+    static final String STORAGE_XML_IDENTIFIER = "ConsentManagerStorageIdentifier.xml";
 
     private static volatile ConsentManager sConsentManager;
-    private final Flags mFlags;
-    private volatile Boolean mInitialized = false;
 
+    private final Flags mFlags;
     private final TopicsWorker mTopicsWorker;
     private final BooleanFileDatastore mDatastore;
     private final AppConsentDao mAppConsentDao;
@@ -93,6 +95,7 @@ public class ConsentManager {
             @NonNull AdServicesLoggerImpl adServicesLoggerImpl,
             @NonNull CustomAudienceDao customAudienceDao,
             @NonNull AdServicesManager adServicesManager,
+            @NonNull BooleanFileDatastore booleanFileDatastore,
             @NonNull Flags flags) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(topicsWorker);
@@ -100,11 +103,12 @@ public class ConsentManager {
         Objects.requireNonNull(measurementImpl);
         Objects.requireNonNull(adServicesLoggerImpl);
         Objects.requireNonNull(customAudienceDao);
+        Objects.requireNonNull(adServicesManager);
+        Objects.requireNonNull(booleanFileDatastore);
 
         mAdServicesManager = adServicesManager;
         mTopicsWorker = topicsWorker;
-        // TODO(b/259664512): don't create the datastore in ctor, provide it from outside instead
-        mDatastore = new BooleanFileDatastore(context, STORAGE_XML_IDENTIFIER, STORAGE_VERSION);
+        mDatastore = booleanFileDatastore;
         mAppConsentDao = appConsentDao;
         mEnrollmentDao = enrollmentDao;
         mMeasurementImpl = measurementImpl;
@@ -138,6 +142,7 @@ public class ConsentManager {
                                     AdServicesLoggerImpl.getInstance(),
                                     CustomAudienceDatabase.getInstance(context).customAudienceDao(),
                                     context.getSystemService(AdServicesManager.class),
+                                    createAndInitializeDataStore(context),
                                     FlagsFactory.getFlags());
                 }
             }
@@ -160,8 +165,6 @@ public class ConsentManager {
 
         // Enable all the APIs
         try {
-            init();
-
             BackgroundJobsManager.scheduleAllBackgroundJobs(context);
 
             setConsent(AdServicesApiConsent.GIVEN);
@@ -185,8 +188,6 @@ public class ConsentManager {
 
         // Disable all the APIs
         try {
-            init();
-
             // reset all data
             resetTopicsAndBlockedTopics();
             resetAppsAndBlockedApps();
@@ -208,17 +209,13 @@ public class ConsentManager {
             return AdServicesApiConsent.GIVEN;
         }
         try {
-            init();
             // TODO(b/258679209): switch to use the Consent from the System Service.
             if (mFlags.getConsentSourceOfTruth() != Flags.PPAPI_ONLY) {
                 mAdServicesManager.getConsent();
             }
 
             return AdServicesApiConsent.getConsent(mDatastore.get(CONSENT_KEY));
-        } catch (NullPointerException
-                | IllegalArgumentException
-                | IOException
-                | SecurityException e) {
+        } catch (NullPointerException | IllegalArgumentException | SecurityException e) {
             LogUtil.e(e, ERROR_MESSAGE_WHILE_GET_CONTENT);
             return AdServicesApiConsent.REVOKED;
         }
@@ -436,7 +433,6 @@ public class ConsentManager {
      */
     public void recordNotificationDisplayed() {
         try {
-            init();
             // TODO(b/229725886): add metrics / logging
             mDatastore.put(NOTIFICATION_DISPLAYED_ONCE, true);
         } catch (IOException e) {
@@ -450,34 +446,31 @@ public class ConsentManager {
      * @return true if Consent Notification was displayed, otherwise false.
      */
     public Boolean wasNotificationDisplayed() {
-        try {
-            init();
-            return mDatastore.get(NOTIFICATION_DISPLAYED_ONCE);
-        } catch (IOException e) {
-            LogUtil.e(e, "Record notification failed due to IOException thrown by Datastore.");
-            return false;
-        }
+        return mDatastore.get(NOTIFICATION_DISPLAYED_ONCE);
     }
 
     private void setConsent(AdServicesApiConsent state) throws IOException {
         mDatastore.put(CONSENT_KEY, state.isGiven());
     }
 
-    void init() throws IOException {
-        if (!mInitialized) {
-            synchronized (ConsentManager.class) {
-                if (!mInitialized) {
-                    mDatastore.initialize();
-                    // TODO(b/259607624): implement a method in the datastore which would support
-                    // this exact scenario - if the value is null, return default value provided
-                    // in the parameter (similar to SP apply etc.)
-                    if (mDatastore.get(NOTIFICATION_DISPLAYED_ONCE) == null) {
-                        mDatastore.put(NOTIFICATION_DISPLAYED_ONCE, false);
-                    }
-                    mInitialized = true;
-                }
+    @VisibleForTesting
+    static BooleanFileDatastore createAndInitializeDataStore(@NonNull Context context) {
+        BooleanFileDatastore booleanFileDatastore =
+                new BooleanFileDatastore(context, STORAGE_XML_IDENTIFIER, STORAGE_VERSION);
+
+        try {
+            booleanFileDatastore.initialize();
+            // TODO(b/259607624): implement a method in the datastore which would support
+            // this exact scenario - if the value is null, return default value provided
+            // in the parameter (similar to SP apply etc.)
+            if (booleanFileDatastore.get(NOTIFICATION_DISPLAYED_ONCE) == null) {
+                booleanFileDatastore.put(NOTIFICATION_DISPLAYED_ONCE, false);
             }
+        } catch (IOException | IllegalArgumentException | NullPointerException e) {
+            throw new RuntimeException("Failed to initialize the File Datastore!", e);
         }
+
+        return booleanFileDatastore;
     }
 
     private int initializeLoggingValues(Context context) {
