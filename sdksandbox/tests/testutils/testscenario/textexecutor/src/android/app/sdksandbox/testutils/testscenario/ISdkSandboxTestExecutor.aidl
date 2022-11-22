@@ -29,5 +29,16 @@ interface ISdkSandboxTestExecutor {
      */
     const String TEST_AUTHOR_DEFINED_BINDER = "TEST_AUTHOR_DEFINED_BINDER";
 
-    oneway void executeTest(String testName, in Bundle params, in ISdkSandboxResultCallback callback);
+    /**
+     * Returns a list of method names that had an annotation
+     * name.
+     */
+    List<String> retrieveAnnotatedMethods(String canonicalAnnotation);
+
+    /**
+     * Invokes a method from within the SDK.
+
+     */
+    oneway void invokeMethod(String methodName, in Bundle params,
+        in ISdkSandboxResultCallback callback);
 }
