@@ -81,6 +81,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android-betaversjonen for annonsepersonvern har nye funksjoner som apper kan bruke for å vise deg annonser du kan være interessert i. Disse teknologiene bruker ikke enhetsidentifikatorer.\n\nAndroid kan anslå hvilke typer annonser du kan være interessert i, og lagre disse interessene midlertidig på enheten din. Dette gjør at apper kan vise deg relevante annonser uten å spore aktiviteten din på nettsteder og i apper fra andre utviklere."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Du har ingen blokkerte interesser"</string>
+    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
+    <skip />
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Apper kan anslå interessene dine og midlertidig lagre disse med Android. Senere kan andre apper viser deg annonser basert på disse interessene.\n\nHvis du blokkerer en app, anslår den ikke flere interesser. Den legges ikke til i denne applisten igjen, med mindre du opphever blokkeringen av den. Interesser som allerede er anslått av appen, blir slettet, men du kan fremdeles se noen relaterte annonser."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Apper du har blokkert"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Tilbakestill interesser anslått av apper"</string>

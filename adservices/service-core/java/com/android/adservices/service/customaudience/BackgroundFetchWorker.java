@@ -16,6 +16,11 @@
 
 package com.android.adservices.service.customaudience;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+
+import static com.android.adservices.service.stats.AdServicesLoggerUtil.UNSET;
+import static com.android.adservices.service.stats.Clock.SYSTEM_CLOCK;
+
 import android.annotation.NonNull;
 import android.content.Context;
 
@@ -27,6 +32,9 @@ import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetc
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.AdServicesLoggerUtil;
+import com.android.adservices.service.stats.BackgroundFetchExecutionLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.Lists;
@@ -56,21 +64,25 @@ public class BackgroundFetchWorker {
     private volatile boolean mWorkInProgress;
     private volatile boolean mStopWorkRequested;
     private CountDownLatch mStopWorkLatch;
+    private final BackgroundFetchExecutionLogger mBackgroundFetchExecutionLogger;
 
     @VisibleForTesting
     protected BackgroundFetchWorker(
             @NonNull CustomAudienceDao customAudienceDao,
             @NonNull Flags flags,
-            @NonNull BackgroundFetchRunner backgroundFetchRunner) {
+            @NonNull BackgroundFetchRunner backgroundFetchRunner,
+            @NonNull BackgroundFetchExecutionLogger backgroundFetchExecutionLogger) {
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(flags);
         Objects.requireNonNull(backgroundFetchRunner);
+        Objects.requireNonNull(backgroundFetchExecutionLogger);
         mCustomAudienceDao = customAudienceDao;
         mFlags = flags;
         mBackgroundFetchRunner = backgroundFetchRunner;
         mWorkInProgress = false;
         mStopWorkRequested = false;
         mStopWorkLatch = new CountDownLatch(0);
+        mBackgroundFetchExecutionLogger = backgroundFetchExecutionLogger;
     }
 
     /**
@@ -96,7 +108,9 @@ public class BackgroundFetchWorker {
                                             customAudienceDao,
                                             context.getPackageManager(),
                                             EnrollmentDao.getInstance(context),
-                                            flags));
+                                            flags),
+                                    new BackgroundFetchExecutionLogger(
+                                            SYSTEM_CLOCK, AdServicesLoggerImpl.getInstance()));
                 }
             }
         }
@@ -125,6 +139,10 @@ public class BackgroundFetchWorker {
             LogUtil.w("Already running FLEDGE background fetch, skipping call");
             return;
         }
+        // Start background fetch execution logger.
+        mBackgroundFetchExecutionLogger.start();
+        int numOfEligibleToUpdateCAs = UNSET;
+        int resultCode = UNSET;
 
         try {
             mWorkInProgress = true;
@@ -155,9 +173,12 @@ public class BackgroundFetchWorker {
                             jobStartTime, mFlags.getFledgeBackgroundFetchMaxNumUpdated());
 
             if (fetchDataList.isEmpty()) {
+                numOfEligibleToUpdateCAs = 0;
                 LogUtil.d("No custom audiences found to update");
+                resultCode = STATUS_SUCCESS;
                 return;
             } else {
+                numOfEligibleToUpdateCAs = fetchDataList.size();
                 LogUtil.d("Updating %d custom audiences", fetchDataList.size());
             }
 
@@ -196,9 +217,15 @@ public class BackgroundFetchWorker {
                             - (Clock.systemUTC().instant().toEpochMilli()
                                     - jobStartTime.toEpochMilli());
             Futures.allAsList(subListFutureUpdates).get(remainingJobTimeMs, TimeUnit.MILLISECONDS);
+            resultCode = STATUS_SUCCESS;
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            resultCode = AdServicesLoggerUtil.getResultCodeFromException(e);
+            throw e;
         } finally {
             mStopWorkLatch.countDown();
             mWorkInProgress = false;
+            // Close the background fetch execution logger.
+            mBackgroundFetchExecutionLogger.close(numOfEligibleToUpdateCAs, resultCode);
         }
     }
 

@@ -26,7 +26,6 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 
-import android.adservices.exceptions.AdServicesException;
 import android.os.LimitExceededException;
 
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -37,29 +36,32 @@ import com.android.adservices.service.js.JSSandboxIsNotAvailableException;
 
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 
+import java.util.concurrent.TimeoutException;
+
 /** Util class for AdServicesLogger */
 public class AdServicesLoggerUtil {
+    /** enum type value for any field in a telemetry atom that should be unset. */
+    // TODO(b/260148149): Replace STATUS_UNSET with UNSET for non status field a.k.a. resultCode. */
+    public static final int UNSET = -1;
 
     /** @return the resultCode corresponding to the type of exception to be used in logging. */
     public static int getResultCodeFromException(Throwable t) {
         int resultCode;
-        if (t.getCause() instanceof AdServicesException) {
-            resultCode = STATUS_INTERNAL_ERROR;
-        } else if (t instanceof AppImportanceFilter.WrongCallingApplicationStateException) {
+        if (t instanceof AppImportanceFilter.WrongCallingApplicationStateException) {
             resultCode = STATUS_BACKGROUND_CALLER;
-        } else if (t instanceof UncheckedTimeoutException) {
+        } else if (t instanceof UncheckedTimeoutException | t instanceof TimeoutException) {
             resultCode = STATUS_TIMEOUT;
         } else if (t instanceof FledgeAuthorizationFilter.AdTechNotAllowedException
                 || t instanceof FledgeAllowListsFilter.AppNotAllowedException) {
             resultCode = STATUS_CALLER_NOT_ALLOWED;
         } else if (t instanceof FledgeAuthorizationFilter.CallerMismatchException) {
             resultCode = STATUS_UNAUTHORIZED;
+        } else if (t instanceof JSSandboxIsNotAvailableException) {
+            resultCode = STATUS_JS_SANDBOX_UNAVAILABLE;
         } else if (t instanceof IllegalArgumentException) {
             resultCode = STATUS_INVALID_ARGUMENT;
         } else if (t instanceof LimitExceededException) {
             resultCode = STATUS_RATE_LIMIT_REACHED;
-        } else if (t instanceof JSSandboxIsNotAvailableException) {
-            resultCode = STATUS_JS_SANDBOX_UNAVAILABLE;
         } else if (t instanceof ConsentManager.RevokedConsentException) {
             resultCode = STATUS_USER_CONSENT_REVOKED;
         } else {

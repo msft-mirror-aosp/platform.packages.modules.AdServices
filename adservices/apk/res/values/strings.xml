@@ -66,6 +66,11 @@
     <!-- Description of an application permission that lets it access AdService's enablement state API. [CHAR LIMIT=NONE] -->
     <string name="permdesc_accessAdServicesState">Allows an application to access AdService’s enablement state API.</string>
 
+    <!-- Title of an application permission that lets it access AdServicesManager’s APIs. [CHAR LIMIT=NONE] -->
+    <string name="permlab_accessAdServicesManager">Access to AdServicesManager’s APIs</string>
+    <!-- Description of an application permission that lets it access AdServicesManager’s APIs. [CHAR LIMIT=NONE] -->
+    <string name="permdesc_accessAdServicesManager">Allows an application to access AdServicesManager’s APIs.</string>
+
     <!-- Settings App UI strings -->
 
     <!--*****************************************************************************************-->
@@ -233,6 +238,20 @@
     <!-- Text to show if there are no apps. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_apps_view_no_blocked_apps_text">You have no blocked apps</string>
 
+    <!-- Settings App UI Measurement View strings *******************************************************-->
+    <!-- TODO (b/257543349): update new strings and mark them as translatable once they are finalized -->
+    <!-- Text for the introduction to ad measurement data. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_measurement_view_intro_text" translatable="false">[Intro copy for measurement] Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod</string>
+    <!-- Text for the button to reset measurement data. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_measurement_view_reset_title" translatable="false">Clear measurement data</string>
+    <!-- Title for the ads measurement view. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_measurement_view_title" translatable="false">@string/settingsUI_main_view_info_text8</string>
+    <!-- Text for the footer of measurement view. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_measurement_view_footer_text" translatable="false">@string/settingsUI_main_view_info_text9</string>
+    <!-- Text for the toast message of measurement reset. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_measurement_are_reset" translatable="false">Data by has been cleared!</string>
+
+
     <!-- Settings App UI dialog strings *******************************************************-->
     <!-- Text for the button to cancel out of a dialog. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_dialog_negative_text">Cancel</string>
@@ -281,6 +300,12 @@
     <!-- Info text for toast displayed after apps are reset. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_apps_are_reset" translatable="false">@string/settingsUI_topics_are_reset</string>
 
+    <!--    TODO (b/257543349): update new strings and mark them as translatable once they are finalized-->
+    <!--    title for button to reset ads measurement. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_dialog_reset_measurement_title" translatable="false">Clear data for Ads measurement?</string>
+    <!--    Body text for the dialog to reset ads measurement [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_dialog_reset_measurement_message" translatable="false">[Copy for measurement] PlaceHolder of for measurement clear message dialog</string>
+    <string name="settingsUI_dialog_reset_measurement_positive_text" translatable="false">Clear</string>
     <!-- All Topics strings *********************************************************************-->
     <!-- Text for the topic name for topic Arts &amp; Entertainment. [CHAR LIMIT=NONE] -->
     <string name="topic10001">Arts &amp; Entertainment</string>
@@ -1174,4 +1199,5 @@
     <string name="topic10445">Travel Agencies &amp; Services</string>
     <!-- Text for the topic name for topic Travel Guides &amp; Travelogues. [CHAR LIMIT=NONE] -->
     <string name="topic10446">Travel Guides &amp; Travelogues</string>
+
 </resources>

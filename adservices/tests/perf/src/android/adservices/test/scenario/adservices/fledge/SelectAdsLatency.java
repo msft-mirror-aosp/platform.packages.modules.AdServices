@@ -14,8 +14,13 @@
  * limitations under the License.
  */
 
-package src.android.adservices.test.scenario.adservices.fledge;
+package android.adservices.test.scenario.adservices.fledge;
 
+import static android.adservices.test.scenario.adservices.utils.MockWebServerDispatcherFactory.NETWORK_4G;
+import static android.adservices.test.scenario.adservices.utils.MockWebServerDispatcherFactory.NETWORK_4GPLUS;
+import static android.adservices.test.scenario.adservices.utils.MockWebServerDispatcherFactory.NETWORK_5G;
+
+import android.Manifest;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.clients.adselection.AdSelectionClient;
@@ -29,9 +34,11 @@ import android.adservices.test.scenario.adservices.utils.MockWebServerRuleFactor
 import android.content.Context;
 import android.net.Uri;
 import android.platform.test.scenario.annotation.Scenario;
+import android.provider.DeviceConfig;
 import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.compatibility.common.util.ShellUtils;
 
@@ -80,12 +87,10 @@ public class SelectAdsLatency {
     private static final int NUMBER_ADS_PER_CA_MEDIUM = 5;
     private static final int NUMBER_ADS_PER_CA_LARGE = 10;
 
-    private static final String LOG_LABEL_P50_5G = "SELECT_ADS_LATENCY_P50_5G";
-    private static final String LOG_LABEL_P50_4GPLUS = "SELECT_ADS_LATENCY_P50_4GPLUS";
-    private static final String LOG_LABEL_P50_4G = "SELECT_ADS_LATENCY_P50_4G";
-    private static final String LOG_LABEL_P90_5G = "SELECT_ADS_LATENCY_P90_5G";
-    private static final String LOG_LABEL_P90_4GPLUS = "SELECT_ADS_LATENCY_P90_4GPLUS";
-    private static final String LOG_LABEL_P90_4G = "SELECT_ADS_LATENCY_P90_4G";
+    private static final Map<Integer, Integer> PERCENTILE_TO_NUM_CAS =
+            Map.of(50, NUMBER_OF_CUSTOM_AUDIENCES_MEDIUM, 90, NUMBER_OF_CUSTOM_AUDIENCES_LARGE);
+    private static final Map<Integer, Integer> PERCENTILE_TO_ADS_PER_CA =
+            Map.of(50, NUMBER_ADS_PER_CA_MEDIUM, 90, NUMBER_ADS_PER_CA_LARGE);
 
     private static final String AD_SELECTION_FAILURE_MESSAGE =
             "Ad selection outcome is not expected";
@@ -116,160 +121,91 @@ public class SelectAdsLatency {
 
     @BeforeClass
     public static void setupBeforeClass() {
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "fledge_ad_selection_bidding_timeout_per_ca_ms",
+                "120000",
+                false);
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "fledge_ad_selection_scoring_timeout_ms",
+                "120000",
+                false);
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "fledge_ad_selection_overall_timeout_ms",
+                "120000",
+                false);
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "fledge_ad_selection_bidding_timeout_per_buyer_ms",
+                "120000",
+                false);
         ShellUtils.runShellCommand("su 0 killall -9 com.google.android.adservices.api");
     }
 
     @Test
     public void selectAds_p50_5G() throws Exception {
-        mMockWebServerRule.createMockWebServer();
-        mMockWebServerRule.startCreatedMockWebServer(
-                MockWebServerDispatcherFactory.create5Gp50LatencyDispatcher(mMockWebServerRule));
-        mCustomAudienceSetupRule.populateCustomAudiences(
-                NUMBER_OF_CUSTOM_AUDIENCES_MEDIUM, NUMBER_ADS_PER_CA_MEDIUM);
-        Stopwatch timer = Stopwatch.createStarted(mTicker);
-
-        AdSelectionOutcome outcome =
-                mAdSelectionClient
-                        .selectAds(createAdSelectionConfig())
-                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-
-        timer.stop();
-
-        // TODO(b/250851601): Currently we use logcat latency collector. Consider replacing this
-        // with a perfetto trace collector because it won't be affected by write to logcat latency.
-        Log.i(TAG, "(" + LOG_LABEL_P50_5G + ": " + timer.elapsed(TimeUnit.MILLISECONDS) + " ms)");
-        Assert.assertEquals(
-                AD_SELECTION_FAILURE_MESSAGE,
-                createExpectedWinningUri(BUYER, "GENERIC_CA_1", NUMBER_ADS_PER_CA_MEDIUM),
-                outcome.getRenderUri());
+        selectAds(NETWORK_5G, 50);
     }
 
     @Test
     public void selectAds_p50_4GPlus() throws Exception {
-        mMockWebServerRule.createMockWebServer();
-        mMockWebServerRule.startCreatedMockWebServer(
-                MockWebServerDispatcherFactory.create4GPlusp50LatencyDispatcher(
-                        mMockWebServerRule));
-        mCustomAudienceSetupRule.populateCustomAudiences(
-                NUMBER_OF_CUSTOM_AUDIENCES_MEDIUM, NUMBER_ADS_PER_CA_MEDIUM);
-
-        Stopwatch timer = Stopwatch.createStarted(mTicker);
-        AdSelectionOutcome outcome =
-                mAdSelectionClient
-                        .selectAds(createAdSelectionConfig())
-                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-
-        timer.stop();
-
-        // TODO(b/250851601): Currently we use logcat latency collector. Consider replacing this
-        // with a perfetto trace collector because it won't be affected by write to logcat latency.
-        Log.i(
-                TAG,
-                "(" + LOG_LABEL_P50_4GPLUS + ": " + timer.elapsed(TimeUnit.MILLISECONDS) + " ms)");
-        Assert.assertEquals(
-                AD_SELECTION_FAILURE_MESSAGE,
-                createExpectedWinningUri(BUYER, "GENERIC_CA_1", NUMBER_ADS_PER_CA_MEDIUM),
-                outcome.getRenderUri());
+        selectAds(NETWORK_4GPLUS, 50);
     }
 
     @Test
     public void selectAds_p50_4G() throws Exception {
-        mMockWebServerRule.createMockWebServer();
-        mMockWebServerRule.startCreatedMockWebServer(
-                MockWebServerDispatcherFactory.create4Gp50LatencyDispatcher(mMockWebServerRule));
-        mCustomAudienceSetupRule.populateCustomAudiences(
-                NUMBER_OF_CUSTOM_AUDIENCES_MEDIUM, NUMBER_ADS_PER_CA_MEDIUM);
-
-        Stopwatch timer = Stopwatch.createStarted(mTicker);
-        AdSelectionOutcome outcome =
-                mAdSelectionClient
-                        .selectAds(createAdSelectionConfig())
-                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-
-        timer.stop();
-
-        // TODO(b/250851601): Currently we use logcat latency collector. Consider replacing this
-        // with a perfetto trace collector because it won't be affected by write to logcat latency.
-        Log.i(TAG, "(" + LOG_LABEL_P50_4G + ": " + timer.elapsed(TimeUnit.MILLISECONDS) + " ms)");
-        Assert.assertEquals(
-                AD_SELECTION_FAILURE_MESSAGE,
-                createExpectedWinningUri(BUYER, "GENERIC_CA_1", NUMBER_ADS_PER_CA_MEDIUM),
-                outcome.getRenderUri());
+        selectAds(NETWORK_4G, 50);
     }
 
     @Test
     public void selectAds_p90_5G() throws Exception {
-        mMockWebServerRule.createMockWebServer();
-        mMockWebServerRule.startCreatedMockWebServer(
-                MockWebServerDispatcherFactory.create5Gp90LatencyDispatcher(mMockWebServerRule));
-        mCustomAudienceSetupRule.populateCustomAudiences(
-                NUMBER_OF_CUSTOM_AUDIENCES_LARGE, NUMBER_ADS_PER_CA_LARGE);
-
-        Stopwatch timer = Stopwatch.createStarted(mTicker);
-        AdSelectionOutcome outcome =
-                mAdSelectionClient
-                        .selectAds(createAdSelectionConfig())
-                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-
-        timer.stop();
-
-        // TODO(b/250851601): Currently we use logcat latency collector. Consider replacing this
-        // with a perfetto trace collector because it won't be affected by write to logcat latency.
-        Log.i(TAG, "(" + LOG_LABEL_P90_5G + ": " + timer.elapsed(TimeUnit.MILLISECONDS) + " ms)");
-        Assert.assertEquals(
-                AD_SELECTION_FAILURE_MESSAGE,
-                createExpectedWinningUri(BUYER, "GENERIC_CA_1", NUMBER_ADS_PER_CA_LARGE),
-                outcome.getRenderUri());
+        selectAds(NETWORK_5G, 90);
     }
 
     @Test
     public void selectAds_p90_4G() throws Exception {
-        mMockWebServerRule.createMockWebServer();
-        mMockWebServerRule.startCreatedMockWebServer(
-                MockWebServerDispatcherFactory.create4Gp90LatencyDispatcher(mMockWebServerRule));
-        mCustomAudienceSetupRule.populateCustomAudiences(
-                NUMBER_OF_CUSTOM_AUDIENCES_LARGE, NUMBER_ADS_PER_CA_LARGE);
-        Stopwatch timer = Stopwatch.createStarted(mTicker);
-
-        AdSelectionOutcome outcome =
-                mAdSelectionClient
-                        .selectAds(createAdSelectionConfig())
-                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-
-        timer.stop();
-        // TODO(b/250851601): Currently we use logcat latency collector. Consider replacing this
-        // with a perfetto trace collector because it won't be affected by write to logcat latency.
-        Log.i(TAG, "(" + LOG_LABEL_P90_4G + ": " + timer.elapsed(TimeUnit.MILLISECONDS) + " ms)");
-        Assert.assertEquals(
-                AD_SELECTION_FAILURE_MESSAGE,
-                createExpectedWinningUri(BUYER, "GENERIC_CA_1", NUMBER_ADS_PER_CA_LARGE),
-                outcome.getRenderUri());
+        selectAds(NETWORK_4G, 90);
     }
 
     @Test
     public void selectAds_p90_4GPlus() throws Exception {
+        selectAds(NETWORK_4GPLUS, 90);
+    }
+
+    private void selectAds(String network, int percentile) throws Exception {
         mMockWebServerRule.createMockWebServer();
         mMockWebServerRule.startCreatedMockWebServer(
-                MockWebServerDispatcherFactory.create4GPlusp90LatencyDispatcher(
-                        mMockWebServerRule));
+                MockWebServerDispatcherFactory.createLatencyDispatcher(
+                        mMockWebServerRule, network, percentile));
         mCustomAudienceSetupRule.populateCustomAudiences(
-                NUMBER_OF_CUSTOM_AUDIENCES_LARGE, NUMBER_ADS_PER_CA_LARGE);
-
+                PERCENTILE_TO_NUM_CAS.get(percentile), PERCENTILE_TO_ADS_PER_CA.get(percentile));
         Stopwatch timer = Stopwatch.createStarted(mTicker);
+
         AdSelectionOutcome outcome =
                 mAdSelectionClient
                         .selectAds(createAdSelectionConfig())
                         .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
         timer.stop();
+
         // TODO(b/250851601): Currently we use logcat latency collector. Consider replacing this
         // with a perfetto trace collector because it won't be affected by write to logcat latency.
         Log.i(
                 TAG,
-                "(" + LOG_LABEL_P90_4GPLUS + ": " + timer.elapsed(TimeUnit.MILLISECONDS) + " ms)");
+                "("
+                        + generateLogLabel(percentile, network)
+                        + ": "
+                        + timer.elapsed(TimeUnit.MILLISECONDS)
+                        + " ms)");
         Assert.assertEquals(
                 AD_SELECTION_FAILURE_MESSAGE,
-                createExpectedWinningUri(BUYER, "GENERIC_CA_1", NUMBER_ADS_PER_CA_LARGE),
+                createExpectedWinningUri(
+                        BUYER, "GENERIC_CA_1", PERCENTILE_TO_ADS_PER_CA.get(percentile)),
                 outcome.getRenderUri());
     }
 
@@ -297,5 +233,9 @@ public class SelectAdsLatency {
                         mMockWebServerRule.uriForPath(
                                 MockWebServerDispatcherFactory.getTrustedScoringSignalPath()))
                 .build();
+    }
+
+    private String generateLogLabel(int percentile, String network) {
+        return "SELECT_ADS_LATENCY_P" + percentile + "_" + network;
     }
 }

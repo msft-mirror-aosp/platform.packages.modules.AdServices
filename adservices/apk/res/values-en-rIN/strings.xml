@@ -81,6 +81,7 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android’s ads privacy beta provides new features that apps can use to show you ads that you might like. These technologies don’t use device identifiers.\n\nAndroid can estimate the kind of ads that you might be interested in and save these interests temporarily on your device. This allows apps to show you relevant ads, without tracking your activity across websites and apps from other developers."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"You have no blocked interests"</string>
+    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Interests are reset"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Apps can estimate your interests and temporarily save these with Android. Later, a different app can show you an ad based on these interests.\n\nIf you block an app, it won’t estimate any more interests. It won’t be added to this list of apps again unless you unblock it. Interests already estimated by the app will be deleted, but you might still see some related ads."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Apps that you’ve blocked"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Reset interests estimated by apps"</string>
