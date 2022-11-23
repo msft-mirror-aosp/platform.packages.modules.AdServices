@@ -106,6 +106,7 @@ public class ConsentManagerTest {
     @Spy private final Context mContextSpy = ApplicationProvider.getApplicationContext();
 
     private BooleanFileDatastore mDatastore;
+    private BooleanFileDatastore mConsentDatastore;
     private ConsentManager mConsentManager;
     private AppConsentDao mAppConsentDao;
     private EnrollmentDao mEnrollmentDao;
@@ -153,9 +154,10 @@ public class ConsentManagerTest {
 
         mDatastore =
                 new BooleanFileDatastore(
-                        mContextSpy,
-                        ConsentManager.STORAGE_XML_IDENTIFIER,
-                        ConsentManager.STORAGE_VERSION);
+                        mContextSpy, AppConsentDao.DATASTORE_NAME, AppConsentDao.DATASTORE_VERSION);
+        // For each file, we should ensure there is only one instance of datastore that is able to
+        // access it. (Refer to BooleanFileDatastore.class)
+        mConsentDatastore = ConsentManager.createAndInitializeDataStore(mContextSpy);
         mAppConsentDao = spy(new AppConsentDao(mDatastore, mPackageManagerMock));
         mDbHelper = DbTestUtil.getDbHelperForTest();
         mEnrollmentDao = spy(new EnrollmentDao(mContextSpy, mDbHelper));
@@ -172,6 +174,7 @@ public class ConsentManagerTest {
                         mAdServicesLoggerImpl,
                         mCustomAudienceDaoMock,
                         mAdServicesManager,
+                        mConsentDatastore,
                         mMockFlags);
 
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
@@ -211,6 +214,7 @@ public class ConsentManagerTest {
     @After
     public void teardown() throws IOException {
         mDatastore.clear();
+        mConsentDatastore.clear();
         if (mStaticMockSession != null) {
             mStaticMockSession.finishMocking();
         }
@@ -845,6 +849,7 @@ public class ConsentManagerTest {
                         mAdServicesLoggerImpl,
                         mCustomAudienceDaoMock,
                         mAdServicesManager,
+                        mConsentDatastore,
                         mMockFlags);
         doNothing().when(mBlockedTopicsManager).blockTopic(any());
         doNothing().when(mBlockedTopicsManager).unblockTopic(any());
@@ -874,6 +879,7 @@ public class ConsentManagerTest {
                         mAdServicesLoggerImpl,
                         mCustomAudienceDaoMock,
                         mAdServicesManager,
+                        mConsentDatastore,
                         mMockFlags);
 
         temporalConsentManager.enable(mContextSpy);
@@ -903,6 +909,7 @@ public class ConsentManagerTest {
                         mAdServicesLoggerImpl,
                         mCustomAudienceDaoMock,
                         mAdServicesManager,
+                        mConsentDatastore,
                         mMockFlags);
 
         temporalConsentManager.enable(mContextSpy);
