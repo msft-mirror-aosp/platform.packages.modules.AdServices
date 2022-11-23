@@ -17,6 +17,8 @@ package com.android.server.adservices;
 
 import static android.app.adservices.AdServicesManager.AD_SERVICES_SYSTEM_SERVICE;
 
+import android.adservices.common.AdServicesPermissions;
+import android.annotation.RequiresPermission;
 import android.app.adservices.ConsentParcel;
 import android.app.adservices.IAdServicesManager;
 import android.content.BroadcastReceiver;
@@ -43,6 +45,9 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     // The base directory for AdServices System Service.
     private static final String SYSTEM_DATA = "/data/system/";
     public static String ADSERVICES_BASE_DIR = SYSTEM_DATA + "adservices";
+    private static final String ERROR_MESSAGE_NOT_PERMITTED_TO_CALL_ADSERVICESMANAGER_API =
+            "Unauthorized caller. Permission to call AdServicesManager API is not granted in System"
+                    + " Server.";
 
     /**
      * Broadcast send from the system service to the AdServices module when a package has been
@@ -115,7 +120,10 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     }
 
     @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
     public ConsentParcel getConsent() {
+        enforceAdServicesManagerPermission();
+
         final int userIdentifier = getUserIdentifier();
 
         LogUtil.v("getConsent() for User Identifier %d", userIdentifier);
@@ -135,7 +143,10 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     }
 
     @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
     public void setConsent(ConsentParcel consentParcel) {
+        enforceAdServicesManagerPermission();
+
         Objects.requireNonNull(consentParcel);
 
         final int userIdentifier = getUserIdentifier();
@@ -150,7 +161,10 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     }
 
     @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
     public void recordNotificationDisplayed() {
+        enforceAdServicesManagerPermission();
+
         final int userIdentifier = getUserIdentifier();
         LogUtil.v("recordNotificationDisplayed() for User Identifier %d", userIdentifier);
         try {
@@ -163,7 +177,10 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     }
 
     @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
     public boolean wasNotificationDisplayed() {
+        enforceAdServicesManagerPermission();
+
         final int userIdentifier = getUserIdentifier();
         LogUtil.v("wasNotificationDisplayed() for User Identifier %d", userIdentifier);
         try {
@@ -281,5 +298,13 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
                 }
             }
         }
+    }
+
+    // Check if caller has permission to invoke AdServicesManager APIs.
+    @VisibleForTesting
+    void enforceAdServicesManagerPermission() {
+        mContext.enforceCallingPermission(
+                AdServicesPermissions.ACCESS_ADSERVICES_MANAGER,
+                ERROR_MESSAGE_NOT_PERMITTED_TO_CALL_ADSERVICESMANAGER_API);
     }
 }
