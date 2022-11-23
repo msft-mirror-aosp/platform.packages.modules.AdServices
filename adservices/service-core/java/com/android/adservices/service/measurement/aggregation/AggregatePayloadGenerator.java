@@ -49,17 +49,17 @@ public class AggregatePayloadGenerator {
         Map<String, BigInteger> aggregateSourceMap =
                 attributionSource.getAggregatableSource();
         for (AggregateTriggerData triggerData : attributionTrigger.getTriggerData()) {
-            Optional<FilterMap> filterMap = triggerData.getFilter();
-            Optional<FilterMap> notFilterMap = triggerData.getNotFilter();
+            Optional<List<FilterMap>> filterSet = triggerData.getFilterSet();
+            Optional<List<FilterMap>> notFilterSet = triggerData.getNotFilterSet();
             // Skip this trigger data when filter doesn't match.
-            if (filterMap.isPresent()
-                    && !Filter.isFilterMatch(sourceFilterMap, filterMap.get(), true)) {
+            if (filterSet.isPresent()
+                    && !Filter.isFilterMatch(sourceFilterMap, filterSet.get(), true)) {
                 continue;
             }
             // Skip this trigger data when not_filters doesn't match.
-            if (notFilterMap.isPresent()
+            if (notFilterSet.isPresent()
                     && !Filter.isFilterMatch(
-                            sourceFilterMap, notFilterMap.get(), false)) {
+                            sourceFilterMap, notFilterSet.get(), false)) {
                 continue;
             }
             for (String sourceKey : triggerData.getSourceKeys()) {
