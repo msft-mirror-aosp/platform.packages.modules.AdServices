@@ -54,6 +54,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.AdditionalMatchers.geq;
+import static org.mockito.Mockito.timeout;
 
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
@@ -884,8 +885,8 @@ public class AdSelectionE2ETest {
                 "Network calls with caching should have been lesser",
                 serverCallsCountWithCaching < expectedNetworkCallsNoCaching);
 
-        // Cache cleanup should have been invoked
-        verify(mCacheObserver).update(HttpCache.CacheEventType.CLEANUP);
+        // Cache cleanup should have been eventually invoked
+        verify(mCacheObserver, timeout(3000)).update(HttpCache.CacheEventType.CLEANUP);
         cache.delete();
     }
 
