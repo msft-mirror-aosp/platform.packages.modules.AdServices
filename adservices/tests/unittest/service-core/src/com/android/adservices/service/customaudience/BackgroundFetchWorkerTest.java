@@ -449,9 +449,11 @@ public class BackgroundFetchWorkerTest {
         partialCompletionLatch.await();
         mBackgroundFetchWorker.stopWork();
         // stopWork() should wait for full stoppage before returning, so the bgfWorkStoppedLatch
-        // should have already counted down
-        LogUtil.v("bgfWorkStoppedLatch.getCount() %d", bgfWorkStoppedLatch.getCount());
-        assertTrue(bgfWorkStoppedLatch.await(0, TimeUnit.MILLISECONDS));
+        // should have already counted down, although there may be slight (<10ms) delays between the
+        // stop latch and returning from the method
+        assertTrue(
+                "stopWork() failed to wait until the background fetch job returned",
+                bgfWorkStoppedLatch.await(10, TimeUnit.MILLISECONDS));
     }
 
     private void verifyBackgroundFetchSuccess(int numOfEligibleToUpdateCAs) {
