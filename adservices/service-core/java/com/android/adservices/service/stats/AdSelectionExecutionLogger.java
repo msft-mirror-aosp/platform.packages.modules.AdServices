@@ -255,8 +255,7 @@ public class AdSelectionExecutionLogger extends ApiServiceLatencyCalculator {
     private long mPersistAdSelectionEndTimestamp;
     private long mDBAdSelectionSizeInBytes;
 
-    private AdServicesLogger mAdServicesLogger;
-
+    private final AdServicesLogger mAdServicesLogger;
 
     public AdSelectionExecutionLogger(
             @NonNull CallerMetadata callerMetadata,

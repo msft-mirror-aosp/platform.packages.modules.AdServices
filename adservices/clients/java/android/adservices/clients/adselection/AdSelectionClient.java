@@ -38,6 +38,7 @@ import java.util.concurrent.Executor;
  */
 // TODO: This should be in JetPack code.
 public class AdSelectionClient {
+
     private AdSelectionManager mAdSelectionManager;
     private Context mContext;
     private Executor mExecutor;

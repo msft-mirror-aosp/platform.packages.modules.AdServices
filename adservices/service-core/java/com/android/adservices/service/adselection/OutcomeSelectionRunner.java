@@ -44,6 +44,7 @@ import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.Throttler;
+import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
@@ -219,7 +220,9 @@ public class OutcomeSelectionRunner {
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
         mScheduledExecutor = scheduledExecutor;
         mAdServicesHttpsClient =
-                new AdServicesHttpsClient(AdServicesExecutors.getBlockingExecutor());
+                new AdServicesHttpsClient(
+                        AdServicesExecutors.getBlockingExecutor(),
+                        CacheProviderFactory.create(context, flags));
         mAdServicesLogger = adServicesLogger;
         mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
         mAppImportanceFilter = appImportanceFilter;

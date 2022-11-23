@@ -22,6 +22,7 @@ import android.annotation.Nullable;
 import android.net.Uri;
 
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
 
 import com.google.common.util.concurrent.FluentFuture;
 
@@ -50,5 +51,6 @@ interface AdBidGenerator {
             @NonNull Map<Uri, JSONObject> trustedBiddingDataPerBaseUri,
             @NonNull AdSelectionSignals adSelectionSignals,
             @NonNull AdSelectionSignals buyerSignals,
-            @NonNull AdSelectionSignals contextualSignals);
+            @NonNull AdSelectionSignals contextualSignals,
+            @NonNull RunAdBiddingPerCAExecutionLogger runAdBiddingPerCAExecutionLogger);
 }
