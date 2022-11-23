@@ -38,8 +38,8 @@ import java.util.stream.Collectors;
  * the FLEDGE Custom Audience and Ad Selection APIs.
  */
 public class AppConsentDao {
-    private static final int DATASTORE_VERSION = 1;
-    private static final String DATASTORE_NAME = "adservices.appconsent.xml";
+    @VisibleForTesting public static final int DATASTORE_VERSION = 1;
+    @VisibleForTesting public static final String DATASTORE_NAME = "adservices.appconsent.xml";
 
     @VisibleForTesting static final String DATASTORE_KEY_SEPARATOR = "  ";
 

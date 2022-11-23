@@ -21,13 +21,13 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
 import android.content.Context;
 import android.content.Intent;
 
-import androidx.lifecycle.ViewModelProvider;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -57,7 +57,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
@@ -70,8 +69,6 @@ public class SettingsActivityUiAutomatorTest {
     private static final String PRIVACY_SANDBOX_TEST_PACKAGE = "android.test.adservices.ui.MAIN";
     private static final int LAUNCH_TIMEOUT = 5000;
     private static UiDevice sDevice;
-    static ViewModelProvider sViewModelProvider = Mockito.mock(ViewModelProvider.class);
-    static ConsentManager sConsentManager;
     private MockitoSession mStaticMockSession;
     private PhFlags mPhFlags;
     private ConsentManager mConsentManager;
@@ -92,8 +89,7 @@ public class SettingsActivityUiAutomatorTest {
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         // prepare objects used by static mocking
-        mConsentManager =
-                spy(ConsentManager.getInstance(ApplicationProvider.getApplicationContext()));
+        mConsentManager = mock(ConsentManager.class);
         List<Topic> tempList = new ArrayList<>();
         tempList.add(Topic.create(10001, 1, 1));
         tempList.add(Topic.create(10002, 1, 1));
