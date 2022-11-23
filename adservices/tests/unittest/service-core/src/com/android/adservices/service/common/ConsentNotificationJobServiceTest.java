@@ -98,6 +98,7 @@ public class ConsentNotificationJobServiceTest {
     /** Test successful onStart method execution when notification was not yet displayed. */
     @Test
     public void testOnStartJobAsyncUtilExecute() throws InterruptedException {
+        doReturn(mFlags).when(FlagsFactory::getFlags);
         ConsentManager consentManager = spy(ConsentManager.getInstance(CONTEXT));
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
@@ -119,7 +120,6 @@ public class ConsentNotificationJobServiceTest {
                 .jobFinished(mMockJobParameters, false);
 
         doNothing().when(mAdservicesSyncUtil).execute(any(Context.class), any(Boolean.class));
-        doReturn(mFlags).when(FlagsFactory::getFlags);
         when(mFlags.getConsentNotificationDebugMode()).thenReturn(false);
 
         mConsentNotificationJobService.onStartJob(mMockJobParameters);
