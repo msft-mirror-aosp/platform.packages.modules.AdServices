@@ -81,6 +81,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Az Android hirdetési adatvédelmének bétaverziója olyan új funkciókat biztosít, melyek segítségével az alkalmazások Önnek esetlegesen tetsző hirdetéseket jeleníthetnek meg. Ezek a technológiák nem használnak eszközazonosítókat.\n\nAz Android becslést tehet az Önt esetlegesen érdeklő hirdetéstípusokra, az érdeklődési köröket pedig ideiglenesen az eszközön menti. Az alkalmazások ennek segítségével releváns hirdetéseket jeleníthetnek meg Önnek anélkül, hogy nyomon követnék a más fejlesztőktől származó webhelyeken és alkalmazásokban végzett tevékenységeit."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Önnek nincsenek letiltott érdeklődési körei"</string>
+    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
+    <skip />
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Az alkalmazások becslést tehetnek az Ön érdeklődési köreire vonatkozóan, és ideiglenesen menthetik e becsléseket az Android rendszerre. Később egy másik alkalmazás hirdetéseket jeleníthet meg Önnek ezen érdeklődési körök alapján.\n\nHa letiltja valamelyik alkalmazást, akkor az a továbbiakban nem tesz becslést az érdeklődési körökre vonatkozóan. Nem kerül fel újból az alkalmazások ezen listájára, kivéve, ha Ön feloldja a letiltását. Az alkalmazás becslése szerinti érdeklődési körök törlődnek majd, de előfordulhat, hogy továbbra is megjelenik néhány kapcsolódó hirdetés."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Letiltott alkalmazások"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Az alkalmazások becslése szerinti érdeklődési körök visszaállítása"</string>
@@ -99,16 +101,14 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Az Android újból felveheti ezt az érdeklődési kört a listára, de előfordulhat, hogy nem jelenik meg azonnal"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Alaphelyzetbe állítja az összes érdeklődési kört?"</string>
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"Listája törölve lesz, és mostantól új érdeklődési körök lesznek kikövetkeztetve. Továbbra is láthat néhány olyan hirdetést, amely kapcsolódik a törölt érdeklődési körökhöz."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Alaphelyzet"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Letiltja ezt: <xliff:g id="APP">%1$s</xliff:g>?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Amíg fel nem oldja, az alkalmazás nem tesz becslést az érdeklődési körökre a Privacy Sandboxnál, és az érdeklődési köröket nem veszi fel újból a rendszer a listára.\n\nAz alkalmazás által korábban becsült érdeklődési körök törlődnek, de továbbra is láthat néhány kapcsolódó hirdetést."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> letiltása feloldva"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Az alkalmazás újból megbecsülheti az érdeklődési köröket, de előfordulhat, hogy nem jelennek meg azonnal a listán. Beletelhet némi időbe, amíg az összes kapcsolódó hirdetés megjelenik."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Alaphelyzetbe állítja az alkalmazások által generált érdeklődési köröket?"</string>
-    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"A listáján szereplő alkalmazások szerint kikövetkeztetett érdeklődési körök törölve lesznek a Privacy Sandboxból, és mostantól az alkalmazások új érdeklődési körökeket fognak kikövetkeztetni. Továbbra is láthat néhány kapcsolódó hirdetést."</string>
     <string name="topic10001" msgid="1636806320891333775">"Művészetek és szórakoztatás"</string>
     <string name="topic10002" msgid="1226367977754287428">"Színészet és színház"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime és manga"</string>

@@ -81,6 +81,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android-ում գովազդի գաղտնիության բետա փորձարկման ծրագիրը տրամադրում է նոր գործառույթներ, որոնց միջոցով հավելվածները կարող են ցույց տալ ձեզ գովազդներ, որոնք կարող են ձեզ դուր գալ։ Այս տեխնոլոգիաները չեն օգտագործում սարքերի նույնացուցիչները։\n\nAndroid-ը կարող է որոշել գովազդների տեսակները, որոնք կարող են հետաքրքրել ձեզ, և ժամանակավորապես պահել հետաքրքրությունները ձեր սարքում։ Սա թույլ է տալիս հավելվածներին ցուցադրել ձեզ համապատասխան գովազդ՝ առանց հետագծելու ձեր գործողությունները այլ մշակողների կայքերում ու հավելվածներում։"</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Արգելափակված հետաքրքրություններ չկան"</string>
+    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
+    <skip />
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Հավելվածները կարող են որոշել ձեր հետաքրքրությունները և ժամանակավորապես պահել դրանք Android-ում։ Հետագայում մեկ այլ հավելված կարող է ձեզ գովազդ ցուցադրել այս հետաքրքրությունների հիման վրա։\n\nԵթե դուք արգելափակեք որևէ հավելված, այն այլևս չի որոշի ձեր հետաքրքրությունները։ Քանի դեռ հավելվածն արգելափակված է, այն չի հայտնվի հավելվածների այս ցանկում։ Հավելվածի կողմից արդեն որոշված հետաքրքրությունները կջնջվեն, սակայն հնարավոր է, որ դուք դեռ տեսնեք այդ հետաքրքրության հետ կապված որոշ գովազդներ։"</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Հավելվածներ, որոնք արգելափակել եք"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Զրոյացնել հավելվածների կողմից որոշված հետաքրքրությունները"</string>
@@ -99,16 +101,14 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android-ը կարող է կրկին ավելացնել այս հետաքրքրությունը ձեր ցուցակում, բայց այն կարող է անմիջապես չհայտնվել"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"Եղավ"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Զրոյացնե՞լ ձեր բոլոր հետաքրքրությունները"</string>
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"Ձեր ցուցակը կմաքրվի, և ժամանակի ընթացքում ցուցակում կավելացվեն նոր որոշված հետաքրքրություններ։ Հնարավոր է՝ դուք նախկինի պես տեսնեք ջնջված հետաքրքրություններին առնչվող որոշ գովազդներ։"</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Զրոյացնել"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Արգելափակե՞լ <xliff:g id="APP">%1$s</xliff:g> հավելվածը"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Այս հավելվածը չի որոշի հետաքրքրությունները Privacy Sandbox-ի համար և այլևս չի ավելացվի ձեր ցուցակում, քանի դեռ չեք արգելահանել այն։\n\nԱյս հավելվածի կողմից արդեն որոշված հետաքրքրությունները կջնջվեն, սակայն հնարավոր է՝ դուք նախկինի պես տեսնեք դրանց հետ կապված որոշ գովազդներ։"</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> հավելվածն արգելաբացված է"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Այս հավելվածը կարող է նորից որոշել ձեր հետաքրքրությունները, սակայն դրանք կարող են անմիջապես չհայտնվել ձեր ցուցակում։ Կարող է որոշ ժամանակ պահանջվել, որպեսզի տեսնեք այդ հետաքրքրությունների հետ կապված գովազդներ։"</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Զրոյացնե՞լ հավելվածների կողմից ստեղծված հետաքրքրությունները"</string>
-    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"Հավելվածների կողմից որոշված հետաքրքրությունները կջնջվեն Privacy Sandbox-ից, և հավելվածները կսկսեն նորից որոշել դրանք։ Հնարավոր է՝ դուք նախկինի պես տեսնեք հին հետաքրքրությունների հետ կապված որոշ գովազդներ։"</string>
     <string name="topic10001" msgid="1636806320891333775">"Արվեստ և զվարճանք"</string>
     <string name="topic10002" msgid="1226367977754287428">"Թատրոն և դրամատուրգիա"</string>
     <string name="topic10003" msgid="6949890838957814881">"Անիմե և մանգա"</string>

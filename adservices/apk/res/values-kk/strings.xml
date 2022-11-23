@@ -81,6 +81,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android-тың жарнама құпиялылығы (бета нұсқасы) қолданбалар сізге ұнайды деген жарнамаларды көрсету үшін пайдалана алатын жаңа функцияларды ұсынады. Бұл технологиялар құрылғы идентификаторларын пайдаланбайды.\n\nAndroid сізді қызықтыруы мүмкін жарнама түрлерін бағалап, бұл қызығушылықтарды құрылғыңызда уақытша сақтай алады. Соның нәтижесінде қолданбалар басқа әзірлеушілердің веб-сайттары мен қолданбаларында жасаған әрекеттеріңізді бақыламай, сізге сәйкес жарнамаларды көрсете алады."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Сізде бөгелген қызығушылықтар жоқ"</string>
+    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
+    <skip />
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Қолданбалар қызығушылықтарыңызды бағалап, оларды уақытша Android-та сақтай алады. Содан кейін осы қызығушылыққа қарай басқа қолданба сізге марафондарға қатысты жарнама көрсете алады.\n\nҚолданбаны бөгесеңіз, ол бұдан былай қызығушылықтарды бағаламайды. Қолданбаны бөгеуден алмайынша, ол қолданбалар тізіміне қайта қосылмайды. Қолданба бағалап қойған қызығушылықтар жойылады, бірақ оған қатысты кейбір жарнамалар көрсетіле беруі мүмкін."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Сіз бөгеген қолданбалар"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Қолданбалар бағалаған қызығушылықтарды бастапқы күйге қайтару"</string>
@@ -99,16 +101,14 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android бұл қызығушылықты тізімге қайта қосуы мүмкін. Алайда ол тізімде дереу пайда болмайды."</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"Жарайды"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Барлық қызығушылық қайтарылсын ба?"</string>
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"Тізім өшіріледі және жаңа қызығушылықтар анықталады. Өшірілген қызығушылықтарға қатысты кейбір жарнамалар көрсетіле беруі мүмкін."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Қайтару"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g> бөгелсін бе?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Бұл қолданба Privacy Sandbox технологиясына қатысты қызығушылықтарыңызды анықтамайды және оның бөгеуі алынбайынша тізімге қайта қосылмайды.\n\nҚолданба анықтаған қызығушылықтар жойылады, бірақ ұқсас жарнамалар көрсетілуі мүмкін."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> бөгеуден шығарылды"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Бұл қолданба қызығушылықтарыңызды қайта анықтай алады. Алайда ол тізімде дереу пайда болмайды. Ұқсас жарнамалардың көрсетілуіне біраз уақыт керек болуы мүмкін."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Қолданбалар арқылы жасалған қызығушылықтар қайтарылсын ба?"</string>
-    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"Қолданбалар анықтаған тізімдегі қызығушылықтар Privacy Sandbox-тан жойылады, ал қолданбалар жаңа қызығушылықтарды анықтайтын болады. Қызығушылықтарға қатысты кейбір жарнамалар көрсетіле беруі мүмкін."</string>
     <string name="topic10001" msgid="1636806320891333775">"Өнер және ойын-сауық"</string>
     <string name="topic10002" msgid="1226367977754287428">"Актерлік өнер және театр"</string>
     <string name="topic10003" msgid="6949890838957814881">"Аниме және манга"</string>

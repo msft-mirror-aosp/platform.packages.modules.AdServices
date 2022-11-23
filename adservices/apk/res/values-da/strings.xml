@@ -81,6 +81,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Androids beskyttelse af personlige oplysninger i forbindelse med annoncer (betaversion) giver nye funktioner, som apps kan bruge til at vise dig annoncer, der muligvis er relevante for dig. Disse teknologier anvender ikke enheds-id\'er.\n\nAndroid kan anslå, hvilke typer annoncer du muligvis er interesseret i, og gemme disse oplysninger midlertidigt på din enhed. Dette giver apps mulighed for at vise dig relevante annoncer, uden at spore din aktivitet på websites og i apps fra andre udviklere."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Du har ingen blokerede interesser"</string>
+    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
+    <skip />
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Apps kan anslå, hvilke interesser du muligvis har, og ved hjælp af Android gemme disse oplysninger. En anden app kan senere vise dig en annonce baseret på disse oplysninger.\n\nHvis du blokerer en app, anslår den ikke længere, hvilke interesser du muligvis har. Den føjes ikke til listen over apps igen, medmindre du fjerner blokeringen af den. Interesser, der allerede er anslået af appen, slettes, men du får muligvis stadig vist nogle relaterede annoncer."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Apps, du har blokeret"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Nulstil interesser, der er anslået af apps"</string>
@@ -99,16 +101,14 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android kan føje denne interesse til din liste igen, men den vises muligvis ikke med det samme"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Vil du nulstille alle dine interesser?"</string>
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"Din liste ryddes, og der vil blive anslået nye interesser fremadrettet. Der vises muligvis stadig annoncer, der er relateret til dine ryddede interesser."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Nulstil"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Vil du blokere <xliff:g id="APP">%1$s</xliff:g>?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Denne app estimerer ikke interesser for Privacy Sandbox, og den føjes ikke til din liste igen, medmindre du fjerner blokeringen af den.\n\nInteresser, som allerede er blevet estimeret af denne app, slettes, men du får muligvis stadig vist nogle relaterede annoncer."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Blokeringen af <xliff:g id="APP">%1$s</xliff:g> er fjernet"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Denne app kan estimere interesser for dig igen, men de vises muligvis ikke på din liste med det samme. Der kan gå noget tid, før du får vist relaterede annoncer."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Vil du nulstille interesser, der er genereret af apps?"</string>
-    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"De interesser, der er anslået af apps på din liste, vil blive slettet fra Privacy Sandbox, og dine apps vil anslå nye interesser fremadrettet Der vises muligvis stadig nogle relaterede annoncer."</string>
     <string name="topic10001" msgid="1636806320891333775">"Kunst og underholdning"</string>
     <string name="topic10002" msgid="1226367977754287428">"Skuespil og teater"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime og manga"</string>

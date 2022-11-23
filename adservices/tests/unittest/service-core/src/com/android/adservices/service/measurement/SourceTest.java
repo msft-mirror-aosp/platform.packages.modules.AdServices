@@ -84,19 +84,21 @@ public class SourceTest {
         assertEquals(
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
-                        .setAppDestination(Uri.parse("android-app://example.com/aD1"))
-                        .setWebDestination(Uri.parse("https://example.com/aD2"))
-                        .setPublisher(Uri.parse("https://example.com/aS"))
+                        .setAppDestination(Uri.parse("android-app://example.test/aD1"))
+                        .setWebDestination(Uri.parse("https://example.test/aD2"))
+                        .setPublisher(Uri.parse("https://example.test/aS"))
                         .setPublisherType(EventSurfaceType.WEB)
                         .setId("1")
                         .setEventId(new UnsignedLong(2L))
                         .setPriority(3L)
                         .setEventTime(5L)
                         .setExpiryTime(5L)
-                        .setDedupKeys(LongStream.range(0, 2)
-                                .boxed()
-                                .map(UnsignedLong::new)
-                                .collect(Collectors.toList()))
+                        .setIsDebugReporting(true)
+                        .setDedupKeys(
+                                LongStream.range(0, 2)
+                                        .boxed()
+                                        .map(UnsignedLong::new)
+                                        .collect(Collectors.toList()))
                         .setStatus(Source.Status.ACTIVE)
                         .setSourceType(Source.SourceType.EVENT)
                         .setRegistrant(Uri.parse("android-app://com.example.abc"))
@@ -109,19 +111,21 @@ public class SourceTest {
                         .build(),
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
-                        .setAppDestination(Uri.parse("android-app://example.com/aD1"))
-                        .setWebDestination(Uri.parse("https://example.com/aD2"))
-                        .setPublisher(Uri.parse("https://example.com/aS"))
+                        .setAppDestination(Uri.parse("android-app://example.test/aD1"))
+                        .setWebDestination(Uri.parse("https://example.test/aD2"))
+                        .setPublisher(Uri.parse("https://example.test/aS"))
                         .setPublisherType(EventSurfaceType.WEB)
                         .setId("1")
                         .setEventId(new UnsignedLong(2L))
                         .setPriority(3L)
                         .setEventTime(5L)
                         .setExpiryTime(5L)
-                        .setDedupKeys(LongStream.range(0, 2)
-                                .boxed()
-                                .map(UnsignedLong::new)
-                                .collect(Collectors.toList()))
+                        .setIsDebugReporting(true)
+                        .setDedupKeys(
+                                LongStream.range(0, 2)
+                                        .boxed()
+                                        .map(UnsignedLong::new)
+                                        .collect(Collectors.toList()))
                         .setStatus(Source.Status.ACTIVE)
                         .setSourceType(Source.SourceType.EVENT)
                         .setRegistrant(Uri.parse("android-app://com.example.abc"))
@@ -144,17 +148,17 @@ public class SourceTest {
                 SourceFixture.getValidSourceBuilder().setEventId(new UnsignedLong(2L)).build());
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder()
-                        .setAppDestination(Uri.parse("android-app://1.com"))
+                        .setAppDestination(Uri.parse("android-app://1.test"))
                         .build(),
                 SourceFixture.getValidSourceBuilder()
-                        .setAppDestination(Uri.parse("android-app://2.com"))
+                        .setAppDestination(Uri.parse("android-app://2.test"))
                         .build());
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder()
-                        .setWebDestination(Uri.parse("https://1.com"))
+                        .setWebDestination(Uri.parse("https://1.test"))
                         .build(),
                 SourceFixture.getValidSourceBuilder()
-                        .setWebDestination(Uri.parse("https://2.com"))
+                        .setWebDestination(Uri.parse("https://2.test"))
                         .build());
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder()
@@ -165,9 +169,9 @@ public class SourceTest {
                         .build());
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder()
-                        .setPublisher(Uri.parse("https://1.com")).build(),
+                        .setPublisher(Uri.parse("https://1.test")).build(),
                 SourceFixture.getValidSourceBuilder()
-                        .setPublisher(Uri.parse("https://2.com")).build());
+                        .setPublisher(Uri.parse("https://2.test")).build());
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder()
                         .setPublisherType(EventSurfaceType.APP).build(),

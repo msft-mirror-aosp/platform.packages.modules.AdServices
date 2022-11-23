@@ -81,6 +81,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android-betaversjonen for annonsepersonvern har nye funksjoner som apper kan bruke for å vise deg annonser du kan være interessert i. Disse teknologiene bruker ikke enhetsidentifikatorer.\n\nAndroid kan anslå hvilke typer annonser du kan være interessert i, og lagre disse interessene midlertidig på enheten din. Dette gjør at apper kan vise deg relevante annonser uten å spore aktiviteten din på nettsteder og i apper fra andre utviklere."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Du har ingen blokkerte interesser"</string>
+    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
+    <skip />
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Apper kan anslå interessene dine og midlertidig lagre disse med Android. Senere kan andre apper viser deg annonser basert på disse interessene.\n\nHvis du blokkerer en app, anslår den ikke flere interesser. Den legges ikke til i denne applisten igjen, med mindre du opphever blokkeringen av den. Interesser som allerede er anslått av appen, blir slettet, men du kan fremdeles se noen relaterte annonser."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Apper du har blokkert"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Tilbakestill interesser anslått av apper"</string>
@@ -99,16 +101,14 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android kan legge til denne interessen i listen igjen, men den vises muligens ikke umiddelbart"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Vil du tilbakestille alle interessene dine?"</string>
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"Listen blir tømt, og nye interesser blir anslått i fremtiden. Du kan fortsatt se noen annonser relatert til fjernede interesser."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Tilbakestill"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Vil du blokkere <xliff:g id="APP">%1$s</xliff:g>?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Denne appen anslår ikke interesser for Privacy Sandbox og blir ikke lagt til i listen igjen, med mindre du opphever blokkeringen av den.\n\nInteresser som allerede er anslått av denne appen, blir slettet, men det kan hende du fortsatt ser noen relaterte annonser."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Blokkeringen av <xliff:g id="APP">%1$s</xliff:g> er opphevet"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Denne appen kan anslå interesser for deg igjen, men den vises muligens ikke i listen umiddelbart. Det kan ta en stund før du ser relaterte annonser."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Vil du tilbakestille interesser som er anslått av apper?"</string>
-    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"Interesser anslått av appene i listen blir slettet fra Privacy Sandbox, og appene anslår nye interesser i fremtiden. Du kan fortsatt se noen relaterte annonser."</string>
     <string name="topic10001" msgid="1636806320891333775">"Kunst og underholdning"</string>
     <string name="topic10002" msgid="1226367977754287428">"Skuespill og teater"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime og manga"</string>

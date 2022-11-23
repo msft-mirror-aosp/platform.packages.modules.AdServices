@@ -19,6 +19,7 @@ package com.android.sdksandbox;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.app.Service;
+import android.app.sdksandbox.FileUtil;
 import android.app.sdksandbox.ISdkToServiceCallback;
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.LogUtil;
@@ -35,6 +36,8 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Binder;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Process;
 import android.os.RemoteException;
@@ -51,6 +54,7 @@ import dalvik.system.PathClassLoader;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -128,6 +132,29 @@ public class SdkSandboxServiceImpl extends Service {
 
         mInitialized = true;
         LogUtil.d(TAG, "Sandbox initialized");
+    }
+
+    /** Computes the storage of the shared and SDK storage for an app */
+    public void computeSdkStorage(
+            List<String> sharedPaths, List<String> sdkPaths, IComputeSdkStorageCallback callback) {
+        // Start the handler thread.
+        HandlerThread handlerThread = new HandlerThread("SdkSandboxServiceImplHandler");
+        handlerThread.start();
+        Handler handler = new Handler(handlerThread.getLooper());
+        handler.post(
+                () -> {
+                    final float sharedStorageKb = FileUtil.getStorageInKbForPaths(sharedPaths);
+                    final float sdkStorageKb = FileUtil.getStorageInKbForPaths(sdkPaths);
+
+                    try {
+                        callback.onStorageInfoComputed(sharedStorageKb, sdkStorageKb);
+                    } catch (RemoteException e) {
+                        LogUtil.d(
+                                TAG,
+                                "Error while calling computeSdkStorage in sandbox: "
+                                        + e.getMessage());
+                    }
+                });
     }
 
     /** Loads SDK. */
@@ -415,6 +442,17 @@ public class SdkSandboxServiceImpl extends Service {
         public void initialize(@NonNull ISdkToServiceCallback sdkToServiceCallback) {
             Objects.requireNonNull(sdkToServiceCallback, "sdkToServiceCallback should not be null");
             SdkSandboxServiceImpl.this.initialize(sdkToServiceCallback);
+        }
+
+        @Override
+        public void computeSdkStorage(
+                @NonNull List<String> sharedPaths,
+                @NonNull List<String> sdkPaths,
+                @NonNull IComputeSdkStorageCallback callback) {
+            Objects.requireNonNull(sharedPaths, "sharedPaths should not be null");
+            Objects.requireNonNull(sdkPaths, "sdkPaths should not be null");
+            Objects.requireNonNull(callback, "callback should not be null");
+            SdkSandboxServiceImpl.this.computeSdkStorage(sharedPaths, sdkPaths, callback);
         }
 
         @Override

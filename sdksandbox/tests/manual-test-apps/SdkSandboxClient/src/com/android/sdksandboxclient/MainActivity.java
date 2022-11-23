@@ -139,8 +139,9 @@ public class MainActivity extends Activity {
                                 @Override
                                 public void onResult(SandboxedSdk sandboxedSdk) {
                                     makeToast("All SDKs Loaded successfully!");
+                                    Log.d(TAG, "All SDKs Loaded successfully!");
                                     // TODO(b/253449573): Add constant string for unload Sdk.
-                                    mLoadButton.setText("Unload SDK");
+                                    mLoadButton.setText("Unload SDKs");
                                 }
 
                                 @Override
@@ -202,8 +203,8 @@ public class MainActivity extends Activity {
                                     sizeInMb = Integer.parseInt(input.getText().toString());
                                 } catch (Exception ignore) {
                                 }
-                                if (sizeInMb <= 0) {
-                                    makeToast("Please provide positive integer value");
+                                if (sizeInMb <= 0 || sizeInMb > 100) {
+                                    makeToast("Please provide a value between 1 and 100");
                                     return;
                                 }
                                 IBinder binder = mSandboxedSdk.getInterface();

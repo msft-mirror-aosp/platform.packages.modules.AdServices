@@ -27,6 +27,7 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.reporting.DebugReport;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import java.util.Arrays;
@@ -86,9 +87,7 @@ public class SqliteObjectMapper {
         return builder.build();
     }
 
-    /**
-     * Create {@link Source} object from SQLite datastore.
-     */
+    /** Create {@link Source} object from SQLite datastore. */
     static Source constructSourceFromCursor(Cursor cursor) {
         Source.Builder builder = new Source.Builder();
         setTextColumn(cursor, MeasurementTables.SourceContract.ID,
@@ -143,6 +142,10 @@ public class SqliteObjectMapper {
                 builder::setAggregateContributions);
         setUnsignedLongColumn(cursor, MeasurementTables.SourceContract.DEBUG_KEY,
                 builder::setDebugKey);
+        setBooleanColumn(
+                cursor,
+                MeasurementTables.SourceContract.DEBUG_REPORTING,
+                builder::setIsDebugReporting);
         return builder.build();
     }
 
@@ -176,6 +179,10 @@ public class SqliteObjectMapper {
                 builder::setNotFilters);
         setUnsignedLongColumn(cursor, MeasurementTables.TriggerContract.DEBUG_KEY,
                 builder::setDebugKey);
+        setBooleanColumn(
+                cursor,
+                MeasurementTables.TriggerContract.DEBUG_REPORTING,
+                builder::setIsDebugReporting);
         return builder.build();
     }
 
@@ -232,6 +239,20 @@ public class SqliteObjectMapper {
                 builder::setPublicKey);
         setLongColumn(cursor, MeasurementTables.AggregateEncryptionKey.EXPIRY,
                 builder::setExpiry);
+        return builder.build();
+    }
+
+    /** Create {@link DebugReport} object from SQLite datastore. */
+    static DebugReport constructDebugReportFromCursor(Cursor cursor) {
+        DebugReport.Builder builder = new DebugReport.Builder();
+        setTextColumn(cursor, MeasurementTables.DebugReportContract.ID, builder::setId);
+        setTextColumn(cursor, MeasurementTables.DebugReportContract.TYPE, builder::setType);
+        setTextColumn(cursor, MeasurementTables.DebugReportContract.BODY, builder::setBody);
+        setTextColumn(
+                cursor,
+                MeasurementTables.DebugReportContract.ENROLLMENT_ID,
+                builder::setEnrollmentId);
+
         return builder.build();
     }
 

@@ -81,6 +81,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android se privaatheidbeta bied nuwe kenmerke wat programme kan gebruik om vir jou advertensies te wys waarvan jy dalk sal hou. Hierdie tegnologieë gebruik nie toestelidentifiseerders nie.\n\nAndroid kan die soorte advertensies skat waarin jy dalk belang sal stel, en stoor hierdie belangstellings tydelik op jou toestel. Dit maak dit vir programme moontlik om vir jou relevante advertesies te wys sonder om jou aktiwiteit op webwerwe en programme van ander ontwikkelaars na te spoor."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Jy het geen geblokkeerde belangstellings nie"</string>
+    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
+    <skip />
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Programme kan jou belangstellings skat en hulle tydelik met Android stoor. ’n Ander program kan later vir jou ’n advertensie wys wat op hierdie belangstellings gegrond is.\n\nAs jy ’n program blokkeer, sal dit nie meer enige belangstellings skat nie. Dit sal nie weer by hierdie lys programme gevoeg word nie, tensy jy dit deblokkeer. Belangstellings wat reeds deur die program geskat is, sal uitgevee word, maar jy sal steeds verwante advertensies sien."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Programme wat jy geblokkeer het"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Stel belangstellings terug wat deur programme geskat is"</string>
@@ -99,16 +101,14 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android kan hierdie belangstelling weer by jou lys voeg, maar dit sal dalk nie dadelik verskyn nie"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Stel al jou belangstellings terug?"</string>
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"Jou lys sal uitgevee word, en nuwe belangstellings sal van nou af geskat word. Jy kan steeds ’n paar advertensies sien wat verband hou met belangstellings wat uitgevee is."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Stel terug"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Blokkeer <xliff:g id="APP">%1$s</xliff:g>?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Hiedie app sal nie belangstellings vir die Privacy Sandbox skat nie, en sal nie weer by jou lys gevoeg word nie, tensy jy dit deblokkeer.\n\nBelangstellings wat reeds deur hierdie app geskat is, sal uitgevee word, maar jy kan steeds ’n paar verwante advertensies sien."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> is gedeblokkeer"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Hierdie app kan weer belangstellings vir jou skat, maar dit sal dalk nie dadelik op jou lys verskyn nie. Dit kan ’n rukkie duur voordat jy verwante advertensies sien."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Stel belangstellings terug wat deur apps gegenereer is?"</string>
-    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"Belangstellings wat die apps op jou lys geskat het, sal in die Privacy Sandbox uitgevee word, en die apps sal van nou af nuwe belangstellings skat. Jy kan steeds ’n paar soortgelyke advertensies sien."</string>
     <string name="topic10001" msgid="1636806320891333775">"Kuns en vermaak"</string>
     <string name="topic10002" msgid="1226367977754287428">"Toneelspel en teater"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime en Manga"</string>

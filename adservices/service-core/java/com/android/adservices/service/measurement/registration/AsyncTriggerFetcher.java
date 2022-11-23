@@ -148,6 +148,9 @@ public class AsyncTriggerFetcher {
                 }
                 result.setNotFilters(notFilters.toString());
             }
+            if (!json.isNull(TriggerHeaderContract.DEBUG_REPORTING)) {
+                result.setIsDebugReporting(json.optBoolean(TriggerHeaderContract.DEBUG_REPORTING));
+            }
             if (!json.isNull(TriggerHeaderContract.DEBUG_KEY) && (isDebugKeyAllowed)) {
                 try {
                     result.setDebugKey(
@@ -289,7 +292,6 @@ public class AsyncTriggerFetcher {
     }
 
     private Optional<String> getValidEventTriggerData(JSONArray eventTriggerDataArr) {
-
         if (eventTriggerDataArr.length() > MAX_ATTRIBUTION_EVENT_TRIGGER_DATA) {
             LogUtil.d(
                     "Event trigger data list has more entries than permitted. %s",
@@ -303,15 +305,15 @@ public class AsyncTriggerFetcher {
                 JSONObject eventTriggerDatum = eventTriggerDataArr.getJSONObject(i);
                 // Treat invalid trigger data, priority and deduplication key as if they were not
                 // set.
+                UnsignedLong triggerData = new UnsignedLong(0L);
                 if (!eventTriggerDatum.isNull("trigger_data")) {
                     try {
-                        validEventTriggerDatum.put(
-                                "trigger_data",
-                                new UnsignedLong(eventTriggerDatum.getString("trigger_data")));
+                        triggerData = new UnsignedLong(eventTriggerDatum.getString("trigger_data"));
                     } catch (NumberFormatException e) {
                         LogUtil.d(e, "getValidEventTriggerData: parsing trigger_data failed.");
                     }
                 }
+                validEventTriggerDatum.put("trigger_data", triggerData);
                 if (!eventTriggerDatum.isNull("priority")) {
                     try {
                         validEventTriggerDatum.put(
@@ -424,5 +426,6 @@ public class AsyncTriggerFetcher {
         String AGGREGATABLE_TRIGGER_DATA = "aggregatable_trigger_data";
         String AGGREGATABLE_VALUES = "aggregatable_values";
         String DEBUG_KEY = "debug_key";
+        String DEBUG_REPORTING = "debug_reporting";
     }
 }

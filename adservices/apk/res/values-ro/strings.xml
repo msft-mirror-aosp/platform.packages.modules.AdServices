@@ -81,6 +81,7 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Versiunea beta pentru confidențialitatea anunțurilor Android oferă noi funcții pe care aplicațiile le pot folosi pentru a-ți afișa anunțuri care ți-ar putea plăcea. Aceste tehnologii nu utilizează identificatorii dispozitivului.\n\nAndroid poate să estimeze tipurile de anunțuri care te-ar putea interesa și salvează temporar categoriile de interese pe dispozitivul tău. Astfel, aplicațiile îți pot afișa anunțuri relevante, fără să-ți urmărească activitatea în site-uri și aplicații de la alți dezvoltatori."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Nu ai blocat nicio categorie de interese"</string>
+    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Se resetează interesele"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Aplicațiile pot să-ți estimeze categoriile de interese și să le salveze temporar pe Android. Mai târziu, altă aplicație îți poate afișa un anunț pe baza acestor interese.\n\nDacă blochezi o aplicație, aceasta nu îți va mai estima interesele. Aplicația nu va fi adăugată din nou în lista de aplicații decât dacă o deblochezi. Categoriile de interese estimate deja de aplicație vor fi șterse, dar este posibil să vezi în continuare câteva anunțuri asociate."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Aplicații pe care le-ai blocat"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Resetează categoriile de interese estimate de aplicații"</string>
@@ -99,16 +100,14 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android poate adăuga din nou acest interes în listă, dar el poate să nu apară imediat"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Resetezi toate interesele?"</string>
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"Lista se va goli și se vor estima noi interese de acum încolo. Este posibil să vezi în continuare unele anunțuri legate de interesele șterse."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Resetează"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Blochezi aplicația <xliff:g id="APP">%1$s</xliff:g>?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Aplicația nu estimează interesele pentru Privacy Sandbox și nu se va adăuga din nou în listă decât dacă îi anulezi blocarea.\n\nInteresele deja estimate de aplicație se vor șterge, dar este posibil să vezi totuși anumite anunțuri asociate."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> este deblocată"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Aplicația îți poate estima din nou interesele, dar poate să nu apară imediat în listă. Poate dura o vreme să vezi anunțuri asociate."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Resetezi interesele generate de aplicații?"</string>
-    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"Interesele estimate de aplicațiile din lista noastră se vor șterge din Privacy Sandbox, iar aplicațiile vor estima alte interese de acum încolo. Este posibil să vezi în continuare unele anunțuri asociate."</string>
     <string name="topic10001" msgid="1636806320891333775">"Artă și divertisment"</string>
     <string name="topic10002" msgid="1226367977754287428">"Actorie și teatru"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime și manga"</string>

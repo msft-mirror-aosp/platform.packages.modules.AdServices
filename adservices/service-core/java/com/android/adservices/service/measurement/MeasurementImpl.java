@@ -153,7 +153,7 @@ public final class MeasurementImpl {
                 case RegistrationRequest.REGISTER_TRIGGER:
                     return EnqueueAsyncRegistration.appSourceOrTriggerRegistrationRequest(
                                     request,
-                                    getRegistrant(request.getPackageName()),
+                                    getRegistrant(request.getAppPackageName()),
                                     requestTime,
                                     mEnrollmentDao,
                                     mDatastoreManager)
@@ -185,7 +185,7 @@ public final class MeasurementImpl {
                     EnqueueAsyncRegistration.webSourceRegistrationRequest(
                             sourceRegistrationRequest,
                             request.isAdIdPermissionGranted(),
-                            getRegistrant(request.getPackageName()),
+                            getRegistrant(request.getAppPackageName()),
                             requestTime,
                             mEnrollmentDao,
                             mDatastoreManager);
@@ -218,7 +218,7 @@ public final class MeasurementImpl {
                     EnqueueAsyncRegistration.webTriggerRegistrationRequest(
                             triggerRegistrationRequest,
                             request.isAdIdPermissionGranted(),
-                            getRegistrant(request.getPackageName()),
+                            getRegistrant(request.getAppPackageName()),
                             requestTime,
                             mEnrollmentDao,
                             mDatastoreManager);

@@ -81,6 +81,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Заштићено окружење приватности"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Бета верзија Android приватности за огласе пружа нове функције које апликације могу да користе да би вам приказивале огласе који ће вам се можда допасти. Ове технологије не користе идентификаторе уређаја.\n\nAndroid може да процењује врсте огласа који ће вас можда занимати и чува интересовања привремено на уређају. То омогућава апликацијама да вам приказују релевантне огласе, без праћења ваших активности на веб-сајтовима и у апликацијама других програмера."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Немате ниједно блокирано интересовање"</string>
+    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
+    <skip />
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Апликације могу да процењују интересовања и привремено их чувају помоћу Android-а. Касније друга апликација може да вам прикаже оглас на основу тих интересовања.\n\nАко блокирате апликацију, она више неће процењивати интересовања. Неће бити додата на ову листу апликација поново ако је не одблокирате. Интересовања која је апликација већ проценила биће избрисана, али ћете можда и даље видети неке повезане огласе."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Апликације које сте блокирали"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Ресетујте интересовања која су процениле апликације"</string>
@@ -99,16 +101,14 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android може поново да дода ово интересовање на листу, али се оно можда неће одмах појавити"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"Потврди"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Желите да ресетујете сва интересовања?"</string>
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"Листа ће се обрисати и убудуће ће се процењивати нова интересовања. И даље могу да вам се приказују неки огласи повезани са обрисаним интересовањима."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Ресетуј"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Желите да блокирате апликацију <xliff:g id="APP">%1$s</xliff:g>?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Ова апликација неће процењивати интересовања за Заштићено окружење приватности и неће бити поново додата на листу.\n\nИнтересовања која је ова апликација већ проценила биће избрисана, али ћете можда и даље видети неке сродне огласе."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Апликација <xliff:g id="APP">%1$s</xliff:g> је одблокирана"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Ова апликација може поново да процени интересовања за вас, али се можда неће одмах појавити на листи. Можда ће проћи неко време док не будете видели сродне огласе."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Желите да ресетујете интересовања која су генерисале апликације?"</string>
-    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"Интересовања која су процениле апликације на листи ће се избрисати из Заштићеног окружења приватности, а апликације ће убудуће процењивати нова интересовања. И даље могу да вам се приказују неки сродни огласи."</string>
     <string name="topic10001" msgid="1636806320891333775">"Уметност и забава"</string>
     <string name="topic10002" msgid="1226367977754287428">"Глума и позориште"</string>
     <string name="topic10003" msgid="6949890838957814881">"Аниме и манга"</string>

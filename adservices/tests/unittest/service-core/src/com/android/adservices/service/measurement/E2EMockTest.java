@@ -75,6 +75,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -220,7 +221,7 @@ public abstract class E2EMockTest extends E2ETest {
     }
 
     @Override
-    void processAction(RegisterTrigger triggerRegistration) throws IOException {
+    void processAction(RegisterTrigger triggerRegistration) throws IOException, JSONException {
         prepareRegistrationServer(triggerRegistration);
         Assert.assertEquals(
                 "MeasurementImpl.register trigger failed",
@@ -231,10 +232,12 @@ public abstract class E2EMockTest extends E2ETest {
                 MAX_RECORDS_PROCESSED, ASYNC_REG_RETRY_LIMIT);
         Assert.assertTrue("AttributionJobHandler.performPendingAttributions returned false",
                 mAttributionHelper.performPendingAttributions());
+        // Attribution can happen upto an hour after registration call, due to AsyncRegistration
+        processDebugReportJob(triggerRegistration.mTimestamp + TimeUnit.MINUTES.toMillis(30));
     }
 
     @Override
-    void processAction(RegisterWebTrigger triggerRegistration) throws IOException {
+    void processAction(RegisterWebTrigger triggerRegistration) throws IOException, JSONException {
         prepareRegistrationServer(triggerRegistration);
         Assert.assertEquals(
                 "MeasurementImpl.registerWebTrigger failed",
@@ -246,6 +249,35 @@ public abstract class E2EMockTest extends E2ETest {
         Assert.assertTrue(
                 "AttributionJobHandler.performPendingAttributions returned false",
                 mAttributionHelper.performPendingAttributions());
+        // Attribution can happen upto an hour after registration call, due to AsyncRegistration
+        processDebugReportJob(triggerRegistration.mTimestamp + TimeUnit.MINUTES.toMillis(30));
+    }
+
+    // Triggers debug reports to be sent
+    void processDebugReportJob(long timestamp) throws IOException, JSONException {
+        Object[] eventCaptures =
+                EventReportingJobHandlerWrapper.spyPerformScheduledPendingReportsInWindow(
+                        sEnrollmentDao,
+                        sDatastoreManager,
+                        timestamp - SystemHealthParams.MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
+                        timestamp,
+                        true);
+
+        processDebugEventReports(
+                (List<EventReport>) eventCaptures[0],
+                (List<Uri>) eventCaptures[1],
+                (List<JSONObject>) eventCaptures[2]);
+
+        Object[] aggregateCaptures =
+                AggregateReportingJobHandlerWrapper.spyPerformScheduledPendingReportsInWindow(
+                        sEnrollmentDao,
+                        sDatastoreManager,
+                        timestamp - SystemHealthParams.MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS,
+                        timestamp,
+                        true);
+
+        processDebugAggregateReports(
+                (List<Uri>) aggregateCaptures[0], (List<JSONObject>) aggregateCaptures[1]);
     }
 
     @Override
@@ -271,13 +303,14 @@ public abstract class E2EMockTest extends E2ETest {
 
     @Override
     void processAction(EventReportingJob reportingJob) throws IOException, JSONException {
-        Object[] eventCaptures = EventReportingJobHandlerWrapper
-                .spyPerformScheduledPendingReportsInWindow(
+        Object[] eventCaptures =
+                EventReportingJobHandlerWrapper.spyPerformScheduledPendingReportsInWindow(
                         sEnrollmentDao,
                         sDatastoreManager,
                         reportingJob.mTimestamp
                                 - SystemHealthParams.MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
-                        reportingJob.mTimestamp);
+                        reportingJob.mTimestamp,
+                        false);
 
         processEventReports(
                 (List<EventReport>) eventCaptures[0],
@@ -287,13 +320,14 @@ public abstract class E2EMockTest extends E2ETest {
 
     @Override
     void processAction(AggregateReportingJob reportingJob) throws IOException, JSONException {
-        Object[] aggregateCaptures = AggregateReportingJobHandlerWrapper
-                .spyPerformScheduledPendingReportsInWindow(
+        Object[] aggregateCaptures =
+                AggregateReportingJobHandlerWrapper.spyPerformScheduledPendingReportsInWindow(
                         sEnrollmentDao,
                         sDatastoreManager,
                         reportingJob.mTimestamp
                                 - SystemHealthParams.MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS,
-                        reportingJob.mTimestamp);
+                        reportingJob.mTimestamp,
+                        false);
 
         processAggregateReports(
                 (List<Uri>) aggregateCaptures[0],
@@ -306,6 +340,14 @@ public abstract class E2EMockTest extends E2ETest {
         List<JSONObject> eventReportObjects =
                 getEventReportObjects(eventReports, destinations, payloads);
         mActualOutput.mEventReportObjects.addAll(eventReportObjects);
+    }
+
+    void processDebugEventReports(
+            List<EventReport> eventReports, List<Uri> destinations, List<JSONObject> payloads)
+            throws JSONException {
+        List<JSONObject> eventReportObjects =
+                getEventReportObjects(eventReports, destinations, payloads);
+        mActualOutput.mDebugEventReportObjects.addAll(eventReportObjects);
     }
 
     private List<JSONObject> getEventReportObjects(
@@ -326,6 +368,12 @@ public abstract class E2EMockTest extends E2ETest {
             throws JSONException {
         List<JSONObject> aggregateReportObjects = getAggregateReportObjects(destinations, payloads);
         mActualOutput.mAggregateReportObjects.addAll(aggregateReportObjects);
+    }
+
+    void processDebugAggregateReports(List<Uri> destinations, List<JSONObject> payloads)
+            throws JSONException {
+        List<JSONObject> aggregateReportObjects = getAggregateReportObjects(destinations, payloads);
+        mActualOutput.mDebugAggregateReportObjects.addAll(aggregateReportObjects);
     }
 
     private List<JSONObject> getAggregateReportObjects(List<Uri> destinations,

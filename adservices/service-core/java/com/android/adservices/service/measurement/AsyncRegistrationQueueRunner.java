@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement;
 
+import static com.android.adservices.service.measurement.SystemHealthParams.MAX_TRIGGER_REGISTERS_PER_DESTINATION;
 import static com.android.adservices.service.measurement.attribution.TriggerContentProvider.TRIGGER_URI;
 
 import android.content.ContentProviderClient;
@@ -115,7 +116,7 @@ public class AsyncRegistrationQueueRunner {
             if (optionalAsyncRegistration.isPresent()) {
                 asyncRegistration = optionalAsyncRegistration.get();
             } else {
-                LogUtil.d("AsyncRegistrationQueueRunner:" + " no async registration fetched.");
+                LogUtil.d("AsyncRegistrationQueueRunner: no async registration fetched.");
                 return;
             }
 
@@ -188,18 +189,8 @@ public class AsyncRegistrationQueueRunner {
                                             ? EventSurfaceType.WEB
                                             : EventSurfaceType.APP;
                             if (isSourceAllowedToInsert(source, topOrigin, publisherType, dao)) {
-                                insertSourcesFromTransaction(source, dao);
+                                insertSourceFromTransaction(source, dao);
                             }
-                            Uri osDestination =
-                                    asyncRegistration.getType()
-                                                    == AsyncRegistration.RegistrationType.WEB_SOURCE
-                                            ? asyncRegistration.getOsDestination()
-                                            : source.getAppDestination();
-                            Uri webDestination =
-                                    asyncRegistration.getType()
-                                                    == AsyncRegistration.RegistrationType.WEB_SOURCE
-                                            ? asyncRegistration.getWebDestination()
-                                            : source.getWebDestination();
                             if (asyncRegistration.shouldProcessRedirects()) {
                                 LogUtil.d(
                                         "AsyncRegistrationQueueRunner: "
@@ -210,8 +201,8 @@ public class AsyncRegistrationQueueRunner {
                                 processRedirects(
                                         asyncRegistration,
                                         asyncRedirect,
-                                        webDestination,
-                                        osDestination,
+                                        source.getWebDestination(),
+                                        source.getAppDestination(),
                                         dao);
                             }
                         }
@@ -226,7 +217,7 @@ public class AsyncRegistrationQueueRunner {
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         Optional<Trigger> resultTrigger = mAsyncTriggerFetcher.fetchTrigger(
                 asyncRegistration, asyncFetchStatus, asyncRedirect);
-        boolean status =
+        boolean transactionSuccessful =
                 mDatastoreManager.runInTransaction(
                         (dao) -> {
                             if (asyncFetchStatus.getStatus()
@@ -275,12 +266,15 @@ public class AsyncRegistrationQueueRunner {
                                                 asyncRegistration.getOsDestination(),
                                                 dao);
                                     }
-                                    dao.insertTrigger(trigger);
+                                    if (isTriggerAllowedToInsert(dao, trigger)) {
+                                        dao.insertTrigger(trigger);
+                                    }
                                 }
                                 dao.deleteAsyncRegistration(asyncRegistration.getId());
                             }
                         });
-        if (status && asyncFetchStatus.getStatus() == AsyncFetchStatus.ResponseStatus.SUCCESS) {
+        if (transactionSuccessful
+                && asyncFetchStatus.getStatus() == AsyncFetchStatus.ResponseStatus.SUCCESS) {
             notifyTriggerContentProvider();
         }
     }
@@ -386,6 +380,9 @@ public class AsyncRegistrationQueueRunner {
             if (optionalAppDestinationCount != null) {
                 if (optionalAppDestinationCount >= PrivacyParams
                         .getMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource()) {
+                    LogUtil.d(
+                            "AsyncRegistrationQueueRunner: App destination count >= "
+                                + "MaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource");
                     return false;
                 }
             } else {
@@ -412,6 +409,10 @@ public class AsyncRegistrationQueueRunner {
             if (optionalAppEnrollmentsCount != null) {
                 if (optionalAppEnrollmentsCount >= PrivacyParams
                         .getMaxDistinctEnrollmentsPerPublisherXDestinationInSource()) {
+                    LogUtil.d(
+                            "AsyncRegistrationQueueRunner: "
+                                    + "App enrollment count >= "
+                                    + "MaxDistinctEnrollmentsPerPublisherXDestinationInSource");
                     return false;
                 }
             } else {
@@ -442,6 +443,9 @@ public class AsyncRegistrationQueueRunner {
             if (optionalDestinationCountWeb != null) {
                 if (optionalDestinationCountWeb >= PrivacyParams
                         .getMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource()) {
+                    LogUtil.d(
+                            "AsyncRegistrationQueueRunner:  Web destination count >= "
+                                + "MaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource");
                     return false;
                 }
             } else {
@@ -469,6 +473,10 @@ public class AsyncRegistrationQueueRunner {
             if (optionalWebEnrollmentsCount != null) {
                 if (optionalWebEnrollmentsCount >= PrivacyParams
                         .getMaxDistinctEnrollmentsPerPublisherXDestinationInSource()) {
+                    LogUtil.d(
+                            "AsyncRegistrationQueueRunner: "
+                                    + " Web enrollment count >= "
+                                    + "MaxDistinctEnrollmentsPerPublisherXDestinationInSource");
                     return false;
                 }
             } else {
@@ -486,6 +494,21 @@ public class AsyncRegistrationQueueRunner {
             }
         }
         return true;
+    }
+
+    @VisibleForTesting
+    static boolean isTriggerAllowedToInsert(IMeasurementDao dao, Trigger trigger) {
+        long triggerInsertedPerDestination;
+        try {
+            triggerInsertedPerDestination =
+                    dao.getNumTriggersPerDestination(
+                            trigger.getAttributionDestination(), trigger.getDestinationType());
+        } catch (DatastoreException e) {
+            LogUtil.e("Unable to fetch number of triggers currently registered per destination.");
+            return false;
+        }
+
+        return triggerInsertedPerDestination < MAX_TRIGGER_REGISTERS_PER_DESTINATION;
     }
 
     private static AsyncRegistration createAsyncRegistrationRedirect(
@@ -563,10 +586,8 @@ public class AsyncRegistrationQueueRunner {
                 .collect(Collectors.toList());
     }
 
-
     @VisibleForTesting
-    void insertSourcesFromTransaction(Source source, IMeasurementDao dao)
-            throws DatastoreException {
+    void insertSourceFromTransaction(Source source, IMeasurementDao dao) throws DatastoreException {
         List<EventReport> er = generateFakeEventReports(source);
         dao.insertSource(source);
         for (EventReport report : er) {

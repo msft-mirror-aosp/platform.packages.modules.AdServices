@@ -25,6 +25,7 @@ public final class MeasurementTablesDeprecated {
     public interface AsyncRegistration {
         String INPUT_EVENT = "input_event";
         String REDIRECT = "redirect";
+        String SCHEDULED_TIME = "scheduled_time";
     }
 
     // Private constructor to prevent instantiation.

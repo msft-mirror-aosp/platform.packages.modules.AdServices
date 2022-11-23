@@ -58,7 +58,7 @@ public class ValidationTest {
     public void testValidateUri_throwsExceptionWhenNull_twoArguments() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> Validation.validateUri(Uri.parse("https://abc.com"), NULL_ARGUMENT)
+                () -> Validation.validateUri(Uri.parse("https://abc.test"), NULL_ARGUMENT)
         );
     }
 
@@ -66,7 +66,7 @@ public class ValidationTest {
     public void testValidateUri_throwsExceptionWhenInvalid_oneArgument() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> Validation.validateUri(Uri.parse("abc.com"))
+                () -> Validation.validateUri(Uri.parse("abc.test"))
         );
     }
 
@@ -74,12 +74,12 @@ public class ValidationTest {
     public void testValidateUri_throwsExceptionWhenInvalid_twoArguments() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> Validation.validateUri(Uri.parse("https://abc.com"), Uri.parse("abc.com"))
+                () -> Validation.validateUri(Uri.parse("https://abc.test"), Uri.parse("abc.test"))
         );
     }
 
     @Test
     public void testValidateUri_doesNotThrowExceptionWhenNotNullAndValid() {
-        Validation.validateNonNull(Uri.parse("https://abc.com"), Uri.parse("https://xyz.com"));
+        Validation.validateNonNull(Uri.parse("https://abc.test"), Uri.parse("https://xyz.test"));
     }
 }

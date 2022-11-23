@@ -101,7 +101,7 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
         AdServicesStatsLog.write(
                 RUN_AD_SELECTION_PROCESS_REPORTED,
                 stats.getIsRemarketingAdsWon(),
-                stats.getAdSelectionEntrySizeInBytes(),
+                stats.getDBAdSelectionSizeInBytes(),
                 stats.getPersistAdSelectionLatencyInMillis(),
                 stats.getPersistAdSelectionResultCode(),
                 stats.getRunAdSelectionLatencyInMillis(),
@@ -191,9 +191,11 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
     public void logGetTopicsReportedStats(GetTopicsReportedStats stats) {
         AdServicesStatsLog.write(
                 AD_SERVICES_GET_TOPICS_REPORTED,
-                new int[] {}, // TODO(b/256649873): Log empty topic ids until the long term solution.
+                new int[] {}, // TODO(b/256649873): Log empty topic ids until the long term
+                // solution.
                 stats.getDuplicateTopicCount(),
-                stats.getFilteredBlockedTopicCount());
+                stats.getFilteredBlockedTopicCount(),
+                stats.getTopicIdsCount());
     }
 
     @Override

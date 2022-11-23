@@ -81,6 +81,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"La versión beta de privacidad de los anuncios de Android ofrece nuevas funciones que las apps pueden usar para mostrarte anuncios que podrían interesarte. Estas tecnologías no utilizan identificadores de dispositivos.\n\nAndroid puede estimar los tipos de anuncios que podrían interesarte y guardar esos intereses temporalmente en tu dispositivo. Esto permite que las apps te muestren anuncios relevantes, sin rastrear tu actividad en sitios web ni apps de otros desarrolladores."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"No tienes intereses bloqueados"</string>
+    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
+    <skip />
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Las apps pueden estimar tus intereses y guardarlos temporalmente con Android. Más tarde, otra app puede mostrarte un anuncio basado en esos intereses.\n\nSi bloqueas una app, esta no estimará más intereses. No se volverá a agregar a esta lista de apps a menos que la desbloquees. Sin embargo, si bien se borrarán los intereses ya estimados por ella, es posible que sigas viendo algunos anuncios relacionados."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Apps que bloqueaste"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Restablecer los intereses estimados por apps"</string>
@@ -99,16 +101,14 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android podría agregar este interés a tu lista de nuevo, pero es posible que no aparezca de inmediato"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"Aceptar"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"¿Quieres restablecer todos tus intereses?"</string>
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"Se borrará tu lista y, de ahora en más, se estimarán nuevos intereses. Es posible que aún veas anuncios relacionados a los intereses que se borraron."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Restablecer"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"¿Quieres bloquear a <xliff:g id="APP">%1$s</xliff:g>?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Esta app no calculará interesas para Privacy Sandbox ni se agregará nuevamente a tu lista, a menos que la desbloquees.\n\nSe borrarán los intereses que esta app ya haya calculado. Sin embargo, es posible que sigas viendo algunos anuncios relacionados."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Se desbloqueó <xliff:g id="APP">%1$s</xliff:g>"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Esta app puede volver a calcular intereses para tí, pero estos podrían no aparecer en tu lista de inmediato. Es posible que lleve un tiempo ver los anuncios relacionados."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"¿Quieres restablecer los intereses que generaron las apps?"</string>
-    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"Se eliminarán de Privacy Sandbox los intereses estimados por las apps en tu lista. De ahora en más, las apps estimarán nuevos intereses. Es posible que aún veas anuncios relacionados."</string>
     <string name="topic10001" msgid="1636806320891333775">"Arte y entretenimiento"</string>
     <string name="topic10002" msgid="1226367977754287428">"Actuación y teatro"</string>
     <string name="topic10003" msgid="6949890838957814881">"Animé y manga"</string>

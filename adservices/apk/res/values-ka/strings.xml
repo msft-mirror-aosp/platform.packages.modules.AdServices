@@ -81,6 +81,7 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android-ის რეკლამების კონფიდენციალურობა (ბეტა) უზრუნველყოფს ისეთ ახალ ფუნქციებს, რომლებსაც აპები იყენებს თქვენთვის საინტერესო რეკლამების საჩვენებლად. ეს ტექნოლოგია არ იყენებს მოწყობილობის იდენტიფიკატორებს.\n\nAndroid აფასებს, როგორი რეკლამები გაინტერესებთ და ამ ინფორმაციას დროებით თქვენს მოწყობილობაში ინახავს. ეს აპებს საშუალებას აძლევს, გაჩვენოს თქვენთვის საინტერესო რეკლამები ვებსა და აპებში თქვენი აქტივობის თვალყურის დევნების გარეშე."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"დაბლოკილი ინტერესები არ გაქვთ"</string>
+    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"ინტერესები გადაყენებულია"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"აპებს შეუძლია თქვენი ინტერესების შეფასება და დროებით მათი Android-ში შენახვა. მოგვიანებით, ამ ინტერესების საფუძველზე, სხვა აპი გაჩვენებთ რეკლამებს.\n\nთუ აპს დაბლოკავთ, ის თქვენს ინტერესებს ვეღარ შეაფასებს. ის აღარ დაემატა ამ სიას, სანამ არ განბლოკავთ. აპის მიერ უკვე შეფასებული ინტერესები ამოიშლება, მაგრამ მსგავსი რეკლამები, შესაძლოა, მაინც ნახოთ."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"თქვენ მიერ დაბლოკილი აპები"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"აპების მიერ შეფასებული ინტერესების გადაყენება"</string>
@@ -99,16 +100,14 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android-მა შეიძლება კვლავ დაამატოს ეს ინტერესი თქვენს სიაში, მაგრამ ის შეიძლება მაშინვე არ გამოჩნდეს"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"კარგი"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"გსურთ, რომ გადააყენოთ ყველა თქვენი ინტერესი?"</string>
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"თქვენი სია გასუფთავდება და შეფასდება მომავალი ინტერესები. თქვენ კვლავ შეგიძლიათ ნახოთ გარკვეული რეკლამები, რომლებიც დაკავშირებულია გასუფთავებულ ინტერესებთან."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"გადაყენება"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"გსურთ, დაბლოკოთ <xliff:g id="APP">%1$s</xliff:g>?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"ეს აპი არ შეაფასებს ინტერესებს Privacy Sandbox-ისთვის და აღარ დაემატება თქვენს სიას, თუ არ განბლოკავთ მას.\n\nამ აპის მიერ უკვე შეფასებული ინტერესები წაიშლება, მაგრამ თქვენ შესაძლოა კვლავ ნახოთ დაკავშირებული რეკლამები."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> განბლოკილია"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"ამ აპს შეუძლია კვლავ შეაფასოს თქვენთვის ინტერესები, მაგრამ ის შესაძლოა დაუყოვნებლივ არ გამოჩნდეს თქვენს სიაში. დაკავშირებული რეკლამის ნახვას შესაძლოა გარკვეული დრო დასჭირდეს."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"გსურთ აპების მიერ გენერირებული ინტერესების გადაყენება?"</string>
-    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"თქვენს სიაში არსებული აპების მიერ შეფასებული ინტერესები წაიშლება Privacy Sandbox-იდან და მომავალში აპები ახალ ინტერესებს შეაფასებს. თქვენ შეიძლება ისევ ნახოთ მსგავსი რეკლამები."</string>
     <string name="topic10001" msgid="1636806320891333775">"ხელოვნება და გართობა"</string>
     <string name="topic10002" msgid="1226367977754287428">"სამსახიობო ოსტატობა და თეატრი"</string>
     <string name="topic10003" msgid="6949890838957814881">"ანიმე და მანგა"</string>

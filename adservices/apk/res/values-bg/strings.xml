@@ -81,6 +81,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Бета-версията на Android за поверителността при рекламите осигурява нови функции, които приложенията могат да ползват, за да ви показват реклами, които е възможно да харесате. Тези технологии не използват идентификатори на устройството.\n\nAndroid може да определя типовете реклами, които е възможно да ви заинтересуват, и временно да ги запазва на устройството ви. Това дава възможност на приложенията да ви показват подходящи реклами, без да проследяват активността ви в уебсайтовете и приложенията от други програмисти."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Няма блокирани интереси"</string>
+    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
+    <skip />
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Приложенията могат да определят интересите ви и временно да ги запазят на устройството ви с Android. Възможно е по-късно друго приложение да ви покаже реклама въз основа на тези интереси.\n\nАко блокирате дадено приложение, то повече няма да определя интереси и няма да бъде добавено отново към списъка с приложения, докато не го отблокирате. Определените от него интереси ще бъдат изтрити, но е възможно да продължите да виждате свързани с тях реклами."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Приложения, които сте блокирали"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Нулиране на интересите, определени от приложения"</string>
@@ -99,16 +101,14 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Този интерес може да бъде добавен отново към списъка ви, но е възможно да не се покаже веднага"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Да се нулират ли всичките ви интереси?"</string>
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"Списъкът ви ще бъде изчистен и от сега нататък ще се определят новите интереси. Пак можете да виждате някои реклами, свързани с изчистените интереси."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Нулиране"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Да се блокира ли <xliff:g id="APP">%1$s</xliff:g>?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Това приложение няма да определя интереси за Privacy Sandbox и няма да бъде добавено отново към списъка ви, освен ако не го отблокирате.\n\nОпределените от приложението интереси ще бъдат изтрити, но е възможно да продължите да виждате свързани с тях реклами."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Приложението <xliff:g id="APP">%1$s</xliff:g> е отблокирано"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Това приложение може отново да определя интересите ви, но е възможно да не се покаже веднага в списъка ви. Може да мине известно време, докато започнете да виждате свързани реклами."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Да се нулират ли интересите, генерирани от приложенията?"</string>
-    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"Интересите, определени от приложенията в списъка ви, ще бъдат изтрити от Privacy Sandbox и от сега нататък приложенията ще определят новите интереси. Възможно е да продължите да виждате някои свързани реклами."</string>
     <string name="topic10001" msgid="1636806320891333775">"Изкуства и развлечения"</string>
     <string name="topic10002" msgid="1226367977754287428">"Актьорско майсторство и театър"</string>
     <string name="topic10003" msgid="6949890838957814881">"Аниме и манга"</string>

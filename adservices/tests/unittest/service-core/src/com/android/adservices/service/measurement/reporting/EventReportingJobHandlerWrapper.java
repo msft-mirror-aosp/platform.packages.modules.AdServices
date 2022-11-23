@@ -41,10 +41,14 @@ public class EventReportingJobHandlerWrapper {
             EnrollmentDao enrollmentDao,
             DatastoreManager datastoreManager,
             long windowStartTime,
-            long windowEndTime) throws IOException, JSONException {
+            long windowEndTime,
+            boolean isDebugInstance)
+            throws IOException, JSONException {
         // Set up event reporting job handler spy
         EventReportingJobHandler eventReportingJobHandler =
-                Mockito.spy(new EventReportingJobHandler(enrollmentDao, datastoreManager));
+                Mockito.spy(
+                        new EventReportingJobHandler(enrollmentDao, datastoreManager)
+                                .setIsDebugInstance(isDebugInstance));
         Mockito.doReturn(200).when(eventReportingJobHandler)
                 .makeHttpPostRequest(any(), any());
 

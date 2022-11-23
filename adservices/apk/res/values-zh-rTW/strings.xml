@@ -81,6 +81,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android 廣告隱私權 Beta 版提供全新功能，可讓應用程式用來向你顯示可能喜歡的廣告。這些技術並未使用裝置 ID。\n\nAndroid 可以推測你可能感興趣的廣告類別，並在裝置上暫時儲存你的興趣喜好。這樣一來，應用程式不必追蹤你在其他開發商的網站和應用程式內的活動，也能向你顯示貼近需求的廣告。"</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"你沒有封鎖任何興趣喜好"</string>
+    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
+    <skip />
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"應用程式可以推測你的興趣喜好，並暫時儲存在 Android 系統中。之後，其他應用程式可以根據這些興趣喜好向你顯示廣告。\n\n如果你封鎖某個應用程式，該應用程式就不會再推測興趣喜好。除非你解除封鎖，否則該應用程式不會再加入這份應用程式清單。系統將刪除這個應用程式已推測出的興趣喜好，不過你可能還是會看到某些相關的廣告。"</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"已封鎖的應用程式"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"重設應用程式推測的興趣喜好"</string>
@@ -99,16 +101,14 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android 可能會再次將這項興趣喜好新增到你的清單，但或許不會立即顯示"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"確定"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"要重設所有興趣喜好嗎？"</string>
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"系統將清除清單內容，之後會重新推測你的興趣喜好。系統清除清單中的興趣喜好後，你可能還是會看到一些相關的廣告。"</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"重設"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"要封鎖「<xliff:g id="APP">%1$s</xliff:g>」嗎？"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"加入 Privacy Sandbox 後，這個應用程式將無法推測你的興趣喜好，系統也不會再將應用程式新增到清單 (除非你解除封鎖)。\n\n系統將刪除這個應用程式推測的興趣喜好，但你可能還是會看到一些相關的廣告。"</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"已解除封鎖「<xliff:g id="APP">%1$s</xliff:g>」"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"這個應用程式將可再推測你的興趣喜好，但可能不會立即顯示在你的清單上。相關廣告可能要一段時間後才會顯示。"</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"要重設由應用程式產生的興趣喜好嗎？"</string>
-    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"系統將從 Privacy Sandbox 中刪除應用程式推測的興趣喜好清單內容，應用程式之後會重新推測你的興趣喜好。請注意，你可能還是會看到一些相關的廣告。"</string>
     <string name="topic10001" msgid="1636806320891333775">"藝術與娛樂"</string>
     <string name="topic10002" msgid="1226367977754287428">"表演與戲劇"</string>
     <string name="topic10003" msgid="6949890838957814881">"動漫與日本漫畫"</string>

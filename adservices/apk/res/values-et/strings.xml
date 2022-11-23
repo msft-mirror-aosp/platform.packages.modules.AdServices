@@ -81,6 +81,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privaatsuse liivakast"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Androidi reklaamide privaatsuse beetaprogramm pakub uusi funktsioone, mida rakendused saavad kasutada selleks, et näidata teile reklaame, mis teile meeldida võivad. Need tehnoloogiad ei kasuta seadmete identifikaatoreid.\n\nAndroid saab prognoosida, millised reklaamid teile huvi pakkuda võivad, ja salvestada need huvid ajutiselt teie seadmesse. See võimaldab rakendustel teile asjakohaseid reklaame näidata ilma teie tegevust muude arendajate veebisaitidel või rakendustes jälgimata."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Teil ei ole blokeeritud huvisid"</string>
+    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
+    <skip />
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Rakendused saavad teie huvisid prognoosida ja need ajutiselt Androidi salvestada. Hiljem saab muu rakendus teile nende huvide alusel reklaami näidata.\n\nKui blokeerite rakenduse, ei prognoosi see enam teie huvisid. Seda ei lisata rakenduste loendisse uuesti enne, kui selle deblokeerite. Rakenduse prognoositud huvid kustutatakse, ent võite siiski näha mõningaid seotud reklaame."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Teie blokeeritud rakendused"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Lähtesta rakenduste prognoositud huvid"</string>
@@ -99,16 +101,14 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android võib selle huvi uuesti teie loendisse lisada, kuid seda ei pruugita kohe kuvada"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Kas lähtestada kõik teie huvid?"</string>
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"Teie loend tühjendatakse ja edaspidi prognoositakse uusi huvisid. Võite siiski näha eemaldatud huvidega seotud reklaame."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Lähtesta"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Kas blokeerida <xliff:g id="APP">%1$s</xliff:g>?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"See rakendus ei prognoosi privaatsuse liivakasti jaoks huvisid ja seda ei lisata enam teie loendisse, kui te seda ei deblokeeri.\n\nHuvid, mille see rakendus on juba prognoosinud, kustutatakse, kuid võite siiski näha mõnda nendega seotud reklaami."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> ei ole blokeeritud"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"See rakendus saab teie jaoks uuesti huvisid prognoosida, kuid neid ei pruugita kohe loendis kuvada. Seotud reklaamide kuvamiseks võib aega kuluda."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Kas lähtestada rakenduste loodud huvide loend?"</string>
-    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"Teie loendis olevate rakenduste prognoositud huvid kustutatakse privaatsuse liivakastist ja rakendused prognoosivad edaspidi uusi huvisid. Võite siiski näha mõnda seotud reklaami."</string>
     <string name="topic10001" msgid="1636806320891333775">"Kunst ja meelelahutus"</string>
     <string name="topic10002" msgid="1226367977754287428">"Näitlemine ja teater"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime ja manga"</string>
