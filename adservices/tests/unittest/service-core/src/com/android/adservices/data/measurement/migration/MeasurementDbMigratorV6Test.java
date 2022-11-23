@@ -51,9 +51,9 @@ public class MeasurementDbMigratorV6Test extends AbstractMeasurementDbMigratorTe
         // Verify
         db = dbHelper.getReadableDatabase();
         assertTrue(
-                doesTableExistAndColumnCountMatch(db, MeasurementTables.SourceContract.TABLE, 23));
+                doesTableExistAndColumnCountMatch(db, MeasurementTables.SourceContract.TABLE, 25));
         assertTrue(
-                doesTableExistAndColumnCountMatch(db, MeasurementTables.TriggerContract.TABLE, 14));
+                doesTableExistAndColumnCountMatch(db, MeasurementTables.TriggerContract.TABLE, 16));
         assertTrue(
                 doesTableExistAndColumnCountMatch(
                         db, MeasurementTables.DebugReportContract.TABLE, 4));

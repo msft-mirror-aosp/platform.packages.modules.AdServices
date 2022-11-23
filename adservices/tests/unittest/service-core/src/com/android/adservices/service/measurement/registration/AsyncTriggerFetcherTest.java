@@ -1545,42 +1545,6 @@ public final class AsyncTriggerFetcherTest {
     }
 
     @Test
-    public void testBasicTriggerRequestWithoutAdIdPermission() throws Exception {
-        RegistrationRequest request = buildRequestWithoutAdIdPermission(TRIGGER_URI);
-        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
-        when(mUrlConnection.getResponseCode()).thenReturn(200);
-        Map<String, List<String>> headersRequest = new HashMap<>();
-        headersRequest.put(
-                "Attribution-Reporting-Register-Trigger",
-                List.of(
-                        "{"
-                                + "\"event_trigger_data\": "
-                                + EVENT_TRIGGERS_1
-                                + ", \"debug_key\": \""
-                                + DEBUG_KEY
-                                + "\""
-                                + "}"));
-        when(mUrlConnection.getHeaderFields()).thenReturn(headersRequest);
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
-        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
-        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
-        // Execution
-        Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
-        // Assertion
-        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
-        assertTrue(fetch.isPresent());
-        Trigger result = fetch.get();
-        assertEquals(
-                asyncRegistration.getTopOrigin().toString(),
-                result.getAttributionDestination().toString());
-        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.getEventTriggers());
-        assertNull(result.getDebugKey());
-        verify(mUrlConnection).setRequestMethod("POST");
-    }
-
-    @Test
     public void testBadTriggerUrl() throws Exception {
         RegistrationRequest request = buildRequest(WebUtil.validUrl("bad-schema://foo.test"));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
@@ -2812,40 +2776,6 @@ public final class AsyncTriggerFetcherTest {
     }
 
     @Test
-    public void fetchWebTriggerSuccessWithoutAdIdPermission() throws IOException, JSONException {
-        // Setup
-        WebTriggerRegistrationRequest request =
-                buildWebTriggerRegistrationRequest(
-                        Arrays.asList(TRIGGER_REGISTRATION_1, TRIGGER_REGISTRATION_2), TOP_ORIGIN);
-        doReturn(mUrlConnection1).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
-        when(mUrlConnection1.getResponseCode()).thenReturn(200);
-        Map<String, List<String>> headersRequest = new HashMap<>();
-        headersRequest.put(
-                "Attribution-Reporting-Register-Trigger",
-                List.of(
-                        "{"
-                                + "\"event_trigger_data\": "
-                                + EVENT_TRIGGERS_1
-                                + ", \"debug_key\": \""
-                                + DEBUG_KEY
-                                + "\""
-                                + "}"));
-        when(mUrlConnection1.getHeaderFields()).thenReturn(headersRequest);
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
-        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
-        // Execution
-        Optional<Trigger> fetch = mFetcher.fetchTrigger(
-                webTriggerRegistrationRequest(request, false), asyncFetchStatus, asyncRedirect);
-        // Assertion
-        assertTrue(fetch.isPresent());
-        Trigger result = fetch.get();
-        assertEquals(TOP_ORIGIN, result.getAttributionDestination().toString());
-        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.getEventTriggers());
-        verify(mUrlConnection1).setRequestMethod("POST");
-    }
-
-    @Test
     public void basicTriggerRequest_headersMoreThanMaxResponseSize_emitsMetricsWithAdTechDomain()
             throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
@@ -2884,17 +2814,6 @@ public final class AsyncTriggerFetcherTest {
                         Uri.parse(triggerUri),
                         CONTEXT.getAttributionSource().getPackageName(),
                         SDK_PACKAGE_NAME)
-                .setAdIdPermissionGranted(true)
-                .build();
-    }
-
-    private RegistrationRequest buildRequestWithoutAdIdPermission(String triggerUri) {
-        return new RegistrationRequest.Builder(
-                        RegistrationRequest.REGISTER_TRIGGER,
-                        Uri.parse(triggerUri),
-                        CONTEXT.getAttributionSource().getPackageName(),
-                        SDK_PACKAGE_NAME)
-                .setAdIdPermissionGranted(false)
                 .build();
     }
 
@@ -2952,12 +2871,12 @@ public final class AsyncTriggerFetcherTest {
                 System.currentTimeMillis(),
                 redirectType,
                 redirectCount,
-                registrationRequest.isAdIdPermissionGranted());
+                false);
     }
 
     private static AsyncRegistration webTriggerRegistrationRequest(
             WebTriggerRegistrationRequest webTriggerRegistrationRequest,
-            boolean adIdPermissionGranted) {
+            boolean arDebugPermission) {
         if (webTriggerRegistrationRequest.getTriggerParams().size() > 0) {
             WebTriggerParams webTriggerParams =
                     webTriggerRegistrationRequest.getTriggerParams().get(0);
@@ -2999,7 +2918,7 @@ public final class AsyncTriggerFetcherTest {
                     System.currentTimeMillis(),
                     AsyncRegistration.RedirectType.NONE,
                     0,
-                    adIdPermissionGranted);
+                    arDebugPermission);
         }
         return null;
     }

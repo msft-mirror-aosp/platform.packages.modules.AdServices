@@ -65,6 +65,7 @@ public final class MeasurementTables {
         String OS_DESTINATION = "os_destination";
         String VERIFIED_DESTINATION = "verified_destination";
         String DEBUG_KEY_ALLOWED = "debug_key_allowed";
+        String AD_ID_PERMISSION = "ad_id_permission";
     }
 
     /** Contract for Source. */
@@ -93,6 +94,8 @@ public final class MeasurementTables {
         String AGGREGATE_CONTRIBUTIONS = "aggregate_contributions";
         String DEBUG_KEY = "debug_key";
         String DEBUG_REPORTING = "debug_reporting";
+        String AD_ID_PERMISSION = "ad_id_permission";
+        String AR_DEBUG_PERMISSION = "ar_debug_permission";
     }
 
     /** Contract for Trigger. */
@@ -112,6 +115,8 @@ public final class MeasurementTables {
         String NOT_FILTERS = "not_filters";
         String DEBUG_KEY = "debug_key";
         String DEBUG_REPORTING = "debug_reporting";
+        String AD_ID_PERMISSION = "ad_id_permission";
+        String AR_DEBUG_PERMISSION = "ar_debug_permission";
     }
 
     /** Contract for EventReport. */
@@ -255,6 +260,8 @@ public final class MeasurementTables {
                     + AsyncRegistrationContract.TYPE
                     + " INTEGER, "
                     + AsyncRegistrationContract.DEBUG_KEY_ALLOWED
+                    + " INTEGER, "
+                    + AsyncRegistrationContract.AD_ID_PERMISSION
                     + " INTEGER "
                     + ")";
 
@@ -357,6 +364,10 @@ public final class MeasurementTables {
                     + SourceContract.DEBUG_KEY
                     + " INTEGER , "
                     + SourceContract.DEBUG_REPORTING
+                    + " INTEGER, "
+                    + SourceContract.AD_ID_PERMISSION
+                    + " INTEGER, "
+                    + SourceContract.AR_DEBUG_PERMISSION
                     + " INTEGER "
                     + ")";
 
@@ -421,6 +432,10 @@ public final class MeasurementTables {
                     + TriggerContract.DEBUG_KEY
                     + " INTEGER, "
                     + TriggerContract.DEBUG_REPORTING
+                    + " INTEGER, "
+                    + TriggerContract.AD_ID_PERMISSION
+                    + " INTEGER, "
+                    + TriggerContract.AR_DEBUG_PERMISSION
                     + " INTEGER "
                     + ")";
 
