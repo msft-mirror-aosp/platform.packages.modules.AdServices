@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.measurement.util;
 
-import com.android.adservices.service.measurement.FilterData;
+import com.android.adservices.service.measurement.FilterMap;
 
 import java.util.HashSet;
 import java.util.List;
@@ -37,7 +37,7 @@ public final class Filter {
      * @return return true when all keys in source filter and trigger filter are matched.
      */
     public static boolean isFilterMatch(
-            FilterData sourceFilter, FilterData triggerFilter, boolean isFilter) {
+            FilterMap sourceFilter, FilterMap triggerFilter, boolean isFilter) {
         for (String key : triggerFilter.getAttributionFilterMap().keySet()) {
             if (!sourceFilter.getAttributionFilterMap().containsKey(key)) {
                 continue;
