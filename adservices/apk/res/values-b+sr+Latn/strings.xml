@@ -36,6 +36,10 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"Dozvoljava aplikaciji da pristupa API-ju za izmenu omogućavanja Adservice-a."</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"Pristup API-ju za omogućavanje Adservice-a"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Dozvoljava aplikaciji da pristupa API-ju za omogućavanje Adservice-a."</string>
+    <!-- no translation found for permlab_accessAdServicesManager (4816332609066703740) -->
+    <skip />
+    <!-- no translation found for permdesc_accessAdServicesManager (2619300431637689524) -->
+    <skip />
     <string name="app_label" msgid="5985320129629013968">"Android sistem"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Pridružite se beta verziji Android privatnosti za oglase"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android istražuje privatnije načine da vam aplikacije prikazuju oglase"</string>
@@ -81,8 +85,7 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Zaštićeno okruženje privatnosti"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Beta verzija Android privatnosti za oglase pruža nove funkcije koje aplikacije mogu da koriste da bi vam prikazivale oglase koji će vam se možda dopasti. Ove tehnologije ne koriste identifikatore uređaja.\n\nAndroid može da procenjuje vrste oglasa koji će vas možda zanimati i čuva interesovanja privremeno na uređaju. To omogućava aplikacijama da vam prikazuju relevantne oglase, bez praćenja vaših aktivnosti na veb-sajtovima i u aplikacijama drugih programera."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Nemate nijedno blokirano interesovanje"</string>
-    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
-    <skip />
+    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Interesovanja su resetovana"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Aplikacije mogu da procenjuju interesovanja i privremeno ih čuvaju pomoću Android-a. Kasnije druga aplikacija može da vam prikaže oglas na osnovu tih interesovanja.\n\nAko blokirate aplikaciju, ona više neće procenjivati interesovanja. Neće biti dodata na ovu listu aplikacija ponovo ako je ne odblokirate. Interesovanja koja je aplikacija već procenila biće izbrisana, ali ćete možda i dalje videti neke povezane oglase."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Aplikacije koje ste blokirali"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Resetujte interesovanja koja su procenile aplikacije"</string>

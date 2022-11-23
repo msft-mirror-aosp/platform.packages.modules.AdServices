@@ -36,6 +36,10 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"ॲप्लिकेशन ला AdService चे सुरू करण्याच्या स्थितीमध्ये सुधारणेसंबंधित API अ‍ॅक्सेस करू देते."</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"AdService चे सुरू करण्याच्या स्थितीसंबंधित API अ‍ॅक्सेस"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"ॲप्लिकेशन ला AdService चे सुरू करण्याच्या स्थितीसंबंधित API अ‍ॅक्सेस करू देते."</string>
+    <!-- no translation found for permlab_accessAdServicesManager (4816332609066703740) -->
+    <skip />
+    <!-- no translation found for permdesc_accessAdServicesManager (2619300431637689524) -->
+    <skip />
     <string name="app_label" msgid="5985320129629013968">"Android सिस्‍टीम"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Android च्या जाहिरातींशी संबंधित गोपनीयतेची बीटा आवृत्तीमध्ये सामील व्हा"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android हे तुम्हाला जाहिराती दाखवण्यासाठी ॲप्सकरिता अधिक खाजगी मार्ग एक्सप्लोर करत आहे"</string>
@@ -81,8 +85,7 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"प्रायव्हसी सॅंडबाॅक्स"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"तुम्हाला कदाचित आवडतील अशा जाहिराती दाखवण्यासाठी अ‍ॅप्सना वापरता येतील अशी नवीन वैशिष्ट्ये Android ची जाहिरातींशी संबंधित गोपनीयतेची बीटा आवृत्ती पुरवते. ही तंत्रज्ञाने डिव्हाइस आयडेंटिफायर वापरत नाहीत.\n\nतुम्हाला कोणत्या प्रकारच्या जाहिरातींमध्ये स्वारस्य असू शकते याच अंदाज Android लावू शकते आणि तुमच्या डिव्हाइसवर ती स्वारस्ये तात्पुरती सेव्ह करू शकते. हे अ‍ॅप्सना इतर डेव्हलपरच्या सर्व वेबसाइटवर आणि अ‍ॅप्सवर तुमची अ‍ॅक्टिव्हिटी ट्रॅक न करता उपयुक्त जाहिराती दाखवण्याची अनुमती देते."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"तुमच्याकडे कोणतीही ब्लॉक केलेली स्वारस्ये नाहीत"</string>
-    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
-    <skip />
+    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"स्वारस्ये रीसेट केली"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"अ‍ॅप्स ही तुमच्या स्वारस्यांचा अंदाज लावून ती Android वर तात्पुरती सेव्ह करू शकतात. नंतर, दुसरे एखादे अ‍ॅप या स्वारस्यांच्या आधारावर तुम्हाला जाहिरात दाखवू शकते.\n\nतुम्ही एखादे अ‍ॅप ब्लॉक केल्यास, ते आणखी स्वारस्यांचा अंदाज लावणार नाही. तुम्ही ते अनब्लॉक केल्याशिवाय पुन्हा या अ‍ॅप्सच्या सूचीमध्ये जोडले जाणार नाही. ॲपद्वारे आधीच अंजाद वर्तवलेली स्वारस्ये हटवली जातील, परंतु तरीही तुम्हाला काही संबंधित जाहिराती दिसतील."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"तुम्ही ब्लॉक केलेली अ‍ॅप्स"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"ॲप्सद्वारे अंदाज लावलेली स्वारस्ये रीसेट करा"</string>

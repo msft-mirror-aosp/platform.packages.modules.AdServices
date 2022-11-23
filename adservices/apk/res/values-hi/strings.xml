@@ -36,6 +36,10 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"इससे, किसी ऐप्लिकेशन को AdService API को चालू या बंद करने की स्थिति में बदलाव करने की अनुमति मिलती है."</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"AdService API को चालू या बंद करने की स्थिति को ऐक्सेस करने की अनुमति दें"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"इससे, किसी ऐप्लिकेशन को AdService API को चालू या बंद करने की स्थिति को ऐक्सेस करने की अनुमति मिलती है."</string>
+    <!-- no translation found for permlab_accessAdServicesManager (4816332609066703740) -->
+    <skip />
+    <!-- no translation found for permdesc_accessAdServicesManager (2619300431637689524) -->
+    <skip />
     <string name="app_label" msgid="5985320129629013968">"Android System"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Android के विज्ञापनों से जुड़ी निजता नीति के बीटा प्रोग्राम में शामिल हों"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android, ऐप्लिकेशन के लिए निजता से जुड़े ऐसे और तरीके बनाने पर काम कर रहा है जिनका इस्तेमाल, आपको विज्ञापन दिखाने के लिए किया जा सके"</string>
@@ -81,8 +85,7 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"प्राइवसी सैंडबॉक्स"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android के विज्ञापनों से जुड़ी निजता नीति के बीटा प्रोग्राम से आपको नई सुविधाएं मिलती हैं. आपके डिवाइस में मौजूद ऐप्लिकेशन, इन सुविधाओं का इस्तेमाल करके आपकी पसंद के मुताबिक विज्ञापन दिखा सकते हैं. ये टेक्नोलॉजी, डिवाइस के आइडेंटिफ़ायर का इस्तेमाल नहीं करती हैं.\n\nAndroid, इस बात का अनुमान लगा सकता है कि आपको किस तरह के विज्ञापन पसंद आएंगे. साथ ही, यह आपके डिवाइस में कुछ समय के लिए आपकी दिलचस्पियों को सेव कर सकता है. इससे ऐप्लिकेशन को, आपके काम के विज्ञापन दिखाने की अनुमति मिलती है. ऐसा, दूसरे डेवलपर के ऐप्लिकेशन और वेबसाइटों पर आपकी गतिविधियों को ट्रैक किए बिना हो सकता है."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"आपकी कोई भी दिलचस्पी ब्लॉक नहीं की गई"</string>
-    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
-    <skip />
+    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"दिलचस्प विषयों को रीसेट कर दिया गया है"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"ऐप्लिकेशन, आपकी दिलचस्पियों का अनुमान लगा सकते हैं. साथ ही, ये Android में कुछ समय के लिए आपकी दिलचस्पियों को सेव कर सकते हैं. इसके बाद, कोई दूसरा ऐप्लिकेशन, आपकी दिलचस्पी के आधार पर विज्ञापन दिखा सकता है.\n\nअगर कोई ऐप्लिकेशन ब्लॉक किया जाता है, तो वह आपकी दिलचस्पी का अनुमान नहीं लगा पाएगा. दिलचस्पी का अनुमान लगाने वाले ऐप्लिकेशन की सूची में किसी ऐप्लिकेशन को वापस तब तक नहीं जोड़ा जाएगा, जब तक आप उसे अनब्लॉक न कर दें. ऐप्लिकेशन ने आपकी जिन दिलचस्पियों का अनुमान लगया था उन्हें मिटा दिया जाएगा. हालांकि, आपको अब भी इनसे जुड़े कुछ विज्ञापन दिख सकते हैं."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"ऐसे ऐप्लिकेशन जिन्हें आपने ब्लॉक किया है"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"ऐप्लिकेशन की अनुमान लगाई गई दिलचस्पियां रीसेट करें"</string>

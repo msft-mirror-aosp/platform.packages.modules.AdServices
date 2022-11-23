@@ -36,6 +36,10 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"អនុញ្ញាតឱ្យកម្មវិធីចូលប្រើ API កែសម្រួលស្ថានភាពនៃការបើករបស់ AdService។"</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"សិទ្ធិចូលប្រើ API ស្ថានភាពនៃការបើករបស់ AdService"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"អនុញ្ញាតឱ្យកម្មវិធីចូលប្រើ API ស្ថានភាពនៃការបើករបស់ AdService។"</string>
+    <!-- no translation found for permlab_accessAdServicesManager (4816332609066703740) -->
+    <skip />
+    <!-- no translation found for permdesc_accessAdServicesManager (2619300431637689524) -->
+    <skip />
     <string name="app_label" msgid="5985320129629013968">"ប្រព័ន្ធ Android"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"ចូលរួមកំណែបេតានៃឯកជនភាពនៃការផ្សាយពាណិជ្ជកម្មរបស់ Android"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android កំពុងស្វែងរកវិធីដែលកាន់តែមានលក្ខណៈឯកជនសម្រាប់កម្មវិធី ដើម្បីបង្ហាញការផ្សាយពាណិជ្ជកម្មដល់អ្នក"</string>
@@ -81,8 +85,7 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"កំណែបេតានៃឯកជនភាពនៃការផ្សាយពាណិជ្ជកម្មរបស់ Android ផ្តល់នូវមុខងារថ្មីៗដែលកម្មវិធីអាចប្រើដើម្បីបង្ហាញអ្នកនូវការផ្សាយពាណិជ្ជកម្មដែលអ្នកប្រហែលជាចូលចិត្ត។ បច្ចេកវិទ្យាទាំងនេះមិនប្រើលេខកូដសម្គាល់ឧបករណ៍ទេ។\n\nAndroid អាចប៉ាន់ស្មានប្រភេទនៃការផ្សាយពាណិជ្ជកម្មដែលអ្នកប្រហែលជាចាប់អារម្មណ៍ និងរក្សាទុកចំណាប់អារម្មណ៍ទាំងនេះជាបណ្តោះអាសន្ននៅលើឧបករណ៍របស់អ្នក។ ដំណើរការនេះអនុញ្ញាតឱ្យកម្មវិធីបង្ហាញអ្នកនូវការផ្សាយពាណិជ្ជកម្មដែលពាក់ព័ន្ធ ដោយមិនតាមដានសកម្មភាពរបស់អ្នកនៅលើគេហទំព័រ និងកម្មវិធីពីអ្នកអភិវឌ្ឍន៍ផ្សេងទៀត។"</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"អ្នកមិនមានចំណាប់អារម្មណ៍ដែលត្រូវបានទប់ស្កាត់ទេ"</string>
-    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
-    <skip />
+    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"ចំណាប់អារម្មណ៍ត្រូវបានកំណត់ឡើងវិញ"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"កម្មវិធីអាចប៉ាន់ស្មានចំណាប់អារម្មណ៍របស់អ្នក និងរក្សាទុកចំណាប់អារម្មណ៍ទាំងនេះជាបណ្តោះអាសន្នជាមួយ Android។ ក្រោយមក កម្មវិធីផ្សេងអាចបង្ហាញអ្នកនូវការផ្សាយពាណិជ្ជកម្មដោយផ្អែកលើចំណាប់អារម្មណ៍ទាំងនេះ។\n\nប្រសិនបើអ្នកទប់ស្កាត់កម្មវិធីណាមួយ វានឹងមិនអាចប៉ាន់ស្មានចំណាប់អារម្មណ៍ទៀតទេ។ កម្មវិធីនោះ​នឹងមិន​ត្រូវ​បាន​បញ្ចូលទៅក្នុង​បញ្ជីកម្មវិធីម្ដងទៀតនោះទេ លុះត្រាតែអ្នកឈប់​ទប់ស្កាត់វា។ ចំណាប់អារម្មណ៍​ដែល​ប៉ាន់ស្មាន​ដោយ​កម្មវិធី​នោះ​រួច​ហើយ​នឹង​ត្រូវ​បាន​លុបចេញ ប៉ុន្តែ​អ្នក​នៅ​តែ​អាច​មើល​ឃើញ​ការផ្សាយ​ពាណិជ្ជកម្ម​ដែល​ពាក់ព័ន្ធ​មួយ​ចំនួន។"</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"កម្មវិធី​ដែល​អ្នក​បាន​ទប់ស្កាត់"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"កំណត់ចំណាប់អារម្មណ៍ដែលប៉ាន់ស្មានដោយកម្មវិធីឡើងវិញ"</string>
