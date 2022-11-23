@@ -96,6 +96,7 @@ import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApp
 import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.Throttler;
+import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
@@ -189,7 +190,9 @@ public class AdSelectionServiceImplTest {
             AdTechIdentifier.fromString("{\"contextual_signals\":1}");
     private final int mBytesPerPeriod = 1;
     private final AdServicesHttpsClient mClient =
-            new AdServicesHttpsClient(AdServicesExecutors.getBlockingExecutor());
+            new AdServicesHttpsClient(
+                    AdServicesExecutors.getBlockingExecutor(),
+                    CacheProviderFactory.createNoOpCache());
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
