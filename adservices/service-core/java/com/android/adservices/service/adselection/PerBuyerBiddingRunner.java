@@ -25,6 +25,9 @@ import android.net.Uri;
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.Clock;
+import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.Lists;
@@ -157,7 +160,9 @@ public class PerBuyerBiddingRunner {
                 trustedBiddingDataByBaseUri,
                 adSelectionConfig.getAdSelectionSignals(),
                 buyerSignal,
-                AdSelectionSignals.EMPTY);
+                AdSelectionSignals.EMPTY,
+                new RunAdBiddingPerCAExecutionLogger(
+                        Clock.SYSTEM_CLOCK, AdServicesLoggerImpl.getInstance()));
     }
 
     /**
