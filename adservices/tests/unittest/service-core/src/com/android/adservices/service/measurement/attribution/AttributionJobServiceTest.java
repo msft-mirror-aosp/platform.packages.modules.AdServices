@@ -273,7 +273,10 @@ public class AttributionJobServiceTest {
                     .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
             ExtendedMockito.doNothing().when(() -> AttributionJobService.schedule(any(), any()));
             ExtendedMockito.doNothing()
-                    .when(() -> DebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+                    .when(
+                            () ->
+                                    DebugReportingJobService.scheduleIfNeeded(
+                                            any(), anyBoolean(), anyBoolean()));
 
             // Execute
             execute.run();
