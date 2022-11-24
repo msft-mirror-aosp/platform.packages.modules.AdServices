@@ -78,9 +78,12 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
      * For example, <code>runPhase("testExample");</code>
      */
     private void runPhase(String phase) throws Exception {
-        assertThat(runDeviceTests(TEST_APP_STORAGE_PACKAGE,
-                "com.android.tests.sdksandbox.SdkSandboxStorageTestApp",
-                phase)).isTrue();
+        assertThat(
+                        runDeviceTests(
+                                TEST_APP_STORAGE_PACKAGE,
+                                TEST_APP_STORAGE_PACKAGE + ".SdkSandboxStorageTestApp",
+                                phase))
+                .isTrue();
     }
 
     @Before
@@ -1298,9 +1301,9 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         public void unlockDevice() throws Exception {
             try {
                 mTest.runDeviceTests(
-                        "com.android.cts.appdataisolation.appa",
-                        "com.android.cts.appdataisolation.appa.AppATests",
-                        "testUnlockDevice");
+                        TEST_APP_STORAGE_PACKAGE,
+                        TEST_APP_STORAGE_PACKAGE + ".SdkSandboxStorageTestApp",
+                        "unlockDevice");
             } catch (Exception ignore) {
             }
         }
