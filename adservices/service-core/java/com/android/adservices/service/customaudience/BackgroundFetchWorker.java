@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.customaudience;
 
+
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
 import static com.android.adservices.service.stats.AdServicesLoggerUtil.UNSET;
@@ -35,6 +36,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
 import com.android.adservices.service.stats.BackgroundFetchExecutionLogger;
+import com.android.adservices.service.stats.UpdateCustomAudienceExecutionLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.Lists;
@@ -205,7 +207,12 @@ public class BackgroundFetchWorker {
                                                     return null;
                                                 }
                                                 mBackgroundFetchRunner.updateCustomAudience(
-                                                        jobStartTime, fetchData);
+                                                        jobStartTime,
+                                                        fetchData,
+                                                        new UpdateCustomAudienceExecutionLogger(
+                                                                SYSTEM_CLOCK,
+                                                                AdServicesLoggerImpl
+                                                                        .getInstance()));
                                             }
                                             return null;
                                         }));
