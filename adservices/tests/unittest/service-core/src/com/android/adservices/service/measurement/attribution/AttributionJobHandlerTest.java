@@ -2004,11 +2004,11 @@ public class AttributionJobHandlerTest {
     }
 
     private JSONObject createFilterJSONObject() throws JSONException {
-        JSONObject filterData = new JSONObject();
-        filterData.put("conversion_subdomain",
+        JSONObject filterMap = new JSONObject();
+        filterMap.put("conversion_subdomain",
                 new JSONArray(Arrays.asList("electronics.megastore")));
-        filterData.put("product", new JSONArray(Arrays.asList("1234", "2345")));
-        return filterData;
+        filterMap.put("product", new JSONArray(Arrays.asList("1234", "2345")));
+        return filterMap;
     }
 
     private void assertAggregateReportsEqual(

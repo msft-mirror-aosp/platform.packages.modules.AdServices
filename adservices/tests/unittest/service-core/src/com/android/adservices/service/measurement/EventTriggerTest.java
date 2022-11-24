@@ -27,32 +27,32 @@ import org.junit.Test;
 import java.util.Set;
 
 public class EventTriggerTest {
-    private static JSONObject sFilterData1;
-    private static JSONObject sFilterData2;
-    private static JSONObject sNotFilterData1;
-    private static JSONObject sNotFilterData2;
+    private static JSONObject sFilterMap1;
+    private static JSONObject sFilterMap2;
+    private static JSONObject sNotFilterMap1;
+    private static JSONObject sNotFilterMap2;
 
     static {
         try {
-            sFilterData1 =
+            sFilterMap1 =
                     new JSONObject(
                             "{\n"
                                     + "    \"source_type\": [\"navigation\"],\n"
                                     + "    \"key_1\": [\"value_1\"] \n"
                                     + "   }\n");
-            sFilterData2 =
+            sFilterMap2 =
                     new JSONObject(
                             "{\n"
                                     + "    \"source_type\": [\"EVENT\"],\n"
                                     + "    \"key_1\": [\"value_1\"] \n"
                                     + "   }\n");
-            sNotFilterData1 =
+            sNotFilterMap1 =
                     new JSONObject(
                             "{\n"
                                     + "    \"not_source_type\": [\"EVENT\"],\n"
                                     + "    \"not_key_1\": [\"value_1\"] \n"
                                     + "   }\n");
-            sNotFilterData2 =
+            sNotFilterMap2 =
                     new JSONObject(
                             "{\n"
                                     + "    \"not_source_type\": [\"navigation\"],\n"
@@ -81,12 +81,12 @@ public class EventTriggerTest {
                         .setTriggerData(new UnsignedLong(101L))
                         .setDedupKey(new UnsignedLong(1001L))
                         .setFilter(
-                                new FilterData.Builder()
-                                        .buildFilterData(sFilterData1)
+                                new FilterMap.Builder()
+                                        .buildFilterData(sFilterMap1)
                                         .build())
                         .setNotFilter(
-                                new FilterData.Builder()
-                                        .buildFilterData(sNotFilterData1)
+                                new FilterMap.Builder()
+                                        .buildFilterData(sNotFilterMap1)
                                         .build())
                         .build();
         EventTrigger eventTrigger2 =
@@ -95,12 +95,12 @@ public class EventTriggerTest {
                         .setTriggerData(new UnsignedLong(101L))
                         .setDedupKey(new UnsignedLong(1001L))
                         .setFilter(
-                                new FilterData.Builder()
-                                        .buildFilterData(sFilterData1)
+                                new FilterMap.Builder()
+                                        .buildFilterData(sFilterMap1)
                                         .build())
                         .setNotFilter(
-                                new FilterData.Builder()
-                                        .buildFilterData(sNotFilterData1)
+                                new FilterMap.Builder()
+                                        .buildFilterData(sNotFilterMap1)
                                         .build())
                         .build();
 
@@ -121,27 +121,27 @@ public class EventTriggerTest {
         assertNotEquals(
                 new EventTrigger.Builder()
                         .setFilter(
-                                new FilterData.Builder()
-                                        .buildFilterData(sFilterData1)
+                                new FilterMap.Builder()
+                                        .buildFilterData(sFilterMap1)
                                         .build())
                         .build(),
                 new EventTrigger.Builder()
                         .setFilter(
-                                new FilterData.Builder()
-                                        .buildFilterData(sFilterData2)
+                                new FilterMap.Builder()
+                                        .buildFilterData(sFilterMap2)
                                         .build())
                         .build());
         assertNotEquals(
                 new EventTrigger.Builder()
                         .setNotFilter(
-                                new FilterData.Builder()
-                                        .buildFilterData(sNotFilterData1)
+                                new FilterMap.Builder()
+                                        .buildFilterData(sNotFilterMap1)
                                         .build())
                         .build(),
                 new EventTrigger.Builder()
                         .setNotFilter(
-                                new FilterData.Builder()
-                                        .buildFilterData(sNotFilterData2)
+                                new FilterMap.Builder()
+                                        .buildFilterData(sNotFilterMap2)
                                         .build())
                         .build());
     }
@@ -166,12 +166,12 @@ public class EventTriggerTest {
                         .setTriggerData(new UnsignedLong(101L))
                         .setDedupKey(new UnsignedLong(1001L))
                         .setFilter(
-                                new FilterData.Builder()
-                                        .buildFilterData(sFilterData1)
+                                new FilterMap.Builder()
+                                        .buildFilterData(sFilterMap1)
                                         .build())
                         .setNotFilter(
-                                new FilterData.Builder()
-                                        .buildFilterData(sNotFilterData1)
+                                new FilterMap.Builder()
+                                        .buildFilterData(sNotFilterMap1)
                                         .build())
                         .build();
         Set<EventTrigger> eventTriggerSet1 = Set.of(eventTrigger1);
@@ -187,12 +187,12 @@ public class EventTriggerTest {
                 .setTriggerData(new UnsignedLong(101L))
                 .setDedupKey(new UnsignedLong(1001L))
                 .setFilter(
-                        new FilterData.Builder()
-                                .buildFilterData(sFilterData1)
+                        new FilterMap.Builder()
+                                .buildFilterData(sFilterMap1)
                                 .build())
                 .setNotFilter(
-                        new FilterData.Builder()
-                                .buildFilterData(sNotFilterData1)
+                        new FilterMap.Builder()
+                                .buildFilterData(sNotFilterMap1)
                                 .build())
                 .build();
     }
