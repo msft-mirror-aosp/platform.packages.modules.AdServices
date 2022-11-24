@@ -25,6 +25,7 @@ import android.os.Trace;
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
+import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.FluentFuture;
@@ -61,7 +62,23 @@ public class JsFetcher {
 
     /**
      * Fetch the buyer decision logic. Check locally to see if an override is present, otherwise
-     * fetch from server.
+     * fetch from server. Does not use caching by default
+     *
+     * @return buyer decision logic
+     */
+    // TODO(b/260043950): Remove this method when telemetry logging is added on
+    //  TrustedServerAdSelectionRunner.
+    public FluentFuture<String> getBuyerDecisionLogic(
+            @NonNull final Uri decisionLogicUri,
+            @NonNull String owner,
+            @NonNull AdTechIdentifier buyer,
+            @NonNull String name) {
+        return getBuyerDecisionLogic(decisionLogicUri, owner, buyer, name, false);
+    }
+
+    /**
+     * Fetch the buyer decision logic. Check locally to see if an override is present, otherwise
+     * fetch from server. Makes use of caching optional.
      *
      * @return buyer decision logic
      */
@@ -69,7 +86,8 @@ public class JsFetcher {
             @NonNull final Uri decisionLogicUri,
             @NonNull String owner,
             @NonNull AdTechIdentifier buyer,
-            @NonNull String name) {
+            @NonNull String name,
+            boolean useCaching) {
         int traceCookie = Tracing.beginAsyncSection(Tracing.GET_BUYER_DECISION_LOGIC);
 
         FluentFuture<String> jsOverrideFuture =
@@ -86,7 +104,8 @@ public class JsFetcher {
                                 LogUtil.v(
                                         "Fetching buyer decision logic from server: %s",
                                         decisionLogicUri.toString());
-                                return mAdServicesHttpsClient.fetchPayload(decisionLogicUri);
+                                return mAdServicesHttpsClient.fetchPayload(
+                                        decisionLogicUri, useCaching);
                             } else {
                                 LogUtil.d(
                                         "Developer options enabled and an override JS is provided "
@@ -94,6 +113,80 @@ public class JsFetcher {
                                                 + "Skipping call to server.");
                                 return Futures.immediateFuture(jsOverride);
                             }
+                        },
+                        mLightweightExecutorService)
+                .catching(
+                        Exception.class,
+                        e -> {
+                            Trace.endAsyncSection(Tracing.GET_BUYER_DECISION_LOGIC, traceCookie);
+                            LogUtil.w(
+                                    e, "Exception encountered when fetching buyer decision logic");
+                            throw new IllegalStateException(MISSING_BIDDING_LOGIC);
+                        },
+                        mLightweightExecutorService);
+    }
+
+    /**
+     * Fetch the buyer decision logic with telemetry logger. Check locally to see if an override is
+     * present, otherwise fetch from server. Does not use caching by default.
+     *
+     * @return buyer decision logic
+     */
+    public FluentFuture<String> getBuyerDecisionLogicWithLogger(
+            @NonNull final Uri decisionLogicUri,
+            @NonNull String owner,
+            @NonNull AdTechIdentifier buyer,
+            @NonNull String name,
+            @NonNull RunAdBiddingPerCAExecutionLogger runAdBiddingPerCAExecutionLogger) {
+        return getBuyerDecisionLogicWithLogger(
+                decisionLogicUri, owner, buyer, name, false, runAdBiddingPerCAExecutionLogger);
+    }
+
+    /**
+     * Fetch the buyer decision logic with telemetry logger. Check locally to see if an override is
+     * present, otherwise fetch from server. Make use of caching optional.
+     *
+     * @return buyer decision logic
+     */
+    public FluentFuture<String> getBuyerDecisionLogicWithLogger(
+            @NonNull final Uri decisionLogicUri,
+            @NonNull String owner,
+            @NonNull AdTechIdentifier buyer,
+            @NonNull String name,
+            boolean useCaching,
+            @NonNull RunAdBiddingPerCAExecutionLogger runAdBiddingPerCAExecutionLogger) {
+        int traceCookie = Tracing.beginAsyncSection(Tracing.GET_BUYER_DECISION_LOGIC);
+        runAdBiddingPerCAExecutionLogger.startGetBuyerDecisionLogic();
+        FluentFuture<String> jsOverrideFuture =
+                FluentFuture.from(
+                        mBackgroundExecutorService.submit(
+                                () ->
+                                        mCustomAudienceDevOverridesHelper.getBiddingLogicOverride(
+                                                owner, buyer, name)));
+        return jsOverrideFuture
+                .transformAsync(
+                        jsOverride -> {
+                            Trace.endAsyncSection(Tracing.GET_BUYER_DECISION_LOGIC, traceCookie);
+                            if (jsOverride == null) {
+                                LogUtil.v(
+                                        "Fetching buyer decision logic from server: %s",
+                                        decisionLogicUri.toString());
+                                return mAdServicesHttpsClient.fetchPayload(
+                                        decisionLogicUri, useCaching);
+                            } else {
+                                LogUtil.d(
+                                        "Developer options enabled and an override JS is provided "
+                                                + "for the current Custom Audience. "
+                                                + "Skipping call to server.");
+                                return Futures.immediateFuture(jsOverride);
+                            }
+                        },
+                        mLightweightExecutorService)
+                .transform(
+                        buyerDecisionLogicJs -> {
+                            runAdBiddingPerCAExecutionLogger.endGetBuyerDecisionLogic(
+                                    buyerDecisionLogicJs);
+                            return buyerDecisionLogicJs;
                         },
                         mLightweightExecutorService)
                 .catching(

@@ -55,6 +55,7 @@ android_test {
         "android.test.mock.stubs",
         "framework-adservices.impl",
         "framework-annotations-lib",
+        "framework-configinfrastructure",
         "framework-sdksandbox.impl",
     ],
     test_suites: [
