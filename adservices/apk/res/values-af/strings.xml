@@ -36,6 +36,10 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"Gee ’n program toegang tot AdService se aktiveringstaatwysiging-API."</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"Toegang tot AdService se aktiveringstaat-API."</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Gee ’n program toegang tot AdService se aktiveringstaat-API."</string>
+    <!-- no translation found for permlab_accessAdServicesManager (4816332609066703740) -->
+    <skip />
+    <!-- no translation found for permdesc_accessAdServicesManager (2619300431637689524) -->
+    <skip />
     <string name="app_label" msgid="5985320129629013968">"Android-stelsel"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Sluit aan by Android se advertensieprivaatheidbeta"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android verken meer private maniere waarop programme vir jou advertensies kan wys"</string>
@@ -81,8 +85,7 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android se privaatheidbeta bied nuwe kenmerke wat programme kan gebruik om vir jou advertensies te wys waarvan jy dalk sal hou. Hierdie tegnologieë gebruik nie toestelidentifiseerders nie.\n\nAndroid kan die soorte advertensies skat waarin jy dalk belang sal stel, en stoor hierdie belangstellings tydelik op jou toestel. Dit maak dit vir programme moontlik om vir jou relevante advertesies te wys sonder om jou aktiwiteit op webwerwe en programme van ander ontwikkelaars na te spoor."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Jy het geen geblokkeerde belangstellings nie"</string>
-    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
-    <skip />
+    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Belangstellings is teruggestel"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Programme kan jou belangstellings skat en hulle tydelik met Android stoor. ’n Ander program kan later vir jou ’n advertensie wys wat op hierdie belangstellings gegrond is.\n\nAs jy ’n program blokkeer, sal dit nie meer enige belangstellings skat nie. Dit sal nie weer by hierdie lys programme gevoeg word nie, tensy jy dit deblokkeer. Belangstellings wat reeds deur die program geskat is, sal uitgevee word, maar jy sal steeds verwante advertensies sien."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Programme wat jy geblokkeer het"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Stel belangstellings terug wat deur programme geskat is"</string>
