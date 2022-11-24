@@ -38,6 +38,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import android.app.adservices.AdServicesManager;
+import android.app.adservices.IAdServicesManager;
 import android.app.job.JobScheduler;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
@@ -104,10 +106,12 @@ public class ConsentManagerTest {
     @Spy private final Context mContextSpy = ApplicationProvider.getApplicationContext();
 
     private BooleanFileDatastore mDatastore;
+    private BooleanFileDatastore mConsentDatastore;
     private ConsentManager mConsentManager;
     private AppConsentDao mAppConsentDao;
     private EnrollmentDao mEnrollmentDao;
     private DbHelper mDbHelper;
+    private AdServicesManager mAdServicesManager;
 
     @Mock private PackageManager mPackageManagerMock;
     @Mock private TopicsWorker mTopicsWorker;
@@ -121,6 +125,7 @@ public class ConsentManagerTest {
     @Mock private EpochManager mMockEpochManager;
     @Mock private Flags mMockFlags;
     @Mock private JobScheduler mJobSchedulerMock;
+    @Mock private IAdServicesManager mMockIAdServicesManager;
     private MockitoSession mStaticMockSession = null;
 
     @Before
@@ -148,10 +153,16 @@ public class ConsentManagerTest {
                         .startMocking();
 
         mDatastore =
-                new BooleanFileDatastore(mContextSpy, AppConsentDaoFixture.TEST_DATASTORE_NAME, 1);
+                new BooleanFileDatastore(
+                        mContextSpy, AppConsentDao.DATASTORE_NAME, AppConsentDao.DATASTORE_VERSION);
+        // For each file, we should ensure there is only one instance of datastore that is able to
+        // access it. (Refer to BooleanFileDatastore.class)
+        mConsentDatastore = ConsentManager.createAndInitializeDataStore(mContextSpy);
         mAppConsentDao = spy(new AppConsentDao(mDatastore, mPackageManagerMock));
         mDbHelper = DbTestUtil.getDbHelperForTest();
         mEnrollmentDao = spy(new EnrollmentDao(mContextSpy, mDbHelper));
+        mAdServicesManager = new AdServicesManager(mContextSpy, mMockIAdServicesManager);
+        doReturn(mAdServicesManager).when(mContextSpy).getSystemService(AdServicesManager.class);
 
         mConsentManager =
                 new ConsentManager(
@@ -162,6 +173,8 @@ public class ConsentManagerTest {
                         mMeasurementImpl,
                         mAdServicesLoggerImpl,
                         mCustomAudienceDaoMock,
+                        mAdServicesManager,
+                        mConsentDatastore,
                         mMockFlags);
 
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
@@ -201,6 +214,7 @@ public class ConsentManagerTest {
     @After
     public void teardown() throws IOException {
         mDatastore.clear();
+        mConsentDatastore.clear();
         if (mStaticMockSession != null) {
             mStaticMockSession.finishMocking();
         }
@@ -834,6 +848,8 @@ public class ConsentManagerTest {
                         mMeasurementImpl,
                         mAdServicesLoggerImpl,
                         mCustomAudienceDaoMock,
+                        mAdServicesManager,
+                        mConsentDatastore,
                         mMockFlags);
         doNothing().when(mBlockedTopicsManager).blockTopic(any());
         doNothing().when(mBlockedTopicsManager).unblockTopic(any());
@@ -862,6 +878,8 @@ public class ConsentManagerTest {
                         mMeasurementImpl,
                         mAdServicesLoggerImpl,
                         mCustomAudienceDaoMock,
+                        mAdServicesManager,
+                        mConsentDatastore,
                         mMockFlags);
 
         temporalConsentManager.enable(mContextSpy);
@@ -890,6 +908,8 @@ public class ConsentManagerTest {
                         mMeasurementImpl,
                         mAdServicesLoggerImpl,
                         mCustomAudienceDaoMock,
+                        mAdServicesManager,
+                        mConsentDatastore,
                         mMockFlags);
 
         temporalConsentManager.enable(mContextSpy);

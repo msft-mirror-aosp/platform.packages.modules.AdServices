@@ -57,9 +57,11 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.TriggerFixture;
+import com.android.adservices.service.measurement.WebUtil;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.aggregation.AggregateReportFixture;
+import com.android.adservices.service.measurement.reporting.DebugReport;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -103,14 +105,14 @@ public class MeasurementDaoTest {
     private static final Uri APP_NO_PUBLISHER =
             Uri.parse("android-app://com.publisher3.no-sources");
     private static final Uri APP_BROWSER = Uri.parse("android-app://com.example1.browser");
-    private static final Uri WEB_ONE_DESTINATION = Uri.parse("https://www.example1.com");
+    private static final Uri WEB_ONE_DESTINATION = WebUtil.validUri("https://www.example1.test");
     private static final Uri WEB_ONE_DESTINATION_DIFFERENT_SUBDOMAIN =
-            Uri.parse("https://store.example1.com");
+            WebUtil.validUri("https://store.example1.test");
     private static final Uri WEB_ONE_DESTINATION_DIFFERENT_SUBDOMAIN_2 =
-            Uri.parse("https://foo.example1.com");
-    private static final Uri WEB_TWO_DESTINATION = Uri.parse("https://www.example2.com");
+            WebUtil.validUri("https://foo.example1.test");
+    private static final Uri WEB_TWO_DESTINATION = WebUtil.validUri("https://www.example2.test");
     private static final Uri WEB_TWO_DESTINATION_WITH_PATH =
-            Uri.parse("https://www.example2.com/ad/foo");
+            WebUtil.validUri("https://www.example2.test/ad/foo");
     private static final Uri APP_ONE_DESTINATION =
             Uri.parse("android-app://com.example1.one-trigger");
     private static final Uri APP_TWO_DESTINATION =
@@ -123,9 +125,9 @@ public class MeasurementDaoTest {
             Uri.parse("android-app://com.example1.three-triggers/path2");
     private static final Uri APP_NO_TRIGGERS = Uri.parse("android-app://com.example1.no-triggers");
     private static final Uri INSTALLED_PACKAGE = Uri.parse("android-app://com.example.installed");
-    private static final Uri WEB_PUBLISHER_ONE = Uri.parse("https://not.example.com");
-    private static final Uri WEB_PUBLISHER_TWO = Uri.parse("https://notexample.com");
-    private static final Uri WEB_PUBLISHER_THREE = Uri.parse("http://not.example.com");
+    private static final Uri WEB_PUBLISHER_ONE = WebUtil.validUri("https://not.example.test");
+    private static final Uri WEB_PUBLISHER_TWO = WebUtil.validUri("https://notexample.test");
+    private static final Uri WEB_PUBLISHER_THREE = WebUtil.validUri("http://not.example.test");
     private static final Uri APP_DESTINATION = Uri.parse("android-app://com.destination.example");
 
     // Fake ID count for initializing triggers.
@@ -183,6 +185,7 @@ public class MeasurementDaoTest {
             assertEquals(validSource.getFilterData(), source.getFilterData());
             assertEquals(validSource.getAggregateContributions(),
                     source.getAggregateContributions());
+            assertEquals(validSource.isDebugReporting(), source.isDebugReporting());
         }
     }
 
@@ -424,6 +427,33 @@ public class MeasurementDaoTest {
     }
 
     @Test
+    public void testInsertDebugReport() {
+        DebugReport debugReport = createDebugReport();
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction((dao) -> dao.insertDebugReport(debugReport));
+
+        try (Cursor cursor =
+                DbHelper.getInstance(sContext)
+                        .getReadableDatabase()
+                        .query(
+                                MeasurementTables.DebugReportContract.TABLE,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null)) {
+            assertTrue(cursor.moveToNext());
+            DebugReport report = SqliteObjectMapper.constructDebugReportFromCursor(cursor);
+            assertNotNull(report);
+            assertNotNull(report.getId());
+            assertEquals(debugReport.getType(), report.getType());
+            assertEquals(debugReport.getBody(), report.getBody());
+            assertEquals(debugReport.getEnrollmentId(), report.getEnrollmentId());
+        }
+    }
+
+    @Test
     public void singleAppTrigger_triggersPerDestination_returnsOne() {
         List<Trigger> triggerList = new ArrayList<>();
         triggerList.add(createAppTrigger(APP_ONE_DESTINATION, APP_ONE_DESTINATION));
@@ -541,12 +571,12 @@ public class MeasurementDaoTest {
                             .isEqualTo(3);
                     assertThat(
                                     measurementDao.getNumTriggersPerDestination(
-                                            Uri.parse("https://new-subdomain.example1.com"),
+                                            WebUtil.validUri("https://new-subdomain.example1.test"),
                                             EventSurfaceType.WEB))
                             .isEqualTo(3);
                     assertThat(
                                     measurementDao.getNumTriggersPerDestination(
-                                            Uri.parse("https://example1.com"),
+                                            WebUtil.validUri("https://example1.test"),
                                             EventSurfaceType.WEB))
                             .isEqualTo(3);
                 });
@@ -555,10 +585,10 @@ public class MeasurementDaoTest {
     @Test
     public void webTriggerWithoutSubdomains_triggersPerDestination_returnsAllMatching() {
         List<Trigger> triggerList = new ArrayList<>();
-        Uri webDestinationWithoutSubdomain = Uri.parse("https://example1.com");
-        Uri webDestinationWithoutSubdomainPath1 = Uri.parse("https://example1.com/path1");
-        Uri webDestinationWithoutSubdomainPath2 = Uri.parse("https://example1.com/path2");
-        Uri webDestinationWithoutSubdomainPath3 = Uri.parse("https://example1.com/path3");
+        Uri webDestinationWithoutSubdomain = WebUtil.validUri("https://example1.test");
+        Uri webDestinationWithoutSubdomainPath1 = WebUtil.validUri("https://example1.test/path1");
+        Uri webDestinationWithoutSubdomainPath2 = WebUtil.validUri("https://example1.test/path2");
+        Uri webDestinationWithoutSubdomainPath3 = WebUtil.validUri("https://example1.test/path3");
         triggerList.add(createWebTrigger(webDestinationWithoutSubdomain));
         triggerList.add(createWebTrigger(webDestinationWithoutSubdomainPath1));
         triggerList.add(createWebTrigger(webDestinationWithoutSubdomainPath2));
@@ -619,19 +649,19 @@ public class MeasurementDaoTest {
         DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
         dm.runInTransaction(
                 measurementDao -> {
-                    Uri differentScheme = Uri.parse("http://www.example1.com");
+                    Uri differentScheme = WebUtil.validUri("http://www.example1.test");
                     assertThat(
                                     measurementDao.getNumTriggersPerDestination(
                                             differentScheme, EventSurfaceType.WEB))
                             .isEqualTo(0);
 
-                    Uri notMatchingUrl2 = Uri.parse("https://www.not-example1.com");
+                    Uri notMatchingUrl2 = WebUtil.validUri("https://www.not-example1.test");
                     assertThat(
                                     measurementDao.getNumTriggersPerDestination(
                                             notMatchingUrl2, EventSurfaceType.WEB))
                             .isEqualTo(0);
 
-                    Uri notMatchingUrl = Uri.parse("https://www.not-example-1.com");
+                    Uri notMatchingUrl = WebUtil.validUri("https://www.not-example-1.test");
                     assertThat(
                                     measurementDao.getNumTriggersPerDestination(
                                             notMatchingUrl, EventSurfaceType.WEB))
@@ -642,7 +672,7 @@ public class MeasurementDaoTest {
     @Test
     public void testCountDistinctEnrollmentsPerPublisherXDestinationInAttribution_appDestination() {
         Uri sourceSite = Uri.parse("android-app://publisher.app");
-        Uri webDestination = Uri.parse("https://web-destination.com");
+        Uri webDestination = WebUtil.validUri("https://web-destination.test");
         Uri appDestination = Uri.parse("android-app://destination.app");
         String registrant = "android-app://registrant.app";
         List<Attribution> attributionsWithAppDestinations1 =
@@ -683,7 +713,7 @@ public class MeasurementDaoTest {
     @Test
     public void testCountDistinctEnrollmentsPerPublisherXDestinationInAttribution_webDestination() {
         Uri sourceSite = Uri.parse("android-app://publisher.app");
-        Uri webDestination = Uri.parse("https://web-destination.com");
+        Uri webDestination = WebUtil.validUri("https://web-destination.test");
         Uri appDestination = Uri.parse("android-app://destination.app");
         String registrant = "android-app://registrant.app";
         List<Attribution> attributionsWithAppDestinations =
@@ -732,7 +762,7 @@ public class MeasurementDaoTest {
             insertSource(source);
         }
         DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
-        Uri excludedDestination = Uri.parse("https://web-destination-2.com");
+        Uri excludedDestination = WebUtil.validUri("https://web-destination-2.test");
         datastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
@@ -764,7 +794,7 @@ public class MeasurementDaoTest {
             insertSource(source);
         }
         DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
-        Uri excludedDestination = Uri.parse("https://web-destination-2.com");
+        Uri excludedDestination = WebUtil.validUri("https://web-destination-2.test");
         datastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
@@ -789,7 +819,7 @@ public class MeasurementDaoTest {
             insertSource(source);
         }
         DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
-        Uri excludedDestination = Uri.parse("https://web-destination-2.com");
+        Uri excludedDestination = WebUtil.validUri("https://web-destination-2.test");
         datastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
@@ -842,7 +872,7 @@ public class MeasurementDaoTest {
             insertSource(source);
         }
         DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
-        Uri excludedDestination = Uri.parse("https://web-destination-2.com");
+        Uri excludedDestination = WebUtil.validUri("https://web-destination-2.test");
         datastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
@@ -896,7 +926,7 @@ public class MeasurementDaoTest {
             insertSource(source);
         }
         DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
-        Uri excludedDestination = Uri.parse("https://web-destination-2.com");
+        Uri excludedDestination = WebUtil.validUri("https://web-destination-2.test");
         datastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
@@ -911,7 +941,7 @@ public class MeasurementDaoTest {
 
     @Test
     public void testCountDistinctDestinationsPerPublisherInActiveSource_webPublisher_exactMatch() {
-        Uri publisher = Uri.parse("https://publisher.com");
+        Uri publisher = WebUtil.validUri("https://publisher.test");
         List<Source> activeSourcesWithAppAndWebDestinations =
                 getSourcesWithDifferentDestinations(
                         4, true, true, 4500000000L, publisher,
@@ -948,7 +978,7 @@ public class MeasurementDaoTest {
             insertSource(source);
         }
         DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
-        Uri excludedDestination = Uri.parse("https://web-destination-2.com");
+        Uri excludedDestination = WebUtil.validUri("https://web-destination-2.test");
         datastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
@@ -965,8 +995,8 @@ public class MeasurementDaoTest {
     // (Testing countDistinctDestinationsPerPublisherXEnrollmentInActiveSource)
     @Test
     public void testCountDistinctDestinations_webPublisher_doesNotMatchDomainAsSuffix() {
-        Uri publisher = Uri.parse("https://publisher.com");
-        Uri publisherAsSuffix = Uri.parse("https://prefix-publisher.com");
+        Uri publisher = WebUtil.validUri("https://publisher.test");
+        Uri publisherAsSuffix = WebUtil.validUri("https://prefix-publisher.test");
         List<Source> activeSourcesWithAppAndWebDestinations =
                 getSourcesWithDifferentDestinations(
                         4, true, true, 4500000000L, publisherAsSuffix,
@@ -1003,7 +1033,7 @@ public class MeasurementDaoTest {
             insertSource(source);
         }
         DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
-        Uri excludedDestination = Uri.parse("https://web-destination-2.com");
+        Uri excludedDestination = WebUtil.validUri("https://web-destination-2.test");
         datastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
@@ -1020,8 +1050,8 @@ public class MeasurementDaoTest {
     // (Testing countDistinctDestinationsPerPublisherXEnrollmentInActiveSource)
     @Test
     public void testCountDistinctDestinations_webPublisher_doesNotMatchDifferentScheme() {
-        Uri publisher = Uri.parse("https://publisher.com");
-        Uri publisherWithDifferentScheme = Uri.parse("http://publisher.com");
+        Uri publisher = WebUtil.validUri("https://publisher.test");
+        Uri publisherWithDifferentScheme = WebUtil.validUri("http://publisher.test");
         List<Source> activeSourcesWithAppAndWebDestinations =
                 getSourcesWithDifferentDestinations(
                         4, true, true, 4500000000L, publisherWithDifferentScheme,
@@ -1058,7 +1088,7 @@ public class MeasurementDaoTest {
             insertSource(source);
         }
         DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
-        Uri excludedDestination = Uri.parse("https://web-destination-2.com");
+        Uri excludedDestination = WebUtil.validUri("https://web-destination-2.test");
         datastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
@@ -1075,7 +1105,7 @@ public class MeasurementDaoTest {
     @Test
     public void testCountDistinctEnrollmentsPerPublisherXDestinationInSource_atWindow() {
         Uri publisher = Uri.parse("android-app://publisher.app");
-        Uri webDestination = Uri.parse("https://web-destination.com");
+        Uri webDestination = WebUtil.validUri("https://web-destination.test");
         Uri appDestination = Uri.parse("android-app://destination.app");
         List<Source> activeSourcesWithAppAndWebDestinations =
                 getSourcesWithDifferentEnrollments(
@@ -1099,7 +1129,7 @@ public class MeasurementDaoTest {
     @Test
     public void testCountDistinctEnrollmentsPerPublisherXDestinationInSource_beyondWindow() {
         Uri publisher = Uri.parse("android-app://publisher.app");
-        Uri webDestination = Uri.parse("https://web-destination.com");
+        Uri webDestination = WebUtil.validUri("https://web-destination.test");
         Uri appDestination = Uri.parse("android-app://destination.app");
         List<Source> activeSourcesWithAppAndWebDestinations =
                 getSourcesWithDifferentEnrollments(
@@ -1123,7 +1153,7 @@ public class MeasurementDaoTest {
     @Test
     public void testCountDistinctEnrollmentsPerPublisherXDestinationInSource_expiredSource() {
         Uri publisher = Uri.parse("android-app://publisher.app");
-        Uri webDestination = Uri.parse("https://web-destination.com");
+        Uri webDestination = WebUtil.validUri("https://web-destination.test");
         Uri appDestination = Uri.parse("android-app://destination.app");
         List<Source> activeSourcesWithAppAndWebDestinations =
                 getSourcesWithDifferentEnrollments(
@@ -1154,7 +1184,7 @@ public class MeasurementDaoTest {
     @Test
     public void testCountDistinctEnrollmentsPerPublisherXDestinationInSource_appDestination() {
         Uri publisher = Uri.parse("android-app://publisher.app");
-        Uri webDestination = Uri.parse("https://web-destination.com");
+        Uri webDestination = WebUtil.validUri("https://web-destination.test");
         Uri appDestination = Uri.parse("android-app://destination.app");
         List<Source> activeSourcesWithAppAndWebDestinations =
                 getSourcesWithDifferentEnrollments(
@@ -1204,7 +1234,7 @@ public class MeasurementDaoTest {
     @Test
     public void testCountDistinctEnrollmentsPerPublisherXDestinationInSource_webDestination() {
         Uri publisher = Uri.parse("android-app://publisher.app");
-        Uri webDestination = Uri.parse("https://web-destination.com");
+        Uri webDestination = WebUtil.validUri("https://web-destination.test");
         Uri appDestination = Uri.parse("android-app://destination.app");
         List<Source> activeSourcesWithAppAndWebDestinations =
                 getSourcesWithDifferentEnrollments(
@@ -1757,20 +1787,28 @@ public class MeasurementDaoTest {
     @Test
     public void getNumAggregateReportsPerDestination_returnsExpected() {
         List<AggregateReport> reportsWithPlainDestination =
-                Arrays.asList(generateMockAggregateReport("https://destination-1.com", 1));
+                Arrays.asList(generateMockAggregateReport(
+                        WebUtil.validUrl("https://destination-1.test"), 1));
         List<AggregateReport> reportsWithPlainAndSubDomainDestination =
                 Arrays.asList(
-                        generateMockAggregateReport("https://destination-2.com", 2),
-                        generateMockAggregateReport("https://subdomain.destination-2.com", 3));
+                        generateMockAggregateReport(
+                                WebUtil.validUrl("https://destination-2.test"), 2),
+                        generateMockAggregateReport(
+                                WebUtil.validUrl("https://subdomain.destination-2.test"), 3));
         List<AggregateReport> reportsWithPlainAndPathDestination =
                 Arrays.asList(
-                        generateMockAggregateReport("https://subdomain.destination-3.com", 4),
-                        generateMockAggregateReport("https://subdomain.destination-3.com/abcd", 5));
+                        generateMockAggregateReport(
+                                WebUtil.validUrl("https://subdomain.destination-3.test"), 4),
+                        generateMockAggregateReport(
+                                WebUtil.validUrl("https://subdomain.destination-3.test/abcd"), 5));
         List<AggregateReport> reportsWithAll3Types =
                 Arrays.asList(
-                        generateMockAggregateReport("https://destination-4.com", 6),
-                        generateMockAggregateReport("https://subdomain.destination-4.com", 7),
-                        generateMockAggregateReport("https://subdomain.destination-4.com/abcd", 8));
+                        generateMockAggregateReport(
+                                WebUtil.validUrl("https://destination-4.test"), 6),
+                        generateMockAggregateReport(
+                                WebUtil.validUrl("https://subdomain.destination-4.test"), 7),
+                        generateMockAggregateReport(
+                                WebUtil.validUrl("https://subdomain.destination-4.test/abcd"), 8));
         List<AggregateReport> reportsWithAndroidAppDestination =
                 Arrays.asList(generateMockAggregateReport("android-app://destination-5.app", 9));
 
@@ -1821,20 +1859,28 @@ public class MeasurementDaoTest {
     @Test
     public void getNumEventReportsPerDestination_returnsExpected() {
         List<EventReport> reportsWithPlainDestination =
-                Arrays.asList(generateMockEventReport("https://destination-1.com", 1));
+                Arrays.asList(generateMockEventReport(
+                        WebUtil.validUrl("https://destination-1.test"), 1));
         List<EventReport> reportsWithPlainAndSubDomainDestination =
                 Arrays.asList(
-                        generateMockEventReport("https://destination-2.com", 2),
-                        generateMockEventReport("https://subdomain.destination-2.com", 3));
+                        generateMockEventReport(
+                                WebUtil.validUrl("https://destination-2.test"), 2),
+                        generateMockEventReport(
+                                WebUtil.validUrl("https://subdomain.destination-2.test"), 3));
         List<EventReport> reportsWithPlainAndPathDestination =
                 Arrays.asList(
-                        generateMockEventReport("https://subdomain.destination-3.com", 4),
-                        generateMockEventReport("https://subdomain.destination-3.com/abcd", 5));
+                        generateMockEventReport(
+                                WebUtil.validUrl("https://subdomain.destination-3.test"), 4),
+                        generateMockEventReport(
+                                WebUtil.validUrl("https://subdomain.destination-3.test/abcd"), 5));
         List<EventReport> reportsWithAll3Types =
                 Arrays.asList(
-                        generateMockEventReport("https://destination-4.com", 6),
-                        generateMockEventReport("https://subdomain.destination-4.com", 7),
-                        generateMockEventReport("https://subdomain.destination-4.com/abcd", 8));
+                        generateMockEventReport(
+                                WebUtil.validUrl("https://destination-4.test"), 6),
+                        generateMockEventReport(
+                                WebUtil.validUrl("https://subdomain.destination-4.test"), 7),
+                        generateMockEventReport(
+                                WebUtil.validUrl("https://subdomain.destination-4.test/abcd"), 8));
         List<EventReport> reportsWithAndroidAppDestination =
                 Arrays.asList(generateMockEventReport("android-app://destination-5.app", 9));
 
@@ -2245,8 +2291,8 @@ public class MeasurementDaoTest {
         Objects.requireNonNull(db);
         String enrollmentId = "enrollment-id";
         Uri appDestination = Uri.parse("android-app://com.example.abc");
-        Uri webDestination = Uri.parse("https://example.com");
-        Uri webDestinationWithSubdomain = Uri.parse("https://xyz.example.com");
+        Uri webDestination = WebUtil.validUri("https://example.test");
+        Uri webDestinationWithSubdomain = WebUtil.validUri("https://xyz.example.test");
         Source sApp1 =
                 SourceFixture.getValidSourceBuilder()
                         .setId("1")
@@ -3372,6 +3418,63 @@ public class MeasurementDaoTest {
         assertEquals(1, count);
     }
 
+    @Test
+    public void testDeleteDebugReport() {
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        DebugReport debugReport = createDebugReport();
+
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.DebugReportContract.ID, debugReport.getId());
+        values.put(MeasurementTables.DebugReportContract.TYPE, debugReport.getType());
+        values.put(MeasurementTables.DebugReportContract.BODY, debugReport.getBody());
+        values.put(
+                MeasurementTables.DebugReportContract.ENROLLMENT_ID, debugReport.getEnrollmentId());
+        db.insert(MeasurementTables.DebugReportContract.TABLE, null, values);
+
+        long count =
+                DatabaseUtils.queryNumEntries(
+                        db, MeasurementTables.DebugReportContract.TABLE, /* selection */ null);
+        assertEquals(1, count);
+
+        assertTrue(
+                DatastoreManagerFactory.getDatastoreManager(sContext)
+                        .runInTransaction(
+                                measurementDao ->
+                                        measurementDao.deleteDebugReport(debugReport.getId())));
+
+        count =
+                DatabaseUtils.queryNumEntries(
+                        db, MeasurementTables.DebugReportContract.TABLE, /* selection */ null);
+        assertEquals(0, count);
+    }
+
+    @Test
+    public void testGetDebugReportIds() {
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        DebugReport debugReport = createDebugReport();
+
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.DebugReportContract.ID, debugReport.getId());
+        values.put(MeasurementTables.DebugReportContract.TYPE, debugReport.getType());
+        values.put(MeasurementTables.DebugReportContract.BODY, debugReport.getBody());
+        values.put(
+                MeasurementTables.DebugReportContract.ENROLLMENT_ID, debugReport.getEnrollmentId());
+        db.insert(MeasurementTables.DebugReportContract.TABLE, null, values);
+
+        long count =
+                DatabaseUtils.queryNumEntries(
+                        db, MeasurementTables.DebugReportContract.TABLE, /* selection */ null);
+        assertEquals(1, count);
+
+        assertTrue(
+                DatastoreManagerFactory.getDatastoreManager(sContext)
+                        .runInTransaction(
+                                measurementDao ->
+                                        assertEquals(
+                                                List.of(debugReport.getId()),
+                                                measurementDao.getDebugReportIds())));
+    }
+
     private static List<Source> getSourcesWithDifferentDestinations(
             int numSources,
             boolean hasAppDestination,
@@ -4003,7 +4106,7 @@ public class MeasurementDaoTest {
         Source source1 =
                 SourceFixture.getValidSourceBuilder()
                         .setEventId(new UnsignedLong(1L))
-                        .setPublisher(Uri.parse("https://subdomain1.site1.com"))
+                        .setPublisher(WebUtil.validUri("https://subdomain1.site1.test"))
                         .setEventTime(5000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("source1")
@@ -4011,7 +4114,7 @@ public class MeasurementDaoTest {
         Source source2 =
                 SourceFixture.getValidSourceBuilder()
                         .setEventId(new UnsignedLong(2L))
-                        .setPublisher(Uri.parse("https://subdomain1.site1.com"))
+                        .setPublisher(WebUtil.validUri("https://subdomain1.site1.test"))
                         .setEventTime(10000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("source2")
@@ -4019,7 +4122,7 @@ public class MeasurementDaoTest {
         Source source3 =
                 SourceFixture.getValidSourceBuilder()
                         .setEventId(new UnsignedLong(3L))
-                        .setPublisher(Uri.parse("https://subdomain2.site1.com"))
+                        .setPublisher(WebUtil.validUri("https://subdomain2.site1.test"))
                         .setEventTime(15000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("source3")
@@ -4027,7 +4130,7 @@ public class MeasurementDaoTest {
         Source source4 =
                 SourceFixture.getValidSourceBuilder()
                         .setEventId(new UnsignedLong(4L))
-                        .setPublisher(Uri.parse("https://subdomain2.site2.com"))
+                        .setPublisher(WebUtil.validUri("https://subdomain2.site2.test"))
                         .setEventTime(15000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("source4")
@@ -4035,7 +4138,7 @@ public class MeasurementDaoTest {
         Source source5 =
                 SourceFixture.getValidSourceBuilder()
                         .setEventId(new UnsignedLong(5L))
-                        .setPublisher(Uri.parse("https://subdomain2.site1.com"))
+                        .setPublisher(WebUtil.validUri("https://subdomain2.site1.test"))
                         .setEventTime(20000)
                         .setRegistrant(Uri.parse("android-app://com.registrant2"))
                         .setId("source5")
@@ -4061,20 +4164,19 @@ public class MeasurementDaoTest {
                                             DeletionRequest.MATCH_BEHAVIOR_DELETE);
                             assertEquals(4, actualSources.size());
 
-                            // 1 & 2 match registrant1 and "https://subdomain1.site1.com" publisher
+                            // 1 & 2 match registrant1 and "https://subdomain1.site1.test" publisher
                             // origin
                             actualSources =
                                     dao.fetchMatchingSources(
                                             Uri.parse("android-app://com.registrant1"),
                                                     Instant.ofEpochMilli(0),
                                             Instant.ofEpochMilli(50000),
-                                                    List.of(
-                                                            Uri.parse(
-                                                                    "https://subdomain1.site1.com")),
+                                                    List.of(WebUtil.validUri(
+                                                            "https://subdomain1.site1.test")),
                                             List.of(), DeletionRequest.MATCH_BEHAVIOR_DELETE);
                             assertEquals(2, actualSources.size());
 
-                            // Only 2 matches registrant1 and "https://subdomain1.site1.com"
+                            // Only 2 matches registrant1 and "https://subdomain1.site1.test"
                             // publisher origin within
                             // the range
                             actualSources =
@@ -4082,20 +4184,19 @@ public class MeasurementDaoTest {
                                             Uri.parse("android-app://com.registrant1"),
                                                     Instant.ofEpochMilli(8000),
                                             Instant.ofEpochMilli(50000),
-                                                    List.of(
-                                                            Uri.parse(
-                                                                    "https://subdomain1.site1.com")),
+                                                    List.of(WebUtil.validUri(
+                                                            "https://subdomain1.site1.test")),
                                             List.of(), DeletionRequest.MATCH_BEHAVIOR_DELETE);
                             assertEquals(1, actualSources.size());
 
-                            // 1,2 & 3 matches registrant1 and "https://site1.com" publisher origin
+                            // 1,2 & 3 matches registrant1 and "https://site1.test" publisher origin
                             actualSources =
                                     dao.fetchMatchingSources(
                                             Uri.parse("android-app://com.registrant1"),
                                             Instant.ofEpochMilli(0),
                                             Instant.ofEpochMilli(50000),
                                             List.of(),
-                                            List.of(Uri.parse("https://site1.com")),
+                                            List.of(WebUtil.validUri("https://site1.test")),
                                             DeletionRequest.MATCH_BEHAVIOR_DELETE);
                             assertEquals(3, actualSources.size());
 
@@ -4105,8 +4206,9 @@ public class MeasurementDaoTest {
                                             Uri.parse("android-app://com.registrant1"),
                                             Instant.ofEpochMilli(10000),
                                             Instant.ofEpochMilli(20000),
-                                            List.of(Uri.parse("https://subdomain2.site1.com")),
-                                            List.of(Uri.parse("https://site2.com")),
+                                            List.of(WebUtil.validUri(
+                                                    "https://subdomain2.site1.test")),
+                                            List.of(WebUtil.validUri("https://site2.test")),
                                             DeletionRequest.MATCH_BEHAVIOR_DELETE);
                             assertEquals(2, actualSources.size());
 
@@ -4124,52 +4226,51 @@ public class MeasurementDaoTest {
                             assertEquals(0, actualSources.size());
 
                             // 3 & 4 match registrant1 and don't match
-                            // "https://subdomain1.site1.com" publisher origin
+                            // "https://subdomain1.site1.test" publisher origin
                             actualSources =
                                     dao.fetchMatchingSources(
                                             Uri.parse("android-app://com.registrant1"),
                                                     Instant.ofEpochMilli(0),
                                             Instant.ofEpochMilli(50000),
-                                                    List.of(
-                                                            Uri.parse(
-                                                                    "https://subdomain1.site1.com")),
+                                                    List.of(WebUtil.validUri(
+                                                            "https://subdomain1.site1.test")),
                                             List.of(), DeletionRequest.MATCH_BEHAVIOR_PRESERVE);
                             assertEquals(2, actualSources.size());
 
                             // 3 & 4 match registrant1, in range and don't match
-                            // "https://subdomain1.site1.com"
+                            // "https://subdomain1.site1.test"
                             actualSources =
                                     dao.fetchMatchingSources(
                                             Uri.parse("android-app://com.registrant1"),
                                                     Instant.ofEpochMilli(8000),
                                             Instant.ofEpochMilli(50000),
-                                                    List.of(
-                                                            Uri.parse(
-                                                                    "https://subdomain1.site1.com")),
+                                                    List.of(WebUtil.validUri(
+                                                            "https://subdomain1.site1.test")),
                                             List.of(), DeletionRequest.MATCH_BEHAVIOR_PRESERVE);
                             assertEquals(2, actualSources.size());
 
                             // Only 4 matches registrant1, in range and don't match
-                            // "https://site1.com"
+                            // "https://site1.test"
                             actualSources =
                                     dao.fetchMatchingSources(
                                             Uri.parse("android-app://com.registrant1"),
                                             Instant.ofEpochMilli(0),
                                             Instant.ofEpochMilli(50000),
                                             List.of(),
-                                            List.of(Uri.parse("https://site1.com")),
+                                            List.of(WebUtil.validUri("https://site1.test")),
                                             DeletionRequest.MATCH_BEHAVIOR_PRESERVE);
                             assertEquals(1, actualSources.size());
 
                             // only 2 is registrant1 based, in range and does not match either
-                            // site2.com or subdomain2.site1.com
+                            // site2.test or subdomain2.site1.test
                             actualSources =
                                     dao.fetchMatchingSources(
                                             Uri.parse("android-app://com.registrant1"),
                                             Instant.ofEpochMilli(10000),
                                             Instant.ofEpochMilli(20000),
-                                            List.of(Uri.parse("https://subdomain2.site1.com")),
-                                            List.of(Uri.parse("https://site2.com")),
+                                            List.of(WebUtil.validUri(
+                                                    "https://subdomain2.site1.test")),
+                                            List.of(WebUtil.validUri("https://site2.test")),
                                             DeletionRequest.MATCH_BEHAVIOR_PRESERVE);
                             assertEquals(1, actualSources.size());
                         });
@@ -4180,35 +4281,40 @@ public class MeasurementDaoTest {
         // Setup
         Trigger trigger1 =
                 TriggerFixture.getValidTriggerBuilder()
-                        .setAttributionDestination(Uri.parse("https://subdomain1.site1.com"))
+                        .setAttributionDestination(WebUtil.validUri(
+                                "https://subdomain1.site1.test"))
                         .setTriggerTime(5000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("trigger1")
                         .build();
         Trigger trigger2 =
                 TriggerFixture.getValidTriggerBuilder()
-                        .setAttributionDestination(Uri.parse("https://subdomain1.site1.com"))
+                        .setAttributionDestination(WebUtil.validUri(
+                                "https://subdomain1.site1.test"))
                         .setTriggerTime(10000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("trigger2")
                         .build();
         Trigger trigger3 =
                 TriggerFixture.getValidTriggerBuilder()
-                        .setAttributionDestination(Uri.parse("https://subdomain2.site1.com"))
+                        .setAttributionDestination(WebUtil.validUri(
+                                "https://subdomain2.site1.test"))
                         .setTriggerTime(15000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("trigger3")
                         .build();
         Trigger trigger4 =
                 TriggerFixture.getValidTriggerBuilder()
-                        .setAttributionDestination(Uri.parse("https://subdomain2.site2.com"))
+                        .setAttributionDestination(WebUtil.validUri(
+                                "https://subdomain2.site2.test"))
                         .setTriggerTime(15000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("trigger4")
                         .build();
         Trigger trigger5 =
                 TriggerFixture.getValidTriggerBuilder()
-                        .setAttributionDestination(Uri.parse("https://subdomain2.site1.com"))
+                        .setAttributionDestination(WebUtil.validUri(
+                                "https://subdomain2.site1.test"))
                         .setTriggerTime(20000)
                         .setRegistrant(Uri.parse("android-app://com.registrant2"))
                         .setId("trigger5")
@@ -4246,20 +4352,19 @@ public class MeasurementDaoTest {
                                             DeletionRequest.MATCH_BEHAVIOR_DELETE);
                             assertEquals(4, actualSources.size());
 
-                            // 1 & 2 match registrant1 and "https://subdomain1.site1.com" publisher
+                            // 1 & 2 match registrant1 and "https://subdomain1.site1.test" publisher
                             // origin
                             actualSources =
                                     dao.fetchMatchingTriggers(
                                             Uri.parse("android-app://com.registrant1"),
                                                     Instant.ofEpochMilli(0),
                                             Instant.ofEpochMilli(50000),
-                                                    List.of(
-                                                            Uri.parse(
-                                                                    "https://subdomain1.site1.com")),
+                                                    List.of(WebUtil.validUri(
+                                                            "https://subdomain1.site1.test")),
                                             List.of(), DeletionRequest.MATCH_BEHAVIOR_DELETE);
                             assertEquals(2, actualSources.size());
 
-                            // Only 2 matches registrant1 and "https://subdomain1.site1.com"
+                            // Only 2 matches registrant1 and "https://subdomain1.site1.test"
                             // publisher origin within
                             // the range
                             actualSources =
@@ -4267,20 +4372,19 @@ public class MeasurementDaoTest {
                                             Uri.parse("android-app://com.registrant1"),
                                                     Instant.ofEpochMilli(8000),
                                             Instant.ofEpochMilli(50000),
-                                                    List.of(
-                                                            Uri.parse(
-                                                                    "https://subdomain1.site1.com")),
+                                                    List.of(WebUtil.validUri(
+                                                            "https://subdomain1.site1.test")),
                                             List.of(), DeletionRequest.MATCH_BEHAVIOR_DELETE);
                             assertEquals(1, actualSources.size());
 
-                            // 1,2 & 3 matches registrant1 and "https://site1.com" publisher origin
+                            // 1,2 & 3 matches registrant1 and "https://site1.test" publisher origin
                             actualSources =
                                     dao.fetchMatchingTriggers(
                                             Uri.parse("android-app://com.registrant1"),
                                             Instant.ofEpochMilli(0),
                                             Instant.ofEpochMilli(50000),
                                             List.of(),
-                                            List.of(Uri.parse("https://site1.com")),
+                                            List.of(WebUtil.validUri("https://site1.test")),
                                             DeletionRequest.MATCH_BEHAVIOR_DELETE);
                             assertEquals(3, actualSources.size());
 
@@ -4290,8 +4394,9 @@ public class MeasurementDaoTest {
                                             Uri.parse("android-app://com.registrant1"),
                                             Instant.ofEpochMilli(10000),
                                             Instant.ofEpochMilli(20000),
-                                            List.of(Uri.parse("https://subdomain2.site1.com")),
-                                            List.of(Uri.parse("https://site2.com")),
+                                            List.of(WebUtil.validUri(
+                                                    "https://subdomain2.site1.test")),
+                                            List.of(WebUtil.validUri("https://site2.test")),
                                             DeletionRequest.MATCH_BEHAVIOR_DELETE);
                             assertEquals(2, actualSources.size());
 
@@ -4309,52 +4414,51 @@ public class MeasurementDaoTest {
                             assertEquals(0, actualSources.size());
 
                             // 3 & 4 match registrant1 and don't match
-                            // "https://subdomain1.site1.com" publisher origin
+                            // "https://subdomain1.site1.test" publisher origin
                             actualSources =
                                     dao.fetchMatchingTriggers(
                                             Uri.parse("android-app://com.registrant1"),
                                                     Instant.ofEpochMilli(0),
                                             Instant.ofEpochMilli(50000),
-                                                    List.of(
-                                                            Uri.parse(
-                                                                    "https://subdomain1.site1.com")),
+                                                    List.of(WebUtil.validUri(
+                                                            "https://subdomain1.site1.test")),
                                             List.of(), DeletionRequest.MATCH_BEHAVIOR_PRESERVE);
                             assertEquals(2, actualSources.size());
 
                             // 3 & 4 match registrant1, in range and don't match
-                            // "https://subdomain1.site1.com"
+                            // "https://subdomain1.site1.test"
                             actualSources =
                                     dao.fetchMatchingTriggers(
                                             Uri.parse("android-app://com.registrant1"),
                                                     Instant.ofEpochMilli(8000),
                                             Instant.ofEpochMilli(50000),
-                                                    List.of(
-                                                            Uri.parse(
-                                                                    "https://subdomain1.site1.com")),
+                                                    List.of(WebUtil.validUri(
+                                                            "https://subdomain1.site1.test")),
                                             List.of(), DeletionRequest.MATCH_BEHAVIOR_PRESERVE);
                             assertEquals(2, actualSources.size());
 
                             // Only 4 matches registrant1, in range and don't match
-                            // "https://site1.com"
+                            // "https://site1.test"
                             actualSources =
                                     dao.fetchMatchingTriggers(
                                             Uri.parse("android-app://com.registrant1"),
                                             Instant.ofEpochMilli(0),
                                             Instant.ofEpochMilli(50000),
                                             List.of(),
-                                            List.of(Uri.parse("https://site1.com")),
+                                            List.of(WebUtil.validUri("https://site1.test")),
                                             DeletionRequest.MATCH_BEHAVIOR_PRESERVE);
                             assertEquals(1, actualSources.size());
 
                             // only 2 is registrant1 based, in range and does not match either
-                            // site2.com or subdomain2.site1.com
+                            // site2.test or subdomain2.site1.test
                             actualSources =
                                     dao.fetchMatchingTriggers(
                                             Uri.parse("android-app://com.registrant1"),
                                             Instant.ofEpochMilli(10000),
                                             Instant.ofEpochMilli(20000),
-                                            List.of(Uri.parse("https://subdomain2.site1.com")),
-                                            List.of(Uri.parse("https://site2.com")),
+                                            List.of(WebUtil.validUri(
+                                                    "https://subdomain2.site1.test")),
+                                            List.of(WebUtil.validUri("https://site2.test")),
                                             DeletionRequest.MATCH_BEHAVIOR_PRESERVE);
                             assertEquals(1, actualSources.size());
                         });
@@ -4388,6 +4492,20 @@ public class MeasurementDaoTest {
                 .setSourceEventId(source.getEventId())
                 .setSourceId(source.getId())
                 .setTriggerId(trigger.getId())
+                .build();
+    }
+
+    private DebugReport createDebugReport() {
+        return new DebugReport.Builder()
+                .setId("reportId")
+                .setType("trigger-event-deduplicated")
+                .setBody(
+                        " {\n"
+                                + "      \"attribution_destination\":"
+                                + " \"https://destination.example\",\n"
+                                + "      \"source_event_id\": \"45623\"\n"
+                                + "    }")
+                .setEnrollmentId("1")
                 .build();
     }
 

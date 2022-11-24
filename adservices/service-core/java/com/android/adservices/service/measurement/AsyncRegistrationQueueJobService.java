@@ -42,7 +42,7 @@ public class AsyncRegistrationQueueJobService extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters params) {
-        if (FlagsFactory.getFlags().getRegistrationJobQueueKillSwitch()) {
+        if (FlagsFactory.getFlags().getAsyncRegistrationJobQueueKillSwitch()) {
             LogUtil.e("AsyncRegistrationQueueJobService is disabled");
             return skipAndCancelBackgroundJob(params);
         }
@@ -77,7 +77,7 @@ public class AsyncRegistrationQueueJobService extends JobService {
                                 ASYNC_REGISTRATION_QUEUE_JOB_ID,
                                 new ComponentName(context, AsyncRegistrationQueueJobService.class))
                         .setRequiresBatteryNotLow(true)
-                        .setPeriodic(flags.getRegistrationJobQueueIntervalMs())
+                        .setPeriodic(flags.getAsyncRegistrationJobQueueIntervalMs())
                         .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                         .setPersisted(true)
                         .build();
@@ -91,7 +91,7 @@ public class AsyncRegistrationQueueJobService extends JobService {
      * @param forceSchedule flag to indicate whether to force rescheduling the job.
      */
     public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
-        if (FlagsFactory.getFlags().getRegistrationJobQueueKillSwitch()) {
+        if (FlagsFactory.getFlags().getAsyncRegistrationJobQueueKillSwitch()) {
             LogUtil.e("AsyncRegistrationQueueJobService is disabled, skip scheduling");
             return;
         }
@@ -108,8 +108,7 @@ public class AsyncRegistrationQueueJobService extends JobService {
             schedule(context, jobScheduler);
             LogUtil.d("Scheduled AsyncRegistrationQueueJobService");
         } else {
-            LogUtil.d(
-                    "AsyncRegistrationQueueJobService already scheduled," + " skipping reschedule");
+            LogUtil.d("AsyncRegistrationQueueJobService already scheduled, skipping reschedule");
         }
     }
 

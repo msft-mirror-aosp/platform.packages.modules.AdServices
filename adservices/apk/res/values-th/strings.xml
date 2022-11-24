@@ -36,6 +36,10 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"อนุญาตให้แอปพลิเคชันเข้าถึง API การแก้ไขสถานะการเปิดการใช้งานของ AdService"</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"เข้าถึง API สถานะการเปิดการใช้งานของ AdService"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"อนุญาตให้แอปพลิเคชันเข้าถึง API สถานะการเปิดการใช้งานของ AdService"</string>
+    <!-- no translation found for permlab_accessAdServicesManager (4816332609066703740) -->
+    <skip />
+    <!-- no translation found for permdesc_accessAdServicesManager (2619300431637689524) -->
+    <skip />
     <string name="app_label" msgid="5985320129629013968">"ระบบ Android"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"เข้าร่วมโปรแกรมความเป็นส่วนตัวสำหรับโฆษณาใน Android (เบต้า)"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android กำลังสำรวจวิธีการอื่นๆ ที่มีความเป็นส่วนตัวมากขึ้นสำหรับให้แอปแสดงโฆษณาต่อคุณ"</string>
@@ -81,6 +85,7 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"โปรแกรมความเป็นส่วนตัวสำหรับโฆษณาใน Android (เบต้า) มีฟีเจอร์ใหม่ๆ ที่แอปสามารถใช้เพื่อแสดงโฆษณาที่คุณอาจชอบ เทคโนโลยีเหล่านี้ไม่ใช้ตัวระบุอุปกรณ์\n\nAndroid สามารถคาดการณ์ประเภทของโฆษณาที่คุณอาจสนใจ และบันทึกความสนใจเหล่านี้ไว้บนอุปกรณ์ของคุณชั่วคราว วิธีนี้ช่วยให้แอปต่างๆ แสดงโฆษณาที่เกี่ยวข้องได้โดยที่ไม่ต้องติดตามกิจกรรมของคุณบนเว็บไซต์และแอปจากนักพัฒนารายอื่น"</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"ไม่มีความสนใจที่คุณบล็อกไว้"</string>
+    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"ระบบจะรีเซ็ตความสนใจ"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"แอปสามารถคาดการณ์ความสนใจของคุณและบันทึกสิ่งเหล่านี้ไว้กับ Android ชั่วคราวได้ จากนั้น แอปอื่นๆ ก็จะแสดงโฆษณาตามความสนใจเหล่านี้ต่อคุณได้\n\nหากบล็อกแอป แอปดังกล่าวก็จะไม่คาดการณ์ความสนใจอีก ระบบจะไม่เพิ่มความสนใจลงในรายการของแอปอีก เว้นแต่คุณจะเลิกบล็อก ระบบจะลบข้อมูลความสนใจที่แอปคาดการณ์แล้ว แต่คุณอาจยังเห็นโฆษณาที่เกี่ยวข้องอยู่บ้าง"</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"แอปที่คุณบล็อก"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"รีเซ็ตความสนใจที่คาดการณ์โดยแอป"</string>
@@ -195,7 +200,7 @@
     <string name="topic10086" msgid="8360336602646460411">"รถปิคอัพ"</string>
     <string name="topic10087" msgid="6566900167002195406">"สกู๊ตเตอร์และโมเพ็ด"</string>
     <string name="topic10088" msgid="2899313082601001223">"รถซีดาน"</string>
-    <string name="topic10089" msgid="1053630346809973163">"รถสเตชั่นแวกอน"</string>
+    <string name="topic10089" msgid="1053630346809973163">"รถสเตชันแวกอน"</string>
     <string name="topic10090" msgid="4478565601243447368">"รถเอสยูวีและครอสโอเวอร์"</string>
     <string name="topic10091" msgid="3812668311830832874">"ครอสโอเวอร์"</string>
     <string name="topic10092" msgid="524130833813249539">"รถตู้และรถมินิแวน"</string>
