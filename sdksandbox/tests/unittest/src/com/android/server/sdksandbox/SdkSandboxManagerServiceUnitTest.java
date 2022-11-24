@@ -123,6 +123,10 @@ public class SdkSandboxManagerServiceUnitTest {
             "com.android.codeproviderresources_1";
     private static final String TEST_PACKAGE = "com.android.server.sdksandbox.tests";
     private static final String PROPERTY_DISABLE_SANDBOX = "disable_sdk_sandbox";
+    private static final String PROPERTY_SERVICE_BIND_ALLOWED_PACKAGENAMES =
+            "runtime_service_bind_allowed_packagenames";
+    private static final String PROPERTY_SERVICE_BIND_ALLOWED_ACTIONS =
+            "runtime_service_bind_allowed_actions";
     private static final long TIME_APP_CALLED_SYSTEM_SERVER = 1;
     private static final long TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP = 3;
     private static final long START_TIME_TO_LOAD_SANDBOX = 5;
@@ -154,7 +158,6 @@ public class SdkSandboxManagerServiceUnitTest {
 
         Context context = InstrumentationRegistry.getInstrumentation().getContext();
         mSpyContext = Mockito.spy(context);
-
         ActivityManager am = context.getSystemService(ActivityManager.class);
         mAmSpy = Mockito.spy(Objects.requireNonNull(am));
 
@@ -1004,13 +1007,45 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
-    public void testEnforceAllowedToStartOrBindService() {
+    public void testEnforceAllowedToStartOrBindService_disallowNonExistentPackage() {
         SdkSandboxManagerLocal mSdkSandboxManagerLocal = mService.getLocalManager();
 
-        Intent disallowedIntent = new Intent();
-        disallowedIntent.setComponent(new ComponentName("nonexistent.package", "test"));
-        assertThrows(SecurityException.class,
-                () -> mSdkSandboxManagerLocal.enforceAllowedToStartOrBindService(disallowedIntent));
+        Intent intent = new Intent();
+        intent.setComponent(new ComponentName("nonexistent.package", "test"));
+        assertThrows(
+                SecurityException.class,
+                () -> mSdkSandboxManagerLocal.enforceAllowedToStartOrBindService(intent));
+    }
+
+    @Test
+    public void testEnforceAllowedToStartOrBindService_allowlistedPackage() {
+        SdkSandboxManagerLocal mSdkSandboxManagerLocal = mService.getLocalManager();
+
+        Intent intent = new Intent();
+        intent.setComponent(new ComponentName("com.allowed.package", "test"));
+        mService.getSdkSandboxSettingsListener()
+                .setBindServiceAllowedPackageNames(
+                        "com.allowed.package;com.allowed.anotherpackage;");
+        mSdkSandboxManagerLocal.enforceAllowedToStartOrBindService(intent);
+    }
+
+    @Test
+    public void testEnforceAllowedToStartOrBindService_allowlistedAction() {
+        SdkSandboxManagerLocal mSdkSandboxManagerLocal = mService.getLocalManager();
+
+        Intent intent = new Intent();
+        intent.setComponent(new ComponentName("com.google.android.gms", "test"));
+        intent.setAction("com.google.android.gms.aService.START");
+        SdkSandboxManagerService.SdkSandboxSettingsListener listener =
+                mService.getSdkSandboxSettingsListener();
+        listener.setBindServiceAllowedPackageNames(
+                "com.google.android.gms;com.allowed.anotherpackage;");
+        assertThrows(
+                SecurityException.class,
+                () -> mSdkSandboxManagerLocal.enforceAllowedToStartOrBindService(intent));
+
+        listener.setBindServiceAllowedActions("com.google.android.gms.aService.START;");
+        mSdkSandboxManagerLocal.enforceAllowedToStartOrBindService(intent);
     }
 
     @Test
@@ -1912,6 +1947,24 @@ public class SdkSandboxManagerServiceUnitTest {
                         DeviceConfig.NAMESPACE_ADSERVICES,
                         Map.of(PROPERTY_DISABLE_SANDBOX, "false")));
         assertThat(listener.isKillSwitchEnabled()).isFalse();
+
+        listener.onPropertiesChanged(
+                new DeviceConfig.Properties(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        Map.of(
+                                PROPERTY_SERVICE_BIND_ALLOWED_PACKAGENAMES,
+                                "com.google.android.gms")));
+        assertThat(listener.getServiceBindPackageNamesAllowlist())
+                .contains("com.google.android.gms");
+
+        listener.onPropertiesChanged(
+                new DeviceConfig.Properties(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        Map.of(
+                                PROPERTY_SERVICE_BIND_ALLOWED_ACTIONS,
+                                "com.google.android.gms.aService.START")));
+        assertThat(listener.getServiceBindActionsAllowlist())
+                .contains("com.google.android.gms.aService.START");
     }
 
     @Test
