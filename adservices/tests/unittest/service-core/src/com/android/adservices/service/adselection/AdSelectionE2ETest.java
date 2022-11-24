@@ -54,6 +54,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.AdditionalMatchers.geq;
+import static org.mockito.Mockito.timeout;
 
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
@@ -99,6 +100,9 @@ import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.Throttler;
+import com.android.adservices.service.common.cache.CacheProviderFactory;
+import com.android.adservices.service.common.cache.FledgeHttpCache;
+import com.android.adservices.service.common.cache.HttpCache;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
@@ -251,6 +255,7 @@ public class AdSelectionE2ETest {
     @Mock DevContextFilter mDevContextFilter;
     @Mock AppImportanceFilter mAppImportanceFilter;
     @Mock CallerMetadata mMockCallerMetadata;
+    @Mock FledgeHttpCache.HttpCacheObserver mCacheObserver;
 
     @Spy
     FledgeAllowListsFilter mFledgeAllowListsFilterSpy =
@@ -302,9 +307,10 @@ public class AdSelectionE2ETest {
                 Room.inMemoryDatabaseBuilder(mContext, CustomAudienceDatabase.class)
                         .build()
                         .customAudienceDao();
-
         mAdServicesHttpsClient =
-                new AdServicesHttpsClient(AdServicesExecutors.getBlockingExecutor());
+                new AdServicesHttpsClient(
+                        AdServicesExecutors.getBlockingExecutor(),
+                        CacheProviderFactory.createNoOpCache());
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
@@ -664,6 +670,224 @@ public class AdSelectionE2ETest {
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
+    }
+
+    @Test
+    public void testRunAdSelectionMultipleCAsNoCachingSuccess() throws Exception {
+        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+
+        MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
+        List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
+        List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
+
+        DBCustomAudience dBCustomAudienceForBuyer1 =
+                createDBCustomAudience(
+                        BUYER_1,
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1),
+                        bidsForBuyer1);
+        DBCustomAudience dBCustomAudienceForBuyer2 =
+                createDBCustomAudience(
+                        BUYER_2,
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2),
+                        bidsForBuyer2);
+
+        // Populating the Custom Audience DB
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
+
+        List<AdTechIdentifier> participatingBuyers = new ArrayList<>();
+        participatingBuyers.add(BUYER_1);
+        participatingBuyers.add(BUYER_2);
+
+        int extraCustomAudienceCount = 100;
+        for (int i = 1; i <= extraCustomAudienceCount; i++) {
+            DBCustomAudience dBCustomAudienceX =
+                    createDBCustomAudience(
+                            BUYER_1,
+                            DEFAULT_CUSTOM_AUDIENCE_NAME_SUFFIX + i,
+                            // All these CAs use the same uri, therefore JS should be cached
+                            mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1),
+                            bidsForBuyer1,
+                            CustomAudienceFixture.VALID_ACTIVATION_TIME,
+                            CustomAudienceFixture.VALID_EXPIRATION_TIME,
+                            CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI);
+            mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                    dBCustomAudienceX,
+                    CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+        }
+
+        AdSelectionConfig adSelectionConfig =
+                AdSelectionConfigFixture.anAdSelectionConfigBuilder()
+                        .setCustomAudienceBuyers(participatingBuyers)
+                        .setSeller(
+                                AdTechIdentifier.fromString(
+                                        mMockWebServerRule
+                                                .uriForPath(SELLER_DECISION_LOGIC_URI_PATH)
+                                                .getHost()))
+                        .setDecisionLogicUri(
+                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
+                        .setTrustedScoringSignalsUri(
+                                mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
+                        .build();
+
+        // Creating client which does not have caching
+        AdServicesHttpsClient httpClientWithNoCaching =
+                new AdServicesHttpsClient(
+                        AdServicesExecutors.getBlockingExecutor(),
+                        CacheProviderFactory.createNoOpCache());
+
+        AdSelectionServiceImpl adSelectionServiceNoCache =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDaoSpy,
+                        mCustomAudienceDao,
+                        httpClientWithNoCaching,
+                        mDevContextFilter,
+                        mAppImportanceFilter,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        mContext,
+                        mConsentManagerMock,
+                        mAdServicesLoggerMock,
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAllowListsFilterSpy);
+
+        AdSelectionTestCallback resultsCallbackNoCache =
+                invokeSelectAds(adSelectionServiceNoCache, adSelectionConfig, CALLER_PACKAGE_NAME);
+
+        assertCallbackIsSuccessful(resultsCallbackNoCache);
+        long resultSelectionId = resultsCallbackNoCache.mAdSelectionResponse.getAdSelectionId();
+        assertTrue(mAdSelectionEntryDaoSpy.doesAdSelectionIdExist(resultSelectionId));
+        assertEquals(
+                AD_URI_PREFIX + BUYER_2 + "/ad3",
+                resultsCallbackNoCache.mAdSelectionResponse.getRenderUri().toString());
+
+        // 1 call per CA bidJs + 2 calls per buyer signals + 2 calls per seller scoreAdJS, signals
+        int expectedNetworkCalls = (102 * 1) + 2 + 2;
+        int serverCallsCountNoCaching = server.getRequestCount();
+        Assert.assertEquals(
+                "Server calls mismatch", expectedNetworkCalls, serverCallsCountNoCaching);
+    }
+
+    @Test
+    public void testRunAdSelectionMultipleCAsJSCachedSuccess() throws Exception {
+        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+
+        MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
+        List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
+        List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
+
+        DBCustomAudience dBCustomAudienceForBuyer1 =
+                createDBCustomAudience(
+                        BUYER_1,
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1),
+                        bidsForBuyer1);
+        DBCustomAudience dBCustomAudienceForBuyer2 =
+                createDBCustomAudience(
+                        BUYER_2,
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2),
+                        bidsForBuyer2);
+
+        // Populating the Custom Audience DB
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
+
+        List<AdTechIdentifier> participatingBuyers = new ArrayList<>();
+        participatingBuyers.add(BUYER_1);
+        participatingBuyers.add(BUYER_2);
+
+        int extraCustomAudienceCount = 100;
+        for (int i = 1; i <= extraCustomAudienceCount; i++) {
+            DBCustomAudience dBCustomAudienceX =
+                    createDBCustomAudience(
+                            BUYER_1,
+                            DEFAULT_CUSTOM_AUDIENCE_NAME_SUFFIX + i,
+                            // All these CAs use the same uri, therefore JS should be cached
+                            mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1),
+                            bidsForBuyer1,
+                            CustomAudienceFixture.VALID_ACTIVATION_TIME,
+                            CustomAudienceFixture.VALID_EXPIRATION_TIME,
+                            CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI);
+            mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                    dBCustomAudienceX,
+                    CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+        }
+
+        AdSelectionConfig adSelectionConfig =
+                AdSelectionConfigFixture.anAdSelectionConfigBuilder()
+                        .setCustomAudienceBuyers(participatingBuyers)
+                        .setSeller(
+                                AdTechIdentifier.fromString(
+                                        mMockWebServerRule
+                                                .uriForPath(SELLER_DECISION_LOGIC_URI_PATH)
+                                                .getHost()))
+                        .setDecisionLogicUri(
+                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
+                        .setTrustedScoringSignalsUri(
+                                mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
+                        .build();
+
+        HttpCache cache = CacheProviderFactory.create(mContext, mFlags);
+        cache.addObserver(mCacheObserver);
+
+        // Creating client which has caching
+        AdServicesHttpsClient httpClientWithCaching =
+                new AdServicesHttpsClient(AdServicesExecutors.getBlockingExecutor(), cache);
+
+        AdSelectionServiceImpl adSelectionServiceWithCache =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDaoSpy,
+                        mCustomAudienceDao,
+                        httpClientWithCaching,
+                        mDevContextFilter,
+                        mAppImportanceFilter,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        mContext,
+                        mConsentManagerMock,
+                        mAdServicesLoggerMock,
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAllowListsFilterSpy);
+
+        // We call selectAds again to verify that scoring logic was also cached
+        AdSelectionTestCallback resultsCallbackWithCaching =
+                invokeSelectAds(
+                        adSelectionServiceWithCache, adSelectionConfig, CALLER_PACKAGE_NAME);
+        assertCallbackIsSuccessful(resultsCallbackWithCaching);
+
+        // 1 call per CA bidJs + 2 calls per buyer signals + 2 calls per seller scoreAdJS, signals
+        int expectedNetworkCallsNoCaching = (102 * 1) + 2 + 2;
+
+        int serverCallsCountWithCaching = server.getRequestCount();
+        assertTrue("Some requests should have been cached", cache.getCachedEntriesCount() > 0);
+        assertTrue(
+                "Network calls with caching should have been lesser",
+                serverCallsCountWithCaching < expectedNetworkCallsNoCaching);
+
+        // Cache cleanup should have been eventually invoked
+        verify(mCacheObserver, timeout(3000)).update(HttpCache.CacheEventType.CLEANUP);
+        cache.delete();
     }
 
     @Test

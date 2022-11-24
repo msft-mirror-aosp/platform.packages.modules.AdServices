@@ -34,6 +34,7 @@ java_sdk_library {
     min_sdk_version: "Tiramisu",
     permitted_packages: ["com.android.server.adservices"],
     libs: [
+        "framework-configinfrastructure",
         "framework-adservices.impl",
     ],
     static_libs: [

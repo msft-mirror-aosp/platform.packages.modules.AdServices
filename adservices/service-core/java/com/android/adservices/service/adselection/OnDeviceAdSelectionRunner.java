@@ -226,6 +226,9 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
         ListenableFuture<AdSelectionOrchestrationResult> dbAdSelectionBuilder =
                 Futures.transform(winningOutcome, mapWinnerToDBResult, mLightweightExecutorService);
 
+        // Clean up after the future is complete, out of critical path
+        dbAdSelectionBuilder.addListener(() -> cleanUpCache(), mLightweightExecutorService);
+
         return dbAdSelectionBuilder;
     }
 
@@ -360,9 +363,11 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
         return buyerToCustomAudienceMap;
     }
 
-    private int getParallelBiddingCount() {
-        int parallelBiddingCountConfigValue = mFlags.getAdSelectionMaxConcurrentBiddingCount();
-        int numberOfAvailableProcessors = Runtime.getRuntime().availableProcessors();
-        return Math.min(parallelBiddingCountConfigValue, numberOfAvailableProcessors);
+    /**
+     * Given we no longer need to fetch data from web for this run of Ad Selection, we attempt to
+     * clean up cache.
+     */
+    private void cleanUpCache() {
+        mAdServicesHttpsClient.getAssociatedCache().cleanUp();
     }
 }
