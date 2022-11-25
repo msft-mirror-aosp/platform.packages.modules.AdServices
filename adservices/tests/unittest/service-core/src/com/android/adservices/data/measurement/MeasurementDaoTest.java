@@ -3439,7 +3439,8 @@ public class MeasurementDaoTest {
         assertTrue(
                 DatastoreManagerFactory.getDatastoreManager(sContext)
                         .runInTransaction(
-                                measurementDao -> measurementDao.deleteDebugReport(debugReport)));
+                                measurementDao ->
+                                        measurementDao.deleteDebugReport(debugReport.getId())));
 
         count =
                 DatabaseUtils.queryNumEntries(

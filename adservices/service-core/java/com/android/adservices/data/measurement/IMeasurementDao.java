@@ -261,7 +261,7 @@ public interface IMeasurementDao {
     void deleteEventReport(EventReport eventReport) throws DatastoreException;
 
     /** Deletes the {@link DebugReport} from datastore. */
-    void deleteDebugReport(DebugReport debugReport) throws DatastoreException;
+    void deleteDebugReport(String debugReportId) throws DatastoreException;
 
     /**
      * Returns list of all event reports that have a scheduled reporting time in the given window.
