@@ -488,11 +488,11 @@ public class TriggerTest {
                         .setTriggerData(new UnsignedLong(2L))
                         .setDedupKey(new UnsignedLong(2L))
                         .setFilter(
-                                new FilterData.Builder()
+                                new FilterMap.Builder()
                                         .buildFilterData(filters1)
                                         .build())
                         .setNotFilter(
-                                new FilterData.Builder()
+                                new FilterMap.Builder()
                                         .buildFilterData(notFilters1)
                                         .build())
                         .build();
@@ -502,7 +502,7 @@ public class TriggerTest {
                         .setTriggerData(new UnsignedLong(3L))
                         .setDedupKey(new UnsignedLong(3L))
                         .setNotFilter(
-                                new FilterData.Builder()
+                                new FilterMap.Builder()
                                         .buildFilterData(notFilters2)
                                         .build())
                         .build();
@@ -543,10 +543,10 @@ public class TriggerTest {
     }
 
     private JSONObject createFilterJSONObject() throws JSONException {
-        JSONObject filterData = new JSONObject();
-        filterData.put("conversion_subdomain",
+        JSONObject filterMap = new JSONObject();
+        filterMap.put("conversion_subdomain",
                 new JSONArray(Arrays.asList("electronics.megastore")));
-        filterData.put("product", new JSONArray(Arrays.asList("1234", "2345")));
-        return filterData;
+        filterMap.put("product", new JSONArray(Arrays.asList("1234", "2345")));
+        return filterMap;
     }
 }

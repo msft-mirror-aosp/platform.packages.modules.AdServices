@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.measurement.aggregation;
 
-import com.android.adservices.service.measurement.FilterData;
+import com.android.adservices.service.measurement.FilterMap;
 
 import java.math.BigInteger;
 import java.util.HashMap;
@@ -29,11 +29,11 @@ import java.util.Objects;
 public class AggregatableAttributionSource {
 
     private Map<String, BigInteger> mAggregatableSource;
-    private FilterData mFilterData;
+    private FilterMap mFilterMap;
 
     private AggregatableAttributionSource() {
         mAggregatableSource = new HashMap<>();
-        mFilterData = null;
+        mFilterMap = null;
     }
 
     @Override
@@ -43,7 +43,7 @@ public class AggregatableAttributionSource {
         }
         AggregatableAttributionSource attributionSource = (AggregatableAttributionSource) obj;
         return Objects.equals(mAggregatableSource, attributionSource.mAggregatableSource)
-                && Objects.equals(mFilterData, attributionSource.mFilterData);
+                && Objects.equals(mFilterMap, attributionSource.mFilterMap);
     }
 
     @Override
@@ -62,8 +62,8 @@ public class AggregatableAttributionSource {
     /**
      * Returns aggregate filter data which represents a map in JSONObject.
      */
-    public FilterData getFilterData() {
-        return mFilterData;
+    public FilterMap getFilterMap() {
+        return mFilterMap;
     }
 
     /**
@@ -86,10 +86,10 @@ public class AggregatableAttributionSource {
         }
 
         /**
-         * See {@link AggregatableAttributionSource#getFilterData()}.
+         * See {@link AggregatableAttributionSource#getFilterMap()}.
          */
-        public Builder setFilterData(FilterData filterData) {
-            mBuilding.mFilterData = filterData;
+        public Builder setFilterMap(FilterMap filterMap) {
+            mBuilding.mFilterMap = filterMap;
             return this;
         }
 

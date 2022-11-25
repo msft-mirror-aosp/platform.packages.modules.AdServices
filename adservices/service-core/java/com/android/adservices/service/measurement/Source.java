@@ -622,19 +622,19 @@ public class Source {
      * Generates AggregatableFilterData from aggregate filter string in Source, including an entry
      * for source type.
      */
-    public FilterData parseFilterData() throws JSONException {
-        FilterData filterData;
+    public FilterMap parseFilterData() throws JSONException {
+        FilterMap filterMap;
         if (mFilterData == null || mFilterData.isEmpty()) {
-            filterData = new FilterData.Builder().build();
+            filterMap = new FilterMap.Builder().build();
         } else {
-            filterData =
-                    new FilterData.Builder()
+            filterMap =
+                    new FilterMap.Builder()
                             .buildFilterData(new JSONObject(mFilterData))
                             .build();
         }
-        filterData.getAttributionFilterMap().put("source_type",
+        filterMap.getAttributionFilterMap().put("source_type",
                 Collections.singletonList(mSourceType.getValue()));
-        return filterData;
+        return filterMap;
     }
 
     /**
@@ -657,7 +657,7 @@ public class Source {
         AggregatableAttributionSource.Builder aggregatableAttributionSourceBuilder =
                 new AggregatableAttributionSource.Builder()
                         .setAggregatableSource(aggregateSourceMap);
-        aggregatableAttributionSourceBuilder.setFilterData(parseFilterData());
+        aggregatableAttributionSourceBuilder.setFilterMap(parseFilterData());
         return Optional.of(aggregatableAttributionSourceBuilder.build());
     }
 
@@ -856,8 +856,8 @@ public class Source {
         }
 
         /** See {@link Source#getFilterData()}. */
-        public Builder setFilterData(@Nullable String filterData) {
-            mBuilding.mFilterData = filterData;
+        public Builder setFilterData(@Nullable String filterMap) {
+            mBuilding.mFilterData = filterMap;
             return this;
         }
 
