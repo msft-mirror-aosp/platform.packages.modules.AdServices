@@ -17,6 +17,7 @@
 package com.android.server.sdksandbox;
 
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND;
+import static android.app.sdksandbox.ISharedPreferencesSyncCallback.PREFERENCES_SYNC_INTERNAL_ERROR;
 import static android.app.sdksandbox.SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR;
 
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__ADD_SDK_SANDBOX_LIFECYCLE_CALLBACK;
@@ -1092,16 +1093,12 @@ public class SdkSandboxManagerServiceUnitTest {
 
     @Test
     public void test_syncDataFromClient_verifiesCallingPackageName() {
-        SecurityException thrown =
-                assertThrows(
-                        SecurityException.class,
-                        () ->
-                                mService.syncDataFromClient(
-                                        "does.not.exist",
-                                        TIME_APP_CALLED_SYSTEM_SERVER,
-                                        TEST_UPDATE,
-                                        new FakeSharedPreferencesSyncCallback()));
-        assertThat(thrown).hasMessageThat().contains("does.not.exist not found");
+        FakeSharedPreferencesSyncCallback callback = new FakeSharedPreferencesSyncCallback();
+        mService.syncDataFromClient(
+                "does.not.exist", TIME_APP_CALLED_SYSTEM_SERVER, TEST_UPDATE, callback);
+
+        assertEquals(PREFERENCES_SYNC_INTERNAL_ERROR, callback.getErrorCode());
+        assertThat(callback.getErrorMsg()).contains("does.not.exist not found");
     }
 
     @Test

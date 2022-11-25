@@ -795,26 +795,36 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             long timeAppCalledSystemServer,
             SharedPreferencesUpdate update,
             ISharedPreferencesSyncCallback callback) {
-        final long timeSystemServerReceivedCallFromApp = mInjector.getCurrentTime();
-
-        final int callingUid = Binder.getCallingUid();
-        final CallingInfo callingInfo = new CallingInfo(callingUid, callingPackageName);
-        enforceCallingPackageBelongsToUid(callingInfo);
-
-        SdkSandboxStatsLog.write(
-                SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__SYNC_DATA_FROM_CLIENT,
-                /*latency=*/ (int)
-                        (timeSystemServerReceivedCallFromApp - timeAppCalledSystemServer),
-                /*success=*/ true,
-                SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER,
-                callingUid);
-
-        final long token = Binder.clearCallingIdentity();
         try {
-            syncDataFromClientInternal(callingInfo, update, callback);
-        } finally {
-            Binder.restoreCallingIdentity(token);
+            final long timeSystemServerReceivedCallFromApp = mInjector.getCurrentTime();
+
+            final int callingUid = Binder.getCallingUid();
+            final CallingInfo callingInfo = new CallingInfo(callingUid, callingPackageName);
+            enforceCallingPackageBelongsToUid(callingInfo);
+
+            SdkSandboxStatsLog.write(
+                    SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                    SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__SYNC_DATA_FROM_CLIENT,
+                    /*latency=*/ (int)
+                            (timeSystemServerReceivedCallFromApp - timeAppCalledSystemServer),
+                    /*success=*/ true,
+                    SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER,
+                    callingUid);
+
+            final long token = Binder.clearCallingIdentity();
+            try {
+                syncDataFromClientInternal(callingInfo, update, callback);
+            } finally {
+                Binder.restoreCallingIdentity(token);
+            }
+        } catch (Throwable e) {
+            try {
+                callback.onError(
+                        ISharedPreferencesSyncCallback.PREFERENCES_SYNC_INTERNAL_ERROR,
+                        e.getMessage());
+            } catch (RemoteException ex) {
+                Log.e(TAG, "Failed to send onLoadCodeFailure", e);
+            }
         }
     }
 
