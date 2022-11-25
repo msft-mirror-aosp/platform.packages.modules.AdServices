@@ -75,6 +75,7 @@ import com.android.adservices.AdServicesCommon;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.sdksandbox.IComputeSdkStorageCallback;
+import com.android.sdksandbox.IRequestSurfacePackageFromSdkCallback;
 import com.android.sdksandbox.ISdkSandboxDisabledCallback;
 import com.android.sdksandbox.ISdkSandboxService;
 import com.android.sdksandbox.service.stats.SdkSandboxStatsLog;
@@ -647,40 +648,52 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             long timeAppCalledSystemServer,
             Bundle params,
             IRequestSurfacePackageCallback callback) {
-        final long timeSystemServerReceivedCallFromApp = mInjector.getCurrentTime();
-
-        LogUtil.d(
-                TAG,
-                "requestSurfacePackage call received. callingPackageName: " + callingPackageName);
-
-        final int callingUid = Binder.getCallingUid();
-        final CallingInfo callingInfo = new CallingInfo(callingUid, callingPackageName);
-        enforceCallingPackageBelongsToUid(callingInfo);
-        enforceCallerRunsInForeground(callingInfo);
-
-        SdkSandboxStatsLog.write(
-                SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE,
-                /*latency=*/ (int)
-                        (timeSystemServerReceivedCallFromApp - timeAppCalledSystemServer),
-                /*success=*/ true,
-                SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER,
-                callingUid);
-
-        final long token = Binder.clearCallingIdentity();
         try {
-            requestSurfacePackageWithClearIdentity(
-                    callingInfo,
-                    sdkName,
-                    hostToken,
-                    displayId,
-                    width,
-                    height,
-                    timeSystemServerReceivedCallFromApp,
-                    params,
-                    callback);
-        } finally {
-            Binder.restoreCallingIdentity(token);
+            final long timeSystemServerReceivedCallFromApp = mInjector.getCurrentTime();
+
+            LogUtil.d(
+                    TAG,
+                    "requestSurfacePackage call received. callingPackageName: "
+                            + callingPackageName);
+
+            final int callingUid = Binder.getCallingUid();
+            final CallingInfo callingInfo = new CallingInfo(callingUid, callingPackageName);
+            enforceCallingPackageBelongsToUid(callingInfo);
+            enforceCallerRunsInForeground(callingInfo);
+
+            SdkSandboxStatsLog.write(
+                    SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                    SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE,
+                    /*latency=*/ (int)
+                            (timeSystemServerReceivedCallFromApp - timeAppCalledSystemServer),
+                    /*success=*/ true,
+                    SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER,
+                    callingUid);
+
+            final long token = Binder.clearCallingIdentity();
+            try {
+                requestSurfacePackageWithClearIdentity(
+                        callingInfo,
+                        sdkName,
+                        hostToken,
+                        displayId,
+                        width,
+                        height,
+                        timeSystemServerReceivedCallFromApp,
+                        params,
+                        callback);
+            } finally {
+                Binder.restoreCallingIdentity(token);
+            }
+        } catch (Throwable e) {
+            try {
+                callback.onSurfacePackageError(
+                        IRequestSurfacePackageFromSdkCallback.SURFACE_PACKAGE_INTERNAL_ERROR,
+                        e.getMessage(),
+                        mInjector.getCurrentTime());
+            } catch (RemoteException ex) {
+                Log.e(TAG, "Failed to send onLoadCodeFailure", e);
+            }
         }
     }
 
