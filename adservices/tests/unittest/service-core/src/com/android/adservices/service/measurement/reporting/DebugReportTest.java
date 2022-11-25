@@ -13,21 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.service.measurement;
+package com.android.adservices.service.measurement.reporting;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
-import androidx.test.filters.SmallTest;
-
-import com.android.adservices.service.measurement.reporting.DebugReport;
-
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.Test;
 
 import java.util.Set;
 
 /** Unit tests for {@link DebugReport} */
-@SmallTest
 public final class DebugReportTest {
 
     private static final String TYPE = "trigger-event-deduplicated";
@@ -66,6 +63,14 @@ public final class DebugReportTest {
         assertNotEquals(debugReport1.hashCode(), debugReport2.hashCode());
         assertNotEquals(debugReport1, debugReport2);
         assertNotEquals(debugReportSet1, debugReportSet2);
+    }
+
+    @Test
+    public void testDebugReportPayloadJsonSerialization() throws JSONException {
+        DebugReport debugReport = createExample1();
+        JSONObject debugReportJson = debugReport.toPayloadJson();
+        assertEquals(TYPE, debugReportJson.get("type"));
+        assertEquals(BODY, debugReportJson.get("body"));
     }
 
     @Test

@@ -81,7 +81,7 @@ public class Source {
     @AttributionMode private int mAttributionMode;
     private long mInstallAttributionWindow;
     private long mInstallCooldownWindow;
-    private @Nullable UnsignedLong mDebugKey;
+    @Nullable private UnsignedLong mDebugKey;
     private boolean mIsInstallAttributed;
     private boolean mIsDebugReporting;
     private String mFilterData;

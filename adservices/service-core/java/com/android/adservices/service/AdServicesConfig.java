@@ -168,4 +168,10 @@ public class AdServicesConfig {
      * com.android.adservices.service.measurement.reporting.DebugReportingJobService})
      */
     public static final int MEASUREMENT_DEBUG_REPORT_JOB_ID = 17;
+
+    /**
+     * Job ID for Measurement Debug Report API JobService ({@link
+     * com.android.adservices.service.measurement.reporting.DebugReportingJobService})
+     */
+    public static final int MEASUREMENT_DEBUG_REPORT_API_JOB_ID = 18;
 }
