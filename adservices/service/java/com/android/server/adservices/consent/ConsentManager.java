@@ -16,7 +16,7 @@
 package com.android.server.adservices.consent;
 
 import android.annotation.NonNull;
-import android.app.adservices.ConsentParcel;
+import android.app.adservices.consent.ConsentParcel;
 
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.adservices.LogUtil;
@@ -45,6 +45,7 @@ public final class ConsentManager {
     static final String NOTIFICATION_DISPLAYED_ONCE = "NOTIFICATION-DISPLAYED-ONCE";
 
     private static final String CONSENT_KEY = "CONSENT";
+    private static final String CONSENT_API_TYPE_PREFIX = "CONSENT_API_TYPE_";
 
     // Deprecate this since we store each version in its own folder.
     static final int STORAGE_VERSION = 1;
@@ -96,24 +97,57 @@ public final class ConsentManager {
     @VisibleForTesting
     @NonNull
     static String getConsentDataStoreDir(String baseDir, int userIdentifier) {
-        return baseDir + "/" + userIdentifier + "/" + CONSENT_DIR + "/" + DATA_SCHEMA_VERSION;
+        return baseDir + "/" + userIdentifier + "/" + CONSENT_DIR;
     }
 
     /** Retrieves the consent for all PP API services. */
-    public ConsentParcel getConsent() {
-        LogUtil.d("ConsentManager.getConsent() is invoked!");
+    public ConsentParcel getConsent(@ConsentParcel.ConsentApiType int consentApiType) {
+        LogUtil.d("ConsentManager.getConsent() is invoked for consentApiType = " + consentApiType);
 
-        try {
-            return new ConsentParcel.Builder().setIsGiven(mDatastore.get(CONSENT_KEY)).build();
-        } catch (NullPointerException | IllegalArgumentException e) {
-            LogUtil.e(e, ERROR_MESSAGE_DATASTORE_EXCEPTION_WHILE_GET_CONTENT);
-            return ConsentParcel.REVOKED;
+        synchronized (this) {
+            try {
+                return new ConsentParcel.Builder()
+                        .setConsentApiType(consentApiType)
+                        .setIsGiven(mDatastore.get(getConsentApiTypeKey(consentApiType)))
+                        .build();
+            } catch (NullPointerException | IllegalArgumentException e) {
+                LogUtil.e(e, ERROR_MESSAGE_DATASTORE_EXCEPTION_WHILE_GET_CONTENT);
+                return ConsentParcel.createRevokedConsent(consentApiType);
+            }
         }
     }
 
     /** Set Consent */
     public void setConsent(ConsentParcel consentParcel) throws IOException {
-        mDatastore.put(CONSENT_KEY, consentParcel.isIsGiven());
+        synchronized (this) {
+            mDatastore.put(
+                    getConsentApiTypeKey(consentParcel.getConsentApiType()),
+                    consentParcel.isIsGiven());
+            if (consentParcel.getConsentApiType() == ConsentParcel.ALL_API) {
+                // Convert from 1 to 3 consents.
+                mDatastore.put(
+                        getConsentApiTypeKey(ConsentParcel.TOPICS), consentParcel.isIsGiven());
+                mDatastore.put(
+                        getConsentApiTypeKey(ConsentParcel.FLEDGE), consentParcel.isIsGiven());
+                mDatastore.put(
+                        getConsentApiTypeKey(ConsentParcel.MEASUREMENT), consentParcel.isIsGiven());
+            } else {
+                // Convert from 3 consents to 1 consent.
+                if (mDatastore.get(
+                                getConsentApiTypeKey(ConsentParcel.TOPICS), /* defaultValue */
+                                false)
+                        && mDatastore.get(
+                                getConsentApiTypeKey(ConsentParcel.FLEDGE), /* defaultValue */
+                                false)
+                        && mDatastore.get(
+                                getConsentApiTypeKey(ConsentParcel.MEASUREMENT), /* defaultValue */
+                                false)) {
+                    mDatastore.put(getConsentApiTypeKey(ConsentParcel.ALL_API), true);
+                } else {
+                    mDatastore.put(getConsentApiTypeKey(ConsentParcel.ALL_API), false);
+                }
+            }
+        }
     }
 
     /**
@@ -121,11 +155,13 @@ public final class ConsentManager {
      * user.
      */
     public void recordNotificationDisplayed() throws IOException {
-        try {
-            // TODO(b/229725886): add metrics / logging
-            mDatastore.put(NOTIFICATION_DISPLAYED_ONCE, true);
-        } catch (IOException e) {
-            LogUtil.e(e, "Record notification failed due to IOException thrown by Datastore.");
+        synchronized (this) {
+            try {
+                // TODO(b/229725886): add metrics / logging
+                mDatastore.put(NOTIFICATION_DISPLAYED_ONCE, true);
+            } catch (IOException e) {
+                LogUtil.e(e, "Record notification failed due to IOException thrown by Datastore.");
+            }
         }
     }
 
@@ -135,12 +171,21 @@ public final class ConsentManager {
      * @return true if Consent Notification was displayed, otherwise false.
      */
     public boolean wasNotificationDisplayed() {
-        return mDatastore.get(NOTIFICATION_DISPLAYED_ONCE);
+        synchronized (this) {
+            return mDatastore.get(NOTIFICATION_DISPLAYED_ONCE);
+        }
+    }
+
+    @VisibleForTesting
+    String getConsentApiTypeKey(@ConsentParcel.ConsentApiType int consentApiType) {
+        return CONSENT_API_TYPE_PREFIX + consentApiType;
     }
 
     /** tearDown method used for Testing only. */
     @VisibleForTesting
     public void tearDownForTesting() {
-        mDatastore.tearDownForTesting();
+        synchronized (this) {
+            mDatastore.tearDownForTesting();
+        }
     }
 }
