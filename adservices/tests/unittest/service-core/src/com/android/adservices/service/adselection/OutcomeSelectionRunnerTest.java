@@ -18,6 +18,7 @@ package com.android.adservices.service.adselection;
 
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 
 import static com.android.adservices.service.adselection.AdSelectionFromOutcomesConfigValidator.AD_SELECTION_IDS_DONT_EXIST;
@@ -30,6 +31,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -47,6 +49,7 @@ import android.adservices.adselection.AdSelectionResponse;
 import android.adservices.adselection.CustomAudienceSignalsFixture;
 import android.adservices.common.CommonFixture;
 import android.adservices.common.FledgeErrorResponse;
+import android.annotation.NonNull;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Process;
@@ -75,12 +78,15 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 import org.mockito.stubbing.Answer;
@@ -93,9 +99,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class OutcomeSelectionRunnerTest {
-    // Time allowed by current test async calls to respond
-    private static final int RESPONSE_TIMEOUT_SECONDS = 3;
-
     private static final int CALLER_UID = Process.myUid();
     private static final String MY_APP_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private static final String ANOTHER_CALLER_PACKAGE_NAME = "another.caller.package";
@@ -132,7 +135,7 @@ public class OutcomeSelectionRunnerTest {
     private AdSelectionEntryDao mAdSelectionEntryDao;
     @Mock private AdOutcomeSelector mAdOutcomeSelectorMock;
     private OutcomeSelectionRunner mOutcomeSelectionRunner;
-    private final Flags mFlags =
+    private Flags mFlags =
             new Flags() {
                 @Override
                 public long getAdSelectionSelectingOutcomeTimeoutMs() {
@@ -142,6 +145,11 @@ public class OutcomeSelectionRunnerTest {
                 @Override
                 public boolean getDisableFledgeEnrollmentCheck() {
                     return true;
+                }
+
+                @Override
+                public long getAdSelectionFromOutcomesOverallTimeoutMs() {
+                    return 1000;
                 }
             };
     private final AdServicesLogger mAdServicesLoggerMock =
@@ -158,9 +166,11 @@ public class OutcomeSelectionRunnerTest {
     private final FledgeAllowListsFilter mFledgeAllowListsFilter =
             new FledgeAllowListsFilter(mFlags, mAdServicesLoggerMock);
     private MockitoSession mStaticMockSession = null;
+    private ListeningExecutorService mBlockingExecutorService;
 
     @Before
     public void setup() {
+        mBlockingExecutorService = AdServicesExecutors.getBlockingExecutor();
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         //                        .spyStatic(JSScriptEngine.class)
@@ -181,7 +191,7 @@ public class OutcomeSelectionRunnerTest {
                         CALLER_UID,
                         mAdOutcomeSelectorMock,
                         mAdSelectionEntryDao,
-                        AdServicesExecutors.getBackgroundExecutor(),
+                        mBlockingExecutorService,
                         AdServicesExecutors.getLightWeightExecutor(),
                         AdServicesExecutors.getScheduler(),
                         mAdServicesLoggerMock,
@@ -319,6 +329,81 @@ public class OutcomeSelectionRunnerTest {
                         anyInt());
     }
 
+    @Test
+    public void testRunOutcomeSelectionOrchestrationTimeoutFailure() {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+        doReturn(true).when(mMockThrottler).tryAcquire(eq(UNKNOWN), anyString());
+
+        mFlags =
+                new Flags() {
+                    @Override
+                    public long getAdSelectionSelectingOutcomeTimeoutMs() {
+                        return 300;
+                    }
+
+                    @Override
+                    public boolean getDisableFledgeEnrollmentCheck() {
+                        return true;
+                    }
+
+                    @Override
+                    public long getAdSelectionFromOutcomesOverallTimeoutMs() {
+                        return 100;
+                    }
+                };
+
+        List<AdSelectionIdWithBidAndRenderUri> adSelectionIdWithBidAndRenderUris =
+                List.of(AD_SELECTION_WITH_BID_1, AD_SELECTION_WITH_BID_2, AD_SELECTION_WITH_BID_3);
+        for (AdSelectionIdWithBidAndRenderUri idWithBid : adSelectionIdWithBidAndRenderUris) {
+            persistAdSelectionEntry(idWithBid, MY_APP_PACKAGE_NAME);
+        }
+
+        List<Long> adOutcomesConfigParam =
+                adSelectionIdWithBidAndRenderUris.stream()
+                        .map(AdSelectionIdWithBidAndRenderUri::getAdSelectionId)
+                        .collect(Collectors.toList());
+
+        AdSelectionFromOutcomesConfig config =
+                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
+                        adOutcomesConfigParam);
+
+        GenericListMatcher matcher = new GenericListMatcher(adSelectionIdWithBidAndRenderUris);
+        doAnswer((ignored) -> getSelectedOutcomeWithDelay(AD_SELECTION_ID_1, mFlags))
+                .when(mAdOutcomeSelectorMock)
+                .runAdOutcomeSelector(argThat(matcher), eq(config));
+
+        OutcomeSelectionRunner outcomeSelectionRunner =
+                new OutcomeSelectionRunner(
+                        CALLER_UID,
+                        mAdOutcomeSelectorMock,
+                        mAdSelectionEntryDao,
+                        mBlockingExecutorService,
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        AdServicesExecutors.getScheduler(),
+                        mAdServicesLoggerMock,
+                        mFledgeAuthorizationFilter,
+                        mAppImportanceFilter,
+                        mThrottlerSupplier,
+                        mFledgeAllowListsFilter,
+                        mConsentManagerMock,
+                        mContext,
+                        mFlags);
+
+        AdSelectionTestCallback resultsCallback =
+                invokeRunAdSelectionFromOutcomes(
+                        outcomeSelectionRunner, config, MY_APP_PACKAGE_NAME);
+
+        verify(mAdOutcomeSelectorMock, Mockito.times(1)).runAdOutcomeSelector(any(), any());
+        assertFalse(resultsCallback.mIsSuccess);
+        assertNotNull(resultsCallback.mFledgeErrorResponse);
+        assertEquals(STATUS_TIMEOUT, resultsCallback.mFledgeErrorResponse.getStatusCode());
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(STATUS_TIMEOUT),
+                        anyInt());
+    }
+
     private void persistAdSelectionEntry(
             AdSelectionIdWithBidAndRenderUri idWithBidAndRenderUri, String callerPackageName) {
         final Uri biddingLogicUri1 = Uri.parse("https://www.domain.com/logic/1");
@@ -374,6 +459,15 @@ public class OutcomeSelectionRunnerTest {
             e.printStackTrace();
         }
         return adSelectionTestCallback;
+    }
+
+    private ListenableFuture<Long> getSelectedOutcomeWithDelay(
+            Long outcomeId, @NonNull Flags flags) {
+        return mBlockingExecutorService.submit(
+                () -> {
+                    Thread.sleep(2 * flags.getAdSelectionFromOutcomesOverallTimeoutMs());
+                    return outcomeId;
+                });
     }
 
     static class AdSelectionTestCallback extends AdSelectionCallback.Stub {

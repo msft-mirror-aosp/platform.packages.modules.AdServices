@@ -157,12 +157,19 @@ public final class PhFlags implements Flags {
             "fledge_ad_selection_selecting_outcome_timeout_ms";
     static final String KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS =
             "fledge_ad_selection_overall_timeout_ms";
+    static final String KEY_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS =
+            "fledge_ad_selection_from_outcomes_overall_timeout_ms";
     static final String KEY_FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S =
             "fledge_ad_selection_expiration_window_s";
     static final String KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS =
             "fledge_report_impression_overall_timeout_ms";
     static final String KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS =
             "fledge_ad_selection_bidding_timeout_per_buyer_ms";
+    static final String KEY_FLEDGE_ENABLE_HTTP_CACHING = "fledge_enable_http_caching";
+    static final String KEY_FLEDGE_AD_SELECTION_ENABLE_JS_CACHING = "fledge_enable_js_caching";
+    static final String KEY_FLEDGE_HTTP_CACHE_MAX_ENTRIES = "fledge_http_cache_max_entries";
+    static final String KEY_FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS =
+            "fledge_http_cache_default_max_age_seconds";
 
     // FLEDGE Off device ad selection keys
     static final String KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS =
@@ -892,6 +899,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public long getAdSelectionFromOutcomesOverallTimeoutMs() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS,
+                /* defaultValue */ FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS);
+    }
+
+    @Override
     public long getAdSelectionOffDeviceOverallTimeoutMs() {
         return DeviceConfig.getLong(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -905,6 +920,38 @@ public final class PhFlags implements Flags {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS,
                 /* defaultValue */ FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS);
+    }
+
+    @Override
+    public boolean getFledgeHttpCachingEnabled() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_ENABLE_HTTP_CACHING,
+                /* defaultValue */ FLEDGE_ENABLE_HTTP_CACHING);
+    }
+
+    @Override
+    public boolean getFledgeJsCachingEnabled() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_AD_SELECTION_ENABLE_JS_CACHING,
+                /* defaultValue */ FLEDGE_AD_SELECTION_ENABLE_JS_CACHING);
+    }
+
+    @Override
+    public long getFledgeHttpCacheMaxEntries() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_HTTP_CACHE_MAX_ENTRIES,
+                /* defaultValue */ FLEDGE_HTTP_CACHE_MAX_ENTRIES);
+    }
+
+    @Override
+    public long getFledgeHttpCacheMaxAgeSeconds() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS,
+                /* defaultValue */ FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS);
     }
 
     // MDD related flags.
@@ -1991,6 +2038,20 @@ public final class PhFlags implements Flags {
                         + " = "
                         + getFledgeCustomAudienceMaxNumAds());
         writer.println(
+                "\t" + KEY_FLEDGE_ENABLE_HTTP_CACHING + " = " + getFledgeHttpCachingEnabled());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_AD_SELECTION_ENABLE_JS_CACHING
+                        + " = "
+                        + getFledgeJsCachingEnabled());
+        writer.println(
+                "\t" + KEY_FLEDGE_HTTP_CACHE_MAX_ENTRIES + " = " + getFledgeHttpCacheMaxEntries());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS
+                        + " = "
+                        + getFledgeHttpCacheMaxAgeSeconds());
+        writer.println(
                 "\t"
                         + KEY_FLEDGE_BACKGROUND_FETCH_ENABLED
                         + " = "
@@ -2065,6 +2126,11 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS
                         + " = "
                         + getAdSelectionOverallTimeoutMs());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS
+                        + " = "
+                        + getAdSelectionFromOutcomesOverallTimeoutMs());
         writer.println(
                 "\t"
                         + KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS

@@ -28,23 +28,23 @@ import java.util.Objects;
 
 
 /**
- * POJO for AggregatableAttributionFilterData.
+ * POJO for AggregatableAttributionFilterMap.
  */
-public class FilterData {
+public class FilterMap {
 
     private Map<String, List<String>> mAttributionFilterMap;
 
-    FilterData() {
+    FilterMap() {
         mAttributionFilterMap = new HashMap<>();
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof FilterData)) {
+        if (!(obj instanceof FilterMap)) {
             return false;
         }
-        FilterData attributionFilterData = (FilterData) obj;
-        return Objects.equals(mAttributionFilterMap, attributionFilterData.mAttributionFilterMap);
+        FilterMap attributionFilterMap = (FilterMap) obj;
+        return Objects.equals(mAttributionFilterMap, attributionFilterMap.mAttributionFilterMap);
     }
 
     @Override
@@ -60,17 +60,17 @@ public class FilterData {
     }
 
     /**
-     * Builder for {@link FilterData}.
+     * Builder for {@link FilterMap}.
      */
     public static final class Builder {
-        private final FilterData mBuilding;
+        private final FilterMap mBuilding;
 
         public Builder() {
-            mBuilding = new FilterData();
+            mBuilding = new FilterMap();
         }
 
         /**
-         * See {@link FilterData#getAttributionFilterMap()}.
+         * See {@link FilterMap#getAttributionFilterMap()}.
          */
         public Builder setAttributionFilterMap(Map<String, List<String>> attributionFilterMap) {
             mBuilding.mAttributionFilterMap = attributionFilterMap;
@@ -78,27 +78,27 @@ public class FilterData {
         }
 
         /**
-         * Builds FilterData from JSONObject.
+         * Builds FilterMap from JSONObject.
          */
         public Builder buildFilterData(JSONObject jsonObject)
                 throws JSONException {
-            Map<String, List<String>> filterData = new HashMap<>();
+            Map<String, List<String>> filterMap = new HashMap<>();
             for (String key : jsonObject.keySet()) {
                 JSONArray jsonArray = jsonObject.getJSONArray(key);
-                List<String> filterDataList = new ArrayList<>();
+                List<String> filterMapList = new ArrayList<>();
                 for (int i = 0; i < jsonArray.length(); i++) {
-                    filterDataList.add(jsonArray.getString(i));
+                    filterMapList.add(jsonArray.getString(i));
                 }
-                filterData.put(key, filterDataList);
+                filterMap.put(key, filterMapList);
             }
-            mBuilding.mAttributionFilterMap = filterData;
+            mBuilding.mAttributionFilterMap = filterMap;
             return this;
         }
 
         /**
-         * Build the {@link FilterData}.
+         * Build the {@link FilterMap}.
          */
-        public FilterData build() {
+        public FilterMap build() {
             return mBuilding;
         }
     }

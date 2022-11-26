@@ -32,7 +32,6 @@ import java.util.Objects;
  *
  */
 public class AddAdSelectionFromOutcomesOverrideRequest {
-    // TODO(b/254500329): use AdSelectionConfig when that change is checked in
     @NonNull private final AdSelectionFromOutcomesConfig mAdSelectionFromOutcomesConfig;
 
     @NonNull private final String mSelectionLogicJs;
