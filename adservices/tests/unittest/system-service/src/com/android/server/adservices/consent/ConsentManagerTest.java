@@ -22,7 +22,9 @@ import static com.android.server.adservices.consent.ConsentManager.STORAGE_XML_I
 
 import static com.google.common.truth.Truth.assertThat;
 
-import android.app.adservices.ConsentParcel;
+import static org.junit.Assert.assertThrows;
+
+import android.app.adservices.consent.ConsentParcel;
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -58,15 +60,15 @@ public class ConsentManagerTest {
     @Test
     public void testGetConsentDataStoreDir() {
         // The Data store is in folder with the following format.
-        // /data/system/adservices/user_id/consent/data_schema_version/
+        // /data/system/adservices/user_id/consent/
         assertThat(
                         ConsentManager.getConsentDataStoreDir(
                                 /* baseDir */ "/data/system/adservices", /* userIdentifier */ 0))
-                .isEqualTo("/data/system/adservices/0/consent/1");
+                .isEqualTo("/data/system/adservices/0/consent");
         assertThat(
                         ConsentManager.getConsentDataStoreDir(
                                 /* baseDir */ "/data/system/adservices", /* userIdentifier */ 1))
-                .isEqualTo("/data/system/adservices/1/consent/1");
+                .isEqualTo("/data/system/adservices/1/consent");
     }
 
     @Test
@@ -88,17 +90,48 @@ public class ConsentManagerTest {
         ConsentManager consentManager =
                 ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
         // Newly initialized ConsentManager has consent = false.
-        assertThat(consentManager.getConsent().isIsGiven()).isFalse();
+        assertThat(consentManager.getConsent(ConsentParcel.ALL_API).isIsGiven()).isFalse();
+        assertThat(consentManager.getConsent(ConsentParcel.TOPICS).isIsGiven()).isFalse();
+        assertThat(consentManager.getConsent(ConsentParcel.FLEDGE).isIsGiven()).isFalse();
+        assertThat(consentManager.getConsent(ConsentParcel.MEASUREMENT).isIsGiven()).isFalse();
     }
 
     @Test
     public void testGetAndSetConsent_null() throws IOException {
         ConsentManager consentManager =
                 ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
-        consentManager.setConsent(new ConsentParcel.Builder().setIsGiven(null).build());
 
+        consentManager.setConsent(
+                new ConsentParcel.Builder()
+                        .setConsentApiType(ConsentParcel.ALL_API)
+                        .setIsGiven(null)
+                        .build());
         // null means the consent is not given (false).
-        assertThat(consentManager.getConsent().isIsGiven()).isFalse();
+        assertThat(consentManager.getConsent(ConsentParcel.ALL_API).isIsGiven()).isFalse();
+
+        consentManager.setConsent(
+                new ConsentParcel.Builder()
+                        .setConsentApiType(ConsentParcel.TOPICS)
+                        .setIsGiven(null)
+                        .build());
+        // null means the consent is not given (false).
+        assertThat(consentManager.getConsent(ConsentParcel.TOPICS).isIsGiven()).isFalse();
+
+        consentManager.setConsent(
+                new ConsentParcel.Builder()
+                        .setConsentApiType(ConsentParcel.FLEDGE)
+                        .setIsGiven(null)
+                        .build());
+        // null means the consent is not given (false).
+        assertThat(consentManager.getConsent(ConsentParcel.FLEDGE).isIsGiven()).isFalse();
+
+        consentManager.setConsent(
+                new ConsentParcel.Builder()
+                        .setConsentApiType(ConsentParcel.MEASUREMENT)
+                        .setIsGiven(null)
+                        .build());
+        // null means the consent is not given (false).
+        assertThat(consentManager.getConsent(ConsentParcel.MEASUREMENT).isIsGiven()).isFalse();
     }
 
     @Test
@@ -106,28 +139,116 @@ public class ConsentManagerTest {
         // Create a ConsentManager for user 0.
         ConsentManager consentManager0 =
                 ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
-        consentManager0.setConsent(new ConsentParcel.Builder().setIsGiven(false).build());
-        assertThat(consentManager0.getConsent().isIsGiven()).isFalse();
+        consentManager0.setConsent(ConsentParcel.createRevokedConsent(ConsentParcel.ALL_API));
+        assertThat(consentManager0.getConsent(ConsentParcel.ALL_API).isIsGiven()).isFalse();
 
-        consentManager0.setConsent(new ConsentParcel.Builder().setIsGiven(true).build());
-        assertThat(consentManager0.getConsent().isIsGiven()).isTrue();
+        consentManager0.setConsent(ConsentParcel.createGivenConsent(ConsentParcel.ALL_API));
+        assertThat(consentManager0.getConsent(ConsentParcel.ALL_API).isIsGiven()).isTrue();
 
-        consentManager0.setConsent(new ConsentParcel.Builder().setIsGiven(false).build());
-        assertThat(consentManager0.getConsent().isIsGiven()).isFalse();
+        consentManager0.setConsent(ConsentParcel.createRevokedConsent(ConsentParcel.TOPICS));
+        assertThat(consentManager0.getConsent(ConsentParcel.TOPICS).isIsGiven()).isFalse();
+
+        consentManager0.setConsent(ConsentParcel.createGivenConsent(ConsentParcel.TOPICS));
+        assertThat(consentManager0.getConsent(ConsentParcel.TOPICS).isIsGiven()).isTrue();
+
+        consentManager0.setConsent(ConsentParcel.createRevokedConsent(ConsentParcel.FLEDGE));
+        assertThat(consentManager0.getConsent(ConsentParcel.FLEDGE).isIsGiven()).isFalse();
+
+        consentManager0.setConsent(ConsentParcel.createGivenConsent(ConsentParcel.FLEDGE));
+        assertThat(consentManager0.getConsent(ConsentParcel.FLEDGE).isIsGiven()).isTrue();
+
+        consentManager0.setConsent(ConsentParcel.createRevokedConsent(ConsentParcel.MEASUREMENT));
+        assertThat(consentManager0.getConsent(ConsentParcel.MEASUREMENT).isIsGiven()).isFalse();
+
+        consentManager0.setConsent(ConsentParcel.createGivenConsent(ConsentParcel.MEASUREMENT));
+        assertThat(consentManager0.getConsent(ConsentParcel.MEASUREMENT).isIsGiven()).isTrue();
 
         // Create another ConsentManager for user 1 to make sure ConsentManagers
         // are isolated by users.
         ConsentManager consentManager1 =
                 ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 1);
         // By default, this ConsentManager has isGiven false.
-        assertThat(consentManager0.getConsent().isIsGiven()).isFalse();
+        assertThat(consentManager1.getConsent(ConsentParcel.ALL_API).isIsGiven()).isFalse();
 
-        consentManager1.setConsent(new ConsentParcel.Builder().setIsGiven(true).build());
-        assertThat(consentManager1.getConsent().isIsGiven()).isTrue();
+        // Set the user 0 to revoked.
+        consentManager0.setConsent(ConsentParcel.createRevokedConsent(ConsentParcel.ALL_API));
+        assertThat(consentManager0.getConsent(ConsentParcel.ALL_API).isIsGiven()).isFalse();
+
+        // Set the user 1 to given.
+        consentManager1.setConsent(ConsentParcel.createGivenConsent(ConsentParcel.ALL_API));
+        assertThat(consentManager1.getConsent(ConsentParcel.ALL_API).isIsGiven()).isTrue();
 
         // This validates that the consentManager for user 0 was not changed when updating
         // ConsentManager for user 1.
-        assertThat(consentManager0.getConsent().isIsGiven()).isFalse();
+        assertThat(consentManager0.getConsent(ConsentParcel.ALL_API).isIsGiven()).isFalse();
+    }
+
+    @Test
+    public void testGetAndSetConsent_upgrade() throws IOException {
+        // Create a ConsentManager for user 0.
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+        // Test upgrading from 1 consent to 3 consents.
+        consentManager.setConsent(ConsentParcel.createRevokedConsent(ConsentParcel.ALL_API));
+        assertThat(consentManager.getConsent(ConsentParcel.TOPICS).isIsGiven()).isFalse();
+        assertThat(consentManager.getConsent(ConsentParcel.FLEDGE).isIsGiven()).isFalse();
+        assertThat(consentManager.getConsent(ConsentParcel.MEASUREMENT).isIsGiven()).isFalse();
+
+        consentManager.setConsent(ConsentParcel.createGivenConsent(ConsentParcel.ALL_API));
+        assertThat(consentManager.getConsent(ConsentParcel.TOPICS).isIsGiven()).isTrue();
+        assertThat(consentManager.getConsent(ConsentParcel.FLEDGE).isIsGiven()).isTrue();
+        assertThat(consentManager.getConsent(ConsentParcel.MEASUREMENT).isIsGiven()).isTrue();
+    }
+
+    @Test
+    public void testGetAndSetConsent_downgrade() throws IOException {
+        // Create a ConsentManager for user 0.
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+        // Test downgrading from 3 consents to 1 consent.
+        // For Topics.
+        consentManager.setConsent(ConsentParcel.createGivenConsent(ConsentParcel.ALL_API));
+        assertThat(consentManager.getConsent(ConsentParcel.ALL_API).isIsGiven()).isTrue();
+        // Now even setting only Topics to false, the ALL_API will get false value too.
+        consentManager.setConsent(ConsentParcel.createRevokedConsent(ConsentParcel.TOPICS));
+        assertThat(consentManager.getConsent(ConsentParcel.ALL_API).isIsGiven()).isFalse();
+
+        // For FLEDGE
+        consentManager.setConsent(ConsentParcel.createGivenConsent(ConsentParcel.ALL_API));
+        assertThat(consentManager.getConsent(ConsentParcel.ALL_API).isIsGiven()).isTrue();
+        // Now even setting only FLEDGE to false, the ALL_API will get false value too.
+        consentManager.setConsent(ConsentParcel.createRevokedConsent(ConsentParcel.FLEDGE));
+        assertThat(consentManager.getConsent(ConsentParcel.ALL_API).isIsGiven()).isFalse();
+
+        // For Measurement
+        consentManager.setConsent(ConsentParcel.createGivenConsent(ConsentParcel.ALL_API));
+        assertThat(consentManager.getConsent(ConsentParcel.ALL_API).isIsGiven()).isTrue();
+        // Now even setting only Measurement to false, the ALL_API will get false value too.
+        consentManager.setConsent(ConsentParcel.createRevokedConsent(ConsentParcel.MEASUREMENT));
+        assertThat(consentManager.getConsent(ConsentParcel.ALL_API).isIsGiven()).isFalse();
+
+        // Now setting 3 consents to true and the ALL_API will be true too.
+        consentManager.setConsent(ConsentParcel.createGivenConsent(ConsentParcel.TOPICS));
+        consentManager.setConsent(ConsentParcel.createGivenConsent(ConsentParcel.FLEDGE));
+        consentManager.setConsent(ConsentParcel.createGivenConsent(ConsentParcel.MEASUREMENT));
+        assertThat(consentManager.getConsent(ConsentParcel.ALL_API).isIsGiven()).isTrue();
+    }
+
+    @Test
+    public void testGetConsent_unSetConsentApiType() throws IOException {
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+        // Newly initialized ConsentManager has consent = false.
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> {
+                    consentManager.setConsent(
+                            new ConsentParcel.Builder()
+                                    // Not set the ConsentApiType.
+                                    // .setConsentApiType(xxx)
+                                    .setIsGiven(true)
+                                    .build());
+                });
     }
 
     @Test

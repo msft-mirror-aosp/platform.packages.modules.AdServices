@@ -19,8 +19,8 @@ import static android.app.adservices.AdServicesManager.AD_SERVICES_SYSTEM_SERVIC
 
 import android.adservices.common.AdServicesPermissions;
 import android.annotation.RequiresPermission;
-import android.app.adservices.ConsentParcel;
 import android.app.adservices.IAdServicesManager;
+import android.app.adservices.consent.ConsentParcel;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -121,7 +121,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
 
     @Override
     @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
-    public ConsentParcel getConsent() {
+    public ConsentParcel getConsent(@ConsentParcel.ConsentApiType int consentApiType) {
         enforceAdServicesManagerPermission();
 
         final int userIdentifier = getUserIdentifier();
@@ -130,10 +130,10 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         try {
             return mUserInstanceManager
                     .getOrCreateUserConsentManagerInstance(userIdentifier)
-                    .getConsent();
+                    .getConsent(consentApiType);
         } catch (IOException e) {
             LogUtil.e(e, "Fail to getConsent with exception. Return REVOKED!");
-            return ConsentParcel.REVOKED;
+            return ConsentParcel.createRevokedConsent(consentApiType);
         }
     }
 
