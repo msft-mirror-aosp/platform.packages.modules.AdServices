@@ -82,6 +82,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdSelectionServiceImpl;
+import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.customaudience.BackgroundFetchJobService;
@@ -213,7 +214,9 @@ public class FledgeE2ETest {
         mScheduledExecutor = AdServicesExecutors.getScheduler();
 
         mAdServicesHttpsClient =
-                new AdServicesHttpsClient(AdServicesExecutors.getBlockingExecutor());
+                new AdServicesHttpsClient(
+                        AdServicesExecutors.getBlockingExecutor(),
+                        CacheProviderFactory.createNoOpCache());
 
         mCustomAudienceService =
                 new CustomAudienceServiceImpl(

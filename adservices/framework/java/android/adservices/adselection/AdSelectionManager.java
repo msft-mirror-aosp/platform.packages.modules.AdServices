@@ -206,7 +206,6 @@ public class AdSelectionManager {
      *
      *     <p>If the {@link IllegalStateException} is thrown with error message "Failure of
      *     AdSelection services.", it is caused by an internal failure of the ad selection service.
-     *
      */
     public void selectAds(
             @NonNull AdSelectionFromOutcomesConfig adSelectionFromOutcomesConfig,
@@ -232,7 +231,7 @@ public class AdSelectionManager {
                             executor.execute(
                                     () -> {
                                         if (resultParcel == null) {
-                                            receiver.onResult(null);
+                                            receiver.onResult(AdSelectionOutcome.NO_OUTCOME);
                                         } else {
                                             receiver.onResult(
                                                     new AdSelectionOutcome.Builder()

@@ -36,6 +36,10 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"অ্যাপ্লিকেশানকে AdService এনাবেলমেন্ট স্টেট মডিফিকেশন API অ্যাক্সেস করার অনুমতি দেয়।"</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"AdService এনাবেলমেন্ট স্টেট API-এ অ্যাক্সেস করা"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"অ্যাপ্লিকেশনকে AdService এনাবেলমেন্ট স্টেট API অ্যাক্সেস করার অনুমতি দেয়।"</string>
+    <!-- no translation found for permlab_accessAdServicesManager (4816332609066703740) -->
+    <skip />
+    <!-- no translation found for permdesc_accessAdServicesManager (2619300431637689524) -->
+    <skip />
     <string name="app_label" msgid="5985320129629013968">"Android সিস্টেম"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Android-এর বিজ্ঞাপন সম্পর্কিত গোপনীয়তা বিটাতে যোগ দিন"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"আপনাকে বিজ্ঞাপন দেখাতে Android অ্যাপের জন্য আরও ব্যক্তিগত উপায় এক্সপ্লোর করছে"</string>
@@ -81,6 +85,7 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"প্রাইভেসি স্যান্ডবক্স"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android-এর বিজ্ঞাপন সম্পর্কিত গোপনীয়তা বিটা নতুন ফিচার প্রদান করে যা, আপনার পছন্দ হতে পারে এমন বিজ্ঞাপন আপনাকে দেখানোর জন্য অ্যাপ ব্যবহার করতে পারে। এইসব প্রযুক্তি ডিভাইস শনাক্তকারী ব্যবহার করে না।\n\nAndroid অনুমান করতে পারে যে কী ধরনের বিজ্ঞাপনে আপনি আগ্রহী হতে পারেন, এবং আপনার ডিভাইসে সাময়িকভাবে এইসব বিজ্ঞাপন সেভ করতে পারে। এটি অন্যান্য ডেভেলপারদের ওয়েবসাইট ও অ্যাপ জুড়ে আপনার অ্যাক্টিভিটি ট্র্যাক না করেই, এই সম্পর্কিত বিজ্ঞাপন দেখানোর জন্য অ্যাপকে অনুমতি দেয়।"</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"আপনার কোনও ব্লক করা আগ্রহ নেই"</string>
+    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"আগ্রহের বিষয় রিসেট করা হয়েছে"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"অ্যাপ আপনার আগ্রহ অনুমান করতে পারে এবং Android-এ সাময়িকভাবে এগুলি সেভ করতে পারে। এরপরে, এইসব বিজ্ঞাপনের উপর নির্ভর করে অ্যাপ বিজ্ঞাপন দেখাতে পারে।\n\nআপনি কোনও অ্যাপ ব্লক করলে, এটি আর কোনও আগ্রহ অনুমান করবে না। আপনি আনব্লক না করা পর্যন্ত অ্যাপের এই তালিকায় এটি আর যোগ করা হবে না। ইতিমধ্যেই অ্যাপের মাধ্যমে অনুমান করা আগ্রহ সম্পর্কিত ডেটা মুছে ফেলা হবে, তবে আপনি হয়ত এই সম্পর্কিত বিজ্ঞাপন এখনও দেখতে পাবেন।"</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"আপনার ব্লক করা অ্যাপ"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"অ্যাপের মাধ্যমে অনুমান করা আগ্রহ রিসেট করুন"</string>

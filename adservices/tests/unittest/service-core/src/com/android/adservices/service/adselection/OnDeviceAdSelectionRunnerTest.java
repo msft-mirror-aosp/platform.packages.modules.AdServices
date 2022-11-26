@@ -95,7 +95,6 @@ import android.webkit.WebView;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.DbTestUtil;
@@ -114,6 +113,7 @@ import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.Throttler;
+import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
@@ -266,7 +266,9 @@ public class OnDeviceAdSelectionRunnerTest {
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mScheduledExecutor = AdServicesExecutors.getScheduler();
         mAdServicesHttpsClient =
-                new AdServicesHttpsClient(AdServicesExecutors.getBlockingExecutor());
+                new AdServicesHttpsClient(
+                        AdServicesExecutors.getBlockingExecutor(),
+                        CacheProviderFactory.createNoOpCache());
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(mContext, CustomAudienceDatabase.class)
                         .build()
@@ -1849,7 +1851,6 @@ public class OnDeviceAdSelectionRunnerTest {
 
     @After
     public void tearDown() {
-        LogUtil.v("mAdSelectionEntryDao is null: %b", Objects.isNull(mAdSelectionEntryDao));
         mAdSelectionEntryDao.removeAdSelectionEntriesByIds(Arrays.asList(AD_SELECTION_ID));
         if (mStaticMockSession != null) {
             mStaticMockSession.finishMocking();

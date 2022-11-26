@@ -30,6 +30,7 @@ import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.content.Context;
 import android.os.LimitExceededException;
 import android.os.RemoteException;
@@ -43,6 +44,7 @@ import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.Throttler;
+import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
@@ -56,12 +58,15 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 
 /**
@@ -82,6 +87,9 @@ public class OutcomeSelectionRunner {
 
     @VisibleForTesting
     static final String AD_SELECTION_THROTTLED = "Ad selection exceeded allowed rate limit";
+
+    @VisibleForTesting
+    static final String AD_SELECTION_TIMED_OUT = "Ad selection exceeded allowed time limit";
 
     private final int mCallerUid;
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
@@ -212,7 +220,9 @@ public class OutcomeSelectionRunner {
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
         mScheduledExecutor = scheduledExecutor;
         mAdServicesHttpsClient =
-                new AdServicesHttpsClient(AdServicesExecutors.getBlockingExecutor());
+                new AdServicesHttpsClient(
+                        AdServicesExecutors.getBlockingExecutor(),
+                        CacheProviderFactory.create(context, flags));
         mAdServicesLogger = adServicesLogger;
         mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
         mAppImportanceFilter = appImportanceFilter;
@@ -283,7 +293,6 @@ public class OutcomeSelectionRunner {
 
     private ListenableFuture<AdSelectionOutcome> orchestrateOutcomeSelection(
             @NonNull AdSelectionFromOutcomesConfig config, @NonNull String callerPackageName) {
-        // TODO(b/249843968): Implement outcome selection service orchestration
         FluentFuture<List<AdSelectionIdWithBidAndRenderUri>> outcomeIdBidPairsFuture =
                 FluentFuture.from(
                         retrieveAdSelectionIdWithBidList(
@@ -295,13 +304,28 @@ public class OutcomeSelectionRunner {
                                 mAdOutcomeSelector.runAdOutcomeSelector(outcomeIdBids, config),
                         mLightweightExecutorService);
 
-        return selectedAdSelectionIdFuture.transformAsync(
-                selectedId ->
-                        (selectedId != null)
-                                ? convertAdSelectionIdToAdSelectionOutcome(
-                                        outcomeIdBidPairsFuture, selectedId)
-                                : Futures.immediateFuture(null),
-                mLightweightExecutorService);
+        return selectedAdSelectionIdFuture
+                .transformAsync(
+                        selectedId ->
+                                (selectedId != null)
+                                        ? convertAdSelectionIdToAdSelectionOutcome(
+                                                outcomeIdBidPairsFuture, selectedId)
+                                        : Futures.immediateFuture(null),
+                        mLightweightExecutorService)
+                .withTimeout(
+                        mFlags.getAdSelectionFromOutcomesOverallTimeoutMs(),
+                        TimeUnit.MILLISECONDS,
+                        mScheduledExecutor)
+                .catching(
+                        TimeoutException.class,
+                        this::handleTimeoutError,
+                        mLightweightExecutorService);
+    }
+
+    @Nullable
+    private AdSelectionOutcome handleTimeoutError(TimeoutException e) {
+        LogUtil.e(e, "Ad Selection exceeded time limit");
+        throw new UncheckedTimeoutException(AD_SELECTION_TIMED_OUT);
     }
 
     private void notifySuccessToCaller(AdSelectionOutcome result, AdSelectionCallback callback) {

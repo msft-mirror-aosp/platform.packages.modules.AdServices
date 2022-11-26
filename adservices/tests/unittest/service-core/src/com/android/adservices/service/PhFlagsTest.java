@@ -45,7 +45,9 @@ import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_TOP
 import static com.android.adservices.service.Flags.ENFORCE_ISOLATE_MAX_HEAP_SIZE;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
+import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_ENABLE_JS_CACHING;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S;
+import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS;
@@ -77,6 +79,9 @@ import static com.android.adservices.service.Flags.FLEDGE_CUSTOM_AUDIENCE_MAX_TR
 import static com.android.adservices.service.Flags.FLEDGE_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B;
 import static com.android.adservices.service.Flags.FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT;
 import static com.android.adservices.service.Flags.FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
+import static com.android.adservices.service.Flags.FLEDGE_ENABLE_HTTP_CACHING;
+import static com.android.adservices.service.Flags.FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS;
+import static com.android.adservices.service.Flags.FLEDGE_HTTP_CACHE_MAX_ENTRIES;
 import static com.android.adservices.service.Flags.FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.FLEDGE_SELECT_ADS_KILL_SWITCH;
 import static com.android.adservices.service.Flags.FOREGROUND_STATUS_LEVEL;
@@ -163,7 +168,9 @@ import static com.android.adservices.service.PhFlags.KEY_ENROLLMENT_BLOCKLIST_ID
 import static com.android.adservices.service.PhFlags.KEY_FLEDE_AD_SELECTION_OFF_DEVICE_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
+import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_ENABLE_JS_CACHING;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S;
+import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED;
@@ -194,6 +201,9 @@ import static com.android.adservices.service.PhFlags.KEY_FLEDGE_CUSTOM_AUDIENCE_
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
+import static com.android.adservices.service.PhFlags.KEY_FLEDGE_ENABLE_HTTP_CACHING;
+import static com.android.adservices.service.PhFlags.KEY_FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS;
+import static com.android.adservices.service.PhFlags.KEY_FLEDGE_HTTP_CACHE_MAX_ENTRIES;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_SELECT_ADS_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_FOREGROUND_STATUS_LEVEL;
@@ -743,6 +753,23 @@ public class PhFlagsTest {
     }
 
     @Test
+    public void testGetAdSelectionFromOutcomesOverallTimeoutMs() {
+        // without any overriding, the value is hard coded constant
+        assertThat(FlagsFactory.getFlags().getAdSelectionFromOutcomesOverallTimeoutMs())
+                .isEqualTo(FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS);
+
+        final int phOverrideValue = 4;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS,
+                Integer.toString(phOverrideValue),
+                false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getAdSelectionFromOutcomesOverallTimeoutMs()).isEqualTo(phOverrideValue);
+    }
+
+    @Test
     public void testGetOffDeviceAdSelectionOverallTimeoutMs() {
         assertThat(FlagsFactory.getFlags().getAdSelectionOffDeviceOverallTimeoutMs())
                 .isEqualTo(FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS);
@@ -1284,6 +1311,78 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getFledgeCustomAudienceMaxNumAds()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void getFledgeHttpCachingEnabled() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getFledgeHttpCachingEnabled())
+                .isEqualTo(FLEDGE_ENABLE_HTTP_CACHING);
+
+        final boolean phOverridingValue = !FLEDGE_ENABLE_HTTP_CACHING;
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_ENABLE_HTTP_CACHING,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getFledgeHttpCachingEnabled()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void getFledgeJsCachingEnabled() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getFledgeJsCachingEnabled())
+                .isEqualTo(FLEDGE_AD_SELECTION_ENABLE_JS_CACHING);
+
+        final boolean phOverridingValue = !FLEDGE_AD_SELECTION_ENABLE_JS_CACHING;
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AD_SELECTION_ENABLE_JS_CACHING,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getFledgeJsCachingEnabled()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void getFledgeHttpCacheMaxEntries() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getFledgeHttpCacheMaxEntries())
+                .isEqualTo(FLEDGE_HTTP_CACHE_MAX_ENTRIES);
+
+        final long phOverridingValue = FLEDGE_HTTP_CACHE_MAX_ENTRIES + 100L;
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_HTTP_CACHE_MAX_ENTRIES,
+                Long.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getFledgeHttpCacheMaxEntries()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void getFledgeHttpCacheMaxAgeSeconds() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getFledgeHttpCacheMaxAgeSeconds())
+                .isEqualTo(FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS);
+
+        final long phOverridingValue = FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS + 3600L;
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS,
+                Long.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getFledgeHttpCacheMaxAgeSeconds()).isEqualTo(phOverridingValue);
     }
 
     @Test

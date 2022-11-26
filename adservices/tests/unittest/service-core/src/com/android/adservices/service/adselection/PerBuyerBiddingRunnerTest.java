@@ -30,6 +30,7 @@ import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
@@ -112,7 +113,8 @@ public class PerBuyerBiddingRunnerTest {
                         ExtendedMockito.anyMap(),
                         ExtendedMockito.any(AdSelectionSignals.class),
                         ExtendedMockito.any(AdSelectionSignals.class),
-                        ExtendedMockito.any(AdSelectionSignals.class));
+                        ExtendedMockito.any(AdSelectionSignals.class),
+                        ExtendedMockito.isA(RunAdBiddingPerCAExecutionLogger.class));
 
         ExtendedMockito.doReturn(createDelayedBiddingOutcome(LONG_SLEEP_MS))
                 .when(mAdBidGeneratorMock)
@@ -121,7 +123,8 @@ public class PerBuyerBiddingRunnerTest {
                         ExtendedMockito.anyMap(),
                         ExtendedMockito.any(AdSelectionSignals.class),
                         ExtendedMockito.any(AdSelectionSignals.class),
-                        ExtendedMockito.any(AdSelectionSignals.class));
+                        ExtendedMockito.any(AdSelectionSignals.class),
+                        ExtendedMockito.isA(RunAdBiddingPerCAExecutionLogger.class));
     }
 
     @Test

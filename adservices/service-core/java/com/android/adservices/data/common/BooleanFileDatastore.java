@@ -359,10 +359,16 @@ public class BooleanFileDatastore {
         }
     }
 
+    /**
+     * Deletes the datastore's underlying file and clears the local map.
+     *
+     * <p>This method is meant only to be used for unit testing.
+     */
     @VisibleForTesting
-    void delete() {
+    void tearDownForTesting() {
         mWriteLock.lock();
         try {
+            mLocalMap.clear();
             mAtomicFile.delete();
         } finally {
             mWriteLock.unlock();

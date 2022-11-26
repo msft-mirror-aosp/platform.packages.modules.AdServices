@@ -66,6 +66,11 @@
     <!-- Description of an application permission that lets it access AdService's enablement state API. [CHAR LIMIT=NONE] -->
     <string name="permdesc_accessAdServicesState">Allows an application to access AdService’s enablement state API.</string>
 
+    <!-- Title of an application permission that lets it access AdServicesManager’s APIs. [CHAR LIMIT=NONE] -->
+    <string name="permlab_accessAdServicesManager">Access to AdServicesManager’s APIs</string>
+    <!-- Description of an application permission that lets it access AdServicesManager’s APIs. [CHAR LIMIT=NONE] -->
+    <string name="permdesc_accessAdServicesManager">Allows an application to access AdServicesManager’s APIs.</string>
+
     <!-- Settings App UI strings -->
 
     <!--*****************************************************************************************-->
