@@ -236,6 +236,27 @@ public class BooleanFileDatastore {
     }
 
     /**
+     * Retrieves a boolean value from the loaded datastore file.
+     *
+     * @param key A non-null, non-empty String key to fetch a value from
+     * @param defaultValue Value to return if this key does not exist.
+     * @throws IllegalArgumentException if {@code key} is an empty string
+     * @throws NullPointerException if {@code key} is null
+     */
+    @Nullable
+    public Boolean get(@NonNull String key, boolean defaultValue) {
+        Objects.requireNonNull(key);
+        Preconditions.checkStringNotEmpty(key, "Key must not be empty");
+
+        mReadLock.lock();
+        try {
+            return mLocalMap.containsKey(key) ? mLocalMap.get(key) : defaultValue;
+        } finally {
+            mReadLock.unlock();
+        }
+    }
+
+    /**
      * Retrieves a {@link Set} of all keys loaded from the datastore file.
      *
      * @return A {@link Set} of {@link String} keys currently in the loaded datastore

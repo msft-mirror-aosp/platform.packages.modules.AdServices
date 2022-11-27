@@ -18,6 +18,7 @@ package com.android.adservices.service.adselection;
 
 import static com.android.adservices.service.js.JSScriptArgument.numericArg;
 import static com.android.adservices.service.js.JSScriptArgument.recordArg;
+import static com.android.adservices.service.js.JSScriptArgument.stringArg;
 
 import com.android.adservices.service.js.JSScriptArgument;
 
@@ -49,7 +50,10 @@ public class SelectAdsFromOutcomesArgument {
             String name, AdSelectionIdWithBidAndRenderUri adSelectionIdWithBidAndRenderUri) {
         return recordArg(
                 name,
-                numericArg(ID_FIELD_NAME, adSelectionIdWithBidAndRenderUri.getAdSelectionId()),
+                // Parse as a string, so we won't lose precision in JS
+                stringArg(
+                        ID_FIELD_NAME,
+                        Long.toString(adSelectionIdWithBidAndRenderUri.getAdSelectionId())),
                 numericArg(BID_FIELD_NAME, adSelectionIdWithBidAndRenderUri.getBid()));
     }
 }

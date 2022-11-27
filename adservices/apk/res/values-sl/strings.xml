@@ -36,6 +36,10 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"Aplikaciji omogoča dostop do API-ja za spreminjanje stanja omogočenosti v storitvi AdService."</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"Dostop do API-ja za stanje omogočenosti v storitvi AdService"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Aplikaciji omogoča dostop do API-ja za stanje omogočenosti v storitvi AdService."</string>
+    <!-- no translation found for permlab_accessAdServicesManager (4816332609066703740) -->
+    <skip />
+    <!-- no translation found for permdesc_accessAdServicesManager (2619300431637689524) -->
+    <skip />
     <string name="app_label" msgid="5985320129629013968">"Sistem Android"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Pridružite se različici beta Androidove zasebnosti pri oglaševanju"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android raziskuje, kako vam lahko aplikacije prikazujejo oglase na bolj zasebne načine."</string>
@@ -81,8 +85,7 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Zasebni peskovnik"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Različica beta Androidove zasebnosti pri oglaševanju zagotavlja nove funkcije, s katerimi vam lahko aplikacije prikazujejo oglase, ki bi vam bili morda všeč. Te tehnologije ne uporabljajo identifikatorjev naprave.\n\nAndroid lahko predvidi, katere vrste oglasov bi vas morda zanimale, in ta zanimanja začasno shrani v vašo napravo. To aplikacijam omogoča, da vam prikazujejo ustrezne oglase, ne da bi spremljale vašo dejavnost na spletnih mestih in v aplikacijah drugih razvijalcev."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Nimate blokiranih zanimanj."</string>
-    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
-    <skip />
+    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Zanimanja so ponastavljena"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Aplikacije lahko predvidijo vaša zanimanja in jih začasno shranijo v Android. Pozneje vam druga aplikacija lahko prikaže oglas na podlagi teh zanimanj.\n\nČe blokirate aplikacijo, ne bo predvidela nobenega zanimanja več. Aplikacija ne bo več dodana na ta seznam aplikacij, razen če jo odblokirate. Zanimanja, ki jih je aplikacija že predvidela, bodo izbrisana, vendar boste morda še vedno videli nekaj z njimi povezanih oglasov."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Blokirane aplikacije"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Ponastavi zanimanja, ki so jih predvidele aplikacije"</string>

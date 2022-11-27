@@ -16,14 +16,16 @@
 
 package android.app.adservices;
 
+import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_MANAGER;
 import static android.app.adservices.AdServicesManager.AD_SERVICES_SYSTEM_SERVICE;
 
 import android.annotation.NonNull;
+import android.annotation.RequiresPermission;
 import android.annotation.SystemService;
+import android.app.adservices.consent.ConsentParcel;
 import android.content.Context;
 import android.os.RemoteException;
 
-import com.android.adservices.LogUtil;
 
 import java.util.Objects;
 
@@ -38,31 +40,29 @@ public class AdServicesManager {
     public static final String AD_SERVICES_SYSTEM_SERVICE = "adservices_manager";
 
     private final IAdServicesManager mService;
-    private final Context mContext;
 
-    /** @hide */
-    public AdServicesManager(@NonNull Context context, @NonNull IAdServicesManager binder) {
-        mContext = context;
+    @SuppressWarnings("unused")
+    public AdServicesManager(@NonNull Context unusedContext, @NonNull IAdServicesManager binder) {
         mService = binder;
     }
 
     /** Return the User Consent */
-    public ConsentParcel getConsent() {
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public ConsentParcel getConsent(@ConsentParcel.ConsentApiType int consentApiType) {
         try {
-            return mService.getConsent();
+            return mService.getConsent(consentApiType);
         } catch (RemoteException e) {
-            LogUtil.e("Failed to get User Consent.", e);
             throw e.rethrowFromSystemServer();
         }
     }
 
     /** Set the User Consent */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
     public void setConsent(@NonNull ConsentParcel consentParcel) {
         Objects.requireNonNull(consentParcel);
         try {
             mService.setConsent(consentParcel);
         } catch (RemoteException e) {
-            LogUtil.e("Failed to set User Consent.", e);
             throw e.rethrowFromSystemServer();
         }
     }
@@ -71,11 +71,11 @@ public class AdServicesManager {
      * Saves information to the storage that notification was displayed for the first time to the
      * user.
      */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
     public void recordNotificationDisplayed() {
         try {
             mService.recordNotificationDisplayed();
         } catch (RemoteException e) {
-            LogUtil.e("Failed to set User Consent.", e);
             throw e.rethrowFromSystemServer();
         }
     }
@@ -85,11 +85,11 @@ public class AdServicesManager {
      *
      * @return true if Consent Notification was displayed, otherwise false.
      */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
     public boolean wasNotificationDisplayed() {
         try {
             return mService.wasNotificationDisplayed();
         } catch (RemoteException e) {
-            LogUtil.e("Failed to get User Consent.", e);
             throw e.rethrowFromSystemServer();
         }
     }
