@@ -30,31 +30,31 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/** Unit tests for {@link FilterData} */
+/** Unit tests for {@link FilterMap} */
 @SmallTest
-public final class FilterDataTest {
+public final class FilterMapTest {
 
     @Test
     public void testCreation() throws Exception {
-        FilterData attributionFilterData = createExample();
+        FilterMap attributionFilterMap = createExample();
 
-        assertEquals(attributionFilterData.getAttributionFilterMap().size(), 2);
-        assertEquals(attributionFilterData.getAttributionFilterMap().get("type").size(), 4);
-        assertEquals(attributionFilterData.getAttributionFilterMap().get("ctid").size(), 1);
+        assertEquals(attributionFilterMap.getAttributionFilterMap().size(), 2);
+        assertEquals(attributionFilterMap.getAttributionFilterMap().get("type").size(), 4);
+        assertEquals(attributionFilterMap.getAttributionFilterMap().get("ctid").size(), 1);
     }
 
     @Test
     public void testDefaults() throws Exception {
-        FilterData data = new FilterData.Builder().build();
+        FilterMap data = new FilterMap.Builder().build();
         assertEquals(data.getAttributionFilterMap().size(), 0);
     }
 
     @Test
     public void testHashCode_equals() throws Exception {
-        final FilterData data1 = createExample();
-        final FilterData data2 = createExample();
-        final Set<FilterData> dataSet1 = Set.of(data1);
-        final Set<FilterData> dataSet2 = Set.of(data2);
+        final FilterMap data1 = createExample();
+        final FilterMap data2 = createExample();
+        final Set<FilterMap> dataSet1 = Set.of(data1);
+        final Set<FilterMap> dataSet2 = Set.of(data2);
         assertEquals(data1.hashCode(), data2.hashCode());
         assertEquals(data1, data2);
         assertEquals(dataSet1, dataSet2);
@@ -62,29 +62,29 @@ public final class FilterDataTest {
 
     @Test
     public void testHashCode_notEquals() throws Exception {
-        final FilterData data1 = createExample();
+        final FilterMap data1 = createExample();
 
         Map<String, List<String>> attributionFilterMap = new HashMap<>();
         attributionFilterMap.put("type", Arrays.asList("2", "3", "4"));
         attributionFilterMap.put("ctid", Collections.singletonList("id"));
 
-        final FilterData data2 =
-                new FilterData.Builder()
+        final FilterMap data2 =
+                new FilterMap.Builder()
                         .setAttributionFilterMap(attributionFilterMap)
                         .build();
-        final Set<FilterData> dataSet1 = Set.of(data1);
-        final Set<FilterData> dataSet2 = Set.of(data2);
+        final Set<FilterMap> dataSet1 = Set.of(data1);
+        final Set<FilterMap> dataSet2 = Set.of(data2);
         assertNotEquals(data1.hashCode(), data2.hashCode());
         assertNotEquals(data1, data2);
         assertNotEquals(dataSet1, dataSet2);
     }
 
-    private FilterData createExample() {
+    private FilterMap createExample() {
         Map<String, List<String>> attributionFilterMap = new HashMap<>();
         attributionFilterMap.put("type", Arrays.asList("1", "2", "3", "4"));
         attributionFilterMap.put("ctid", Collections.singletonList("id"));
 
-        return new FilterData.Builder()
+        return new FilterMap.Builder()
                 .setAttributionFilterMap(attributionFilterMap)
                 .build();
     }
