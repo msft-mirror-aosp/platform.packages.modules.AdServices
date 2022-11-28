@@ -37,6 +37,7 @@ public final class RegisterTrigger implements Action {
     public final long mTimestamp;
     // Used in interop tests
     public final String mDestination;
+    public final boolean mDebugReporting;
 
     public RegisterTrigger(JSONObject obj) throws JSONException {
         JSONObject regParamsJson = obj.getJSONObject(
@@ -63,6 +64,7 @@ public final class RegisterTrigger implements Action {
 
         mUriToResponseHeadersMap = getUriToResponseHeadersMap(obj);
         mTimestamp = obj.getLong(TestFormatJsonMapping.TIMESTAMP_KEY);
+        mDebugReporting = regParamsJson.optBoolean(TestFormatJsonMapping.DEBUG_REPORTING_KEY);
     }
 
     @Override

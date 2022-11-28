@@ -38,6 +38,7 @@ public final class RegisterSource implements Action {
     public final long mTimestamp;
     // Used in interop tests
     public final String mPublisher;
+    public final boolean mDebugReporting;
 
     public RegisterSource(JSONObject obj) throws JSONException {
         JSONObject regParamsJson = obj.getJSONObject(
@@ -69,6 +70,7 @@ public final class RegisterSource implements Action {
                         .build();
         mUriToResponseHeadersMap = getUriToResponseHeadersMap(obj);
         mTimestamp = obj.getLong(TestFormatJsonMapping.TIMESTAMP_KEY);
+        mDebugReporting = regParamsJson.optBoolean(TestFormatJsonMapping.DEBUG_REPORTING_KEY);
     }
 
     @Override
