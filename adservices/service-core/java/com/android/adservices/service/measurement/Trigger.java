@@ -55,7 +55,7 @@ public class Trigger {
     @EventSurfaceType private int mDestinationType;
     private String mEnrollmentId;
     private long mTriggerTime;
-    private String mEventTriggers;
+    private @NonNull String mEventTriggers;
     @Status private int mStatus;
     private Uri mRegistrant;
     private String mAggregateTriggerData;
@@ -319,13 +319,12 @@ public class Trigger {
         List<EventTrigger> eventTriggers = new ArrayList<>();
 
         for (int i = 0; i < jsonArray.length(); i++) {
-            EventTrigger.Builder eventTriggerBuilder = new EventTrigger.Builder();
             JSONObject eventTriggersJsonString = jsonArray.getJSONObject(i);
-
-            if (!eventTriggersJsonString.isNull(EventTriggerContract.TRIGGER_DATA)) {
-                eventTriggerBuilder.setTriggerData(new UnsignedLong(
-                        eventTriggersJsonString.getString(EventTriggerContract.TRIGGER_DATA)));
-            }
+            EventTrigger.Builder eventTriggerBuilder =
+                    new EventTrigger.Builder(
+                            new UnsignedLong(
+                                    eventTriggersJsonString.getString(
+                                            EventTriggerContract.TRIGGER_DATA)));
 
             if (!eventTriggersJsonString.isNull(EventTriggerContract.PRIORITY)) {
                 eventTriggerBuilder.setTriggerPriority(
