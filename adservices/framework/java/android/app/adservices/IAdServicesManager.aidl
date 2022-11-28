@@ -16,10 +16,10 @@
 
 package android.app.adservices;
 
-import android.app.adservices.ConsentParcel;
+import android.app.adservices.consent.ConsentParcel;
 
 /**
-  * Consent Service
+  * AdServices Manager Service
   *
   * {@hide}
   */
@@ -27,7 +27,7 @@ interface IAdServicesManager {
     /**
      * Get Consent
      */
-    ConsentParcel getConsent();
+    ConsentParcel getConsent(in int consentApiType);
 
     /**
      * Set Consent

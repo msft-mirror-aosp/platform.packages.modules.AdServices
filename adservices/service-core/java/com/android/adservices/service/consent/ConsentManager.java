@@ -24,6 +24,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 
 import android.annotation.NonNull;
 import android.app.adservices.AdServicesManager;
+import android.app.adservices.consent.ConsentParcel;
 import android.app.job.JobScheduler;
 import android.content.Context;
 
@@ -210,11 +211,13 @@ public class ConsentManager {
         }
         try {
             // TODO(b/258679209): switch to use the Consent from the System Service.
-            if (mFlags.getConsentSourceOfTruth() != Flags.PPAPI_ONLY) {
-                mAdServicesManager.getConsent();
+            if (mFlags.getConsentSourceOfTruth() == Flags.SYSTEM_SERVER_ONLY
+                    || mFlags.getConsentSourceOfTruth() == Flags.PPAPI_AND_SYSTEM_SERVER) {
+                return AdServicesApiConsent.getConsent(
+                        mAdServicesManager.getConsent(ConsentParcel.ALL_API).isIsGiven());
+            } else {
+                return AdServicesApiConsent.getConsent(mDatastore.get(CONSENT_KEY));
             }
-
-            return AdServicesApiConsent.getConsent(mDatastore.get(CONSENT_KEY));
         } catch (NullPointerException | IllegalArgumentException | SecurityException e) {
             LogUtil.e(e, ERROR_MESSAGE_WHILE_GET_CONTENT);
             return AdServicesApiConsent.REVOKED;
@@ -450,7 +453,16 @@ public class ConsentManager {
     }
 
     private void setConsent(AdServicesApiConsent state) throws IOException {
-        mDatastore.put(CONSENT_KEY, state.isGiven());
+        if (mFlags.getConsentSourceOfTruth() == Flags.SYSTEM_SERVER_ONLY
+                || mFlags.getConsentSourceOfTruth() == Flags.PPAPI_AND_SYSTEM_SERVER) {
+            mAdServicesManager.setConsent(
+                    new ConsentParcel.Builder()
+                            .setConsentApiType(ConsentParcel.ALL_API)
+                            .setIsGiven(state.isGiven())
+                            .build());
+        } else {
+            mDatastore.put(CONSENT_KEY, state.isGiven());
+        }
     }
 
     @VisibleForTesting
