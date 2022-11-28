@@ -36,6 +36,10 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"AdServiceஸின் இயக்க நிலை மாற்ற APIயை அணுக ஆப்ஸை அனுமதிக்கும்."</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"AdServiceஸின் இயக்க நிலை APIக்கான அணுகல்"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"AdServiceஸின் இயக்க நிலை APIயை அணுக ஆப்ஸை அனுமதிக்கும்."</string>
+    <!-- no translation found for permlab_accessAdServicesManager (4816332609066703740) -->
+    <skip />
+    <!-- no translation found for permdesc_accessAdServicesManager (2619300431637689524) -->
+    <skip />
     <string name="app_label" msgid="5985320129629013968">"Android System"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Androidன் விளம்பரத் தனியுரிமை பீட்டா பதிப்பில் இணைதல்"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"ஆப்ஸ் உங்களுக்கு விளம்பரங்களைக் காட்டுவதற்கான கூடுதல் வழிகளை Android ஆராய்ந்து வருகிறது"</string>
@@ -81,6 +85,7 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"தனியுரிமை சாண்ட்பாக்ஸ்"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Androidன் விளம்பரத் தனியுரிமை பீட்டா பதிப்பு புதிய அம்சங்களை வழங்குகிறது. அவற்றைப் பயன்படுத்தி நீங்கள் விரும்பக்கூடிய விளம்பரங்களை ஆப்ஸால் வழங்க முடியும். இந்தத் தொழில்நுட்பங்கள் சாதன அடையாளங்காட்டிகளைப் பயன்படுத்தாது.\n\nAndroid நீங்கள் விரும்பக்கூடிய விளம்பர வகைகளை மதிப்பீடு செய்து அவற்றைத் தற்காலிகமாக உங்கள் சாதனத்தில் சேமித்து வைக்கும். இதன் மூலம், இணையதளங்களிலும் பிற டெவெலப்பர்களின் ஆப்ஸிலும் உங்கள் செயல்பாடுகளைக் கண்காணிக்காமலே தொடர்புடைய விளம்பரங்களை ஆப்ஸால் காட்ட முடியும்."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"தடுக்கப்பட்ட ஆர்வங்கள் எதுவுமில்லை"</string>
+    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"தலைப்புகள் ரீசெட் செய்யப்பட்டன"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"ஆப்ஸால் உங்கள் ஆர்வங்களை மதிப்பீடு செய்து அவற்றை Androidல் தற்காலிகமாகச் சேமிக்க முடியும். பிறகு, வேறொரு ஆப்ஸ் இந்த ஆர்வங்களின் அடிப்படையில் விளம்பரங்களைக் காட்டலாம்.\n\nநீங்கள் ஓர் ஆப்ஸைத் தடுத்தால் அதன் பிறகு அந்த ஆப்ஸ் உங்கள் ஆர்வங்களை மதிப்பீடு செய்யாது. நீங்கள் தடுப்பை நீக்காதவரை அது இந்த ஆப்ஸ் பட்டியலில் மீண்டும் சேர்க்கப்படாது. ஆப்ஸால் ஏற்கெனவே மதிப்பீடு செய்யப்பட்ட ஆர்வங்கள் நீக்கப்படும். இருப்பினும் சில தொடர்புடைய விளம்பரங்கள் காட்டப்படலாம்."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"நீங்கள் தடுத்த ஆப்ஸ்"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"ஆப்ஸால் மதிப்பீடு செய்யப்பட்ட ஆர்வங்களை மீட்டமை"</string>

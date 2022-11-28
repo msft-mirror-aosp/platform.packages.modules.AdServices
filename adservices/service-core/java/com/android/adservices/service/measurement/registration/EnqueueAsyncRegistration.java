@@ -99,6 +99,7 @@ public class EnqueueAsyncRegistration {
      */
     public static boolean webSourceRegistrationRequest(
             WebSourceRegistrationRequest webSourceRegistrationRequest,
+            boolean adIdPermission,
             Uri registrant,
             long requestTime,
             @NonNull EnrollmentDao enrollmentDao,
@@ -116,7 +117,8 @@ public class EnqueueAsyncRegistration {
                             return;
                         }
                         String enrollmentId = enrollmentData.get();
-
+                        final boolean debugKeyAllowed =
+                                adIdPermission && webSourceParams.isDebugKeyAllowed();
                         insertAsyncRegistration(
                                 UUID.randomUUID().toString(),
                                 enrollmentId,
@@ -132,7 +134,7 @@ public class EnqueueAsyncRegistration {
                                 /* mRetryCount */ 0,
                                 System.currentTimeMillis(),
                                 AsyncRegistration.RedirectType.NONE,
-                                webSourceParams.isDebugKeyAllowed(),
+                                debugKeyAllowed,
                                 dao);
                     }
                 });
@@ -145,6 +147,7 @@ public class EnqueueAsyncRegistration {
      */
     public static boolean webTriggerRegistrationRequest(
             WebTriggerRegistrationRequest webTriggerRegistrationRequest,
+            boolean adIdPermission,
             Uri registrant,
             long requestTime,
             @NonNull EnrollmentDao enrollmentDao,
@@ -162,7 +165,8 @@ public class EnqueueAsyncRegistration {
                             return;
                         }
                         String enrollmentId = enrollmentData.get();
-
+                        final boolean debugKeyAllowed =
+                                adIdPermission && webTriggerParams.isDebugKeyAllowed();
                         insertAsyncRegistration(
                                 UUID.randomUUID().toString(),
                                 enrollmentId,
@@ -178,7 +182,7 @@ public class EnqueueAsyncRegistration {
                                 /* mRetryCount */ 0,
                                 System.currentTimeMillis(),
                                 AsyncRegistration.RedirectType.NONE,
-                                webTriggerParams.isDebugKeyAllowed(),
+                                debugKeyAllowed,
                                 dao);
                     }
                 });

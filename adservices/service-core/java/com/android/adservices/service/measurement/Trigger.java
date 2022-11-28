@@ -60,6 +60,7 @@ public class Trigger {
     private Uri mRegistrant;
     private String mAggregateTriggerData;
     private String mAggregateValues;
+    private boolean mIsDebugReporting;
     private AggregatableAttributionTrigger mAggregatableAttributionTrigger;
     private String mFilters;
     private String mNotFilters;
@@ -78,6 +79,7 @@ public class Trigger {
         mStatus = Status.PENDING;
         // Making this default explicit since it anyway occur on an uninitialised int field.
         mDestinationType = EventSurfaceType.APP;
+        mIsDebugReporting = false;
     }
 
     @Override
@@ -94,6 +96,7 @@ public class Trigger {
                 && Objects.equals(mDebugKey, trigger.mDebugKey)
                 && Objects.equals(mEventTriggers, trigger.mEventTriggers)
                 && mStatus == trigger.mStatus
+                && mIsDebugReporting == trigger.mIsDebugReporting
                 && Objects.equals(mRegistrant, trigger.mRegistrant)
                 && Objects.equals(mAggregateTriggerData, trigger.mAggregateTriggerData)
                 && Objects.equals(mAggregateValues, trigger.mAggregateValues)
@@ -241,6 +244,11 @@ public class Trigger {
         return mFilters;
     }
 
+    /** Is Ad Tech Opt-in to Debug Reporting {@link Trigger}. */
+    public boolean isDebugReporting() {
+        return mIsDebugReporting;
+    }
+
     /**
      * Returns top level not-filters. The value is in json format.
      */
@@ -278,13 +286,13 @@ public class Trigger {
                             .setKey(bigInteger)
                             .setSourceKeys(sourceKeySet);
             if (jsonObject.has("filters") && !jsonObject.isNull("filters")) {
-                FilterData filters = new FilterData.Builder()
+                FilterMap filters = new FilterMap.Builder()
                         .buildFilterData(jsonObject.getJSONObject("filters")).build();
                 builder.setFilter(filters);
             }
             if (jsonObject.has("not_filters")
                     && !jsonObject.isNull("not_filters")) {
-                FilterData notFilters = new FilterData.Builder()
+                FilterMap notFilters = new FilterMap.Builder()
                         .buildFilterData(
                                 jsonObject.getJSONObject("not_filters")).build();
                 builder.setNotFilter(notFilters);
@@ -330,8 +338,8 @@ public class Trigger {
             }
 
             if (!eventTriggersJsonString.isNull(EventTriggerContract.FILTERS)) {
-                FilterData filters =
-                        new FilterData.Builder()
+                FilterMap filters =
+                        new FilterMap.Builder()
                                 .buildFilterData(
                                         eventTriggersJsonString.getJSONObject(
                                                 EventTriggerContract.FILTERS))
@@ -340,8 +348,8 @@ public class Trigger {
             }
 
             if (!eventTriggersJsonString.isNull(EventTriggerContract.NOT_FILTERS)) {
-                FilterData notFilters =
-                        new FilterData.Builder()
+                FilterMap notFilters =
+                        new FilterMap.Builder()
                                 .buildFilterData(
                                         eventTriggersJsonString.getJSONObject(
                                                 EventTriggerContract.NOT_FILTERS))
@@ -456,6 +464,12 @@ public class Trigger {
         @NonNull
         public Builder setFilters(@Nullable String filters) {
             mBuilding.mFilters = filters;
+            return this;
+        }
+
+        /** See {@link Trigger#isDebugReporting()} */
+        public Trigger.Builder setIsDebugReporting(boolean isDebugReporting) {
+            mBuilding.mIsDebugReporting = isDebugReporting;
             return this;
         }
 

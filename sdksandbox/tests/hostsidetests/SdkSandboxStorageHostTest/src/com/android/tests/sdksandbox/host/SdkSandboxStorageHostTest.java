@@ -78,9 +78,12 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
      * For example, <code>runPhase("testExample");</code>
      */
     private void runPhase(String phase) throws Exception {
-        assertThat(runDeviceTests(TEST_APP_STORAGE_PACKAGE,
-                "com.android.tests.sdksandbox.SdkSandboxStorageTestApp",
-                phase)).isTrue();
+        assertThat(
+                        runDeviceTests(
+                                TEST_APP_STORAGE_PACKAGE,
+                                TEST_APP_STORAGE_PACKAGE + ".SdkSandboxStorageTestApp",
+                                phase))
+                .isTrue();
     }
 
     @Before
@@ -605,6 +608,9 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         // Install first before creating the user
         installPackage(TEST_APP_STORAGE_APK, "--user all");
 
+        // Allow some extra time for broadcast to propagate and sdk data to be created
+        Thread.sleep(WAIT_TO_PROCESS_PACKAGE_ADDED_BROADCAST);
+
         int secondaryUserId = mUserUtils.createAndStartSecondaryUser();
 
         // Data directories should not exist as the package is not installed on new user
@@ -623,18 +629,23 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         // Install the app on new user
         installPackage(TEST_APP_STORAGE_APK);
 
+        // Allow some extra time for broadcast to propagate and sdk data to be created
+        Thread.sleep(WAIT_TO_PROCESS_PACKAGE_ADDED_BROADCAST);
+
         assertThat(getDevice().isDirectory(ceAppPath)).isTrue();
         assertThat(getDevice().isDirectory(deAppPath)).isTrue();
         assertThat(getDevice().isDirectory(cePath)).isTrue();
         assertThat(getDevice().isDirectory(dePath)).isTrue();
+
+        mUserUtils.removeSecondaryUserIfNecessary(/*waitForUserDataDeletion=*/ true);
     }
 
     @Test
     public void testSdkDataPackageDirectory_SharedStorageIsUsable() throws Exception {
         installPackage(TEST_APP_STORAGE_APK);
 
-        // LoadSdk to ensure per-sdk storage is available. This also reduces flakiness.
-        runPhase("loadSdk");
+        // Allow some extra time for broadcast to propagate and sdk data to be created
+        Thread.sleep(WAIT_TO_PROCESS_PACKAGE_ADDED_BROADCAST);
 
         // Verify that shared storage exist
         final String sharedCePath =
@@ -859,8 +870,8 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     public void testSdkDataSubDirectory_PerSdkStorageIsUsable() throws Exception {
         installPackage(TEST_APP_STORAGE_APK);
 
-        // LoadSdk to ensure per-sdk storage is available. This also reduces flakiness
-        runPhase("loadSdk");
+        // Allow some extra time for broadcast to propagate and sdk data to be created
+        Thread.sleep(WAIT_TO_PROCESS_PACKAGE_ADDED_BROADCAST);
 
         // Verify that per-sdk storage exist
         final String perSdkStorage =
@@ -1298,9 +1309,9 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         public void unlockDevice() throws Exception {
             try {
                 mTest.runDeviceTests(
-                        "com.android.cts.appdataisolation.appa",
-                        "com.android.cts.appdataisolation.appa.AppATests",
-                        "testUnlockDevice");
+                        TEST_APP_STORAGE_PACKAGE,
+                        TEST_APP_STORAGE_PACKAGE + ".SdkSandboxStorageTestApp",
+                        "unlockDevice");
             } catch (Exception ignore) {
             }
         }

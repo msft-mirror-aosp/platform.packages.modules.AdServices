@@ -107,8 +107,8 @@ public final class TriggerFixture {
         public static final UnsignedLong DEBUG_KEY = new UnsignedLong(27836L);
 
         public static final AggregatableAttributionTrigger buildAggregatableAttributionTrigger() {
-            final FilterData filter =
-                    new FilterData.Builder()
+            final FilterMap filter =
+                    new FilterMap.Builder()
                             .setAttributionFilterMap(
                                     Map.of(
                                             "product",

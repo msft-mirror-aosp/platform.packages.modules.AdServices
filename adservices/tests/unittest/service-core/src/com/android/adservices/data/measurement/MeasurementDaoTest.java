@@ -61,6 +61,7 @@ import com.android.adservices.service.measurement.WebUtil;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.aggregation.AggregateReportFixture;
+import com.android.adservices.service.measurement.reporting.DebugReport;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -184,6 +185,7 @@ public class MeasurementDaoTest {
             assertEquals(validSource.getFilterData(), source.getFilterData());
             assertEquals(validSource.getAggregateContributions(),
                     source.getAggregateContributions());
+            assertEquals(validSource.isDebugReporting(), source.isDebugReporting());
         }
     }
 
@@ -422,6 +424,33 @@ public class MeasurementDaoTest {
                 measurementDao -> {
                     assertEquals(0, measurementDao.getNumTriggersPerRegistrant(APP_NO_TRIGGERS));
                 });
+    }
+
+    @Test
+    public void testInsertDebugReport() {
+        DebugReport debugReport = createDebugReport();
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction((dao) -> dao.insertDebugReport(debugReport));
+
+        try (Cursor cursor =
+                DbHelper.getInstance(sContext)
+                        .getReadableDatabase()
+                        .query(
+                                MeasurementTables.DebugReportContract.TABLE,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null)) {
+            assertTrue(cursor.moveToNext());
+            DebugReport report = SqliteObjectMapper.constructDebugReportFromCursor(cursor);
+            assertNotNull(report);
+            assertNotNull(report.getId());
+            assertEquals(debugReport.getType(), report.getType());
+            assertEquals(debugReport.getBody(), report.getBody());
+            assertEquals(debugReport.getEnrollmentId(), report.getEnrollmentId());
+        }
     }
 
     @Test
@@ -3389,6 +3418,63 @@ public class MeasurementDaoTest {
         assertEquals(1, count);
     }
 
+    @Test
+    public void testDeleteDebugReport() {
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        DebugReport debugReport = createDebugReport();
+
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.DebugReportContract.ID, debugReport.getId());
+        values.put(MeasurementTables.DebugReportContract.TYPE, debugReport.getType());
+        values.put(MeasurementTables.DebugReportContract.BODY, debugReport.getBody());
+        values.put(
+                MeasurementTables.DebugReportContract.ENROLLMENT_ID, debugReport.getEnrollmentId());
+        db.insert(MeasurementTables.DebugReportContract.TABLE, null, values);
+
+        long count =
+                DatabaseUtils.queryNumEntries(
+                        db, MeasurementTables.DebugReportContract.TABLE, /* selection */ null);
+        assertEquals(1, count);
+
+        assertTrue(
+                DatastoreManagerFactory.getDatastoreManager(sContext)
+                        .runInTransaction(
+                                measurementDao ->
+                                        measurementDao.deleteDebugReport(debugReport.getId())));
+
+        count =
+                DatabaseUtils.queryNumEntries(
+                        db, MeasurementTables.DebugReportContract.TABLE, /* selection */ null);
+        assertEquals(0, count);
+    }
+
+    @Test
+    public void testGetDebugReportIds() {
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        DebugReport debugReport = createDebugReport();
+
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.DebugReportContract.ID, debugReport.getId());
+        values.put(MeasurementTables.DebugReportContract.TYPE, debugReport.getType());
+        values.put(MeasurementTables.DebugReportContract.BODY, debugReport.getBody());
+        values.put(
+                MeasurementTables.DebugReportContract.ENROLLMENT_ID, debugReport.getEnrollmentId());
+        db.insert(MeasurementTables.DebugReportContract.TABLE, null, values);
+
+        long count =
+                DatabaseUtils.queryNumEntries(
+                        db, MeasurementTables.DebugReportContract.TABLE, /* selection */ null);
+        assertEquals(1, count);
+
+        assertTrue(
+                DatastoreManagerFactory.getDatastoreManager(sContext)
+                        .runInTransaction(
+                                measurementDao ->
+                                        assertEquals(
+                                                List.of(debugReport.getId()),
+                                                measurementDao.getDebugReportIds())));
+    }
+
     private static List<Source> getSourcesWithDifferentDestinations(
             int numSources,
             boolean hasAppDestination,
@@ -4406,6 +4492,20 @@ public class MeasurementDaoTest {
                 .setSourceEventId(source.getEventId())
                 .setSourceId(source.getId())
                 .setTriggerId(trigger.getId())
+                .build();
+    }
+
+    private DebugReport createDebugReport() {
+        return new DebugReport.Builder()
+                .setId("reportId")
+                .setType("trigger-event-deduplicated")
+                .setBody(
+                        " {\n"
+                                + "      \"attribution_destination\":"
+                                + " \"https://destination.example\",\n"
+                                + "      \"source_event_id\": \"45623\"\n"
+                                + "    }")
+                .setEnrollmentId("1")
                 .build();
     }
 

@@ -87,9 +87,7 @@ public class AsyncTriggerFetcher {
             long triggerTime,
             @NonNull Map<String, List<String>> headers,
             @NonNull List<Trigger> triggers,
-            boolean isWebSource,
-            boolean isAllowDebugKey,
-            boolean isAdIdPermissionGranted,
+            boolean isDebugKeyAllowed,
             AsyncRegistration.RegistrationType registrationType) {
         Trigger.Builder result = new Trigger.Builder();
         result.setEnrollmentId(enrollmentId);
@@ -150,9 +148,10 @@ public class AsyncTriggerFetcher {
                 }
                 result.setNotFilters(notFilters.toString());
             }
-            boolean isWebAllow = isWebSource && isAllowDebugKey && isAdIdPermissionGranted;
-            boolean isAppAllow = !isWebSource && isAdIdPermissionGranted;
-            if (!json.isNull(TriggerHeaderContract.DEBUG_KEY) && (isWebAllow || isAppAllow)) {
+            if (!json.isNull(TriggerHeaderContract.DEBUG_REPORTING)) {
+                result.setIsDebugReporting(json.optBoolean(TriggerHeaderContract.DEBUG_REPORTING));
+            }
+            if (!json.isNull(TriggerHeaderContract.DEBUG_KEY) && (isDebugKeyAllowed)) {
                 try {
                     result.setDebugKey(
                             new UnsignedLong(json.getString(TriggerHeaderContract.DEBUG_KEY)));
@@ -183,10 +182,8 @@ public class AsyncTriggerFetcher {
             @AsyncRegistration.RedirectType int redirectType,
             @NonNull AsyncRedirect asyncRedirect,
             @NonNull List<Trigger> triggerOut,
-            boolean isWebSource,
-            boolean isAllowDebugKey,
+            boolean isDebugKeyAllowed,
             @Nullable AsyncFetchStatus asyncFetchStatus,
-            boolean isAdIdPermissionGranted,
             AsyncRegistration.RegistrationType registrationType) {
         // Require https.
         if (!registrationUri.getScheme().equals("https")) {
@@ -242,9 +239,7 @@ public class AsyncTriggerFetcher {
                             triggerTime,
                             headers,
                             triggerOut,
-                            isWebSource,
-                            isAllowDebugKey,
-                            isAdIdPermissionGranted,
+                            isDebugKeyAllowed,
                             registrationType);
             if (!parsed) {
                 asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.PARSING_ERROR);
@@ -286,10 +281,8 @@ public class AsyncTriggerFetcher {
                 asyncRegistration.getRedirectType(),
                 asyncRedirect,
                 out,
-                asyncRegistration.getType() == AsyncRegistration.RegistrationType.WEB_TRIGGER,
                 asyncRegistration.getDebugKeyAllowed(),
                 asyncFetchStatus,
-                asyncRegistration.getDebugKeyAllowed(),
                 asyncRegistration.getType());
         if (out.isEmpty()) {
             return Optional.empty();
@@ -433,5 +426,6 @@ public class AsyncTriggerFetcher {
         String AGGREGATABLE_TRIGGER_DATA = "aggregatable_trigger_data";
         String AGGREGATABLE_VALUES = "aggregatable_values";
         String DEBUG_KEY = "debug_key";
+        String DEBUG_REPORTING = "debug_reporting";
     }
 }

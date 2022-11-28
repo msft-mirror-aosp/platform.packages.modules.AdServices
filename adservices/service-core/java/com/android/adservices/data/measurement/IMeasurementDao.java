@@ -30,6 +30,7 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.reporting.DebugReport;
 
 import java.time.Instant;
 import java.util.List;
@@ -209,6 +210,15 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
+     * Queries and returns the {@link DebugReport}
+     *
+     * @param debugReportId of the request Debug Report
+     * @return the request Debug Report; Null in case of SQL failure
+     */
+    @Nullable
+    DebugReport getDebugReport(String debugReportId) throws DatastoreException;
+
+    /**
      * Change the status of an event report to DELIVERED
      *
      * @param eventReportId the id of the event report to be updated
@@ -249,6 +259,9 @@ public interface IMeasurementDao {
      * Deletes the {@link EventReport} from datastore.
      */
     void deleteEventReport(EventReport eventReport) throws DatastoreException;
+
+    /** Deletes the {@link DebugReport} from datastore. */
+    void deleteDebugReport(String debugReportId) throws DatastoreException;
 
     /**
      * Returns list of all event reports that have a scheduled reporting time in the given window.
@@ -324,6 +337,9 @@ public interface IMeasurementDao {
      */
     void insertAggregateReport(AggregateReport payload) throws DatastoreException;
 
+    /** Save debug report payload to datastore. */
+    void insertDebugReport(DebugReport payload) throws DatastoreException;
+
     /**
      * Returns list of all aggregate reports that have a scheduled reporting time in the given
      * window.
@@ -333,6 +349,9 @@ public interface IMeasurementDao {
 
     /** Returns list of all aggregate debug reports. */
     List<String> getPendingAggregateDebugReportIds() throws DatastoreException;
+
+    /** Returns list of all debug reports. */
+    List<String> getDebugReportIds() throws DatastoreException;
 
     /**
      * Returns list of all pending aggregate reports for a given app right away.
