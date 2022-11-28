@@ -35,12 +35,15 @@ import com.android.compatibility.common.util.ShellUtils;
 import com.google.common.base.Stopwatch;
 import com.google.common.base.Ticker;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -52,8 +55,8 @@ public class SelectAdsTestServerLatency {
 
     private static final String TAG = "SelectAds";
 
-    private static final String LOG_LABEL_REAL_SERVER_P50 = "SELECT_ADS_LATENCY_REAL_SERVER_P50";
     private static final String LOG_LABEL_P50_5G = "SELECT_ADS_LATENCY_P50_5G";
+    private static final String LOG_LABEL_P90_5G = "SELECT_ADS_LATENCY_P90_5G";
 
     private static final int NUMBER_OF_CUSTOM_AUDIENCES_MEDIUM = 10;
     private static final int NUMBER_ADS_PER_CA_MEDIUM = 5;
@@ -75,7 +78,6 @@ public class SelectAdsTestServerLatency {
                     .setContext(mContext)
                     .setExecutor(CALLBACK_EXECUTOR)
                     .build();
-
     private final Ticker mTicker =
             new Ticker() {
                 public long read() {
@@ -83,7 +85,10 @@ public class SelectAdsTestServerLatency {
                 }
             };
 
+    private List<CustomAudience> mCustomAudiences = new ArrayList<>();
+
     // TODO(b/259392654): Avoid duplication of common code across Fledge CB performance tests
+    // TODO(b/259546574): Warm up test servers before running CB perf tests
     @BeforeClass
     public static void setupBeforeClass() {
         InstrumentationRegistry.getInstrumentation()
@@ -110,32 +115,71 @@ public class SelectAdsTestServerLatency {
                 "120000",
                 false);
         ShellUtils.runShellCommand("su 0 killall -9 com.google.android.adservices.api");
+        ShellUtils.runShellCommand("setprop debug.adservices.disable_fledge_enrollment_check true");
+    }
+
+    @Before
+    public void setup() {
+        mCustomAudiences.clear();
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        leaveCustomAudiences(mCustomAudiences);
     }
 
     @Test
-    public void selectAds_realServer() throws Exception {
+    public void selectAds_oneBuyer_realServer() throws Exception {
+        StaticAdTechServerUtils staticAdTechServerUtils =
+                StaticAdTechServerUtils.withNumberOfBuyers(1);
         List<CustomAudience> customAudiences =
-                StaticAdTechServerUtils.getCustomAudiences(
+                staticAdTechServerUtils.createAndGetCustomAudiences(
                         NUMBER_OF_CUSTOM_AUDIENCES_MEDIUM, NUMBER_ADS_PER_CA_MEDIUM);
         joinCustomAudiences(customAudiences);
 
         Stopwatch timer = Stopwatch.createStarted(mTicker);
         AdSelectionOutcome outcome =
                 mAdSelectionClient
-                        .selectAds(StaticAdTechServerUtils.createAdSelectionConfig())
+                        .selectAds(staticAdTechServerUtils.createAndGetAdSelectionConfig())
                         .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-
         timer.stop();
 
         // TODO(b/259248789) : Modify SelectAdsLatencyHelper to parse all log queries beginning with
-        //  SELECT_ADS_LATENCY and use LOG_LABEL_REAL_SERVER_P50 below instead of LOG_LABEL_P50_5G
+        //  SELECT_ADS_LATENCY and use LOG_LABEL_REAL_SERVER_ONE_BUYER_P50 below instead of
+        //  LOG_LABEL_P50_5G
         Log.i(TAG, "(" + LOG_LABEL_P50_5G + ": " + timer.elapsed(TimeUnit.MILLISECONDS) + " ms)");
         Assert.assertEquals(
                 AD_SELECTION_FAILURE_MESSAGE,
-                createExpectedWinningUri("GENERIC_CA_1", NUMBER_ADS_PER_CA_MEDIUM),
+                createExpectedWinningUri(
+                        /* buyerIndex = */ 0, "GENERIC_CA_1", NUMBER_ADS_PER_CA_MEDIUM),
                 outcome.getRenderUri().toString());
+    }
 
-        leaveCustomAudiences(customAudiences);
+    @Test
+    public void selectAds_fiveBuyers_realServer() throws Exception {
+        StaticAdTechServerUtils staticAdTechServerUtils =
+                StaticAdTechServerUtils.withNumberOfBuyers(5);
+        mCustomAudiences =
+                staticAdTechServerUtils.createAndGetCustomAudiences(
+                        NUMBER_OF_CUSTOM_AUDIENCES_MEDIUM, NUMBER_ADS_PER_CA_MEDIUM);
+        joinCustomAudiences(mCustomAudiences);
+
+        Stopwatch timer = Stopwatch.createStarted(mTicker);
+        AdSelectionOutcome outcome =
+                mAdSelectionClient
+                        .selectAds(staticAdTechServerUtils.createAndGetAdSelectionConfig())
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        timer.stop();
+
+        // TODO(b/259248789) : Modify SelectAdsLatencyHelper to parse all log queries beginning with
+        //  SELECT_ADS_LATENCY and use LOG_LABEL_REAL_SERVER_FIVE_BUYERS_P50 below instead of
+        //  LOG_LABEL_P90_5G
+        Log.i(TAG, "(" + LOG_LABEL_P90_5G + ": " + timer.elapsed(TimeUnit.MILLISECONDS) + " ms)");
+        Assert.assertEquals(
+                AD_SELECTION_FAILURE_MESSAGE,
+                createExpectedWinningUri(
+                        /* buyerIndex = */ 4, "GENERIC_CA_1", NUMBER_ADS_PER_CA_MEDIUM),
+                outcome.getRenderUri().toString());
     }
 
     private void joinCustomAudiences(List<CustomAudience> customAudiences) throws Exception {
@@ -156,7 +200,8 @@ public class SelectAdsTestServerLatency {
         }
     }
 
-    private String createExpectedWinningUri(String customAudienceName, int adNumber) {
-        return StaticAdTechServerUtils.getAdRenderUri(customAudienceName, adNumber);
+    private String createExpectedWinningUri(
+            int buyerIndex, String customAudienceName, int adNumber) {
+        return StaticAdTechServerUtils.getAdRenderUri(buyerIndex, customAudienceName, adNumber);
     }
 }
