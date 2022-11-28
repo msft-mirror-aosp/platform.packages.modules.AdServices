@@ -19,21 +19,38 @@ package android.adservices.adselection;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
+import android.os.OutcomeReceiver;
 
 import com.android.internal.util.Preconditions;
 
 import java.util.Objects;
+import java.util.concurrent.Executor;
 
 /**
  * This class represents a field in the {@code OutcomeReceiver}, which is an input to the {@link
  * AdSelectionManager#selectAds} in the {@link AdSelectionManager}. This field is populated in the
  * case of a successful {@link AdSelectionManager#selectAds} call.
+ *
+ * <p>Empty outcome may be returned from {@link
+ * AdSelectionManager#selectAds(AdSelectionFromOutcomesConfig, Executor, OutcomeReceiver)}. Use
+ * {@link AdSelectionOutcome#hasOutcome()} to check if an instance has a valid outcome. When {@link
+ * AdSelectionOutcome#hasOutcome()} returns {@code false}, results from {@link AdSelectionOutcome
+ * #getAdSelectionId()} and {@link AdSelectionOutcome#getRenderUri()} are invalid and shouldn't be
+ * used.
  */
 public class AdSelectionOutcome {
+    /** Represents an AdSelectionOutcome with empty results. */
+    @NonNull public static final AdSelectionOutcome NO_OUTCOME = new AdSelectionOutcome();
+
     private static final int UNSET = 0;
 
     private final long mAdSelectionId;
     @NonNull private final Uri mRenderUri;
+
+    private AdSelectionOutcome() {
+        mAdSelectionId = UNSET;
+        mRenderUri = Uri.EMPTY;
+    }
 
     private AdSelectionOutcome(long adSelectionId, @NonNull Uri renderUri) {
         Objects.requireNonNull(renderUri);
@@ -52,6 +69,14 @@ public class AdSelectionOutcome {
     @NonNull
     public long getAdSelectionId() {
         return mAdSelectionId;
+    }
+
+    /**
+     * Returns whether the outcome contains results or empty. Empty outcomes' {@code render uris}
+     * shouldn't be used.
+     */
+    public boolean hasOutcome() {
+        return !this.equals(NO_OUTCOME);
     }
 
     @Override

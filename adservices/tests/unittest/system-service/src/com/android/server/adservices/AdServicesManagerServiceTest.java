@@ -20,11 +20,15 @@ import static com.android.server.adservices.PhFlags.KEY_ADSERVICES_SYSTEM_SERVIC
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import android.Manifest;
+import android.app.adservices.ConsentParcel;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -41,6 +45,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -49,6 +54,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 /** Tests for {@link AdServicesManagerService} */
@@ -58,6 +64,7 @@ public class AdServicesManagerServiceTest {
             new TestableDeviceConfig.TestableDeviceConfigRule();
 
     private AdServicesManagerService mService;
+    private UserInstanceManager mUserInstanceManager;
     private Context mSpyContext;
     @Mock private PackageManager mMockPackageManager;
 
@@ -77,11 +84,21 @@ public class AdServicesManagerServiceTest {
         Context context = InstrumentationRegistry.getInstrumentation().getContext();
         mSpyContext = Mockito.spy(context);
 
+        mUserInstanceManager =
+                new UserInstanceManager(
+                        /* adservicesBaseDir */ context.getFilesDir().getAbsolutePath());
+
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.INTERACT_ACROSS_USERS_FULL);
 
         doReturn(mMockPackageManager).when(mSpyContext).getPackageManager();
+    }
+
+    @After
+    public void tearDown() {
+        // We need tear down this instance since it can have underlying persisted Data Store.
+        mUserInstanceManager.tearDownForTesting();
     }
 
     @Test
@@ -94,7 +111,7 @@ public class AdServicesManagerServiceTest {
                 /* makeDefault */ false);
 
         // This will trigger the registration of the Receiver.
-        mService = new AdServicesManagerService(mSpyContext);
+        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
 
         ArgumentCaptor<BroadcastReceiver> argumentReceiver =
                 ArgumentCaptor.forClass(BroadcastReceiver.class);
@@ -117,13 +134,12 @@ public class AdServicesManagerServiceTest {
         BroadcastReceiver receiver = argumentReceiver.getValue();
         assertThat(receiver).isNotNull();
 
-        assertThat(argumentIntentFilter.getValue().getAction(0))
-                .isEqualTo(Intent.ACTION_PACKAGE_FULLY_REMOVED);
-        assertThat(argumentIntentFilter.getValue().getAction(1))
-                .isEqualTo(Intent.ACTION_PACKAGE_DATA_CLEARED);
-        assertThat(argumentIntentFilter.getValue().getAction(2))
-                .isEqualTo(Intent.ACTION_PACKAGE_ADDED);
-        assertThat(argumentIntentFilter.getValue().getDataScheme(0)).isEqualTo("package");
+        IntentFilter intentFilter = argumentIntentFilter.getValue();
+        assertThat(intentFilter.hasAction(Intent.ACTION_PACKAGE_FULLY_REMOVED)).isTrue();
+        assertThat(intentFilter.hasAction(Intent.ACTION_PACKAGE_DATA_CLEARED)).isTrue();
+        assertThat(intentFilter.hasAction(Intent.ACTION_PACKAGE_ADDED)).isTrue();
+        assertThat(intentFilter.countActions()).isEqualTo(3);
+        assertThat(intentFilter.getDataScheme(0)).isEqualTo("package");
 
         assertThat(argumentPermission.getValue()).isNull();
         assertThat(argumentHandler.getValue()).isNotNull();
@@ -153,7 +169,7 @@ public class AdServicesManagerServiceTest {
                 Boolean.toString(Boolean.FALSE),
                 /* makeDefault */ false);
 
-        mService = new AdServicesManagerService(mSpyContext);
+        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
 
         // The flag is disabled so there is no registerReceiverForAllUsers
         Mockito.verify(mSpyContext, Mockito.times(0))
@@ -166,7 +182,7 @@ public class AdServicesManagerServiceTest {
 
     @Test
     public void testSendBroadcastForPackageFullyRemoved() {
-        mService = new AdServicesManagerService(mSpyContext);
+        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
 
         Intent i = new Intent(Intent.ACTION_PACKAGE_FULLY_REMOVED);
         i.setData(Uri.parse("package:" + PACKAGE_NAME));
@@ -194,7 +210,7 @@ public class AdServicesManagerServiceTest {
 
     @Test
     public void testSendBroadcastForPackageAdded() {
-        mService = new AdServicesManagerService(mSpyContext);
+        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
 
         Intent i = new Intent(Intent.ACTION_PACKAGE_ADDED);
         i.setData(Uri.parse("package:" + PACKAGE_NAME));
@@ -222,7 +238,7 @@ public class AdServicesManagerServiceTest {
 
     @Test
     public void testSendBroadcastForPackageDataCleared() {
-        mService = new AdServicesManagerService(mSpyContext);
+        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
 
         Intent i = new Intent(Intent.ACTION_PACKAGE_DATA_CLEARED);
         i.setData(Uri.parse("package:" + PACKAGE_NAME));
@@ -246,6 +262,70 @@ public class AdServicesManagerServiceTest {
         assertThat(argumentIntent.getValue().getIntExtra(Intent.EXTRA_UID, -1))
                 .isEqualTo(PACKAGE_UID);
         assertThat(argumentUser.getValue()).isEqualTo(mSpyContext.getUser());
+    }
+
+    @Test
+    public void testGetConsent_unSet() throws IOException {
+        AdServicesManagerService service =
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+        // Since unit test cannot execute an IPC call currently, disable the permission check.
+        disableEnforceAdServicesManagerPermission(service);
+
+        // Newly initialized ConsentManager has consent = false.
+        assertThat(service.getConsent().isIsGiven()).isFalse();
+    }
+
+    @Test
+    public void testGetAndSetConsent_null() throws IOException {
+        AdServicesManagerService service =
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+        // Since unit test cannot execute an IPC call currently, disable the permission check.
+        disableEnforceAdServicesManagerPermission(service);
+
+        service.setConsent(new ConsentParcel.Builder().setIsGiven(null).build());
+        // null means the consent is not given (false).
+        assertThat(service.getConsent().isIsGiven()).isFalse();
+    }
+
+    @Test
+    public void testGetAndSetConsent_nonNull() throws IOException {
+        AdServicesManagerService service =
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+        // Since unit test cannot execute an IPC call currently, disable the permission check.
+        disableEnforceAdServicesManagerPermission(service);
+
+        service.setConsent(new ConsentParcel.Builder().setIsGiven(false).build());
+        assertThat(service.getConsent().isIsGiven()).isFalse();
+
+        service.setConsent(new ConsentParcel.Builder().setIsGiven(true).build());
+        assertThat(service.getConsent().isIsGiven()).isTrue();
+    }
+
+    @Test
+    public void testRecordNotificationDisplayed() throws IOException {
+        AdServicesManagerService service =
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+        // Since unit test cannot execute an IPC call currently, disable the permission check.
+        disableEnforceAdServicesManagerPermission(service);
+
+        // First, the notification displayed is false.
+        assertThat(service.wasNotificationDisplayed()).isFalse();
+        service.recordNotificationDisplayed();
+        assertThat(service.wasNotificationDisplayed()).isTrue();
+    }
+
+    @Test
+    public void testEnforceAdServicesManagerPermission() {
+        AdServicesManagerService service =
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+
+        // Throw due to non-IPC call
+        assertThrows(SecurityException.class, service::getConsent);
+    }
+
+    // Since unit test cannot execute an IPC call, disable the permission check.
+    private void disableEnforceAdServicesManagerPermission(AdServicesManagerService service) {
+        doNothing().when(service).enforceAdServicesManagerPermission();
     }
 
     private void setupMockResolveInfo() {

@@ -32,6 +32,10 @@ import org.junit.runner.RunWith;
 public class AdServicesJUnit4DeviceTest {
     @Test
     public void testApiVersion() {
+        // Note that this version constant has been @removed from the public API,
+        // but there is some value in keeping the test around to verify
+        // - that the test APK can access the field (even though it's hidden)
+        // - that the value is kept the same
         assertThat(AdServicesVersion.API_VERSION).isAtLeast(2);
     }
 

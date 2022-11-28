@@ -20,7 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.mock;
 
 import android.content.Context;
 import android.content.Intent;
@@ -36,15 +36,18 @@ import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.common.BackgroundJobsManager;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
@@ -60,7 +63,8 @@ public class NotificationActivityUiAutomatorTest {
     private static UiDevice sDevice;
     private static Intent sIntent;
     private MockitoSession mStaticMockSession;
-    private PhFlags mPhFlags;
+
+    @Mock private Flags mMockFlags;
 
     @Before
     public void setup() throws UiObjectNotFoundException, IOException {
@@ -70,15 +74,17 @@ public class NotificationActivityUiAutomatorTest {
                         .spyStatic(PhFlags.class)
                         .spyStatic(BackgroundJobsManager.class)
                         .spyStatic(FlagsFactory.class)
+                        .spyStatic(ConsentManager.class)
                         .strictness(Strictness.WARN)
                         .initMocks(this)
                         .startMocking();
-        ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        doReturn(true).when(mMockFlags).getUIDialogsFeatureEnabled();
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        ConsentManager consentManager = mock(ConsentManager.class);
+        ExtendedMockito.doReturn(consentManager)
+                .when(() -> ConsentManager.getInstance(any(Context.class)));
         ExtendedMockito.doNothing()
                 .when(() -> BackgroundJobsManager.scheduleAllBackgroundJobs(any(Context.class)));
-        mPhFlags = spy(PhFlags.getInstance());
-        doReturn(true).when(mPhFlags).getUIDialogsFeatureEnabled();
-        ExtendedMockito.doReturn(mPhFlags).when(PhFlags::getInstance);
 
         // Initialize UiDevice instance
         sDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());

@@ -133,6 +133,9 @@ public class AsyncSourceFetcher {
         if (!json.isNull(SourceHeaderContract.PRIORITY)) {
             result.setPriority(json.getLong(SourceHeaderContract.PRIORITY));
         }
+        if (!json.isNull(SourceHeaderContract.DEBUG_REPORTING)) {
+            result.setIsDebugReporting(json.optBoolean(SourceHeaderContract.DEBUG_REPORTING));
+        }
         if (!json.isNull(SourceHeaderContract.DEBUG_KEY) && (isDebugKeyAllowed)) {
             try {
                 result.setDebugKey(
@@ -475,5 +478,6 @@ public class AsyncSourceFetcher {
         String FILTER_DATA = "filter_data";
         String WEB_DESTINATION = "web_destination";
         String AGGREGATION_KEYS = "aggregation_keys";
+        String DEBUG_REPORTING = "debug_reporting";
     }
 }
