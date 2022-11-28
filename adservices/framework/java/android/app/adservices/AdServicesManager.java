@@ -22,6 +22,7 @@ import static android.app.adservices.AdServicesManager.AD_SERVICES_SYSTEM_SERVIC
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
 import android.annotation.SystemService;
+import android.app.adservices.consent.ConsentParcel;
 import android.content.Context;
 import android.os.RemoteException;
 
@@ -47,9 +48,9 @@ public class AdServicesManager {
 
     /** Return the User Consent */
     @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
-    public ConsentParcel getConsent() {
+    public ConsentParcel getConsent(@ConsentParcel.ConsentApiType int consentApiType) {
         try {
-            return mService.getConsent();
+            return mService.getConsent(consentApiType);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
