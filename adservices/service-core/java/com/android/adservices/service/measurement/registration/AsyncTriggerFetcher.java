@@ -106,6 +106,7 @@ public class AsyncTriggerFetcher {
             return false;
         }
         try {
+            String eventTriggerData = new JSONArray().toString();
             JSONObject json = new JSONObject(field.get(0));
             if (!json.isNull(TriggerHeaderContract.EVENT_TRIGGER_DATA)) {
                 Optional<String> validEventTriggerData =
@@ -114,8 +115,9 @@ public class AsyncTriggerFetcher {
                 if (!validEventTriggerData.isPresent()) {
                     return false;
                 }
-                result.setEventTriggers(validEventTriggerData.get());
+                eventTriggerData = validEventTriggerData.get();
             }
+            result.setEventTriggers(eventTriggerData);
             if (!json.isNull(TriggerHeaderContract.AGGREGATABLE_TRIGGER_DATA)) {
                 if (!isValidAggregateTriggerData(
                         json.getJSONArray(TriggerHeaderContract.AGGREGATABLE_TRIGGER_DATA))) {
