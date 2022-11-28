@@ -25,7 +25,6 @@ import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_AP
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_SANDBOX_TO_APP;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_SANDBOX;
 
-import com.android.sdksandbox.IComputeSdkStorageCallback;
 import com.android.server.SystemService.TargetUser;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -36,16 +35,14 @@ import android.Manifest;
 import android.app.ActivityManager;
 import android.app.sdksandbox.ILoadSdkCallback;
 import android.app.sdksandbox.ISdkSandboxManager;
-import android.app.sdksandbox.ISdkToServiceCallback;
 import android.app.sdksandbox.ISharedPreferencesSyncCallback;
-import android.app.sdksandbox.LoadSdkException;
-import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.SharedPreferencesUpdate;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallbackBinder;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallbackBinder;
 import android.app.sdksandbox.testutils.FakeSdkSandboxProcessDeathCallbackBinder;
+import android.app.sdksandbox.testutils.FakeSdkSandboxService;
 import android.app.sdksandbox.testutils.FakeSharedPreferencesSyncCallback;
 import android.content.ComponentName;
 import android.content.Context;
@@ -70,10 +67,6 @@ import androidx.annotation.Nullable;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
-import com.android.sdksandbox.ILoadSdkInSandboxCallback;
-import com.android.sdksandbox.IRequestSurfacePackageFromSdkCallback;
-import com.android.sdksandbox.ISdkSandboxDisabledCallback;
-import com.android.sdksandbox.ISdkSandboxManagerToSdkSandboxCallback;
 import com.android.sdksandbox.ISdkSandboxService;
 import com.android.sdksandbox.IUnloadSdkCallback;
 import com.android.sdksandbox.SandboxLatencyInfo;
@@ -169,6 +162,12 @@ public class SdkSandboxManagerServiceUnitTest {
                         Manifest.permission.READ_DEVICE_CONFIG,
                                 Manifest.permission.WRITE_DEVICE_CONFIG);
         mSdkSandboxService = Mockito.spy(FakeSdkSandboxService.class);
+        mSdkSandboxService.setTimeValues(
+                TIME_SYSTEM_SERVER_CALLED_SANDBOX,
+                TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER,
+                TIME_SANDBOX_CALLED_SDK,
+                TIME_SDK_CALL_COMPLETED,
+                TIME_SANDBOX_CALLED_SYSTEM_SERVER);
         mProvider = new FakeSdkSandboxProvider(mSdkSandboxService);
 
         // Populate LocalManagerRegistry
@@ -2405,170 +2404,6 @@ public class SdkSandboxManagerServiceUnitTest {
         final Bundle data = new Bundle();
         data.putString(TEST_KEY, TEST_VALUE);
         return data;
-    }
-
-    public static class FakeSdkSandboxService extends ISdkSandboxService.Stub {
-        private ILoadSdkInSandboxCallback mLoadSdkInSandboxCallback;
-        private final ISdkSandboxManagerToSdkSandboxCallback mManagerToSdkCallback;
-        private IRequestSurfacePackageFromSdkCallback mRequestSurfacePackageFromSdkCallback = null;
-        private IUnloadSdkCallback mUnloadSdkCallback = null;
-        private IComputeSdkStorageCallback mComputeSdkStorageCallback = null;
-
-        private boolean mSurfacePackageRequested = false;
-        private int mInitializationCount = 0;
-
-        boolean mIsDisabledResponse = false;
-
-        private SharedPreferencesUpdate mLastSyncUpdate = null;
-
-        FakeSdkSandboxService() {
-            mManagerToSdkCallback = new FakeManagerToSdkCallback();
-        }
-
-        @Override
-        public void initialize(ISdkToServiceCallback sdkToServiceCallback) {
-            mInitializationCount++;
-        }
-
-        @Override
-        public void loadSdk(
-                String callingPackageName,
-                ApplicationInfo info,
-                String sdkName,
-                String sdkProviderClass,
-                String ceDataDir,
-                String deDataDir,
-                Bundle params,
-                ILoadSdkInSandboxCallback callback,
-                SandboxLatencyInfo sandboxLatencyInfo) {
-            mLoadSdkInSandboxCallback = callback;
-        }
-
-        @Override
-        public void unloadSdk(
-                String sdkName,
-                IUnloadSdkCallback callback,
-                SandboxLatencyInfo sandboxLatencyInfo) {
-            mUnloadSdkCallback = callback;
-        }
-
-        @Override
-        public void syncDataFromClient(SharedPreferencesUpdate update) {
-            mLastSyncUpdate = update;
-        }
-
-        @Override
-        public void isDisabled(ISdkSandboxDisabledCallback callback) {
-            try {
-                callback.onResult(mIsDisabledResponse);
-            } catch (RemoteException e) {
-                e.rethrowAsRuntimeException();
-            }
-        }
-
-        @Override
-        public void computeSdkStorage(
-                List<String> cePackagePaths,
-                List<String> dePackagePaths,
-                IComputeSdkStorageCallback callback) {
-            mComputeSdkStorageCallback = callback;
-        }
-
-        @Nullable
-        public Bundle getLastSyncData() {
-            return mLastSyncUpdate.getData();
-        }
-
-        @Nullable
-        public SharedPreferencesUpdate getLastSyncUpdate() {
-            return mLastSyncUpdate;
-        }
-
-        int getInitializationCount() {
-            return mInitializationCount;
-        }
-
-        void sendLoadCodeSuccessful() throws RemoteException {
-            mLoadSdkInSandboxCallback.onLoadSdkSuccess(
-                    new SandboxedSdk(new Binder()),
-                    mManagerToSdkCallback,
-                    new SandboxLatencyInfo(TIME_SYSTEM_SERVER_CALLED_SANDBOX));
-        }
-
-        void sendLoadCodeSuccessfulWithSandboxLatencies() throws RemoteException {
-            mLoadSdkInSandboxCallback.onLoadSdkSuccess(
-                    new SandboxedSdk(new Binder()),
-                    mManagerToSdkCallback,
-                    createSandboxLatencyInfo());
-        }
-
-        void sendStorageInfoToSystemServer() throws RemoteException {
-            mComputeSdkStorageCallback.onStorageInfoComputed(0F, 0F);
-        }
-
-        void sendLoadCodeError() throws Exception {
-            Class<?> clz = Class.forName("android.app.sdksandbox.LoadSdkException");
-            LoadSdkException exception =
-                    (LoadSdkException)
-                            clz.getConstructor(Integer.TYPE, String.class)
-                                    .newInstance(
-                                            SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR,
-                                            "Internal error");
-            mLoadSdkInSandboxCallback.onLoadSdkError(
-                    exception, new SandboxLatencyInfo(TIME_SYSTEM_SERVER_CALLED_SANDBOX));
-        }
-
-        void sendSurfacePackageReady(SandboxLatencyInfo sandboxLatencyInfo) throws RemoteException {
-            if (mSurfacePackageRequested) {
-                mRequestSurfacePackageFromSdkCallback.onSurfacePackageReady(
-                        /*surfacePackage=*/ null,
-                        /*surfacePackageId=*/ 1,
-                        /*params=*/ new Bundle(),
-                        sandboxLatencyInfo);
-            }
-        }
-
-        void sendUnloadSdkSuccess() throws Exception {
-            mUnloadSdkCallback.onUnloadSdk(createSandboxLatencyInfo());
-        }
-
-        // TODO(b/242684679): Use iRequestSurfacePackageFromSdkCallback instead of fake callback
-        void sendSurfacePackageError(
-                int errorCode, String errorMsg, FakeRequestSurfacePackageCallbackBinder callback)
-                throws RemoteException {
-            callback.onSurfacePackageError(errorCode, errorMsg, System.currentTimeMillis());
-        }
-
-        void setIsDisabledResponse(boolean response) {
-            mIsDisabledResponse = response;
-        }
-
-        private SandboxLatencyInfo createSandboxLatencyInfo() {
-            final SandboxLatencyInfo sandboxLatencyInfo =
-                    new SandboxLatencyInfo(TIME_SYSTEM_SERVER_CALLED_SANDBOX);
-            sandboxLatencyInfo.setTimeSandboxReceivedCallFromSystemServer(
-                    TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER);
-            sandboxLatencyInfo.setTimeSandboxCalledSdk(TIME_SANDBOX_CALLED_SDK);
-            sandboxLatencyInfo.setTimeSdkCallCompleted(TIME_SDK_CALL_COMPLETED);
-            sandboxLatencyInfo.setTimeSandboxCalledSystemServer(TIME_SANDBOX_CALLED_SYSTEM_SERVER);
-
-            return sandboxLatencyInfo;
-        }
-
-        private class FakeManagerToSdkCallback extends ISdkSandboxManagerToSdkSandboxCallback.Stub {
-            @Override
-            public void onSurfacePackageRequested(
-                    IBinder hostToken,
-                    int displayId,
-                    int width,
-                    int height,
-                    Bundle extraParams,
-                    SandboxLatencyInfo sandboxLatencyInfo,
-                    IRequestSurfacePackageFromSdkCallback iRequestSurfacePackageFromSdkCallback) {
-                mSurfacePackageRequested = true;
-                mRequestSurfacePackageFromSdkCallback = iRequestSurfacePackageFromSdkCallback;
-            }
-        }
     }
 
     public static class InjectorForTest extends SdkSandboxManagerService.Injector {
