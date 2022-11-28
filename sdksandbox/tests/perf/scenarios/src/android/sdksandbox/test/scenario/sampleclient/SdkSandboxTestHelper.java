@@ -49,7 +49,7 @@ public class SdkSandboxTestHelper {
         if (getLoadSdkButton() != null) {
             getLoadSdkButton().click();
         } else {
-            throw new RuntimeException("Did not find 'Load SDK' button.");
+            throw new RuntimeException("Did not find 'Load SDKs' button.");
         }
 
         int retries = 0;
@@ -57,13 +57,13 @@ public class SdkSandboxTestHelper {
         // wait until loadSdk.
         while (!sdkLoaded && retries < UI_RETRIES_WAIT_LOADSDK) {
             SystemClock.sleep(UI_WAIT_LOADSDK_MS);
-            if (getLoadSdkButton().getText().equals("Unload SDK")) {
+            if (getLoadSdkButton().getText().equals("Unload SDKs")) {
                 sdkLoaded = true;
             }
             retries++;
         }
 
-        assertThat(sdkLoaded).isTrue();
+        assertThat(getLoadSdkButton().getText()).isEqualTo("Unload SDKs");
     }
 
     /** Remote render ad on sandbox client test app by clicking request surface button. */
