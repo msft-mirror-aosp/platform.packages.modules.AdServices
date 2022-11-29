@@ -84,6 +84,9 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
         MeasurementTables.AttributionContract.TRIGGER_ID
     };
 
+    private static final String TRIGGER_DATA_KEY = "trigger_data";
+    private static final String TRIGGER_DATA_VALUE = "0";
+
     public MeasurementDbMigratorV3() {
         super(3);
     }
@@ -111,6 +114,7 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
         db.execSQL(ATTRIBUTION_CREATE_INDEX_SS_SO_DS_DO_EI_TT);
 
         migrateSourceData(db);
+        migrateEventTrigger(db);
         migrateEventReportData(db);
     }
 
@@ -164,6 +168,34 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
                 MeasurementTables.AttributionContract.TABLE,
                 ATTRIBUTION_CONTRACT_BACKUP,
                 MeasurementTables.CREATE_TABLE_ATTRIBUTION_LATEST);
+    }
+
+    private static void migrateEventTrigger(SQLiteDatabase db) {
+        try (Cursor cursor =
+                db.query(
+                        MeasurementTables.TriggerContract.TABLE,
+                        new String[] {
+                            MeasurementTables.TriggerContract.ID,
+                            MeasurementTables.TriggerContract.EVENT_TRIGGERS
+                        },
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null)) {
+            while (cursor.moveToNext()) {
+                String id =
+                        cursor.getString(
+                                cursor.getColumnIndex(MeasurementTables.TriggerContract.ID));
+                String eventTriggersV3 =
+                        cursor.getString(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.TriggerContract.EVENT_TRIGGERS));
+                String eventTriggerV4 = convertEventTrigger(eventTriggersV3);
+                updateEventTrigger(db, id, eventTriggerV4);
+            }
+        }
     }
 
     private static void migrateEventReportData(SQLiteDatabase db) {
@@ -220,6 +252,20 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
                         new String[] {id});
         if (rowCount != 1) {
             LogUtil.d("MeasurementDbMigratorV3: failed to update aggregate source record.");
+        }
+    }
+
+    private static void updateEventTrigger(SQLiteDatabase db, String id, String eventTriggers) {
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.TriggerContract.EVENT_TRIGGERS, eventTriggers);
+        long rowCount =
+                db.update(
+                        MeasurementTables.TriggerContract.TABLE,
+                        values,
+                        MeasurementTables.TriggerContract.ID + " = ?",
+                        new String[] {id});
+        if (rowCount != 1) {
+            LogUtil.d("MeasurementDbMigratorV4: failed to update event trigger record.");
         }
     }
 
@@ -284,4 +330,22 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
         }
     }
 
+    private static String convertEventTrigger(String eventTriggers) {
+        if (eventTriggers == null) {
+            return new JSONArray().toString();
+        }
+        try {
+            JSONArray jsonArray = new JSONArray(eventTriggers);
+            for (int i = 0; i < jsonArray.length(); i++) {
+                JSONObject jsonObject = jsonArray.getJSONObject(i);
+                if (jsonObject.isNull(TRIGGER_DATA_KEY)) {
+                    jsonObject.put(TRIGGER_DATA_KEY, TRIGGER_DATA_VALUE);
+                }
+            }
+            return jsonArray.toString();
+        } catch (JSONException e) {
+            LogUtil.e(e, "Event trigger parsing failed when migrating from V3 to V4.");
+            return new JSONArray().toString();
+        }
+    }
 }

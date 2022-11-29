@@ -3788,6 +3788,70 @@
           }
         ]
       }
+    },
+    {
+      "name": "Event trigger data default value",
+      "description": "Simple 1-1 match with event trigger data having a default value of an empty array",
+      "input": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 0,
+            "sourceType": "event",
+            "publisher": "android-app://com.example.abc",
+            "appDestination": "android-app://com.example1.app",
+            "enrollmentId": "enrollment-id-3",
+            "eventTime": 8640000000,
+            "expiryTime": 8726400000,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://com.example.abc"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "android-app://com.example1.app",
+            "enrollmentId": "enrollment-id-3",
+            "status": 0,
+            "eventTriggers": [],
+            "triggerTime": 8640000002,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ],
+        "event_reports": [],
+        "attributions": []
+      },
+      "output": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 0,
+            "sourceType": "event",
+            "publisher": "android-app://com.example.abc",
+            "appDestination": "android-app://com.example1.app",
+            "enrollmentId": "enrollment-id-3",
+            "eventTime": 8640000000,
+            "expiryTime": 8726400000,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://com.example.abc"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "android-app://com.example1.app",
+            "enrollmentId": "enrollment-id-3",
+            "status": 1,
+            "eventTriggers": [],
+            "triggerTime": 8640000002,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ],
+        "event_reports": [],
+        "attributions": []
+      }
     }
   ]
 }
