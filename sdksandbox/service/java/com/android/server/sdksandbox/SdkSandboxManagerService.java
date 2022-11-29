@@ -164,6 +164,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     private SdkSandboxSettingsListener mSdkSandboxSettingsListener;
 
     private static final String PROPERTY_DISABLE_SDK_SANDBOX = "disable_sdk_sandbox";
+    private static final String GMS_PACKAGENAME_PREFIX = "com.google.android.gms";
+    private static final String PROPERTY_SERVICE_BIND_ALLOWED_PACKAGENAMES =
+            "runtime_service_bind_allowed_packagenames";
+    private static final String PROPERTY_SERVICE_BIND_ALLOWED_ACTIONS =
+            "runtime_service_bind_allowed_actions";
 
     static class Injector {
         long getCurrentTime() {
@@ -1184,15 +1189,36 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
     }
 
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    void setSdkSandboxSettingsListener(SdkSandboxSettingsListener listener) {
+        synchronized (mLock) {
+            mSdkSandboxSettingsListener = listener;
+        }
+    }
+
     class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedListener {
 
         private final Context mContext;
         private final Object mLock = new Object();
 
         @GuardedBy("mLock")
-        private boolean mIsKillSwitchEnabled =
+        private boolean mKillSwitchEnabled =
                 DeviceConfig.getBoolean(
                         DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_DISABLE_SDK_SANDBOX, true);
+
+        @GuardedBy("mLock")
+        private String mBindServiceAllowedPackageNames =
+                DeviceConfig.getString(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        PROPERTY_SERVICE_BIND_ALLOWED_PACKAGENAMES,
+                        null);
+
+        @GuardedBy("mLock")
+        private String mBindServiceAllowedActions =
+                DeviceConfig.getString(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        PROPERTY_SERVICE_BIND_ALLOWED_ACTIONS,
+                        null);
 
         SdkSandboxSettingsListener(Context context) {
             mContext = context;
@@ -1206,7 +1232,21 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
         boolean isKillSwitchEnabled() {
             synchronized (mLock) {
-                return mIsKillSwitchEnabled;
+                return mKillSwitchEnabled;
+            }
+        }
+
+        @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+        String getServiceBindPackageNamesAllowlist() {
+            synchronized (mLock) {
+                return mBindServiceAllowedPackageNames;
+            }
+        }
+
+        @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+        String getServiceBindActionsAllowlist() {
+            synchronized (mLock) {
+                return mBindServiceAllowedActions;
             }
         }
 
@@ -1218,7 +1258,31 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         PROPERTY_DISABLE_SDK_SANDBOX,
                         Boolean.toString(enabled),
                         false);
-                mIsKillSwitchEnabled = enabled;
+                mKillSwitchEnabled = enabled;
+            }
+        }
+
+        @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+        void setBindServiceAllowedPackageNames(String packageNames) {
+            synchronized (mLock) {
+                DeviceConfig.setProperty(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        PROPERTY_SERVICE_BIND_ALLOWED_PACKAGENAMES,
+                        packageNames,
+                        false);
+                mBindServiceAllowedPackageNames = packageNames;
+            }
+        }
+
+        @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+        void setBindServiceAllowedActions(String actions) {
+            synchronized (mLock) {
+                DeviceConfig.setProperty(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        PROPERTY_SERVICE_BIND_ALLOWED_ACTIONS,
+                        actions,
+                        false);
+                mBindServiceAllowedActions = actions;
             }
         }
 
@@ -1236,15 +1300,26 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     }
 
                     if (name.equals(PROPERTY_DISABLE_SDK_SANDBOX)) {
-                        boolean killSwitchPreviouslyEnabled = mIsKillSwitchEnabled;
-                        mIsKillSwitchEnabled =
+                        boolean killSwitchPreviouslyEnabled = mKillSwitchEnabled;
+                        mKillSwitchEnabled =
                                 properties.getBoolean(PROPERTY_DISABLE_SDK_SANDBOX, true);
-                        if (mIsKillSwitchEnabled && !killSwitchPreviouslyEnabled) {
+                        if (mKillSwitchEnabled && !killSwitchPreviouslyEnabled) {
                             Log.i(TAG, "SDK sandbox killswitch has become enabled");
                             synchronized (SdkSandboxManagerService.this.mLock) {
                                 stopAllSandboxesLocked();
                             }
                         }
+                    }
+
+                    if (name.equals(PROPERTY_SERVICE_BIND_ALLOWED_PACKAGENAMES)) {
+                        mBindServiceAllowedPackageNames =
+                                properties.getString(
+                                        PROPERTY_SERVICE_BIND_ALLOWED_PACKAGENAMES, null);
+                    }
+
+                    if (name.equals(PROPERTY_SERVICE_BIND_ALLOWED_ACTIONS)) {
+                        mBindServiceAllowedActions =
+                                properties.getString(PROPERTY_SERVICE_BIND_ALLOWED_ACTIONS, null);
                     }
                 }
             }
@@ -1401,22 +1476,42 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 timeSystemServerReceivedCallFromApp);
     }
 
+    private void failStartOrBindService(Intent intent) {
+        throw new SecurityException(
+                "SDK sandbox uid may not bind to or start to this service: " + intent.toString());
+    }
+
     private void enforceAllowedToStartOrBindService(Intent intent) {
         ComponentName component = intent.getComponent();
-        String errorMsg = "SDK sandbox uid may not bind to or start a service: ";
         if (component == null) {
-            throw new SecurityException(errorMsg + "intent component must be non-null.");
+            failStartOrBindService(intent);
         }
         String componentPackageName = component.getPackageName();
-        if (componentPackageName != null) {
-            if (!componentPackageName.equals(WebViewUpdateService.getCurrentWebViewPackageName())
-                    && !componentPackageName.equals(getAdServicesPackageName())) {
-                throw new SecurityException(errorMsg + "component package name "
-                        + componentPackageName + " is not allowlisted.");
+        if (componentPackageName == null) {
+            failStartOrBindService(intent);
+        }
+        if (componentPackageName.equals(WebViewUpdateService.getCurrentWebViewPackageName())
+                || componentPackageName.equals(getAdServicesPackageName())) {
+            return;
+        }
+
+        String dynamicPackageNamesAllowlist =
+                mSdkSandboxSettingsListener.getServiceBindPackageNamesAllowlist();
+        if (dynamicPackageNamesAllowlist == null
+                || !dynamicPackageNamesAllowlist.contains(componentPackageName)) {
+            failStartOrBindService(intent);
+        }
+
+        if (componentPackageName.startsWith(GMS_PACKAGENAME_PREFIX)) {
+            String action = intent.getAction();
+            if (action == null) {
+                failStartOrBindService(intent);
             }
-        } else {
-            throw new SecurityException(errorMsg
-                    + "the intent's component package name must be non-null.");
+            String dynamicActionAllowlist =
+                    mSdkSandboxSettingsListener.getServiceBindActionsAllowlist();
+            if (dynamicActionAllowlist == null || !dynamicActionAllowlist.contains(action)) {
+                failStartOrBindService(intent);
+            }
         }
     }
 
