@@ -192,38 +192,6 @@ public final class EventReportTest {
     }
 
     @Test
-    public void testPopulateFromSourceAndTrigger_shouldSetTriggerData0WhenNull()
-            throws JSONException {
-        long baseTime = System.currentTimeMillis();
-        Source source =
-                createSourceForTest(
-                        baseTime, Source.SourceType.EVENT, false, APP_DESTINATION, null);
-        Trigger trigger =
-                createTriggerForTest(baseTime + TimeUnit.SECONDS.toMillis(10), APP_DESTINATION);
-
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
-        EventTrigger eventTrigger = spy(eventTriggers.get(0));
-        when(eventTrigger.getTriggerData()).thenReturn(null);
-        EventReport report =
-                new EventReport.Builder()
-                        .populateFromSourceAndTrigger(source, trigger, eventTrigger)
-                        .build();
-
-        assertEquals(TRIGGER_PRIORITY, report.getTriggerPriority());
-        assertEquals(TRIGGER_DEDUP_KEY, report.getTriggerDedupKey());
-        assertEquals(new UnsignedLong(0L), report.getTriggerData());
-        assertEquals(trigger.getTriggerTime(), report.getTriggerTime());
-        assertEquals(source.getEventId(), report.getSourceEventId());
-        assertEquals(source.getEnrollmentId(), report.getEnrollmentId());
-        assertEquals(trigger.getAttributionDestination(), report.getAttributionDestination());
-        assertEquals(source.getExpiryTime() + ONE_HOUR_IN_MILLIS, report.getReportTime());
-        assertEquals(source.getSourceType(), report.getSourceType());
-        assertEquals(EVENT_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
-        assertEquals(SOURCE_ID, report.getSourceId());
-        assertEquals(TRIGGER_ID, report.getTriggerId());
-    }
-
-    @Test
     public void testPopulateFromSourceAndTrigger_shouldTruncateTriggerDataWith64thBit()
             throws JSONException {
         long baseTime = System.currentTimeMillis();

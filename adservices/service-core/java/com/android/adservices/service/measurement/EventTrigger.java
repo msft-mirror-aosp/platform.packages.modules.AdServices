@@ -16,15 +16,18 @@
 
 package com.android.adservices.service.measurement;
 
+import android.annotation.NonNull;
+
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.util.UnsignedLong;
+import com.android.adservices.service.measurement.util.Validation;
 
 import java.util.Objects;
 import java.util.Optional;
 
 /** Event trigger containing trigger data, priority, de-deup key and filters info. */
 public class EventTrigger {
-    private UnsignedLong mTriggerData;
+    @NonNull private UnsignedLong mTriggerData;
     private long mTriggerPriority;
     private UnsignedLong mDedupKey;
     private Optional<FilterMap> mFilter;
@@ -82,14 +85,10 @@ public class EventTrigger {
     public static final class Builder {
         private final EventTrigger mBuilding;
 
-        public Builder() {
+        public Builder(@NonNull UnsignedLong triggerData) {
+            Validation.validateNonNull(triggerData);
             mBuilding = new EventTrigger();
-        }
-
-        /** See {@link EventTrigger#getTriggerData()}. */
-        public EventTrigger.Builder setTriggerData(UnsignedLong triggerData) {
             mBuilding.mTriggerData = triggerData;
-            return this;
         }
 
         /** See {@link EventTrigger#getTriggerPriority()}. */

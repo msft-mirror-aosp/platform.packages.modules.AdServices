@@ -54,6 +54,15 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
         {"5", "android-app://com.another.android.app", "random five"},
     };
 
+    private static final String[][] INSERTED_TRIGGER = {
+        // id, eventTriggers
+        {"1", "[{\"trigger_data\":\"1\"},{},{}]"},
+        {"2", "[{\"trigger_data\":\"1\"},{\"priority\":\"100\"}]"},
+        {"3", null},
+        {"4", "{[]}"},
+        {"5", "[}]"}
+    };
+
     private static final String[][] MIGRATED_EVENT_REPORT_DATA = {
         // id, destination, sourceEventId
         {"1", "https://example.com", "random one"},
@@ -61,6 +70,15 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
         {"3", "http://example.com", "random three"},
         {"4", "android-app://com.android.app", "random four"},
         {"5", "android-app://com.another.android.app", "random five"},
+    };
+
+    private static final String[][] MIGRATED_TRIGGER = {
+        // id, eventTriggers
+        {"1", "[{\"trigger_data\":\"1\"},{\"trigger_data\":\"0\"},{\"trigger_data\":\"0\"}]"},
+        {"2", "[{\"trigger_data\":\"1\"},{\"priority\":\"100\",\"trigger_data\":\"0\"}]"},
+        {"3", "[]"},
+        {"4", "[]"},
+        {"5", "[]"}
     };
 
     @Test
@@ -107,6 +125,7 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
         // Execution
         new MeasurementDbMigratorV2().performMigration(db, 1, 2);
         insertV2Sources(db);
+        insertTriggers(db);
         insertEventReports(db);
         new MeasurementDbMigratorV3().performMigration(db, 2, 3);
 
@@ -131,6 +150,7 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
                         db, MeasurementTables.AttributionContract.TABLE, 10));
         assertTrue(doesIndexExist(db, "idx_msmt_attribution_ss_so_ds_do_ei_tt"));
         assertSourceMigration(db);
+        assertTriggerMigration(db);
         assertEventReportMigration(db);
         db.close();
     }
@@ -175,6 +195,12 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
                     INSERTED_EVENT_REPORT_DATA[i][0],
                     INSERTED_EVENT_REPORT_DATA[i][1],
                     INSERTED_EVENT_REPORT_DATA[i][2]);
+        }
+    }
+
+    private static void insertTriggers(SQLiteDatabase db) {
+        for (int i = 0; i < INSERTED_TRIGGER.length; i++) {
+            insertTrigger(db, INSERTED_TRIGGER[i][0], INSERTED_TRIGGER[i][1]);
         }
     }
 
@@ -369,6 +395,25 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
         }
     }
 
+    private static void assertTriggerMigration(SQLiteDatabase db) {
+        Cursor cursor =
+                db.query(
+                        MeasurementTables.TriggerContract.TABLE,
+                        new String[] {
+                            MeasurementTables.TriggerContract.ID,
+                            MeasurementTables.TriggerContract.EVENT_TRIGGERS
+                        },
+                        null,
+                        null,
+                        null,
+                        null,
+                        /* orderBy */ MeasurementTables.TriggerContract.ID,
+                        null);
+        while (cursor.moveToNext()) {
+            assertTriggerMigrated(cursor);
+        }
+    }
+
     private static void assertSourceMigration(SQLiteDatabase db) throws JSONException {
         Cursor cursor =
                 db.query(
@@ -411,6 +456,13 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
         db.insert(MeasurementTables.EventReportContract.TABLE, null, values);
     }
 
+    private static void insertTrigger(SQLiteDatabase db, String id, String eventTriggers) {
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.TriggerContract.ID, id);
+        values.put(MeasurementTables.TriggerContract.EVENT_TRIGGERS, eventTriggers);
+        db.insert(MeasurementTables.TriggerContract.TABLE, null, values);
+    }
+
     private static void assertEventReportMigrated(Cursor cursor) {
         int i = cursor.getPosition();
         assertEquals(MIGRATED_EVENT_REPORT_DATA[i][0], cursor.getString(cursor.getColumnIndex(
@@ -419,5 +471,16 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
                 MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION)));
         assertEquals(MIGRATED_EVENT_REPORT_DATA[i][2], cursor.getString(cursor.getColumnIndex(
                 MeasurementTables.EventReportContract.SOURCE_EVENT_ID)));
+    }
+
+    private static void assertTriggerMigrated(Cursor cursor) {
+        int i = cursor.getPosition();
+        assertEquals(
+                MIGRATED_TRIGGER[i][0],
+                cursor.getString(cursor.getColumnIndex(MeasurementTables.TriggerContract.ID)));
+        assertEquals(
+                MIGRATED_TRIGGER[i][1],
+                cursor.getString(
+                        cursor.getColumnIndex(MeasurementTables.TriggerContract.EVENT_TRIGGERS)));
     }
 }
