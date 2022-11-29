@@ -36,6 +36,7 @@ android_test_helper_app {
        "src/**/apiimplementation/*.java",
     ],
     manifest: "AndroidManifest.xml",
+    test_suites: ["general-tests"],
 }
 
 android_test_helper_app {
@@ -49,6 +50,7 @@ android_test_helper_app {
        "src/**/apiimplementation/*.java"
     ],
     manifest: "AndroidManifest_WebViewProvider.xml",
+    test_suites: ["general-tests"],
 }
 
 android_test_helper_app {
@@ -62,4 +64,5 @@ android_test_helper_app {
        "src/**/apiimplementation/*.java"
     ],
     manifest: "AndroidManifest_MediateeProvider.xml",
+    test_suites: ["general-tests"],
 }

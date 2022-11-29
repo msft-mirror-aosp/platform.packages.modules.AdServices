@@ -36,6 +36,10 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"Колдонмого AdService кызматынын иштетүү абалын өзгөртүү API\'cин пайдаланууга мүмкүнчүлүк берет."</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"AdService кызматынын иштетүү абалынын API\'сине кирүү"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Колдонмого AdService кызматынын иштетүү абалынын API\'син пайдаланууга мүмкүнчүлүк берет."</string>
+    <!-- no translation found for permlab_accessAdServicesManager (4816332609066703740) -->
+    <skip />
+    <!-- no translation found for permdesc_accessAdServicesManager (2619300431637689524) -->
+    <skip />
     <string name="app_label" msgid="5985320129629013968">"Android системасы"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Android\'деги жарнамалардын купуялыгынын бета версиясына кошулуңуз"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android сизге жарнамаларды көрсөтүүнүн мындан да купуя жолдорун изилдеп жатат"</string>
@@ -81,6 +85,7 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android\'деги жарнамалардын купуялыгынын бета версиясы колдонмолор сизге кызыктуу жарнамаларды көрсөтүү үчүн пайдалана турган жаңы функцияларды сунуштайт. Бул технологиялар түзмөктүн идентификаторлорун колдонбойт.\n\nAndroid сизге кызыктуу жарнамаларды аныктап, бул кызыккан нерселериңизди түзмөгүңүзгө убактылуу сактай алат. Ал аркылуу колдонмолор сизге ылайыктуу жарнамаларды көрсөтөт, бирок башка иштеп чыгуучулардын колдонмолорунда жана вебсайттарында жасаган аракеттериңизге көз сала албайт."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Бөгөттөлгөн кызыккан нерселериңиз жок"</string>
+    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Кызыккан нерселер баштапкы абалга келтирилди"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Колдонмолор кызыккан нерселериңизди аныктап, аларды Android\'ге убактылуу сактай алат. Кийинчерээк башка колдонмо сизге бул кызыккан нерселердин негизинде жарнама көрсөтө алат.\n\nЭгер колдонмону бөгөттөсөңүз, ал мындан кийин кызыккан нерселериңизди аныктабай калат. Аны бөгөттөн чыгармайынча, ал ушул колдонмолордун тизмесине кошулбайт. Колдонмо буга чейин аныктаган кызыккан нерселер өчүрүлөт, бирок ылайыктуу жарнамаларды дагы деле көрүшүңүз мүмкүн."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Сиз бөгөттөгөн колдонмолор"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Колдонмолор аныктаган кызыккан нерселерди баштапкы абалга келтирүү"</string>

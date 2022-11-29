@@ -19,7 +19,7 @@ package com.android.adservices.service.measurement.util;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.android.adservices.service.measurement.FilterData;
+import com.android.adservices.service.measurement.FilterMap;
 
 import org.junit.Test;
 
@@ -37,16 +37,16 @@ public class FilterTest {
                 "conversion_subdomain", Collections.singletonList("electronics.megastore"));
         sourceFilterMap.put("product", Arrays.asList("1234", "234"));
         sourceFilterMap.put("ctid", Collections.singletonList("id"));
-        FilterData sourceFilter =
-                new FilterData.Builder().setAttributionFilterMap(sourceFilterMap).build();
+        FilterMap sourceFilter =
+                new FilterMap.Builder().setAttributionFilterMap(sourceFilterMap).build();
 
         Map<String, List<String>> triggerFilterMap = new HashMap<>();
         triggerFilterMap.put(
                 "conversion_subdomain", Collections.singletonList("electronics.megastore"));
         triggerFilterMap.put("product", Arrays.asList("1234", "2345"));
         triggerFilterMap.put("id", Arrays.asList("1", "2"));
-        FilterData triggerFilter =
-                new FilterData.Builder().setAttributionFilterMap(triggerFilterMap).build();
+        FilterMap triggerFilter =
+                new FilterMap.Builder().setAttributionFilterMap(triggerFilterMap).build();
 
         assertTrue(Filter.isFilterMatch(sourceFilter, triggerFilter, true));
     }
@@ -58,8 +58,8 @@ public class FilterTest {
                 "conversion_subdomain", Collections.singletonList("electronics.megastore"));
         sourceFilterMap.put("product", Arrays.asList("1234", "234"));
         sourceFilterMap.put("ctid", Collections.singletonList("id"));
-        FilterData sourceFilter =
-                new FilterData.Builder().setAttributionFilterMap(sourceFilterMap).build();
+        FilterMap sourceFilter =
+                new FilterMap.Builder().setAttributionFilterMap(sourceFilterMap).build();
 
         Map<String, List<String>> triggerFilterMap = new HashMap<>();
         triggerFilterMap.put(
@@ -67,8 +67,8 @@ public class FilterTest {
         // Doesn't match
         triggerFilterMap.put("product", Arrays.asList("1", "2"));
         triggerFilterMap.put("id", Arrays.asList("1", "2"));
-        FilterData triggerFilter =
-                new FilterData.Builder().setAttributionFilterMap(triggerFilterMap).build();
+        FilterMap triggerFilter =
+                new FilterMap.Builder().setAttributionFilterMap(triggerFilterMap).build();
 
         assertFalse(Filter.isFilterMatch(sourceFilter, triggerFilter, true));
     }
@@ -80,16 +80,16 @@ public class FilterTest {
                 "conversion_subdomain", Collections.singletonList("electronics.megastore"));
         sourceFilterMap.put("product", Collections.emptyList());
         sourceFilterMap.put("ctid", Collections.singletonList("id"));
-        FilterData sourceFilter =
-                new FilterData.Builder().setAttributionFilterMap(sourceFilterMap).build();
+        FilterMap sourceFilter =
+                new FilterMap.Builder().setAttributionFilterMap(sourceFilterMap).build();
 
         Map<String, List<String>> triggerFilterMap = new HashMap<>();
         triggerFilterMap.put(
                 "conversion_subdomain", Collections.singletonList("electronics.megastore"));
         triggerFilterMap.put("product", Collections.emptyList());
         triggerFilterMap.put("id", Arrays.asList("1", "2"));
-        FilterData triggerFilter =
-                new FilterData.Builder().setAttributionFilterMap(triggerFilterMap).build();
+        FilterMap triggerFilter =
+                new FilterMap.Builder().setAttributionFilterMap(triggerFilterMap).build();
 
         assertTrue(Filter.isFilterMatch(sourceFilter, triggerFilter, true));
     }
@@ -101,8 +101,8 @@ public class FilterTest {
                 "conversion_subdomain", Collections.singletonList("electronics.megastore"));
         sourceFilterMap.put("product", Arrays.asList("1234", "234"));
         sourceFilterMap.put("ctid", Collections.singletonList("id"));
-        FilterData sourceFilter =
-                new FilterData.Builder().setAttributionFilterMap(sourceFilterMap).build();
+        FilterMap sourceFilter =
+                new FilterMap.Builder().setAttributionFilterMap(sourceFilterMap).build();
 
         Map<String, List<String>> triggerFilterMap = new HashMap<>();
         triggerFilterMap.put(
@@ -110,8 +110,8 @@ public class FilterTest {
         // Doesn't match
         triggerFilterMap.put("product", Collections.emptyList());
         triggerFilterMap.put("id", Arrays.asList("1", "2"));
-        FilterData triggerFilter =
-                new FilterData.Builder().setAttributionFilterMap(triggerFilterMap).build();
+        FilterMap triggerFilter =
+                new FilterMap.Builder().setAttributionFilterMap(triggerFilterMap).build();
 
         assertFalse(Filter.isFilterMatch(sourceFilter, triggerFilter, true));
     }
@@ -123,16 +123,16 @@ public class FilterTest {
                 "conversion_subdomain", Collections.singletonList("electronics.megastore"));
         sourceFilterMap.put("product", Arrays.asList("1234", "234"));
         sourceFilterMap.put("ctid", Collections.singletonList("id"));
-        FilterData sourceFilter =
-                new FilterData.Builder().setAttributionFilterMap(sourceFilterMap).build();
+        FilterMap sourceFilter =
+                new FilterMap.Builder().setAttributionFilterMap(sourceFilterMap).build();
 
         Map<String, List<String>> triggerFilterMap = new HashMap<>();
         triggerFilterMap.put("conversion_subdomain", Collections.singletonList("electronics"));
         // Doesn't match
         triggerFilterMap.put("product", Arrays.asList("1", "2"));
         triggerFilterMap.put("id", Arrays.asList("1", "2"));
-        FilterData triggerFilter =
-                new FilterData.Builder().setAttributionFilterMap(triggerFilterMap).build();
+        FilterMap triggerFilter =
+                new FilterMap.Builder().setAttributionFilterMap(triggerFilterMap).build();
         assertTrue(Filter.isFilterMatch(sourceFilter, triggerFilter, false));
     }
 
@@ -143,16 +143,16 @@ public class FilterTest {
                 "conversion_subdomain", Collections.singletonList("electronics.megastore"));
         sourceFilterMap.put("product", Arrays.asList("1234", "234"));
         sourceFilterMap.put("ctid", Collections.singletonList("id"));
-        FilterData sourceFilter =
-                new FilterData.Builder().setAttributionFilterMap(sourceFilterMap).build();
+        FilterMap sourceFilter =
+                new FilterMap.Builder().setAttributionFilterMap(sourceFilterMap).build();
 
         Map<String, List<String>> triggerFilterMap = new HashMap<>();
         triggerFilterMap.put(
                 "conversion_subdomain", Collections.singletonList("electronics.megastore"));
         triggerFilterMap.put("product", Arrays.asList("1234", "2345"));
         triggerFilterMap.put("id", Arrays.asList("1", "2"));
-        FilterData triggerFilter =
-                new FilterData.Builder().setAttributionFilterMap(triggerFilterMap).build();
+        FilterMap triggerFilter =
+                new FilterMap.Builder().setAttributionFilterMap(triggerFilterMap).build();
 
         assertFalse(Filter.isFilterMatch(sourceFilter, triggerFilter, false));
     }
@@ -164,16 +164,16 @@ public class FilterTest {
                 "conversion_subdomain", Collections.singletonList("electronics.megastore"));
         sourceFilterMap.put("product", Arrays.asList("1234", "234"));
         sourceFilterMap.put("ctid", Collections.singletonList("id"));
-        FilterData sourceFilter =
-                new FilterData.Builder().setAttributionFilterMap(sourceFilterMap).build();
+        FilterMap sourceFilter =
+                new FilterMap.Builder().setAttributionFilterMap(sourceFilterMap).build();
 
         Map<String, List<String>> triggerFilterMap = new HashMap<>();
         triggerFilterMap.put("conversion_subdomain", Collections.singletonList("electronics"));
         // Matches when negated
         triggerFilterMap.put("product", Collections.emptyList());
         triggerFilterMap.put("id", Arrays.asList("1", "2"));
-        FilterData triggerFilter =
-                new FilterData.Builder().setAttributionFilterMap(triggerFilterMap).build();
+        FilterMap triggerFilter =
+                new FilterMap.Builder().setAttributionFilterMap(triggerFilterMap).build();
         assertTrue(Filter.isFilterMatch(sourceFilter, triggerFilter, false));
     }
 
@@ -184,8 +184,8 @@ public class FilterTest {
                 "conversion_subdomain", Collections.singletonList("electronics.megastore"));
         sourceFilterMap.put("product", Collections.emptyList());
         sourceFilterMap.put("ctid", Collections.singletonList("id"));
-        FilterData sourceFilter =
-                new FilterData.Builder().setAttributionFilterMap(sourceFilterMap).build();
+        FilterMap sourceFilter =
+                new FilterMap.Builder().setAttributionFilterMap(sourceFilterMap).build();
 
         Map<String, List<String>> triggerFilterMap = new HashMap<>();
         triggerFilterMap.put(
@@ -193,8 +193,8 @@ public class FilterTest {
         // Doesn't match when negated
         triggerFilterMap.put("product", Collections.emptyList());
         triggerFilterMap.put("id", Arrays.asList("1", "2"));
-        FilterData triggerFilter =
-                new FilterData.Builder().setAttributionFilterMap(triggerFilterMap).build();
+        FilterMap triggerFilter =
+                new FilterMap.Builder().setAttributionFilterMap(triggerFilterMap).build();
 
         assertFalse(Filter.isFilterMatch(sourceFilter, triggerFilter, false));
     }

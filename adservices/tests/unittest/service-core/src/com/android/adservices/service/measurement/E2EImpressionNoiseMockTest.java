@@ -16,10 +16,13 @@
 
 package com.android.adservices.service.measurement;
 
+
 import android.net.Uri;
 
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.service.measurement.actions.Action;
+import com.android.adservices.service.measurement.actions.RegisterSource;
+import com.android.adservices.service.measurement.actions.RegisterWebSource;
 import com.android.adservices.service.measurement.actions.ReportObjects;
 
 import org.json.JSONException;
@@ -73,8 +76,25 @@ public class E2EImpressionNoiseMockTest extends E2EMockTest {
                         sDatastoreManager,
                         mAsyncSourceFetcher,
                         mAsyncTriggerFetcher,
-                        sEnrollmentDao);
+                        sEnrollmentDao,
+                        mDebugReportApi);
         getExpectedTriggerDataDistributions();
+    }
+
+    @Override
+    void processAction(RegisterSource sourceRegistration) throws IOException, JSONException {
+        super.processAction(sourceRegistration);
+        if (sourceRegistration.mDebugReporting) {
+            processDebugReportApiJob();
+        }
+    }
+
+    @Override
+    void processAction(RegisterWebSource sourceRegistration) throws IOException, JSONException {
+        super.processAction(sourceRegistration);
+        if (sourceRegistration.mDebugReporting) {
+            processDebugReportApiJob();
+        }
     }
 
     @Override

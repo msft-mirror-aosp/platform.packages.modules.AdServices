@@ -39,6 +39,7 @@ public final class RegisterWebTrigger implements Action {
     public final WebTriggerRegistrationRequestInternal mRegistrationRequest;
     public final Map<String, List<Map<String, List<String>>>> mUriToResponseHeadersMap;
     public final long mTimestamp;
+    public final boolean mDebugReporting;
 
     public RegisterWebTrigger(JSONObject obj) throws JSONException {
         JSONObject regParamsJson =
@@ -60,7 +61,9 @@ public final class RegisterWebTrigger implements Action {
 
         mRegistrationRequest =
                 new WebTriggerRegistrationRequestInternal.Builder(
-                                registrationRequest, attributionSource.getPackageName())
+                                registrationRequest,
+                                attributionSource.getPackageName(),
+                                /* sdkPackageName = */ "")
                         .setAdIdPermissionGranted(
                                 regParamsJson.optBoolean(
                                         TestFormatJsonMapping.IS_ADID_PERMISSION_GRANTED_KEY, true))
@@ -68,6 +71,7 @@ public final class RegisterWebTrigger implements Action {
 
         mUriToResponseHeadersMap = getUriToResponseHeadersMap(obj);
         mTimestamp = obj.getLong(TestFormatJsonMapping.TIMESTAMP_KEY);
+        mDebugReporting = regParamsJson.optBoolean(TestFormatJsonMapping.DEBUG_REPORTING_KEY);
     }
 
     @Override

@@ -64,6 +64,7 @@ public final class SourceFixture {
                 .setAttributionMode(ValidSourceParams.ATTRIBUTION_MODE)
                 .setAggregateSource(ValidSourceParams.buildAggregateSource())
                 .setFilterData(ValidSourceParams.buildFilterData())
+                .setIsDebugReporting(true)
                 .build();
     }
 
@@ -102,11 +103,11 @@ public final class SourceFixture {
 
         public static final String buildFilterData() {
             try {
-                JSONObject filterData = new JSONObject();
-                filterData.put("conversion_subdomain",
+                JSONObject filterMap = new JSONObject();
+                filterMap.put("conversion_subdomain",
                         new JSONArray(Collections.singletonList("electronics.megastore")));
-                filterData.put("product", new JSONArray(Arrays.asList("1234", "2345")));
-                return filterData.toString();
+                filterMap.put("product", new JSONArray(Arrays.asList("1234", "2345")));
+                return filterMap.toString();
             } catch (JSONException e) {
                 LogUtil.e("JSONException when building aggregate filter data.");
             }
@@ -116,8 +117,8 @@ public final class SourceFixture {
         public static final AggregatableAttributionSource buildAggregatableAttributionSource() {
             return new AggregatableAttributionSource.Builder()
                     .setAggregatableSource(Map.of("5", new BigInteger("345")))
-                    .setFilterData(
-                            new FilterData.Builder()
+                    .setFilterMap(
+                            new FilterMap.Builder()
                                     .setAttributionFilterMap(
                                             Map.of(
                                                     "product", List.of("1234", "4321"),

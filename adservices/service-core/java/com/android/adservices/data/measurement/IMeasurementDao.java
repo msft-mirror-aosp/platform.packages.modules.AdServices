@@ -30,6 +30,7 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.reporting.DebugReport;
 
 import java.time.Instant;
 import java.util.List;
@@ -104,12 +105,20 @@ public interface IMeasurementDao {
      */
     long getNumTriggersPerRegistrant(Uri registrant) throws DatastoreException;
 
+    /** Gets the number of triggers associated to a destination. */
+    long getNumTriggersPerDestination(Uri destination, @EventSurfaceType int destinationType)
+            throws DatastoreException;
+
     /**
-     * Gets the count of distinct IDs of enrollments in the Attribution table in a time window
-     * with matching publisher and destination, excluding a given enrollment ID.
+     * Gets the count of distinct IDs of enrollments in the Attribution table in a time window with
+     * matching publisher and destination, excluding a given enrollment ID.
      */
-    Integer countDistinctEnrollmentsPerPublisherXDestinationInAttribution(Uri sourceSite,
-            Uri destination, String excludedEnrollmentId, long windowStartTime, long windowEndTime)
+    Integer countDistinctEnrollmentsPerPublisherXDestinationInAttribution(
+            Uri sourceSite,
+            Uri destination,
+            String excludedEnrollmentId,
+            long windowStartTime,
+            long windowEndTime)
             throws DatastoreException;
 
     /**
@@ -201,6 +210,15 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
+     * Queries and returns the {@link DebugReport}
+     *
+     * @param debugReportId of the request Debug Report
+     * @return the request Debug Report; Null in case of SQL failure
+     */
+    @Nullable
+    DebugReport getDebugReport(String debugReportId) throws DatastoreException;
+
+    /**
      * Change the status of an event report to DELIVERED
      *
      * @param eventReportId the id of the event report to be updated
@@ -241,6 +259,9 @@ public interface IMeasurementDao {
      * Deletes the {@link EventReport} from datastore.
      */
     void deleteEventReport(EventReport eventReport) throws DatastoreException;
+
+    /** Deletes the {@link DebugReport} from datastore. */
+    void deleteDebugReport(String debugReportId) throws DatastoreException;
 
     /**
      * Returns list of all event reports that have a scheduled reporting time in the given window.
@@ -316,6 +337,9 @@ public interface IMeasurementDao {
      */
     void insertAggregateReport(AggregateReport payload) throws DatastoreException;
 
+    /** Save debug report payload to datastore. */
+    void insertDebugReport(DebugReport payload) throws DatastoreException;
+
     /**
      * Returns list of all aggregate reports that have a scheduled reporting time in the given
      * window.
@@ -325,6 +349,9 @@ public interface IMeasurementDao {
 
     /** Returns list of all aggregate debug reports. */
     List<String> getPendingAggregateDebugReportIds() throws DatastoreException;
+
+    /** Returns list of all debug reports. */
+    List<String> getDebugReportIds() throws DatastoreException;
 
     /**
      * Returns list of all pending aggregate reports for a given app right away.

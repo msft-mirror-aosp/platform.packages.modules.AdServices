@@ -40,6 +40,7 @@ public final class RegisterWebSource implements Action {
     public final WebSourceRegistrationRequestInternal mRegistrationRequest;
     public final Map<String, List<Map<String, List<String>>>> mUriToResponseHeadersMap;
     public final long mTimestamp;
+    public final boolean mDebugReporting;
 
     public RegisterWebSource(JSONObject obj) throws JSONException {
         JSONObject regParamsJson =
@@ -79,7 +80,10 @@ public final class RegisterWebSource implements Action {
 
         mRegistrationRequest =
                 new WebSourceRegistrationRequestInternal.Builder(
-                                registrationRequest, attributionSource.getPackageName(), 2000L)
+                                registrationRequest,
+                                attributionSource.getPackageName(),
+                                /* sdkPackageName = */ "",
+                                /* requestTime =*/ 2000L)
                         .setAdIdPermissionGranted(
                                 regParamsJson.optBoolean(
                                         TestFormatJsonMapping.IS_ADID_PERMISSION_GRANTED_KEY, true))
@@ -87,6 +91,7 @@ public final class RegisterWebSource implements Action {
 
         mUriToResponseHeadersMap = getUriToResponseHeadersMap(obj);
         mTimestamp = obj.getLong(TestFormatJsonMapping.TIMESTAMP_KEY);
+        mDebugReporting = regParamsJson.optBoolean(TestFormatJsonMapping.DEBUG_REPORTING_KEY);
     }
 
     @Override

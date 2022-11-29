@@ -20,7 +20,5 @@ import android.platform.test.microbenchmark.Microbenchmark;
 
 import org.junit.runner.RunWith;
 
-import src.android.adservices.test.scenario.adservices.fledge.SelectAdsLatency;
-
 @RunWith(Microbenchmark.class)
 public class SelectAdsLatencyMicroBenchmark extends SelectAdsLatency {}

@@ -18,6 +18,8 @@ package android.app.sdksandbox.testutils;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.fail;
+
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
@@ -25,25 +27,21 @@ import android.os.OutcomeReceiver;
 
 import com.google.common.base.Preconditions;
 
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-
 public class FakeLoadSdkCallback implements OutcomeReceiver<SandboxedSdk, LoadSdkException> {
-    private final CountDownLatch mLoadSdkLatch = new CountDownLatch(1);
+    private final WaitableCountDownLatch mLoadSdkLatch;
 
     private boolean mLoadSdkSuccess;
 
     private SandboxedSdk mSandboxedSdk;
     private LoadSdkException mLoadSdkException = null;
-    private final int mWaitTimeSec;
 
     public FakeLoadSdkCallback() {
-        mWaitTimeSec = 5;
+        mLoadSdkLatch = new WaitableCountDownLatch(5);
     }
 
     public FakeLoadSdkCallback(int waitTimeSec) {
         Preconditions.checkArgument(waitTimeSec > 0, "Callback should use a positive wait time");
-        mWaitTimeSec = waitTimeSec;
+        mLoadSdkLatch = new WaitableCountDownLatch(waitTimeSec);
     }
 
     @Override
@@ -65,7 +63,7 @@ public class FakeLoadSdkCallback implements OutcomeReceiver<SandboxedSdk, LoadSd
     }
 
     public boolean isLoadSdkSuccessful(boolean ignoreSdkAlreadyLoadedError) {
-        waitForLatch(mLoadSdkLatch);
+        mLoadSdkLatch.waitForLatch();
         if (ignoreSdkAlreadyLoadedError
                 && ((mLoadSdkException == null)
                         || (mLoadSdkException.getLoadSdkErrorCode()
@@ -75,38 +73,35 @@ public class FakeLoadSdkCallback implements OutcomeReceiver<SandboxedSdk, LoadSd
         return mLoadSdkSuccess;
     }
 
+    public void assertLoadSdkIsSuccessful() {
+        if (!this.isLoadSdkSuccessful()) {
+            fail(
+                    "Load SDK was not successful. errorCode: "
+                            + this.getLoadSdkErrorCode()
+                            + ", errorMsg: "
+                            + this.getLoadSdkErrorMsg());
+        }
+    }
+
     public int getLoadSdkErrorCode() {
-        waitForLatch(mLoadSdkLatch);
+        mLoadSdkLatch.waitForLatch();
         assertThat(mLoadSdkSuccess).isFalse();
         return mLoadSdkException.getLoadSdkErrorCode();
     }
 
     public String getLoadSdkErrorMsg() {
-        waitForLatch(mLoadSdkLatch);
+        mLoadSdkLatch.waitForLatch();
         assertThat(mLoadSdkSuccess).isFalse();
         return mLoadSdkException.getMessage();
     }
 
     public SandboxedSdk getSandboxedSdk() {
-        waitForLatch(mLoadSdkLatch);
+        mLoadSdkLatch.waitForLatch();
         return mSandboxedSdk;
     }
 
     public LoadSdkException getLoadSdkException() {
-        waitForLatch(mLoadSdkLatch);
+        mLoadSdkLatch.waitForLatch();
         return mLoadSdkException;
-    }
-
-    private void waitForLatch(CountDownLatch latch) {
-        try {
-            // Wait for callback to be called
-            if (!latch.await(mWaitTimeSec, TimeUnit.SECONDS)) {
-                throw new IllegalStateException(
-                        "Callback not called within " + mWaitTimeSec + " seconds");
-            }
-        } catch (InterruptedException e) {
-            throw new IllegalStateException(
-                    "Interrupted while waiting on callback: " + e.getMessage());
-        }
     }
 }

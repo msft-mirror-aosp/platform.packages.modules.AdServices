@@ -36,6 +36,10 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"Poskytuje aplikácii prístup k rozhraniu Enablement State Modification API služby AdService."</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"Prístup k rozhraniu Enablement State API služby AdService."</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Poskytuje aplikácii prístup k rozhraniu Enablement State API služby AdService."</string>
+    <!-- no translation found for permlab_accessAdServicesManager (4816332609066703740) -->
+    <skip />
+    <!-- no translation found for permdesc_accessAdServicesManager (2619300431637689524) -->
+    <skip />
     <string name="app_label" msgid="5985320129629013968">"Systém Android"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Pripojte sa k beta verzii ochrany súkromia pri reklamách v Androide"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android hľadá spôsoby, ako vám aplikácie môžu zobrazovať reklamy s vyššou ochranou súkromia"</string>
@@ -81,6 +85,7 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Beta verzia ochrany súkromia pri reklamách v Androide poskytuje nové funkcie pre aplikácie na zobrazovanie reklám, ktoré by sa vám mohli páčiť. Tieto technológie nepoužívajú identifikátory zariadenia.\n\nAndroid môže odhadnúť druhy reklám, ktoré by vás mohli zaujímať, a dočasne uložiť tieto záujmy vo vašom zariadení. Vďaka tomu vám môžu aplikácie zobrazovať relevantné reklamy bez sledovania vašej aktivity na weboch a v aplikáciách od iných vývojárov."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Nemáte žiadne blokované záujmy"</string>
+    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Záujmy sa resetujú"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Aplikácie môžu odhadnúť vaše záujmy a dočasne ich uložiť v Androide. Neskôr vám iná aplikácia môže zobraziť reklamu na základe týchto záujmov.\n\nAk nejakú aplikáciu zablokujete, nebude odhadovať žiadne ďalšie záujmy. Do zoznamu aplikácií bude znova pridaná iba vtedy, keď ju odblokujete. Záujmy, ktoré boli danou aplikáciou odhadnuté, budú odstránené, ale môžu sa vám naďalej zobrazovať určité súvisiace reklamy."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Aplikácie, ktoré ste zablokovali"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Resetovať záujmy odhadnuté aplikáciami"</string>

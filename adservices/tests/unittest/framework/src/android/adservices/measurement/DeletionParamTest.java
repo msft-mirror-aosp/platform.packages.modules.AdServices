@@ -35,29 +35,30 @@ import java.util.Collections;
 /** Unit tests for {@link DeletionParam} */
 @SmallTest
 public final class DeletionParamTest {
-    private static final String TAG = "DeletionRequestTest";
-
     private static final Context sContext = InstrumentationRegistry.getTargetContext();
+    private static final String SDK_PACKAGE_NAME = "sdk.package.name";
 
     private DeletionParam createExample() {
-        return new DeletionParam.Builder()
-                .setOriginUris(Collections.singletonList(Uri.parse("http://foo.com")))
-                .setDomainUris(Collections.emptyList())
-                .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_PRESERVE)
+        return new DeletionParam.Builder(
+                        Collections.singletonList(Uri.parse("http://foo.com")),
+                        Collections.emptyList(),
+                        Instant.ofEpochMilli(1642060000000L),
+                        Instant.ofEpochMilli(1642060538000L),
+                        sContext.getAttributionSource().getPackageName(),
+                        "sdk.package.name")
                 .setDeletionMode(DeletionRequest.DELETION_MODE_EXCLUDE_INTERNAL_DATA)
-                .setStart(Instant.ofEpochMilli(1642060000000L))
-                .setEnd(Instant.ofEpochMilli(1642060538000L))
-                .setPackageName(sContext.getAttributionSource().getPackageName())
+                .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_PRESERVE)
                 .build();
     }
 
     private DeletionParam createDefaultExample() {
-        return new DeletionParam.Builder()
-                .setOriginUris(Collections.emptyList())
-                .setDomainUris(Collections.emptyList())
-                .setStart(Instant.MIN)
-                .setEnd(Instant.MAX)
-                .setPackageName(sContext.getAttributionSource().getPackageName())
+        return new DeletionParam.Builder(
+                        Collections.emptyList(),
+                        Collections.emptyList(),
+                        Instant.MIN,
+                        Instant.MAX,
+                        sContext.getAttributionSource().getPackageName(),
+                        /* sdkPackageName = */ "")
                 .build();
     }
 
@@ -70,7 +71,7 @@ public final class DeletionParamTest {
                 DeletionRequest.DELETION_MODE_EXCLUDE_INTERNAL_DATA, request.getDeletionMode());
         assertEquals(1642060000000L, request.getStart().toEpochMilli());
         assertEquals(1642060538000L, request.getEnd().toEpochMilli());
-        assertNotNull(request.getPackageName());
+        assertNotNull(request.getAppPackageName());
     }
 
     void verifyDefaultExample(DeletionParam request) {
@@ -80,16 +81,97 @@ public final class DeletionParamTest {
         assertEquals(DeletionRequest.DELETION_MODE_ALL, request.getDeletionMode());
         assertEquals(Instant.MIN, request.getStart());
         assertEquals(Instant.MAX, request.getEnd());
-        assertNotNull(request.getPackageName());
+        assertNotNull(request.getAppPackageName());
     }
 
     @Test
-    public void testMissingParams() {
+    public void testMissingOrigin_throwException() {
         assertThrows(
-                IllegalArgumentException.class,
-                () -> {
-                    new DeletionParam.Builder().build();
-                });
+                NullPointerException.class,
+                () ->
+                        new DeletionParam.Builder(
+                                        /* originUris = */ null,
+                                        Collections.emptyList(),
+                                        Instant.MIN,
+                                        Instant.MAX,
+                                        sContext.getAttributionSource().getPackageName(),
+                                        SDK_PACKAGE_NAME)
+                                .build());
+    }
+
+    @Test
+    public void testMissingDomainUris_throwException() {
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        new DeletionParam.Builder(
+                                        Collections.emptyList(),
+                                        /* domainUris = */ null,
+                                        Instant.MIN,
+                                        Instant.MAX,
+                                        sContext.getAttributionSource().getPackageName(),
+                                        SDK_PACKAGE_NAME)
+                                .build());
+    }
+
+    @Test
+    public void testMissingStart_throwException() {
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        new DeletionParam.Builder(
+                                        Collections.emptyList(),
+                                        Collections.emptyList(),
+                                        /* start = */ null,
+                                        Instant.MAX,
+                                        sContext.getAttributionSource().getPackageName(),
+                                        SDK_PACKAGE_NAME)
+                                .build());
+    }
+
+    @Test
+    public void testMissingEnd_throwException() {
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        new DeletionParam.Builder(
+                                        Collections.emptyList(),
+                                        Collections.emptyList(),
+                                        Instant.MIN,
+                                        /* end = */ null,
+                                        sContext.getAttributionSource().getPackageName(),
+                                        SDK_PACKAGE_NAME)
+                                .build());
+    }
+
+    @Test
+    public void testMissingAppPackageName_throwException() {
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        new DeletionParam.Builder(
+                                        Collections.emptyList(),
+                                        Collections.emptyList(),
+                                        Instant.MIN,
+                                        Instant.MAX,
+                                        /* appPackageName = */ null,
+                                        SDK_PACKAGE_NAME)
+                                .build());
+    }
+
+    @Test
+    public void testMissingSdkPackageName_throwException() {
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        new DeletionParam.Builder(
+                                        Collections.emptyList(),
+                                        Collections.emptyList(),
+                                        Instant.MIN,
+                                        Instant.MAX,
+                                        sContext.getPackageName(),
+                                        /* sdkPackageName = */ null)
+                                .build());
     }
 
     @Test

@@ -44,8 +44,8 @@ import com.android.adservices.service.proto.SellerFrontendService.BuyerInput;
 import com.android.adservices.service.proto.SellerFrontendService.SelectWinningAdRequest;
 import com.android.adservices.service.proto.SellerFrontendService.SelectWinningAdRequest.SelectWinningAdRawRequest.ClientType;
 import com.android.adservices.service.proto.SellerFrontendService.SelectWinningAdResponse;
+import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.adservices.service.stats.ApiServiceLatencyCalculator;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.base.Function;
@@ -104,7 +104,7 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
             int callerUid,
             @NonNull final FledgeAuthorizationFilter fledgeAuthorizationFilter,
             @NonNull final FledgeAllowListsFilter fledgeAllowListsFilter,
-            @NonNull final ApiServiceLatencyCalculator apiServiceLatencyCalculator) {
+            @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger) {
         super(
                 context,
                 customAudienceDao,
@@ -120,7 +120,7 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
                 callerUid,
                 fledgeAuthorizationFilter,
                 fledgeAllowListsFilter,
-                apiServiceLatencyCalculator);
+                adSelectionExecutionLogger);
 
         CustomAudienceDevOverridesHelper mCustomAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(devContext, customAudienceDao);
@@ -151,7 +151,7 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
             @NonNull final FledgeAuthorizationFilter fledgeAuthorizationFilter,
             @NonNull final FledgeAllowListsFilter fledgeAllowListsFilter,
             @NonNull final JsFetcher jsFetcher,
-            @NonNull final ApiServiceLatencyCalculator apiServiceLatencyCalculator) {
+            @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger) {
         super(
                 context,
                 customAudienceDao,
@@ -169,7 +169,7 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
                 callerUid,
                 fledgeAuthorizationFilter,
                 fledgeAllowListsFilter,
-                apiServiceLatencyCalculator);
+                adSelectionExecutionLogger);
 
         this.mJsFetcher = jsFetcher;
     }
