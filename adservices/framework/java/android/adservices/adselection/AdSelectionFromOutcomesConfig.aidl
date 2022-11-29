@@ -20,5 +20,6 @@ package android.adservices.adselection;
  * This defines the AdSelectionFromOutcomesConfig class, a configuration created by SDKs which
  * contains information used in the {@link selectAds} API.
  *
+ * {@hide}
  */
 parcelable AdSelectionFromOutcomesConfig;
