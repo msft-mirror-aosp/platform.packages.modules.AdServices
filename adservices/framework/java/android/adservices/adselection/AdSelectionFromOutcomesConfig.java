@@ -33,6 +33,8 @@ import java.util.Objects;
  *
  * <p>Instances of this class are created by SDKs to be provided as arguments to the {@link
  * AdSelectionManager#selectAds} methods in {@link AdSelectionManager}.
+ *
+ * @hide
  */
 public final class AdSelectionFromOutcomesConfig implements Parcelable {
     @NonNull private final AdTechIdentifier mSeller;
@@ -146,6 +148,8 @@ public final class AdSelectionFromOutcomesConfig implements Parcelable {
 
     /**
      * Builder for {@link AdSelectionFromOutcomesConfig} objects.
+     *
+     * @hide
      */
     public static final class Builder {
         @Nullable private AdTechIdentifier mSeller;
