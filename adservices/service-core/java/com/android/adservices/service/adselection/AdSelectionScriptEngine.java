@@ -148,7 +148,11 @@ public class AdSelectionScriptEngine {
                     + JSScriptEngine.ENTRY_POINT_FUNC_NAME
                     + "(names) {\n"
                     + " for (const name of names) {\n"
-                    + "   if (typeof name != 'function') return false;\n"
+                    + "     try {\n"
+                    + "         if (typeof eval(name) != 'function') return false;\n"
+                    + "     } catch(e) {\n"
+                    + "         if (e instanceof ReferenceError) return false;\n"
+                    + "     }\n"
                     + " }\n"
                     + " return true;\n"
                     + "}";
