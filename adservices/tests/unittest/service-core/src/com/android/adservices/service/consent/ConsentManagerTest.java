@@ -236,6 +236,7 @@ public class ConsentManagerTest {
                 /* hasWrittenToPpApi */ true,
                 /* hasWrittenToSystemServer */ false,
                 /* hasReadFromSystemServer */ false);
+        verifyDataCleanup(spyConsentManager);
     }
 
     @Test
@@ -255,6 +256,7 @@ public class ConsentManagerTest {
                 /* hasWrittenToPpApi */ false,
                 /* hasWrittenToSystemServer */ true,
                 /* hasReadFromSystemServer */ true);
+        verifyDataCleanup(spyConsentManager);
     }
 
     @Test
@@ -274,6 +276,7 @@ public class ConsentManagerTest {
                 /* hasWrittenToPpApi */ true,
                 /* hasWrittenToSystemServer */ true,
                 /* hasReadFromSystemServer */ true);
+        verifyDataCleanup(spyConsentManager);
     }
 
     @Test
@@ -302,6 +305,7 @@ public class ConsentManagerTest {
                 /* hasWrittenToPpApi */ true,
                 /* hasWrittenToSystemServer */ false,
                 /* hasReadFromSystemServer */ false);
+        verifyDataCleanup(spyConsentManager);
     }
 
     @Test
@@ -321,6 +325,7 @@ public class ConsentManagerTest {
                 /* hasWrittenToPpApi */ false,
                 /* hasWrittenToSystemServer */ true,
                 /* hasReadFromSystemServer */ true);
+        verifyDataCleanup(spyConsentManager);
     }
 
     @Test
@@ -340,6 +345,7 @@ public class ConsentManagerTest {
                 /* hasWrittenToPpApi */ true,
                 /* hasWrittenToSystemServer */ true,
                 /* hasReadFromSystemServer */ true);
+        verifyDataCleanup(spyConsentManager);
     }
 
     @Test
@@ -486,6 +492,19 @@ public class ConsentManagerTest {
         // TODO(b/240988406): change to test for correct method call
         verify(mAppConsentDao, times(1)).clearAllConsentData();
         verify(mEnrollmentDao, times(1)).deleteAll();
+        verify(mMeasurementImpl, times(1)).deleteAllMeasurementData(any());
+        verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+    }
+
+    @Test
+    public void testDataIsResetAfterConsentIsGiven() throws IOException {
+        doReturn(mPackageManagerMock).when(mContextSpy).getPackageManager();
+        mConsentManager.enable(mContextSpy);
+
+        SystemClock.sleep(1000);
+        verify(mTopicsWorker, times(1)).clearAllTopicsData(any());
+        // TODO(b/240988406): change to test for correct method call
+        verify(mAppConsentDao, times(1)).clearAllConsentData();
         verify(mMeasurementImpl, times(1)).deleteAllMeasurementData(any());
         verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
     }
@@ -860,7 +879,7 @@ public class ConsentManagerTest {
         assertThat(appsWithRevokedConsent).isEmpty();
 
         SystemClock.sleep(1000);
-        verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+        verify(mCustomAudienceDaoMock, times(2)).deleteAllCustomAudienceData();
     }
 
     @Test
@@ -924,7 +943,7 @@ public class ConsentManagerTest {
                                 .collect(Collectors.toList()));
 
         SystemClock.sleep(1000);
-        verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+        verify(mCustomAudienceDaoMock, times(2)).deleteAllCustomAudienceData();
     }
 
     @Test
@@ -1318,6 +1337,12 @@ public class ConsentManagerTest {
 
         verify(mMockIAdServicesManager, verificationMode(hasReadFromSystemServer))
                 .getConsent(ConsentParcel.ALL_API);
+    }
+
+    private void verifyDataCleanup(ConsentManager consentManager) throws IOException {
+        verify(consentManager).resetTopicsAndBlockedTopics();
+        verify(consentManager).resetAppsAndBlockedApps();
+        verify(consentManager).resetMeasurement();
     }
 
     private VerificationMode verificationMode(boolean hasHappened) {
