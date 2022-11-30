@@ -465,16 +465,21 @@ public class SdkSandboxManagerTest {
     public void testSdkSandboxPermissions() throws Exception {
         final PackageManager pm =
                 InstrumentationRegistry.getInstrumentation().getContext().getPackageManager();
-        final PackageInfo sdkSandboxPackage =
-                pm.getPackageInfo(
-                        pm.getSdkSandboxPackageName(),
-                        PackageManager.PackageInfoFlags.of(PackageManager.GET_PERMISSIONS));
-        for (int i = 0; i < sdkSandboxPackage.requestedPermissions.length; i++) {
-            final String permissionName = sdkSandboxPackage.requestedPermissions[i];
-            final PermissionInfo permissionInfo = pm.getPermissionInfo(permissionName, 0);
-            mExpect.withMessage("SdkSandbox.apk requests non-normal permission " + permissionName)
-                    .that(permissionInfo.getProtection())
-                    .isEqualTo(PermissionInfo.PROTECTION_NORMAL);
+        try {
+            final PackageInfo sdkSandboxPackage =
+                    pm.getPackageInfo(
+                            pm.getSdkSandboxPackageName(),
+                            PackageManager.PackageInfoFlags.of(PackageManager.GET_PERMISSIONS));
+            for (int i = 0; i < sdkSandboxPackage.requestedPermissions.length; i++) {
+                final String permissionName = sdkSandboxPackage.requestedPermissions[i];
+                final PermissionInfo permissionInfo = pm.getPermissionInfo(permissionName, 0);
+                mExpect.withMessage(
+                                "SdkSandbox.apk requests non-normal permission " + permissionName)
+                        .that(permissionInfo.getProtection())
+                        .isEqualTo(PermissionInfo.PROTECTION_NORMAL);
+            }
+        } catch (PackageManager.NameNotFoundException exception) {
+            // TODO(b/259936418): Remove once we stop needing non-system permissions.
         }
     }
 
