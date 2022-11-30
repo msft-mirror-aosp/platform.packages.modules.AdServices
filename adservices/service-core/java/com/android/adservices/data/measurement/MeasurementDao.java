@@ -244,13 +244,13 @@ class MeasurementDao implements IMeasurementDao {
                         .getDatabase()
                         .query(
                                 MeasurementTables.DebugReportContract.TABLE,
-                                null,
+                                /*columns=*/ null,
                                 MeasurementTables.DebugReportContract.ID + " = ? ",
                                 new String[] {debugReportId},
-                                null,
-                                null,
-                                null,
-                                null)) {
+                                /*groupBy=*/ null,
+                                /*having=*/ null,
+                                /*orderBy=*/ null,
+                                /*limit=*/ null)) {
             if (cursor.getCount() == 0) {
                 throw new DatastoreException("DebugReport retrieval failed. Id: " + debugReportId);
             }
@@ -515,14 +515,14 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public void deleteDebugReport(DebugReport debugReport) throws DatastoreException {
+    public void deleteDebugReport(String debugReportId) throws DatastoreException {
         long rows =
                 mSQLTransaction
                         .getDatabase()
                         .delete(
                                 MeasurementTables.DebugReportContract.TABLE,
                                 MeasurementTables.DebugReportContract.ID + " = ?",
-                                new String[] {debugReport.getId()});
+                                new String[] {debugReportId});
         if (rows != 1) {
             throw new DatastoreException("DebugReport deletion failed.");
         }
@@ -1525,7 +1525,7 @@ class MeasurementDao implements IMeasurementDao {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.DebugReportContract.ID, UUID.randomUUID().toString());
         values.put(MeasurementTables.DebugReportContract.TYPE, debugReport.getType());
-        values.put(MeasurementTables.DebugReportContract.BODY, debugReport.getBody());
+        values.put(MeasurementTables.DebugReportContract.BODY, debugReport.getBody().toString());
         values.put(
                 MeasurementTables.DebugReportContract.ENROLLMENT_ID, debugReport.getEnrollmentId());
         long rowId =
@@ -1571,8 +1571,8 @@ class MeasurementDao implements IMeasurementDao {
                         .query(
                                 MeasurementTables.DebugReportContract.TABLE,
                                 /*columns=*/ null,
-                                null,
-                                null,
+                                /*selection=*/ null,
+                                /*selectionArgs=*/ null,
                                 /*groupBy=*/ null,
                                 /*having=*/ null,
                                 /*orderBy=*/ null,

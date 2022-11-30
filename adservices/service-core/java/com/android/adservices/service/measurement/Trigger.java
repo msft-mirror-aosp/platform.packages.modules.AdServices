@@ -55,7 +55,7 @@ public class Trigger {
     @EventSurfaceType private int mDestinationType;
     private String mEnrollmentId;
     private long mTriggerTime;
-    private String mEventTriggers;
+    private @NonNull String mEventTriggers;
     @Status private int mStatus;
     private Uri mRegistrant;
     private String mAggregateTriggerData;
@@ -286,13 +286,13 @@ public class Trigger {
                             .setKey(bigInteger)
                             .setSourceKeys(sourceKeySet);
             if (jsonObject.has("filters") && !jsonObject.isNull("filters")) {
-                FilterData filters = new FilterData.Builder()
+                FilterMap filters = new FilterMap.Builder()
                         .buildFilterData(jsonObject.getJSONObject("filters")).build();
                 builder.setFilter(filters);
             }
             if (jsonObject.has("not_filters")
                     && !jsonObject.isNull("not_filters")) {
-                FilterData notFilters = new FilterData.Builder()
+                FilterMap notFilters = new FilterMap.Builder()
                         .buildFilterData(
                                 jsonObject.getJSONObject("not_filters")).build();
                 builder.setNotFilter(notFilters);
@@ -319,13 +319,12 @@ public class Trigger {
         List<EventTrigger> eventTriggers = new ArrayList<>();
 
         for (int i = 0; i < jsonArray.length(); i++) {
-            EventTrigger.Builder eventTriggerBuilder = new EventTrigger.Builder();
             JSONObject eventTriggersJsonString = jsonArray.getJSONObject(i);
-
-            if (!eventTriggersJsonString.isNull(EventTriggerContract.TRIGGER_DATA)) {
-                eventTriggerBuilder.setTriggerData(new UnsignedLong(
-                        eventTriggersJsonString.getString(EventTriggerContract.TRIGGER_DATA)));
-            }
+            EventTrigger.Builder eventTriggerBuilder =
+                    new EventTrigger.Builder(
+                            new UnsignedLong(
+                                    eventTriggersJsonString.getString(
+                                            EventTriggerContract.TRIGGER_DATA)));
 
             if (!eventTriggersJsonString.isNull(EventTriggerContract.PRIORITY)) {
                 eventTriggerBuilder.setTriggerPriority(
@@ -338,8 +337,8 @@ public class Trigger {
             }
 
             if (!eventTriggersJsonString.isNull(EventTriggerContract.FILTERS)) {
-                FilterData filters =
-                        new FilterData.Builder()
+                FilterMap filters =
+                        new FilterMap.Builder()
                                 .buildFilterData(
                                         eventTriggersJsonString.getJSONObject(
                                                 EventTriggerContract.FILTERS))
@@ -348,8 +347,8 @@ public class Trigger {
             }
 
             if (!eventTriggersJsonString.isNull(EventTriggerContract.NOT_FILTERS)) {
-                FilterData notFilters =
-                        new FilterData.Builder()
+                FilterMap notFilters =
+                        new FilterMap.Builder()
                                 .buildFilterData(
                                         eventTriggersJsonString.getJSONObject(
                                                 EventTriggerContract.NOT_FILTERS))

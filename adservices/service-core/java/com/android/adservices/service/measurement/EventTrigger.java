@@ -16,19 +16,22 @@
 
 package com.android.adservices.service.measurement;
 
+import android.annotation.NonNull;
+
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.util.UnsignedLong;
+import com.android.adservices.service.measurement.util.Validation;
 
 import java.util.Objects;
 import java.util.Optional;
 
 /** Event trigger containing trigger data, priority, de-deup key and filters info. */
 public class EventTrigger {
-    private UnsignedLong mTriggerData;
+    @NonNull private UnsignedLong mTriggerData;
     private long mTriggerPriority;
     private UnsignedLong mDedupKey;
-    private Optional<FilterData> mFilter;
-    private Optional<FilterData> mNotFilter;
+    private Optional<FilterMap> mFilter;
+    private Optional<FilterMap> mNotFilter;
 
     private EventTrigger() {
         mFilter = Optional.empty();
@@ -69,12 +72,12 @@ public class EventTrigger {
     }
 
     /** Filters that should match with source's. */
-    public Optional<FilterData> getFilterData() {
+    public Optional<FilterMap> getFilterData() {
         return mFilter;
     }
 
     /** Filters that should not match with source's. */
-    public Optional<FilterData> getNotFilterData() {
+    public Optional<FilterMap> getNotFilterData() {
         return mNotFilter;
     }
 
@@ -82,14 +85,10 @@ public class EventTrigger {
     public static final class Builder {
         private final EventTrigger mBuilding;
 
-        public Builder() {
+        public Builder(@NonNull UnsignedLong triggerData) {
+            Validation.validateNonNull(triggerData);
             mBuilding = new EventTrigger();
-        }
-
-        /** See {@link EventTrigger#getTriggerData()}. */
-        public EventTrigger.Builder setTriggerData(UnsignedLong triggerData) {
             mBuilding.mTriggerData = triggerData;
-            return this;
         }
 
         /** See {@link EventTrigger#getTriggerPriority()}. */
@@ -105,14 +104,14 @@ public class EventTrigger {
         }
 
         /** See {@link EventTrigger#getFilterData()}. */
-        public EventTrigger.Builder setFilter(FilterData filterData) {
-            mBuilding.mFilter = Optional.ofNullable(filterData);
+        public EventTrigger.Builder setFilter(FilterMap filterMap) {
+            mBuilding.mFilter = Optional.ofNullable(filterMap);
             return this;
         }
 
         /** See {@link EventTrigger#getNotFilterData()} ()}. */
-        public EventTrigger.Builder setNotFilter(FilterData notFilterData) {
-            mBuilding.mNotFilter = Optional.ofNullable(notFilterData);
+        public EventTrigger.Builder setNotFilter(FilterMap notFilterMap) {
+            mBuilding.mNotFilter = Optional.ofNullable(notFilterMap);
             return this;
         }
 
