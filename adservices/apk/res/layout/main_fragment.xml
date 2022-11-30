@@ -73,6 +73,14 @@
                     android:padding="20dp"
                     android:text="@string/settingsUI_apps_title"
                     style="@style/MainStyle.H5" />
+                <TextView
+                    android:id="@+id/measurement_preference"
+                    android:background="?android:attr/selectableItemBackground"
+                    android:layout_marginTop="0dp"
+                    android:padding="20dp"
+                    android:text="@string/settingsUI_measurement_view_title"
+                    android:visibility="gone"
+                    style="@style/MainStyle.H5" />
             </LinearLayout>
 
             <LinearLayout

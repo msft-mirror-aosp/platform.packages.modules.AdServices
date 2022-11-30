@@ -21,16 +21,22 @@ import android.annotation.Nullable;
 import android.net.Uri;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.common.cache.CacheProviderFactory;
+import com.android.adservices.service.common.cache.DBCacheEntry;
+import com.android.adservices.service.common.cache.HttpCache;
+import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteStreams;
+import com.google.common.util.concurrent.ClosingFuture;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -38,7 +44,9 @@ import java.net.MalformedURLException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
@@ -59,10 +67,12 @@ public class AdServicesHttpsClient {
     private static final long DEFAULT_MAX_BYTES = 1048576;
     private static final String CONTENT_SIZE_ERROR = "Content size exceeds limit!";
     private final ListeningExecutorService mExecutorService;
+    private final UriConverter mUriConverter;
+    private final HttpCache mCache;
 
     /**
      * Create an HTTPS client with the input {@link ExecutorService} and initial connect and read
-     * timeouts (in milliseconds).
+     * timeouts (in milliseconds). Using this constructor does not provide any caching.
      *
      * @param executorService an {@link ExecutorService} that allows connection and fetching to be
      *     executed outside the main calling thread
@@ -79,10 +89,13 @@ public class AdServicesHttpsClient {
             int connectTimeoutMs,
             int readTimeoutMs,
             long maxBytes) {
-        mConnectTimeoutMs = connectTimeoutMs;
-        mReadTimeoutMs = readTimeoutMs;
-        this.mExecutorService = MoreExecutors.listeningDecorator(executorService);
-        this.mMaxBytes = maxBytes;
+        this(
+                executorService,
+                connectTimeoutMs,
+                readTimeoutMs,
+                maxBytes,
+                new UriConverter(),
+                CacheProviderFactory.createNoOpCache());
     }
 
     /**
@@ -91,36 +104,40 @@ public class AdServicesHttpsClient {
      *
      * @param executorService an {@link ExecutorService} that allows connection and fetching to be
      *     executed outside the main calling thread
+     * @param cache A {@link HttpCache} that caches requests and response based on the use case
      */
-    public AdServicesHttpsClient(ExecutorService executorService) {
-        this(executorService, DEFAULT_TIMEOUT_MS, DEFAULT_TIMEOUT_MS, DEFAULT_MAX_BYTES);
+    public AdServicesHttpsClient(
+            @NonNull ExecutorService executorService, @NonNull HttpCache cache) {
+        this(
+                executorService,
+                DEFAULT_TIMEOUT_MS,
+                DEFAULT_TIMEOUT_MS,
+                DEFAULT_MAX_BYTES,
+                new UriConverter(),
+                cache);
     }
 
+    @VisibleForTesting
+    AdServicesHttpsClient(
+            ExecutorService executorService,
+            int connectTimeoutMs,
+            int readTimeoutMs,
+            long maxBytes,
+            UriConverter uriConverter,
+            @NonNull HttpCache cache) {
+        mConnectTimeoutMs = connectTimeoutMs;
+        mReadTimeoutMs = readTimeoutMs;
+        mExecutorService = MoreExecutors.listeningDecorator(executorService);
+        mMaxBytes = maxBytes;
+        mUriConverter = uriConverter;
+        mCache = cache;
+    }
 
     /** Opens the Url Connection */
     @NonNull
     private URLConnection openUrl(@NonNull URL url) throws IOException {
         Objects.requireNonNull(url);
-
         return url.openConnection();
-    }
-
-    @NonNull
-    private URL toUrl(@NonNull Uri uri) {
-        Objects.requireNonNull(uri);
-        Preconditions.checkArgument(
-                ValidatorUtil.HTTPS_SCHEME.equalsIgnoreCase(uri.getScheme()),
-                "URI \"%s\" must use HTTPS",
-                uri.toString());
-
-        URL url;
-        try {
-            url = new URL(uri.toString());
-        } catch (MalformedURLException e) {
-            LogUtil.d(e, "Uri is malformed! ");
-            throw new IllegalArgumentException("Uri is malformed!");
-        }
-        return url;
     }
 
     @NonNull
@@ -144,15 +161,43 @@ public class AdServicesHttpsClient {
      */
     @NonNull
     public ListenableFuture<String> fetchPayload(@NonNull Uri uri) {
-        Objects.requireNonNull(uri);
-
-        return mExecutorService.submit(() -> doFetchPayload(uri));
+        // TODO(b/260042942) : Refactor to let the Cache decide if caching should be used or not
+        return fetchPayload(uri, false);
     }
 
-    private String doFetchPayload(@NonNull Uri uri) throws IOException {
-        URL url = toUrl(uri);
-        HttpsURLConnection urlConnection;
+    /**
+     * Performs a GET request on the given URI in order to fetch a payload.
+     *
+     * @param uri a {@link Uri} pointing to a target server, converted to a URL for fetching
+     * @param useCache the intent to use cache for storing & retrieving results
+     * @return a string containing the fetched payload
+     */
+    @NonNull
+    public ListenableFuture<String> fetchPayload(@NonNull Uri uri, boolean useCache) {
+        Objects.requireNonNull(uri);
+        return ClosingFuture.from(mExecutorService.submit(() -> mUriConverter.toUrl(uri)))
+                .transformAsync(
+                        (closer, url) ->
+                                ClosingFuture.from(
+                                        mExecutorService.submit(
+                                                () -> doFetchPayload(url, closer, useCache))),
+                        mExecutorService)
+                .finishToFuture();
+    }
 
+    private String doFetchPayload(
+            @NonNull URL url, @NonNull ClosingFuture.DeferredCloser closer, boolean useCache)
+            throws IOException {
+        LogUtil.v("Downloading payload from: \"%s\"", url.toString());
+        if (useCache) {
+            DBCacheEntry cachedEntry = mCache.get(url);
+            if (cachedEntry != null) {
+                LogUtil.v("Cache hit for url: %s", url.toString());
+                return cachedEntry.getResponseBody();
+            }
+            LogUtil.v("Cache miss for url: %s", url.toString());
+        }
+        HttpsURLConnection urlConnection;
         try {
             urlConnection = setupConnection(url);
         } catch (IOException e) {
@@ -160,43 +205,31 @@ public class AdServicesHttpsClient {
             throw new IllegalArgumentException("Failed to open URL!");
         }
 
+        InputStream inputStream = null;
         try {
             // TODO(b/237342352): Both connect and read timeouts are kludged in this method and if
             //  necessary need to be separated
-            InputStream in = new BufferedInputStream(urlConnection.getInputStream());
+            Map<String, List<String>> requestPropertiesMap = urlConnection.getRequestProperties();
+            inputStream = new BufferedInputStream(urlConnection.getInputStream());
+            closer.eventuallyClose(new CloseableConnectionWrapper(urlConnection), mExecutorService);
             int responseCode = urlConnection.getResponseCode();
             if (isSuccessfulResponse(responseCode)) {
-                return fromInputStream(in, urlConnection.getContentLengthLong());
-            } else {
-                InputStream errorStream = urlConnection.getErrorStream();
-                if (!Objects.isNull(errorStream)) {
-                    String errorMessage =
-                            fromInputStream(
-                                    urlConnection.getErrorStream(),
-                                    urlConnection.getContentLengthLong());
-                    String exceptionMessage =
-                            String.format(
-                                    Locale.US,
-                                    "Server returned an error with code %d and message:" + " %s",
-                                    responseCode,
-                                    errorMessage);
-
-                    LogUtil.d(exceptionMessage);
-                    throw new IOException(exceptionMessage);
-                } else {
-                    String exceptionMessage =
-                            String.format(
-                                    Locale.US,
-                                    "Server returned an error with code %d and null" + " message",
-                                    responseCode);
-                    LogUtil.d(exceptionMessage);
-                    throw new IOException(exceptionMessage);
+                String responseBody =
+                        fromInputStream(inputStream, urlConnection.getContentLengthLong());
+                if (useCache) {
+                    LogUtil.v("Putting data in cache for url: %s", url);
+                    mCache.put(url, responseBody, requestPropertiesMap);
                 }
+                return responseBody;
+            } else {
+                throwError(urlConnection, responseCode);
+                return null;
             }
         } catch (SocketTimeoutException e) {
             throw new IOException("Connection timed out while reading response!", e);
         } finally {
             maybeDisconnect(urlConnection);
+            maybeClose(inputStream);
         }
     }
 
@@ -209,12 +242,18 @@ public class AdServicesHttpsClient {
     public ListenableFuture<Void> reportUri(@NonNull Uri uri) {
         Objects.requireNonNull(uri);
 
-        return mExecutorService.submit(() -> doReportUri(uri));
+        return ClosingFuture.from(mExecutorService.submit(() -> mUriConverter.toUrl(uri)))
+                .transformAsync(
+                        (closer, url) ->
+                                ClosingFuture.from(
+                                        mExecutorService.submit(() -> doReportUri(url, closer))),
+                        mExecutorService)
+                .finishToFuture();
     }
 
-    private Void doReportUri(@NonNull Uri uri) throws IOException {
-        LogUtil.v("Reporting to \"%s\"", uri.toString());
-        URL url = toUrl(uri);
+    private Void doReportUri(@NonNull URL url, @NonNull ClosingFuture.DeferredCloser closer)
+            throws IOException {
+        LogUtil.v("Reporting to: \"%s\"", url.toString());
         HttpsURLConnection urlConnection;
 
         try {
@@ -227,41 +266,46 @@ public class AdServicesHttpsClient {
         try {
             // TODO(b/237342352): Both connect and read timeouts are kludged in this method and if
             //  necessary need to be separated
+            closer.eventuallyClose(new CloseableConnectionWrapper(urlConnection), mExecutorService);
             int responseCode = urlConnection.getResponseCode();
             if (isSuccessfulResponse(responseCode)) {
                 LogUtil.d("Successfully reported for URl: " + url);
-                return null;
             } else {
                 LogUtil.w("Failed to report for URL: " + url);
-                InputStream errorStream = urlConnection.getErrorStream();
-                if (!Objects.isNull(errorStream)) {
-                    String errorMessage =
-                            fromInputStream(
-                                    urlConnection.getErrorStream(),
-                                    urlConnection.getContentLengthLong());
-                    String exceptionMessage =
-                            String.format(
-                                    Locale.US,
-                                    "Server returned an error with code %d and message:" + " %s",
-                                    responseCode,
-                                    errorMessage);
-
-                    LogUtil.d(exceptionMessage);
-                    throw new IOException(exceptionMessage);
-                } else {
-                    String exceptionMessage =
-                            String.format(
-                                    Locale.US,
-                                    "Server returned an error with code %d and null" + " message",
-                                    responseCode);
-                    LogUtil.d(exceptionMessage);
-                    throw new IOException(exceptionMessage);
-                }
+                throwError(urlConnection, responseCode);
             }
+            return null;
         } catch (SocketTimeoutException e) {
             throw new IOException("Connection timed out while reading response!", e);
         } finally {
             maybeDisconnect(urlConnection);
+        }
+    }
+
+    private void throwError(final HttpsURLConnection urlConnection, int responseCode)
+            throws IOException {
+        InputStream errorStream = urlConnection.getErrorStream();
+        if (!Objects.isNull(errorStream)) {
+            String errorMessage =
+                    fromInputStream(
+                            urlConnection.getErrorStream(), urlConnection.getContentLengthLong());
+            String exceptionMessage =
+                    String.format(
+                            Locale.US,
+                            "Server returned an error with code %d and message:" + " %s",
+                            responseCode,
+                            errorMessage);
+
+            LogUtil.d(exceptionMessage);
+            throw new IOException(exceptionMessage);
+        } else {
+            String exceptionMessage =
+                    String.format(
+                            Locale.US,
+                            "Server returned an error with code %d and null" + " message",
+                            responseCode);
+            LogUtil.d(exceptionMessage);
+            throw new IOException(exceptionMessage);
         }
     }
 
@@ -278,8 +322,16 @@ public class AdServicesHttpsClient {
         }
     }
 
+    private static void maybeClose(@Nullable InputStream inputStream) throws IOException {
+        if (inputStream == null) {
+            return;
+        } else {
+            inputStream.close();
+        }
+    }
+
     /**
-     * @return the connect timeout, in milliseconds, when opening an initial link to a target
+     * @return the connection timeout, in milliseconds, when opening an initial link to a target
      *     address with this client
      */
     public int getConnectTimeoutMs() {
@@ -347,5 +399,48 @@ public class AdServicesHttpsClient {
         }
         into.close();
         return into.toString(Charsets.UTF_8);
+    }
+
+    private static class CloseableConnectionWrapper implements Closeable {
+        @Nullable final HttpsURLConnection mURLConnection;
+
+        private CloseableConnectionWrapper(HttpsURLConnection urlConnection) {
+            mURLConnection = urlConnection;
+        }
+
+        @Override
+        public void close() throws IOException {
+            LogUtil.d("Closing HTTPS connection and streams");
+            maybeClose(mURLConnection.getInputStream());
+            maybeClose(mURLConnection.getErrorStream());
+            maybeDisconnect(mURLConnection);
+        }
+    }
+
+    /** A light-weight class to convert Uri to URL */
+    public static final class UriConverter {
+
+        @NonNull
+        URL toUrl(@NonNull Uri uri) {
+            Objects.requireNonNull(uri);
+            Preconditions.checkArgument(
+                    ValidatorUtil.HTTPS_SCHEME.equalsIgnoreCase(uri.getScheme()),
+                    "URI \"%s\" must use HTTPS",
+                    uri.toString());
+
+            URL url;
+            try {
+                url = new URL(uri.toString());
+            } catch (MalformedURLException e) {
+                LogUtil.d(e, "Uri is malformed! ");
+                throw new IllegalArgumentException("Uri is malformed!");
+            }
+            return url;
+        }
+    }
+
+    /** @return the cache associated with this instance of client */
+    public HttpCache getAssociatedCache() {
+        return mCache;
     }
 }

@@ -20,6 +20,7 @@ import static com.android.adservices.data.measurement.deletion.MeasurementDataDe
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -44,12 +45,12 @@ import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.TriggerFixture;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
-import com.android.adservices.service.measurement.aggregation.AggregateAttributionData;
 import com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.aggregation.AggregateReportFixture;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
+import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -77,17 +78,6 @@ public class MeasurementDataDeleterTest {
                             .setValue(87)
                             .build());
 
-    private static final AggregateReport AGGREGATE_REPORT_1 =
-            AggregateReportFixture.getValidAggregateReportBuilder()
-                    .setId("reportId1")
-                    .setAggregateAttributionData(
-                            new AggregateAttributionData.Builder()
-                                    .setId(1L)
-                                    .setContributions(CONTRIBUTIONS_1)
-                                    .build())
-                    .setSourceId("source1")
-                    .setTriggerId("trigger1")
-                    .build();
 
     private static final List<AggregateHistogramContribution> CONTRIBUTIONS_2 =
             Arrays.asList(
@@ -100,21 +90,42 @@ public class MeasurementDataDeleterTest {
                             .setValue(3454)
                             .build());
 
-    private static final AggregateReport AGGREGATE_REPORT_2 =
-            AggregateReportFixture.getValidAggregateReportBuilder()
-                    .setId("reportId2")
-                    .setAggregateAttributionData(
-                            new AggregateAttributionData.Builder()
-                                    .setId(2L)
-                                    .setContributions(CONTRIBUTIONS_2)
-                                    .build())
-                    .setSourceId("source2")
-                    .setTriggerId("trigger2")
-                    .build();
+    private static final AggregateReport AGGREGATE_REPORT_1;
+    private static final AggregateReport AGGREGATE_REPORT_2;
+
+    static {
+        AggregateReport localAggregateReport1;
+        AggregateReport localAggregateReport2;
+        try {
+            localAggregateReport1 =
+                    AggregateReportFixture.getValidAggregateReportBuilder()
+                            .setId("reportId1")
+                            .setDebugCleartextPayload(
+                                    AggregateReport.generateDebugPayload(CONTRIBUTIONS_1))
+                            .setSourceId("source1")
+                            .setTriggerId("trigger1")
+                            .build();
+            localAggregateReport2 =
+                    AggregateReportFixture.getValidAggregateReportBuilder()
+                            .setId("reportId2")
+                            .setDebugCleartextPayload(
+                                    AggregateReport.generateDebugPayload(CONTRIBUTIONS_2))
+                            .setSourceId("source2")
+                            .setTriggerId("trigger2")
+                            .build();
+        } catch (JSONException e) {
+            localAggregateReport1 = null;
+            localAggregateReport2 = null;
+            fail("Failed to create aggregate report.");
+        }
+        AGGREGATE_REPORT_1 = localAggregateReport1;
+        AGGREGATE_REPORT_2 = localAggregateReport2;
+    }
 
     private static final Instant START = Instant.ofEpochMilli(5000);
     private static final Instant END = Instant.ofEpochMilli(10000);
-    private static final String PACKAGE_NAME = "com.package.name";
+    private static final String APP_PACKAGE_NAME = "app.package.name";
+    private static final String SDK_PACKAGE_NAME = "sdk.package.name";
 
     @Mock private IMeasurementDao mMeasurementDao;
     @Mock private ITransaction mTransaction;
@@ -287,14 +298,15 @@ public class MeasurementDataDeleterTest {
         when(mAggregateReport1.getId()).thenReturn("aggregateReportId1");
         when(mAggregateReport2.getId()).thenReturn("aggregateReportId2");
         DeletionParam deletionParam =
-                new DeletionParam.Builder()
-                        .setOriginUris(mOriginUris)
-                        .setDomainUris(mDomainUris)
+                new DeletionParam.Builder(
+                                mOriginUris,
+                                mDomainUris,
+                                START,
+                                END,
+                                APP_PACKAGE_NAME,
+                                SDK_PACKAGE_NAME)
                         .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
-                        .setStart(START)
-                        .setEnd(END)
                         .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
-                        .setPackageName(PACKAGE_NAME)
                         .build();
 
         doNothing()
@@ -309,7 +321,7 @@ public class MeasurementDataDeleterTest {
         when(mMeasurementDao.fetchMatchingAggregateReports(sourceIds, triggerIds))
                 .thenReturn(List.of(mAggregateReport1, mAggregateReport2));
         when(mMeasurementDao.fetchMatchingSources(
-                        Uri.parse(ANDROID_APP_SCHEME + "://" + PACKAGE_NAME),
+                        Uri.parse(ANDROID_APP_SCHEME + "://" + APP_PACKAGE_NAME),
                         START,
                         END,
                         mOriginUris,
@@ -317,7 +329,7 @@ public class MeasurementDataDeleterTest {
                         DeletionRequest.MATCH_BEHAVIOR_DELETE))
                 .thenReturn(Arrays.asList(source1.getId(), source2.getId()));
         when(mMeasurementDao.fetchMatchingTriggers(
-                        Uri.parse(ANDROID_APP_SCHEME + "://" + PACKAGE_NAME),
+                        Uri.parse(ANDROID_APP_SCHEME + "://" + APP_PACKAGE_NAME),
                         START,
                         END,
                         mOriginUris,
@@ -354,14 +366,15 @@ public class MeasurementDataDeleterTest {
         when(mAggregateReport1.getId()).thenReturn("aggregateReportId1");
         when(mAggregateReport2.getId()).thenReturn("aggregateReportId2");
         DeletionParam deletionParam =
-                new DeletionParam.Builder()
-                        .setOriginUris(mOriginUris)
-                        .setDomainUris(mDomainUris)
+                new DeletionParam.Builder(
+                                mOriginUris,
+                                mDomainUris,
+                                START,
+                                END,
+                                APP_PACKAGE_NAME,
+                                SDK_PACKAGE_NAME)
                         .setDeletionMode(DeletionRequest.DELETION_MODE_EXCLUDE_INTERNAL_DATA)
-                        .setStart(START)
-                        .setEnd(END)
                         .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
-                        .setPackageName(PACKAGE_NAME)
                         .build();
 
         doNothing()
@@ -376,7 +389,7 @@ public class MeasurementDataDeleterTest {
         when(mMeasurementDao.fetchMatchingAggregateReports(sourceIds, triggerIds))
                 .thenReturn(List.of(mAggregateReport1, mAggregateReport2));
         when(mMeasurementDao.fetchMatchingSources(
-                        Uri.parse(ANDROID_APP_SCHEME + "://" + PACKAGE_NAME),
+                        Uri.parse(ANDROID_APP_SCHEME + "://" + APP_PACKAGE_NAME),
                         START,
                         END,
                         mOriginUris,
@@ -384,7 +397,7 @@ public class MeasurementDataDeleterTest {
                         DeletionRequest.MATCH_BEHAVIOR_DELETE))
                 .thenReturn(Arrays.asList(source1.getId(), source2.getId()));
         when(mMeasurementDao.fetchMatchingTriggers(
-                        Uri.parse(ANDROID_APP_SCHEME + "://" + PACKAGE_NAME),
+                        Uri.parse(ANDROID_APP_SCHEME + "://" + APP_PACKAGE_NAME),
                         START,
                         END,
                         mOriginUris,

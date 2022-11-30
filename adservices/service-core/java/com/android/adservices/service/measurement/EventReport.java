@@ -391,9 +391,6 @@ public class EventReport {
 
         private UnsignedLong getTruncatedTriggerData(Source source, EventTrigger eventTrigger) {
             UnsignedLong triggerData = eventTrigger.getTriggerData();
-            if (triggerData == null) {
-                return new UnsignedLong(0L);
-            }
             return triggerData.mod(source.getTriggerDataCardinality());
         }
 
