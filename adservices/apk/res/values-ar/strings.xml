@@ -36,6 +36,10 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"‏يتيح هذا الإذن للتطبيق الوصول إلى واجهة برمجة تطبيقات AdService’s enablement state modification."</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"‏الوصول إلى واجهة برمجة تطبيقات AdService’s enablement state"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"‏يتيح هذا الإذن للتطبيق الوصول إلى واجهة برمجة تطبيقات AdService’s enablement state."</string>
+    <!-- no translation found for permlab_accessAdServicesManager (4816332609066703740) -->
+    <skip />
+    <!-- no translation found for permdesc_accessAdServicesManager (2619300431637689524) -->
+    <skip />
     <string name="app_label" msgid="5985320129629013968">"‏نظام Android"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"‏الانضمام إلى حماية خصوصية الإعلانات من Android (الإصدار التجريبي)"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"‏يعمل نظام Android على استكشاف طرق أكثر خصوصية لتتمكن التطبيقات من عرض إعلاناتك."</string>
@@ -81,8 +85,7 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"مبادرة حماية الخصوصية"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"‏توفّر حماية خصوصية الإعلانات من Android (الإصدار التجريبي) ميزات جديدة يمكن للتطبيقات استخدامها لعرض التطبيقات التي قد تعجبك. لا تستخدم هذه التقنيات معرّفات الأجهزة.\n\nيمكن لنظام Android أن يُحدّد أنواع الإعلانات التي قد تهتم بمشاهدتها، وحفظ فئات الاهتمام على جهازك مؤقّتًا. يتيح هذا الأمر للتطبيقات عرض الإعلانات ذات الصلة، بدون أن يتم تتبُّع نشاطك بواسطة المواقع الإلكترونية والتطبيقات التابعة لمطورين آخرين."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"ليس لديك فئات اهتمام محظورة"</string>
-    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
-    <skip />
+    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"تمت إعادة ضبط الاهتمامات."</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"‏يمكن أن تُحدّد التطبيقات اهتماماتك وتحفظها مؤقتًا على نظام Android. وفي وقت لاحق، يمكن أن يعرض تطبيق آخر إعلانًا وفقًا لهذه الاهتمامات.\n\nفي حال حظر أحد التطبيقات، لن يُحدّد هذا التطبيق أي اهتمامات بعد ذلك. لن تتم إضافة هذا التطبيق إلى قائمة التطبيقات مرة أخرى ما لم يتم إزالة حظره. وسيتم أيضًا حذف الاهتمامات التي سبق وحدّدها التطبيق، ولكن قد يستمر ظهور بعض الإعلانات ذات الصلة."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"التطبيقات المحظورة"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"إعادة ضبط الاهتمامات المحددّة وفقًا للتطبيقات"</string>
