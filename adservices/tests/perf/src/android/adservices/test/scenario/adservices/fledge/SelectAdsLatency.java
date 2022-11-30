@@ -150,35 +150,35 @@ public class SelectAdsLatency {
 
     @Test
     public void selectAds_p50_5G() throws Exception {
-        selectAds(NETWORK_5G, 50);
+        selectAds(NETWORK_5G, 50, "selectAds_p50_5G");
     }
 
     @Test
     public void selectAds_p50_4GPlus() throws Exception {
-        selectAds(NETWORK_4GPLUS, 50);
+        selectAds(NETWORK_4GPLUS, 50, "selectAds_p50_4GPlus");
     }
 
     @Test
     public void selectAds_p50_4G() throws Exception {
-        selectAds(NETWORK_4G, 50);
+        selectAds(NETWORK_4G, 50, "selectAds_p50_4G");
     }
 
     @Test
     public void selectAds_p90_5G() throws Exception {
-        selectAds(NETWORK_5G, 90);
+        selectAds(NETWORK_5G, 90, "selectAds_p90_5G");
     }
 
     @Test
     public void selectAds_p90_4G() throws Exception {
-        selectAds(NETWORK_4G, 90);
+        selectAds(NETWORK_4G, 90, "selectAds_p90_4G");
     }
 
     @Test
     public void selectAds_p90_4GPlus() throws Exception {
-        selectAds(NETWORK_4GPLUS, 90);
+        selectAds(NETWORK_4GPLUS, 90, "selectAds_p90_4GPlus");
     }
 
-    private void selectAds(String network, int percentile) throws Exception {
+    private void selectAds(String network, int percentile, String testName) throws Exception {
         mMockWebServerRule.createMockWebServer();
         mMockWebServerRule.startCreatedMockWebServer(
                 MockWebServerDispatcherFactory.createLatencyDispatcher(
@@ -199,7 +199,7 @@ public class SelectAdsLatency {
         Log.i(
                 TAG,
                 "("
-                        + generateLogLabel(percentile, network)
+                        + generateLogLabel(testName)
                         + ": "
                         + timer.elapsed(TimeUnit.MILLISECONDS)
                         + " ms)");
@@ -236,7 +236,7 @@ public class SelectAdsLatency {
                 .build();
     }
 
-    private String generateLogLabel(int percentile, String network) {
-        return "SELECT_ADS_LATENCY_P" + percentile + "_" + network;
+    private String generateLogLabel(String testName) {
+        return "SELECT_ADS_LATENCY_" + getClass().getSimpleName() + "#" + testName;
     }
 }
