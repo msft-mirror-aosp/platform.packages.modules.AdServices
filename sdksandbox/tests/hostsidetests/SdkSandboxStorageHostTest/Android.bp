@@ -27,6 +27,7 @@ java_test_host {
         "tradefed",
     ],
     static_libs: [
+        "modules-utils-build-testing",
         "cts-install-lib-host",
         "SdkSandboxHostTestUtils",
     ],
