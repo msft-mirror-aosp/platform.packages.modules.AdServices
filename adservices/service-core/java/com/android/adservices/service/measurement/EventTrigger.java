@@ -110,7 +110,7 @@ public class EventTrigger {
             return this;
         }
 
-        /** See {@link EventTrigger#getNotFilterSet()} ()}. */
+        /** See {@link EventTrigger#getNotFilterSet()}. */
         public EventTrigger.Builder setNotFilterSet(List<FilterMap> notFilterSet) {
             mBuilding.mNotFilterSet = Optional.ofNullable(notFilterSet);
             return this;

@@ -29,10 +29,9 @@ import com.android.adservices.data.measurement.MeasurementTables;
 import com.android.adservices.data.measurement.migration.IMeasurementDbMigrator;
 import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV2;
 import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV3;
-import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV6;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.data.topics.migration.ITopicsDbMigrator;
-import com.android.adservices.data.topics.migration.TopicDbMigratorV7;
+import com.android.adservices.data.topics.migration.TopicDbMigratorV5;
 import com.android.adservices.service.FlagsFactory;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -46,10 +45,10 @@ import java.util.List;
  * get the same reference.
  */
 public class DbHelper extends SQLiteOpenHelper {
-    // Version 3: Add TopicContributors Table for Topics API, guarded by feature flag.
-    public static final int DATABASE_VERSION_V7 = 7;
+    // Version 5: Add TopicContributors Table for Topics API, guarded by feature flag.
+    public static final int DATABASE_VERSION_V5 = 5;
 
-    static final int CURRENT_DATABASE_VERSION = 6;
+    static final int CURRENT_DATABASE_VERSION = 3;
     private static final String DATABASE_NAME = "adservices.db";
 
     private static DbHelper sSingleton = null;
@@ -156,22 +155,19 @@ public class DbHelper extends SQLiteOpenHelper {
      * introduced in Version 3.
      */
     public boolean supportsTopicContributorsTable() {
-        return mDbVersion >= DATABASE_VERSION_V7;
+        return mDbVersion >= DATABASE_VERSION_V5;
     }
 
     /** Get Migrators in order for Measurement. */
     @VisibleForTesting
     public List<IMeasurementDbMigrator> getOrderedDbMigrators() {
-        return ImmutableList.of(
-                new MeasurementDbMigratorV2(),
-                new MeasurementDbMigratorV3(),
-                new MeasurementDbMigratorV6());
+        return ImmutableList.of(new MeasurementDbMigratorV2(), new MeasurementDbMigratorV3());
     }
 
     /** Get Migrators in order for Topics. */
     @VisibleForTesting
     public List<ITopicsDbMigrator> topicsGetOrderedDbMigrators() {
-        return ImmutableList.of(new TopicDbMigratorV7());
+        return ImmutableList.of(new TopicDbMigratorV5());
     }
 
     // Get the database version to create. It may be different as CURRENT_DATABASE_VERSION,
@@ -179,8 +175,8 @@ public class DbHelper extends SQLiteOpenHelper {
     // on Flags status.
     @VisibleForTesting
     static int getDatabaseVersionToCreate() {
-        return FlagsFactory.getFlags().getEnableDatabaseSchemaVersion3()
-                ? DATABASE_VERSION_V7
+        return FlagsFactory.getFlags().getEnableDatabaseSchemaVersion5()
+                ? DATABASE_VERSION_V5
                 : CURRENT_DATABASE_VERSION;
     }
 }
