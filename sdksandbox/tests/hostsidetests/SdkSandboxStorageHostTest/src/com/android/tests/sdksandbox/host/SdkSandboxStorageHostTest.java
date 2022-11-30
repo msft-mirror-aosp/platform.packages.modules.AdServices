@@ -34,6 +34,7 @@ import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -277,10 +278,10 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         assertThat(getDevice().isDirectory(dePath)).isFalse();
     }
 
+    @Ignore("b/260659816")
     @Test
     @LargeTest
-    public void testSdkDataPackageDirectory_IsDestroyedOnUninstall_DeviceLocked()
-            throws Exception {
+    public void testSdkDataPackageDirectory_IsDestroyedOnUninstall_DeviceLocked() throws Exception {
         assumeThat("Device is NOT encrypted with file-based encryption.",
                 getDevice().getProperty("ro.crypto.type"), equalTo("file"));
         assumeTrue("Screen lock is not supported so skip direct boot test",
@@ -874,6 +875,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         assertThat(getSdkDataPerSdkPath(0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, false)).isNotNull();
     }
 
+    @Ignore("b/260659816")
     @Test
     @LargeTest
     public void testSdkDataSubDirectory_IsCreatedOnInstall_DeviceLocked() throws Exception {

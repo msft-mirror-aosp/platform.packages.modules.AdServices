@@ -81,7 +81,8 @@ public class E2EInteropMockTest extends E2EMockTest {
                         sDatastoreManager,
                         mAsyncSourceFetcher,
                         mAsyncTriggerFetcher,
-                        sEnrollmentDao);
+                        sEnrollmentDao,
+                        mDebugReportApi);
     }
 
     @Override
@@ -105,7 +106,8 @@ public class E2EInteropMockTest extends E2EMockTest {
                                         source,
                                         source.getPublisher(),
                                         EventSurfaceType.WEB,
-                                        measurementDao)) {
+                                        measurementDao,
+                                        mDebugReportApi)) {
                                     measurementDao.insertSource(source);
                                 }
                             }));

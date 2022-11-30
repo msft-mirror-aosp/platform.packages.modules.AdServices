@@ -60,6 +60,7 @@ import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.measurement.registration.AsyncSourceFetcher;
 import com.android.adservices.service.measurement.registration.AsyncTriggerFetcher;
 import com.android.adservices.service.measurement.registration.EnqueueAsyncRegistration;
+import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.util.AsyncFetchStatus;
 import com.android.adservices.service.measurement.util.AsyncRedirect;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -156,6 +157,7 @@ public class AsyncRegistrationQueueRunnerTest {
     @Mock private EnrollmentDao mEnrollmentDao;
     @Mock private ContentResolver mContentResolver;
     @Mock private ContentProviderClient mMockContentProviderClient;
+    @Mock private DebugReportApi mDebugReportApi;
     @Mock HttpsURLConnection mUrlConnection;
     @Mock Flags mFlags;
     @Mock AdServicesLogger mLogger;
@@ -1482,7 +1484,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mAsyncSourceFetcher,
                                 mAsyncTriggerFetcher,
                                 mEnrollmentDao,
-                                new FakeDatastoreManager()));
+                                new FakeDatastoreManager(),
+                                mDebugReportApi));
 
         // Execution
         when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
@@ -1492,7 +1495,11 @@ public class AsyncRegistrationQueueRunnerTest {
                         any(), anyInt(), any(), any(), anyLong(), anyLong()))
                 .thenReturn(Integer.valueOf(0));
         asyncRegistrationQueueRunner.isSourceAllowedToInsert(
-                SOURCE_1, SOURCE_1.getPublisher(), EventSurfaceType.APP, mMeasurementDao);
+                SOURCE_1,
+                SOURCE_1.getPublisher(),
+                EventSurfaceType.APP,
+                mMeasurementDao,
+                mDebugReportApi);
 
         // Assertions
         verify(mMeasurementDao, times(2))
@@ -1514,7 +1521,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mAsyncSourceFetcher,
                                 mAsyncTriggerFetcher,
                                 mEnrollmentDao,
-                                new FakeDatastoreManager()));
+                                new FakeDatastoreManager(),
+                                mDebugReportApi));
 
         // Execution
         when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
@@ -1525,7 +1533,11 @@ public class AsyncRegistrationQueueRunnerTest {
                 .thenReturn(Integer.valueOf(0));
         boolean status =
                 asyncRegistrationQueueRunner.isSourceAllowedToInsert(
-                        SOURCE_1, SOURCE_1.getPublisher(), EventSurfaceType.APP, mMeasurementDao);
+                        SOURCE_1,
+                        SOURCE_1.getPublisher(),
+                        EventSurfaceType.APP,
+                        mMeasurementDao,
+                        mDebugReportApi);
 
         // Assert
         assertFalse(status);
@@ -1548,7 +1560,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mAsyncSourceFetcher,
                                 mAsyncTriggerFetcher,
                                 mEnrollmentDao,
-                                new FakeDatastoreManager()));
+                                new FakeDatastoreManager(),
+                                mDebugReportApi));
 
         // Execution
         doReturn(SystemHealthParams.MAX_SOURCES_PER_PUBLISHER)
@@ -1556,7 +1569,11 @@ public class AsyncRegistrationQueueRunnerTest {
                 .getNumSourcesPerPublisher(any(), anyInt());
         boolean status =
                 asyncRegistrationQueueRunner.isSourceAllowedToInsert(
-                        SOURCE_1, SOURCE_1.getPublisher(), EventSurfaceType.APP, mMeasurementDao);
+                        SOURCE_1,
+                        SOURCE_1.getPublisher(),
+                        EventSurfaceType.APP,
+                        mMeasurementDao,
+                        mDebugReportApi);
 
         // Assert
         assertFalse(status);
@@ -1574,7 +1591,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mAsyncSourceFetcher,
                                 mAsyncTriggerFetcher,
                                 mEnrollmentDao,
-                                new FakeDatastoreManager()));
+                                new FakeDatastoreManager(),
+                                mDebugReportApi));
         // Execution
         when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
                         any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
@@ -1584,7 +1602,11 @@ public class AsyncRegistrationQueueRunnerTest {
                 .thenReturn(Integer.valueOf(100));
         boolean status =
                 asyncRegistrationQueueRunner.isSourceAllowedToInsert(
-                        SOURCE_1, SOURCE_1.getPublisher(), EventSurfaceType.APP, mMeasurementDao);
+                        SOURCE_1,
+                        SOURCE_1.getPublisher(),
+                        EventSurfaceType.APP,
+                        mMeasurementDao,
+                        mDebugReportApi);
 
         // Assert
         assertFalse(status);
@@ -1607,7 +1629,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mAsyncSourceFetcher,
                                 mAsyncTriggerFetcher,
                                 mEnrollmentDao,
-                                new FakeDatastoreManager()));
+                                new FakeDatastoreManager(),
+                                mDebugReportApi));
 
         // Execution
         when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
@@ -1618,7 +1641,11 @@ public class AsyncRegistrationQueueRunnerTest {
                 .thenReturn(Integer.valueOf(0));
         boolean status =
                 asyncRegistrationQueueRunner.isSourceAllowedToInsert(
-                        SOURCE_1, SOURCE_1.getPublisher(), EventSurfaceType.APP, mMeasurementDao);
+                        SOURCE_1,
+                        SOURCE_1.getPublisher(),
+                        EventSurfaceType.APP,
+                        mMeasurementDao,
+                        mDebugReportApi);
 
         // Assert
         assertFalse(status);
@@ -1641,7 +1668,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mAsyncSourceFetcher,
                                 mAsyncTriggerFetcher,
                                 mEnrollmentDao,
-                                new FakeDatastoreManager()));
+                                new FakeDatastoreManager(),
+                                mDebugReportApi));
 
         // Execution
         when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
@@ -1653,7 +1681,11 @@ public class AsyncRegistrationQueueRunnerTest {
 
         boolean status =
                 asyncRegistrationQueueRunner.isSourceAllowedToInsert(
-                        SOURCE_1, SOURCE_1.getPublisher(), EventSurfaceType.APP, mMeasurementDao);
+                        SOURCE_1,
+                        SOURCE_1.getPublisher(),
+                        EventSurfaceType.APP,
+                        mMeasurementDao,
+                        mDebugReportApi);
 
         // Assert
         assertFalse(status);
@@ -1674,7 +1706,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mAsyncSourceFetcher,
                                 mAsyncTriggerFetcher,
                                 mEnrollmentDao,
-                                new FakeDatastoreManager()));
+                                new FakeDatastoreManager(),
+                                mDebugReportApi));
         doReturn(SystemHealthParams.MAX_SOURCES_PER_PUBLISHER)
                 .when(mMeasurementDao)
                 .getNumSourcesPerPublisher(any(), anyInt());
@@ -1682,7 +1715,11 @@ public class AsyncRegistrationQueueRunnerTest {
         // Execution
         boolean status =
                 asyncRegistrationQueueRunner.isSourceAllowedToInsert(
-                        SOURCE_1, SOURCE_1.getPublisher(), EventSurfaceType.APP, mMeasurementDao);
+                        SOURCE_1,
+                        SOURCE_1.getPublisher(),
+                        EventSurfaceType.APP,
+                        mMeasurementDao,
+                        mDebugReportApi);
 
         // Assertions
         assertFalse(status);
@@ -1699,7 +1736,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mAsyncSourceFetcher,
                                 mAsyncTriggerFetcher,
                                 mEnrollmentDao,
-                                new FakeDatastoreManager()));
+                                new FakeDatastoreManager(),
+                                mDebugReportApi));
 
         doReturn(SystemHealthParams.MAX_SOURCES_PER_PUBLISHER)
                 .when(mMeasurementDao)
@@ -1708,7 +1746,11 @@ public class AsyncRegistrationQueueRunnerTest {
         // Execution
         boolean status =
                 asyncRegistrationQueueRunner.isSourceAllowedToInsert(
-                        SOURCE_1, SOURCE_1.getPublisher(), EventSurfaceType.APP, mMeasurementDao);
+                        SOURCE_1,
+                        SOURCE_1.getPublisher(),
+                        EventSurfaceType.APP,
+                        mMeasurementDao,
+                        mDebugReportApi);
 
         // Assertions
         assertFalse(status);
@@ -1724,7 +1766,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mAsyncSourceFetcher,
                                 mAsyncTriggerFetcher,
                                 mEnrollmentDao,
-                                new FakeDatastoreManager()));
+                                new FakeDatastoreManager(),
+                                mDebugReportApi));
 
         when(mMeasurementDao.getNumTriggersPerDestination(APP_DESTINATION, EventSurfaceType.APP))
                 .thenReturn(0L);
@@ -1745,7 +1788,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mAsyncSourceFetcher,
                                 mAsyncTriggerFetcher,
                                 mEnrollmentDao,
-                                new FakeDatastoreManager()));
+                                new FakeDatastoreManager(),
+                                mDebugReportApi));
 
         when(mMeasurementDao.getNumTriggersPerDestination(APP_DESTINATION, EventSurfaceType.APP))
                 .thenReturn(MAX_TRIGGER_REGISTERS_PER_DESTINATION - 1L);
@@ -1766,7 +1810,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mAsyncSourceFetcher,
                                 mAsyncTriggerFetcher,
                                 mEnrollmentDao,
-                                new FakeDatastoreManager()));
+                                new FakeDatastoreManager(),
+                                mDebugReportApi));
 
         when(mMeasurementDao.getNumTriggersPerDestination(APP_DESTINATION, EventSurfaceType.APP))
                 .thenReturn(MAX_TRIGGER_REGISTERS_PER_DESTINATION);
@@ -1830,7 +1875,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mFetcher,
                                 mAsyncTriggerFetcher,
                                 mEnrollmentDao,
-                                datastoreManager));
+                                datastoreManager,
+                                mDebugReportApi));
         ArgumentCaptor<DatastoreManager.ThrowingCheckedConsumer> consumerArgCaptor =
                 ArgumentCaptor.forClass(DatastoreManager.ThrowingCheckedConsumer.class);
         EnqueueAsyncRegistration.appSourceOrTriggerRegistrationRequest(
@@ -1904,7 +1950,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mFetcher,
                                 mAsyncTriggerFetcher,
                                 mEnrollmentDao,
-                                datastoreManager));
+                                datastoreManager,
+                                mDebugReportApi));
         ArgumentCaptor<DatastoreManager.ThrowingCheckedConsumer> consumerArgCaptor =
                 ArgumentCaptor.forClass(DatastoreManager.ThrowingCheckedConsumer.class);
         EnqueueAsyncRegistration.webSourceRegistrationRequest(
@@ -2064,12 +2111,14 @@ public class AsyncRegistrationQueueRunnerTest {
     }
 
     private AsyncRegistrationQueueRunner getSpyAsyncRegistrationQueueRunner() {
-        return spy(new AsyncRegistrationQueueRunner(
-                mContentResolver,
-                mAsyncSourceFetcher,
-                mAsyncTriggerFetcher,
-                mEnrollmentDao,
-                new FakeDatastoreManager()));
+        return spy(
+                new AsyncRegistrationQueueRunner(
+                        mContentResolver,
+                        mAsyncSourceFetcher,
+                        mAsyncTriggerFetcher,
+                        mEnrollmentDao,
+                        new FakeDatastoreManager(),
+                        mDebugReportApi));
     }
 
     private static void emptyTables(SQLiteDatabase db) {
