@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
@@ -147,6 +148,15 @@ public class AdSelectionScriptEngineTest {
                         "function helloAdvert(ad) { return {'status': 0, 'greeting': 'hello ' +"
                                 + " ad.render_uri }; }",
                         ImmutableList.of("helloAdvert", "helloAdvertWrongName")));
+    }
+
+    @Test
+    public void testAuctionScriptIsValidIfAllRequiredFunctionsExist() throws Exception {
+        assertTrue(
+                callJsValidation(
+                        "function helloAdvert(ad) { return {'status': 0, 'greeting': 'hello ' +"
+                                + " ad.render_uri }; }",
+                        ImmutableList.of("helloAdvert")));
     }
 
     @Test
