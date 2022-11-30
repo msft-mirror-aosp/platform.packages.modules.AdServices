@@ -67,12 +67,14 @@ public class AsyncTriggerFetcher {
     private final EnrollmentDao mEnrollmentDao;
     private final Flags mFlags;
     private final AdServicesLogger mLogger;
+
     public AsyncTriggerFetcher(Context context) {
         this(
                 EnrollmentDao.getInstance(context),
                 FlagsFactory.getFlags(),
                 AdServicesLoggerImpl.getInstance());
     }
+
     @VisibleForTesting
     public AsyncTriggerFetcher(EnrollmentDao enrollmentDao, Flags flags, AdServicesLogger logger) {
         mEnrollmentDao = enrollmentDao;
@@ -87,12 +89,15 @@ public class AsyncTriggerFetcher {
             long triggerTime,
             @NonNull Map<String, List<String>> headers,
             @NonNull List<Trigger> triggers,
-            boolean isDebugKeyAllowed,
-            AsyncRegistration.RegistrationType registrationType) {
+            AsyncRegistration.RegistrationType registrationType,
+            boolean adIdPermission,
+            boolean arDebugPermission) {
         Trigger.Builder result = new Trigger.Builder();
         result.setEnrollmentId(enrollmentId);
         result.setAttributionDestination(topOrigin);
         result.setRegistrant(registrant);
+        result.setAdIdPermission(adIdPermission);
+        result.setArDebugPermission(arDebugPermission);
         result.setDestinationType(
                 registrationType == AsyncRegistration.RegistrationType.WEB_TRIGGER
                         ? EventSurfaceType.WEB
@@ -153,7 +158,7 @@ public class AsyncTriggerFetcher {
             if (!json.isNull(TriggerHeaderContract.DEBUG_REPORTING)) {
                 result.setIsDebugReporting(json.optBoolean(TriggerHeaderContract.DEBUG_REPORTING));
             }
-            if (!json.isNull(TriggerHeaderContract.DEBUG_KEY) && (isDebugKeyAllowed)) {
+            if (!json.isNull(TriggerHeaderContract.DEBUG_KEY)) {
                 try {
                     result.setDebugKey(
                             new UnsignedLong(json.getString(TriggerHeaderContract.DEBUG_KEY)));
@@ -184,9 +189,10 @@ public class AsyncTriggerFetcher {
             @AsyncRegistration.RedirectType int redirectType,
             @NonNull AsyncRedirect asyncRedirect,
             @NonNull List<Trigger> triggerOut,
-            boolean isDebugKeyAllowed,
             @Nullable AsyncFetchStatus asyncFetchStatus,
-            AsyncRegistration.RegistrationType registrationType) {
+            AsyncRegistration.RegistrationType registrationType,
+            boolean adIdPermission,
+            boolean arDebugPermission) {
         // Require https.
         if (!registrationUri.getScheme().equals("https")) {
             asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.PARSING_ERROR);
@@ -241,8 +247,9 @@ public class AsyncTriggerFetcher {
                             triggerTime,
                             headers,
                             triggerOut,
-                            isDebugKeyAllowed,
-                            registrationType);
+                            registrationType,
+                            adIdPermission,
+                            arDebugPermission);
             if (!parsed) {
                 asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.PARSING_ERROR);
                 LogUtil.d("Failed to parse.");
@@ -283,9 +290,10 @@ public class AsyncTriggerFetcher {
                 asyncRegistration.getRedirectType(),
                 asyncRedirect,
                 out,
-                asyncRegistration.getDebugKeyAllowed(),
                 asyncFetchStatus,
-                asyncRegistration.getType());
+                asyncRegistration.getType(),
+                asyncRegistration.hasAdIdPermission(),
+                asyncRegistration.getDebugKeyAllowed());
         if (out.isEmpty()) {
             return Optional.empty();
         } else {

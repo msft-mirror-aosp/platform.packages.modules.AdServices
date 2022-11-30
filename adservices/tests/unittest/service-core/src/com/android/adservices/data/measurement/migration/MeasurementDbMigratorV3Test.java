@@ -101,7 +101,7 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
         db = dbHelper.getReadableDatabase();
         assertTrue(
                 doesTableExistAndColumnCountMatch(
-                        db, MeasurementTables.AsyncRegistrationContract.TABLE, 16));
+                        db, MeasurementTables.AsyncRegistrationContract.TABLE, 17));
         assertTrue(
                 doesTableExistAndColumnCountMatch(
                         db, MeasurementTables.EventReportContract.TABLE, 17));
@@ -139,7 +139,7 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
         db = dbHelper.getReadableDatabase();
         assertTrue(
                 doesTableExistAndColumnCountMatch(
-                        db, MeasurementTables.AsyncRegistrationContract.TABLE, 16));
+                        db, MeasurementTables.AsyncRegistrationContract.TABLE, 17));
         assertTrue(
                 doesTableExistAndColumnCountMatch(
                         db, MeasurementTables.EventReportContract.TABLE, 17));
