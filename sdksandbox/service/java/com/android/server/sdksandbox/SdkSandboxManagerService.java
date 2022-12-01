@@ -164,6 +164,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     private SdkSandboxSettingsListener mSdkSandboxSettingsListener;
 
     private static final String PROPERTY_DISABLE_SDK_SANDBOX = "disable_sdk_sandbox";
+    private static final boolean DEFAULT_VALUE_DISABLE_SDK_SANDBOX = false;
     private static final String GMS_PACKAGENAME_PREFIX = "com.google.android.gms";
     private static final String PROPERTY_SERVICE_BIND_ALLOWED_PACKAGENAMES =
             "runtime_service_bind_allowed_packagenames";
@@ -1165,7 +1166,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     void clearSdkSandboxState() {
         synchronized (mLock) {
             mCheckedVisibilityPatch = false;
-            getSdkSandboxSettingsListener().setKillSwitchState(true);
+            getSdkSandboxSettingsListener().setKillSwitchState(DEFAULT_VALUE_DISABLE_SDK_SANDBOX);
         }
     }
 
@@ -1204,7 +1205,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         @GuardedBy("mLock")
         private boolean mKillSwitchEnabled =
                 DeviceConfig.getBoolean(
-                        DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_DISABLE_SDK_SANDBOX, true);
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        PROPERTY_DISABLE_SDK_SANDBOX,
+                        DEFAULT_VALUE_DISABLE_SDK_SANDBOX);
 
         @GuardedBy("mLock")
         private String mBindServiceAllowedPackageNames =
@@ -1302,7 +1305,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     if (name.equals(PROPERTY_DISABLE_SDK_SANDBOX)) {
                         boolean killSwitchPreviouslyEnabled = mKillSwitchEnabled;
                         mKillSwitchEnabled =
-                                properties.getBoolean(PROPERTY_DISABLE_SDK_SANDBOX, true);
+                                properties.getBoolean(
+                                        PROPERTY_DISABLE_SDK_SANDBOX,
+                                        DEFAULT_VALUE_DISABLE_SDK_SANDBOX);
                         if (mKillSwitchEnabled && !killSwitchPreviouslyEnabled) {
                             Log.i(TAG, "SDK sandbox killswitch has become enabled");
                             synchronized (SdkSandboxManagerService.this.mLock) {
