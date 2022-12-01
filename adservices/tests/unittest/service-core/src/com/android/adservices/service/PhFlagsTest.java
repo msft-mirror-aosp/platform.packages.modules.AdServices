@@ -129,9 +129,9 @@ import static com.android.adservices.service.Flags.MEASUREMENT_REGISTER_WEB_SOUR
 import static com.android.adservices.service.Flags.MEASUREMENT_REGISTRATION_INPUT_EVENT_VALID_WINDOW_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
 import static com.android.adservices.service.Flags.NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY;
-import static com.android.adservices.service.Flags.PPAPI_AND_SYSTEM_SERVER;
 import static com.android.adservices.service.Flags.PPAPI_APP_ALLOW_LIST;
 import static com.android.adservices.service.Flags.PPAPI_APP_SIGNATURE_ALLOW_LIST;
+import static com.android.adservices.service.Flags.PPAPI_ONLY;
 import static com.android.adservices.service.Flags.PRECOMPUTED_CLASSIFIER;
 import static com.android.adservices.service.Flags.SDK_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
@@ -3591,7 +3591,7 @@ public class PhFlagsTest {
         assertThat(FlagsFactory.getFlags().getConsentSourceOfTruth())
                 .isEqualTo(DEFAULT_CONSENT_SOURCE_OF_TRUTH);
 
-        final int phOverridingValue = PPAPI_AND_SYSTEM_SERVER;
+        final int phOverridingValue = PPAPI_ONLY;
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_CONSENT_SOURCE_OF_TRUTH,

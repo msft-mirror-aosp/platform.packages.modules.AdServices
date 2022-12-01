@@ -696,22 +696,22 @@ public interface Flags extends Dumpable {
     @IntDef(
             flag = true,
             value = {
-                PPAPI_ONLY,
                 SYSTEM_SERVER_ONLY,
+                PPAPI_ONLY,
                 PPAPI_AND_SYSTEM_SERVER,
             })
     @Retention(RetentionPolicy.SOURCE)
     @interface ConsentSourceOfTruth {}
 
-    /** Write and read consent from PPAPI only */
-    int PPAPI_ONLY = 0;
     /** Write and read consent from system server only. */
-    int SYSTEM_SERVER_ONLY = 1;
+    int SYSTEM_SERVER_ONLY = 0;
+    /** Write and read consent from PPAPI only */
+    int PPAPI_ONLY = 1;
     /** Write consent to both PPAPI and system server. Read consent from system server only. */
     int PPAPI_AND_SYSTEM_SERVER = 2;
 
     /* Consent source of truth intended to be used by default. */
-    @ConsentSourceOfTruth int DEFAULT_CONSENT_SOURCE_OF_TRUTH = PPAPI_ONLY;
+    @ConsentSourceOfTruth int DEFAULT_CONSENT_SOURCE_OF_TRUTH = PPAPI_AND_SYSTEM_SERVER;
 
     /** Returns the consent source of truth currently used for PPAPI. */
     @ConsentSourceOfTruth
