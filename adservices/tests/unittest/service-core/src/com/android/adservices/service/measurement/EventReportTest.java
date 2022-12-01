@@ -69,10 +69,10 @@ public final class EventReportTest {
                     + "  \"deduplication_key\": \""
                     + TRIGGER_DEDUP_KEY
                     + "\",\n"
-                    + "  \"filters\": {\n"
+                    + "  \"filters\": [{\n"
                     + "    \"source_type\": [\"navigation\"],\n"
                     + "    \"key_1\": [\"value_1\"] \n"
-                    + "   }\n"
+                    + "   }]\n"
                     + "}"
                     + "]\n";
 

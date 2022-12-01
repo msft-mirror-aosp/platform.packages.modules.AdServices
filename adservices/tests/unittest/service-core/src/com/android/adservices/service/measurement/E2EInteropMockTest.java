@@ -32,6 +32,7 @@ import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Web;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Assert;
@@ -203,22 +204,23 @@ public class E2EInteropMockTest extends E2EMockTest {
             JSONObject json = new JSONObject(field.get(0));
             String eventTriggerData = DEFAULT_EVENT_TRIGGER_DATA;
             if (!json.isNull("event_trigger_data")) {
-                eventTriggerData = json.getJSONArray("event_trigger_data").toString();
+                eventTriggerData = getValidEventTriggerData(
+                        json.getJSONArray("event_trigger_data"));
             }
             triggerBuilder.setEventTriggers(eventTriggerData);
             if (!json.isNull("aggregatable_trigger_data")) {
-                triggerBuilder.setAggregateTriggerData(
-                        json.getJSONArray("aggregatable_trigger_data").toString());
+                triggerBuilder.setAggregateTriggerData(getValidAggregateTriggerData(
+                        json.getJSONArray("aggregatable_trigger_data")));
             }
             if (!json.isNull("aggregatable_values")) {
                 triggerBuilder.setAggregateValues(
                         json.getJSONObject("aggregatable_values").toString());
             }
             if (!json.isNull("filters")) {
-                triggerBuilder.setFilters(json.getString("filters"));
+                triggerBuilder.setFilters("[" + json.getString("filters") + "]");
             }
             if (!json.isNull("not_filters")) {
-                triggerBuilder.setNotFilters(json.getString("not_filters"));
+                triggerBuilder.setNotFilters("[" + json.getString("not_filters") + "]");
             }
             if (!json.isNull("debug_key")) {
                 triggerBuilder.setDebugKey(new UnsignedLong(json.getString("debug_key")));
@@ -248,5 +250,71 @@ public class E2EInteropMockTest extends E2EMockTest {
         }
 
         return value;
+    }
+
+    private static String getValidEventTriggerData(JSONArray eventTriggerDataArr)
+            throws JSONException {
+        JSONArray validEventTriggerData = new JSONArray();
+        for (int i = 0; i < eventTriggerDataArr.length(); i++) {
+            JSONObject validEventTriggerDatum = new JSONObject();
+            JSONObject eventTriggerDatum = eventTriggerDataArr.getJSONObject(i);
+            // Treat invalid trigger data, priority and deduplication key as if they were not
+            // set.
+            UnsignedLong triggerData = new UnsignedLong(0L);
+            if (!eventTriggerDatum.isNull("trigger_data")) {
+                triggerData = new UnsignedLong(eventTriggerDatum.getString("trigger_data"));
+            }
+            validEventTriggerDatum.put("trigger_data", triggerData);
+            if (!eventTriggerDatum.isNull("priority")) {
+                validEventTriggerDatum.put(
+                        "priority",
+                        String.valueOf(
+                                Long.parseLong(eventTriggerDatum.getString("priority"))));
+            }
+            if (!eventTriggerDatum.isNull("deduplication_key")) {
+                validEventTriggerDatum.put(
+                        "deduplication_key",
+                        new UnsignedLong(eventTriggerDatum.getString("deduplication_key")));
+            }
+            if (!eventTriggerDatum.isNull("filters")) {
+                JSONArray filters = maybeWrapFilters(eventTriggerDatum, "filters");
+                validEventTriggerDatum.put("filters", filters);
+            }
+            if (!eventTriggerDatum.isNull("not_filters")) {
+                JSONArray notFilters = maybeWrapFilters(eventTriggerDatum, "not_filters");
+                validEventTriggerDatum.put("not_filters", notFilters);
+            }
+            validEventTriggerData.put(validEventTriggerDatum);
+        }
+        return validEventTriggerData.toString();
+    }
+
+    private static String getValidAggregateTriggerData(JSONArray aggregateTriggerDataArr)
+            throws JSONException {
+        JSONArray validAggregateTriggerData = new JSONArray();
+        for (int i = 0; i < aggregateTriggerDataArr.length(); i++) {
+            JSONObject aggregateTriggerData = aggregateTriggerDataArr.getJSONObject(i);
+            if (!aggregateTriggerData.isNull("filters")) {
+                JSONArray filters = maybeWrapFilters(aggregateTriggerData, "filters");
+                aggregateTriggerData.put("filters", filters);
+            }
+            if (!aggregateTriggerData.isNull("not_filters")) {
+                JSONArray notFilters = maybeWrapFilters(aggregateTriggerData, "not_filters");
+                aggregateTriggerData.put("not_filters", notFilters);
+            }
+            validAggregateTriggerData.put(aggregateTriggerData);
+        }
+        return validAggregateTriggerData.toString();
+    }
+
+    // Filters can be either a JSON object or a JSON array
+    private static JSONArray maybeWrapFilters(JSONObject json, String key) throws JSONException {
+        JSONObject maybeFilterMap = json.optJSONObject(key);
+        if (maybeFilterMap != null) {
+            JSONArray filterSet = new JSONArray();
+            filterSet.put(maybeFilterMap);
+            return filterSet;
+        }
+        return json.getJSONArray(key);
     }
 }
