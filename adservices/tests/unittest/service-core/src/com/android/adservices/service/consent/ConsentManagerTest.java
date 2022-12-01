@@ -233,6 +233,7 @@ public class ConsentManagerTest {
 
         verifyConsentMigration(
                 spyConsentManager,
+                /* isGiven */ isGiven,
                 /* hasWrittenToPpApi */ true,
                 /* hasWrittenToSystemServer */ false,
                 /* hasReadFromSystemServer */ false);
@@ -252,6 +253,7 @@ public class ConsentManagerTest {
 
         verifyConsentMigration(
                 spyConsentManager,
+                /* isGiven */ isGiven,
                 /* hasWrittenToPpApi */ false,
                 /* hasWrittenToSystemServer */ true,
                 /* hasReadFromSystemServer */ true);
@@ -271,6 +273,7 @@ public class ConsentManagerTest {
 
         verifyConsentMigration(
                 spyConsentManager,
+                /* isGiven */ isGiven,
                 /* hasWrittenToPpApi */ true,
                 /* hasWrittenToSystemServer */ true,
                 /* hasReadFromSystemServer */ true);
@@ -299,6 +302,7 @@ public class ConsentManagerTest {
 
         verifyConsentMigration(
                 spyConsentManager,
+                /* isGiven */ isGiven,
                 /* hasWrittenToPpApi */ true,
                 /* hasWrittenToSystemServer */ false,
                 /* hasReadFromSystemServer */ false);
@@ -318,6 +322,7 @@ public class ConsentManagerTest {
 
         verifyConsentMigration(
                 spyConsentManager,
+                /* isGiven */ isGiven,
                 /* hasWrittenToPpApi */ false,
                 /* hasWrittenToSystemServer */ true,
                 /* hasReadFromSystemServer */ true);
@@ -337,6 +342,7 @@ public class ConsentManagerTest {
 
         verifyConsentMigration(
                 spyConsentManager,
+                /* isGiven */ isGiven,
                 /* hasWrittenToPpApi */ true,
                 /* hasWrittenToSystemServer */ true,
                 /* hasReadFromSystemServer */ true);
@@ -1305,15 +1311,14 @@ public class ConsentManagerTest {
 
     private void verifyConsentMigration(
             ConsentManager consentManager,
+            boolean isGiven,
             boolean hasWrittenToPpApi,
             boolean hasWrittenToSystemServer,
             boolean hasReadFromSystemServer)
             throws RemoteException, IOException {
-
-        // TODO(b/253017669): Check actual boolean.
-        verify(consentManager, verificationMode(hasWrittenToPpApi)).setConsentToPpApi(anyBoolean());
+        verify(consentManager, verificationMode(hasWrittenToPpApi)).setConsentToPpApi(isGiven);
         ExtendedMockito.verify(
-                () -> ConsentManager.setConsentToSystemServer(any(), anyBoolean()),
+                () -> ConsentManager.setConsentToSystemServer(any(), eq(isGiven)),
                 verificationMode(hasWrittenToSystemServer));
 
         verify(mMockIAdServicesManager, verificationMode(hasReadFromSystemServer))
