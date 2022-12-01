@@ -31,6 +31,8 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.Process;
 import android.os.UserHandle;
+import android.support.test.uiautomator.UiDevice;
+import android.view.KeyEvent;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
@@ -68,6 +70,7 @@ public class SdkSandboxStorageTestApp {
     private Context mContext;
     private SdkSandboxManager mSdkSandboxManager;
     private IStorageTestSdk1Api mSdk;
+    private UiDevice mUiDevice;
 
     @Before
     public void setup() {
@@ -75,6 +78,7 @@ public class SdkSandboxStorageTestApp {
         mSdkSandboxManager = mContext.getSystemService(SdkSandboxManager.class);
         assertThat(mSdkSandboxManager).isNotNull();
         mRule.getScenario();
+        mUiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
     }
 
     @Test
@@ -91,6 +95,23 @@ public class SdkSandboxStorageTestApp {
 
         // Store the returned SDK interface so that we can interact with it later.
         mSdk = IStorageTestSdk1Api.Stub.asInterface(callback.getSandboxedSdk().getInterface());
+    }
+
+    @Test
+    public void unlockDevice() throws Exception {
+        mUiDevice.wakeUp();
+        mUiDevice.waitForIdle();
+        mUiDevice.pressMenu();
+        mUiDevice.waitForIdle();
+        mUiDevice.pressKeyCode(KeyEvent.KEYCODE_1);
+        mUiDevice.pressKeyCode(KeyEvent.KEYCODE_2);
+        mUiDevice.pressKeyCode(KeyEvent.KEYCODE_3);
+        mUiDevice.pressKeyCode(KeyEvent.KEYCODE_4);
+        mUiDevice.waitForIdle();
+        mUiDevice.pressEnter();
+        mUiDevice.waitForIdle();
+        mUiDevice.pressHome();
+        mUiDevice.waitForIdle();
     }
 
     @Test

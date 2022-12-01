@@ -18,8 +18,10 @@ package com.android.adservices.service.adselection;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
@@ -150,6 +152,15 @@ public class AdSelectionScriptEngineTest {
     }
 
     @Test
+    public void testAuctionScriptIsValidIfAllRequiredFunctionsExist() throws Exception {
+        assertTrue(
+                callJsValidation(
+                        "function helloAdvert(ad) { return {'status': 0, 'greeting': 'hello ' +"
+                                + " ad.render_uri }; }",
+                        ImmutableList.of("helloAdvert")));
+    }
+
+    @Test
     public void testCanCallScript() throws Exception {
         AdData advert = new AdData(Uri.parse("http://www.domain.com/adverts/123"), "{}");
         final AuctionScriptResult result =
@@ -249,6 +260,102 @@ public class AdSelectionScriptEngineTest {
         verify(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
         verify(mRunAdBiddingPerCAExecutionLoggerMock).endGenerateBids();
         assertThat(result).containsExactly(new AdWithBid(ad1, 1.1), new AdWithBid(ad2, 2.1));
+    }
+
+    @Test
+    public void testGetFunctionArgumentCountSuccess() throws Exception {
+        String jsScript =
+                "function generateBid(ad, auction_signals, per_buyer_signals,"
+                        + " trusted_bidding_signals, contextual_signals, user_signals,"
+                        + " custom_audience_signals) { \n"
+                        + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
+                        + "}";
+        String functionName = "generateBid";
+        int argCount = getArgCount(jsScript, functionName);
+        assertEquals("Argument count mismatch", 7, argCount);
+    }
+
+    @Test
+    public void testGetFunctionArgumentCountGracefulFallBack() throws Exception {
+        String jsScript =
+                "function generateBid(ad, auction_signals, per_buyer_signals,"
+                        + " trusted_bidding_signals, contextual_signals, user_signals,"
+                        + " custom_audience_signals) { \n"
+                        + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
+                        + "}";
+        String functionName = "functionThatDoesNotExist";
+        int argCount = getArgCount(jsScript, functionName);
+        assertEquals("Should have gracefully fallen back to -1", -1, argCount);
+    }
+
+    @Test
+    public void testGenerateBidBackwardCompatCaseSuccess() throws Exception {
+        final AdData ad1 =
+                new AdData(Uri.parse("http://www.domain.com/adverts/123"), "{\"result\":1.1}");
+        final AdData ad2 =
+                new AdData(Uri.parse("http://www.domain.com/adverts/456"), "{\"result\":2.1}");
+        List<AdData> ads = ImmutableList.of(ad1, ad2);
+        doNothing().when(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
+        // Logger calls come after the callback is returned
+        CountDownLatch loggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            loggerLatch.countDown();
+                            return null;
+                        })
+                .when(mRunAdBiddingPerCAExecutionLoggerMock)
+                .endGenerateBids();
+        final String previousVersionOfJS =
+                "function generateBid(ad, auction_signals, per_buyer_signals,"
+                        + " trusted_bidding_signals, contextual_signals, user_signals,"
+                        + " custom_audience_signals) {\n"
+                        + " custom_audience_signals.name;\n"
+                        + " return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
+                        + "}";
+        final List<AdWithBid> result =
+                generateBids(
+                        previousVersionOfJS,
+                        ads,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        CUSTOM_AUDIENCE_SIGNALS_1);
+        loggerLatch.await();
+        verify(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
+        verify(mRunAdBiddingPerCAExecutionLoggerMock).endGenerateBids();
+        assertThat(result).containsExactly(new AdWithBid(ad1, 1.1), new AdWithBid(ad2, 2.1));
+    }
+
+    @Test
+    public void testGenerateBidBackwardCompatCaseException() throws Exception {
+        final AdData ad1 =
+                new AdData(Uri.parse("http://www.domain.com/adverts/123"), "{\"result\":1.1}");
+        final AdData ad2 =
+                new AdData(Uri.parse("http://www.domain.com/adverts/456"), "{\"result\":2.1}");
+        List<AdData> ads = ImmutableList.of(ad1, ad2);
+        final String incompatibleVersionOfJS =
+                "function generateBids(ad, auction_signals, per_buyer_signals,"
+                        + " trusted_bidding_signals) {\n"
+                        + " custom_audience_signals.name;\n"
+                        + " return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
+                        + "}";
+
+        Exception exception =
+                Assert.assertThrows(
+                        ExecutionException.class,
+                        () ->
+                                generateBids(
+                                        incompatibleVersionOfJS,
+                                        ads,
+                                        AdSelectionSignals.EMPTY,
+                                        AdSelectionSignals.EMPTY,
+                                        AdSelectionSignals.EMPTY,
+                                        AdSelectionSignals.EMPTY,
+                                        CUSTOM_AUDIENCE_SIGNALS_1));
+
+        assertThat(exception.getCause()).isInstanceOf(JSExecutionException.class);
+        Assert.assertTrue(exception.getCause() instanceof JSExecutionException);
     }
 
     @Test
@@ -598,6 +705,14 @@ public class AdSelectionScriptEngineTest {
                 () -> {
                     Log.i(TAG, "Calling Auction Script Engine");
                     return mAdSelectionScriptEngine.validateAuctionScript(jsScript, functionNames);
+                });
+    }
+
+    private int getArgCount(String jsScript, String functionName) throws Exception {
+        return waitForFuture(
+                () -> {
+                    return mAdSelectionScriptEngine.getAuctionScriptArgCount(
+                            jsScript, functionName);
                 });
     }
 

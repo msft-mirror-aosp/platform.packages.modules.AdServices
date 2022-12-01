@@ -41,8 +41,6 @@ import java.util.UUID;
 
 /** Class containing static functions for enqueueing AsyncRegistrations */
 public class EnqueueAsyncRegistration {
-    private static final String ANDROID_APP_SCHEME = "android-app";
-
     /**
      * Inserts an App Source or Trigger Registration request into the Async Registration Queue
      * table.
@@ -51,6 +49,7 @@ public class EnqueueAsyncRegistration {
      */
     public static boolean appSourceOrTriggerRegistrationRequest(
             RegistrationRequest registrationRequest,
+            boolean adIdPermission,
             Uri registrant,
             long requestTime,
             @NonNull EnrollmentDao enrollmentDao,
@@ -87,7 +86,8 @@ public class EnqueueAsyncRegistration {
                             /* mRetryCount */ 0,
                             System.currentTimeMillis(),
                             AsyncRegistration.RedirectType.ANY,
-                            registrationRequest.isAdIdPermissionGranted(),
+                            false,
+                            adIdPermission,
                             dao);
                 });
     }
@@ -117,8 +117,6 @@ public class EnqueueAsyncRegistration {
                             return;
                         }
                         String enrollmentId = enrollmentData.get();
-                        final boolean debugKeyAllowed =
-                                adIdPermission && webSourceParams.isDebugKeyAllowed();
                         insertAsyncRegistration(
                                 UUID.randomUUID().toString(),
                                 enrollmentId,
@@ -134,7 +132,8 @@ public class EnqueueAsyncRegistration {
                                 /* mRetryCount */ 0,
                                 System.currentTimeMillis(),
                                 AsyncRegistration.RedirectType.NONE,
-                                debugKeyAllowed,
+                                webSourceParams.isDebugKeyAllowed(),
+                                adIdPermission,
                                 dao);
                     }
                 });
@@ -165,8 +164,6 @@ public class EnqueueAsyncRegistration {
                             return;
                         }
                         String enrollmentId = enrollmentData.get();
-                        final boolean debugKeyAllowed =
-                                adIdPermission && webTriggerParams.isDebugKeyAllowed();
                         insertAsyncRegistration(
                                 UUID.randomUUID().toString(),
                                 enrollmentId,
@@ -182,7 +179,8 @@ public class EnqueueAsyncRegistration {
                                 /* mRetryCount */ 0,
                                 System.currentTimeMillis(),
                                 AsyncRegistration.RedirectType.NONE,
-                                debugKeyAllowed,
+                                webTriggerParams.isDebugKeyAllowed(),
+                                adIdPermission,
                                 dao);
                     }
                 });
@@ -204,6 +202,7 @@ public class EnqueueAsyncRegistration {
             long mLastProcessingTime,
             @AsyncRegistration.RedirectType int redirectType,
             boolean debugKeyAllowed,
+            boolean adIdPermission,
             @NonNull IMeasurementDao dao)
             throws DatastoreException {
         AsyncRegistration asyncRegistration =
@@ -223,6 +222,7 @@ public class EnqueueAsyncRegistration {
                         .setLastProcessingTime(mLastProcessingTime)
                         .setRedirectType(redirectType)
                         .setDebugKeyAllowed(debugKeyAllowed)
+                        .setAdIdPermission(adIdPermission)
                         .build();
 
         dao.insertAsyncRegistration(asyncRegistration);

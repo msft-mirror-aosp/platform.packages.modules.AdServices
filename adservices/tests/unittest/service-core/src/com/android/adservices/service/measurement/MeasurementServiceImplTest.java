@@ -30,6 +30,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doThrow;
@@ -174,7 +175,7 @@ public final class MeasurementServiceImplTest {
                         });
 
         assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        verify(mMockMeasurementImpl, never()).register(any(), anyLong());
+        verify(mMockMeasurementImpl, never()).register(any(), anyBoolean(), anyLong());
         Assert.assertEquals(1, errorContainer.size());
         Assert.assertEquals(status, errorContainer.get(0).getStatusCode());
     }
@@ -287,7 +288,7 @@ public final class MeasurementServiceImplTest {
                         });
 
         assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        verify(mMockMeasurementImpl, never()).register(any(), anyLong());
+        verify(mMockMeasurementImpl, never()).register(any(), anyBoolean(), anyLong());
         Assert.assertEquals(1, errorContainer.size());
         Assert.assertEquals(status, errorContainer.get(0).getStatusCode());
     }
@@ -679,7 +680,7 @@ public final class MeasurementServiceImplTest {
                         });
 
         assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        verify(mMockMeasurementImpl, never()).registerWebSource(any(), anyLong());
+        verify(mMockMeasurementImpl, never()).registerWebSource(any(), anyBoolean(), anyLong());
         Assert.assertEquals(1, errorContainer.size());
         Assert.assertEquals(status, errorContainer.get(0).getStatusCode());
     }
@@ -836,7 +837,7 @@ public final class MeasurementServiceImplTest {
                         });
 
         assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        verify(mMockMeasurementImpl, never()).registerWebTrigger(any(), anyLong());
+        verify(mMockMeasurementImpl, never()).registerWebTrigger(any(), anyBoolean(), anyLong());
         Assert.assertEquals(1, errorContainer.size());
         Assert.assertEquals(status, errorContainer.get(0).getStatusCode());
     }
@@ -1163,7 +1164,7 @@ public final class MeasurementServiceImplTest {
         updateManifestBasedDenied(accessDenier.mByManifestBased);
 
         // Results
-        when(mMockMeasurementImpl.register(any(RegistrationRequest.class), anyLong()))
+        when(mMockMeasurementImpl.register(any(RegistrationRequest.class), anyBoolean(), anyLong()))
                 .thenReturn(STATUS_SUCCESS);
     }
 
@@ -1206,7 +1207,7 @@ public final class MeasurementServiceImplTest {
         updateManifestBasedDenied(accessDenier.mByManifestBased);
 
         // Results
-        when(mMockMeasurementImpl.register(any(RegistrationRequest.class), anyLong()))
+        when(mMockMeasurementImpl.register(any(RegistrationRequest.class), anyBoolean(), anyLong()))
                 .thenReturn(STATUS_SUCCESS);
     }
 
@@ -1254,7 +1255,7 @@ public final class MeasurementServiceImplTest {
 
         // Results
         when(mMockMeasurementImpl.registerWebSource(
-                        any(WebSourceRegistrationRequestInternal.class), anyLong()))
+                        any(WebSourceRegistrationRequestInternal.class), anyBoolean(), anyLong()))
                 .thenReturn(STATUS_SUCCESS);
     }
 
@@ -1299,7 +1300,7 @@ public final class MeasurementServiceImplTest {
 
         // Results
         when(mMockMeasurementImpl.registerWebTrigger(
-                        any(WebTriggerRegistrationRequestInternal.class), anyLong()))
+                        any(WebTriggerRegistrationRequestInternal.class), anyBoolean(), anyLong()))
                 .thenReturn(STATUS_SUCCESS);
     }
 

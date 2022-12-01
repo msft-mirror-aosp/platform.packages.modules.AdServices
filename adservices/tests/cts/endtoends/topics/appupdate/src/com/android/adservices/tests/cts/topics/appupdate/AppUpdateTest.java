@@ -38,6 +38,7 @@ import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -165,6 +166,7 @@ public class AppUpdateTest {
     }
 
     @Test
+    @Ignore("b/260275007")
     public void testAppUpdate() throws Exception {
         // Invoke Topics API once to compute top topics so that following installed test apps are
         // able to get top topics assigned when getting installed.
