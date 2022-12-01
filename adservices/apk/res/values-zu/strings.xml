@@ -36,6 +36,10 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"Ivumela i-application ukufinyelela i-API yokuguqula isimo sokuvumela kwe-AdService."</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"Ukufinyelela ku-API yesimo sokunika amandla se-AdService"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Ivumela i-application ukufinyelela i-API yesimo sokuvumela se-AdService."</string>
+    <!-- no translation found for permlab_accessAdServicesManager (4816332609066703740) -->
+    <skip />
+    <!-- no translation found for permdesc_accessAdServicesManager (2619300431637689524) -->
+    <skip />
     <string name="app_label" msgid="5985320129629013968">"Isistimu ye-Android"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Joyina i-beta yobumfihlo yezikhangiso ze-Android"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"I-Android ihlola izindlela eziyimfihlo ezengeziwe zokuthi ama-app akubonise izikhangiso"</string>
@@ -81,6 +85,7 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"I-Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"I-beta yobumfihlo yezikhangiso ze-Android inikeza izakhi ezintsha ezingasetshenziswa ama-app ukuze akubonise izikhangiso ongase uzithande. Lobu buchwepheshe abuzisebenzisi izinkomba zedivayisi.\n\nI-Android ingalinganisela izinhlobo zezikhangiso ongaba nentshisekelo kuzo, futhi ilondoloze lezi zintshisekelo zakho okwesikhashana kudivayisi yakho. Lokhu kuvumela ama-app ukuthi akubonise izikhangiso ezihambisanayo, ngaphandle kokulandelela umsebenzi wakho kuwo wonke amawebhusayithi nama-app avela kwabanye onjiniyela."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Awunakho ongaba nentshiseklo kukho okuvinjiwe"</string>
+    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Izintshisekelo zisethiwe kabusha"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Ama-app angalinganisela ongaba nentshisekelo kukho futhi alondoloze lezi okwesikhashana nge-Android. Kamuva, i-app ehlukile ingakubonisa isikhangiso esisekelwe kulezi zintshisekelo.\n\nUma uvimba i-app, ngeke iphinde isikisele okunye ongaba nentshisekelo kukho. Ngeke iphinde yengezwe kulolu uhlu lwama-app ngaphandle kokuthi uyivulele. Ongaba netshisekelo kukho okusikiselwe kakade i-app kuzosulwa, kodwa usengabona ezinye izikhangiso ezihambisanayo."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Ama-app owavimbile"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Setha kabusha ongaba nentshisekelo kukho okusikiselwe ama-app"</string>

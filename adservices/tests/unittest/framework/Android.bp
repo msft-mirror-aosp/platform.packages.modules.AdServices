@@ -34,7 +34,8 @@ android_test {
         "android.test.mock",
         "android.test.runner",
         "framework-adservices.impl",
-        "framework-sdksandbox.impl"
+        "framework-sdksandbox.impl",
+        "framework-annotations-lib",
     ],
     sdk_version: "module_current",
     min_sdk_version: "Tiramisu",

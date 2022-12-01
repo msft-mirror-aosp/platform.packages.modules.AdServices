@@ -56,7 +56,7 @@ public final class EventReportTest {
     private static final String SOURCE_ID = UUID.randomUUID().toString();
     private static final String TRIGGER_ID = UUID.randomUUID().toString();
     private static final Uri APP_DESTINATION = Uri.parse("android-app://example1.app");
-    private static final Uri WEB_DESTINATION = Uri.parse("https://example1.com");
+    private static final Uri WEB_DESTINATION = Uri.parse("https://example1.test");
     private static final String EVENT_TRIGGERS =
             "[\n"
                     + "{\n"
@@ -82,7 +82,7 @@ public final class EventReportTest {
         assertEquals("1", eventReport.getId());
         assertEquals(new UnsignedLong(21L), eventReport.getSourceEventId());
         assertEquals("enrollment-id", eventReport.getEnrollmentId());
-        assertEquals("https://bar.com", eventReport.getAttributionDestination().toString());
+        assertEquals("https://bar.test", eventReport.getAttributionDestination().toString());
         assertEquals(1000L, eventReport.getTriggerTime());
         assertEquals(new UnsignedLong(8L), eventReport.getTriggerData());
         assertEquals(2L, eventReport.getTriggerPriority());
@@ -103,7 +103,7 @@ public final class EventReportTest {
         assertEquals("1", eventReport.getId());
         assertEquals(new UnsignedLong(21L), eventReport.getSourceEventId());
         assertEquals("enrollment-id", eventReport.getEnrollmentId());
-        assertEquals("https://bar.com", eventReport.getAttributionDestination().toString());
+        assertEquals("https://bar.test", eventReport.getAttributionDestination().toString());
         assertEquals(1000L, eventReport.getTriggerTime());
         assertEquals(new UnsignedLong(8L), eventReport.getTriggerData());
         assertEquals(2L, eventReport.getTriggerPriority());
@@ -124,7 +124,7 @@ public final class EventReportTest {
         assertEquals("1", eventReport.getId());
         assertEquals(new UnsignedLong(21L), eventReport.getSourceEventId());
         assertEquals("enrollment-id", eventReport.getEnrollmentId());
-        assertEquals("https://bar.com", eventReport.getAttributionDestination().toString());
+        assertEquals("https://bar.test", eventReport.getAttributionDestination().toString());
         assertEquals(1000L, eventReport.getTriggerTime());
         assertEquals(new UnsignedLong(8L), eventReport.getTriggerData());
         assertEquals(2L, eventReport.getTriggerPriority());
@@ -179,38 +179,6 @@ public final class EventReportTest {
         assertEquals(TRIGGER_PRIORITY, report.getTriggerPriority());
         assertEquals(TRIGGER_DEDUP_KEY, report.getTriggerDedupKey());
         // Truncated data 4 % 2 = 0
-        assertEquals(new UnsignedLong(0L), report.getTriggerData());
-        assertEquals(trigger.getTriggerTime(), report.getTriggerTime());
-        assertEquals(source.getEventId(), report.getSourceEventId());
-        assertEquals(source.getEnrollmentId(), report.getEnrollmentId());
-        assertEquals(trigger.getAttributionDestination(), report.getAttributionDestination());
-        assertEquals(source.getExpiryTime() + ONE_HOUR_IN_MILLIS, report.getReportTime());
-        assertEquals(source.getSourceType(), report.getSourceType());
-        assertEquals(EVENT_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
-        assertEquals(SOURCE_ID, report.getSourceId());
-        assertEquals(TRIGGER_ID, report.getTriggerId());
-    }
-
-    @Test
-    public void testPopulateFromSourceAndTrigger_shouldSetTriggerData0WhenNull()
-            throws JSONException {
-        long baseTime = System.currentTimeMillis();
-        Source source =
-                createSourceForTest(
-                        baseTime, Source.SourceType.EVENT, false, APP_DESTINATION, null);
-        Trigger trigger =
-                createTriggerForTest(baseTime + TimeUnit.SECONDS.toMillis(10), APP_DESTINATION);
-
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
-        EventTrigger eventTrigger = spy(eventTriggers.get(0));
-        when(eventTrigger.getTriggerData()).thenReturn(null);
-        EventReport report =
-                new EventReport.Builder()
-                        .populateFromSourceAndTrigger(source, trigger, eventTrigger)
-                        .build();
-
-        assertEquals(TRIGGER_PRIORITY, report.getTriggerPriority());
-        assertEquals(TRIGGER_DEDUP_KEY, report.getTriggerDedupKey());
         assertEquals(new UnsignedLong(0L), report.getTriggerData());
         assertEquals(trigger.getTriggerTime(), report.getTriggerTime());
         assertEquals(source.getEventId(), report.getSourceEventId());
@@ -511,7 +479,7 @@ public final class EventReportTest {
                         .setId("1")
                         .setSourceEventId(new UnsignedLong(22L))
                         .setEnrollmentId("another-enrollment-id")
-                        .setAttributionDestination(Uri.parse("https://bar.com"))
+                        .setAttributionDestination(Uri.parse("https://bar.test"))
                         .setTriggerTime(1000L)
                         .setTriggerData(new UnsignedLong(8L))
                         .setTriggerPriority(2L)
@@ -562,7 +530,7 @@ public final class EventReportTest {
                 .setId("1")
                 .setSourceEventId(new UnsignedLong(21L))
                 .setEnrollmentId("enrollment-id")
-                .setAttributionDestination(Uri.parse("https://bar.com"))
+                .setAttributionDestination(Uri.parse("https://bar.test"))
                 .setTriggerTime(1000L)
                 .setTriggerData(new UnsignedLong(8L))
                 .setTriggerPriority(2L)
@@ -583,7 +551,7 @@ public final class EventReportTest {
                 .setId("1")
                 .setSourceEventId(new UnsignedLong(21L))
                 .setEnrollmentId("enrollment-id")
-                .setAttributionDestination(Uri.parse("https://bar.com"))
+                .setAttributionDestination(Uri.parse("https://bar.test"))
                 .setTriggerTime(1000L)
                 .setTriggerData(new UnsignedLong(8L))
                 .setTriggerPriority(2L)
@@ -603,7 +571,7 @@ public final class EventReportTest {
                 .setId("1")
                 .setSourceEventId(new UnsignedLong(21L))
                 .setEnrollmentId("enrollment-id")
-                .setAttributionDestination(Uri.parse("https://bar.com"))
+                .setAttributionDestination(Uri.parse("https://bar.test"))
                 .setTriggerTime(1000L)
                 .setTriggerData(new UnsignedLong(8L))
                 .setTriggerPriority(2L)

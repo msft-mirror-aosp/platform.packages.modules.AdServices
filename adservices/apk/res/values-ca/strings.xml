@@ -36,6 +36,10 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"Permet que una aplicació accedeixi a l\'API de modificació de l\'estat d\'activació d\'AdService."</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"Accedir a l\'API d\'estat d\'activació d\'AdService"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Permet que una aplicació accedeixi a l\'API d\'estat d\'activació d\'AdService."</string>
+    <!-- no translation found for permlab_accessAdServicesManager (4816332609066703740) -->
+    <skip />
+    <!-- no translation found for permdesc_accessAdServicesManager (2619300431637689524) -->
+    <skip />
     <string name="app_label" msgid="5985320129629013968">"Sistema Android"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Uneix-te a la versió beta de la privadesa d\'anuncis d\'Android"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android està explorant maneres més privades perquè les aplicacions et mostrin anuncis"</string>
@@ -81,6 +85,7 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"La versió beta de la privadesa d\'anuncis d\'Android ofereix noves funcions que les aplicacions poden utilitzar per mostrar-te anuncis que et poden agradar. Aquestes tecnologies no fan servir identificadors de dispositiu.\n\nAndroid pot estimar els tipus d\'anuncis que et poden interessar i desar-los temporalment al teu dispositiu. Això permet que les aplicacions et mostrin anuncis rellevants sense fer un seguiment de la teva activitat en llocs web i aplicacions d\'altres desenvolupadors."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"No tens cap interès bloquejat"</string>
+    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"S\'han restablert els interessos"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Les aplicacions poden estimar els teus interessos i desar-los temporalment a Android. Més endavant, una altra aplicació pot mostrar-te un anunci basant-se en aquests interessos.\n\nSi bloqueges una aplicació, no estimarà més interessos. No es tornarà a afegir a aquesta llista d\'aplicacions tret que la desbloquegis. Els interessos que l\'aplicació ja hagi estimat se suprimiran, però pot ser que encara vegis alguns anuncis relacionats."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Aplicacions que has bloquejat"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Restableix els interessos estimats per les aplicacions"</string>

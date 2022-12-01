@@ -23,6 +23,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyBoolean;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.mock;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
@@ -59,6 +60,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
@@ -957,7 +959,7 @@ public class CustomAudienceServiceEndToEndTest {
                                 mAdServicesLogger,
                                 mAppImportanceFilter,
                                 CommonFixture.FLAGS_FOR_TEST,
-                                () -> Throttler.getInstance(1),
+                                () -> Throttler.getInstance(CommonFixture.FLAGS_FOR_TEST),
                                 CallingAppUidSupplierProcessImpl.create());
 
         // The first call should succeed
@@ -992,8 +994,10 @@ public class CustomAudienceServiceEndToEndTest {
      */
     private void resetThrottlerToNoRateLimits() {
         Throttler.destroyExistingThrottler();
-        final double noRateLimit = -1;
-        Throttler.getInstance(noRateLimit);
+        final float noRateLimit = -1;
+        Flags mockNoRateLimitFlags = mock(Flags.class);
+        doReturn(noRateLimit).when(mockNoRateLimitFlags).getSdkRequestPermitsPerSecond();
+        Throttler.getInstance(mockNoRateLimitFlags);
     }
 
     private CustomAudienceOverrideTestCallback callAddOverride(

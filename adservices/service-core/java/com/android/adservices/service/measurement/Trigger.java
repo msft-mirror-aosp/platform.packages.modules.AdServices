@@ -55,15 +55,18 @@ public class Trigger {
     @EventSurfaceType private int mDestinationType;
     private String mEnrollmentId;
     private long mTriggerTime;
-    private String mEventTriggers;
+    private @NonNull String mEventTriggers;
     @Status private int mStatus;
     private Uri mRegistrant;
     private String mAggregateTriggerData;
     private String mAggregateValues;
+    private boolean mIsDebugReporting;
     private AggregatableAttributionTrigger mAggregatableAttributionTrigger;
     private String mFilters;
     private String mNotFilters;
-    private @Nullable UnsignedLong mDebugKey;
+    @Nullable private UnsignedLong mDebugKey;
+    private boolean mAdIdPermission;
+    private boolean mArDebugPermission;
 
     @IntDef(value = {Status.PENDING, Status.IGNORED, Status.ATTRIBUTED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -78,6 +81,7 @@ public class Trigger {
         mStatus = Status.PENDING;
         // Making this default explicit since it anyway occur on an uninitialised int field.
         mDestinationType = EventSurfaceType.APP;
+        mIsDebugReporting = false;
     }
 
     @Override
@@ -94,6 +98,9 @@ public class Trigger {
                 && Objects.equals(mDebugKey, trigger.mDebugKey)
                 && Objects.equals(mEventTriggers, trigger.mEventTriggers)
                 && mStatus == trigger.mStatus
+                && mIsDebugReporting == trigger.mIsDebugReporting
+                && mAdIdPermission == trigger.mAdIdPermission
+                && mArDebugPermission == trigger.mArDebugPermission
                 && Objects.equals(mRegistrant, trigger.mRegistrant)
                 && Objects.equals(mAggregateTriggerData, trigger.mAggregateTriggerData)
                 && Objects.equals(mAggregateValues, trigger.mAggregateValues)
@@ -118,7 +125,9 @@ public class Trigger {
                 mAggregatableAttributionTrigger,
                 mFilters,
                 mNotFilters,
-                mDebugKey);
+                mDebugKey,
+                mAdIdPermission,
+                mArDebugPermission);
     }
 
     /**
@@ -241,6 +250,21 @@ public class Trigger {
         return mFilters;
     }
 
+    /** Is Ad Tech Opt-in to Debug Reporting {@link Trigger}. */
+    public boolean isDebugReporting() {
+        return mIsDebugReporting;
+    }
+
+    /** Is Ad ID Permission Enabled. */
+    public boolean hasAdIdPermission() {
+        return mAdIdPermission;
+    }
+
+    /** Is Ar Debug Permission Enabled. */
+    public boolean hasArDebugPermission() {
+        return mArDebugPermission;
+    }
+
     /**
      * Returns top level not-filters. The value is in json format.
      */
@@ -278,13 +302,13 @@ public class Trigger {
                             .setKey(bigInteger)
                             .setSourceKeys(sourceKeySet);
             if (jsonObject.has("filters") && !jsonObject.isNull("filters")) {
-                FilterData filters = new FilterData.Builder()
+                FilterMap filters = new FilterMap.Builder()
                         .buildFilterData(jsonObject.getJSONObject("filters")).build();
                 builder.setFilter(filters);
             }
             if (jsonObject.has("not_filters")
                     && !jsonObject.isNull("not_filters")) {
-                FilterData notFilters = new FilterData.Builder()
+                FilterMap notFilters = new FilterMap.Builder()
                         .buildFilterData(
                                 jsonObject.getJSONObject("not_filters")).build();
                 builder.setNotFilter(notFilters);
@@ -311,13 +335,12 @@ public class Trigger {
         List<EventTrigger> eventTriggers = new ArrayList<>();
 
         for (int i = 0; i < jsonArray.length(); i++) {
-            EventTrigger.Builder eventTriggerBuilder = new EventTrigger.Builder();
             JSONObject eventTriggersJsonString = jsonArray.getJSONObject(i);
-
-            if (!eventTriggersJsonString.isNull(EventTriggerContract.TRIGGER_DATA)) {
-                eventTriggerBuilder.setTriggerData(new UnsignedLong(
-                        eventTriggersJsonString.getString(EventTriggerContract.TRIGGER_DATA)));
-            }
+            EventTrigger.Builder eventTriggerBuilder =
+                    new EventTrigger.Builder(
+                            new UnsignedLong(
+                                    eventTriggersJsonString.getString(
+                                            EventTriggerContract.TRIGGER_DATA)));
 
             if (!eventTriggersJsonString.isNull(EventTriggerContract.PRIORITY)) {
                 eventTriggerBuilder.setTriggerPriority(
@@ -330,8 +353,8 @@ public class Trigger {
             }
 
             if (!eventTriggersJsonString.isNull(EventTriggerContract.FILTERS)) {
-                FilterData filters =
-                        new FilterData.Builder()
+                FilterMap filters =
+                        new FilterMap.Builder()
                                 .buildFilterData(
                                         eventTriggersJsonString.getJSONObject(
                                                 EventTriggerContract.FILTERS))
@@ -340,8 +363,8 @@ public class Trigger {
             }
 
             if (!eventTriggersJsonString.isNull(EventTriggerContract.NOT_FILTERS)) {
-                FilterData notFilters =
-                        new FilterData.Builder()
+                FilterMap notFilters =
+                        new FilterMap.Builder()
                                 .buildFilterData(
                                         eventTriggersJsonString.getJSONObject(
                                                 EventTriggerContract.NOT_FILTERS))
@@ -456,6 +479,24 @@ public class Trigger {
         @NonNull
         public Builder setFilters(@Nullable String filters) {
             mBuilding.mFilters = filters;
+            return this;
+        }
+
+        /** See {@link Trigger#isDebugReporting()} */
+        public Trigger.Builder setIsDebugReporting(boolean isDebugReporting) {
+            mBuilding.mIsDebugReporting = isDebugReporting;
+            return this;
+        }
+
+        /** See {@link Trigger#hasAdIdPermission()} ()} */
+        public Trigger.Builder setAdIdPermission(boolean adIdPermission) {
+            mBuilding.mAdIdPermission = adIdPermission;
+            return this;
+        }
+
+        /** See {@link Trigger#hasArDebugPermission()} ()} */
+        public Trigger.Builder setArDebugPermission(boolean arDebugPermission) {
+            mBuilding.mArDebugPermission = arDebugPermission;
             return this;
         }
 

@@ -145,7 +145,7 @@ public final class MeasurementImpl {
 
     /** Implement a registration request, returning a {@link AdServicesStatusUtils.StatusCode}. */
     @AdServicesStatusUtils.StatusCode
-    int register(@NonNull RegistrationRequest request, long requestTime) {
+    int register(@NonNull RegistrationRequest request, boolean adIdPermission, long requestTime) {
         mReadWriteLock.readLock().lock();
         try {
             switch (request.getRegistrationType()) {
@@ -153,7 +153,8 @@ public final class MeasurementImpl {
                 case RegistrationRequest.REGISTER_TRIGGER:
                     return EnqueueAsyncRegistration.appSourceOrTriggerRegistrationRequest(
                                     request,
-                                    getRegistrant(request.getPackageName()),
+                                    adIdPermission,
+                                    getRegistrant(request.getAppPackageName()),
                                     requestTime,
                                     mEnrollmentDao,
                                     mDatastoreManager)
@@ -172,7 +173,10 @@ public final class MeasurementImpl {
      * Processes a source registration request delegated to OS from the caller, e.g. Chrome,
      * returning a status code.
      */
-    int registerWebSource(@NonNull WebSourceRegistrationRequestInternal request, long requestTime) {
+    int registerWebSource(
+            @NonNull WebSourceRegistrationRequestInternal request,
+            boolean adIdPermission,
+            long requestTime) {
         WebSourceRegistrationRequest sourceRegistrationRequest =
                 request.getSourceRegistrationRequest();
         if (!isValid(sourceRegistrationRequest)) {
@@ -184,7 +188,8 @@ public final class MeasurementImpl {
             boolean enqueueStatus =
                     EnqueueAsyncRegistration.webSourceRegistrationRequest(
                             sourceRegistrationRequest,
-                            getRegistrant(request.getPackageName()),
+                            adIdPermission,
+                            getRegistrant(request.getAppPackageName()),
                             requestTime,
                             mEnrollmentDao,
                             mDatastoreManager);
@@ -204,7 +209,9 @@ public final class MeasurementImpl {
      * returning a status code.
      */
     int registerWebTrigger(
-            @NonNull WebTriggerRegistrationRequestInternal request, long requestTime) {
+            @NonNull WebTriggerRegistrationRequestInternal request,
+            boolean adIdPermission,
+            long requestTime) {
         WebTriggerRegistrationRequest triggerRegistrationRequest =
                 request.getTriggerRegistrationRequest();
         if (!isValid(triggerRegistrationRequest)) {
@@ -216,7 +223,8 @@ public final class MeasurementImpl {
             boolean enqueueStatus =
                     EnqueueAsyncRegistration.webTriggerRegistrationRequest(
                             triggerRegistrationRequest,
-                            getRegistrant(request.getPackageName()),
+                            adIdPermission,
+                            getRegistrant(request.getAppPackageName()),
                             requestTime,
                             mEnrollmentDao,
                             mDatastoreManager);

@@ -39,6 +39,7 @@ import android.view.SurfaceControlViewHost;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -47,9 +48,14 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
+import java.io.File;
 import java.io.FileDescriptor;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -171,6 +177,46 @@ public class SdkSandboxTest {
                 SANDBOX_LATENCY_INFO);
         assertThat(latch.await(1, TimeUnit.MINUTES)).isTrue();
         assertThat(mRemoteCode.mSuccessful).isTrue();
+    }
+
+    private void createFileInPaths(List<String> paths) throws IOException {
+        final String fileName = "file.txt";
+
+        for (int i = 0; i < 2; i++) {
+            Files.createDirectories(
+                    Paths.get(mContext.getDataDir().getPath() + "/" + paths.get(i)));
+            final Path path =
+                    Paths.get(mContext.getDataDir().getPath(), "/" + paths.get(i) + "/" + fileName);
+            Files.deleteIfExists(path);
+
+            Files.createFile(path);
+            final byte[] buffer = new byte[1 * 1024 * 1024];
+            Files.write(path, buffer);
+
+            final File file = new File(String.valueOf(path));
+            assertThat(file.exists()).isTrue();
+        }
+    }
+
+    @Test
+    public void testComputeSdkStorage() throws Exception {
+        final String pathName1 = "path1";
+        final String pathName2 = "path2";
+
+        createFileInPaths(Arrays.asList(pathName1, pathName2));
+
+        final List<String> sharedPaths =
+                Arrays.asList(mContext.getDataDir().getPath() + "/" + pathName1);
+        final List<String> sdkPaths =
+                Arrays.asList(mContext.getDataDir().getPath() + "/" + pathName2);
+
+        SdkSandboxStorageCallback sdkSandboxStorageCallback = new SdkSandboxStorageCallback();
+        mService.computeSdkStorage(sharedPaths, sdkPaths, sdkSandboxStorageCallback);
+
+        Thread.sleep(5000);
+
+        assertThat(sdkSandboxStorageCallback.getSdkStorage()).isEqualTo(1024F);
+        assertThat(sdkSandboxStorageCallback.getSharedStorage()).isEqualTo(1024F);
     }
 
     @Test
@@ -665,6 +711,25 @@ public class SdkSandboxTest {
         boolean isDisabled() throws Exception {
             assertThat(mLatch.await(1, TimeUnit.SECONDS)).isTrue();
             return mIsDisabled;
+        }
+    }
+
+    private static class SdkSandboxStorageCallback extends IComputeSdkStorageCallback.Stub {
+        private float mSharedStorage;
+        private float mSdkStorage;
+
+        @Override
+        public void onStorageInfoComputed(float sharedStorage, float sdkStorage) {
+            mSharedStorage = sharedStorage;
+            mSdkStorage = sdkStorage;
+        }
+
+        public float getSharedStorage() {
+            return mSharedStorage;
+        }
+
+        public float getSdkStorage() {
+            return mSdkStorage;
         }
     }
 }

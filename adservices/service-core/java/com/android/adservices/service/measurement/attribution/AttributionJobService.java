@@ -68,7 +68,10 @@ public class AttributionJobService extends JobService {
                     jobFinished(params, !success);
                     // jobFinished is asynchronous, so forcing scheduling avoiding concurrency issue
                     scheduleIfNeeded(this, /* forceSchedule */ true);
-                    DebugReportingJobService.scheduleIfNeeded(getApplicationContext(), true);
+                    DebugReportingJobService.scheduleIfNeeded(
+                            getApplicationContext(),
+                            /* forceSchedule */ true,
+                            /* isDebugReportApi */ false);
                 });
         return true;
     }

@@ -36,6 +36,10 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"Дозволува апликација да пристапува до модификација на состојбата на овозможување API на AdService."</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"Пристап до овозможување состојбата на API на AdService"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Дозволува апликација да пристапува до состојбата на овозможување API на AdService."</string>
+    <!-- no translation found for permlab_accessAdServicesManager (4816332609066703740) -->
+    <skip />
+    <!-- no translation found for permdesc_accessAdServicesManager (2619300431637689524) -->
+    <skip />
     <string name="app_label" msgid="5985320129629013968">"Систем Android"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Придружете се на бета-верзијата за приватноста на рекламите на Android"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android истражува поприватни начини на кои апликациите ќе ви прикажуваат реклами"</string>
@@ -81,6 +85,7 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Бета-верзијата за приватноста на рекламите на Android обезбедува нови функции што апликациите може да ги користат за да ви прикажуваат реклами што можеби ќе ви се допаднат. Овие технологии не користат идентификатори на уреди.\n\nAndroid може да ги процени типовите реклами што можеби ве интересираат и привремено да ги зачува овие интереси на вашиот уред. Ова им овозможува на апликациите да ви прикажуваат релевантни реклами, без да ја следат вашата активност на веб-сајтови и апликации од други програмери."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Немате блокирани интереси"</string>
+    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Интересите се ресетирани"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Апликациите може да ги проценат вашите интереси и привремено да ги зачуваат со Android. Подоцна друга апликација може да ви прикаже реклама според овие интереси.\n\nАко блокирате апликација, таа веќе нема да проценува интереси. Нема да биде додадена на списоков со апликации повторно, освен ако не ја одблокирате. Интересите што апликацијата веќе ги проценила ќе се избришат, но можеби сѐ уште ќе ви се прикажуваат некои слични реклами."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Апликации што сте ги блокирале"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Ресетирајте ги интересите проценети од апликациите"</string>

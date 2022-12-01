@@ -69,6 +69,7 @@ java_sdk_library {
     static_libs: ["sdksandbox-statsd"],
     defaults: [
         "framework-system-server-module-defaults",
+        "framework-system-server-module-optimize-defaults",
         "sdksandbox-java-defaults",
     ],
     visibility: [

@@ -31,7 +31,7 @@ import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.EventTrigger;
-import com.android.adservices.service.measurement.FilterData;
+import com.android.adservices.service.measurement.FilterMap;
 import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SystemHealthParams;
@@ -43,7 +43,9 @@ import com.android.adservices.service.measurement.aggregation.AggregateHistogram
 import com.android.adservices.service.measurement.aggregation.AggregatePayloadGenerator;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
+import com.android.adservices.service.measurement.util.DebugKey;
 import com.android.adservices.service.measurement.util.Filter;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Web;
 
 import org.json.JSONException;
@@ -182,8 +184,13 @@ class AttributionJobHandler {
                     long randomTime = (long) ((Math.random()
                             * (AGGREGATE_MAX_REPORT_DELAY - AGGREGATE_MIN_REPORT_DELAY))
                             + AGGREGATE_MIN_REPORT_DELAY);
+                    Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                            DebugKey.getDebugKeys(source, trigger);
+                    UnsignedLong sourceDebugKey = debugKeyPair.first;
+                    UnsignedLong triggerDebugKey = debugKeyPair.second;
+
                     int debugReportStatus = AggregateReport.DebugReportStatus.NONE;
-                    if (source.getDebugKey() != null || trigger.getDebugKey() != null) {
+                    if (sourceDebugKey != null || triggerDebugKey != null) {
                         debugReportStatus = AggregateReport.DebugReportStatus.PENDING;
                     }
                     AggregateReport aggregateReport =
@@ -206,8 +213,8 @@ class AttributionJobHandler {
                                     .setStatus(AggregateReport.Status.PENDING)
                                     .setDebugReportStatus(debugReportStatus)
                                     .setApiVersion(API_VERSION)
-                                    .setSourceDebugKey(source.getDebugKey())
-                                    .setTriggerDebugKey(trigger.getDebugKey())
+                                    .setSourceDebugKey(sourceDebugKey)
+                                    .setTriggerDebugKey(triggerDebugKey)
                                     .setSourceId(source.getId())
                                     .setTriggerId(trigger.getId())
                                     .build();
@@ -259,10 +266,6 @@ class AttributionJobHandler {
     private boolean maybeGenerateEventReport(
             Source source, Trigger trigger, IMeasurementDao measurementDao)
             throws DatastoreException {
-        if (trigger.getEventTriggers() == null) {
-            return false;
-        }
-
         int numReports =
                 measurementDao.getNumEventReportsPerDestination(
                         trigger.getAttributionDestination(), trigger.getDestinationType());
@@ -402,9 +405,9 @@ class AttributionJobHandler {
      */
     private boolean doTopLevelFiltersMatch(@NonNull Source source, @NonNull Trigger trigger) {
         try {
-            FilterData sourceFilters = source.parseFilterData();
-            FilterData triggerFilters = extractFilterMap(trigger.getFilters());
-            FilterData triggerNotFilters = extractFilterMap(trigger.getNotFilters());
+            FilterMap sourceFilters = source.parseFilterData();
+            FilterMap triggerFilters = extractFilterMap(trigger.getFilters());
+            FilterMap triggerNotFilters = extractFilterMap(trigger.getNotFilters());
             return Filter.isFilterMatch(sourceFilters, triggerFilters, true)
                     && Filter.isFilterMatch(sourceFilters, triggerNotFilters, false);
         } catch (JSONException e) {
@@ -416,7 +419,7 @@ class AttributionJobHandler {
 
     private Optional<EventTrigger> findFirstMatchingEventTrigger(Source source, Trigger trigger) {
         try {
-            FilterData sourceFiltersData = source.parseFilterData();
+            FilterMap sourceFiltersData = source.parseFilterData();
             List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
             return eventTriggers.stream()
                     .filter(
@@ -431,7 +434,7 @@ class AttributionJobHandler {
     }
 
     private boolean doEventLevelFiltersMatch(
-            FilterData sourceFiltersData, EventTrigger eventTrigger) {
+            FilterMap sourceFiltersData, EventTrigger eventTrigger) {
         if (eventTrigger.getFilterData().isPresent()
                 && !Filter.isFilterMatch(
                         sourceFiltersData, eventTrigger.getFilterData().get(), true)) {
@@ -447,10 +450,10 @@ class AttributionJobHandler {
         return true;
     }
 
-    private static FilterData extractFilterMap(String str) throws JSONException {
+    private static FilterMap extractFilterMap(String str) throws JSONException {
         String json = (str == null || str.isEmpty()) ? "{}" : str;
         JSONObject filterObject = new JSONObject(json);
-        return new FilterData.Builder()
+        return new FilterMap.Builder()
                 .buildFilterData(filterObject)
                 .build();
     }

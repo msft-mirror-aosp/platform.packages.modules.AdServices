@@ -67,12 +67,14 @@ public class AsyncTriggerFetcher {
     private final EnrollmentDao mEnrollmentDao;
     private final Flags mFlags;
     private final AdServicesLogger mLogger;
+
     public AsyncTriggerFetcher(Context context) {
         this(
                 EnrollmentDao.getInstance(context),
                 FlagsFactory.getFlags(),
                 AdServicesLoggerImpl.getInstance());
     }
+
     @VisibleForTesting
     public AsyncTriggerFetcher(EnrollmentDao enrollmentDao, Flags flags, AdServicesLogger logger) {
         mEnrollmentDao = enrollmentDao;
@@ -87,14 +89,15 @@ public class AsyncTriggerFetcher {
             long triggerTime,
             @NonNull Map<String, List<String>> headers,
             @NonNull List<Trigger> triggers,
-            boolean isWebSource,
-            boolean isAllowDebugKey,
-            boolean isAdIdPermissionGranted,
-            AsyncRegistration.RegistrationType registrationType) {
+            AsyncRegistration.RegistrationType registrationType,
+            boolean adIdPermission,
+            boolean arDebugPermission) {
         Trigger.Builder result = new Trigger.Builder();
         result.setEnrollmentId(enrollmentId);
         result.setAttributionDestination(topOrigin);
         result.setRegistrant(registrant);
+        result.setAdIdPermission(adIdPermission);
+        result.setArDebugPermission(arDebugPermission);
         result.setDestinationType(
                 registrationType == AsyncRegistration.RegistrationType.WEB_TRIGGER
                         ? EventSurfaceType.WEB
@@ -108,6 +111,7 @@ public class AsyncTriggerFetcher {
             return false;
         }
         try {
+            String eventTriggerData = new JSONArray().toString();
             JSONObject json = new JSONObject(field.get(0));
             if (!json.isNull(TriggerHeaderContract.EVENT_TRIGGER_DATA)) {
                 Optional<String> validEventTriggerData =
@@ -116,8 +120,9 @@ public class AsyncTriggerFetcher {
                 if (!validEventTriggerData.isPresent()) {
                     return false;
                 }
-                result.setEventTriggers(validEventTriggerData.get());
+                eventTriggerData = validEventTriggerData.get();
             }
+            result.setEventTriggers(eventTriggerData);
             if (!json.isNull(TriggerHeaderContract.AGGREGATABLE_TRIGGER_DATA)) {
                 if (!isValidAggregateTriggerData(
                         json.getJSONArray(TriggerHeaderContract.AGGREGATABLE_TRIGGER_DATA))) {
@@ -150,9 +155,10 @@ public class AsyncTriggerFetcher {
                 }
                 result.setNotFilters(notFilters.toString());
             }
-            boolean isWebAllow = isWebSource && isAllowDebugKey && isAdIdPermissionGranted;
-            boolean isAppAllow = !isWebSource && isAdIdPermissionGranted;
-            if (!json.isNull(TriggerHeaderContract.DEBUG_KEY) && (isWebAllow || isAppAllow)) {
+            if (!json.isNull(TriggerHeaderContract.DEBUG_REPORTING)) {
+                result.setIsDebugReporting(json.optBoolean(TriggerHeaderContract.DEBUG_REPORTING));
+            }
+            if (!json.isNull(TriggerHeaderContract.DEBUG_KEY)) {
                 try {
                     result.setDebugKey(
                             new UnsignedLong(json.getString(TriggerHeaderContract.DEBUG_KEY)));
@@ -183,11 +189,10 @@ public class AsyncTriggerFetcher {
             @AsyncRegistration.RedirectType int redirectType,
             @NonNull AsyncRedirect asyncRedirect,
             @NonNull List<Trigger> triggerOut,
-            boolean isWebSource,
-            boolean isAllowDebugKey,
             @Nullable AsyncFetchStatus asyncFetchStatus,
-            boolean isAdIdPermissionGranted,
-            AsyncRegistration.RegistrationType registrationType) {
+            AsyncRegistration.RegistrationType registrationType,
+            boolean adIdPermission,
+            boolean arDebugPermission) {
         // Require https.
         if (!registrationUri.getScheme().equals("https")) {
             asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.PARSING_ERROR);
@@ -242,10 +247,9 @@ public class AsyncTriggerFetcher {
                             triggerTime,
                             headers,
                             triggerOut,
-                            isWebSource,
-                            isAllowDebugKey,
-                            isAdIdPermissionGranted,
-                            registrationType);
+                            registrationType,
+                            adIdPermission,
+                            arDebugPermission);
             if (!parsed) {
                 asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.PARSING_ERROR);
                 LogUtil.d("Failed to parse.");
@@ -286,11 +290,10 @@ public class AsyncTriggerFetcher {
                 asyncRegistration.getRedirectType(),
                 asyncRedirect,
                 out,
-                asyncRegistration.getType() == AsyncRegistration.RegistrationType.WEB_TRIGGER,
-                asyncRegistration.getDebugKeyAllowed(),
                 asyncFetchStatus,
-                asyncRegistration.getDebugKeyAllowed(),
-                asyncRegistration.getType());
+                asyncRegistration.getType(),
+                asyncRegistration.hasAdIdPermission(),
+                asyncRegistration.getDebugKeyAllowed());
         if (out.isEmpty()) {
             return Optional.empty();
         } else {
@@ -299,7 +302,6 @@ public class AsyncTriggerFetcher {
     }
 
     private Optional<String> getValidEventTriggerData(JSONArray eventTriggerDataArr) {
-
         if (eventTriggerDataArr.length() > MAX_ATTRIBUTION_EVENT_TRIGGER_DATA) {
             LogUtil.d(
                     "Event trigger data list has more entries than permitted. %s",
@@ -313,15 +315,15 @@ public class AsyncTriggerFetcher {
                 JSONObject eventTriggerDatum = eventTriggerDataArr.getJSONObject(i);
                 // Treat invalid trigger data, priority and deduplication key as if they were not
                 // set.
+                UnsignedLong triggerData = new UnsignedLong(0L);
                 if (!eventTriggerDatum.isNull("trigger_data")) {
                     try {
-                        validEventTriggerDatum.put(
-                                "trigger_data",
-                                new UnsignedLong(eventTriggerDatum.getString("trigger_data")));
+                        triggerData = new UnsignedLong(eventTriggerDatum.getString("trigger_data"));
                     } catch (NumberFormatException e) {
                         LogUtil.d(e, "getValidEventTriggerData: parsing trigger_data failed.");
                     }
                 }
+                validEventTriggerDatum.put("trigger_data", triggerData);
                 if (!eventTriggerDatum.isNull("priority")) {
                     try {
                         validEventTriggerDatum.put(
@@ -434,5 +436,6 @@ public class AsyncTriggerFetcher {
         String AGGREGATABLE_TRIGGER_DATA = "aggregatable_trigger_data";
         String AGGREGATABLE_VALUES = "aggregatable_values";
         String DEBUG_KEY = "debug_key";
+        String DEBUG_REPORTING = "debug_reporting";
     }
 }

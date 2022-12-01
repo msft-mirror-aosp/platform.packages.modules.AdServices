@@ -47,8 +47,8 @@ android_test {
         "adservices-test-fixtures",
         "mobile_data_downloader_lib",
         "tflite_support_classifiers_java",
-       "opencensus-java-api",
-       "opencensus-java-contrib-grpc-metrics",
+        "opencensus-java-api",
+        "opencensus-java-contrib-grpc-metrics",
     ],
     libs: [
         "android.test.base",

@@ -70,12 +70,13 @@ public class TriggerTest {
     private static final Uri APP_DESTINATION = Uri.parse("android-app://com.android.app");
     private static final Uri APP_DESTINATION_WITH_PATH =
             Uri.parse("android-app://com.android.app/with/path");
-    private static final Uri WEB_DESTINATION = Uri.parse("https://example.com");
-    private static final Uri WEB_DESTINATION_WITH_PATH = Uri.parse("https://example.com/with/path");
+    private static final Uri WEB_DESTINATION = WebUtil.validUri("https://example.test");
+    private static final Uri WEB_DESTINATION_WITH_PATH =
+            WebUtil.validUri("https://example.test/with/path");
     private static final Uri WEB_DESTINATION_WITH_SUBDOMAIN =
-            Uri.parse("https://subdomain.example.com");
+            WebUtil.validUri("https://subdomain.example.test");
     private static final Uri WEB_DESTINATION_WITH_SUBDOMAIN_PATH_QUERY_FRAGMENT =
-            Uri.parse("https://subdomain.example.com/with/path?query=0#fragment");
+            WebUtil.validUri("https://subdomain.example.test/with/path?query=0#fragment");
     private static final Uri WEB_DESTINATION_INVALID = Uri.parse("https://example.notatld");
 
     @Test
@@ -97,11 +98,14 @@ public class TriggerTest {
         assertEquals(
                 TriggerFixture.getValidTriggerBuilder()
                         .setEnrollmentId("enrollment-id")
-                        .setAttributionDestination(Uri.parse("https://example.com/aD"))
+                        .setAttributionDestination(Uri.parse("https://example.test/aD"))
                         .setDestinationType(EventSurfaceType.WEB)
                         .setId("1")
                         .setEventTriggers(EVENT_TRIGGERS)
                         .setTriggerTime(5L)
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(true)
+                        .setArDebugPermission(true)
                         .setStatus(Trigger.Status.PENDING)
                         .setRegistrant(Uri.parse("android-app://com.example.abc"))
                         .setAggregateTriggerData(aggregateTriggerDatas.toString())
@@ -115,11 +119,14 @@ public class TriggerTest {
                         .build(),
                 TriggerFixture.getValidTriggerBuilder()
                         .setEnrollmentId("enrollment-id")
-                        .setAttributionDestination(Uri.parse("https://example.com/aD"))
+                        .setAttributionDestination(Uri.parse("https://example.test/aD"))
                         .setDestinationType(EventSurfaceType.WEB)
                         .setId("1")
                         .setEventTriggers(EVENT_TRIGGERS)
                         .setTriggerTime(5L)
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(true)
+                        .setArDebugPermission(true)
                         .setStatus(Trigger.Status.PENDING)
                         .setRegistrant(Uri.parse("android-app://com.example.abc"))
                         .setAggregateTriggerData(aggregateTriggerDatas.toString())
@@ -140,9 +147,9 @@ public class TriggerTest {
                 TriggerFixture.getValidTriggerBuilder().setId("2").build());
         assertNotEquals(
                 TriggerFixture.getValidTriggerBuilder()
-                        .setAttributionDestination(Uri.parse("https://1.com")).build(),
+                        .setAttributionDestination(Uri.parse("https://1.test")).build(),
                 TriggerFixture.getValidTriggerBuilder()
-                        .setAttributionDestination(Uri.parse("https://2.com")).build());
+                        .setAttributionDestination(Uri.parse("https://2.test")).build());
         assertNotEquals(
                 TriggerFixture.getValidTriggerBuilder()
                         .setDestinationType(EventSurfaceType.APP).build(),
@@ -480,28 +487,17 @@ public class TriggerTest {
                         .setTriggerTime(234324L)
                         .build();
         EventTrigger eventTrigger1 =
-                new EventTrigger.Builder()
+                new EventTrigger.Builder(new UnsignedLong(2L))
                         .setTriggerPriority(2L)
-                        .setTriggerData(new UnsignedLong(2L))
                         .setDedupKey(new UnsignedLong(2L))
-                        .setFilter(
-                                new FilterData.Builder()
-                                        .buildFilterData(filters1)
-                                        .build())
-                        .setNotFilter(
-                                new FilterData.Builder()
-                                        .buildFilterData(notFilters1)
-                                        .build())
+                        .setFilter(new FilterMap.Builder().buildFilterData(filters1).build())
+                        .setNotFilter(new FilterMap.Builder().buildFilterData(notFilters1).build())
                         .build();
         EventTrigger eventTrigger2 =
-                new EventTrigger.Builder()
+                new EventTrigger.Builder(new UnsignedLong(3L))
                         .setTriggerPriority(3L)
-                        .setTriggerData(new UnsignedLong(3L))
                         .setDedupKey(new UnsignedLong(3L))
-                        .setNotFilter(
-                                new FilterData.Builder()
-                                        .buildFilterData(notFilters2)
-                                        .build())
+                        .setNotFilter(new FilterMap.Builder().buildFilterData(notFilters2).build())
                         .build();
 
         // Action
@@ -540,10 +536,10 @@ public class TriggerTest {
     }
 
     private JSONObject createFilterJSONObject() throws JSONException {
-        JSONObject filterData = new JSONObject();
-        filterData.put("conversion_subdomain",
+        JSONObject filterMap = new JSONObject();
+        filterMap.put("conversion_subdomain",
                 new JSONArray(Arrays.asList("electronics.megastore")));
-        filterData.put("product", new JSONArray(Arrays.asList("1234", "2345")));
-        return filterData;
+        filterMap.put("product", new JSONArray(Arrays.asList("1234", "2345")));
+        return filterMap;
     }
 }

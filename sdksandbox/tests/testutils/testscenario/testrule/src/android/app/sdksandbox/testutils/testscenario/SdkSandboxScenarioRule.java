@@ -32,19 +32,27 @@ import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallback;
 import android.app.sdksandbox.testutils.WaitableCountDownLatch;
 import android.content.Context;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.text.TextUtils;
 import android.view.SurfaceView;
 import android.view.View;
 
+import androidx.annotation.IntDef;
+import androidx.annotation.Nullable;
 import androidx.lifecycle.Lifecycle;
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import org.junit.After;
 import org.junit.Assume;
+import org.junit.Before;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -54,14 +62,42 @@ import java.util.concurrent.atomic.AtomicReference;
  * while {@link SdkSandboxTestScenarioRunner} handles the Sdk-side logic for test execution.
  */
 public final class SdkSandboxScenarioRule implements TestRule {
+    // This flag is used internally for behaviors that are
+    // enabled by default.
+    private static final int ENABLE_ALWAYS = 0x1;
+    // Execute "Before" and "After" annotations around tests.
+    public static final int ENABLE_LIFE_CYCLE_ANNOTATIONS = 0x2;
+
+    // Use flags when you want to make a new behavior available
+    // to preserve backwards compatibility.
+    @IntDef({ENABLE_ALWAYS, ENABLE_LIFE_CYCLE_ANNOTATIONS})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface RuleOptions {}
+
     // We need to allow a fair amount of time to time out since we might
     // want to execute fairly large tests.
     private static final int TEST_TIMEOUT_S = 60;
     private final String mSdkName;
     private ISdkSandboxTestExecutor mTestExecutor;
+    private @Nullable IBinder mBinder;
+    private final int mFlags;
 
     public SdkSandboxScenarioRule(String sdkName) {
+        this(sdkName, null, ENABLE_ALWAYS);
+    }
+
+    public SdkSandboxScenarioRule(String sdkName, @Nullable IBinder customInterface) {
+        this(sdkName, customInterface, ENABLE_ALWAYS);
+    }
+
+    public SdkSandboxScenarioRule(
+            String sdkName, @Nullable IBinder customInterface, @RuleOptions int flags) {
         mSdkName = sdkName;
+        mBinder = customInterface;
+        // The always enable flag is added to the flags
+        // so that we have a way to indicate when a behavior
+        // is always enabled by default.
+        mFlags = flags | ENABLE_ALWAYS;
     }
 
     @Override
@@ -80,10 +116,49 @@ public final class SdkSandboxScenarioRule implements TestRule {
                     assertThat(scenario.getState()).isEqualTo(Lifecycle.State.RESUMED);
                     setView(scenario, sdkSandboxManager);
                     mTestExecutor = ISdkSandboxTestExecutor.Stub.asInterface(sdk.getInterface());
-                    try {
-                        base.evaluate();
-                    } finally {
-                        sdkSandboxManager.unloadSdk(mSdkName);
+
+                    Throwable testFailure =
+                            tryDoWhen(
+                                    ENABLE_LIFE_CYCLE_ANNOTATIONS,
+                                    () -> {
+                                        final List<String> beforeMethods =
+                                                mTestExecutor.retrieveAnnotatedMethods(
+                                                        Before.class.getCanonicalName());
+                                        for (final String before : beforeMethods) {
+                                            runSdkMethod(before, new Bundle());
+                                        }
+                                    });
+
+                    // If the before methods failed, we should not run our tests.
+                    if (testFailure == null) {
+                        testFailure =
+                                tryDoWhen(
+                                        ENABLE_ALWAYS,
+                                        () -> {
+                                            base.evaluate();
+                                        });
+                    }
+
+                    // Even if "before methods" or tests fail, we are still expected to
+                    // run "after methods" for clean up.
+                    Throwable afterFailure =
+                            tryDoWhen(
+                                    ENABLE_LIFE_CYCLE_ANNOTATIONS,
+                                    () -> {
+                                        final List<String> afterMethods =
+                                                mTestExecutor.retrieveAnnotatedMethods(
+                                                        After.class.getCanonicalName());
+                                        for (final String after : afterMethods) {
+                                            runSdkMethod(after, new Bundle());
+                                        }
+                                    });
+
+                    sdkSandboxManager.unloadSdk(mSdkName);
+
+                    if (testFailure != null) {
+                        throw testFailure;
+                    } else if (afterFailure != null) {
+                        throw afterFailure;
                     }
                 }
             }
@@ -95,6 +170,10 @@ public final class SdkSandboxScenarioRule implements TestRule {
     }
 
     public void assertSdkTestRunPasses(String testMethodName, Bundle params) throws Exception {
+        runSdkMethod(testMethodName, params);
+    }
+
+    private void runSdkMethod(String methodName, Bundle params) throws Exception {
         WaitableCountDownLatch testDoneLatch = new WaitableCountDownLatch(TEST_TIMEOUT_S);
         AtomicReference<String> errorRef = new AtomicReference<>(null);
 
@@ -106,7 +185,11 @@ public final class SdkSandboxScenarioRule implements TestRule {
 
                     public void onError(String errorMessage) {
                         if (TextUtils.isEmpty(errorMessage)) {
-                            errorRef.set("Error executing test: Sdk returned no stacktrace");
+                            errorRef.set(
+                                    String.format(
+                                            "Error executing method %s in sdk: Sdk returned no"
+                                                    + " stacktrace",
+                                            methodName));
                         } else {
                             errorRef.set(errorMessage);
                         }
@@ -115,7 +198,7 @@ public final class SdkSandboxScenarioRule implements TestRule {
                 };
 
         assertThat(mTestExecutor).isNotNull();
-        mTestExecutor.executeTest(testMethodName, params, callback);
+        mTestExecutor.invokeMethod(methodName, params, callback);
 
         testDoneLatch.waitForLatch("Sdk did not return any response");
 
@@ -123,10 +206,27 @@ public final class SdkSandboxScenarioRule implements TestRule {
         assertThat(true).isTrue();
     }
 
-    private static SandboxedSdk getLoadedSdk(SdkSandboxManager mSdkSandboxManager, String sdkName)
+    /**
+     * Will attempt to perform a {@link MightThrow} and return a throwable if it failed. It also
+     * expects a flag to gate if the behavior should be attempted or if it should just return.
+     */
+    private Throwable tryDoWhen(@RuleOptions int doWhenFlag, MightThrow mightThrow) {
+        try {
+            if (isFlagSet(doWhenFlag)) {
+                mightThrow.call();
+            }
+            return null;
+        } catch (Throwable e) {
+            return e;
+        }
+    }
+
+    private SandboxedSdk getLoadedSdk(SdkSandboxManager mSdkSandboxManager, String sdkName)
             throws Exception {
+        final Bundle loadParams = new Bundle(1);
+        loadParams.putBinder(ISdkSandboxTestExecutor.TEST_AUTHOR_DEFINED_BINDER, mBinder);
         final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
-        mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
+        mSdkSandboxManager.loadSdk(sdkName, loadParams, Runnable::run, callback);
         if (!callback.isLoadSdkSuccessful()) {
             Assume.assumeTrue(
                     "Skipping test because Sdk Sandbox is disabled",
@@ -169,5 +269,17 @@ public final class SdkSandboxScenarioRule implements TestRule {
         if (surfacePackageException.get() != null) {
             throw surfacePackageException.get();
         }
+    }
+
+    private boolean isFlagSet(@RuleOptions int flag) {
+        return (mFlags & flag) == flag;
+    }
+
+    /**
+     * Similar to Callable but uses Throwable instead. Also not generic because we don't need the
+     * return types in this class.
+     */
+    private interface MightThrow {
+        void call() throws Throwable;
     }
 }
