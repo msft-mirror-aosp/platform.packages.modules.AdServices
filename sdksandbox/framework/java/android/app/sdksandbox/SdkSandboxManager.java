@@ -337,7 +337,7 @@ public final class SdkSandboxManager {
      * the client application.
      *
      * <p>This API may only be called while the caller is running in the foreground. Calls from the
-     * background will result in a {@link SecurityException} being thrown.
+     * background will result in returning LoadSdkException in the {@code receiver}.
      *
      * @param sdkName name of the SDK to be loaded.
      * @param params additional parameters to be passed to the SDK in the form of a {@link Bundle}
