@@ -142,7 +142,13 @@ public class SelectAdsTestServerLatency {
         // TODO(b/259248789) : Modify SelectAdsLatencyHelper to parse all log queries beginning with
         //  SELECT_ADS_LATENCY and use LOG_LABEL_REAL_SERVER_ONE_BUYER_P50 below instead of
         //  LOG_LABEL_P50_5G
-        Log.i(TAG, "(" + LOG_LABEL_P50_5G + ": " + timer.elapsed(TimeUnit.MILLISECONDS) + " ms)");
+        Log.i(
+                TAG,
+                "("
+                        + generateLogLabel("selectAds_oneBuyer_realServer")
+                        + ": "
+                        + timer.elapsed(TimeUnit.MILLISECONDS)
+                        + " ms)");
         Assert.assertEquals(
                 AD_SELECTION_FAILURE_MESSAGE,
                 createExpectedWinningUri(
@@ -169,7 +175,13 @@ public class SelectAdsTestServerLatency {
         // TODO(b/259248789) : Modify SelectAdsLatencyHelper to parse all log queries beginning with
         //  SELECT_ADS_LATENCY and use LOG_LABEL_REAL_SERVER_FIVE_BUYERS_P50 below instead of
         //  LOG_LABEL_P90_5G
-        Log.i(TAG, "(" + LOG_LABEL_P90_5G + ": " + timer.elapsed(TimeUnit.MILLISECONDS) + " ms)");
+        Log.i(
+                TAG,
+                "("
+                        + generateLogLabel("selectAds_fiveBuyers_realServer")
+                        + ": "
+                        + timer.elapsed(TimeUnit.MILLISECONDS)
+                        + " ms)");
         Assert.assertEquals(
                 AD_SELECTION_FAILURE_MESSAGE,
                 createExpectedWinningUri(
@@ -198,5 +210,9 @@ public class SelectAdsTestServerLatency {
     private String createExpectedWinningUri(
             int buyerIndex, String customAudienceName, int adNumber) {
         return StaticAdTechServerUtils.getAdRenderUri(buyerIndex, customAudienceName, adNumber);
+    }
+
+    private String generateLogLabel(String testName) {
+        return "SELECT_ADS_LATENCY_" + getClass().getSimpleName() + "#" + testName;
     }
 }
