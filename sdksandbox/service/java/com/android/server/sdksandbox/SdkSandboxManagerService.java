@@ -18,6 +18,7 @@ package com.android.server.sdksandbox;
 
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND;
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE;
+import static android.app.sdksandbox.SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR;
 import static android.app.sdksandbox.SdkSandboxManager.LOAD_SDK_SDK_SANDBOX_DISABLED;
 import static android.app.sdksandbox.SdkSandboxManager.REQUEST_SURFACE_PACKAGE_SDK_NOT_LOADED;
 import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_AVAILABLE;
@@ -379,36 +380,51 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             long timeAppCalledSystemServer,
             Bundle params,
             ILoadSdkCallback callback) {
-        // Log the IPC latency from app to system server
-        final long timeSystemServerReceivedCallFromApp = mInjector.getCurrentTime();
-
-        final int callingUid = Binder.getCallingUid();
-        final CallingInfo callingInfo = new CallingInfo(callingUid, callingPackageName);
-        enforceCallingPackageBelongsToUid(callingInfo);
-        enforceCallerHasNetworkAccess(callingPackageName);
-        enforceCallerRunsInForeground(callingInfo);
-        synchronized (mLock) {
-            if (mRunningInstrumentations.contains(callingInfo)) {
-                throw new SecurityException(
-                        "Currently running instrumentation of this sdk sandbox process");
-            }
-        }
-
-        SdkSandboxStatsLog.write(
-                SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK,
-                /*latency=*/ (int)
-                        (timeSystemServerReceivedCallFromApp - timeAppCalledSystemServer),
-                /*success=*/ true,
-                SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER,
-                callingUid);
-
-        final long token = Binder.clearCallingIdentity();
         try {
-            loadSdkWithClearIdentity(
-                    callingInfo, sdkName, params, callback, timeSystemServerReceivedCallFromApp);
-        } finally {
-            Binder.restoreCallingIdentity(token);
+            // Log the IPC latency from app to system server
+            final long timeSystemServerReceivedCallFromApp = mInjector.getCurrentTime();
+
+            final int callingUid = Binder.getCallingUid();
+            final CallingInfo callingInfo = new CallingInfo(callingUid, callingPackageName);
+            enforceCallingPackageBelongsToUid(callingInfo);
+            enforceCallerHasNetworkAccess(callingPackageName);
+            enforceCallerRunsInForeground(callingInfo);
+            synchronized (mLock) {
+                if (mRunningInstrumentations.contains(callingInfo)) {
+                    throw new SecurityException(
+                            "Currently running instrumentation of this sdk sandbox process");
+                }
+            }
+
+            SdkSandboxStatsLog.write(
+                    SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                    SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK,
+                    /*latency=*/ (int)
+                            (timeSystemServerReceivedCallFromApp - timeAppCalledSystemServer),
+                    /*success=*/ true,
+                    SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER,
+                    callingUid);
+
+            final long token = Binder.clearCallingIdentity();
+            try {
+                loadSdkWithClearIdentity(
+                        callingInfo,
+                        sdkName,
+                        params,
+                        callback,
+                        timeSystemServerReceivedCallFromApp);
+            } finally {
+                Binder.restoreCallingIdentity(token);
+            }
+        } catch (Throwable e) {
+            try {
+                Log.e(TAG, "Failed to load SDK" + sdkName, e);
+                callback.onLoadSdkFailure(
+                        new LoadSdkException(LOAD_SDK_INTERNAL_ERROR, e.getMessage(), e),
+                        System.currentTimeMillis());
+            } catch (RemoteException ex) {
+                Log.e(TAG, "Failed to send onLoadCodeFailure", e);
+            }
         }
     }
 
