@@ -82,7 +82,12 @@ public class AsyncTriggerFetcher {
         mLogger = logger;
     }
 
-    private boolean parseTrigger(
+    /**
+     * Parse a {@code Trigger}, given response headers, adding the {@code Trigger} to a given
+     * list.
+     */
+    @VisibleForTesting
+    public boolean parseTrigger(
             @NonNull Uri topOrigin,
             @NonNull Uri registrant,
             @NonNull String enrollmentId,
