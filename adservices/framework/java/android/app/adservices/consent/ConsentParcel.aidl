@@ -14,6 +14,6 @@
  * limitations under the License.
  */
 
-package android.app.adservices;
+package android.app.adservices.consent;
 
 parcelable ConsentParcel;

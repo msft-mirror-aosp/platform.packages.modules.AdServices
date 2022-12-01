@@ -43,7 +43,9 @@ import com.android.adservices.service.measurement.aggregation.AggregateHistogram
 import com.android.adservices.service.measurement.aggregation.AggregatePayloadGenerator;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
+import com.android.adservices.service.measurement.util.DebugKey;
 import com.android.adservices.service.measurement.util.Filter;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Web;
 
 import org.json.JSONException;
@@ -182,8 +184,13 @@ class AttributionJobHandler {
                     long randomTime = (long) ((Math.random()
                             * (AGGREGATE_MAX_REPORT_DELAY - AGGREGATE_MIN_REPORT_DELAY))
                             + AGGREGATE_MIN_REPORT_DELAY);
+                    Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                            DebugKey.getDebugKeys(source, trigger);
+                    UnsignedLong sourceDebugKey = debugKeyPair.first;
+                    UnsignedLong triggerDebugKey = debugKeyPair.second;
+
                     int debugReportStatus = AggregateReport.DebugReportStatus.NONE;
-                    if (source.getDebugKey() != null || trigger.getDebugKey() != null) {
+                    if (sourceDebugKey != null || triggerDebugKey != null) {
                         debugReportStatus = AggregateReport.DebugReportStatus.PENDING;
                     }
                     AggregateReport aggregateReport =
@@ -206,8 +213,8 @@ class AttributionJobHandler {
                                     .setStatus(AggregateReport.Status.PENDING)
                                     .setDebugReportStatus(debugReportStatus)
                                     .setApiVersion(API_VERSION)
-                                    .setSourceDebugKey(source.getDebugKey())
-                                    .setTriggerDebugKey(trigger.getDebugKey())
+                                    .setSourceDebugKey(sourceDebugKey)
+                                    .setTriggerDebugKey(triggerDebugKey)
                                     .setSourceId(source.getId())
                                     .setTriggerId(trigger.getId())
                                     .build();
@@ -259,10 +266,6 @@ class AttributionJobHandler {
     private boolean maybeGenerateEventReport(
             Source source, Trigger trigger, IMeasurementDao measurementDao)
             throws DatastoreException {
-        if (trigger.getEventTriggers() == null) {
-            return false;
-        }
-
         int numReports =
                 measurementDao.getNumEventReportsPerDestination(
                         trigger.getAttributionDestination(), trigger.getDestinationType());

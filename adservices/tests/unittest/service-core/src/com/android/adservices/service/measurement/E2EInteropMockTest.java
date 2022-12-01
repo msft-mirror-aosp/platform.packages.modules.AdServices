@@ -57,6 +57,7 @@ public class E2EInteropMockTest extends E2EMockTest {
     private static final String LOG_TAG = "msmt_e2e_interop_mock_test";
     private static final String TEST_DIR_NAME = "msmt_interop_tests";
     private static final String ANDROID_APP_SCHEME = "android-app";
+    private static final String DEFAULT_EVENT_TRIGGER_DATA = "[]";
 
     @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> getData() throws IOException, JSONException {
@@ -80,7 +81,8 @@ public class E2EInteropMockTest extends E2EMockTest {
                         sDatastoreManager,
                         mAsyncSourceFetcher,
                         mAsyncTriggerFetcher,
-                        sEnrollmentDao);
+                        sEnrollmentDao,
+                        mDebugReportApi);
     }
 
     @Override
@@ -104,7 +106,8 @@ public class E2EInteropMockTest extends E2EMockTest {
                                         source,
                                         source.getPublisher(),
                                         EventSurfaceType.WEB,
-                                        measurementDao)) {
+                                        measurementDao,
+                                        mDebugReportApi)) {
                                     measurementDao.insertSource(source);
                                 }
                             }));
@@ -198,9 +201,11 @@ public class E2EInteropMockTest extends E2EMockTest {
             triggerBuilder.setRegistrant(getRegistrant(request.getAppPackageName()));
             List<String> field = headers.get("Attribution-Reporting-Register-Trigger");
             JSONObject json = new JSONObject(field.get(0));
+            String eventTriggerData = DEFAULT_EVENT_TRIGGER_DATA;
             if (!json.isNull("event_trigger_data")) {
-                triggerBuilder.setEventTriggers(json.getJSONArray("event_trigger_data").toString());
+                eventTriggerData = json.getJSONArray("event_trigger_data").toString();
             }
+            triggerBuilder.setEventTriggers(eventTriggerData);
             if (!json.isNull("aggregatable_trigger_data")) {
                 triggerBuilder.setAggregateTriggerData(
                         json.getJSONArray("aggregatable_trigger_data").toString());

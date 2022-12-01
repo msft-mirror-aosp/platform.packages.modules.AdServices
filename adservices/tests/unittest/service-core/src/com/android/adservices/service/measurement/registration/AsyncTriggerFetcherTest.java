@@ -136,6 +136,7 @@ public final class AsyncTriggerFetcherTest {
             new WebTriggerParams.Builder(REGISTRATION_URI_2).setDebugKeyAllowed(false).build();
     private static final Context CONTEXT =
             InstrumentationRegistry.getInstrumentation().getContext();
+    private static final String DEFAULT_EVENT_TRIGGER_DATA = "[]";
 
     AsyncTriggerFetcher mFetcher;
 
@@ -391,6 +392,92 @@ public final class AsyncTriggerFetcherTest {
                         appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void fetchTrigger_eventTriggerDataNull_eventTriggerDataEqualsEmptyArray()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String eventTriggerData = "null";
+        String expectedResult = DEFAULT_EVENT_TRIGGER_DATA;
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
+
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertTrue(fetch.isPresent());
+        Trigger result = fetch.get();
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals(expectedResult, result.getEventTriggers());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void fetchTrigger_eventTriggerDataMissing_eventTriggerDataEqualsEmptyArray()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String expectedResult = DEFAULT_EVENT_TRIGGER_DATA;
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{\"debug_key\": \"" + DEBUG_KEY + "\"}")));
+
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertTrue(fetch.isPresent());
+        Trigger result = fetch.get();
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals(expectedResult, result.getEventTriggers());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void fetchTrigger_eventTriggerDataEmptyObjects_emptyObjectsPopulated() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String eventTriggerData = "[{\"trigger_data\":\"2\"},{},{}]";
+        String expectedResult =
+                "[{\"trigger_data\":\"2\"},{\"trigger_data\":\"0\"},{\"trigger_data\":\"0\"}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
+
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertTrue(fetch.isPresent());
+        Trigger result = fetch.get();
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals(expectedResult, result.getEventTriggers());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
     }
@@ -1455,42 +1542,6 @@ public final class AsyncTriggerFetcherTest {
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
         assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.getEventTriggers());
         assertEquals(new UnsignedLong(-1L), result.getDebugKey());
-    }
-
-    @Test
-    public void testBasicTriggerRequestWithoutAdIdPermission() throws Exception {
-        RegistrationRequest request = buildRequestWithoutAdIdPermission(TRIGGER_URI);
-        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
-        when(mUrlConnection.getResponseCode()).thenReturn(200);
-        Map<String, List<String>> headersRequest = new HashMap<>();
-        headersRequest.put(
-                "Attribution-Reporting-Register-Trigger",
-                List.of(
-                        "{"
-                                + "\"event_trigger_data\": "
-                                + EVENT_TRIGGERS_1
-                                + ", \"debug_key\": \""
-                                + DEBUG_KEY
-                                + "\""
-                                + "}"));
-        when(mUrlConnection.getHeaderFields()).thenReturn(headersRequest);
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
-        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
-        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
-        // Execution
-        Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
-        // Assertion
-        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
-        assertTrue(fetch.isPresent());
-        Trigger result = fetch.get();
-        assertEquals(
-                asyncRegistration.getTopOrigin().toString(),
-                result.getAttributionDestination().toString());
-        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.getEventTriggers());
-        assertNull(result.getDebugKey());
-        verify(mUrlConnection).setRequestMethod("POST");
     }
 
     @Test
@@ -2725,40 +2776,6 @@ public final class AsyncTriggerFetcherTest {
     }
 
     @Test
-    public void fetchWebTriggerSuccessWithoutAdIdPermission() throws IOException, JSONException {
-        // Setup
-        WebTriggerRegistrationRequest request =
-                buildWebTriggerRegistrationRequest(
-                        Arrays.asList(TRIGGER_REGISTRATION_1, TRIGGER_REGISTRATION_2), TOP_ORIGIN);
-        doReturn(mUrlConnection1).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
-        when(mUrlConnection1.getResponseCode()).thenReturn(200);
-        Map<String, List<String>> headersRequest = new HashMap<>();
-        headersRequest.put(
-                "Attribution-Reporting-Register-Trigger",
-                List.of(
-                        "{"
-                                + "\"event_trigger_data\": "
-                                + EVENT_TRIGGERS_1
-                                + ", \"debug_key\": \""
-                                + DEBUG_KEY
-                                + "\""
-                                + "}"));
-        when(mUrlConnection1.getHeaderFields()).thenReturn(headersRequest);
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
-        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
-        // Execution
-        Optional<Trigger> fetch = mFetcher.fetchTrigger(
-                webTriggerRegistrationRequest(request, false), asyncFetchStatus, asyncRedirect);
-        // Assertion
-        assertTrue(fetch.isPresent());
-        Trigger result = fetch.get();
-        assertEquals(TOP_ORIGIN, result.getAttributionDestination().toString());
-        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.getEventTriggers());
-        verify(mUrlConnection1).setRequestMethod("POST");
-    }
-
-    @Test
     public void basicTriggerRequest_headersMoreThanMaxResponseSize_emitsMetricsWithAdTechDomain()
             throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
@@ -2797,17 +2814,6 @@ public final class AsyncTriggerFetcherTest {
                         Uri.parse(triggerUri),
                         CONTEXT.getAttributionSource().getPackageName(),
                         SDK_PACKAGE_NAME)
-                .setAdIdPermissionGranted(true)
-                .build();
-    }
-
-    private RegistrationRequest buildRequestWithoutAdIdPermission(String triggerUri) {
-        return new RegistrationRequest.Builder(
-                        RegistrationRequest.REGISTER_TRIGGER,
-                        Uri.parse(triggerUri),
-                        CONTEXT.getAttributionSource().getPackageName(),
-                        SDK_PACKAGE_NAME)
-                .setAdIdPermissionGranted(false)
                 .build();
     }
 
@@ -2865,12 +2871,12 @@ public final class AsyncTriggerFetcherTest {
                 System.currentTimeMillis(),
                 redirectType,
                 redirectCount,
-                registrationRequest.isAdIdPermissionGranted());
+                false);
     }
 
     private static AsyncRegistration webTriggerRegistrationRequest(
             WebTriggerRegistrationRequest webTriggerRegistrationRequest,
-            boolean adIdPermissionGranted) {
+            boolean arDebugPermission) {
         if (webTriggerRegistrationRequest.getTriggerParams().size() > 0) {
             WebTriggerParams webTriggerParams =
                     webTriggerRegistrationRequest.getTriggerParams().get(0);
@@ -2912,7 +2918,7 @@ public final class AsyncTriggerFetcherTest {
                     System.currentTimeMillis(),
                     AsyncRegistration.RedirectType.NONE,
                     0,
-                    adIdPermissionGranted);
+                    arDebugPermission);
         }
         return null;
     }

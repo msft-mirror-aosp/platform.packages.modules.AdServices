@@ -55,7 +55,7 @@ public class Trigger {
     @EventSurfaceType private int mDestinationType;
     private String mEnrollmentId;
     private long mTriggerTime;
-    private String mEventTriggers;
+    private @NonNull String mEventTriggers;
     @Status private int mStatus;
     private Uri mRegistrant;
     private String mAggregateTriggerData;
@@ -64,7 +64,9 @@ public class Trigger {
     private AggregatableAttributionTrigger mAggregatableAttributionTrigger;
     private String mFilters;
     private String mNotFilters;
-    private @Nullable UnsignedLong mDebugKey;
+    @Nullable private UnsignedLong mDebugKey;
+    private boolean mAdIdPermission;
+    private boolean mArDebugPermission;
 
     @IntDef(value = {Status.PENDING, Status.IGNORED, Status.ATTRIBUTED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -97,6 +99,8 @@ public class Trigger {
                 && Objects.equals(mEventTriggers, trigger.mEventTriggers)
                 && mStatus == trigger.mStatus
                 && mIsDebugReporting == trigger.mIsDebugReporting
+                && mAdIdPermission == trigger.mAdIdPermission
+                && mArDebugPermission == trigger.mArDebugPermission
                 && Objects.equals(mRegistrant, trigger.mRegistrant)
                 && Objects.equals(mAggregateTriggerData, trigger.mAggregateTriggerData)
                 && Objects.equals(mAggregateValues, trigger.mAggregateValues)
@@ -121,7 +125,9 @@ public class Trigger {
                 mAggregatableAttributionTrigger,
                 mFilters,
                 mNotFilters,
-                mDebugKey);
+                mDebugKey,
+                mAdIdPermission,
+                mArDebugPermission);
     }
 
     /**
@@ -249,6 +255,16 @@ public class Trigger {
         return mIsDebugReporting;
     }
 
+    /** Is Ad ID Permission Enabled. */
+    public boolean hasAdIdPermission() {
+        return mAdIdPermission;
+    }
+
+    /** Is Ar Debug Permission Enabled. */
+    public boolean hasArDebugPermission() {
+        return mArDebugPermission;
+    }
+
     /**
      * Returns top level not-filters. The value is in json format.
      */
@@ -319,13 +335,12 @@ public class Trigger {
         List<EventTrigger> eventTriggers = new ArrayList<>();
 
         for (int i = 0; i < jsonArray.length(); i++) {
-            EventTrigger.Builder eventTriggerBuilder = new EventTrigger.Builder();
             JSONObject eventTriggersJsonString = jsonArray.getJSONObject(i);
-
-            if (!eventTriggersJsonString.isNull(EventTriggerContract.TRIGGER_DATA)) {
-                eventTriggerBuilder.setTriggerData(new UnsignedLong(
-                        eventTriggersJsonString.getString(EventTriggerContract.TRIGGER_DATA)));
-            }
+            EventTrigger.Builder eventTriggerBuilder =
+                    new EventTrigger.Builder(
+                            new UnsignedLong(
+                                    eventTriggersJsonString.getString(
+                                            EventTriggerContract.TRIGGER_DATA)));
 
             if (!eventTriggersJsonString.isNull(EventTriggerContract.PRIORITY)) {
                 eventTriggerBuilder.setTriggerPriority(
@@ -470,6 +485,18 @@ public class Trigger {
         /** See {@link Trigger#isDebugReporting()} */
         public Trigger.Builder setIsDebugReporting(boolean isDebugReporting) {
             mBuilding.mIsDebugReporting = isDebugReporting;
+            return this;
+        }
+
+        /** See {@link Trigger#hasAdIdPermission()} ()} */
+        public Trigger.Builder setAdIdPermission(boolean adIdPermission) {
+            mBuilding.mAdIdPermission = adIdPermission;
+            return this;
+        }
+
+        /** See {@link Trigger#hasArDebugPermission()} ()} */
+        public Trigger.Builder setArDebugPermission(boolean arDebugPermission) {
+            mBuilding.mArDebugPermission = arDebugPermission;
             return this;
         }
 
