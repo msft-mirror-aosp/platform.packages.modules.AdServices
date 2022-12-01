@@ -51,7 +51,7 @@ import javax.net.ssl.HttpsURLConnection;
 public final class AggregateEncryptionKeyManagerTest {
     private static final int NUM_KEYS_REQUESTED = 5;
     private static final Uri MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL =
-            Uri.parse("https://not-going-to-be-visited.com");
+            Uri.parse("https://not-going-to-be-visited.test");
 
     @Mock DatastoreManager mDatastoreManager;
     @Spy AggregateEncryptionKeyFetcher mFetcher;

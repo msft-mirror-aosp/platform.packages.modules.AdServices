@@ -16,10 +16,14 @@
 
 package com.android.adservices.service.adselection;
 
-
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.verify;
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdWithBid;
@@ -40,6 +44,8 @@ import com.android.adservices.service.adselection.AdSelectionScriptEngine.Auctio
 import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
+import com.android.adservices.service.stats.AdSelectionExecutionLogger;
+import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -47,10 +53,14 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import org.json.JSONObject;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -81,6 +91,31 @@ public class AdSelectionScriptEngineTest {
                     AdSelectionSignals.EMPTY);
     private static final List<CustomAudienceSignals> CUSTOM_AUDIENCE_SIGNALS_LIST =
             ImmutableList.of(CUSTOM_AUDIENCE_SIGNALS_1, CUSTOM_AUDIENCE_SIGNALS_2);
+    private static final long AD_SELECTION_ID_1 = 12345L;
+    private static final double AD_BID_1 = 10.0;
+    private static final long AD_SELECTION_ID_2 = 123456L;
+    private static final double AD_BID_2 = 11.0;
+    private static final long AD_SELECTION_ID_3 = 1234567L;
+    private static final double AD_BID_3 = 12.0;
+    private static final Uri AD_RENDER_URI = Uri.parse("test.com/");
+    private static final AdSelectionIdWithBidAndRenderUri AD_SELECTION_ID_WITH_BID_1 =
+            AdSelectionIdWithBidAndRenderUri.builder()
+                    .setAdSelectionId(AD_SELECTION_ID_1)
+                    .setBid(AD_BID_1)
+                    .setRenderUri(AD_RENDER_URI)
+                    .build();
+    private static final AdSelectionIdWithBidAndRenderUri AD_SELECTION_ID_WITH_BID_2 =
+            AdSelectionIdWithBidAndRenderUri.builder()
+                    .setAdSelectionId(AD_SELECTION_ID_2)
+                    .setBid(AD_BID_2)
+                    .setRenderUri(AD_RENDER_URI)
+                    .build();
+    private static final AdSelectionIdWithBidAndRenderUri AD_SELECTION_ID_WITH_BID_3 =
+            AdSelectionIdWithBidAndRenderUri.builder()
+                    .setAdSelectionId(AD_SELECTION_ID_3)
+                    .setBid(AD_BID_3)
+                    .setRenderUri(AD_RENDER_URI)
+                    .build();
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(1);
     IsolateSettings mIsolateSettings = IsolateSettings.forMaxHeapSizeEnforcementDisabled();
     private final AdSelectionScriptEngine mAdSelectionScriptEngine =
@@ -88,6 +123,14 @@ public class AdSelectionScriptEngineTest {
                     sContext,
                     () -> mIsolateSettings.getEnforceMaxHeapSizeFeature(),
                     () -> mIsolateSettings.getMaxHeapSizeBytes());
+
+    @Mock private AdSelectionExecutionLogger mAdSelectionExecutionLoggerMock;
+    @Mock private RunAdBiddingPerCAExecutionLogger mRunAdBiddingPerCAExecutionLoggerMock;
+
+    @Before
+    public void setUp() {
+        MockitoAnnotations.initMocks(this);
+    }
 
     @Test
     public void testAuctionScriptIsInvalidIfRequiredFunctionDoesNotExist() throws Exception {
@@ -105,6 +148,15 @@ public class AdSelectionScriptEngineTest {
                         "function helloAdvert(ad) { return {'status': 0, 'greeting': 'hello ' +"
                                 + " ad.render_uri }; }",
                         ImmutableList.of("helloAdvert", "helloAdvertWrongName")));
+    }
+
+    @Test
+    public void testAuctionScriptIsValidIfAllRequiredFunctionsExist() throws Exception {
+        assertTrue(
+                callJsValidation(
+                        "function helloAdvert(ad) { return {'status': 0, 'greeting': 'hello ' +"
+                                + " ad.render_uri }; }",
+                        ImmutableList.of("helloAdvert")));
     }
 
     @Test
@@ -180,6 +232,16 @@ public class AdSelectionScriptEngineTest {
         final AdData ad2 =
                 new AdData(Uri.parse("http://www.domain.com/adverts/456"), "{\"result\":2.1}");
         List<AdData> ads = ImmutableList.of(ad1, ad2);
+        doNothing().when(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
+        // Logger calls come after the callback is returned
+        CountDownLatch loggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            loggerLatch.countDown();
+                            return null;
+                        })
+                .when(mRunAdBiddingPerCAExecutionLoggerMock)
+                .endGenerateBids();
         final List<AdWithBid> result =
                 generateBids(
                         "function generateBid(ad, auction_signals, per_buyer_signals,"
@@ -193,6 +255,9 @@ public class AdSelectionScriptEngineTest {
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         CUSTOM_AUDIENCE_SIGNALS_1);
+        loggerLatch.await();
+        verify(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
+        verify(mRunAdBiddingPerCAExecutionLoggerMock).endGenerateBids();
         assertThat(result).containsExactly(new AdWithBid(ad1, 1.1), new AdWithBid(ad2, 2.1));
     }
 
@@ -203,6 +268,16 @@ public class AdSelectionScriptEngineTest {
         final AdData ad2 =
                 new AdData(Uri.parse("http://www.domain.com/adverts/456"), "{\"result\":2.1}");
         List<AdData> ads = ImmutableList.of(ad1, ad2);
+        doNothing().when(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
+        // Logger calls come after the callback is returned
+        CountDownLatch loggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            loggerLatch.countDown();
+                            return null;
+                        })
+                .when(mRunAdBiddingPerCAExecutionLoggerMock)
+                .endGenerateBids();
         final List<AdWithBid> result =
                 generateBids(
                         "function generateBid(ad, auction_signals, per_buyer_signals,"
@@ -216,7 +291,10 @@ public class AdSelectionScriptEngineTest {
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         CUSTOM_AUDIENCE_SIGNALS_1);
+        loggerLatch.await();
         assertThat(result).isEmpty();
+        verify(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
+        verify(mRunAdBiddingPerCAExecutionLoggerMock).endGenerateBids();
     }
 
     @Test
@@ -226,6 +304,16 @@ public class AdSelectionScriptEngineTest {
         final AdData ad2 =
                 new AdData(Uri.parse("http://www.domain.com/adverts/456"), "{\"result\":2.1}");
         List<AdData> ads = ImmutableList.of(ad1, ad2);
+        doNothing().when(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
+        // Logger calls come after the callback is returned
+        CountDownLatch loggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            loggerLatch.countDown();
+                            return null;
+                        })
+                .when(mRunAdBiddingPerCAExecutionLoggerMock)
+                .endGenerateBids();
         final List<AdWithBid> result =
                 generateBids(
                         // The response for the second add doesn't include the bid so we cannot
@@ -242,7 +330,10 @@ public class AdSelectionScriptEngineTest {
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         CUSTOM_AUDIENCE_SIGNALS_1);
+        loggerLatch.await();
         assertThat(result).isEmpty();
+        verify(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
+        verify(mRunAdBiddingPerCAExecutionLoggerMock).endGenerateBids();
     }
 
     @Test
@@ -253,6 +344,16 @@ public class AdSelectionScriptEngineTest {
                 new AdData(Uri.parse("http://www.domain.com/adverts/456"), "{\"result\":2.1}");
         List<AdWithBid> adWithBids =
                 ImmutableList.of(new AdWithBid(ad1, 100), new AdWithBid(ad2, 200));
+        doNothing().when(mAdSelectionExecutionLoggerMock).startScoreAds();
+        // Logger calls come after the callback is returned
+        CountDownLatch loggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            loggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdSelectionExecutionLoggerMock)
+                .endScoreAds();
         final List<Double> result =
                 scoreAds(
                         "function scoreAd(ad, bid, auction_config, seller_signals, "
@@ -266,7 +367,10 @@ public class AdSelectionScriptEngineTest {
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         CUSTOM_AUDIENCE_SIGNALS_LIST);
+        loggerLatch.await();
         assertThat(result).containsExactly(100.0, 200.0);
+        verify(mAdSelectionExecutionLoggerMock).startScoreAds();
+        verify(mAdSelectionExecutionLoggerMock).endScoreAds();
     }
 
     @Test
@@ -277,6 +381,16 @@ public class AdSelectionScriptEngineTest {
                 new AdData(Uri.parse("http://www.domain.com/adverts/456"), "{\"result\":2.1}");
         List<AdWithBid> adWithBids =
                 ImmutableList.of(new AdWithBid(ad1, 100), new AdWithBid(ad2, 200));
+        doNothing().when(mAdSelectionExecutionLoggerMock).startScoreAds();
+        // Logger calls come after the callback is returned
+        CountDownLatch loggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            loggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdSelectionExecutionLoggerMock)
+                .endScoreAds();
         final List<Double> result =
                 scoreAds(
                         "function scoreAd(ad, bid, auction_config, seller_signals, "
@@ -290,7 +404,85 @@ public class AdSelectionScriptEngineTest {
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         CUSTOM_AUDIENCE_SIGNALS_LIST);
+        loggerLatch.await();
         assertThat(result).isEmpty();
+        verify(mAdSelectionExecutionLoggerMock).startScoreAds();
+        verify(mAdSelectionExecutionLoggerMock).endScoreAds();
+    }
+
+    @Test
+    public void testSelectOutcomeWaterfallMediationLogicReturnAdJsSuccess() throws Exception {
+        final Long result =
+                selectOutcome(
+                        "function selectOutcome(outcomes, selection_signals) {\n"
+                                + "    if (outcomes.length != 1 || selection_signals.bid_floor =="
+                                + " undefined) return null;\n"
+                                + "\n"
+                                + "    const outcome_1p = outcomes[0];\n"
+                                + "    return {'status': 0, 'result': (outcome_1p.bid >"
+                                + " selection_signals.bid_floor) ? outcome_1p : null};\n"
+                                + "}",
+                        Collections.singletonList(AD_SELECTION_ID_WITH_BID_1),
+                        AdSelectionSignals.fromString("{bid_floor: 9}"));
+        assertThat(result).isEqualTo(AD_SELECTION_ID_WITH_BID_1.getAdSelectionId());
+    }
+
+    @Test
+    public void testSelectOutcomeWaterfallMediationLogicReturnNullJsSuccess() throws Exception {
+        final Long result =
+                selectOutcome(
+                        "function selectOutcome(outcomes, selection_signals) {\n"
+                                + "    if (outcomes.length != 1 || selection_signals.bid_floor =="
+                                + " undefined) return null;\n"
+                                + "\n"
+                                + "    const outcome_1p = outcomes[0];\n"
+                                + "    return {'status': 0, 'result': (outcome_1p.bid >"
+                                + " selection_signals.bid_floor) ? outcome_1p : null};\n"
+                                + "}",
+                        Collections.singletonList(AD_SELECTION_ID_WITH_BID_1),
+                        AdSelectionSignals.fromString("{bid_floor: 11}"));
+        assertThat(result).isNull();
+    }
+
+    @Test
+    public void testSelectOutcomeOpenBiddingMediationLogicJsSuccess() throws Exception {
+        final Long result =
+                selectOutcome(
+                        "function selectOutcome(outcomes, selection_signals) {\n"
+                                + "    let max_bid = 0;\n"
+                                + "    let winner_outcome = null;\n"
+                                + "    for (let outcome of outcomes) {\n"
+                                + "        if (outcome.bid > max_bid) {\n"
+                                + "            max_bid = outcome.bid;\n"
+                                + "            winner_outcome = outcome;\n"
+                                + "        }\n"
+                                + "    }\n"
+                                + "    return {'status': 0, 'result': winner_outcome};\n"
+                                + "}",
+                        List.of(
+                                AD_SELECTION_ID_WITH_BID_1,
+                                AD_SELECTION_ID_WITH_BID_2,
+                                AD_SELECTION_ID_WITH_BID_3),
+                        AdSelectionSignals.EMPTY);
+        assertThat(result).isEqualTo(AD_SELECTION_ID_WITH_BID_3.getAdSelectionId());
+    }
+
+    @Test
+    public void testSelectOutcomeReturningMultipleIdsFailure() {
+        ExecutionException exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () ->
+                                selectOutcome(
+                                        "function selectOutcome(outcomes, selection_signals) {\n"
+                                                + "    return {'status': 0, 'result': outcomes};\n"
+                                                + "}",
+                                        List.of(
+                                                AD_SELECTION_ID_WITH_BID_1,
+                                                AD_SELECTION_ID_WITH_BID_2,
+                                                AD_SELECTION_ID_WITH_BID_3),
+                                        AdSelectionSignals.EMPTY));
+        Assert.assertTrue(exception.getCause() instanceof IllegalStateException);
     }
 
     @Test
@@ -348,7 +540,8 @@ public class AdSelectionScriptEngineTest {
                             perBuyerSignals,
                             trustedBiddingSignals,
                             contextualSignals,
-                            customAudienceSignals);
+                            customAudienceSignals,
+                            mRunAdBiddingPerCAExecutionLoggerMock);
                 });
     }
 
@@ -371,7 +564,21 @@ public class AdSelectionScriptEngineTest {
                             sellerSignals,
                             trustedScoringSignals,
                             contextualSignals,
-                            customAudienceSignals);
+                            customAudienceSignals,
+                            mAdSelectionExecutionLoggerMock);
+                });
+    }
+
+    private Long selectOutcome(
+            String jsScript,
+            List<AdSelectionIdWithBidAndRenderUri> adSelectionIdWithBidAndRenderUris,
+            AdSelectionSignals selectionSignals)
+            throws Exception {
+        return waitForFuture(
+                () -> {
+                    Log.i(TAG, "Calling selectOutcome");
+                    return mAdSelectionScriptEngine.selectOutcome(
+                            jsScript, adSelectionIdWithBidAndRenderUris, selectionSignals);
                 });
     }
 
@@ -388,7 +595,7 @@ public class AdSelectionScriptEngineTest {
         return waitForFuture(
                 () -> {
                     Log.i(TAG, "Calling Auction Script Engine");
-                    return mAdSelectionScriptEngine.runAuctionScript(
+                    return mAdSelectionScriptEngine.runAuctionScriptIterative(
                             jsScript,
                             adDataArgs.build(),
                             otherArgs,

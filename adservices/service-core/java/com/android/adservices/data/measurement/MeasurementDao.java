@@ -39,6 +39,7 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.reporting.DebugReport;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Web;
@@ -107,6 +108,11 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.TriggerContract.NOT_FILTERS, trigger.getNotFilters());
         values.put(MeasurementTables.TriggerContract.DEBUG_KEY,
                 getNullableUnsignedLong(trigger.getDebugKey()));
+        values.put(MeasurementTables.TriggerContract.DEBUG_REPORTING, trigger.isDebugReporting());
+        values.put(MeasurementTables.TriggerContract.AD_ID_PERMISSION, trigger.hasAdIdPermission());
+        values.put(
+                MeasurementTables.TriggerContract.AR_DEBUG_PERMISSION,
+                trigger.hasArDebugPermission());
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.TriggerContract.TABLE,
                         /*nullColumnHack=*/null, values);
@@ -234,6 +240,29 @@ class MeasurementDao implements IMeasurementDao {
         }
     }
 
+    @Nullable
+    @Override
+    public DebugReport getDebugReport(String debugReportId) throws DatastoreException {
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                MeasurementTables.DebugReportContract.TABLE,
+                                /*columns=*/ null,
+                                MeasurementTables.DebugReportContract.ID + " = ? ",
+                                new String[] {debugReportId},
+                                /*groupBy=*/ null,
+                                /*having=*/ null,
+                                /*orderBy=*/ null,
+                                /*limit=*/ null)) {
+            if (cursor.getCount() == 0) {
+                throw new DatastoreException("DebugReport retrieval failed. Id: " + debugReportId);
+            }
+            cursor.moveToNext();
+            return SqliteObjectMapper.constructDebugReportFromCursor(cursor);
+        }
+    }
+
     @Override
     public void insertSource(@NonNull Source source) throws DatastoreException {
         if (mDbFileMaxSizeLimitReachedSupplier.get()) {
@@ -269,6 +298,11 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.SourceContract.AGGREGATE_CONTRIBUTIONS, 0);
         values.put(MeasurementTables.SourceContract.DEBUG_KEY,
                 getNullableUnsignedLong(source.getDebugKey()));
+        values.put(MeasurementTables.SourceContract.DEBUG_REPORTING, source.isDebugReporting());
+        values.put(MeasurementTables.SourceContract.AD_ID_PERMISSION, source.hasAdIdPermission());
+        values.put(
+                MeasurementTables.SourceContract.AR_DEBUG_PERMISSION,
+                source.hasArDebugPermission());
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.SourceContract.TABLE,
                         /*nullColumnHack=*/null, values);
@@ -485,6 +519,20 @@ class MeasurementDao implements IMeasurementDao {
                         new String[]{eventReport.getId()});
         if (rows != 1) {
             throw new DatastoreException("EventReport deletion failed.");
+        }
+    }
+
+    @Override
+    public void deleteDebugReport(String debugReportId) throws DatastoreException {
+        long rows =
+                mSQLTransaction
+                        .getDatabase()
+                        .delete(
+                                MeasurementTables.DebugReportContract.TABLE,
+                                MeasurementTables.DebugReportContract.ID + " = ?",
+                                new String[] {debugReportId});
+        if (rows != 1) {
+            throw new DatastoreException("DebugReport deletion failed.");
         }
     }
 
@@ -724,6 +772,15 @@ class MeasurementDao implements IMeasurementDao {
                 MeasurementTables.TriggerContract.TABLE,
                 MeasurementTables.TriggerContract.REGISTRANT + " = ? ",
                 new String[]{registrant.toString()});
+    }
+
+    @Override
+    public long getNumTriggersPerDestination(Uri destination, @EventSurfaceType int destinationType)
+            throws DatastoreException {
+        return DatabaseUtils.queryNumEntries(
+                mSQLTransaction.getDatabase(),
+                MeasurementTables.TriggerContract.TABLE,
+                getDestinationWhereStatement(destination, destinationType));
     }
 
     @Override
@@ -1472,6 +1529,26 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
+    public void insertDebugReport(DebugReport debugReport) throws DatastoreException {
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.DebugReportContract.ID, UUID.randomUUID().toString());
+        values.put(MeasurementTables.DebugReportContract.TYPE, debugReport.getType());
+        values.put(MeasurementTables.DebugReportContract.BODY, debugReport.getBody().toString());
+        values.put(
+                MeasurementTables.DebugReportContract.ENROLLMENT_ID, debugReport.getEnrollmentId());
+        long rowId =
+                mSQLTransaction
+                        .getDatabase()
+                        .insert(
+                                MeasurementTables.DebugReportContract.TABLE,
+                                /*nullColumnHack=*/ null,
+                                values);
+        if (rowId == -1) {
+            throw new DatastoreException("Debug report payload insertion failed.");
+        }
+    }
+
+    @Override
     public List<String> getPendingAggregateReportIdsInWindow(long windowStartTime,
             long windowEndTime) throws DatastoreException {
         List<String> aggregateReports = new ArrayList<>();
@@ -1490,6 +1567,30 @@ class MeasurementDao implements IMeasurementDao {
                                 cursor.getColumnIndex(MeasurementTables.AggregateReport.ID)));
             }
             return aggregateReports;
+        }
+    }
+
+    @Override
+    public List<String> getDebugReportIds() throws DatastoreException {
+        List<String> debugReportIds = new ArrayList<>();
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                MeasurementTables.DebugReportContract.TABLE,
+                                /*columns=*/ null,
+                                /*selection=*/ null,
+                                /*selectionArgs=*/ null,
+                                /*groupBy=*/ null,
+                                /*having=*/ null,
+                                /*orderBy=*/ null,
+                                /*limit=*/ null)) {
+            while (cursor.moveToNext()) {
+                debugReportIds.add(
+                        cursor.getString(
+                                cursor.getColumnIndex(MeasurementTables.DebugReportContract.ID)));
+            }
+            return debugReportIds;
         }
     }
 
@@ -1628,6 +1729,44 @@ class MeasurementDao implements IMeasurementDao {
         }
     }
 
+    /** Returns a SQL where statement for matching an app/web destination. */
+    private static String getDestinationWhereStatement(
+            Uri destination, @EventSurfaceType int destinationType) {
+        Optional<Uri> destinationBaseUriOptional = extractBaseUri(destination, destinationType);
+        if (!destinationBaseUriOptional.isPresent()) {
+            throw new IllegalArgumentException(
+                    String.format(
+                            Locale.ENGLISH,
+                            "getDestinationWhereStatement:" + " Unable to extract base uri from %s",
+                            destination.toString()));
+        }
+        Uri destinationBaseUri = destinationBaseUriOptional.get();
+
+        if (destinationType == EventSurfaceType.APP) {
+            return String.format(
+                    Locale.ENGLISH,
+                    "(%1$s = %2$s OR %1$s LIKE %3$s)",
+                    MeasurementTables.TriggerContract.ATTRIBUTION_DESTINATION,
+                    DatabaseUtils.sqlEscapeString(destinationBaseUri.toString()),
+                    DatabaseUtils.sqlEscapeString(destinationBaseUri + "/%"));
+        } else {
+            String schemeSubDomainMatcher =
+                    destination.getScheme() + "://%." + destinationBaseUri.getAuthority();
+            String schemeDomainMatcher =
+                    destination.getScheme() + "://" + destinationBaseUri.getAuthority();
+            String domainAndPathMatcher = schemeDomainMatcher + "/%";
+            String subDomainAndPathMatcher = schemeSubDomainMatcher + "/%";
+            return String.format(
+                    Locale.ENGLISH,
+                    "(%1$s = %2$s OR %1$s LIKE %3$s OR %1$s LIKE %4$s OR %1$s LIKE %5$s)",
+                    MeasurementTables.TriggerContract.ATTRIBUTION_DESTINATION,
+                    DatabaseUtils.sqlEscapeString(schemeDomainMatcher),
+                    DatabaseUtils.sqlEscapeString(schemeSubDomainMatcher),
+                    DatabaseUtils.sqlEscapeString(domainAndPathMatcher),
+                    DatabaseUtils.sqlEscapeString(subDomainAndPathMatcher));
+        }
+    }
+
     private static String getNullableUriString(@Nullable Uri uri) {
         return Optional.ofNullable(uri).map(Uri::toString).orElse(null);
     }
@@ -1699,6 +1838,9 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.AsyncRegistrationContract.DEBUG_KEY_ALLOWED,
                 asyncRegistration.getDebugKeyAllowed());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.AD_ID_PERMISSION,
+                asyncRegistration.hasAdIdPermission());
         long rowId =
                 mSQLTransaction
                         .getDatabase()

@@ -35,7 +35,7 @@ android_test {
     certificate: "platform",
     platform_apis: true,
     srcs: ["src//**/*.java"],
-    test_suites: ["device-tests"],
+    test_suites: ["device-tests", "general-tests"],
     data: [":perfetto_artifacts"],
     min_sdk_version: "33",
 }

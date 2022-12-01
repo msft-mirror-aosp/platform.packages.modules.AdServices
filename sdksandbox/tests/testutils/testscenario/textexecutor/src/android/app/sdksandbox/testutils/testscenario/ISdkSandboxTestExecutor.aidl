@@ -22,5 +22,23 @@ import android.os.Bundle;
 import android.app.sdksandbox.testutils.testscenario.ISdkSandboxResultCallback;
 
 interface ISdkSandboxTestExecutor {
-    oneway void executeTest(String testName, in Bundle params, in ISdkSandboxResultCallback callback);
+    /*
+     * This constant is used for optionally loading a test author
+     * binder. This is useful for when a test author wants their
+     * SDK driven tests to invoke an event outside the test SDK.
+     */
+    const String TEST_AUTHOR_DEFINED_BINDER = "TEST_AUTHOR_DEFINED_BINDER";
+
+    /**
+     * Returns a list of method names that had an annotation
+     * name.
+     */
+    List<String> retrieveAnnotatedMethods(String canonicalAnnotation);
+
+    /**
+     * Invokes a method from within the SDK.
+
+     */
+    oneway void invokeMethod(String methodName, in Bundle params,
+        in ISdkSandboxResultCallback callback);
 }

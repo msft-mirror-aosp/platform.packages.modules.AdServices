@@ -35,6 +35,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 import java.util.List;
 
 public class AdSelectionEntryDaoTest {
@@ -598,6 +599,23 @@ public class AdSelectionEntryDaoTest {
         assertTrue(
                 mAdSelectionEntryDao.doesBuyerDecisionLogicExist(
                         DB_BUYER_DECISION_LOGIC_1.getBiddingLogicUri()));
+    }
+
+    @Test
+    public void testGetAdSelectionEntitiesFilteredByCallerPackageName() {
+        mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_1);
+        mAdSelectionEntryDao.persistBuyerDecisionLogic(DB_BUYER_DECISION_LOGIC_1);
+        mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_2); // different caller package name
+        mAdSelectionEntryDao.persistBuyerDecisionLogic(DB_BUYER_DECISION_LOGIC_2);
+
+        List<DBAdSelectionEntry> adSelectionEntries =
+                mAdSelectionEntryDao.getAdSelectionEntities(
+                        Collections.singletonList(AD_SELECTION_ID_1), CALLER_PACKAGE_NAME_1);
+        DBAdSelectionEntry expected =
+                toAdSelectionEntry(DB_AD_SELECTION_1, DB_BUYER_DECISION_LOGIC_1);
+
+        assertEquals(1, adSelectionEntries.size());
+        assertEquals(adSelectionEntries.get(0), expected);
     }
 
     @Test

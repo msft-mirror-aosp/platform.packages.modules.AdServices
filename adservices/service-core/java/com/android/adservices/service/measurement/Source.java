@@ -81,12 +81,15 @@ public class Source {
     @AttributionMode private int mAttributionMode;
     private long mInstallAttributionWindow;
     private long mInstallCooldownWindow;
-    private @Nullable UnsignedLong mDebugKey;
+    @Nullable private UnsignedLong mDebugKey;
     private boolean mIsInstallAttributed;
+    private boolean mIsDebugReporting;
     private String mFilterData;
     private String mAggregateSource;
     private int mAggregateContributions;
     private AggregatableAttributionSource mAggregatableAttributionSource;
+    private boolean mAdIdPermission;
+    private boolean mArDebugPermission;
 
     @IntDef(value = {Status.ACTIVE, Status.IGNORED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -133,6 +136,7 @@ public class Source {
         mPublisherType = EventSurfaceType.APP;
         mAttributionMode = AttributionMode.UNASSIGNED;
         mIsInstallAttributed = false;
+        mIsDebugReporting = false;
     }
 
     /** Class for storing fake report data. */
@@ -313,12 +317,15 @@ public class Source {
                 && mStatus == source.mStatus
                 && mExpiryTime == source.mExpiryTime
                 && mEventTime == source.mEventTime
+                && mAdIdPermission == source.mAdIdPermission
+                && mArDebugPermission == source.mArDebugPermission
                 && Objects.equals(mEventId, source.mEventId)
                 && Objects.equals(mDebugKey, source.mDebugKey)
                 && mSourceType == source.mSourceType
                 && Objects.equals(mDedupKeys, source.mDedupKeys)
                 && Objects.equals(mRegistrant, source.mRegistrant)
                 && mAttributionMode == source.mAttributionMode
+                && mIsDebugReporting == source.mIsDebugReporting
                 && Objects.equals(mFilterData, source.mFilterData)
                 && Objects.equals(mAggregateSource, source.mAggregateSource)
                 && mAggregateContributions == source.mAggregateContributions
@@ -346,7 +353,9 @@ public class Source {
                 mAggregateSource,
                 mAggregateContributions,
                 mAggregatableAttributionSource,
-                mDebugKey);
+                mDebugKey,
+                mAdIdPermission,
+                mArDebugPermission);
     }
 
     /**
@@ -491,6 +500,16 @@ public class Source {
         return mEventTime;
     }
 
+    /** Is Ad ID Permission Enabled. */
+    public boolean hasAdIdPermission() {
+        return mAdIdPermission;
+    }
+
+    /** Is Ar Debug Permission Enabled. */
+    public boolean hasArDebugPermission() {
+        return mArDebugPermission;
+    }
+
     /**
      * List of dedup keys for the attributed {@link Trigger}.
      */
@@ -536,6 +555,11 @@ public class Source {
      */
     public boolean isInstallAttributed() {
         return mIsInstallAttributed;
+    }
+
+    /** Is Ad Tech Opt-in to Debug Reporting {@link Source}. */
+    public boolean isDebugReporting() {
+        return mIsDebugReporting;
     }
 
     /**
@@ -614,19 +638,19 @@ public class Source {
      * Generates AggregatableFilterData from aggregate filter string in Source, including an entry
      * for source type.
      */
-    public FilterData parseFilterData() throws JSONException {
-        FilterData filterData;
+    public FilterMap parseFilterData() throws JSONException {
+        FilterMap filterMap;
         if (mFilterData == null || mFilterData.isEmpty()) {
-            filterData = new FilterData.Builder().build();
+            filterMap = new FilterMap.Builder().build();
         } else {
-            filterData =
-                    new FilterData.Builder()
+            filterMap =
+                    new FilterMap.Builder()
                             .buildFilterData(new JSONObject(mFilterData))
                             .build();
         }
-        filterData.getAttributionFilterMap().put("source_type",
+        filterMap.getAttributionFilterMap().put("source_type",
                 Collections.singletonList(mSourceType.getValue()));
-        return filterData;
+        return filterMap;
     }
 
     /**
@@ -649,7 +673,7 @@ public class Source {
         AggregatableAttributionSource.Builder aggregatableAttributionSourceBuilder =
                 new AggregatableAttributionSource.Builder()
                         .setAggregatableSource(aggregateSourceMap);
-        aggregatableAttributionSourceBuilder.setFilterData(parseFilterData());
+        aggregatableAttributionSourceBuilder.setFilterMap(parseFilterData());
         return Optional.of(aggregatableAttributionSourceBuilder.build());
     }
 
@@ -748,10 +772,22 @@ public class Source {
             return this;
         }
 
-        /** See {@link Source#getEnrollmentId()} ()}. */
+        /** See {@link Source#getEnrollmentId()}. */
         @NonNull
         public Builder setEnrollmentId(@NonNull String enrollmentId) {
             mBuilding.mEnrollmentId = enrollmentId;
+            return this;
+        }
+
+        /** See {@link Source#hasAdIdPermission()} ()} */
+        public Source.Builder setAdIdPermission(boolean adIdPermission) {
+            mBuilding.mAdIdPermission = adIdPermission;
+            return this;
+        }
+
+        /** See {@link Source#hasArDebugPermission()} ()} */
+        public Source.Builder setArDebugPermission(boolean arDebugPermission) {
+            mBuilding.mArDebugPermission = arDebugPermission;
             return this;
         }
 
@@ -777,9 +813,15 @@ public class Source {
             return this;
         }
 
-        /** See {@link Source#getDebugKey()} ()}. */
+        /** See {@link Source#getDebugKey()}. */
         public Builder setDebugKey(@Nullable UnsignedLong debugKey) {
             mBuilding.mDebugKey = debugKey;
+            return this;
+        }
+
+        /** See {@link Source#isDebugReporting()}. */
+        public Builder setIsDebugReporting(boolean isDebugReporting) {
+            mBuilding.mIsDebugReporting = isDebugReporting;
             return this;
         }
 
@@ -842,8 +884,8 @@ public class Source {
         }
 
         /** See {@link Source#getFilterData()}. */
-        public Builder setFilterData(@Nullable String filterData) {
-            mBuilding.mFilterData = filterData;
+        public Builder setFilterData(@Nullable String filterMap) {
+            mBuilding.mFilterData = filterMap;
             return this;
         }
 

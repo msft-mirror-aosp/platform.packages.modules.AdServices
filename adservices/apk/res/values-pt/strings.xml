@@ -36,6 +36,10 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"Permite que um aplicativo tenha acesso à API para mudança do estado de ativação do AdService."</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"Acesso à API de estado de ativação do AdService."</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Permite que um aplicativo tenha acesso à API de estado de ativação do AdService."</string>
+    <!-- no translation found for permlab_accessAdServicesManager (4816332609066703740) -->
+    <skip />
+    <!-- no translation found for permdesc_accessAdServicesManager (2619300431637689524) -->
+    <skip />
     <string name="app_label" msgid="5985320129629013968">"Sistema Android"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Participe do programa Beta da privacidade de anúncios do Android"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"O Android está procurando como os apps podem mostrar anúncios de forma mais particular"</string>
@@ -81,6 +85,7 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Sandbox de privacidade"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"A versão Beta da privacidade de anúncios do Android oferece novos recursos usados pelos apps para mostrar anúncios que você pode gostar. Essas tecnologias não usam identificadores de dispositivo.\n\nO Android pode estimar os tipos de anúncios que podem ser do seu interesse e salvar essa informação temporariamente no seu dispositivo. Isso permite que os apps mostrem anúncios relevantes sem rastrear sua atividade nos sites e apps de outros desenvolvedores."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Você não tem interesses bloqueados"</string>
+    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Os interesses foram redefinidos"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Os apps podem estimar e salvar seus interesses temporariamente com o Android. Depois, outro app pode mostrar um anúncio com base nesses interesses.\n\nSe você bloquear um app, ele não vai mais estimar interesses. Ele não vai ser adicionado à lista de apps novamente, a menos que você o desbloqueie. Os interesses já estimados pelo app vão ser excluídos, mas você talvez ainda encontre alguns anúncios relacionados."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Apps bloqueados"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Redefinir interesses estimados por apps"</string>

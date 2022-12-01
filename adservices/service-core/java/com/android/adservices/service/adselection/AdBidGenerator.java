@@ -19,10 +19,16 @@ package com.android.adservices.service.adselection;
 import android.adservices.common.AdSelectionSignals;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.net.Uri;
 
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
 
 import com.google.common.util.concurrent.FluentFuture;
+
+import org.json.JSONObject;
+
+import java.util.Map;
 
 /** Defines the bid generator applied on the ads of each custom audience during the ad selection. */
 interface AdBidGenerator {
@@ -42,7 +48,9 @@ interface AdBidGenerator {
     @Nullable
     FluentFuture<AdBiddingOutcome> runAdBiddingPerCA(
             @NonNull DBCustomAudience customAudience,
+            @NonNull Map<Uri, JSONObject> trustedBiddingDataPerBaseUri,
             @NonNull AdSelectionSignals adSelectionSignals,
             @NonNull AdSelectionSignals buyerSignals,
-            @NonNull AdSelectionSignals contextualSignals);
+            @NonNull AdSelectionSignals contextualSignals,
+            @NonNull RunAdBiddingPerCAExecutionLogger runAdBiddingPerCAExecutionLogger);
 }

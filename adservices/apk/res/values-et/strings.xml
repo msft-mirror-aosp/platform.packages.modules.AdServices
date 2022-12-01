@@ -36,6 +36,10 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"Annab rakendusele juurdepääsu AdService\'i lubamise oleku muutmise API-le."</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"Juurdepääs AdService\'i lubamise oleku API-le"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Annab rakendusele juurdepääsu AdService\'i lubamise oleku API-le."</string>
+    <!-- no translation found for permlab_accessAdServicesManager (4816332609066703740) -->
+    <skip />
+    <!-- no translation found for permdesc_accessAdServicesManager (2619300431637689524) -->
+    <skip />
     <string name="app_label" msgid="5985320129629013968">"Android-süsteem"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Liituge Androidi reklaamide privaatsuse beetaprogrammiga"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android uurib, kuidas rakendused teile privaatsemalt reklaame näidata saaksid"</string>
@@ -81,6 +85,7 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privaatsuse liivakast"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Androidi reklaamide privaatsuse beetaprogramm pakub uusi funktsioone, mida rakendused saavad kasutada selleks, et näidata teile reklaame, mis teile meeldida võivad. Need tehnoloogiad ei kasuta seadmete identifikaatoreid.\n\nAndroid saab prognoosida, millised reklaamid teile huvi pakkuda võivad, ja salvestada need huvid ajutiselt teie seadmesse. See võimaldab rakendustel teile asjakohaseid reklaame näidata ilma teie tegevust muude arendajate veebisaitidel või rakendustes jälgimata."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Teil ei ole blokeeritud huvisid"</string>
+    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Huvid on lähtestatud"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Rakendused saavad teie huvisid prognoosida ja need ajutiselt Androidi salvestada. Hiljem saab muu rakendus teile nende huvide alusel reklaami näidata.\n\nKui blokeerite rakenduse, ei prognoosi see enam teie huvisid. Seda ei lisata rakenduste loendisse uuesti enne, kui selle deblokeerite. Rakenduse prognoositud huvid kustutatakse, ent võite siiski näha mõningaid seotud reklaame."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Teie blokeeritud rakendused"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Lähtesta rakenduste prognoositud huvid"</string>

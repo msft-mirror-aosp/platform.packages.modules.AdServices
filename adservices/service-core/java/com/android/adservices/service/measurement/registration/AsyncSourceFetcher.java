@@ -95,19 +95,27 @@ public class AsyncSourceFetcher {
             @Nullable Uri appDestinationFromRequest,
             @Nullable Uri webDestinationFromRequest,
             long sourceEventTime,
-            boolean shouldValidateDestination,
+            boolean shouldValidateDestinationWebSource,
+            boolean shouldOverrideDestinationAppSource,
             Source.Builder result,
-            boolean isWebSource,
-            boolean isAllowDebugKey,
-            boolean isAdIdPermissionGranted)
+            boolean isWebSource)
             throws JSONException {
-        final boolean hasRequiredParams = hasRequiredParams(json, shouldValidateDestination);
+        final boolean hasRequiredParams =
+                hasRequiredParams(json, shouldValidateDestinationWebSource);
         if (!hasRequiredParams) {
             throw new JSONException(
                     String.format(
                             "Expected %s and a destination", SourceHeaderContract.SOURCE_EVENT_ID));
         }
-        result.setEventId(new UnsignedLong(json.getString(SourceHeaderContract.SOURCE_EVENT_ID)));
+        UnsignedLong eventId = new UnsignedLong(0L);
+        if (!json.isNull(SourceHeaderContract.SOURCE_EVENT_ID)) {
+            try {
+                eventId = new UnsignedLong(json.getString(SourceHeaderContract.SOURCE_EVENT_ID));
+            } catch (NumberFormatException e) {
+                LogUtil.d(e, "parseCommonSourceParams: parsing source_event_id failed.");
+            }
+        }
+        result.setEventId(eventId);
         if (!json.isNull(SourceHeaderContract.EXPIRY)) {
             long expiry =
                     extractValidNumberInRange(
@@ -124,9 +132,10 @@ public class AsyncSourceFetcher {
         if (!json.isNull(SourceHeaderContract.PRIORITY)) {
             result.setPriority(json.getLong(SourceHeaderContract.PRIORITY));
         }
-        boolean isWebAllow = isWebSource && isAllowDebugKey && isAdIdPermissionGranted;
-        boolean isAppAllow = !isWebSource && isAdIdPermissionGranted;
-        if (!json.isNull(SourceHeaderContract.DEBUG_KEY) && (isWebAllow || isAppAllow)) {
+        if (!json.isNull(SourceHeaderContract.DEBUG_REPORTING)) {
+            result.setIsDebugReporting(json.optBoolean(SourceHeaderContract.DEBUG_REPORTING));
+        }
+        if (!json.isNull(SourceHeaderContract.DEBUG_KEY)) {
             try {
                 result.setDebugKey(
                         new UnsignedLong(json.getString(SourceHeaderContract.DEBUG_KEY)));
@@ -178,13 +187,15 @@ public class AsyncSourceFetcher {
                         appUri.getScheme());
                 return false;
             }
-            if (appDestinationFromRequest != null && !appDestinationFromRequest.equals(appUri)) {
+            if (shouldValidateDestinationWebSource
+                    && appDestinationFromRequest != null
+                    && !appDestinationFromRequest.equals(appUri)) {
                 LogUtil.d("Expected destination to match with the supplied one!");
                 return false;
             }
             result.setAppDestination(getBaseUri(appUri));
         }
-        if (shouldValidateDestination
+        if (shouldValidateDestinationWebSource
                 && !doUriFieldsMatch(
                         json, SourceHeaderContract.WEB_DESTINATION, webDestinationFromRequest)) {
             LogUtil.d("Expected web_destination to match with ths supplied one!");
@@ -200,6 +211,10 @@ public class AsyncSourceFetcher {
                 result.setWebDestination(topPrivateDomainAndScheme.get());
             }
         }
+        if (shouldOverrideDestinationAppSource && !isWebSource) {
+            result.setAppDestination(appDestinationFromRequest);
+            result.setWebDestination(webDestinationFromRequest);
+        }
         return true;
     }
 
@@ -211,18 +226,22 @@ public class AsyncSourceFetcher {
             @Nullable Uri registrant,
             long eventTime,
             @Nullable Source.SourceType sourceType,
-            boolean shouldValidateDestination,
+            boolean shouldValidateDestinationWebSource,
+            boolean shouldOverrideDestinationAppSource,
             @NonNull Map<String, List<String>> headers,
             @NonNull List<Source> sources,
             boolean isWebSource,
-            boolean isAllowDebugKey,
-            boolean isAdIdPermissionGranted) {
+            boolean adIdPermission,
+            boolean arDebugPermission) {
         Source.Builder result = new Source.Builder();
         result.setPublisher(publisher);
         result.setEnrollmentId(enrollmentId);
         result.setRegistrant(registrant);
         result.setSourceType(sourceType);
         result.setAttributionMode(Source.AttributionMode.TRUTHFULLY);
+        result.setEventTime(eventTime);
+        result.setAdIdPermission(adIdPermission);
+        result.setArDebugPermission(arDebugPermission);
         result.setEventTime(eventTime);
         result.setPublisherType(isWebSource ? EventSurfaceType.WEB : EventSurfaceType.APP);
         List<String> field = headers.get("Attribution-Reporting-Register-Source");
@@ -240,11 +259,10 @@ public class AsyncSourceFetcher {
                             appDestination,
                             webDestination,
                             eventTime,
-                            shouldValidateDestination,
+                            shouldValidateDestinationWebSource,
+                            shouldOverrideDestinationAppSource,
                             result,
-                            isWebSource,
-                            isAllowDebugKey,
-                            isAdIdPermissionGranted);
+                            isWebSource);
             if (!isValid) {
                 return false;
             }
@@ -268,7 +286,7 @@ public class AsyncSourceFetcher {
         if (shouldValidateDestinations) {
             isDestinationAvailable |= !json.isNull(SourceHeaderContract.WEB_DESTINATION);
         }
-        return !json.isNull(SourceHeaderContract.SOURCE_EVENT_ID) && isDestinationAvailable;
+        return isDestinationAvailable;
     }
 
     private static boolean doUriFieldsMatch(JSONObject json, String fieldName, Uri expectedValue)
@@ -315,14 +333,15 @@ public class AsyncSourceFetcher {
                 asyncRegistration.getRegistrant(),
                 asyncRegistration.getRequestTime(),
                 asyncRegistration.getType() == AsyncRegistration.RegistrationType.WEB_SOURCE,
+                asyncRegistration.getRedirectType() != AsyncRegistration.RedirectType.ANY,
                 asyncRegistration.getSourceType(),
                 out,
                 asyncRegistration.shouldProcessRedirects(),
                 asyncRegistration.getRedirectType(),
                 asyncRedirect,
                 asyncRegistration.getType() == AsyncRegistration.RegistrationType.WEB_SOURCE,
-                asyncRegistration.getDebugKeyAllowed(),
                 asyncFetchStatus,
+                asyncRegistration.hasAdIdPermission(),
                 asyncRegistration.getDebugKeyAllowed());
         if (out.isEmpty()) {
             return Optional.empty();
@@ -338,16 +357,17 @@ public class AsyncSourceFetcher {
             @Nullable Uri webDestination,
             @Nullable Uri registrant,
             long eventTime,
-            boolean shouldValidateDestination,
+            boolean shouldValidateDestinationWebSource,
+            boolean shouldOverrideDestinationAppSource,
             @NonNull Source.SourceType sourceType,
             @NonNull List<Source> sourceOut,
             boolean shouldProcessRedirects,
             @AsyncRegistration.RedirectType int redirectType,
             @NonNull AsyncRedirect asyncRedirect,
             boolean isWebSource,
-            boolean isAllowDebugKey,
             @Nullable AsyncFetchStatus asyncFetchStatus,
-            boolean isAdIdPermissionGranted) {
+            boolean adIdPermission,
+            boolean arDebugPermission) {
         // Require https.
         if (!registrationUri.getScheme().equals("https")) {
             asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.PARSING_ERROR);
@@ -404,12 +424,13 @@ public class AsyncSourceFetcher {
                             registrant,
                             eventTime,
                             sourceType,
-                            shouldValidateDestination,
+                            shouldValidateDestinationWebSource,
+                            shouldOverrideDestinationAppSource,
                             headers,
                             sourceOut,
                             isWebSource,
-                            isAllowDebugKey,
-                            isAdIdPermissionGranted);
+                            adIdPermission,
+                            arDebugPermission);
             if (!parsed) {
                 asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.PARSING_ERROR);
                 LogUtil.d("Failed to parse");
@@ -462,5 +483,6 @@ public class AsyncSourceFetcher {
         String FILTER_DATA = "filter_data";
         String WEB_DESTINATION = "web_destination";
         String AGGREGATION_KEYS = "aggregation_keys";
+        String DEBUG_REPORTING = "debug_reporting";
     }
 }

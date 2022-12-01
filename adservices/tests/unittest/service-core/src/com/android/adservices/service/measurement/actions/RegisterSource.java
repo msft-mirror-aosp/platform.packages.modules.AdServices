@@ -38,6 +38,8 @@ public final class RegisterSource implements Action {
     public final long mTimestamp;
     // Used in interop tests
     public final String mPublisher;
+    public final boolean mDebugReporting;
+    public final boolean mAdIdPermission;
 
     public RegisterSource(JSONObject obj) throws JSONException {
         JSONObject regParamsJson = obj.getJSONObject(
@@ -50,25 +52,24 @@ public final class RegisterSource implements Action {
         mPublisher = regParamsJson.optString(TestFormatJsonMapping.SOURCE_TOP_ORIGIN_URI_KEY);
 
         mRegistrationRequest =
-                new RegistrationRequest.Builder()
-                        .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
-                        .setRegistrationUri(
+                new RegistrationRequest.Builder(
+                                RegistrationRequest.REGISTER_SOURCE,
                                 Uri.parse(
                                         regParamsJson.getString(
-                                                TestFormatJsonMapping.REGISTRATION_URI_KEY)))
+                                                TestFormatJsonMapping.REGISTRATION_URI_KEY)),
+                                attributionSource.getPackageName(),
+                                /* sdkPackageName = */ "")
                         .setInputEvent(
                                 regParamsJson
                                                 .getString(TestFormatJsonMapping.INPUT_EVENT_KEY)
                                                 .equals(TestFormatJsonMapping.SOURCE_VIEW_TYPE)
                                         ? null
                                         : getInputEvent())
-                        .setAdIdPermissionGranted(
-                                regParamsJson.optBoolean(
-                                        TestFormatJsonMapping.IS_ADID_PERMISSION_GRANTED_KEY, true))
-                        .setPackageName(attributionSource.getPackageName())
                         .build();
         mUriToResponseHeadersMap = getUriToResponseHeadersMap(obj);
         mTimestamp = obj.getLong(TestFormatJsonMapping.TIMESTAMP_KEY);
+        mDebugReporting = regParamsJson.optBoolean(TestFormatJsonMapping.DEBUG_REPORTING_KEY);
+        mAdIdPermission = regParamsJson.optBoolean(TestFormatJsonMapping.HAS_AD_ID_PERMISSION);
     }
 
     @Override
