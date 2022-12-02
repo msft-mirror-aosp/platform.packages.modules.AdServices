@@ -88,6 +88,33 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
     private static final String TRIGGER_DATA_KEY = "trigger_data";
     private static final String TRIGGER_DATA_DEFAULT_VALUE = "0";
 
+    private static final String[] ALTER_STATEMENTS = {
+        String.format(
+                "ALTER TABLE %1$s ADD %2$s INTEGER",
+                MeasurementTables.SourceContract.TABLE,
+                MeasurementTables.SourceContract.DEBUG_REPORTING),
+        String.format(
+                "ALTER TABLE %1$s ADD %2$s INTEGER",
+                MeasurementTables.TriggerContract.TABLE,
+                MeasurementTables.TriggerContract.DEBUG_REPORTING),
+        String.format(
+                "ALTER TABLE %1$s ADD %2$s INTEGER",
+                MeasurementTables.SourceContract.TABLE,
+                MeasurementTables.SourceContract.AD_ID_PERMISSION),
+        String.format(
+                "ALTER TABLE %1$s ADD %2$s INTEGER",
+                MeasurementTables.SourceContract.TABLE,
+                MeasurementTables.SourceContract.AR_DEBUG_PERMISSION),
+        String.format(
+                "ALTER TABLE %1$s ADD %2$s INTEGER",
+                MeasurementTables.TriggerContract.TABLE,
+                MeasurementTables.TriggerContract.AD_ID_PERMISSION),
+        String.format(
+                "ALTER TABLE %1$s ADD %2$s INTEGER",
+                MeasurementTables.TriggerContract.TABLE,
+                MeasurementTables.TriggerContract.AR_DEBUG_PERMISSION),
+    };
+
     public MeasurementDbMigratorV3() {
         super(3);
     }
@@ -100,12 +127,14 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
                 db,
                 MeasurementTables.EventReportContract.TABLE,
                 MeasurementTables.EventReportContract.SOURCE_EVENT_ID)) {
+            LogUtil.d("Source event id exists. Skipping Migration");
             return;
         }
         // Drop and create a new AsyncRegistrationTable if it exists.
         for (String query : UPDATE_ASYNC_REGISTRATION_TABLE_QUERIES) {
             db.execSQL(query);
         }
+        db.execSQL(MeasurementTables.CREATE_TABLE_DEBUG_REPORT_LATEST);
 
         alterEventReportTable(db);
         alterAggregateReportTable(db);
@@ -117,6 +146,10 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
         migrateSourceData(db);
         migrateEventReportData(db);
         migrateTriggers(db);
+
+        for (String sql : ALTER_STATEMENTS) {
+            db.execSQL(sql);
+        }
     }
 
     private static void alterEventReportTable(SQLiteDatabase db) {

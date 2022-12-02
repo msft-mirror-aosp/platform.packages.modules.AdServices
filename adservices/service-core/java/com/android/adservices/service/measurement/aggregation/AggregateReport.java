@@ -379,13 +379,13 @@ public class AggregateReport {
             return this;
         }
 
-        /** See {@link AggregateReport#getSourceDebugKey()} ()} */
+        /** See {@link AggregateReport#getSourceDebugKey()} */
         public Builder setSourceDebugKey(UnsignedLong sourceDebugKey) {
             mAttributionReport.mSourceDebugKey = sourceDebugKey;
             return this;
         }
 
-        /** See {@link AggregateReport#getTriggerDebugKey()} ()} */
+        /** See {@link AggregateReport#getTriggerDebugKey()} */
         public Builder setTriggerDebugKey(UnsignedLong triggerDebugKey) {
             mAttributionReport.mTriggerDebugKey = triggerDebugKey;
             return this;
