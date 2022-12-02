@@ -169,6 +169,9 @@ public class ConsentManager {
                 BooleanFileDatastore datastore = createAndInitializeDataStore(context);
                 AdServicesManager adServicesManager =
                         context.getSystemService(AdServicesManager.class);
+                if (adServicesManager == null) {
+                    throw new RuntimeException("Adservices System Server is not available!");
+                }
                 handleConsentMigrationIfNeeded(
                         context, datastore, adServicesManager, consentSourceOfTruth);
 

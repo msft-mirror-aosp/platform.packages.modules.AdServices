@@ -20,11 +20,12 @@ import static android.app.sdksandbox.SdkSandboxManager.EXTRA_DISPLAY_ID;
 import static android.app.sdksandbox.SdkSandboxManager.EXTRA_HEIGHT_IN_PIXELS;
 import static android.app.sdksandbox.SdkSandboxManager.EXTRA_HOST_TOKEN;
 import static android.app.sdksandbox.SdkSandboxManager.EXTRA_WIDTH_IN_PIXELS;
+import static android.app.sdksandbox.SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThrows;
 
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SandboxedSdk;
@@ -423,12 +424,11 @@ public class SdkSandboxManagerTest {
 
         final String sdkName = "com.android.loadSdkSuccessfullySdkProvider";
         final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
-        SecurityException thrown =
-                assertThrows(
-                        SecurityException.class,
-                        () ->
-                                mSdkSandboxManager.loadSdk(
-                                        sdkName, new Bundle(), Runnable::run, callback));
+        mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
+
+        LoadSdkException thrown = callback.getLoadSdkException();
+
+        assertEquals(LOAD_SDK_INTERNAL_ERROR, thrown.getLoadSdkErrorCode());
         assertThat(thrown).hasMessageThat().contains("does not run in the foreground");
     }
 
@@ -486,11 +486,13 @@ public class SdkSandboxManagerTest {
     // TODO(b/244730098): The test below needs to be moved from e2e.
     // It is not and e2e test.
     @Test
-    public void testLoadSdkExceptionWriteToParcel() throws Exception {
+    public void testLoadSdkExceptionWriteToParcel() {
         final Bundle bundle = new Bundle();
         bundle.putChar("testKey", /*testValue=*/ 'C');
+        final String errorMessage = "Error Message";
+        final Exception cause = new Exception(errorMessage);
 
-        final LoadSdkException exception = new LoadSdkException(/*Throwable=*/ null, bundle);
+        final LoadSdkException exception = new LoadSdkException(cause, bundle);
 
         final Parcel parcel = Parcel.obtain();
         exception.writeToParcel(parcel, /*flags=*/ 0);
@@ -500,6 +502,7 @@ public class SdkSandboxManagerTest {
         final LoadSdkException exceptionCheck = LoadSdkException.CREATOR.createFromParcel(parcel);
 
         assertThat(exceptionCheck.getLoadSdkErrorCode()).isEqualTo(exception.getLoadSdkErrorCode());
+        assertThat(exceptionCheck.getMessage()).isEqualTo(exception.getMessage());
         assertThat(exceptionCheck.getExtraInformation().getChar("testKey"))
                 .isEqualTo(exception.getExtraInformation().getChar("testKey"));
         assertThat(exceptionCheck.getExtraInformation().keySet()).containsExactly("testKey");
@@ -509,7 +512,7 @@ public class SdkSandboxManagerTest {
     // It is not and e2e test.
     @Test
     public void testLoadSdkExceptionDescribeContents() throws Exception {
-        final LoadSdkException exception = new LoadSdkException(/*Throwable=*/ null, new Bundle());
+        final LoadSdkException exception = new LoadSdkException(new Exception(), new Bundle());
         assertThat(exception.describeContents()).isEqualTo(0);
     }
 

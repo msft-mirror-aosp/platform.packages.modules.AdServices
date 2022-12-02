@@ -146,6 +146,14 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.SourceContract.DEBUG_REPORTING,
                 builder::setIsDebugReporting);
+        setBooleanColumn(
+                cursor,
+                MeasurementTables.SourceContract.AD_ID_PERMISSION,
+                builder::setAdIdPermission);
+        setBooleanColumn(
+                cursor,
+                MeasurementTables.SourceContract.AR_DEBUG_PERMISSION,
+                builder::setArDebugPermission);
         return builder.build();
     }
 
@@ -183,6 +191,14 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.TriggerContract.DEBUG_REPORTING,
                 builder::setIsDebugReporting);
+        setBooleanColumn(
+                cursor,
+                MeasurementTables.TriggerContract.AD_ID_PERMISSION,
+                builder::setAdIdPermission);
+        setBooleanColumn(
+                cursor,
+                MeasurementTables.TriggerContract.AR_DEBUG_PERMISSION,
+                builder::setArDebugPermission);
         return builder.build();
     }
 
@@ -319,6 +335,10 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.AsyncRegistrationContract.DEBUG_KEY_ALLOWED,
                 builder::setDebugKeyAllowed);
+        setBooleanColumn(
+                cursor,
+                MeasurementTables.AsyncRegistrationContract.AD_ID_PERMISSION,
+                builder::setAdIdPermission);
         return builder.build();
     }
 
