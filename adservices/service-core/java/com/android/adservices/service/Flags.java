@@ -395,10 +395,10 @@ public interface Flags extends Dumpable {
     int FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS = 5 * 1000; // 5 seconds
     int FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS = 30 * 1000; // 30 seconds
     int FLEDGE_BACKGROUND_FETCH_MAX_RESPONSE_SIZE_B = 10 * 1024; // 10 KiB
-    boolean FLEDGE_ENABLE_HTTP_CACHING = true;
-    boolean FLEDGE_AD_SELECTION_ENABLE_JS_CACHING = true;
-    long FLEDGE_HTTP_CACHE_MAX_ENTRIES = 100;
+    boolean FLEDGE_HTTP_CACHE_ENABLE = true;
+    boolean FLEDGE_HTTP_CACHE_ENABLE_JS_CACHING = true;
     long FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS = 2 * 24 * 60 * 60; // 2 days
+    long FLEDGE_HTTP_CACHE_MAX_ENTRIES = 100;
 
     /** Returns {@code true} if the FLEDGE Background Fetch is enabled. */
     default boolean getFledgeBackgroundFetchEnabled() {
@@ -479,12 +479,12 @@ public interface Flags extends Dumpable {
 
     /** Returns boolean, if the caching is enabled for {@link FledgeHttpCache} */
     default boolean getFledgeHttpCachingEnabled() {
-        return FLEDGE_ENABLE_HTTP_CACHING;
+        return FLEDGE_HTTP_CACHE_ENABLE;
     }
 
     /** Returns boolean, if the caching is enabled for JS for bidding and scoring */
-    default boolean getFledgeJsCachingEnabled() {
-        return FLEDGE_AD_SELECTION_ENABLE_JS_CACHING;
+    default boolean getFledgeHttpJsCachingEnabled() {
+        return FLEDGE_HTTP_CACHE_ENABLE_JS_CACHING;
     }
 
     /** Returns max number of entries that should be persisted in cache */

@@ -149,6 +149,7 @@ public class EnqueueAsyncRegistrationTest {
         Assert.assertTrue(
                 EnqueueAsyncRegistration.appSourceOrTriggerRegistrationRequest(
                         registrationRequest,
+                        DEFAULT_AD_ID_PERMISSION,
                         Uri.parse("android-app://test.destination"),
                         System.currentTimeMillis(),
                         mEnrollmentDao,
@@ -203,6 +204,7 @@ public class EnqueueAsyncRegistrationTest {
         Assert.assertTrue(
                 EnqueueAsyncRegistration.appSourceOrTriggerRegistrationRequest(
                         registrationRequest,
+                        DEFAULT_AD_ID_PERMISSION,
                         Uri.parse("android-app://test.destination"),
                         System.currentTimeMillis(),
                         mEnrollmentDao,
@@ -256,6 +258,7 @@ public class EnqueueAsyncRegistrationTest {
         Assert.assertTrue(
                 EnqueueAsyncRegistration.appSourceOrTriggerRegistrationRequest(
                         registrationRequest,
+                        DEFAULT_AD_ID_PERMISSION,
                         Uri.parse("android-app://test.destination"),
                         System.currentTimeMillis(),
                         mEnrollmentDao,
@@ -639,33 +642,6 @@ public class EnqueueAsyncRegistrationTest {
         }
     }
 
-    @Test
-    public void testWebSourceRegistrationRequest_adIdPermissionAndDebugKeyAllowed_allowed() {
-        enqueueSourceRegistrationRequestWithDebugRelatedKeys(
-                /* adIdPermission = */ true, /* debugKeyAllowed = */ true);
-        assertDebugRelatedKeyStored(/* expected = */ true);
-    }
-
-    @Test
-    public void testWebSourceRegistrationRequest_noAdIdPermissionAndDebugKeyAllowed_denied() {
-        enqueueSourceRegistrationRequestWithDebugRelatedKeys(
-                /* adIdPermission = */ false, /* debugKeyAllowed = */ true);
-        assertDebugRelatedKeyStored(/* expected = */ false);
-    }
-
-    @Test
-    public void testWebSourceRegistrationRequest_adIdPermissionAndDebugKeyDenied_denied() {
-        enqueueSourceRegistrationRequestWithDebugRelatedKeys(
-                /* adIdPermission = */ true, /* debugKeyAllowed = */ false);
-        assertDebugRelatedKeyStored(/* expected = */ false);
-    }
-
-    @Test
-    public void testWebSourceRegistrationRequest_noAdIdPermissionAndDebugKeyDenied_denied() {
-        enqueueSourceRegistrationRequestWithDebugRelatedKeys(
-                /* adIdPermission = */ false, /* debugKeyAllowed = */ false);
-        assertDebugRelatedKeyStored(/* expected = */ false);
-    }
 
     @Test
     public void testWebTriggerRegistrationRequest_isValid() {
@@ -796,34 +772,6 @@ public class EnqueueAsyncRegistrationTest {
     }
 
     @Test
-    public void testWebTriggerRegistrationRequest_adIdPermissionAndDebugKeyAllowed_allowed() {
-        enqueueTriggerRegistrationRequestWithDebugRelatedKeys(
-                /* adIdPermission = */ true, /* debugKeyAllowed = */ true);
-        assertDebugRelatedKeyStored(/* expected = */ true);
-    }
-
-    @Test
-    public void testWebTriggerRegistrationRequest_noAdIdPermissionAndDebugKeyAllowed_denied() {
-        enqueueTriggerRegistrationRequestWithDebugRelatedKeys(
-                /* adIdPermission = */ false, /* debugKeyAllowed = */ true);
-        assertDebugRelatedKeyStored(/* expected = */ false);
-    }
-
-    @Test
-    public void testWebTriggerRegistrationRequest_adIdPermissionAndDebugKeyDenied_denied() {
-        enqueueTriggerRegistrationRequestWithDebugRelatedKeys(
-                /* adIdPermission = */ true, /* debugKeyAllowed = */ false);
-        assertDebugRelatedKeyStored(/* expected = */ false);
-    }
-
-    @Test
-    public void testWebTriggerRegistrationRequest_noAdIdPermissionAndDebugKeyDenied_denied() {
-        enqueueTriggerRegistrationRequestWithDebugRelatedKeys(
-                /* adIdPermission = */ false, /* debugKeyAllowed = */ false);
-        assertDebugRelatedKeyStored(/* expected = */ false);
-    }
-
-    @Test
     public void testRunInTransactionFail_inValid() {
         when(mDatastoreManagerMock.runInTransaction(any())).thenReturn(false);
         Assert.assertFalse(
@@ -864,6 +812,7 @@ public class EnqueueAsyncRegistrationTest {
                 new SQLDatastoreManager(DbTestUtil.getDbHelperForTest());
         EnqueueAsyncRegistration.appSourceOrTriggerRegistrationRequest(
                 registrationRequest,
+                DEFAULT_AD_ID_PERMISSION,
                 Uri.parse("android-app://test.destination"),
                 System.currentTimeMillis(),
                 mEnrollmentDao,
@@ -906,25 +855,6 @@ public class EnqueueAsyncRegistrationTest {
         }
     }
 
-    private void assertDebugRelatedKeyStored(final boolean expected) {
-        try (Cursor cursor =
-                DbTestUtil.getDbHelperForTest()
-                        .getReadableDatabase()
-                        .query(
-                                MeasurementTables.AsyncRegistrationContract.TABLE,
-                                null,
-                                null,
-                                null,
-                                null,
-                                null,
-                                null)) {
-
-            Assert.assertTrue(cursor.moveToNext());
-            boolean actualDebugKeyAllowed =
-                    SqliteObjectMapper.constructAsyncRegistration(cursor).getDebugKeyAllowed();
-            Assert.assertEquals(expected, actualDebugKeyAllowed);
-        }
-    }
 
     private void enqueueSourceRegistrationRequestWithDebugRelatedKeys(
             final boolean adIdPermission, final boolean debugKeyAllowed) {

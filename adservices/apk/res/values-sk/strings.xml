@@ -36,10 +36,8 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"Poskytuje aplikácii prístup k rozhraniu Enablement State Modification API služby AdService."</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"Prístup k rozhraniu Enablement State API služby AdService."</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Poskytuje aplikácii prístup k rozhraniu Enablement State API služby AdService."</string>
-    <!-- no translation found for permlab_accessAdServicesManager (4816332609066703740) -->
-    <skip />
-    <!-- no translation found for permdesc_accessAdServicesManager (2619300431637689524) -->
-    <skip />
+    <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Prístup k rozhraniam API služby AdServicesManager"</string>
+    <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Umožnuje aplikácii prístup k rozhraniam API služby AdServicesManager."</string>
     <string name="app_label" msgid="5985320129629013968">"Systém Android"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Pripojte sa k beta verzii ochrany súkromia pri reklamách v Androide"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android hľadá spôsoby, ako vám aplikácie môžu zobrazovať reklamy s vyššou ochranou súkromia"</string>

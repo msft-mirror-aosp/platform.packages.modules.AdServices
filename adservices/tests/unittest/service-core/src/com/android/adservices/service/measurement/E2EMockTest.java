@@ -123,13 +123,17 @@ public abstract class E2EMockTest extends E2ETest {
     @Rule
     public final E2EMockStatic.E2EMockStaticRule mE2EMockStaticRule;
 
-    E2EMockTest(Collection<Action> actions, ReportObjects expectedOutput,
-            PrivacyParamsProvider privacyParamsProvider, String name) {
+    E2EMockTest(
+            Collection<Action> actions,
+            ReportObjects expectedOutput,
+            PrivacyParamsProvider privacyParamsProvider,
+            String name) {
         super(actions, expectedOutput, name);
         mClickVerifier = Mockito.mock(ClickVerifier.class);
         mFlags = FlagsFactory.getFlagsForTest();
         mE2EMockStaticRule = new E2EMockStatic.E2EMockStaticRule(privacyParamsProvider);
         mMeasurementDataDeleter = Mockito.spy(new MeasurementDataDeleter(sDatastoreManager));
+
         mAsyncSourceFetcher =
                 Mockito.spy(
                         new AsyncSourceFetcher(
@@ -208,7 +212,9 @@ public abstract class E2EMockTest extends E2ETest {
                 "MeasurementImpl.register source failed",
                 RESULT_OK,
                 mMeasurementImpl.register(
-                        sourceRegistration.mRegistrationRequest, sourceRegistration.mTimestamp));
+                        sourceRegistration.mRegistrationRequest,
+                        sourceRegistration.mAdIdPermission,
+                        sourceRegistration.mTimestamp));
         mAsyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker(
                 MAX_RECORDS_PROCESSED, ASYNC_REG_RETRY_LIMIT);
         if (sourceRegistration.mDebugReporting) {
@@ -223,7 +229,9 @@ public abstract class E2EMockTest extends E2ETest {
                 "MeasurementImpl.registerWebSource failed",
                 RESULT_OK,
                 mMeasurementImpl.registerWebSource(
-                        sourceRegistration.mRegistrationRequest, sourceRegistration.mTimestamp));
+                        sourceRegistration.mRegistrationRequest,
+                        sourceRegistration.mAdIdPermission,
+                        sourceRegistration.mTimestamp));
         mAsyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker(
                 MAX_RECORDS_PROCESSED, ASYNC_REG_RETRY_LIMIT);
         if (sourceRegistration.mDebugReporting) {
@@ -238,7 +246,9 @@ public abstract class E2EMockTest extends E2ETest {
                 "MeasurementImpl.register trigger failed",
                 RESULT_OK,
                 mMeasurementImpl.register(
-                        triggerRegistration.mRegistrationRequest, triggerRegistration.mTimestamp));
+                        triggerRegistration.mRegistrationRequest,
+                        triggerRegistration.mAdIdPermission,
+                        triggerRegistration.mTimestamp));
         mAsyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker(
                 MAX_RECORDS_PROCESSED, ASYNC_REG_RETRY_LIMIT);
         Assert.assertTrue("AttributionJobHandler.performPendingAttributions returned false",
@@ -254,7 +264,9 @@ public abstract class E2EMockTest extends E2ETest {
                 "MeasurementImpl.registerWebTrigger failed",
                 RESULT_OK,
                 mMeasurementImpl.registerWebTrigger(
-                        triggerRegistration.mRegistrationRequest, triggerRegistration.mTimestamp));
+                        triggerRegistration.mRegistrationRequest,
+                        triggerRegistration.mAdIdPermission,
+                        triggerRegistration.mTimestamp));
         mAsyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker(
                 MAX_RECORDS_PROCESSED, ASYNC_REG_RETRY_LIMIT);
         Assert.assertTrue(

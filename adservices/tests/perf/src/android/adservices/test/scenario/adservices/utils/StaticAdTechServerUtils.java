@@ -23,9 +23,15 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.TrustedBiddingData;
 import android.net.Uri;
+import android.util.Log;
 
 import com.google.common.collect.ImmutableList;
 
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.ProtocolException;
+import java.net.URL;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -35,8 +41,9 @@ import java.util.List;
 import java.util.Map;
 
 public class StaticAdTechServerUtils {
-    private static final String SERVER_BASE_ADDRESS_FORMAT = "https://%s";
+    private static final String TAG = "StaticAdTechServerUtils";
 
+    private static final String SERVER_BASE_ADDRESS_FORMAT = "https://%s";
     private static final List<String> BUYER_BASE_DOMAINS =
             ImmutableList.of(
                     "performance-fledge-static-5jyy5ulagq-uc.a.run.app",
@@ -82,6 +89,28 @@ public class StaticAdTechServerUtils {
         this.mNumberOfBuyers = numberOfBuyers;
         this.mCustomAudienceBuyers = customAudienceBuyers;
         this.mPerBuyerSignals = perBuyerSignals;
+    }
+
+    /**
+     * Makes a warmup call to all the servers so that servers don't have cold start latency during
+     * test runs.
+     */
+    public static void warmupServers() {
+        for (String domain : BUYER_BASE_DOMAINS) {
+            String buyerBaseAddress = String.format("https://%s", domain);
+            try {
+                URL url = new URL(buyerBaseAddress);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("GET");
+                connection.getInputStream();
+            } catch (MalformedURLException e) {
+                Log.e(TAG, "Parsing ad render url failed", e);
+            } catch (ProtocolException e) {
+                Log.e(TAG, "Invalid protocol for http call", e);
+            } catch (IOException e) {
+                Log.e(TAG, "Ad rendering call failed with exception", e);
+            }
+        }
     }
 
     public static StaticAdTechServerUtils withNumberOfBuyers(int numberOfBuyers) {

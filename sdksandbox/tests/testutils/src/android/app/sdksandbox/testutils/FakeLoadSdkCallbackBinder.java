@@ -52,4 +52,8 @@ public class FakeLoadSdkCallbackBinder extends ILoadSdkCallback.Stub {
     public String getLoadSdkErrorMsg() {
         return mFakeLoadSdkCallback.getLoadSdkErrorMsg();
     }
+
+    public LoadSdkException getLoadSdkException() {
+        return mFakeLoadSdkCallback.getLoadSdkException();
+    }
 }
