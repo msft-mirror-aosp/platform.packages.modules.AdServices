@@ -22,6 +22,7 @@ import com.android.adservices.service.measurement.aggregation.AggregatableAttrib
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Validation;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -30,12 +31,12 @@ public class EventTrigger {
     @NonNull private UnsignedLong mTriggerData;
     private long mTriggerPriority;
     private UnsignedLong mDedupKey;
-    private Optional<FilterMap> mFilter;
-    private Optional<FilterMap> mNotFilter;
+    private Optional<List<FilterMap>> mFilterSet;
+    private Optional<List<FilterMap>> mNotFilterSet;
 
     private EventTrigger() {
-        mFilter = Optional.empty();
-        mNotFilter = Optional.empty();
+        mFilterSet = Optional.empty();
+        mNotFilterSet = Optional.empty();
     }
 
     @Override
@@ -47,13 +48,13 @@ public class EventTrigger {
         return Objects.equals(mTriggerData, eventTrigger.mTriggerData)
                 && mTriggerPriority == eventTrigger.mTriggerPriority
                 && Objects.equals(mDedupKey, eventTrigger.mDedupKey)
-                && Objects.equals(mFilter, eventTrigger.mFilter)
-                && Objects.equals(mNotFilter, eventTrigger.mNotFilter);
+                && Objects.equals(mFilterSet, eventTrigger.mFilterSet)
+                && Objects.equals(mNotFilterSet, eventTrigger.mNotFilterSet);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mTriggerData, mTriggerPriority, mDedupKey, mFilter, mNotFilter);
+        return Objects.hash(mTriggerData, mTriggerPriority, mDedupKey, mFilterSet, mNotFilterSet);
     }
 
     /** Returns trigger_data for the event. */
@@ -72,13 +73,13 @@ public class EventTrigger {
     }
 
     /** Filters that should match with source's. */
-    public Optional<FilterMap> getFilterData() {
-        return mFilter;
+    public Optional<List<FilterMap>> getFilterSet() {
+        return mFilterSet;
     }
 
     /** Filters that should not match with source's. */
-    public Optional<FilterMap> getNotFilterData() {
-        return mNotFilter;
+    public Optional<List<FilterMap>> getNotFilterSet() {
+        return mNotFilterSet;
     }
 
     /** Builder for {@link AggregatableAttributionTrigger}. */
@@ -103,15 +104,15 @@ public class EventTrigger {
             return this;
         }
 
-        /** See {@link EventTrigger#getFilterData()}. */
-        public EventTrigger.Builder setFilter(FilterMap filterMap) {
-            mBuilding.mFilter = Optional.ofNullable(filterMap);
+        /** See {@link EventTrigger#getFilterSet()}. */
+        public EventTrigger.Builder setFilterSet(List<FilterMap> filterSet) {
+            mBuilding.mFilterSet = Optional.ofNullable(filterSet);
             return this;
         }
 
-        /** See {@link EventTrigger#getNotFilterData()} ()}. */
-        public EventTrigger.Builder setNotFilter(FilterMap notFilterMap) {
-            mBuilding.mNotFilter = Optional.ofNullable(notFilterMap);
+        /** See {@link EventTrigger#getNotFilterSet()} ()}. */
+        public EventTrigger.Builder setNotFilterSet(List<FilterMap> notFilterSet) {
+            mBuilding.mNotFilterSet = Optional.ofNullable(notFilterSet);
             return this;
         }
 

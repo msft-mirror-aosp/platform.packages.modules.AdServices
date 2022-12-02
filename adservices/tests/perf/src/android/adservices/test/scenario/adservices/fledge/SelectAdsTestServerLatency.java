@@ -16,7 +16,6 @@
 
 package android.adservices.test.scenario.adservices.fledge;
 
-import android.Manifest;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
@@ -27,9 +26,6 @@ import android.platform.test.scenario.annotation.Scenario;
 import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.platform.app.InstrumentationRegistry;
-
-import com.android.compatibility.common.util.ShellUtils;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.base.Ticker;
@@ -38,6 +34,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -54,6 +51,8 @@ public class SelectAdsTestServerLatency {
 
     private static final String TAG = "SelectAds";
 
+    private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
+
     private static final String LOG_LABEL_P50_5G = "SELECT_ADS_LATENCY_P50_5G";
     private static final String LOG_LABEL_P90_5G = "SELECT_ADS_LATENCY_P90_5G";
 
@@ -65,8 +64,7 @@ public class SelectAdsTestServerLatency {
     private static final String AD_SELECTION_FAILURE_MESSAGE =
             "Ad selection outcome is not expected";
 
-    protected final Context mContext = ApplicationProvider.getApplicationContext();
-    private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
+    private final Context mContext = ApplicationProvider.getApplicationContext();
     private final AdSelectionClient mAdSelectionClient =
             new AdSelectionClient.Builder()
                     .setContext(mContext)
@@ -83,38 +81,17 @@ public class SelectAdsTestServerLatency {
                     return android.os.SystemClock.elapsedRealtimeNanos();
                 }
             };
-
     private List<CustomAudience> mCustomAudiences = new ArrayList<>();
 
-    // TODO(b/259392654): Avoid duplication of common code across Fledge CB performance tests
-    // TODO(b/259546574): Warm up test servers before running CB perf tests
+    @Rule public SelectAdsFlagRule mSelectAdsFlagRule = new SelectAdsFlagRule();
+
     @BeforeClass
     public static void setupBeforeClass() {
-        InstrumentationRegistry.getInstrumentation()
-                .getUiAutomation()
-                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+        StaticAdTechServerUtils.warmupServers();
     }
 
     @Before
     public void setup() {
-        ShellUtils.runShellCommand(
-                "device_config put adservices fledge_ad_selection_bidding_timeout_per_ca_ms"
-                        + " 120000");
-        ShellUtils.runShellCommand(
-                "device_config put adservices fledge_ad_selection_scoring_timeout_ms 120000");
-        ShellUtils.runShellCommand(
-                "device_config put adservices fledge_ad_selection_overall_timeout_ms 120000");
-        ShellUtils.runShellCommand(
-                "device_config put adservices fledge_ad_selection_bidding_timeout_per_buyer_ms"
-                        + " 120000");
-        ShellUtils.runShellCommand("su 0 killall -9 com.google.android.adservices.api");
-
-        // TODO(b/260704277) : Remove/modify the temporary adb commands added to
-        //  SelectAdsTestServerLatency
-        ShellUtils.runShellCommand("setprop debug.adservices.disable_fledge_enrollment_check true");
-        ShellUtils.runShellCommand("device_config put adservices global_kill_switch false");
-        ShellUtils.runShellCommand(
-                "device_config put adservices adservice_system_service_enabled true");
         mCustomAudiences.clear();
     }
 
@@ -142,7 +119,13 @@ public class SelectAdsTestServerLatency {
         // TODO(b/259248789) : Modify SelectAdsLatencyHelper to parse all log queries beginning with
         //  SELECT_ADS_LATENCY and use LOG_LABEL_REAL_SERVER_ONE_BUYER_P50 below instead of
         //  LOG_LABEL_P50_5G
-        Log.i(TAG, "(" + LOG_LABEL_P50_5G + ": " + timer.elapsed(TimeUnit.MILLISECONDS) + " ms)");
+        Log.i(
+                TAG,
+                "("
+                        + generateLogLabel("selectAds_oneBuyer_realServer")
+                        + ": "
+                        + timer.elapsed(TimeUnit.MILLISECONDS)
+                        + " ms)");
         Assert.assertEquals(
                 AD_SELECTION_FAILURE_MESSAGE,
                 createExpectedWinningUri(
@@ -169,7 +152,13 @@ public class SelectAdsTestServerLatency {
         // TODO(b/259248789) : Modify SelectAdsLatencyHelper to parse all log queries beginning with
         //  SELECT_ADS_LATENCY and use LOG_LABEL_REAL_SERVER_FIVE_BUYERS_P50 below instead of
         //  LOG_LABEL_P90_5G
-        Log.i(TAG, "(" + LOG_LABEL_P90_5G + ": " + timer.elapsed(TimeUnit.MILLISECONDS) + " ms)");
+        Log.i(
+                TAG,
+                "("
+                        + generateLogLabel("selectAds_fiveBuyers_realServer")
+                        + ": "
+                        + timer.elapsed(TimeUnit.MILLISECONDS)
+                        + " ms)");
         Assert.assertEquals(
                 AD_SELECTION_FAILURE_MESSAGE,
                 createExpectedWinningUri(
@@ -198,5 +187,9 @@ public class SelectAdsTestServerLatency {
     private String createExpectedWinningUri(
             int buyerIndex, String customAudienceName, int adNumber) {
         return StaticAdTechServerUtils.getAdRenderUri(buyerIndex, customAudienceName, adNumber);
+    }
+
+    private String generateLogLabel(String testName) {
+        return "SELECT_ADS_LATENCY_" + getClass().getSimpleName() + "#" + testName;
     }
 }
