@@ -21,6 +21,8 @@ import androidx.core.view.WindowCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.FlagsFactory;
+
 /**
  * Android application activity for controlling settings related to PP (Privacy Preserving) APIs.
  */
@@ -29,6 +31,9 @@ public class ConsentNotificationActivity extends FragmentActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
-        setContentView(R.layout.consent_notification_activity);
+        setContentView(
+                FlagsFactory.getFlags().getGaUxFeatureEnabled()
+                        ? R.layout.consent_notification_ga_activity
+                        : R.layout.consent_notification_activity);
     }
 }
