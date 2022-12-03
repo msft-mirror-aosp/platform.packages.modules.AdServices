@@ -26,9 +26,10 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
-import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
-import com.android.adservices.data.measurement.ITransaction;
+import com.android.adservices.service.measurement.Source;
+import com.android.adservices.service.measurement.SourceFixture;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -39,132 +40,96 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
-import java.util.HashMap;
-import java.util.Map;
 
 /** Unit tests for {@link DebugReport} */
 @SmallTest
 public final class DebugReportApiTest {
 
-    private static final String TYPE = "trigger-event-deduplicated";
-    private static final String BODY_KEY_1 = "attribution_destination";
-    private static final String BODY_VALUE_1 = "https://destination.example";
-    private static final String BODY_KEY_2 = "source_event_id";
-    private static final String BODY_VALUE_2 = "936731";
-    private static final String ENROLLMENT_ID = "E1";
+    private static final UnsignedLong SOURCE_EVENT_ID = new UnsignedLong("7213872");
+    private static final String LIMIT = "100";
     private final Context mContext = ApplicationProvider.getApplicationContext();
     private DebugReportApi mDebugReportApi;
-    @Mock private ITransaction mTransaction;
     @Mock private IMeasurementDao mMeasurementDao;
-
-    class FakeDatastoreManager extends DatastoreManager {
-
-        @Override
-        public ITransaction createNewTransaction() {
-            return mTransaction;
-        }
-
-        @Override
-        public IMeasurementDao getMeasurementDao() {
-            return mMeasurementDao;
-        }
-    }
 
     @Before
     public void setup() {
-        mDebugReportApi = new DebugReportApi(mContext, new FakeDatastoreManager());
+        mDebugReportApi = new DebugReportApi(mContext);
         MockitoAnnotations.initMocks(this);
     }
 
     @Test
-    public void testScheduleReport_success() throws Exception {
+    public void testScheduleSourceDestinationLimitDebugReport_success() throws Exception {
         runWithMocks(
                 () -> {
-                    Map<String, String> body = new HashMap<>();
-                    body.put(BODY_KEY_1, BODY_VALUE_1);
-                    body.put(BODY_KEY_2, BODY_VALUE_2);
+                    Source source = SourceFixture.getValidSource();
                     ExtendedMockito.doNothing()
                             .when(
                                     () ->
                                             DebugReportingJobService.scheduleIfNeeded(
                                                     any(), anyBoolean(), anyBoolean()));
 
-                    mDebugReportApi.scheduleReport(
-                            TYPE, body, ENROLLMENT_ID, /*isAdTechOptIn=*/ true);
+                    mDebugReportApi.scheduleSourceDestinationLimitDebugReport(
+                            source, LIMIT, mMeasurementDao);
                     verify(mMeasurementDao, times(1)).insertDebugReport(any());
                 });
     }
 
     @Test
-    public void testScheduleReport_without_enrollmentId_dontSchedule() throws Exception {
+    public void testScheduleSourceDestinationLimitDebugReport_without_enrollmentId_dontSchedule()
+            throws Exception {
         runWithMocks(
                 () -> {
-                    Map<String, String> body = new HashMap<>();
-                    body.put(BODY_KEY_1, BODY_VALUE_1);
-                    body.put(BODY_KEY_2, BODY_VALUE_2);
+                    Source source =
+                            SourceFixture.getValidSourceBuilder()
+                                    .setEventId(SOURCE_EVENT_ID)
+                                    .setEnrollmentId("")
+                                    .build();
+
                     ExtendedMockito.doNothing()
                             .when(
                                     () ->
                                             DebugReportingJobService.scheduleIfNeeded(
                                                     any(), anyBoolean(), anyBoolean()));
 
-                    mDebugReportApi.scheduleReport(
-                            TYPE, body, /*enrollmentId*/ "", /*isAdTechOptIn=*/ true);
+                    mDebugReportApi.scheduleSourceDestinationLimitDebugReport(
+                            source, LIMIT, mMeasurementDao);
                     verify(mMeasurementDao, never()).insertDebugReport(any());
                 });
     }
 
     @Test
-    public void testScheduleReport_without_adTechOptIn_dontSchedule() throws Exception {
+    public void testScheduleSourceNoisedDebugReport_success() throws Exception {
         runWithMocks(
                 () -> {
-                    Map<String, String> body = new HashMap<>();
-                    body.put(BODY_KEY_1, BODY_VALUE_1);
-                    body.put(BODY_KEY_2, BODY_VALUE_2);
+                    Source source = SourceFixture.getValidSource();
                     ExtendedMockito.doNothing()
                             .when(
                                     () ->
                                             DebugReportingJobService.scheduleIfNeeded(
                                                     any(), anyBoolean(), anyBoolean()));
 
-                    mDebugReportApi.scheduleReport(
-                            TYPE, body, ENROLLMENT_ID, /*isAdTechOptIn=*/ false);
-                    verify(mMeasurementDao, never()).insertDebugReport(any());
+                    mDebugReportApi.scheduleSourceNoisedDebugReport(source, mMeasurementDao);
+                    verify(mMeasurementDao, times(1)).insertDebugReport(any());
                 });
     }
 
     @Test
-    public void testScheduleReport_empty_reportType_dontSchedule() throws Exception {
+    public void testScheduleSourceNoisedDebugReport_without_enrollmentId_dontSchedule()
+            throws Exception {
         runWithMocks(
                 () -> {
-                    Map<String, String> body = new HashMap<>();
-                    body.put(BODY_KEY_1, BODY_VALUE_1);
-                    body.put(BODY_KEY_2, BODY_VALUE_2);
+                    Source source =
+                            SourceFixture.getValidSourceBuilder()
+                                    .setEventId(SOURCE_EVENT_ID)
+                                    .setEnrollmentId("")
+                                    .build();
                     ExtendedMockito.doNothing()
                             .when(
                                     () ->
                                             DebugReportingJobService.scheduleIfNeeded(
                                                     any(), anyBoolean(), anyBoolean()));
 
-                    mDebugReportApi.scheduleReport(
-                            /*type=*/ "", body, ENROLLMENT_ID, /*isAdTechOptIn=*/ false);
-                    verify(mMeasurementDao, never()).insertDebugReport(any());
-                });
-    }
-
-    @Test
-    public void testScheduleReport_empty_reportBody_dontSchedule() throws Exception {
-        runWithMocks(
-                () -> {
-                    Map<String, String> body = new HashMap<>();
-                    ExtendedMockito.doNothing()
-                            .when(
-                                    () ->
-                                            DebugReportingJobService.scheduleIfNeeded(
-                                                    any(), anyBoolean(), anyBoolean()));
-
-                    mDebugReportApi.scheduleReport(
-                            TYPE, body, ENROLLMENT_ID, /*isAdTechOptIn=*/ true);
+                    mDebugReportApi.scheduleSourceNoisedDebugReport(source, mMeasurementDao);
                     verify(mMeasurementDao, never()).insertDebugReport(any());
                 });
     }

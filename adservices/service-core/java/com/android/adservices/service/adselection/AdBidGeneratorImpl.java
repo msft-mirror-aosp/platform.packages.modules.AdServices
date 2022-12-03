@@ -190,7 +190,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                         customAudience.getOwner(),
                         customAudience.getBuyer(),
                         customAudience.getName(),
-                        mFlags.getFledgeJsCachingEnabled(),
+                        mFlags.getFledgeHttpJsCachingEnabled(),
                         runAdBiddingPerCAExecutionLogger);
 
         FluentFuture<Pair<AdWithBid, String>> adWithBidPair =

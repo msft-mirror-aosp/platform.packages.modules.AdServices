@@ -31,12 +31,25 @@ public final class Filter {
      * source or trigger, ignore that key. When a key is present both in source and trigger, the key
      * matches if the intersection of values is not empty.
      *
-     * @param sourceFilter the filter_data field in attribution source.
-     * @param triggerFilter the AttributionTriggerData in attribution trigger.
+     * @param sourceFilter the {@code FilterMap} in attribution source.
+     * @param triggerFilters a list of {@code FilterMap}, the trigger filter set.
      * @param isFilter true for filters, false for not_filters.
-     * @return return true when all keys in source filter and trigger filter are matched.
+     * @return return true when all keys shared by source filter and trigger filter are matched.
      */
     public static boolean isFilterMatch(
+            FilterMap sourceFilter, List<FilterMap> triggerFilters, boolean isFilter) {
+        if (sourceFilter.getAttributionFilterMap().isEmpty() || triggerFilters.isEmpty()) {
+            return true;
+        }
+        for (FilterMap filterMap : triggerFilters) {
+            if (isFilterMatch(sourceFilter, filterMap, isFilter)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean isFilterMatch(
             FilterMap sourceFilter, FilterMap triggerFilter, boolean isFilter) {
         for (String key : triggerFilter.getAttributionFilterMap().keySet()) {
             if (!sourceFilter.getAttributionFilterMap().containsKey(key)) {

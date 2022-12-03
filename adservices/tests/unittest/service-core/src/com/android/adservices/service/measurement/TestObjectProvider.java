@@ -32,6 +32,7 @@ import com.android.adservices.service.measurement.attribution.AttributionJobHand
 import com.android.adservices.service.measurement.inputverification.ClickVerifier;
 import com.android.adservices.service.measurement.registration.AsyncSourceFetcher;
 import com.android.adservices.service.measurement.registration.AsyncTriggerFetcher;
+import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.mockito.stubbing.Answer;
@@ -79,7 +80,8 @@ class TestObjectProvider {
             DatastoreManager datastoreManager,
             AsyncSourceFetcher asyncSourceFetcher,
             AsyncTriggerFetcher asyncTriggerFetcher,
-            EnrollmentDao enrollmentDao) {
+            EnrollmentDao enrollmentDao,
+            DebugReportApi debugReportApi) {
         if (type == Type.DENOISED) {
             AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                     spy(
@@ -88,7 +90,8 @@ class TestObjectProvider {
                                     asyncSourceFetcher,
                                     asyncTriggerFetcher,
                                     enrollmentDao,
-                                    datastoreManager));
+                                    datastoreManager,
+                                    debugReportApi));
             // Disable Impression Noise
             doReturn(Collections.emptyList())
                     .when(asyncRegistrationQueueRunner)
@@ -102,7 +105,8 @@ class TestObjectProvider {
                                     asyncSourceFetcher,
                                     asyncTriggerFetcher,
                                     enrollmentDao,
-                                    datastoreManager));
+                                    datastoreManager,
+                                    debugReportApi));
             // Create impression noise with 100% probability
             Answer<?> answerSourceEventReports =
                     invocation -> {
@@ -133,6 +137,7 @@ class TestObjectProvider {
                 asyncSourceFetcher,
                 asyncTriggerFetcher,
                 enrollmentDao,
-                datastoreManager);
+                datastoreManager,
+                debugReportApi);
     }
 }

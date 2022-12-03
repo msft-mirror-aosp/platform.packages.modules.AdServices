@@ -36,10 +36,8 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"Ivumela i-application ukufinyelela i-API yokuguqula isimo sokuvumela kwe-AdService."</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"Ukufinyelela ku-API yesimo sokunika amandla se-AdService"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Ivumela i-application ukufinyelela i-API yesimo sokuvumela se-AdService."</string>
-    <!-- no translation found for permlab_accessAdServicesManager (4816332609066703740) -->
-    <skip />
-    <!-- no translation found for permdesc_accessAdServicesManager (2619300431637689524) -->
-    <skip />
+    <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Ukufinyelela kuma-API we-AdServicesManager"</string>
+    <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Ivumela i-app ukufinyelela i-AdServicesManager\'s API."</string>
     <string name="app_label" msgid="5985320129629013968">"Isistimu ye-Android"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Joyina i-beta yobumfihlo yezikhangiso ze-Android"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"I-Android ihlola izindlela eziyimfihlo ezengeziwe zokuthi ama-app akubonise izikhangiso"</string>

@@ -201,7 +201,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                             if (jsOverride == null) {
                                 LogUtil.v("Fetching Ad Scoring Logic from the server");
                                 return mAdServicesHttpsClient.fetchPayload(
-                                        decisionLogicUri, mFlags.getFledgeJsCachingEnabled());
+                                        decisionLogicUri, mFlags.getFledgeHttpJsCachingEnabled());
                             } else {
                                 LogUtil.d(
                                         "Developer options enabled and an override JS is provided "
