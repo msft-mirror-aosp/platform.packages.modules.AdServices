@@ -36,6 +36,8 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"允許應用程式存取 AdService 啟用狀態修改 API。"</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"AdService 啟用狀態 API 的存取權"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"允許應用程式存取 AdService 啟用狀態 API。"</string>
+    <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"AdServicesManager 的 API 存取權"</string>
+    <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"允許應用程式存取 AdServicesManager 的 API。"</string>
     <string name="app_label" msgid="5985320129629013968">"Android 系統"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"加入 Android 廣告私隱權 Beta 版本測試計劃"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android 不斷探索如何透過更能保護私隱的方式，讓應用程式向您顯示廣告"</string>
@@ -81,8 +83,7 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"私隱沙箱"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android 廣告私隱權 Beta 版本提供全新功能，讓應用程式可向您顯示可能感興趣的廣告。這些技術不會使用裝置識別碼。\n\n推測您可能感興趣的廣告類別，並在裝置上暫時儲存興趣。這允許應用程式向您顯示相關的廣告，但不會追蹤您在其他開發人員的網站和應用程式內的活動。"</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"您沒有封鎖任何興趣"</string>
-    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
-    <skip />
+    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"興趣已重設"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"應用程式可推測您的興趣，並暫時儲存在 Android 系統中。然後，另一個應用程式可根據這些興趣向您顯示廣告。\n\n如果您封鎖某個應用程式，該應用程式就不會再推測其他興趣。除非您解除封鎖，否則該應用程式不會再加入此應用程式清單。系統會刪除應用程式之前推測的興趣，但您仍可能看到部分相關的廣告。"</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"您已封鎖的應用程式"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"重設應用程式推測的興趣"</string>
