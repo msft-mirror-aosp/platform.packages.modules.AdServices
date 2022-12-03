@@ -142,6 +142,13 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
         assertTrue(
                 doesTableExistAndColumnCountMatch(
                         db, MeasurementTables.AttributionContract.TABLE, 10));
+        assertTrue(
+                doesTableExistAndColumnCountMatch(db, MeasurementTables.SourceContract.TABLE, 25));
+        assertTrue(
+                doesTableExistAndColumnCountMatch(db, MeasurementTables.TriggerContract.TABLE, 16));
+        assertTrue(
+                doesTableExistAndColumnCountMatch(
+                        db, MeasurementTables.DebugReportContract.TABLE, 4));
         assertTrue(doesIndexExist(db, "idx_msmt_attribution_ss_so_ds_do_ei_tt"));
         assertSourceMigration(db);
         assertEventReportMigration(db);
