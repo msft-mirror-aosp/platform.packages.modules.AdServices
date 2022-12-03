@@ -20,7 +20,6 @@ import static android.adservices.test.scenario.adservices.utils.MockWebServerDis
 import static android.adservices.test.scenario.adservices.utils.MockWebServerDispatcherFactory.NETWORK_4GPLUS;
 import static android.adservices.test.scenario.adservices.utils.MockWebServerDispatcherFactory.NETWORK_5G;
 
-import android.Manifest;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.clients.adselection.AdSelectionClient;
@@ -34,19 +33,14 @@ import android.adservices.test.scenario.adservices.utils.MockWebServerRuleFactor
 import android.content.Context;
 import android.net.Uri;
 import android.platform.test.scenario.annotation.Scenario;
-import android.provider.DeviceConfig;
 import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.platform.app.InstrumentationRegistry;
-
-import com.android.compatibility.common.util.ShellUtils;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.base.Ticker;
 
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -66,6 +60,7 @@ import java.util.concurrent.TimeUnit;
 @RunWith(JUnit4.class)
 public class SelectAdsLatency {
     private static final String TAG = "SelectAds";
+    private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("localhost");
     private static final List<AdTechIdentifier> CUSTOM_AUDIENCE_BUYERS =
@@ -78,7 +73,6 @@ public class SelectAdsLatency {
             Map.of(BUYER, AdSelectionSignals.fromString("{\"buyer_signals\":1}"));
     private static final AdTechIdentifier SELLER = AdTechIdentifier.fromString("localhost");
     private static final int API_RESPONSE_TIMEOUT_SECONDS = 100;
-    private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
     // Estimates from
     // https://docs.google.com/spreadsheets/d/1EP_cwBbwYI-NMro0Qq5uif1krwjIQhjK8fjOu15j7hQ/edit?usp=sharing&resourcekey=0-A67kzEnAKKz1k7qpshSedg
@@ -95,7 +89,7 @@ public class SelectAdsLatency {
     private static final String AD_SELECTION_FAILURE_MESSAGE =
             "Ad selection outcome is not expected";
 
-    protected final Context mContext = ApplicationProvider.getApplicationContext();
+    private final Context mContext = ApplicationProvider.getApplicationContext();
     private final AdSelectionClient mAdSelectionClient =
             new AdSelectionClient.Builder()
                     .setContext(mContext)
@@ -106,12 +100,6 @@ public class SelectAdsLatency {
                     .setContext(mContext)
                     .setExecutor(CALLBACK_EXECUTOR)
                     .build();
-    @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
-
-    @Rule
-    public CustomAudienceSetupRule mCustomAudienceSetupRule =
-            new CustomAudienceSetupRule(mCustomAudienceClient, mMockWebServerRule);
-
     private final Ticker mTicker =
             new Ticker() {
                 public long read() {
@@ -119,65 +107,44 @@ public class SelectAdsLatency {
                 }
             };
 
-    @BeforeClass
-    public static void setupBeforeClass() {
-        InstrumentationRegistry.getInstrumentation()
-                .getUiAutomation()
-                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                "fledge_ad_selection_bidding_timeout_per_ca_ms",
-                "120000",
-                false);
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                "fledge_ad_selection_scoring_timeout_ms",
-                "120000",
-                false);
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                "fledge_ad_selection_overall_timeout_ms",
-                "120000",
-                false);
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                "fledge_ad_selection_bidding_timeout_per_buyer_ms",
-                "120000",
-                false);
-        ShellUtils.runShellCommand("su 0 killall -9 com.google.android.adservices.api");
-    }
+    @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
+    @Rule public SelectAdsFlagRule mSelectAdsFlagRule = new SelectAdsFlagRule();
+
+    @Rule
+    public CustomAudienceSetupRule mCustomAudienceSetupRule =
+            new CustomAudienceSetupRule(mCustomAudienceClient, mMockWebServerRule);
 
     @Test
     public void selectAds_p50_5G() throws Exception {
-        selectAds(NETWORK_5G, 50);
+        selectAds(NETWORK_5G, 50, "selectAds_p50_5G");
     }
 
     @Test
     public void selectAds_p50_4GPlus() throws Exception {
-        selectAds(NETWORK_4GPLUS, 50);
+        selectAds(NETWORK_4GPLUS, 50, "selectAds_p50_4GPlus");
     }
 
     @Test
     public void selectAds_p50_4G() throws Exception {
-        selectAds(NETWORK_4G, 50);
+        selectAds(NETWORK_4G, 50, "selectAds_p50_4G");
     }
 
     @Test
     public void selectAds_p90_5G() throws Exception {
-        selectAds(NETWORK_5G, 90);
+        selectAds(NETWORK_5G, 90, "selectAds_p90_5G");
     }
 
     @Test
     public void selectAds_p90_4G() throws Exception {
-        selectAds(NETWORK_4G, 90);
+        selectAds(NETWORK_4G, 90, "selectAds_p90_4G");
     }
 
     @Test
     public void selectAds_p90_4GPlus() throws Exception {
-        selectAds(NETWORK_4GPLUS, 90);
+        selectAds(NETWORK_4GPLUS, 90, "selectAds_p90_4GPlus");
     }
 
-    private void selectAds(String network, int percentile) throws Exception {
+    private void selectAds(String network, int percentile, String testName) throws Exception {
         mMockWebServerRule.createMockWebServer();
         mMockWebServerRule.startCreatedMockWebServer(
                 MockWebServerDispatcherFactory.createLatencyDispatcher(
@@ -198,7 +165,7 @@ public class SelectAdsLatency {
         Log.i(
                 TAG,
                 "("
-                        + generateLogLabel(percentile, network)
+                        + generateLogLabel(testName)
                         + ": "
                         + timer.elapsed(TimeUnit.MILLISECONDS)
                         + " ms)");
@@ -235,7 +202,7 @@ public class SelectAdsLatency {
                 .build();
     }
 
-    private String generateLogLabel(int percentile, String network) {
-        return "SELECT_ADS_LATENCY_P" + percentile + "_" + network;
+    private String generateLogLabel(String testName) {
+        return "SELECT_ADS_LATENCY_" + getClass().getSimpleName() + "#" + testName;
     }
 }

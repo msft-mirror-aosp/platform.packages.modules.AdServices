@@ -20,11 +20,12 @@ import static android.app.sdksandbox.SdkSandboxManager.EXTRA_DISPLAY_ID;
 import static android.app.sdksandbox.SdkSandboxManager.EXTRA_HEIGHT_IN_PIXELS;
 import static android.app.sdksandbox.SdkSandboxManager.EXTRA_HOST_TOKEN;
 import static android.app.sdksandbox.SdkSandboxManager.EXTRA_WIDTH_IN_PIXELS;
+import static android.app.sdksandbox.SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThrows;
 
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SandboxedSdk;
@@ -423,12 +424,11 @@ public class SdkSandboxManagerTest {
 
         final String sdkName = "com.android.loadSdkSuccessfullySdkProvider";
         final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
-        SecurityException thrown =
-                assertThrows(
-                        SecurityException.class,
-                        () ->
-                                mSdkSandboxManager.loadSdk(
-                                        sdkName, new Bundle(), Runnable::run, callback));
+        mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
+
+        LoadSdkException thrown = callback.getLoadSdkException();
+
+        assertEquals(LOAD_SDK_INTERNAL_ERROR, thrown.getLoadSdkErrorCode());
         assertThat(thrown).hasMessageThat().contains("does not run in the foreground");
     }
 
@@ -465,27 +465,34 @@ public class SdkSandboxManagerTest {
     public void testSdkSandboxPermissions() throws Exception {
         final PackageManager pm =
                 InstrumentationRegistry.getInstrumentation().getContext().getPackageManager();
-        final PackageInfo sdkSandboxPackage =
-                pm.getPackageInfo(
-                        pm.getSdkSandboxPackageName(),
-                        PackageManager.PackageInfoFlags.of(PackageManager.GET_PERMISSIONS));
-        for (int i = 0; i < sdkSandboxPackage.requestedPermissions.length; i++) {
-            final String permissionName = sdkSandboxPackage.requestedPermissions[i];
-            final PermissionInfo permissionInfo = pm.getPermissionInfo(permissionName, 0);
-            mExpect.withMessage("SdkSandbox.apk requests non-normal permission " + permissionName)
-                    .that(permissionInfo.getProtection())
-                    .isEqualTo(PermissionInfo.PROTECTION_NORMAL);
+        try {
+            final PackageInfo sdkSandboxPackage =
+                    pm.getPackageInfo(
+                            pm.getSdkSandboxPackageName(),
+                            PackageManager.PackageInfoFlags.of(PackageManager.GET_PERMISSIONS));
+            for (int i = 0; i < sdkSandboxPackage.requestedPermissions.length; i++) {
+                final String permissionName = sdkSandboxPackage.requestedPermissions[i];
+                final PermissionInfo permissionInfo = pm.getPermissionInfo(permissionName, 0);
+                mExpect.withMessage(
+                                "SdkSandbox.apk requests non-normal permission " + permissionName)
+                        .that(permissionInfo.getProtection())
+                        .isEqualTo(PermissionInfo.PROTECTION_NORMAL);
+            }
+        } catch (PackageManager.NameNotFoundException exception) {
+            // TODO(b/259936418): Remove once we stop needing non-system permissions.
         }
     }
 
     // TODO(b/244730098): The test below needs to be moved from e2e.
     // It is not and e2e test.
     @Test
-    public void testLoadSdkExceptionWriteToParcel() throws Exception {
+    public void testLoadSdkExceptionWriteToParcel() {
         final Bundle bundle = new Bundle();
         bundle.putChar("testKey", /*testValue=*/ 'C');
+        final String errorMessage = "Error Message";
+        final Exception cause = new Exception(errorMessage);
 
-        final LoadSdkException exception = new LoadSdkException(/*Throwable=*/ null, bundle);
+        final LoadSdkException exception = new LoadSdkException(cause, bundle);
 
         final Parcel parcel = Parcel.obtain();
         exception.writeToParcel(parcel, /*flags=*/ 0);
@@ -495,6 +502,7 @@ public class SdkSandboxManagerTest {
         final LoadSdkException exceptionCheck = LoadSdkException.CREATOR.createFromParcel(parcel);
 
         assertThat(exceptionCheck.getLoadSdkErrorCode()).isEqualTo(exception.getLoadSdkErrorCode());
+        assertThat(exceptionCheck.getMessage()).isEqualTo(exception.getMessage());
         assertThat(exceptionCheck.getExtraInformation().getChar("testKey"))
                 .isEqualTo(exception.getExtraInformation().getChar("testKey"));
         assertThat(exceptionCheck.getExtraInformation().keySet()).containsExactly("testKey");
@@ -504,7 +512,7 @@ public class SdkSandboxManagerTest {
     // It is not and e2e test.
     @Test
     public void testLoadSdkExceptionDescribeContents() throws Exception {
-        final LoadSdkException exception = new LoadSdkException(/*Throwable=*/ null, new Bundle());
+        final LoadSdkException exception = new LoadSdkException(new Exception(), new Bundle());
         assertThat(exception.describeContents()).isEqualTo(0);
     }
 

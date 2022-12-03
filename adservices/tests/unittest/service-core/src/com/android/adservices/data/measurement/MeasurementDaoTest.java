@@ -448,7 +448,7 @@ public class MeasurementDaoTest {
             assertNotNull(report);
             assertNotNull(report.getId());
             assertEquals(debugReport.getType(), report.getType());
-            assertEquals(debugReport.getBody(), report.getBody());
+            assertEquals(debugReport.getBody().toString(), report.getBody().toString());
             assertEquals(debugReport.getEnrollmentId(), report.getEnrollmentId());
         }
     }
@@ -3426,7 +3426,7 @@ public class MeasurementDaoTest {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.DebugReportContract.ID, debugReport.getId());
         values.put(MeasurementTables.DebugReportContract.TYPE, debugReport.getType());
-        values.put(MeasurementTables.DebugReportContract.BODY, debugReport.getBody());
+        values.put(MeasurementTables.DebugReportContract.BODY, debugReport.getBody().toString());
         values.put(
                 MeasurementTables.DebugReportContract.ENROLLMENT_ID, debugReport.getEnrollmentId());
         db.insert(MeasurementTables.DebugReportContract.TABLE, null, values);
@@ -3456,7 +3456,7 @@ public class MeasurementDaoTest {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.DebugReportContract.ID, debugReport.getId());
         values.put(MeasurementTables.DebugReportContract.TYPE, debugReport.getType());
-        values.put(MeasurementTables.DebugReportContract.BODY, debugReport.getBody());
+        values.put(MeasurementTables.DebugReportContract.BODY, debugReport.getBody().toString());
         values.put(
                 MeasurementTables.DebugReportContract.ENROLLMENT_ID, debugReport.getEnrollmentId());
         db.insert(MeasurementTables.DebugReportContract.TABLE, null, values);

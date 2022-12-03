@@ -68,6 +68,11 @@ public class SystemHealthParams {
     public static final int MAX_BYTES_PER_ATTRIBUTION_FILTER_STRING = 25;
 
     /**
+     * Maximum number of filter maps allowed in an attribution filter set.
+     */
+    public static final int MAX_FILTER_MAPS_PER_FILTER_SET = 5;
+
+    /**
      * Maximum number of values allowed in an attribution filter.
      */
     public static final int MAX_VALUES_PER_ATTRIBUTION_FILTER = 50;
