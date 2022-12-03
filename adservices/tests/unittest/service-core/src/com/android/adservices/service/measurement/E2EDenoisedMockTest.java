@@ -37,7 +37,7 @@ public class E2EDenoisedMockTest extends E2EMockTest {
 
     @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> getData() throws IOException, JSONException {
-        return data(TEST_DIR_NAME);
+        return data(TEST_DIR_NAME, E2ETest::preprocessTestJson);
     }
 
     public E2EDenoisedMockTest(Collection<Action> actions, ReportObjects expectedOutput,
