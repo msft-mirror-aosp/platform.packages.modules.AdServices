@@ -36,6 +36,8 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"Omogućava aplikaciji da pristupa AdServiceovom API-ju za izmjenu stanja omogućenosti."</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"Pristup AdServiceovom API-ju za stanje omogućenosti"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Omogućava aplikaciji da pristupa AdServiceovom API-ju za stanje omogućenosti."</string>
+    <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Pristup API-jevima AdServicesManagera"</string>
+    <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Dozvoljava aplikaciji da pristupi API-jevima AdServicesManagera."</string>
     <string name="app_label" msgid="5985320129629013968">"Sistem Android"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Pridružite se Androidovoj beta verziji privatnosti oglasa"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android istražuje privatnije načine na koje vam aplikacije prikazuju oglase"</string>
@@ -81,7 +83,7 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Okruženje zaštićene privatnosti"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Androidova beta verzija privatnosti oglasa pruža nove funkcije koje aplikacije mogu koristiti za prikazivanje oglasa koji bi vam se mogli svidjeti. Ove tehnologije ne koriste identifikatore uređaja.\n\nAndroid može procijeniti vrste oglasa koje bi vam mogle biti zanimljive i privremeno sačuvati ta interesovanja na vašem uređaju. Ovo omogućava aplikacijama da vam prikazuju relevantne oglase, ali bez praćenja vaše aktivnosti na web lokacijama i u aplikacijama drugih programera."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Nemate nijedno blokirano interesovanje"</string>
-    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Interesi su poništeni"</string>
+    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Interesovanja se poništavaju"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Aplikacije mogu procijeniti vaša interesovanja i privremeno ih sačuvati pomoću Androida. Druga aplikacija vam kasnije može prikazati oglas na osnovu tih interesovanja.\n\nAko blokirate aplikaciju, neće više procjenjivati interesovanja. Neće se ponovo dodati na listu aplikacija osim ako je deblokirate. Interesovanja koja je aplikacija već procijenila će se izbrisati, ali vam se i dalje mogu prikazivati neki srodni oglasi."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Aplikacije koje ste blokirali"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Poništi interesovanja koja su procijenile aplikacije"</string>
@@ -516,7 +518,7 @@
     <string name="topic10406" msgid="8167644332387528703">"Jahanje"</string>
     <string name="topic10407" msgid="3237734582719584272">"Ekstremni sportovi"</string>
     <string name="topic10408" msgid="3859749534843254349">"Penjanje i planinarenje"</string>
-    <string name="topic10409" msgid="7485614115639267976">"Fantazijski sportovi"</string>
+    <string name="topic10409" msgid="7485614115639267976">"Fantasy sportovi"</string>
     <string name="topic10410" msgid="5996939009229881074">"Golf"</string>
     <string name="topic10411" msgid="2513997418184786648">"Gimnastika"</string>
     <string name="topic10412" msgid="5411755341358248299">"Hokej"</string>

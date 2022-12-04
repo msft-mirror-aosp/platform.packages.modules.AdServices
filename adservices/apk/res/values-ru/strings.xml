@@ -36,6 +36,8 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"Приложение сможет получать доступ к API для изменения состояния поддержки AdService."</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"Доступ к API для чтения состояния поддержки AdService"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Приложение сможет получать доступ к API для чтения состояния поддержки AdService."</string>
+    <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Доступ к API AdServicesManager"</string>
+    <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Приложение сможет получать доступ к API AdServicesManager."</string>
     <string name="app_label" msgid="5985320129629013968">"Система Android"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Примите участие в бета-тестировании функции конфиденциального просмотра рекламы в Android"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Мы ищем новые способы показа рекламы в Android, которые лучше защищают вашу конфиденциальность"</string>
@@ -81,8 +83,7 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"В бета-версии функции конфиденциального просмотра рекламы в Android приложениям предоставлены новые возможности для демонстрации объявлений. При этом не требуется применять идентификаторы устройств.\n\nAndroid сможет определять, реклама на какие темы может вас заинтересовать, и временно хранить эти сведения на вашем устройстве. Так приложения будут показывать релевантные объявления без отслеживания ваших действий на сайтах и в продуктах других разработчиков."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Нет заблокированных интересов"</string>
-    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
-    <skip />
+    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Интересы сброшены"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Приложения могут собирать информацию о ваших интересах и временно хранить ее в Android. Другое приложение может воспользоваться этими данными и показать вам подходящую рекламу.\n\nЕсли вы не хотите, чтобы приложение анализировало ваши интересы, заблокируйте его. Оно не появится в списке, пока вы не снимете блокировку. Собранная информация об интересах будет удалена, но объявления, подобранные на ее основе, иногда могут появляться."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Заблокированные приложения"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Сбросить интересы по данным приложений"</string>
