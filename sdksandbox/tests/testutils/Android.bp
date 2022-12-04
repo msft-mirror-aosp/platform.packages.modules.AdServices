@@ -27,6 +27,7 @@ java_library {
     static_libs: [
         "truth-prebuilt",
         "androidx.test.ext.junit",
+        "SdkSandbox-java-lib",
     ],
     visibility: [
         // TODO(b/222118402): adjust once code is moved

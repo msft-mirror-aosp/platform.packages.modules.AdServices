@@ -20,6 +20,7 @@ import static org.junit.Assert.assertNotEquals;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Set;
@@ -27,19 +28,21 @@ import java.util.Set;
 /** Unit tests for {@link DebugReport} */
 public final class DebugReportTest {
 
-    private static final String TYPE = "trigger-event-deduplicated";
-    private static final String BODY =
-            " {\n"
-                    + "      \"attribution_destination\": \"https://destination.example\",\n"
-                    + "      \"source_event_id\": \"45623\"\n"
-                    + "    }";
+    private final String mType = "trigger-event-deduplicated";
+    private final JSONObject mBodyJson = new JSONObject();
+
+    @Before
+    public void setup() throws JSONException {
+        mBodyJson.put("attribution_destination", "https://destination.example");
+        mBodyJson.put("source_event_id", "733458");
+    }
 
     @Test
     public void creation_success() {
         DebugReport debugReport = createExample1();
         assertEquals("1", debugReport.getId());
-        assertEquals(TYPE, debugReport.getType());
-        assertEquals(BODY, debugReport.getBody());
+        assertEquals(mType, debugReport.getType());
+        assertEquals(mBodyJson, debugReport.getBody());
         assertEquals("2", debugReport.getEnrollmentId());
     }
 
@@ -69,8 +72,8 @@ public final class DebugReportTest {
     public void testDebugReportPayloadJsonSerialization() throws JSONException {
         DebugReport debugReport = createExample1();
         JSONObject debugReportJson = debugReport.toPayloadJson();
-        assertEquals(TYPE, debugReportJson.get("type"));
-        assertEquals(BODY, debugReportJson.get("body"));
+        assertEquals(mType, debugReportJson.get("type"));
+        assertEquals(mBodyJson, debugReportJson.get("body"));
     }
 
     @Test
@@ -79,8 +82,8 @@ public final class DebugReportTest {
                 createExample1(),
                 new DebugReport.Builder()
                         .setId("1")
-                        .setType(TYPE)
-                        .setBody(BODY)
+                        .setType(mType)
+                        .setBody(mBodyJson)
                         .setEnrollmentId("2")
                         .build());
     }
@@ -93,8 +96,8 @@ public final class DebugReportTest {
     private DebugReport createExample1() {
         return new DebugReport.Builder()
                 .setId("1")
-                .setType(TYPE)
-                .setBody(BODY)
+                .setType(mType)
+                .setBody(mBodyJson)
                 .setEnrollmentId("2")
                 .build();
     }
@@ -102,8 +105,8 @@ public final class DebugReportTest {
     private DebugReport createExample2() {
         return new DebugReport.Builder()
                 .setId("3")
-                .setType(TYPE)
-                .setBody(BODY)
+                .setType(mType)
+                .setBody(mBodyJson)
                 .setEnrollmentId("4")
                 .build();
     }

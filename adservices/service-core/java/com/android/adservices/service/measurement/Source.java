@@ -88,6 +88,8 @@ public class Source {
     private String mAggregateSource;
     private int mAggregateContributions;
     private AggregatableAttributionSource mAggregatableAttributionSource;
+    private boolean mAdIdPermission;
+    private boolean mArDebugPermission;
 
     @IntDef(value = {Status.ACTIVE, Status.IGNORED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -315,6 +317,8 @@ public class Source {
                 && mStatus == source.mStatus
                 && mExpiryTime == source.mExpiryTime
                 && mEventTime == source.mEventTime
+                && mAdIdPermission == source.mAdIdPermission
+                && mArDebugPermission == source.mArDebugPermission
                 && Objects.equals(mEventId, source.mEventId)
                 && Objects.equals(mDebugKey, source.mDebugKey)
                 && mSourceType == source.mSourceType
@@ -349,7 +353,9 @@ public class Source {
                 mAggregateSource,
                 mAggregateContributions,
                 mAggregatableAttributionSource,
-                mDebugKey);
+                mDebugKey,
+                mAdIdPermission,
+                mArDebugPermission);
     }
 
     /**
@@ -492,6 +498,16 @@ public class Source {
      */
     public long getEventTime() {
         return mEventTime;
+    }
+
+    /** Is Ad ID Permission Enabled. */
+    public boolean hasAdIdPermission() {
+        return mAdIdPermission;
+    }
+
+    /** Is Ar Debug Permission Enabled. */
+    public boolean hasArDebugPermission() {
+        return mArDebugPermission;
     }
 
     /**
@@ -760,6 +776,18 @@ public class Source {
         @NonNull
         public Builder setEnrollmentId(@NonNull String enrollmentId) {
             mBuilding.mEnrollmentId = enrollmentId;
+            return this;
+        }
+
+        /** See {@link Source#hasAdIdPermission()} */
+        public Source.Builder setAdIdPermission(boolean adIdPermission) {
+            mBuilding.mAdIdPermission = adIdPermission;
+            return this;
+        }
+
+        /** See {@link Source#hasArDebugPermission()} */
+        public Source.Builder setArDebugPermission(boolean arDebugPermission) {
+            mBuilding.mArDebugPermission = arDebugPermission;
             return this;
         }
 

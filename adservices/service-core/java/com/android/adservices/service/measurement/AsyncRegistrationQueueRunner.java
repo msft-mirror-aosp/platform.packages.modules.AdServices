@@ -33,11 +33,13 @@ import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.service.measurement.registration.AsyncSourceFetcher;
 import com.android.adservices.service.measurement.registration.AsyncTriggerFetcher;
+import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.util.AsyncFetchStatus;
 import com.android.adservices.service.measurement.util.AsyncRedirect;
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.Web;
 import com.android.internal.annotations.VisibleForTesting;
+
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -56,6 +58,7 @@ public class AsyncRegistrationQueueRunner {
     private AsyncTriggerFetcher mAsyncTriggerFetcher;
     private EnrollmentDao mEnrollmentDao;
     private final ContentResolver mContentResolver;
+    private final DebugReportApi mDebugReportApi;
 
     private AsyncRegistrationQueueRunner(Context context) {
         mDatastoreManager = DatastoreManagerFactory.getDatastoreManager(context);
@@ -63,6 +66,7 @@ public class AsyncRegistrationQueueRunner {
         mAsyncTriggerFetcher = new AsyncTriggerFetcher(context);
         mEnrollmentDao = EnrollmentDao.getInstance(context);
         mContentResolver = context.getContentResolver();
+        mDebugReportApi = new DebugReportApi(context);
     }
 
     @VisibleForTesting
@@ -71,12 +75,14 @@ public class AsyncRegistrationQueueRunner {
             AsyncSourceFetcher asyncSourceFetcher,
             AsyncTriggerFetcher asyncTriggerFetcher,
             EnrollmentDao enrollmentDao,
-            DatastoreManager datastoreManager) {
+            DatastoreManager datastoreManager,
+            DebugReportApi debugReportApi) {
         mAsyncSourceFetcher = asyncSourceFetcher;
         mAsyncTriggerFetcher = asyncTriggerFetcher;
         mDatastoreManager = datastoreManager;
         mEnrollmentDao = enrollmentDao;
         mContentResolver = contentResolver;
+        mDebugReportApi = debugReportApi;
     }
 
     /**
@@ -188,7 +194,8 @@ public class AsyncRegistrationQueueRunner {
                                                     == AsyncRegistration.RegistrationType.WEB_SOURCE
                                             ? EventSurfaceType.WEB
                                             : EventSurfaceType.APP;
-                            if (isSourceAllowedToInsert(source, topOrigin, publisherType, dao)) {
+                            if (isSourceAllowedToInsert(
+                                    source, topOrigin, publisherType, dao, mDebugReportApi)) {
                                 insertSourceFromTransaction(source, dao);
                             }
                             if (asyncRegistration.shouldProcessRedirects()) {
@@ -338,7 +345,8 @@ public class AsyncRegistrationQueueRunner {
             Source source,
             Uri topOrigin,
             @EventSurfaceType int publisherType,
-            IMeasurementDao dao) {
+            IMeasurementDao dao,
+            DebugReportApi debugReportApi) {
         long windowStartTime = source.getEventTime() - PrivacyParams.RATE_LIMIT_WINDOW_MILLISECONDS;
         Optional<Uri> publisher = getTopLevelPublisher(topOrigin, publisherType);
         if (!publisher.isPresent()) {
@@ -383,6 +391,10 @@ public class AsyncRegistrationQueueRunner {
                     LogUtil.d(
                             "AsyncRegistrationQueueRunner: App destination count >= "
                                 + "MaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource");
+                    if (source.isDebugReporting()) {
+                        debugReportApi.scheduleSourceDestinationLimitDebugReport(
+                                source, optionalAppDestinationCount.toString(), dao);
+                    }
                     return false;
                 }
             } else {
@@ -588,9 +600,12 @@ public class AsyncRegistrationQueueRunner {
 
     @VisibleForTesting
     void insertSourceFromTransaction(Source source, IMeasurementDao dao) throws DatastoreException {
-        List<EventReport> er = generateFakeEventReports(source);
+        List<EventReport> eventReports = generateFakeEventReports(source);
+        if (!eventReports.isEmpty() && source.isDebugReporting()) {
+            mDebugReportApi.scheduleSourceNoisedDebugReport(source, dao);
+        }
         dao.insertSource(source);
-        for (EventReport report : er) {
+        for (EventReport report : eventReports) {
             dao.insertEventReport(report);
         }
         // We want to account for attribution if fake report generation was considered

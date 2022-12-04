@@ -165,11 +165,12 @@ public final class PhFlags implements Flags {
             "fledge_report_impression_overall_timeout_ms";
     static final String KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS =
             "fledge_ad_selection_bidding_timeout_per_buyer_ms";
-    static final String KEY_FLEDGE_ENABLE_HTTP_CACHING = "fledge_enable_http_caching";
-    static final String KEY_FLEDGE_AD_SELECTION_ENABLE_JS_CACHING = "fledge_enable_js_caching";
-    static final String KEY_FLEDGE_HTTP_CACHE_MAX_ENTRIES = "fledge_http_cache_max_entries";
+    static final String KEY_FLEDGE_HTTP_CACHE_ENABLE = "fledge_http_cache_enable";
+    static final String KEY_FLEDGE_HTTP_CACHE_ENABLE_JS_CACHING =
+            "fledge_http_cache_enable_js_caching";
     static final String KEY_FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS =
             "fledge_http_cache_default_max_age_seconds";
+    static final String KEY_FLEDGE_HTTP_CACHE_MAX_ENTRIES = "fledge_http_cache_max_entries";
 
     // FLEDGE Off device ad selection keys
     static final String KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS =
@@ -322,7 +323,7 @@ public final class PhFlags implements Flags {
     static final String KEY_ENABLE_TOPIC_CONTRIBUTORS_CHECK = "enable_topic_contributors_check";
 
     // Database Schema Version Flags
-    static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_3 = "enable_database_schema_version_3";
+    static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_5 = "enable_database_schema_version_5";
 
     // Enrollment flags.
     static final String KEY_ENROLLMENT_BLOCKLIST_IDS = "enrollment_blocklist_ids";
@@ -926,16 +927,16 @@ public final class PhFlags implements Flags {
     public boolean getFledgeHttpCachingEnabled() {
         return DeviceConfig.getBoolean(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_FLEDGE_ENABLE_HTTP_CACHING,
-                /* defaultValue */ FLEDGE_ENABLE_HTTP_CACHING);
+                /* flagName */ KEY_FLEDGE_HTTP_CACHE_ENABLE,
+                /* defaultValue */ FLEDGE_HTTP_CACHE_ENABLE);
     }
 
     @Override
-    public boolean getFledgeJsCachingEnabled() {
+    public boolean getFledgeHttpJsCachingEnabled() {
         return DeviceConfig.getBoolean(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_FLEDGE_AD_SELECTION_ENABLE_JS_CACHING,
-                /* defaultValue */ FLEDGE_AD_SELECTION_ENABLE_JS_CACHING);
+                /* flagName */ KEY_FLEDGE_HTTP_CACHE_ENABLE_JS_CACHING,
+                /* defaultValue */ FLEDGE_HTTP_CACHE_ENABLE_JS_CACHING);
     }
 
     @Override
@@ -1747,11 +1748,11 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getEnableDatabaseSchemaVersion3() {
+    public boolean getEnableDatabaseSchemaVersion5() {
         return DeviceConfig.getBoolean(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_ENABLE_DATABASE_SCHEMA_VERSION_3,
-                /* defaultValue */ ENABLE_DATABASE_SCHEMA_VERSION_3);
+                /* flagName */ KEY_ENABLE_DATABASE_SCHEMA_VERSION_5,
+                /* defaultValue */ ENABLE_DATABASE_SCHEMA_VERSION_5);
     }
 
     @Override
@@ -2037,13 +2038,12 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS
                         + " = "
                         + getFledgeCustomAudienceMaxNumAds());
-        writer.println(
-                "\t" + KEY_FLEDGE_ENABLE_HTTP_CACHING + " = " + getFledgeHttpCachingEnabled());
+        writer.println("\t" + KEY_FLEDGE_HTTP_CACHE_ENABLE + " = " + getFledgeHttpCachingEnabled());
         writer.println(
                 "\t"
-                        + KEY_FLEDGE_AD_SELECTION_ENABLE_JS_CACHING
+                        + KEY_FLEDGE_HTTP_CACHE_ENABLE_JS_CACHING
                         + " = "
-                        + getFledgeJsCachingEnabled());
+                        + getFledgeHttpJsCachingEnabled());
         writer.println(
                 "\t" + KEY_FLEDGE_HTTP_CACHE_MAX_ENTRIES + " = " + getFledgeHttpCacheMaxEntries());
         writer.println(

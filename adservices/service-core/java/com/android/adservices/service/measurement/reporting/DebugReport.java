@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement.reporting;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -27,14 +28,14 @@ import java.util.Objects;
 public final class DebugReport {
     private final String mId;
     private final String mType;
-    private final String mBody;
+    private final JSONObject mBody;
     private final String mEnrollmentId;
 
     /** Create a new debug report object. */
     private DebugReport(
             @Nullable String id,
             @NonNull String type,
-            @NonNull String body,
+            @NonNull JSONObject body,
             @NonNull String enrollmentId) {
         mId = id;
         mType = type;
@@ -69,7 +70,7 @@ public final class DebugReport {
     }
 
     /** Body of debug report. */
-    public String getBody() {
+    public JSONObject getBody() {
         return mBody;
     }
 
@@ -90,7 +91,7 @@ public final class DebugReport {
     public static final class Builder {
         private String mId;
         private String mType;
-        private String mBody;
+        private JSONObject mBody;
         private String mEnrollmentId;
 
         public Builder() {}
@@ -109,11 +110,21 @@ public final class DebugReport {
 
         /** See {@link DebugReport#getBody}. */
         public @NonNull Builder setBody(@NonNull String body) {
+            try {
+                mBody = new JSONObject(body);
+            } catch (JSONException e) {
+                throw new IllegalArgumentException("Invalid debug report body json");
+            }
+            return this;
+        }
+
+        /** See {@link DebugReport#getBody}. */
+        public @NonNull Builder setBody(@NonNull JSONObject body) {
             mBody = body;
             return this;
         }
 
-        /** See {@link DebugReport#getEnrollmentId()} ()}. */
+        /** See {@link DebugReport#getEnrollmentId()}. */
         @NonNull
         public Builder setEnrollmentId(String enrollmentId) {
             mEnrollmentId = enrollmentId;

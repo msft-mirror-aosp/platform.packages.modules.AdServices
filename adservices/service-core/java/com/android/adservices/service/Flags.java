@@ -395,10 +395,10 @@ public interface Flags extends Dumpable {
     int FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS = 5 * 1000; // 5 seconds
     int FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS = 30 * 1000; // 30 seconds
     int FLEDGE_BACKGROUND_FETCH_MAX_RESPONSE_SIZE_B = 10 * 1024; // 10 KiB
-    boolean FLEDGE_ENABLE_HTTP_CACHING = true;
-    boolean FLEDGE_AD_SELECTION_ENABLE_JS_CACHING = true;
-    long FLEDGE_HTTP_CACHE_MAX_ENTRIES = 100;
+    boolean FLEDGE_HTTP_CACHE_ENABLE = true;
+    boolean FLEDGE_HTTP_CACHE_ENABLE_JS_CACHING = true;
     long FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS = 2 * 24 * 60 * 60; // 2 days
+    long FLEDGE_HTTP_CACHE_MAX_ENTRIES = 100;
 
     /** Returns {@code true} if the FLEDGE Background Fetch is enabled. */
     default boolean getFledgeBackgroundFetchEnabled() {
@@ -479,12 +479,12 @@ public interface Flags extends Dumpable {
 
     /** Returns boolean, if the caching is enabled for {@link FledgeHttpCache} */
     default boolean getFledgeHttpCachingEnabled() {
-        return FLEDGE_ENABLE_HTTP_CACHING;
+        return FLEDGE_HTTP_CACHE_ENABLE;
     }
 
     /** Returns boolean, if the caching is enabled for JS for bidding and scoring */
-    default boolean getFledgeJsCachingEnabled() {
-        return FLEDGE_AD_SELECTION_ENABLE_JS_CACHING;
+    default boolean getFledgeHttpJsCachingEnabled() {
+        return FLEDGE_HTTP_CACHE_ENABLE_JS_CACHING;
     }
 
     /** Returns max number of entries that should be persisted in cache */
@@ -696,22 +696,22 @@ public interface Flags extends Dumpable {
     @IntDef(
             flag = true,
             value = {
-                PPAPI_ONLY,
                 SYSTEM_SERVER_ONLY,
+                PPAPI_ONLY,
                 PPAPI_AND_SYSTEM_SERVER,
             })
     @Retention(RetentionPolicy.SOURCE)
     @interface ConsentSourceOfTruth {}
 
-    /** Write and read consent from PPAPI only */
-    int PPAPI_ONLY = 0;
     /** Write and read consent from system server only. */
-    int SYSTEM_SERVER_ONLY = 1;
+    int SYSTEM_SERVER_ONLY = 0;
+    /** Write and read consent from PPAPI only */
+    int PPAPI_ONLY = 1;
     /** Write consent to both PPAPI and system server. Read consent from system server only. */
     int PPAPI_AND_SYSTEM_SERVER = 2;
 
     /* Consent source of truth intended to be used by default. */
-    @ConsentSourceOfTruth int DEFAULT_CONSENT_SOURCE_OF_TRUTH = PPAPI_ONLY;
+    @ConsentSourceOfTruth int DEFAULT_CONSENT_SOURCE_OF_TRUTH = PPAPI_AND_SYSTEM_SERVER;
 
     /** Returns the consent source of truth currently used for PPAPI. */
     @ConsentSourceOfTruth
@@ -1502,12 +1502,12 @@ public interface Flags extends Dumpable {
         return ENABLE_TOPIC_CONTRIBUTORS_CHECK;
     }
 
-    /** Whether to enable database schema version 3 */
-    boolean ENABLE_DATABASE_SCHEMA_VERSION_3 = false;
+    /** Whether to enable database schema version 5 */
+    boolean ENABLE_DATABASE_SCHEMA_VERSION_5 = false;
 
-    /** @return if to enable database schema version 3. */
-    default boolean getEnableDatabaseSchemaVersion3() {
-        return ENABLE_DATABASE_SCHEMA_VERSION_3;
+    /** @return if to enable database schema version 5. */
+    default boolean getEnableDatabaseSchemaVersion5() {
+        return ENABLE_DATABASE_SCHEMA_VERSION_5;
     }
 
     /** Returns true if the given enrollmentId is blocked from using PP-API. */
