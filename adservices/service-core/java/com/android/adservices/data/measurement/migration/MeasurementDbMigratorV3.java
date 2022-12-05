@@ -38,6 +38,8 @@ import java.util.Optional;
 /** Migrates Measurement DB from user version 2 to 3. */
 public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
     private static final String ANDROID_APP_SCHEME = "android-app";
+    private static final String FILTERS = "filters";
+    private static final String NOT_FILTERS = "not_filters";
     private static final String EVENT_REPORT_CONTRACT_BACKUP =
             MeasurementTables.EventReportContract.TABLE + "_backup";
     private static final String AGGREGATE_REPORT_CONTRACT_BACKUP =
@@ -425,22 +427,22 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
     private static String convertFiltersInObjectArray(JSONArray objectArray) throws JSONException {
         for (int i = 0; i < objectArray.length(); i++) {
             JSONObject obj = objectArray.getJSONObject(i);
-            if (!obj.isNull("filters")) {
+            if (!obj.isNull(FILTERS)) {
                 JSONArray convertedFilters = convertFilters(
-                        obj.getJSONObject("filters").toString());
+                        obj.getJSONObject(FILTERS).toString());
                 if (convertedFilters == null) {
                     return null;
                 } else {
-                    obj.put("filters", convertedFilters);
+                    obj.put(FILTERS, convertedFilters);
                 }
             }
-            if (!obj.isNull("not_filters")) {
+            if (!obj.isNull(NOT_FILTERS)) {
                 JSONArray convertedNotFilters = convertFilters(
-                        obj.getJSONObject("not_filters").toString());
+                        obj.getJSONObject(NOT_FILTERS).toString());
                 if (convertedNotFilters == null) {
                     return null;
                 } else {
-                    obj.put("not_filters", convertedNotFilters);
+                    obj.put(NOT_FILTERS, convertedNotFilters);
                 }
             }
         }
