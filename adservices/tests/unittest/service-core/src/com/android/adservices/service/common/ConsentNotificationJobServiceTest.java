@@ -27,15 +27,13 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import android.app.job.JobParameters;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.PersistableBundle;
-
-import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -55,10 +53,8 @@ import java.util.Calendar;
 import java.util.TimeZone;
 import java.util.concurrent.CountDownLatch;
 
-/** Unit test for {@link com.android.adservices.ui.notifications.ConsentNotificationJobService}. */
+/** Unit test for {@link com.android.adservices.service.common.ConsentNotificationJobService}. */
 public class ConsentNotificationJobServiceTest {
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
-
     @Spy
     private ConsentNotificationJobService mConsentNotificationJobService =
             new ConsentNotificationJobService();
@@ -98,7 +94,8 @@ public class ConsentNotificationJobServiceTest {
     /** Test successful onStart method execution when notification was not yet displayed. */
     @Test
     public void testOnStartJobAsyncUtilExecute() throws InterruptedException {
-        ConsentManager consentManager = spy(ConsentManager.getInstance(CONTEXT));
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+        ConsentManager consentManager = mock(ConsentManager.class);
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
         doReturn(mPackageManager).when(mConsentNotificationJobService).getPackageManager();
@@ -119,7 +116,6 @@ public class ConsentNotificationJobServiceTest {
                 .jobFinished(mMockJobParameters, false);
 
         doNothing().when(mAdservicesSyncUtil).execute(any(Context.class), any(Boolean.class));
-        doReturn(mFlags).when(FlagsFactory::getFlags);
         when(mFlags.getConsentNotificationDebugMode()).thenReturn(false);
 
         mConsentNotificationJobService.onStartJob(mMockJobParameters);

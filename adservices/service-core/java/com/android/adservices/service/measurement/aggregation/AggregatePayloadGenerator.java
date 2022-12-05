@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.measurement.aggregation;
 
-import com.android.adservices.service.measurement.FilterData;
+import com.android.adservices.service.measurement.FilterMap;
 import com.android.adservices.service.measurement.util.Filter;
 
 import java.math.BigInteger;
@@ -45,21 +45,21 @@ public class AggregatePayloadGenerator {
     public static Optional<List<AggregateHistogramContribution>> generateAttributionReport(
             AggregatableAttributionSource attributionSource,
             AggregatableAttributionTrigger attributionTrigger) {
-        FilterData sourceFilterData = attributionSource.getFilterData();
+        FilterMap sourceFilterMap = attributionSource.getFilterMap();
         Map<String, BigInteger> aggregateSourceMap =
                 attributionSource.getAggregatableSource();
         for (AggregateTriggerData triggerData : attributionTrigger.getTriggerData()) {
-            Optional<FilterData> filterData = triggerData.getFilter();
-            Optional<FilterData> notFilterData = triggerData.getNotFilter();
+            Optional<List<FilterMap>> filterSet = triggerData.getFilterSet();
+            Optional<List<FilterMap>> notFilterSet = triggerData.getNotFilterSet();
             // Skip this trigger data when filter doesn't match.
-            if (filterData.isPresent()
-                    && !Filter.isFilterMatch(sourceFilterData, filterData.get(), true)) {
+            if (filterSet.isPresent()
+                    && !Filter.isFilterMatch(sourceFilterMap, filterSet.get(), true)) {
                 continue;
             }
             // Skip this trigger data when not_filters doesn't match.
-            if (notFilterData.isPresent()
+            if (notFilterSet.isPresent()
                     && !Filter.isFilterMatch(
-                            sourceFilterData, notFilterData.get(), false)) {
+                            sourceFilterMap, notFilterSet.get(), false)) {
                 continue;
             }
             for (String sourceKey : triggerData.getSourceKeys()) {

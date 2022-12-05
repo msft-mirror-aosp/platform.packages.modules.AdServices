@@ -36,6 +36,8 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"აპლიკაციას აძლევს წვდომას AdService-ის ჩართვის მდგომარეობის მოდიფიკაციის API-ზე"</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"AdService-ის ჩართვის მდგომარეობის API-ზე წვდომა"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"აპლიკაციას აძლევს წვდომას AdService-ის ჩართვის მდგომარეობის API-ზე."</string>
+    <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"AdServicesManager-ის API-ზე წვდომა"</string>
+    <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"ნებას დართავს აპს, რომ მიიღოს AdServicesManager-ის API-ზე წვდომა."</string>
     <string name="app_label" msgid="5985320129629013968">"Android-ის სისტემა"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"შეუერთდით Android-ის რეკლამების კონფიდენციალურობას (ბეტა)"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android ეძებს უფრო დაცულ გზებს თქვენთვის რეკლამების საჩვენებლად"</string>
@@ -81,6 +83,7 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android-ის რეკლამების კონფიდენციალურობა (ბეტა) უზრუნველყოფს ისეთ ახალ ფუნქციებს, რომლებსაც აპები იყენებს თქვენთვის საინტერესო რეკლამების საჩვენებლად. ეს ტექნოლოგია არ იყენებს მოწყობილობის იდენტიფიკატორებს.\n\nAndroid აფასებს, როგორი რეკლამები გაინტერესებთ და ამ ინფორმაციას დროებით თქვენს მოწყობილობაში ინახავს. ეს აპებს საშუალებას აძლევს, გაჩვენოს თქვენთვის საინტერესო რეკლამები ვებსა და აპებში თქვენი აქტივობის თვალყურის დევნების გარეშე."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"დაბლოკილი ინტერესები არ გაქვთ"</string>
+    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"ინტერესები გადაყენებულია"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"აპებს შეუძლია თქვენი ინტერესების შეფასება და დროებით მათი Android-ში შენახვა. მოგვიანებით, ამ ინტერესების საფუძველზე, სხვა აპი გაჩვენებთ რეკლამებს.\n\nთუ აპს დაბლოკავთ, ის თქვენს ინტერესებს ვეღარ შეაფასებს. ის აღარ დაემატა ამ სიას, სანამ არ განბლოკავთ. აპის მიერ უკვე შეფასებული ინტერესები ამოიშლება, მაგრამ მსგავსი რეკლამები, შესაძლოა, მაინც ნახოთ."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"თქვენ მიერ დაბლოკილი აპები"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"აპების მიერ შეფასებული ინტერესების გადაყენება"</string>

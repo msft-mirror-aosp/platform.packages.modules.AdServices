@@ -44,7 +44,7 @@ import com.android.adservices.ui.settings.activities.AdServicesBaseActivity;
  *   <li>common logging events
  * </ul>
  */
-public class BaseActionDelegate {
+public abstract class BaseActionDelegate {
     private final int mDeviceLoggingRegion;
 
     protected enum ActionEnum {
@@ -56,6 +56,8 @@ public class BaseActionDelegate {
         UNBLOCK_TOPIC_SELECTED,
         BLOCK_APP_SELECTED,
         UNBLOCK_APP_SELECTED,
+        MANAGE_MEASUREMENT_SELECTED,
+        RESET_MEASUREMENT_SELECTED,
     }
 
     public BaseActionDelegate(Activity activity) {

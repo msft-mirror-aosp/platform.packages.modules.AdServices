@@ -135,6 +135,8 @@ java_library {
     libs: [
         "framework-sdksandbox.impl",
     ],
+    min_sdk_version: "33", // This is passed to the AIDL compiler so that generated Java code doesn't use newer (>33) APIs
+
 }
 
 java_library {
