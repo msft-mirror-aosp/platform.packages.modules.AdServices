@@ -166,7 +166,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     private SdkSandboxSettingsListener mSdkSandboxSettingsListener;
 
     private static final String PROPERTY_DISABLE_SDK_SANDBOX = "disable_sdk_sandbox";
-    private static final boolean DEFAULT_VALUE_DISABLE_SDK_SANDBOX = false;
+    private static final boolean DEFAULT_VALUE_DISABLE_SDK_SANDBOX = true;
     private static final String GMS_PACKAGENAME_PREFIX = "com.google.android.gms";
     private static final String PROPERTY_SERVICE_BIND_ALLOWED_PACKAGENAMES =
             "runtime_service_bind_allowed_packagenames";
