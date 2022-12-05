@@ -41,9 +41,11 @@ import org.junit.Test;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
@@ -82,6 +84,8 @@ public class SourceTest {
         filterMap.put(
                 "conversion_subdomain", Collections.singletonList("electronics.megastore"));
         filterMap.put("product", Arrays.asList("1234", "2345"));
+
+        String sharedAggregateKeys = "[\"campaignCounts\"]";
         assertEquals(
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
@@ -116,6 +120,9 @@ public class SourceTest {
                         .setDebugKey(DEBUG_KEY_1)
                         .setAggregatableAttributionSource(
                                 SourceFixture.getValidSource().getAggregatableAttributionSource())
+                        .setRegistrationId("R1")
+                        .setSharedAggregationKeys(sharedAggregateKeys)
+                        .setInstallTime(100L)
                         .build(),
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
@@ -150,6 +157,9 @@ public class SourceTest {
                         .setDebugKey(DEBUG_KEY_1)
                         .setAggregatableAttributionSource(
                                 SourceFixture.getValidSource().getAggregatableAttributionSource())
+                        .setRegistrationId("R1")
+                        .setSharedAggregationKeys(sharedAggregateKeys)
+                        .setInstallTime(100L)
                         .build());
     }
 
@@ -287,6 +297,25 @@ public class SourceTest {
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder().setDebugKey(DEBUG_KEY_1).build(),
                 SourceFixture.getValidSourceBuilder().setDebugKey(DEBUG_KEY_2).build());
+
+        assertNotEquals(
+                SourceFixture.getValidSourceBuilder().setRegistrationId("R1").build(),
+                SourceFixture.getValidSourceBuilder().setRegistrationId("R2").build());
+
+        String sharedAggregationKeys1 = "[\"key1\"]";
+        String sharedAggregationKeys2 = "[\"key2\"]";
+
+        assertNotEquals(
+                SourceFixture.getValidSourceBuilder()
+                        .setSharedAggregationKeys(sharedAggregationKeys1)
+                        .build(),
+                SourceFixture.getValidSourceBuilder()
+                        .setSharedAggregationKeys(sharedAggregationKeys2)
+                        .build());
+
+        assertNotEquals(
+                SourceFixture.getValidSourceBuilder().setInstallTime(100L).build(),
+                SourceFixture.getValidSourceBuilder().setInstallTime(101L).build());
     }
 
     @Test
@@ -307,7 +336,10 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
-                SourceFixture.ValidSourceParams.buildFilterData());
+                SourceFixture.ValidSourceParams.buildFilterData(),
+                SourceFixture.ValidSourceParams.REGISTRATION_ID,
+                SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.INSTALL_TIME);
 
         assertInvalidSourceArguments(
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
@@ -325,7 +357,10 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
-                SourceFixture.ValidSourceParams.buildFilterData());
+                SourceFixture.ValidSourceParams.buildFilterData(),
+                SourceFixture.ValidSourceParams.REGISTRATION_ID,
+                SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.INSTALL_TIME);
     }
 
     @Test
@@ -346,7 +381,10 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
-                SourceFixture.ValidSourceParams.buildFilterData());
+                SourceFixture.ValidSourceParams.buildFilterData(),
+                SourceFixture.ValidSourceParams.REGISTRATION_ID,
+                SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.INSTALL_TIME);
 
         assertInvalidSourceArguments(
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
@@ -364,7 +402,10 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
-                SourceFixture.ValidSourceParams.buildFilterData());
+                SourceFixture.ValidSourceParams.buildFilterData(),
+                SourceFixture.ValidSourceParams.REGISTRATION_ID,
+                SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.INSTALL_TIME);
 
         assertInvalidSourceArguments(
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
@@ -382,7 +423,10 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
-                SourceFixture.ValidSourceParams.buildFilterData());
+                SourceFixture.ValidSourceParams.buildFilterData(),
+                SourceFixture.ValidSourceParams.REGISTRATION_ID,
+                SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.INSTALL_TIME);
     }
 
     @Test
@@ -403,7 +447,10 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
-                SourceFixture.ValidSourceParams.buildFilterData());
+                SourceFixture.ValidSourceParams.buildFilterData(),
+                SourceFixture.ValidSourceParams.REGISTRATION_ID,
+                SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.INSTALL_TIME);
     }
 
     @Test
@@ -424,7 +471,10 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
-                SourceFixture.ValidSourceParams.buildFilterData());
+                SourceFixture.ValidSourceParams.buildFilterData(),
+                SourceFixture.ValidSourceParams.REGISTRATION_ID,
+                SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.INSTALL_TIME);
 
         assertInvalidSourceArguments(
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
@@ -442,7 +492,10 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
-                SourceFixture.ValidSourceParams.buildFilterData());
+                SourceFixture.ValidSourceParams.buildFilterData(),
+                SourceFixture.ValidSourceParams.REGISTRATION_ID,
+                SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.INSTALL_TIME);
     }
 
     @Test
@@ -463,7 +516,10 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
-                SourceFixture.ValidSourceParams.buildFilterData());
+                SourceFixture.ValidSourceParams.buildFilterData(),
+                SourceFixture.ValidSourceParams.REGISTRATION_ID,
+                SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.INSTALL_TIME);
     }
 
     @Test
@@ -1377,6 +1433,18 @@ public class SourceTest {
         assertEquals(aggregateSource.getFilterMap().getAttributionFilterMap().size(), 3);
     }
 
+    @Test
+    public void parseSharedAggregationKeys_nonEmpty_parseSuccess() throws JSONException {
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setSharedAggregationKeys("[\"campaignCounts\",\"geoValue\"]")
+                        .build();
+        Set<String> sharedKeys = source.parseSharedAggregationKeys();
+        assertEquals(sharedKeys.size(), 2);
+        assertEquals(new HashSet(Arrays.asList("campaignCounts", "geoValue")), sharedKeys);
+    }
+
     private void verifyAlgorithmicFakeReportGeneration(Source source, int expectedCardinality) {
         // Increase the probability of random attribution.
         doReturn(0.50D).when(source).getRandomAttributionProbability();
@@ -1445,7 +1513,10 @@ public class SourceTest {
             @Nullable UnsignedLong debugKey,
             @Source.AttributionMode int attributionMode,
             @Nullable String aggregateSource,
-            @Nullable String filterData) {
+            @Nullable String filterData,
+            @Nullable String registrationId,
+            @Nullable String sharedAggregationKeys,
+            @Nullable Long installTime) {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -1466,6 +1537,9 @@ public class SourceTest {
                                 .setAggregateSource(aggregateSource)
                                 .setFilterData(filterData)
                                 .setDebugKey(debugKey)
+                                .setRegistrationId(registrationId)
+                                .setSharedAggregationKeys(sharedAggregationKeys)
+                                .setInstallTime(installTime)
                                 .build());
     }
 }
