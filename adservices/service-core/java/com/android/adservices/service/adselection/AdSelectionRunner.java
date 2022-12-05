@@ -550,8 +550,8 @@ public abstract class AdSelectionRunner {
                                     .setBuyerDecisionLogicJs(buyerDecisionLogicJS)
                                     .setBiddingLogicUri(dbAdSelection.getBiddingLogicUri())
                                     .build());
-                    Tracing.endAsyncSection(Tracing.PERSIST_AD_SELECTION, traceCookie);
                     mAdSelectionExecutionLogger.endPersistAdSelection();
+                    Tracing.endAsyncSection(Tracing.PERSIST_AD_SELECTION, traceCookie);
                     return dbAdSelection;
                 });
     }
