@@ -1001,8 +1001,12 @@ public class SdkSandboxManagerServiceUnitTest {
         Intent intent = new Intent();
         intent.setComponent(new ComponentName("com.allowed.package", "test"));
         mService.getSdkSandboxSettingsListener()
-                .setBindServiceAllowedPackageNames(
-                        "com.allowed.package;com.allowed.anotherpackage;");
+                .onPropertiesChanged(
+                        new DeviceConfig.Properties(
+                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                Map.of(
+                                        PROPERTY_SERVICE_BIND_ALLOWED_PACKAGENAMES,
+                                        "com.allowed.package;com.allowed.anotherpackage;")));
         mSdkSandboxManagerLocal.enforceAllowedToStartOrBindService(intent);
     }
 
@@ -1015,13 +1019,23 @@ public class SdkSandboxManagerServiceUnitTest {
         intent.setAction("com.google.android.gms.aService.START");
         SdkSandboxManagerService.SdkSandboxSettingsListener listener =
                 mService.getSdkSandboxSettingsListener();
-        listener.setBindServiceAllowedPackageNames(
-                "com.google.android.gms;com.allowed.anotherpackage;");
+        listener.onPropertiesChanged(
+                new DeviceConfig.Properties(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        Map.of(
+                                PROPERTY_SERVICE_BIND_ALLOWED_PACKAGENAMES,
+                                "com.google.android.gms;com.allowed.anotherpackage;",
+                                PROPERTY_SERVICE_BIND_ALLOWED_ACTIONS,
+                                "")));
         assertThrows(
                 SecurityException.class,
                 () -> mSdkSandboxManagerLocal.enforceAllowedToStartOrBindService(intent));
-
-        listener.setBindServiceAllowedActions("com.google.android.gms.aService.START;");
+        listener.onPropertiesChanged(
+                new DeviceConfig.Properties(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        Map.of(
+                                PROPERTY_SERVICE_BIND_ALLOWED_ACTIONS,
+                                "com.google.android.gms.aService.START")));
         mSdkSandboxManagerLocal.enforceAllowedToStartOrBindService(intent);
     }
 
