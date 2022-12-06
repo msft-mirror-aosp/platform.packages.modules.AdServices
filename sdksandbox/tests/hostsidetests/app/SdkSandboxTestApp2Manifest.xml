@@ -29,6 +29,14 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <activity android:name=".SdkSandboxEmptyActivity"
+                  android:exported="true"
+                  android:process=":com.android.sdksandbox.emptyactivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
         <uses-sdk-library
             android:name="com.android.testcode2"
             android:versionMajor="1"
