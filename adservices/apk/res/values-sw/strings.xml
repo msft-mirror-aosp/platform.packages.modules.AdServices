@@ -36,6 +36,8 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"Inaruhusu programu kufikia enablement state modification API ya AdService."</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"Ufikiaji wa enablement state API ya AdService"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Inaruhusu programu kufikia enablement state API ya AdService."</string>
+    <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Uwezo wa kufikia API za AdServicesManager’s"</string>
+    <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Inaruhusu programu kufikia API za AdServicesManager."</string>
     <string name="app_label" msgid="5985320129629013968">"Mfumo wa Android"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Jiunge na toleo la beta la faragha ya matangazo kwenye Android"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android inaendelea kugundua njia za faragha zaidi za programu kukuonyesha matangazo"</string>
@@ -81,8 +83,7 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Mazingira ya Faragha"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Toleo la beta la faragha ya matangazo kwenye Android hutoa vipengele vipya ambavyo programu zinaweza kutumia ili zikuonyeshe matangazo ambayo huenda ukayapenda. Teknolojia hizi hazitumii vitambulishi vya kifaa.\n\nAndroid inaweza kukadiria aina ya matangazo ambayo huenda yakakuvutia na kuhifadhi mambo haya yanayokuvutia kwa muda kwenye kifaa chako. Hali hii huwezesha programu kukuonyesha matangazo yanayokufaa, bila kufuatilia shughuli zako kwenye tovuti na programu za wasanidi programu wengine."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Huna mambo yanayokuvutia uliyozuia"</string>
-    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
-    <skip />
+    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Mambo yanayokuvutia yamewekwa upya"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Programu zinaweza kukadiria mambo yanayokuvutia na kuyahifadhi kwa muda kupitia Android. Hapo baadaye, programu tofauti inaweza kukuonyesha tangazo kulingana na mambo haya yanayokuvutia.\n\nIwapo utazuia programu, haitakadiria mambo yanayokuvutia. Haitawekwa tena kwenye orodha hii ya programu isipokuwa uiondolee kizuizi. Mambo yanayokuvutia yaliyoakadiriwa na programu hiyo yatafutwa, ila huenda bado ukaona baadhi ya matangazo yanayohusiana."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Programu ulizozizuia"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Weka upya mambo yanayokuvutia yaliyokadiriwa na programu"</string>

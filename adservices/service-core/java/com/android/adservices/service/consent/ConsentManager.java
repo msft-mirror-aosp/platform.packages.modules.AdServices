@@ -214,6 +214,15 @@ public class ConsentManager {
 
         BackgroundJobsManager.scheduleAllBackgroundJobs(context);
 
+        try {
+            // reset all state data which should be removed
+            resetTopicsAndBlockedTopics();
+            resetAppsAndBlockedApps();
+            resetMeasurement();
+        } catch (IOException e) {
+            throw new RuntimeException(ERROR_MESSAGE_WHILE_SET_CONTENT, e);
+        }
+
         setConsentToSourceOfTruth(/* isGiven */ true);
     }
 
@@ -488,7 +497,8 @@ public class ConsentManager {
     }
 
     /** Wipes out all the Enrollment data */
-    private void resetEnrollment() {
+    @VisibleForTesting
+    void resetEnrollment() {
         mEnrollmentDao.deleteAll();
     }
 
