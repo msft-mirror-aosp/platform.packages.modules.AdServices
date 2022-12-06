@@ -17,6 +17,7 @@
 package com.android.adservices.service.adselection;
 
 import android.adservices.adselection.AdSelectionFromOutcomesConfig;
+import android.adservices.adselection.Tracing;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 
@@ -114,6 +115,7 @@ public class AdOutcomeSelectorImpl implements AdOutcomeSelector {
                                         config.getSelectionSignals()),
                         mLightweightExecutorService);
 
+        int traceCookie = Tracing.beginAsyncSection(Tracing.RUN_OUTCOME_SELECTION);
         return selectedOutcomeFuture
                 .withTimeout(
                         mFlags.getAdSelectionSelectingOutcomeTimeoutMs(),
@@ -121,11 +123,17 @@ public class AdOutcomeSelectorImpl implements AdOutcomeSelector {
                         mScheduledExecutor)
                 .catching(
                         TimeoutException.class,
-                        this::handleTimeoutError,
+                        e -> {
+                            Tracing.endAsyncSection(Tracing.RUN_OUTCOME_SELECTION, traceCookie);
+                            return handleTimeoutError(e);
+                        },
                         mLightweightExecutorService)
                 .catching(
                         IllegalStateException.class,
-                        this::handleIllegalStateException,
+                        e -> {
+                            Tracing.endAsyncSection(Tracing.RUN_OUTCOME_SELECTION, traceCookie);
+                            return handleIllegalStateException(e);
+                        },
                         mLightweightExecutorService);
     }
 

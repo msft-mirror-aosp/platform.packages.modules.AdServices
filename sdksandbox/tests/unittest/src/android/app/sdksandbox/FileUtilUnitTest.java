@@ -42,7 +42,7 @@ public class FileUtilUnitTest {
     @Before
     public void setup() {
         Context context = InstrumentationRegistry.getInstrumentation().getContext();
-        mTestDir = context.getDataDir().getPath();
+        mTestDir = context.getDir("test_dir", Context.MODE_PRIVATE).getPath();
     }
 
     @After
