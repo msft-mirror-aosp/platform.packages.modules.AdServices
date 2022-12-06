@@ -19,16 +19,27 @@ package android.adservices.adselection;
 import android.annotation.NonNull;
 import android.os.Trace;
 
+
 import java.util.concurrent.ThreadLocalRandom;
 
 /** Utility class providing methods for using {@link android.os.Trace}. */
 public final class Tracing {
 
+    // DO NOT SUBMIT without organising the naming conventions.
     public static final String RUN_AD_SELECTION = "RunOnDeviceAdSelection";
     public static final String PERSIST_AD_SELECTION = "PersistOnDeviceAdSelection";
     public static final String GET_BUYERS_CUSTOM_AUDIENCE = "GetBuyersCustomAudience";
     public static final String VALIDATE_REQUEST = "ValidateRequest";
     public static final String GET_BUYER_DECISION_LOGIC = "GetBuyerDecisionLogic";
+    public static final String GET_TRUSTED_BIDDING_SIGNALS = "GetTrustedBiddingSignals";
+    public static final String RUN_BIDDING = "RunBidding";
+    public static final String RUN_BIDDING_PER_CA = "RunBiddingPerCustomAudience";
+    public static final String RUN_AD_SCORING = "RunAdScoring";
+    public static final String GET_AD_SELECTION_LOGIC = "GetAdSelectionLogic";
+    public static final String GET_TRUSTED_SCORING_SIGNALS = "GetTrustedScoringSignals";
+    public static final String SCORE_AD = "ScoreAd";
+    public static final String RUN_OUTCOME_SELECTION = "RunAdOutcomeSelection";
+    public static final String GENERATE_BIDS = "GenerateBids";
 
     /**
      * Begins an asynchronous trace and generates random cookie.

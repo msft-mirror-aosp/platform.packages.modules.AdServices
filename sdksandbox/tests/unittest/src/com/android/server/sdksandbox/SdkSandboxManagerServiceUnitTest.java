@@ -110,6 +110,7 @@ public class SdkSandboxManagerServiceUnitTest {
     private SdkSandboxManagerService.Injector mInjector;
     private int mClientAppUid;
     private PackageManagerLocal mPmLocal;
+    private SdkSandboxPulledAtoms mSdkSandboxPulledAtoms;
 
     private static final String CLIENT_PACKAGE_NAME = "com.android.client";
     private static final String SDK_NAME = "com.android.codeprovider";
@@ -182,9 +183,13 @@ public class SdkSandboxManagerServiceUnitTest {
         ExtendedMockito.doReturn(mPmLocal)
                 .when(() -> LocalManagerRegistry.getManager(PackageManagerLocal.class));
 
+        mSdkSandboxPulledAtoms = Mockito.spy(new SdkSandboxPulledAtoms());
+
         mInjector = Mockito.spy(new InjectorForTest());
 
-        mService = new SdkSandboxManagerService(mSpyContext, mProvider, mInjector);
+        mService =
+                new SdkSandboxManagerService(
+                        mSpyContext, mProvider, mInjector, mSdkSandboxPulledAtoms);
         mService.forceEnableSandbox();
 
         mClientAppUid = Process.myUid();
@@ -1001,8 +1006,12 @@ public class SdkSandboxManagerServiceUnitTest {
         Intent intent = new Intent();
         intent.setComponent(new ComponentName("com.allowed.package", "test"));
         mService.getSdkSandboxSettingsListener()
-                .setBindServiceAllowedPackageNames(
-                        "com.allowed.package;com.allowed.anotherpackage;");
+                .onPropertiesChanged(
+                        new DeviceConfig.Properties(
+                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                Map.of(
+                                        PROPERTY_SERVICE_BIND_ALLOWED_PACKAGENAMES,
+                                        "com.allowed.package;com.allowed.anotherpackage;")));
         mSdkSandboxManagerLocal.enforceAllowedToStartOrBindService(intent);
     }
 
@@ -1015,13 +1024,23 @@ public class SdkSandboxManagerServiceUnitTest {
         intent.setAction("com.google.android.gms.aService.START");
         SdkSandboxManagerService.SdkSandboxSettingsListener listener =
                 mService.getSdkSandboxSettingsListener();
-        listener.setBindServiceAllowedPackageNames(
-                "com.google.android.gms;com.allowed.anotherpackage;");
+        listener.onPropertiesChanged(
+                new DeviceConfig.Properties(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        Map.of(
+                                PROPERTY_SERVICE_BIND_ALLOWED_PACKAGENAMES,
+                                "com.google.android.gms;com.allowed.anotherpackage;",
+                                PROPERTY_SERVICE_BIND_ALLOWED_ACTIONS,
+                                "")));
         assertThrows(
                 SecurityException.class,
                 () -> mSdkSandboxManagerLocal.enforceAllowedToStartOrBindService(intent));
-
-        listener.setBindServiceAllowedActions("com.google.android.gms.aService.START;");
+        listener.onPropertiesChanged(
+                new DeviceConfig.Properties(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        Map.of(
+                                PROPERTY_SERVICE_BIND_ALLOWED_ACTIONS,
+                                "com.google.android.gms.aService.START")));
         mSdkSandboxManagerLocal.enforceAllowedToStartOrBindService(intent);
     }
 
@@ -1572,7 +1591,8 @@ public class SdkSandboxManagerServiceUnitTest {
                 Mockito.mock(SdkSandboxManagerService.Injector.class);
 
         SdkSandboxManagerService service =
-                new SdkSandboxManagerService(mSpyContext, mProvider, injector);
+                new SdkSandboxManagerService(
+                        mSpyContext, mProvider, injector, new SdkSandboxPulledAtoms());
         Mockito.when(injector.getCurrentTime())
                 .thenReturn(TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP, TIME_FAILURE_HANDLED);
 
@@ -2312,12 +2332,14 @@ public class SdkSandboxManagerServiceUnitTest {
                         Mockito.any(SandboxLatencyInfo.class));
     }
 
-    // TODO(b/257952392): Store the storage information in memory in system server
     @Test
     public void testLoadSdk_computeSdkStorage() throws Exception {
         loadSdk(SDK_NAME);
         // Assume sdk storage information calculated and sent
         mSdkSandboxService.sendStorageInfoToSystemServer();
+
+        Mockito.verify(mSdkSandboxPulledAtoms)
+                .logStorage(mClientAppUid, /*sharedStorage=*/ 0, /*sdkStorage=*/ 0);
     }
 
     private SandboxLatencyInfo getFakedSandboxLatencies() {

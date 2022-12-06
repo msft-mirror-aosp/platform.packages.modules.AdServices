@@ -24,6 +24,7 @@ import static com.google.common.util.concurrent.Futures.transform;
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdWithBid;
+import android.adservices.adselection.Tracing;
 import android.adservices.common.AdData;
 import android.adservices.common.AdSelectionSignals;
 import android.annotation.NonNull;
@@ -215,6 +216,7 @@ public class AdSelectionScriptEngine {
         Objects.requireNonNull(contextualSignals);
         Objects.requireNonNull(customAudienceSignals);
         Objects.requireNonNull(runAdBiddingPerCAExecutionLogger);
+        int traceCookie = Tracing.beginAsyncSection(Tracing.GENERATE_BIDS);
 
         ImmutableList<JSScriptArgument> signals =
                 ImmutableList.<JSScriptArgument>builder()
@@ -248,12 +250,14 @@ public class AdSelectionScriptEngine {
                                 result -> {
                                     List<AdWithBid> bids = handleGenerateBidsOutput(result);
                                     runAdBiddingPerCAExecutionLogger.endGenerateBids();
+                                    Tracing.endAsyncSection(Tracing.GENERATE_BIDS, traceCookie);
                                     return bids;
                                 },
                                 mExecutor))
                 .catchingAsync(
                         JSExecutionException.class,
                         e -> {
+                            Tracing.endAsyncSection(Tracing.GENERATE_BIDS, traceCookie);
                             LogUtil.e(
                                     e,
                                     "Encountered exception when generating bids, attempting to run"

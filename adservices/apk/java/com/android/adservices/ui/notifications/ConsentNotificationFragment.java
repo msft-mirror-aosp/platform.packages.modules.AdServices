@@ -134,6 +134,8 @@ public class ConsentNotificationFragment extends Fragment {
                 new ScrollToBottomController(
                         scrollView, leftControlButton, rightControlButton, savedInstanceState);
         mScrollToBottomController.bind();
+        // check whether it can scroll vertically and update buttons after layout can be measured
+        scrollView.post(() -> mScrollToBottomController.updateButtonsIfHasScrolledToBottom());
     }
 
     private void setInfoViewState(boolean expanded) {
@@ -250,6 +252,10 @@ public class ConsentNotificationFragment extends Fragment {
         @Override
         public void onScrollChange(
                 View view, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
+            updateButtonsIfHasScrolledToBottom();
+        }
+
+        void updateButtonsIfHasScrolledToBottom() {
             if (!mScrollContainer.canScrollVertically(SCROLL_DIRECTION_DOWN)) {
                 mHasScrolledToBottom = true;
                 updateControlButtons();

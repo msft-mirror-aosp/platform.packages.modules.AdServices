@@ -1057,6 +1057,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         runPhase("testSdkDataIsAttributedToApp");
     }
 
+    @Ignore("b/261429833")
     @Test
     public void testSdkData_IsAttributedToApp_DisableQuota() throws Exception {
         installPackage(TEST_APP_STORAGE_APK);
