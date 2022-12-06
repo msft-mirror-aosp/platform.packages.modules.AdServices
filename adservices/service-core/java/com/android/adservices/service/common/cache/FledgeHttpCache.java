@@ -46,7 +46,6 @@ public class FledgeHttpCache implements HttpCache {
     @VisibleForTesting static final String PROPERTY_NO_STORE = "no-store";
     // TODO(b/259751285) support max-age cache header
     @VisibleForTesting static final String PROPERTY_MAX_AGE = "max-age";
-    @VisibleForTesting static final String PROPERTY_MAX_AGE_SEPARATOR = "=";
 
     public FledgeHttpCache(
             @NonNull CacheEntryDao cacheEntryDao, long maxAgeSeconds, long maxEntriesCount) {
@@ -103,14 +102,14 @@ public class FledgeHttpCache implements HttpCache {
                         || cacheProperties.contains(PROPERTY_NO_STORE))) {
             return;
         }
-        long requestMaxAge = getRequestMaxAgeSeconds(cacheProperties);
+
         LogUtil.v("Caching results for Url: %s", url.toString());
         DBCacheEntry entry =
                 DBCacheEntry.builder()
                         .setUrl(url.toString())
                         .setResponseBody(body)
                         .setCreationTimestamp(Instant.now())
-                        .setMaxAgeSeconds(Math.min(requestMaxAge, mMaxAgeSeconds))
+                        .setMaxAgeSeconds(mMaxAgeSeconds)
                         .build();
         mCacheEntryDao.persistCacheEntry(entry);
         notifyObservers(CacheEventType.PUT);
@@ -181,25 +180,6 @@ public class FledgeHttpCache implements HttpCache {
             return 0;
         }
         return getHitCount() / totalRequests;
-    }
-
-    @VisibleForTesting
-    long getRequestMaxAgeSeconds(final List<String> cacheProperties) {
-        if (cacheProperties == null) {
-            return mMaxAgeSeconds;
-        }
-        return Math.abs(
-                cacheProperties.parallelStream()
-                        .filter(property -> property.startsWith(PROPERTY_MAX_AGE))
-                        .map(
-                                maxAgeProperty ->
-                                        Long.valueOf(
-                                                maxAgeProperty.substring(
-                                                        maxAgeProperty.lastIndexOf(
-                                                                        PROPERTY_MAX_AGE_SEPARATOR)
-                                                                + 1)))
-                        .findFirst()
-                        .orElse(mMaxAgeSeconds));
     }
 
     private void prune() {

@@ -36,8 +36,6 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"Թույլ է տալիս հավելվածին օգտագործել AdService-ի ակտիվացման վիճակի փոփոխման API-ը։"</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"AdService-ի ակտիվացման վիճակի API-ի մուտք"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Թույլ է տալիս հավելվածին օգտագործել AdService-ի ակտիվացման վիճակի API-ը։"</string>
-    <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"AdServicesManager API-ների հասանելիություն"</string>
-    <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Թույլ է տալիս հավելվածին օգտագործել AdServicesManager API-ները։"</string>
     <string name="app_label" msgid="5985320129629013968">"Android համակարգ"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Միացեք Android-ում գովազդի գաղտնիության բետա փորձարկմանը"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android-ն ավելի ապահով եղանակներ է փնտրում՝ ձեզ հավելվածներում գովազդ ցուցադրելու համար"</string>
@@ -83,7 +81,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android-ում գովազդի գաղտնիության բետա փորձարկման ծրագիրը տրամադրում է նոր գործառույթներ, որոնց միջոցով հավելվածները կարող են ցույց տալ ձեզ գովազդներ, որոնք կարող են ձեզ դուր գալ։ Այս տեխնոլոգիաները չեն օգտագործում սարքերի նույնացուցիչները։\n\nAndroid-ը կարող է որոշել գովազդների տեսակները, որոնք կարող են հետաքրքրել ձեզ, և ժամանակավորապես պահել հետաքրքրությունները ձեր սարքում։ Սա թույլ է տալիս հավելվածներին ցուցադրել ձեզ համապատասխան գովազդ՝ առանց հետագծելու ձեր գործողությունները այլ մշակողների կայքերում ու հավելվածներում։"</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Արգելափակված հետաքրքրություններ չկան"</string>
-    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Հետաքրքրությունները զրոյացված են"</string>
+    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
+    <skip />
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Հավելվածները կարող են որոշել ձեր հետաքրքրությունները և ժամանակավորապես պահել դրանք Android-ում։ Հետագայում մեկ այլ հավելված կարող է ձեզ գովազդ ցուցադրել այս հետաքրքրությունների հիման վրա։\n\nԵթե դուք արգելափակեք որևէ հավելված, այն այլևս չի որոշի ձեր հետաքրքրությունները։ Քանի դեռ հավելվածն արգելափակված է, այն չի հայտնվի հավելվածների այս ցանկում։ Հավելվածի կողմից արդեն որոշված հետաքրքրությունները կջնջվեն, սակայն հնարավոր է, որ դուք դեռ տեսնեք այդ հետաքրքրության հետ կապված որոշ գովազդներ։"</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Հավելվածներ, որոնք արգելափակել եք"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Զրոյացնել հավելվածների կողմից որոշված հետաքրքրությունները"</string>

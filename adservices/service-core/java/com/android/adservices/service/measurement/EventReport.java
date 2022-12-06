@@ -252,7 +252,9 @@ public class EventReport {
             return this;
         }
 
-        /** See {@link EventReport#getEnrollmentId()} */
+        /**
+         * See {@link EventReport#getEnrollmentId()} ()}
+         */
         public Builder setEnrollmentId(String enrollmentId) {
             mBuilding.mEnrollmentId = enrollmentId;
             return this;

@@ -218,9 +218,7 @@ public class AsyncSourceFetcher {
         return true;
     }
 
-    /** Parse a {@code Source}, given response headers, adding the {@code Source} to a given list */
-    @VisibleForTesting
-    public boolean parseSource(
+    private boolean parseSource(
             @NonNull Uri publisher,
             @NonNull String enrollmentId,
             @Nullable Uri appDestination,

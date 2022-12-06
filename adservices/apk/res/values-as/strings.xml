@@ -36,8 +36,6 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"কোনো এপ্লিকেশ্বনক AdService সক্ষমকৰণৰ স্থিতিৰ সংশোধনৰ API এক্সেছ কৰিবলৈ অনুমতি দিয়ে।"</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"AdService সক্ষমকৰণৰ স্থিতিৰ APIলৈ এক্সেছ"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"কোনো এপ্লিকেশ্বনক AdService সক্ষমকৰণৰ স্থিতিৰ API এক্সেছ কৰিবলৈ অনুমতি দিয়ে।"</string>
-    <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"AdServicesManager’s APIsলৈ এক্সেছ"</string>
-    <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"এটা এপ্লিকেশ্বনক AdServicesManager’s APIs এক্সেছ কৰিবলৈ অনুমতি দিয়ে।"</string>
     <string name="app_label" msgid="5985320129629013968">"Android ছিষ্টেম"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Androidৰ বিজ্ঞাপনৰ গোপনীয়তাৰ বিটাত যোগদান কৰক"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Androidএ আপোনাক বিজ্ঞাপন দেখুৱাবলৈ এপৰ বাবে অধিক গোপনীয় উপায়সমূহ অন্বেষণ কৰি আছে"</string>
@@ -83,7 +81,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"প্ৰাইভেচি ছেণ্ডবক্স"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Androidৰ বিজ্ঞাপনৰ গোপনীয়তাৰ বিটায়ে নতুন সুবিধাসমূহ দিয়ে, যিসমূহ সুবিধা এপে আপোনাক আপুনি পচন্দ কৰিব পৰা ধৰণৰ বিজ্ঞাপন দেখুৱাবলৈ ব্যৱহাৰ কৰিব পাৰে। এই প্ৰযুক্তিসমূহে ডিভাইচ চিনাক্তকাৰী ব্যৱহাৰ নকৰে।\n\nAndroidএ আপুনি আগ্ৰহী হ’ব পৰা ধৰণৰ বিজ্ঞাপন অনুমান কৰিব পাৰে আৰু আপোনাৰ ডিভাইচত অস্থায়ীভাৱে আগ্ৰহসমূহ ছেভ কৰিব পাৰে। এইটোৱে সমগ্ৰ ৱেবছাইট আৰু অন্য বিকাশকৰ্তাৰ এপত আপোনাৰ কাৰ্যকলাপ ট্ৰেক নকৰাকৈয়ে আপোনাৰ বাবে প্ৰাসংগিক বিজ্ঞাপন দেখুৱাবলৈ এপক অনুমতি দিয়ে।"</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"আপোনাৰ ওচৰত অৱৰোধ কৰি থোৱা কোনো আগ্ৰহ নাই"</string>
-    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"আগ্ৰহসমূহ ৰিছেট কৰা হৈছে"</string>
+    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
+    <skip />
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"এপে আপোনাৰ আগ্ৰহসমূহ অনুমান কৰিব আৰু সেইবোৰ Androidৰ জৰিয়তে অস্থায়ীভাৱে ছেভ কৰিব পাৰে। পাছত, অন্য এটা এপে এই আগ্ৰহসমূহৰ ভিত্তিত আপোনাক কোনো বিজ্ঞাপন দেখুৱাব পাৰে।\n\nযদি আপুনি কোনো এপ্ অৱৰোধ কৰে, সেইটোৱে আৰু কোনো আগ্ৰহ অনুমান কৰিব নোৱাৰিব। আপুনি ইয়াক অৱৰোধৰ পৰা আঁতৰাই নিদিয়ালৈকে ইয়াক এপৰ এই সূচীখনত যোগ দিয়া নহ’ব। এপ্‌টোৱে ইতিমধ্যে অনুমান কৰা আগ্ৰহসমূহ মচি পেলোৱা হ’ব, কিন্তু আপুনি তথাপি কিছুমান প্ৰাসংগিক বিজ্ঞাপন দেখিব পাৰে।"</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"আপুনি অৱৰোধ কৰা এপ্"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"এপে অনুমান কৰা আগ্ৰহ ৰিছেট কৰক"</string>

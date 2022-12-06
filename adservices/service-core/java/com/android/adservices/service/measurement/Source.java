@@ -779,13 +779,13 @@ public class Source {
             return this;
         }
 
-        /** See {@link Source#hasAdIdPermission()} */
+        /** See {@link Source#hasAdIdPermission()} ()} */
         public Source.Builder setAdIdPermission(boolean adIdPermission) {
             mBuilding.mAdIdPermission = adIdPermission;
             return this;
         }
 
-        /** See {@link Source#hasArDebugPermission()} */
+        /** See {@link Source#hasArDebugPermission()} ()} */
         public Source.Builder setArDebugPermission(boolean arDebugPermission) {
             mBuilding.mArDebugPermission = arDebugPermission;
             return this;

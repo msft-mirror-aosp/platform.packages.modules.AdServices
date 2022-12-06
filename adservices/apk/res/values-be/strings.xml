@@ -36,8 +36,6 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"Дазваляе праграме мець доступ да API змянення стану ўключэння AdService."</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"Доступ да API стану ўключэння AdService"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Дазваляе праграме мець доступ да API стану ўключэння AdService."</string>
-    <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Доступ да інтэрфэйсаў API AdServicesManager"</string>
-    <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Дазваляе праграме мець доступ да інтэрфэйсаў API AdServicesManager."</string>
     <string name="app_label" msgid="5985320129629013968">"Сістэма Android"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Далучайцеся да тэсціравання бэта-версіі праграмы \"Прыватнасць у рэкламе на прыладах Android\"."</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android даследуе больш прыватныя спосабы паказу рэкламы ў праграмах"</string>
@@ -83,7 +81,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Праграма \"Прыватнасць у рэкламе на прыладах Android\" (бэта-версія) забяспечвае ўжыванне ў праграмах новых функцый для паказу вам рэкламы. Гэтыя тэхналогіі не выкарыстоўваюць ідэнтыфікатары прылады.\n\nAndroid будзе аналізаваць, якія тыпы рэкламы могуць быць для вас цікавымі, і часова захоўваць інфармацыю пра вашы інтарэсы на вашай прыладзе. Гэта дазволіць праграмам паказваць вам рэлевантную рэкламу, не адсочваючы вашы дзеянні на вэб-сайтах і ў праграмах іншых распрацоўшчыкаў."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"У вас няма заблакіраваных інтарэсаў"</string>
-    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Інтарэсы скінуты"</string>
+    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
+    <skip />
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Праграмы могуць аналізаваць інфармацыю пра вашы інтарэсы і часова захоўваць яе на прыладзе Android. Пазней іншая праграма, кіруючыся гэтымі данымі, можа паказаць вам адпаведную рэкламу.\n\nКалі заблакіраваць праграму, яна не зможа аналізаваць даныя пра інтарэсы і не будзе дадавацца ў гэты спіс праграм, пакуль вы не разблакіруеце яе. Даныя пра інтарэсы, ужо прааналізаваныя праграмай, будуць выдалены, аднак вам па-ранейшаму можа паказвацца адпаведная рэклама."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Праграмы, якія вы заблакіравалі"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Скінуць даныя пра інтарэсы, захаваныя праграмамі"</string>

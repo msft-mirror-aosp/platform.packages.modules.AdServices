@@ -36,8 +36,6 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"Permite que una aplicación acceda a la API de modificación de estado de habilitación de AdService."</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"Acceso a la API de estado de habilitación de AdService"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Permite que una aplicación acceda a la API de estado de habilitación de AdService."</string>
-    <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Acceso a las APIs de AdServicesManager"</string>
-    <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Permite que una aplicación acceda a las APIs de AdServicesManager."</string>
     <string name="app_label" msgid="5985320129629013968">"Sistema Android"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Únete a la versión beta de privacidad de los anuncios de Android"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android está explorando más formas privadas para que las apps te muestren anuncios"</string>
@@ -83,7 +81,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"La versión beta de privacidad de los anuncios de Android ofrece nuevas funciones que las apps pueden usar para mostrarte anuncios que podrían interesarte. Estas tecnologías no utilizan identificadores de dispositivos.\n\nAndroid puede estimar los tipos de anuncios que podrían interesarte y guardar esos intereses temporalmente en tu dispositivo. Esto permite que las apps te muestren anuncios relevantes, sin rastrear tu actividad en sitios web ni apps de otros desarrolladores."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"No tienes intereses bloqueados"</string>
-    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Se restablecieron los intereses"</string>
+    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
+    <skip />
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Las apps pueden estimar tus intereses y guardarlos temporalmente con Android. Más tarde, otra app puede mostrarte un anuncio basado en esos intereses.\n\nSi bloqueas una app, esta no estimará más intereses. No se volverá a agregar a esta lista de apps a menos que la desbloquees. Sin embargo, si bien se borrarán los intereses ya estimados por ella, es posible que sigas viendo algunos anuncios relacionados."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Apps que bloqueaste"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Restablecer los intereses estimados por apps"</string>

@@ -713,6 +713,7 @@ public class AdSelectionE2ETest {
                     createDBCustomAudience(
                             BUYER_1,
                             DEFAULT_CUSTOM_AUDIENCE_NAME_SUFFIX + i,
+                            // All these CAs use the same uri, therefore JS should be cached
                             mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1),
                             bidsForBuyer1,
                             CustomAudienceFixture.VALID_ACTIVATION_TIME,

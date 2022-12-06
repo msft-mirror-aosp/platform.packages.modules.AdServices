@@ -36,8 +36,6 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"Geeft een app toegang tot de AdService-API voor wijziging van activeringsstatus."</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"Toegang tot de AdService-API voor activeringsstatus"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Geeft een app toegang tot de AdService-API voor activeringsstatus."</string>
-    <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Toegang tot AdServicesManager API\'s"</string>
-    <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Geeft een app toegang tot de AdServicesManager API\'s."</string>
     <string name="app_label" msgid="5985320129629013968">"Android-systeem"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Doe mee aan de bèta voor advertentieprivacy van Android"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android onderzoekt meer privacyvriendelijke manieren waarop apps jou advertenties kunnen laten zien"</string>
@@ -83,7 +81,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"De Android-bèta voor advertentieprivacy biedt nieuwe functies waarmee apps je advertenties kunnen laten zien die je misschien interessant vindt. Deze technologieën gebruiken geen apparaat-ID\'s.\n\nAndroid kan inschatten wat voor advertenties interessant voor jou zouden zijn en deze interesses tijdelijk op je apparaat opslaan. Zo kunnen apps relevante advertenties laten zien zonder je activiteit op websites en in apps van andere ontwikkelaars te tracken."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Je hebt geen interesses geblokkeerd"</string>
-    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Interesses zijn gereset"</string>
+    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
+    <skip />
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Apps kunnen een inschatting maken van je interesses en die tijdelijk opslaan via Android. Later kan een andere app je een advertentie laten zien op basis van deze interesses.\n\nAls je een app blokkeert, maakt deze geen inschattingen van interesses meer. De app wordt niet meer aan deze lijst toegevoegd, tenzij je de blokkering opheft. Interesses die al door de app zijn geschat, worden verwijderd, maar je kunt nog wel een aantal gerelateerde advertenties te zien krijgen."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Apps die je hebt geblokkeerd"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Interesses die zijn geschat door apps resetten"</string>

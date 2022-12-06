@@ -36,8 +36,6 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"Uygulamanın, AdService etkinleştirme durumu değiştirme API\'sine erişmesine izin verir."</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"AdService etkinleştirme durumu API\'sine erişme"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Uygulamanın, AdService etkinleştirme durumu API\'sine erişmesine izin verir."</string>
-    <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"AdServicesManager API\'lerine erişim"</string>
-    <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Uygulamanın, AdServicesManager API\'lerine erişmesine izin verir."</string>
     <string name="app_label" msgid="5985320129629013968">"Android Sistemi"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Android reklam gizliliği beta programına katılın"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android, uygulamaların daha gizlilik odaklı yöntemler kullanarak size reklam göstermesini sağlamanın yollarını araştırıyor"</string>
@@ -83,7 +81,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Özel Korumalı Alan"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android reklam gizliliği beta programı, uygulamaların size beğenebileceğiniz reklamları göstermek için kullanabileceği yeni özellikler sunar. Bu teknolojiler, cihaz tanımlayıcılarını kullanmaz.\n\nAndroid, ilginizi çekebilecek reklam türlerini tahmin edebilir ve bu ilgi alanlarını geçici olarak cihazınıza kaydedebilir. Böylece, uygulamalar, web sitelerindeki ve diğer geliştiricilerin uygulamalarındaki etkinliklerinizi izlemeden size alakalı reklamlar gösterebilir."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Engellenmiş ilgi alanınız yok"</string>
-    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"İlgi alanları sıfırlandı"</string>
+    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
+    <skip />
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Uygulamalar, ilgi alanlarınızı tahmin ederek geçici bir süreliğine Android\'e kaydedebilir. Daha sonra farklı bir uygulama size bu ilgi alanlarına dayalı bir reklam gösterebilir.\n\nEngellediğiniz uygulamalar artık ilgi alanlarınızı tahmin edemez. Bu uygulamalar, engellemeyi kaldırmadığınız sürece bu uygulama listesine tekrar eklenmez. Uygulamanın daha önce tahmin ettiği ilgi alanları silinse de bunlarla alakalı reklamlar görmeye devam edebilirsiniz."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Engellediğiniz uygulamalar"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Uygulamaların tahmin ettiği ilgi alanlarını sıfırla"</string>

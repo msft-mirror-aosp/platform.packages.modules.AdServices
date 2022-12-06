@@ -36,8 +36,6 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"Veitir forriti aðgang að forritaskilum AdService fyrir breytingar virknistöðu."</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"Aðgangur að virknistöðuforritaskilum AdService"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Veitir forriti aðgang að virknistöðuforritaskilum AdService."</string>
-    <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Aðgangur að forritaskilum AdServicesManager"</string>
-    <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Veitir forriti aðgang að forritaskilum AdServicesManager."</string>
     <string name="app_label" msgid="5985320129629013968">"Android kerfið"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Taktu þátt í betaútgáfu persónuverndar Android-auglýsinga"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android kannar lokaðri leiðir fyrir forrit til að birta þér auglýsingar."</string>
@@ -83,7 +81,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Betaútgáfa persónuverndar Android-auglýsinga býður upp á nýja eiginleika sem forrit geta notað til að birta þér auglýsingar sem gætu höfðað til þín. Þessi tækni notar ekki auðkenni tækja.\n\nAndroid getur áætlað hvernig auglýsingar gætu höfðað til þín og vistað áhugasviðin tímabundið í tækinu þínu. Þetta gerir forritum kleift að birta þér viðeigandi auglýsingar án þess að rekja virkni þína á vefsvæðum eða í forritum annarra þróunaraðila."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Þú hefur ekki sett nein áhugasvið á bannlista"</string>
-    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Áhugasvið voru endurstillt"</string>
+    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
+    <skip />
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Forrit geta áætlað áhugasviðin þín og vistað þau tímabundið með Android. Síðar gæti annað forrit birt þér auglýsingu í samræmi við þessi áhugasvið.\n\nEf þú lokar á forrit getur það ekki áætlað áhugasviðin þín lengur. Því verður ekki bætt við forritalistann aftur nema þú takir það af bannlista. Áhugasviðunum sem forrit hefur nú þegar áætlað verður eytt en þú gætir áfram fengið einhverjar tengdar auglýsingar."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Forrit sem þú hefur lokað á"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Endurstilla áhugasvið sem forrit hafa áætlað"</string>

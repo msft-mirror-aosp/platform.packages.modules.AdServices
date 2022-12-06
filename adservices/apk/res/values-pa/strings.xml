@@ -36,8 +36,6 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"ਇਸ ਨਾਲ ਕਿਸੇ ਐਪਲੀਕੇਸ਼ਨ ਨੂੰ AdService API ਨੂੰ ਚਾਲੂ ਜਾਂ ਬੰਦ ਕਰਨ ਦੀ ਸਥਿਤੀ ਵਿੱਚ ਸੰਸ਼ੋਧਨ ਤੱਕ ਪਹੁੰਚ ਕਰਨ ਦੀ ਆਗਿਆ ਮਿਲਦੀ ਹੈ।"</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"AdService API ਨੂੰ ਚਾਲੂ ਜਾਂ ਬੰਦ ਕਰਨ ਦੀ ਸਥਿਤੀ ਤੱਕ ਪਹੁੰਚ ਕਰੋ"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"ਇਸ ਨਾਲ ਕਿਸੇ ਐਪਲੀਕੇਸ਼ਨ ਨੂੰ AdService API ਨੂੰ ਚਾਲੂ ਜਾਂ ਬੰਦ ਕਰਨ ਦੀ ਸਥਿਤੀ ਤੱਕ ਪਹੁੰਚ ਕਰਨ ਦੀ ਆਗਿਆ ਮਿਲਦੀ ਹੈ।"</string>
-    <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"AdServicesManager ਦੇ API ਤੱਕ ਪਹੁੰਚ"</string>
-    <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"ਐਪਲੀਕੇਸ਼ਨ ਨੂੰ AdServicesManager ਦੇ API ਤੱਕ ਪਹੁੰਚ ਕਰਨ ਦੀ ਆਗਿਆ ਦਿੰਦੀ ਹੈ।"</string>
     <string name="app_label" msgid="5985320129629013968">"Android ਸਿਸਟਮ"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Android ਦੇ ਵਿਗਿਆਪਨ ਪਰਦੇਦਾਰੀ ਸੰਬੰਧੀ ਬੀਟਾ ਵਰਜਨ ਵਿੱਚ ਸ਼ਾਮਲ ਹੋਵੋ"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android ਤੁਹਾਨੂੰ ਵਿਗਿਆਪਨ ਦਿਖਾਉਣ ਵਾਸਤੇ ਐਪਾਂ ਲਈ ਹੋਰ ਜ਼ਿਆਦਾ ਨਿੱਜੀ ਤਰੀਕਿਆਂ ਦੀ ਪੜਚੋਲ ਕਰ ਰਿਹਾ ਹੈ"</string>
@@ -83,7 +81,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"ਪ੍ਰਾਈਵੇਸੀ ਸੈਂਡਬਾਕਸ"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android ਦਾ ਵਿਗਿਆਪਨ ਪਰਦੇਦਾਰੀ ਸੰਬੰਧੀ ਬੀਟਾ ਵਰਜਨ ਨਵੀਆਂ ਵਿਸ਼ੇਸ਼ਤਾਵਾਂ ਮੁਹੱਈਆ ਕਰਵਾਉਂਦਾ ਹੈ, ਜਿਨ੍ਹਾਂ ਨੂੰ ਐਪਾਂ ਤੁਹਾਡੇ ਮਨਪਸੰਦ ਵਿਗਿਆਪਨ ਦਿਖਾਉਣ ਲਈ ਵਰਤ ਸਕਦੀਆਂ ਹਨ। ਇਹ ਤਕਨਾਲੋਜੀਆਂ ਡੀਵਾਈਸ ਪਛਾਣਕਰਤਾਵਾਂ ਦੀ ਵਰਤੋਂ ਨਹੀਂ ਕਰਦੀਆਂ।\n\nAndroid ਤੁਹਾਡੇ ਦਿਲਚਸਪੀ ਵਾਲੇ ਵਿਗਿਆਪਨਾਂ ਦੀਆਂ ਕਿਸਮਾਂ ਬਾਰੇ ਅੰਦਾਜ਼ਾ ਲਗਾ ਸਕਦਾ ਹੈ, ਅਤੇ ਉਨ੍ਹਾਂ ਦਿਲਚਸਪੀਆਂ ਨੂੰ ਤੁਹਾਡੇ ਡੀਵਾਈਸ \'ਤੇ ਕੁਝ ਸਮੇਂ ਲਈ ਰੱਖਿਅਤ ਕਰ ਸਕਦਾ ਹੈ। ਇਸ ਨਾਲ ਐਪਾਂ ਨੂੰ ਹੋਰ ਵਿਕਾਸਕਾਰਾਂ ਦੀਆਂ ਵੈੱਬਸਾਈਟਾਂ ਅਤੇ ਐਪਾਂ \'ਤੇ ਤੁਹਾਡੀ ਸਰਗਰਮੀ ਨੂੰ ਟਰੈਕ ਕੀਤੇ ਬਿਨਾਂ, ਤੁਹਾਨੂੰ ਢੁਕਵੇਂ ਵਿਗਿਆਪਨ ਦਿਖਾਉਣ ਦੀ ਆਗਿਆ ਮਿਲਦੀ ਹੈ।"</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"ਤੁਹਾਡੇ ਕੋਲ ਕੋਈ ਬਲਾਕ ਕੀਤੀ ਦਿਲਚਸਪੀ ਨਹੀਂ ਹੈ"</string>
-    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"ਦਿਲਚਸਪੀਆਂ ਨੂੰ ਰੀਸੈੱਟ ਕੀਤਾ ਗਿਆ ਹੈ"</string>
+    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
+    <skip />
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"ਐਪਾਂ ਤੁਹਾਡੀਆਂ ਦਿਲਚਸਪੀਆਂ ਬਾਰੇ ਅੰਦਾਜ਼ਾ ਲਗਾ ਸਕਦੀਆਂ ਹਨ ਅਤੇ ਉਨ੍ਹਾਂ ਨੂੰ Android ਨਾਲ ਕੁਝ ਸਮੇਂ ਲਈ ਰੱਖਿਅਤ ਕਰ ਸਕਦੀਆਂ ਹਨ। ਬਾਅਦ ਵਿੱਚ, ਕੋਈ ਵੱਖਰੀ ਐਪ ਇਨ੍ਹਾਂ ਦਿਲਚਸਪੀਆਂ ਦੇ ਆਧਾਰ \'ਤੇ ਤੁਹਾਨੂੰ ਵਿਗਿਆਪਨ ਦਿਖਾ ਸਕਦੀ ਹੈ।\n\nਜੇ ਤੁਸੀਂ ਕਿਸੇ ਐਪ ਨੂੰ ਬਲਾਕ ਕਰਦੇ ਹੋ, ਤਾਂ ਇਹ ਕਿਸੇ ਹੋਰ ਦਿਲਚਸਪੀ ਬਾਰੇ ਅੰਦਾਜ਼ਾ ਨਹੀਂ ਲਗਾ ਸਕੇਗੀ। ਇਸਨੂੰ ਉਦੋਂ ਤੱਕ ਐਪਾਂ ਦੀ ਇਸ ਸੂਚੀ ਵਿੱਚ ਦੁਬਾਰਾ ਸ਼ਾਮਲ ਨਹੀਂ ਕੀਤਾ ਜਾਵੇਗਾ, ਜਦੋਂ ਤੱਕ ਤੁਸੀਂ ਇਸਨੂੰ ਅਣਬਲਾਕ ਨਹੀਂ ਕਰ ਦਿੰਦੇ। ਐਪ ਵੱਲੋਂ ਪਹਿਲਾਂ ਤੋਂ ਅੰਦਾਜ਼ਨ ਦਿਲਚਸਪੀਆਂ ਨੂੰ ਮਿਟਾ ਦਿੱਤਾ ਜਾਵੇਗਾ, ਪਰ ਤੁਹਾਨੂੰ ਹਾਲੇ ਵੀ ਕੁਝ ਸੰਬੰਧਿਤ ਵਿਗਿਆਪਨ ਦਿਸ ਸਕਦੇ ਹਨ।"</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"ਤੁਹਾਡੇ ਵੱਲੋਂ ਬਲਾਕ ਕੀਤੀਆਂ ਗਈਆਂ ਐਪਾਂ"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"ਐਪਾਂ ਦੀਆਂ ਅੰਦਾਜ਼ਨ ਦਿਲਚਸਪੀਆਂ ਨੂੰ ਰੀਸੈੱਟ ਕਰੋ"</string>

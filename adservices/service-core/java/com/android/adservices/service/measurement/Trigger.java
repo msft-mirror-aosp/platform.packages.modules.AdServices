@@ -414,7 +414,7 @@ public class Trigger {
             return this;
         }
 
-        /** See {@link Trigger#getEnrollmentId()}. */
+        /** See {@link Trigger#getEnrollmentId()} ()}. */
         @NonNull
         public Builder setEnrollmentId(String enrollmentId) {
             mBuilding.mEnrollmentId = enrollmentId;
@@ -478,13 +478,13 @@ public class Trigger {
             return this;
         }
 
-        /** See {@link Trigger#hasAdIdPermission()} */
+        /** See {@link Trigger#hasAdIdPermission()} ()} */
         public Trigger.Builder setAdIdPermission(boolean adIdPermission) {
             mBuilding.mAdIdPermission = adIdPermission;
             return this;
         }
 
-        /** See {@link Trigger#hasArDebugPermission()} */
+        /** See {@link Trigger#hasArDebugPermission()} ()} */
         public Trigger.Builder setArDebugPermission(boolean arDebugPermission) {
             mBuilding.mArDebugPermission = arDebugPermission;
             return this;
@@ -497,7 +497,7 @@ public class Trigger {
             return this;
         }
 
-        /** See {@link Trigger#getDebugKey()} */
+        /** See {@link Trigger#getDebugKey()} ()} */
         public Builder setDebugKey(@Nullable UnsignedLong debugKey) {
             mBuilding.mDebugKey = debugKey;
             return this;
