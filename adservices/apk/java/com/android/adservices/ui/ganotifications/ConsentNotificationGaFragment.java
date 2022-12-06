@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.ui.notifications;
+package com.android.adservices.ui.ganotifications;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__LANDING_PAGE_DISPLAYED;
@@ -44,7 +44,7 @@ import com.android.adservices.service.stats.UIStats;
 import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
 
 /** Fragment for the topics view of the AdServices Settings App. */
-public class ConsentNotificationFragment extends Fragment {
+public class ConsentNotificationGaFragment extends Fragment {
     public static final String IS_EU_DEVICE_ARGUMENT_KEY = "isEUDevice";
     public static final String IS_INFO_VIEW_EXPANDED_KEY = "is_info_view_expanded";
     private boolean mIsEUDevice;
@@ -59,8 +59,6 @@ public class ConsentNotificationFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
-        mIsEUDevice =
-                requireActivity().getIntent().getBooleanExtra(IS_EU_DEVICE_ARGUMENT_KEY, true);
         logLandingPageDisplayed();
         setupListeners(savedInstanceState);
     }
@@ -89,14 +87,16 @@ public class ConsentNotificationFragment extends Fragment {
     }
 
     private View setupActivity(LayoutInflater inflater, ViewGroup container) {
-        boolean isEUDevice =
+        mIsEUDevice =
                 requireActivity().getIntent().getBooleanExtra(IS_EU_DEVICE_ARGUMENT_KEY, true);
         View rootView;
-        if (isEUDevice) {
+        if (mIsEUDevice) {
             rootView =
-                    inflater.inflate(R.layout.consent_notification_fragment_eu, container, false);
+                    inflater.inflate(
+                            R.layout.consent_notification_ga_fragment_eu, container, false);
         } else {
-            rootView = inflater.inflate(R.layout.consent_notification_fragment, container, false);
+            rootView =
+                    inflater.inflate(R.layout.consent_notification_ga_fragment, container, false);
         }
         return rootView;
     }
@@ -112,6 +112,8 @@ public class ConsentNotificationFragment extends Fragment {
         leftControlButton.setOnClickListener(
                 view -> {
                     if (mIsEUDevice) {
+                        // TODO(b/254350760): For EU: Topics Off; FLEDGE and Measurement On.
+                        //  For Row: all three on. will need to change ConsentNotificationTrigger
                         // opt-out confirmation activity
                         ConsentManager.getInstance(requireContext()).disable(requireContext());
                         Bundle args = new Bundle();
@@ -159,7 +161,7 @@ public class ConsentNotificationFragment extends Fragment {
                 .beginTransaction()
                 .replace(
                         R.id.fragment_container_view,
-                        ConsentNotificationConfirmationFragment.class,
+                        ConsentNotificationConfirmationGaFragment.class,
                         args)
                 .setReorderingAllowed(true)
                 .addToBackStack(null)
