@@ -168,11 +168,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private static final String PROPERTY_DISABLE_SDK_SANDBOX = "disable_sdk_sandbox";
     private static final boolean DEFAULT_VALUE_DISABLE_SDK_SANDBOX = true;
-    private static final String GMS_PACKAGENAME_PREFIX = "com.google.android.gms";
-    private static final String PROPERTY_SERVICE_BIND_ALLOWED_PACKAGENAMES =
-            "runtime_service_bind_allowed_packagenames";
-    private static final String PROPERTY_SERVICE_BIND_ALLOWED_ACTIONS =
-            "runtime_service_bind_allowed_actions";
 
     static class Injector {
 
@@ -1268,20 +1263,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         PROPERTY_DISABLE_SDK_SANDBOX,
                         DEFAULT_VALUE_DISABLE_SDK_SANDBOX);
 
-        @GuardedBy("mLock")
-        private String mBindServiceAllowedPackageNames =
-                DeviceConfig.getString(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        PROPERTY_SERVICE_BIND_ALLOWED_PACKAGENAMES,
-                        null);
-
-        @GuardedBy("mLock")
-        private String mBindServiceAllowedActions =
-                DeviceConfig.getString(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        PROPERTY_SERVICE_BIND_ALLOWED_ACTIONS,
-                        null);
-
         SdkSandboxSettingsListener(Context context) {
             mContext = context;
         }
@@ -1295,20 +1276,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         boolean isKillSwitchEnabled() {
             synchronized (mLock) {
                 return mKillSwitchEnabled;
-            }
-        }
-
-        @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
-        String getServiceBindPackageNamesAllowlist() {
-            synchronized (mLock) {
-                return mBindServiceAllowedPackageNames;
-            }
-        }
-
-        @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
-        String getServiceBindActionsAllowlist() {
-            synchronized (mLock) {
-                return mBindServiceAllowedActions;
             }
         }
 
@@ -1373,17 +1340,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                                 stopAllSandboxesLocked();
                             }
                         }
-                    }
-
-                    if (name.equals(PROPERTY_SERVICE_BIND_ALLOWED_PACKAGENAMES)) {
-                        mBindServiceAllowedPackageNames =
-                                properties.getString(
-                                        PROPERTY_SERVICE_BIND_ALLOWED_PACKAGENAMES, null);
-                    }
-
-                    if (name.equals(PROPERTY_SERVICE_BIND_ALLOWED_ACTIONS)) {
-                        mBindServiceAllowedActions =
-                                properties.getString(PROPERTY_SERVICE_BIND_ALLOWED_ACTIONS, null);
                     }
                 }
             }
@@ -1559,24 +1515,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             return;
         }
 
-        String dynamicPackageNamesAllowlist =
-                mSdkSandboxSettingsListener.getServiceBindPackageNamesAllowlist();
-        if (dynamicPackageNamesAllowlist == null
-                || !dynamicPackageNamesAllowlist.contains(componentPackageName)) {
-            failStartOrBindService(intent);
-        }
-
-        if (componentPackageName.startsWith(GMS_PACKAGENAME_PREFIX)) {
-            String action = intent.getAction();
-            if (action == null) {
-                failStartOrBindService(intent);
-            }
-            String dynamicActionAllowlist =
-                    mSdkSandboxSettingsListener.getServiceBindActionsAllowlist();
-            if (dynamicActionAllowlist == null || !dynamicActionAllowlist.contains(action)) {
-                failStartOrBindService(intent);
-            }
-        }
+        // Default disallow.
+        failStartOrBindService(intent);
     }
 
     @Override
