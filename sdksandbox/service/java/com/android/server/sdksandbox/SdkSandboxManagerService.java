@@ -63,6 +63,7 @@ import android.os.ParcelFileDescriptor;
 import android.os.Process;
 import android.os.RemoteCallbackList;
 import android.os.RemoteException;
+import android.os.SystemProperties;
 import android.os.UserHandle;
 import android.provider.DeviceConfig;
 import android.text.TextUtils;
@@ -171,6 +172,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     private static final boolean DEFAULT_VALUE_DISABLE_SDK_SANDBOX = true;
 
     static class Injector {
+
+        private static final boolean IS_EMULATOR =
+                SystemProperties.getBoolean("ro.boot.qemu", false);
+
         long getCurrentTime() {
             return System.currentTimeMillis();
         }
@@ -178,6 +183,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         SdkSandboxShellCommand createShellCommand(
                 SdkSandboxManagerService service, Context context) {
             return new SdkSandboxShellCommand(service, context);
+        }
+
+        boolean isEmulator() {
+            return IS_EMULATOR;
         }
     }
 
@@ -1195,7 +1204,18 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     return true;
                 }
             }
-            return !mHasVisibilityPatch || getSdkSandboxSettingsListener().isKillSwitchEnabled();
+
+            // Disable immediately if visibility patch is missing
+            if (!mHasVisibilityPatch) {
+                return true;
+            }
+
+            // Ignore killswitch if the device is an emulator
+            if (mInjector.isEmulator()) {
+                return false;
+            }
+
+            return getSdkSandboxSettingsListener().isKillSwitchEnabled();
         }
     }
 
