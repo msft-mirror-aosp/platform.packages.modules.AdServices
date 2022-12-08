@@ -144,13 +144,33 @@ public class SelectAdsLatency {
         selectAds(NETWORK_4GPLUS, 90, "selectAds_p90_4GPlus");
     }
 
+    @Test
+    public void selectAds_p50_5G_Realistic() throws Exception {
+        selectAds(NETWORK_5G, 50, "selectAds_p50_5G_Realistic", true);
+    }
+
     private void selectAds(String network, int percentile, String testName) throws Exception {
+        selectAds(network, percentile, testName, false);
+    }
+
+    private void selectAds(String network, int percentile, String testName, boolean useRealisticCas)
+            throws Exception {
         mMockWebServerRule.createMockWebServer();
         mMockWebServerRule.startCreatedMockWebServer(
                 MockWebServerDispatcherFactory.createLatencyDispatcher(
                         mMockWebServerRule, network, percentile));
-        mCustomAudienceSetupRule.populateCustomAudiences(
-                PERCENTILE_TO_NUM_CAS.get(percentile), PERCENTILE_TO_ADS_PER_CA.get(percentile));
+        if (useRealisticCas) {
+            mCustomAudienceSetupRule.populateRealisticCustomAudiences(
+                    new String(
+                            ApplicationProvider.getApplicationContext()
+                                    .getAssets()
+                                    .open("InterestGroups.json")
+                                    .readAllBytes()));
+        } else {
+            mCustomAudienceSetupRule.populateCustomAudiences(
+                    PERCENTILE_TO_NUM_CAS.get(percentile),
+                    PERCENTILE_TO_ADS_PER_CA.get(percentile));
+        }
         Stopwatch timer = Stopwatch.createStarted(mTicker);
 
         AdSelectionOutcome outcome =
@@ -169,11 +189,16 @@ public class SelectAdsLatency {
                         + ": "
                         + timer.elapsed(TimeUnit.MILLISECONDS)
                         + " ms)");
-        Assert.assertEquals(
-                AD_SELECTION_FAILURE_MESSAGE,
-                createExpectedWinningUri(
-                        BUYER, "GENERIC_CA_1", PERCENTILE_TO_ADS_PER_CA.get(percentile)),
-                outcome.getRenderUri());
+        if (useRealisticCas) {
+            // Ensure the auction has a winner
+            Assert.assertFalse(outcome.getRenderUri().toString().isEmpty());
+        } else {
+            Assert.assertEquals(
+                    AD_SELECTION_FAILURE_MESSAGE,
+                    createExpectedWinningUri(
+                            BUYER, "GENERIC_CA_1", PERCENTILE_TO_ADS_PER_CA.get(percentile)),
+                    outcome.getRenderUri());
+        }
     }
 
     private static Uri getUri(String name, String path) {
