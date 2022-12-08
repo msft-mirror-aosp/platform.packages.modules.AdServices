@@ -17,15 +17,24 @@ package {
 }
 
 android_test_helper_app {
-    name: "LoadSdkAndCheckClassloaderSdkProvider",
-    defaults: ["platform_app_defaults",],
+    name: "SdkSandboxManagerCtsProvider",
+    defaults: ["platform_app_defaults"],
     certificate: ":sdksandbox-test",
     srcs: [
        "src/**/*.java",
     ],
     static_libs: [
         "SdkSandbox-java-lib",
+        "CtsSdkProviderApi",
     ],
+    resource_dirs: ["res"],
     min_sdk_version: "33",
     target_sdk_version: "33",
+}
+
+java_library {
+    name: "CtsSdkProviderApi",
+    srcs: [
+        "src/**/*.aidl",
+    ],
 }
