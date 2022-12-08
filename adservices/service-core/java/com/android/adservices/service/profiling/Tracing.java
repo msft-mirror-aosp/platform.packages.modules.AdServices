@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package android.adservices.adselection;
+package com.android.adservices.service.profiling;
 
 import android.annotation.NonNull;
 import android.os.Trace;
@@ -25,7 +25,6 @@ import java.util.concurrent.ThreadLocalRandom;
 /** Utility class providing methods for using {@link android.os.Trace}. */
 public final class Tracing {
 
-    // DO NOT SUBMIT without organising the naming conventions.
     public static final String RUN_AD_SELECTION = "RunOnDeviceAdSelection";
     public static final String PERSIST_AD_SELECTION = "PersistOnDeviceAdSelection";
     public static final String GET_BUYERS_CUSTOM_AUDIENCE = "GetBuyersCustomAudience";
@@ -40,6 +39,10 @@ public final class Tracing {
     public static final String SCORE_AD = "ScoreAd";
     public static final String RUN_OUTCOME_SELECTION = "RunAdOutcomeSelection";
     public static final String GENERATE_BIDS = "GenerateBids";
+    public static final String FETCH_PAYLOAD = "FetchPayload";
+    public static final String CACHE_GET = "CacheGet";
+    public static final String CACHE_PUT = "CachePut";
+    public static final String HTTP_REQUEST = "HttpRequest";
 
     /**
      * Begins an asynchronous trace and generates random cookie.
