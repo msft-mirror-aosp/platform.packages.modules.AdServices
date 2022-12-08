@@ -17,7 +17,6 @@
 package com.android.adservices.service.adselection;
 
 import android.adservices.adselection.AdSelectionFromOutcomesConfig;
-import android.adservices.adselection.Tracing;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 
@@ -25,6 +24,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
+import com.android.adservices.service.profiling.Tracing;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.FluentFuture;
