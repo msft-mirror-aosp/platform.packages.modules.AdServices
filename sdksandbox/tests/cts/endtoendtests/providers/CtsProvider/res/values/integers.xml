@@ -14,13 +14,7 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.android.loadsdkwithinternalerrorsdkprovider">
 
-    <application>
-        <sdk-library android:name="com.android.loadSdkWithInternalErrorSdkProvider"
-                     android:versionMajor="1" />
-        <property android:name="android.sdksandbox.PROPERTY_SDK_PROVIDER_CLASS_NAME"
-                  android:value="com.android.loadsdkwithinternalerrorsdkprovider.SdkProvider" />
-    </application>
-</manifest>
+<resources>
+    <integer name="test_integer">1234</integer>
+</resources>
