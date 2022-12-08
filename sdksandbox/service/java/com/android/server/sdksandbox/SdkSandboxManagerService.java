@@ -1292,30 +1292,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
 
         @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
-        void setBindServiceAllowedPackageNames(String packageNames) {
-            synchronized (mLock) {
-                DeviceConfig.setProperty(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        PROPERTY_SERVICE_BIND_ALLOWED_PACKAGENAMES,
-                        packageNames,
-                        false);
-                mBindServiceAllowedPackageNames = packageNames;
-            }
-        }
-
-        @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
-        void setBindServiceAllowedActions(String actions) {
-            synchronized (mLock) {
-                DeviceConfig.setProperty(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        PROPERTY_SERVICE_BIND_ALLOWED_ACTIONS,
-                        actions,
-                        false);
-                mBindServiceAllowedActions = actions;
-            }
-        }
-
-        @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
         void unregisterPropertiesListener() {
             DeviceConfig.removeOnPropertiesChangedListener(this);
         }
