@@ -26,6 +26,11 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.ProviderInfo;
 import android.os.IBinder;
 
+import com.android.tools.r8.keepanno.annotations.KeepForApi;
+import com.android.tools.r8.keepanno.annotations.KeepItemKind;
+import com.android.tools.r8.keepanno.annotations.KeepTarget;
+import com.android.tools.r8.keepanno.annotations.MemberAccessFlags;
+
 /**
  * Exposes APIs to {@code system_server} components outside of the module boundaries.
  *
@@ -38,11 +43,20 @@ public interface SdkSandboxManagerLocal {
     String SERVICE_INTERFACE = "com.android.sdksandbox.SdkSandboxService";
 
     /**
-     * Broadcast Receiver listen to sufficient verifier requests from Package Manager
-     * when install new SDK, to verifier SDK code during installation time
-     * and terminate install if SDK not compatible with privacy sandbox restrictions.
+     * Broadcast Receiver listen to sufficient verifier requests from Package Manager when install
+     * new SDK, to verifier SDK code during installation time and terminate install if SDK not
+     * compatible with privacy sandbox restrictions.
      */
     @SdkConstant(SdkConstant.SdkConstantType.BROADCAST_INTENT_ACTION)
+    @KeepForApi(
+            description =
+                    "Package Manager reflects on the class denoted by this field. See b/255754931",
+            additionalTargets = {
+                @KeepTarget(
+                        kind = KeepItemKind.CLASS_AND_MEMBERS,
+                        classConstant = SdkSandboxVerifierReceiver.class,
+                        memberAccess = {MemberAccessFlags.PUBLIC})
+            })
     String VERIFIER_RECEIVER = "com.android.server.sdksandbox.SdkSandboxVerifierReceiver";
 
     /**

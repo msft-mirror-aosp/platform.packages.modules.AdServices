@@ -73,6 +73,7 @@ java_sdk_library {
         "framework-sdksandbox.impl",
         "framework-statsd.stubs.module_lib",
         "jsr305",
+        "keepanno-annotations",
     ],
     static_libs: [
         "sdksandbox-statsd",
