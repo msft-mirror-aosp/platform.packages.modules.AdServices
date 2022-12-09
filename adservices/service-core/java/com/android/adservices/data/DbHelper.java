@@ -104,9 +104,7 @@ public class DbHelper extends SQLiteOpenHelper {
         db.execSQL("PRAGMA foreign_keys=ON");
     }
 
-    /**
-     * Wraps getReadableDatabase to catch SQLiteException and log error.
-     */
+    /** Wraps getReadableDatabase to catch SQLiteException and log error. */
     @Nullable
     public SQLiteDatabase safeGetReadableDatabase() {
         try {
@@ -144,6 +142,25 @@ public class DbHelper extends SQLiteOpenHelper {
                     "Topics DB Upgrade is not performed! oldVersion: %d, newVersion: %d.",
                     oldVersion, newVersion);
         }
+    }
+
+    // TODO(b/261934022): Support a framework as upgrade.
+    @Override
+    public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        // Only downgrade if it's triggered by value change of Flag enable_database_schema_version_5
+        if (oldVersion == DATABASE_VERSION_V5
+                && newVersion == CURRENT_DATABASE_VERSION
+                && !FlagsFactory.getFlags().getEnableDatabaseSchemaVersion5()) {
+            LogUtil.e(
+                    "Has to downgrade database version from %d to %d. The reason is"
+                            + " TopicContributorsTable was enabled and now disabled. Dropping"
+                            + " TopicContributorsTable...",
+                    DATABASE_VERSION_V5, CURRENT_DATABASE_VERSION);
+            db.execSQL("DROP TABLE IF EXISTS " + TopicsTables.TopicContributorsContract.TABLE);
+            return;
+        }
+
+        super.onDowngrade(db, oldVersion, newVersion);
     }
 
     public long getDbFileSize() {
