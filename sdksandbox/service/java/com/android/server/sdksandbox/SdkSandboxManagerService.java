@@ -63,6 +63,7 @@ import android.os.ParcelFileDescriptor;
 import android.os.Process;
 import android.os.RemoteCallbackList;
 import android.os.RemoteException;
+import android.os.SystemProperties;
 import android.os.UserHandle;
 import android.provider.DeviceConfig;
 import android.text.TextUtils;
@@ -155,6 +156,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private Injector mInjector;
 
+    private final SdkSandboxPulledAtoms mSdkSandboxPulledAtoms;
+
     // The device must have a change that allows the Webview provider to be visible in order for the
     // sandbox to be enabled.
     @GuardedBy("mLock")
@@ -166,14 +169,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     private SdkSandboxSettingsListener mSdkSandboxSettingsListener;
 
     private static final String PROPERTY_DISABLE_SDK_SANDBOX = "disable_sdk_sandbox";
-    private static final boolean DEFAULT_VALUE_DISABLE_SDK_SANDBOX = false;
-    private static final String GMS_PACKAGENAME_PREFIX = "com.google.android.gms";
-    private static final String PROPERTY_SERVICE_BIND_ALLOWED_PACKAGENAMES =
-            "runtime_service_bind_allowed_packagenames";
-    private static final String PROPERTY_SERVICE_BIND_ALLOWED_ACTIONS =
-            "runtime_service_bind_allowed_actions";
+    private static final boolean DEFAULT_VALUE_DISABLE_SDK_SANDBOX = true;
 
     static class Injector {
+
+        private static final boolean IS_EMULATOR =
+                SystemProperties.getBoolean("ro.boot.qemu", false);
+
         long getCurrentTime() {
             return System.currentTimeMillis();
         }
@@ -182,20 +184,28 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 SdkSandboxManagerService service, Context context) {
             return new SdkSandboxShellCommand(service, context);
         }
+
+        boolean isEmulator() {
+            return IS_EMULATOR;
+        }
     }
 
     @VisibleForTesting
     SdkSandboxManagerService(Context context, SdkSandboxServiceProvider provider) {
-        this(context, provider, new Injector());
+        this(context, provider, new Injector(), new SdkSandboxPulledAtoms());
     }
 
     SdkSandboxManagerService(
-            Context context, SdkSandboxServiceProvider provider, Injector injector) {
+            Context context,
+            SdkSandboxServiceProvider provider,
+            Injector injector,
+            SdkSandboxPulledAtoms sdkSandboxPulledAtoms) {
         mContext = context;
         mServiceProvider = provider;
         mInjector = injector;
         mActivityManager = mContext.getSystemService(ActivityManager.class);
         mLocalManager = new LocalImpl();
+        mSdkSandboxPulledAtoms = sdkSandboxPulledAtoms;
 
         PackageManagerLocal packageManagerLocal =
                 LocalManagerRegistry.getManager(PackageManagerLocal.class);
@@ -211,6 +221,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         mAdServicesPackageName = resolveAdServicesPackage();
         mSdkSandboxSettingsListener = new SdkSandboxSettingsListener(mContext);
         mSdkSandboxSettingsListener.registerObserver();
+        mSdkSandboxPulledAtoms.initialize(mContext);
     }
 
     private void registerBroadcastReceivers() {
@@ -1193,7 +1204,18 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     return true;
                 }
             }
-            return !mHasVisibilityPatch || getSdkSandboxSettingsListener().isKillSwitchEnabled();
+
+            // Disable immediately if visibility patch is missing
+            if (!mHasVisibilityPatch) {
+                return true;
+            }
+
+            // Ignore killswitch if the device is an emulator
+            if (mInjector.isEmulator()) {
+                return false;
+            }
+
+            return getSdkSandboxSettingsListener().isKillSwitchEnabled();
         }
     }
 
@@ -1248,20 +1270,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         PROPERTY_DISABLE_SDK_SANDBOX,
                         DEFAULT_VALUE_DISABLE_SDK_SANDBOX);
 
-        @GuardedBy("mLock")
-        private String mBindServiceAllowedPackageNames =
-                DeviceConfig.getString(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        PROPERTY_SERVICE_BIND_ALLOWED_PACKAGENAMES,
-                        null);
-
-        @GuardedBy("mLock")
-        private String mBindServiceAllowedActions =
-                DeviceConfig.getString(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        PROPERTY_SERVICE_BIND_ALLOWED_ACTIONS,
-                        null);
-
         SdkSandboxSettingsListener(Context context) {
             mContext = context;
         }
@@ -1279,20 +1287,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
 
         @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
-        String getServiceBindPackageNamesAllowlist() {
-            synchronized (mLock) {
-                return mBindServiceAllowedPackageNames;
-            }
-        }
-
-        @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
-        String getServiceBindActionsAllowlist() {
-            synchronized (mLock) {
-                return mBindServiceAllowedActions;
-            }
-        }
-
-        @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
         void setKillSwitchState(boolean enabled) {
             synchronized (mLock) {
                 DeviceConfig.setProperty(
@@ -1301,30 +1295,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         Boolean.toString(enabled),
                         false);
                 mKillSwitchEnabled = enabled;
-            }
-        }
-
-        @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
-        void setBindServiceAllowedPackageNames(String packageNames) {
-            synchronized (mLock) {
-                DeviceConfig.setProperty(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        PROPERTY_SERVICE_BIND_ALLOWED_PACKAGENAMES,
-                        packageNames,
-                        false);
-                mBindServiceAllowedPackageNames = packageNames;
-            }
-        }
-
-        @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
-        void setBindServiceAllowedActions(String actions) {
-            synchronized (mLock) {
-                DeviceConfig.setProperty(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        PROPERTY_SERVICE_BIND_ALLOWED_ACTIONS,
-                        actions,
-                        false);
-                mBindServiceAllowedActions = actions;
             }
         }
 
@@ -1353,17 +1323,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                                 stopAllSandboxesLocked();
                             }
                         }
-                    }
-
-                    if (name.equals(PROPERTY_SERVICE_BIND_ALLOWED_PACKAGENAMES)) {
-                        mBindServiceAllowedPackageNames =
-                                properties.getString(
-                                        PROPERTY_SERVICE_BIND_ALLOWED_PACKAGENAMES, null);
-                    }
-
-                    if (name.equals(PROPERTY_SERVICE_BIND_ALLOWED_ACTIONS)) {
-                        mBindServiceAllowedActions =
-                                properties.getString(PROPERTY_SERVICE_BIND_ALLOWED_ACTIONS, null);
                     }
                 }
             }
@@ -1445,8 +1404,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 getListOfStoragePaths(sdkStorageDirsInfo),
                 new IComputeSdkStorageCallback.Stub() {
                     @Override
-                    public void onStorageInfoComputed(float sharedStorageKb, float sdkStorageKb) {
-                        // TODO(b/257952392): Store the storage information in memory in system
+                    public void onStorageInfoComputed(int sharedStorageKb, int sdkStorageKb) {
+                        mSdkSandboxPulledAtoms.logStorage(
+                                callingInfo.getUid(), sharedStorageKb, sdkStorageKb);
                     }
                 });
     }
@@ -1539,24 +1499,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             return;
         }
 
-        String dynamicPackageNamesAllowlist =
-                mSdkSandboxSettingsListener.getServiceBindPackageNamesAllowlist();
-        if (dynamicPackageNamesAllowlist == null
-                || !dynamicPackageNamesAllowlist.contains(componentPackageName)) {
-            failStartOrBindService(intent);
-        }
-
-        if (componentPackageName.startsWith(GMS_PACKAGENAME_PREFIX)) {
-            String action = intent.getAction();
-            if (action == null) {
-                failStartOrBindService(intent);
-            }
-            String dynamicActionAllowlist =
-                    mSdkSandboxSettingsListener.getServiceBindActionsAllowlist();
-            if (dynamicActionAllowlist == null || !dynamicActionAllowlist.contains(action)) {
-                failStartOrBindService(intent);
-            }
-        }
+        // Default disallow.
+        failStartOrBindService(intent);
     }
 
     @Override
@@ -1697,6 +1641,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         @Override
         public void onStart() {
             publishBinderService(SDK_SANDBOX_SERVICE, mService);
+
             LocalManagerRegistry.addManager(
                     SdkSandboxManagerLocal.class, mService.getLocalManager());
         }

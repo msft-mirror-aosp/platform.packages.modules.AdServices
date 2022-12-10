@@ -38,6 +38,8 @@ import java.util.Optional;
 /** Migrates Measurement DB from user version 2 to 3. */
 public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
     private static final String ANDROID_APP_SCHEME = "android-app";
+    private static final String FILTERS = "filters";
+    private static final String NOT_FILTERS = "not_filters";
     private static final String EVENT_REPORT_CONTRACT_BACKUP =
             MeasurementTables.EventReportContract.TABLE + "_backup";
     private static final String AGGREGATE_REPORT_CONTRACT_BACKUP =
@@ -88,6 +90,33 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
     private static final String TRIGGER_DATA_KEY = "trigger_data";
     private static final String TRIGGER_DATA_DEFAULT_VALUE = "0";
 
+    private static final String[] ALTER_STATEMENTS = {
+        String.format(
+                "ALTER TABLE %1$s ADD %2$s INTEGER",
+                MeasurementTables.SourceContract.TABLE,
+                MeasurementTables.SourceContract.DEBUG_REPORTING),
+        String.format(
+                "ALTER TABLE %1$s ADD %2$s INTEGER",
+                MeasurementTables.TriggerContract.TABLE,
+                MeasurementTables.TriggerContract.DEBUG_REPORTING),
+        String.format(
+                "ALTER TABLE %1$s ADD %2$s INTEGER",
+                MeasurementTables.SourceContract.TABLE,
+                MeasurementTables.SourceContract.AD_ID_PERMISSION),
+        String.format(
+                "ALTER TABLE %1$s ADD %2$s INTEGER",
+                MeasurementTables.SourceContract.TABLE,
+                MeasurementTables.SourceContract.AR_DEBUG_PERMISSION),
+        String.format(
+                "ALTER TABLE %1$s ADD %2$s INTEGER",
+                MeasurementTables.TriggerContract.TABLE,
+                MeasurementTables.TriggerContract.AD_ID_PERMISSION),
+        String.format(
+                "ALTER TABLE %1$s ADD %2$s INTEGER",
+                MeasurementTables.TriggerContract.TABLE,
+                MeasurementTables.TriggerContract.AR_DEBUG_PERMISSION),
+    };
+
     public MeasurementDbMigratorV3() {
         super(3);
     }
@@ -100,12 +129,14 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
                 db,
                 MeasurementTables.EventReportContract.TABLE,
                 MeasurementTables.EventReportContract.SOURCE_EVENT_ID)) {
+            LogUtil.d("Source event id exists. Skipping Migration");
             return;
         }
         // Drop and create a new AsyncRegistrationTable if it exists.
         for (String query : UPDATE_ASYNC_REGISTRATION_TABLE_QUERIES) {
             db.execSQL(query);
         }
+        db.execSQL(MeasurementTables.CREATE_TABLE_DEBUG_REPORT_LATEST);
 
         alterEventReportTable(db);
         alterAggregateReportTable(db);
@@ -117,6 +148,10 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
         migrateSourceData(db);
         migrateEventReportData(db);
         migrateTriggers(db);
+
+        for (String sql : ALTER_STATEMENTS) {
+            db.execSQL(sql);
+        }
     }
 
     private static void alterEventReportTable(SQLiteDatabase db) {
@@ -392,22 +427,22 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
     private static String convertFiltersInObjectArray(JSONArray objectArray) throws JSONException {
         for (int i = 0; i < objectArray.length(); i++) {
             JSONObject obj = objectArray.getJSONObject(i);
-            if (!obj.isNull("filters")) {
+            if (!obj.isNull(FILTERS)) {
                 JSONArray convertedFilters = convertFilters(
-                        obj.getJSONObject("filters").toString());
+                        obj.getJSONObject(FILTERS).toString());
                 if (convertedFilters == null) {
                     return null;
                 } else {
-                    obj.put("filters", convertedFilters);
+                    obj.put(FILTERS, convertedFilters);
                 }
             }
-            if (!obj.isNull("not_filters")) {
+            if (!obj.isNull(NOT_FILTERS)) {
                 JSONArray convertedNotFilters = convertFilters(
-                        obj.getJSONObject("not_filters").toString());
+                        obj.getJSONObject(NOT_FILTERS).toString());
                 if (convertedNotFilters == null) {
                     return null;
                 } else {
-                    obj.put("not_filters", convertedNotFilters);
+                    obj.put(NOT_FILTERS, convertedNotFilters);
                 }
             }
         }
