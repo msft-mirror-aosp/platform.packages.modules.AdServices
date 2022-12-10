@@ -12,21 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package {
-    default_applicable_licenses: ["Android-Apache-2.0"],
-}
+package com.android.ctssdkprovider;
 
-android_test_helper_app {
-    name: "EmptySdkProviderApp",
-    manifest: "AndroidManifest.xml",
-    certificate: ":sdksandbox-test",
-    srcs: [
-      "src/**/*.java",
-    ],
-    min_sdk_version: "33",
-    target_sdk_version: "33",
-    visibility: [
-        "//cts/tests/tests:__subpackages__",
-        "//packages/modules/AdServices/sdksandbox/tests/cts/endtoendtests"
-    ],
+interface ICtsSdkProviderApi {
+    void checkClassloaders();
+    void checkResourcesAndAssets();
 }
