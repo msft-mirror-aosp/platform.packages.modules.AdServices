@@ -134,6 +134,8 @@ import static com.android.adservices.service.Flags.PPAPI_APP_SIGNATURE_ALLOW_LIS
 import static com.android.adservices.service.Flags.PPAPI_ONLY;
 import static com.android.adservices.service.Flags.PRECOMPUTED_CLASSIFIER;
 import static com.android.adservices.service.Flags.SDK_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.Flags.TOPICS_API_APP_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.Flags.TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.TOPICS_KILL_SWITCH;
@@ -255,6 +257,8 @@ import static com.android.adservices.service.PhFlags.KEY_NUMBER_OF_EPOCHS_TO_KEE
 import static com.android.adservices.service.PhFlags.KEY_PPAPI_APP_ALLOW_LIST;
 import static com.android.adservices.service.PhFlags.KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST;
 import static com.android.adservices.service.PhFlags.KEY_SDK_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.PhFlags.KEY_TOPICS_API_APP_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.PhFlags.KEY_TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.PhFlags.KEY_TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.service.PhFlags.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
 import static com.android.adservices.service.PhFlags.KEY_TOPICS_KILL_SWITCH;
@@ -3077,19 +3081,6 @@ public class PhFlagsTest {
     }
 
     @Test
-    public void testGetSdkRequestPermitsPerSecond_illegalValue() {
-        final float illegalPhOverridingValue = -1;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_SDK_REQUEST_PERMITS_PER_SECOND,
-                Float.toString(illegalPhOverridingValue),
-                /* makeDefault */ false);
-
-        Flags phFlags = FlagsFactory.getFlags();
-        assertThrows(IllegalArgumentException.class, () -> phFlags.getSdkRequestPermitsPerSecond());
-    }
-
-    @Test
     public void testGetAdIdRequestPermitsPerSecond() {
         // Without any overriding, the value is the hard coded constant.
         assertThat(FlagsFactory.getFlags().getAdIdRequestPermitsPerSecond())
@@ -3112,20 +3103,6 @@ public class PhFlagsTest {
     }
 
     @Test
-    public void testGetAdIdRequestPermitsPerSecond_illegalValue() {
-        final float illegalPhOverridingValue = -1;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_ADID_REQUEST_PERMITS_PER_SECOND,
-                Float.toString(illegalPhOverridingValue),
-                /* makeDefault */ false);
-
-        Flags phFlags = FlagsFactory.getFlags();
-        assertThrows(
-                IllegalArgumentException.class, () -> phFlags.getAdIdRequestPermitsPerSecond());
-    }
-
-    @Test
     public void testGetAppSetIdRequestPermitsPerSecond() {
         // Without any overriding, the value is the hard coded constant.
         assertThat(FlagsFactory.getFlags().getAppSetIdRequestPermitsPerSecond())
@@ -3145,20 +3122,6 @@ public class PhFlagsTest {
         final Flags flags = FlagsFactory.getFlagsForTest();
         assertThat(flags.getAppSetIdRequestPermitsPerSecond())
                 .isEqualTo(APPSETID_REQUEST_PERMITS_PER_SECOND);
-    }
-
-    @Test
-    public void testGetAppSetIdRequestPermitsPerSecond_illegalValue() {
-        final float illegalPhOverridingValue = -1;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_APPSETID_REQUEST_PERMITS_PER_SECOND,
-                Float.toString(illegalPhOverridingValue),
-                /* makeDefault */ false);
-
-        Flags phFlags = FlagsFactory.getFlags();
-        assertThrows(
-                IllegalArgumentException.class, () -> phFlags.getAppSetIdRequestPermitsPerSecond());
     }
 
     @Test
@@ -3185,21 +3148,6 @@ public class PhFlagsTest {
     }
 
     @Test
-    public void testGetMeasurementRegisterSourceRequestPermitsPerSecond_illegalValue() {
-        final float illegalPhOverridingValue = -1;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_REGISTER_SOURCE_REQUEST_PERMITS_PER_SECOND,
-                Float.toString(illegalPhOverridingValue),
-                /* makeDefault */ false);
-
-        Flags phFlags = FlagsFactory.getFlags();
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> phFlags.getMeasurementRegisterSourceRequestPermitsPerSecond());
-    }
-
-    @Test
     public void testGetMeasurementRegisterWebSourceRequestPermitsPerSecond() {
         // Without any overriding, the value is the hard coded constant.
         assertThat(FlagsFactory.getFlags().getMeasurementRegisterWebSourceRequestPermitsPerSecond())
@@ -3223,18 +3171,47 @@ public class PhFlagsTest {
     }
 
     @Test
-    public void testGetMeasurementRegisterWebSourceRequestPermitsPerSecond_illegalValue() {
-        final float illegalPhOverridingValue = -1;
+    public void testGetTopicsApiAppRequestPermitsPerSecond() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getTopicsApiAppRequestPermitsPerSecond())
+                .isEqualTo(TOPICS_API_APP_REQUEST_PERMITS_PER_SECOND);
+
+        final float phOverridingValue = 7;
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND,
-                Float.toString(illegalPhOverridingValue),
+                KEY_TOPICS_API_APP_REQUEST_PERMITS_PER_SECOND,
+                Float.toString(phOverridingValue),
                 /* makeDefault */ false);
 
-        Flags phFlags = FlagsFactory.getFlags();
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> phFlags.getMeasurementRegisterWebSourceRequestPermitsPerSecond());
+        // Now verify that the PhFlag value was overridden.
+        final Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getTopicsApiAppRequestPermitsPerSecond()).isEqualTo(phOverridingValue);
+
+        final Flags flags = FlagsFactory.getFlagsForTest();
+        assertThat(flags.getTopicsApiAppRequestPermitsPerSecond())
+                .isEqualTo(TOPICS_API_APP_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Test
+    public void testGetTopicsApiSdkRequestPermitsPerSecond() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getTopicsApiSdkRequestPermitsPerSecond())
+                .isEqualTo(TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND);
+
+        final float phOverridingValue = 7;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND,
+                Float.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        // Now verify that the PhFlag value was overridden.
+        final Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getTopicsApiSdkRequestPermitsPerSecond()).isEqualTo(phOverridingValue);
+
+        final Flags flags = FlagsFactory.getFlagsForTest();
+        assertThat(flags.getTopicsApiSdkRequestPermitsPerSecond())
+                .isEqualTo(TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND);
     }
 
     @Test

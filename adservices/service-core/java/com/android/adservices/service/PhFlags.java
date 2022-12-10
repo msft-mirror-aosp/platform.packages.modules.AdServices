@@ -273,6 +273,10 @@ public final class PhFlags implements Flags {
             "measurement_register_source_request_permits_per_second";
     static final String KEY_MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND =
             "measurement_register_web_source_request_permits_per_second";
+    static final String KEY_TOPICS_API_APP_REQUEST_PERMITS_PER_SECOND =
+            "topics_api_app_request_permits_per_second";
+    static final String KEY_TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND =
+            "topics_api_sdk_request_permits_per_second";
 
     // Adservices enable status keys.
     static final String KEY_ADSERVICES_ENABLED = "adservice_enabled";
@@ -1435,6 +1439,20 @@ public final class PhFlags implements Flags {
                 MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND);
     }
 
+    @Override
+    public float getTopicsApiAppRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                KEY_TOPICS_API_APP_REQUEST_PERMITS_PER_SECOND,
+                TOPICS_API_APP_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
+    public float getTopicsApiSdkRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                KEY_TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND,
+                TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND);
+    }
+
     private float getPermitsPerSecond(String flagName, float defaultValue) {
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
@@ -1448,13 +1466,7 @@ public final class PhFlags implements Flags {
             return defaultValue;
         }
 
-        final float permitsPerSecond =
-                DeviceConfig.getFloat(DeviceConfig.NAMESPACE_ADSERVICES, flagName, defaultValue);
-
-        if (permitsPerSecond <= 0) {
-            throw new IllegalArgumentException(flagName + " should > 0");
-        }
-        return permitsPerSecond;
+        return DeviceConfig.getFloat(DeviceConfig.NAMESPACE_ADSERVICES, flagName, defaultValue);
     }
 
     @Override
