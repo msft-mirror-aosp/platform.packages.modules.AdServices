@@ -20,6 +20,7 @@ import android.annotation.NonNull;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.service.profiling.Tracing;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.net.HttpHeaders;
@@ -78,6 +79,7 @@ public class FledgeHttpCache implements HttpCache {
      */
     @Override
     public DBCacheEntry get(URL url) {
+        int traceCookie = Tracing.beginAsyncSection(Tracing.CACHE_GET);
         incrementRequestCount();
         DBCacheEntry entry = mCacheEntryDao.getCacheEntry(url.toString(), Instant.now());
         if (entry != null) {
@@ -85,6 +87,7 @@ public class FledgeHttpCache implements HttpCache {
             incrementHitCount();
         }
         notifyObservers(CacheEventType.GET);
+        Tracing.endAsyncSection(Tracing.CACHE_GET, traceCookie);
         return entry;
     }
 
@@ -97,6 +100,7 @@ public class FledgeHttpCache implements HttpCache {
      */
     @Override
     public void put(URL url, String body, Map<String, List<String>> requestPropertiesMap) {
+        int traceCookie = Tracing.beginAsyncSection(Tracing.CACHE_PUT);
         List<String> cacheProperties = requestPropertiesMap.get(HttpHeaders.CACHE_CONTROL);
         if ((cacheProperties != null)
                 && (cacheProperties.contains(PROPERTY_NO_CACHE)
@@ -114,6 +118,7 @@ public class FledgeHttpCache implements HttpCache {
                         .build();
         mCacheEntryDao.persistCacheEntry(entry);
         notifyObservers(CacheEventType.PUT);
+        Tracing.endAsyncSection(Tracing.CACHE_PUT, traceCookie);
     }
 
     @Override

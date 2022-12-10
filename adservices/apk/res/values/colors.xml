@@ -5,6 +5,7 @@
     <color name="card_background_color">#F9F9F9</color>
     <color name="primary_text_color">@color/settingslib_text_color_primary_device_default</color>
     <color name="secondary_text_color">@color/settingslib_text_color_secondary_device_default</color>
+    <color name="transparent_color">#00000000</color>
     <!-- Material inverse ripple color, useful for inverted backgrounds. -->
     <color name="ripple_material_inverse">@*android:color/ripple_material_dark</color>
 </resources>

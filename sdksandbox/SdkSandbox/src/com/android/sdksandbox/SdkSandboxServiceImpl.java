@@ -143,8 +143,8 @@ public class SdkSandboxServiceImpl extends Service {
         Handler handler = new Handler(handlerThread.getLooper());
         handler.post(
                 () -> {
-                    final float sharedStorageKb = FileUtil.getStorageInKbForPaths(sharedPaths);
-                    final float sdkStorageKb = FileUtil.getStorageInKbForPaths(sdkPaths);
+                    final int sharedStorageKb = FileUtil.getStorageInKbForPaths(sharedPaths);
+                    final int sdkStorageKb = FileUtil.getStorageInKbForPaths(sdkPaths);
 
                     try {
                         callback.onStorageInfoComputed(sharedStorageKb, sdkStorageKb);

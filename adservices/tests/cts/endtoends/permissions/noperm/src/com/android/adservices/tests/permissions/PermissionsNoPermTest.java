@@ -22,6 +22,8 @@ import static org.junit.Assert.assertThrows;
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
+import android.adservices.adselection.AdSelectionFromOutcomesConfig;
+import android.adservices.adselection.AdSelectionFromOutcomesConfigFixture;
 import android.adservices.adselection.AddAdSelectionOverrideRequest;
 import android.adservices.adselection.RemoveAdSelectionOverrideRequest;
 import android.adservices.adselection.ReportImpressionRequest;
@@ -182,7 +184,7 @@ public class PermissionsNoPermTest {
     }
 
     @Test
-    public void testPermissionNotRequested_selectAds() {
+    public void testPermissionNotRequested_selectAds_adSelectionConfig() {
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
 
         AdSelectionClient mAdSelectionClient =
@@ -195,6 +197,23 @@ public class PermissionsNoPermTest {
                 assertThrows(
                         ExecutionException.class,
                         () -> mAdSelectionClient.selectAds(adSelectionConfig).get());
+        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+    }
+
+    @Test
+    public void testPermissionNotRequested_selectAds_adSelectionFromOutcomesConfig() {
+        AdSelectionFromOutcomesConfig config =
+                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
+
+        AdSelectionClient mAdSelectionClient =
+                new AdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
+        ExecutionException exception =
+                assertThrows(
+                        ExecutionException.class, () -> mAdSelectionClient.selectAds(config).get());
         assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
     }
 
