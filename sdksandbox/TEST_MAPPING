@@ -157,6 +157,69 @@
     },
     {
       "name": "CtsBatterySavingTestCases"
+    },
+    {
+      "name": "CtsBlobStoreTestCases"
+    },
+    {
+      "name": "CtsBluetoothTestCases"
+    },
+    {
+      "name": "CtsCameraTestCases"
+    },
+    {
+      "name": "CtsContentTestCases"
+    },
+    {
+      "name": "CtsDatabaseTestCases"
+    },
+    {
+      "name": "CtsDisplayTestCases"
+    },
+    {
+      "name": "CtsDpiTestCases"
+    },
+    {
+      "name": "CtsDreamsTestCases"
+    },
+    {
+      "name": "CtsDropBoxManagerTestCases"
+    },
+    {
+      "name": "CtsFragmentTestCases"
+    },
+    {
+      "name": "CtsGameManagerTestCases"
+    },
+    {
+      "name": "CtsGameServiceTestCases"
+    },
+    {
+      "name": "CtsGraphicsTestCases"
+    },
+    {
+      "name": "CtsHardwareTestCases"
+    },
+    {
+      "name": "CtsInputMethodTestCases"
+    },
+    {
+      "name": "CtsInputMethodTestCases32"
+    },
+    {
+      "name": "CtsInputTestCases"
+    },
+    {
+      "name": "CtsInstantAppTests"
+    },
+    {
+      "name": "CtsJniTestCases"
+    },
+    {
+      "name": "CtsKeystorePerformanceTestCases"
+    },
+    {
+      "name": "CtsKeystoreTestCases"
     }
   ]
 }
