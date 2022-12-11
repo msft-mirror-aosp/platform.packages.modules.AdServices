@@ -23,7 +23,10 @@ android_test_helper_app {
     srcs: [
       "src/**/*.java",
     ],
+    min_sdk_version: "33",
+    target_sdk_version: "33",
     visibility: [
         "//cts/tests/tests:__subpackages__",
+        "//packages/modules/AdServices/sdksandbox/tests/cts/endtoendtests"
     ],
 }

@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.adselection;
 
-import android.adservices.adselection.Tracing;
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.net.Uri;
@@ -25,6 +24,7 @@ import android.os.Trace;
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
+import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
