@@ -16,7 +16,6 @@
 
 package com.android.tests.sandbox.adid;
 
-import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
@@ -77,14 +76,8 @@ public class SandboxedAdIdManagerTest {
         sdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), CALLBACK_EXECUTOR, callback);
 
         // This verifies that the adidsdk in the Sandbox gets back the correct adid.
-        // If the adidsdk did not get correct adid, it will trigger the callback.onLoadSdkError
-        // callback.isLoadSdkSuccessful returns true if there were no errors.
-        assertWithMessage(
-                        callback.isLoadSdkSuccessful()
-                                ? "Callback was successful"
-                                : "Callback failed with message " + callback.getLoadSdkErrorMsg())
-                .that(callback.isLoadSdkSuccessful())
-                .isTrue();
+        // If the adidsdk did not get correct adid, it will trigger the callback.onLoadSdkError.
+        callback.assertLoadSdkIsSuccessful();
     }
 
     private void overridingBeforeTest() {
