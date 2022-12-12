@@ -233,12 +233,14 @@ public class SdkSandboxScenarioRule implements TestRule {
         loadParams.putBinder(ISdkSandboxTestExecutor.TEST_AUTHOR_DEFINED_BINDER, mBinder);
         final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(mSdkName, loadParams, Runnable::run, callback);
-        if (!callback.isLoadSdkSuccessful()) {
+        try {
+            callback.assertLoadSdkIsSuccessful();
+        } catch (Exception e) {
             Assume.assumeTrue(
                     "Skipping test because Sdk Sandbox is disabled",
                     callback.getLoadSdkErrorCode()
                             != SdkSandboxManager.LOAD_SDK_SDK_SANDBOX_DISABLED);
-            throw callback.getLoadSdkException();
+            throw e;
         }
         return callback.getSandboxedSdk();
     }

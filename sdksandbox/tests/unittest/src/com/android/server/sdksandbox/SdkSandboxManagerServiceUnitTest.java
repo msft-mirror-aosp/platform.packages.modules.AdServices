@@ -240,7 +240,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER, new Bundle(), callback);
         // Assume sdk sandbox loads successfully
         mSdkSandboxService.sendLoadCodeSuccessful();
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        callback.assertLoadSdkIsSuccessful();
     }
 
     @Test
@@ -285,7 +285,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 callback);
 
         // Verify loading failed
-        assertThat(callback.isLoadSdkSuccessful()).isFalse();
+        callback.assertLoadSdkIsUnsuccessful();
         assertThat(callback.getLoadSdkErrorCode())
                 .isEqualTo(SdkSandboxManager.LOAD_SDK_NOT_FOUND);
         assertThat(callback.getLoadSdkErrorMsg()).contains("not found for loading");
@@ -303,7 +303,7 @@ public class SdkSandboxManagerServiceUnitTest {
         mSdkSandboxService.sendLoadCodeError();
 
         // Verify loading failed
-        assertThat(callback.isLoadSdkSuccessful()).isFalse();
+        callback.assertLoadSdkIsUnsuccessful();
         assertThat(callback.getLoadSdkErrorCode()).isEqualTo(LOAD_SDK_INTERNAL_ERROR);
     }
 
@@ -348,7 +348,7 @@ public class SdkSandboxManagerServiceUnitTest {
                     TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER, new Bundle(), callback);
             // Assume SupplementalProcess loads successfully
             mSdkSandboxService.sendLoadCodeSuccessful();
-            assertThat(callback.isLoadSdkSuccessful()).isTrue();
+            callback.assertLoadSdkIsSuccessful();
         }
 
         // Load it again
@@ -357,7 +357,7 @@ public class SdkSandboxManagerServiceUnitTest {
             mService.loadSdk(
                     TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER, new Bundle(), callback);
             // Verify loading failed
-            assertThat(callback.isLoadSdkSuccessful()).isFalse();
+            callback.assertLoadSdkIsUnsuccessful();
             assertThat(callback.getLoadSdkErrorCode()).isEqualTo(
                     SdkSandboxManager.LOAD_SDK_ALREADY_LOADED);
             assertThat(callback.getLoadSdkErrorMsg()).contains("has been loaded already");
@@ -382,7 +382,7 @@ public class SdkSandboxManagerServiceUnitTest {
             mService.loadSdk(
                     TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER, new Bundle(), callback);
             // Verify loading failed
-            assertThat(callback.isLoadSdkSuccessful()).isFalse();
+            callback.assertLoadSdkIsUnsuccessful();
             assertThat(callback.getLoadSdkErrorCode())
                     .isEqualTo(SdkSandboxManager.LOAD_SDK_ALREADY_LOADED);
             assertThat(callback.getLoadSdkErrorMsg()).contains("is currently being loaded");
@@ -401,7 +401,7 @@ public class SdkSandboxManagerServiceUnitTest {
                     TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER, new Bundle(), callback);
             // Assume sdk load fails
             mSdkSandboxService.sendLoadCodeError();
-            assertThat(callback.isLoadSdkSuccessful()).isFalse();
+            callback.assertLoadSdkIsUnsuccessful();
         }
 
         // Caller should be able to retry loading the code
@@ -421,7 +421,7 @@ public class SdkSandboxManagerServiceUnitTest {
         // Kill the sandbox before the SDK can call the callback
         killSandbox();
 
-        assertThat(callback.isLoadSdkSuccessful()).isFalse();
+        callback.assertLoadSdkIsUnsuccessful();
         assertThat(callback.getLoadSdkErrorCode())
                 .isEqualTo(SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_AVAILABLE);
     }
@@ -505,7 +505,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER, new Bundle(), callback);
         // Assume SupplementalProcess loads successfully
         mSdkSandboxService.sendLoadCodeSuccessful();
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        callback.assertLoadSdkIsSuccessful();
 
         // Trying to request package with not exist SDK packageName
         String sdkName = "invalid";
@@ -587,7 +587,7 @@ public class SdkSandboxManagerServiceUnitTest {
         mService.loadSdk(
                 TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER, new Bundle(), callback);
         mSdkSandboxService.sendLoadCodeSuccessful();
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        callback.assertLoadSdkIsSuccessful();
 
         Mockito.verify(callback.asBinder())
                 .linkToDeath(deathRecipient.capture(), ArgumentMatchers.eq(0));
@@ -638,7 +638,7 @@ public class SdkSandboxManagerServiceUnitTest {
         mService.loadSdk(
                 TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER, new Bundle(), callback);
         mSdkSandboxService.sendLoadCodeSuccessful();
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        callback.assertLoadSdkIsSuccessful();
 
         // Request surface package from the SDK
         FakeRequestSurfacePackageCallbackBinder surfacePackageCallback =
@@ -948,7 +948,7 @@ public class SdkSandboxManagerServiceUnitTest {
         mService.loadSdk(
                 TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER, new Bundle(), callback2);
         mSdkSandboxService.sendLoadCodeSuccessful();
-        assertThat(callback2.isLoadSdkSuccessful()).isTrue();
+        callback2.assertLoadSdkIsSuccessful();
         assertThat(sProvider.getBoundServiceForApp(callingInfo)).isNotNull();
     }
 
@@ -977,7 +977,7 @@ public class SdkSandboxManagerServiceUnitTest {
         mSdkSandboxService.sendLoadCodeError();
 
         // Verify sdkInfo is missing when loading failed
-        assertThat(callback.isLoadSdkSuccessful()).isFalse();
+        callback.assertLoadSdkIsUnsuccessful();
         assertThat(callback.getLoadSdkErrorCode()).isEqualTo(LOAD_SDK_INTERNAL_ERROR);
         assertThat(mService.getSandboxedSdks(TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER))
                 .isEmpty();
@@ -1056,7 +1056,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
         // After loading the SDK, unloading should not fail
         mSdkSandboxService.sendLoadCodeSuccessful();
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        callback.assertLoadSdkIsSuccessful();
         mService.unloadSdk(TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER);
     }
 
@@ -1953,7 +1953,7 @@ public class SdkSandboxManagerServiceUnitTest {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         mService.loadSdk(
                 TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER, new Bundle(), callback);
-        assertThat(callback.isLoadSdkSuccessful()).isFalse();
+        callback.assertLoadSdkIsUnsuccessful();
         assertThat(callback.getLoadSdkErrorCode())
                 .isEqualTo(SdkSandboxManager.LOAD_SDK_SDK_SANDBOX_DISABLED);
         assertThat(callback.getLoadSdkErrorMsg()).isEqualTo("SDK sandbox is disabled");
@@ -2262,7 +2262,7 @@ public class SdkSandboxManagerServiceUnitTest {
         mService.loadSdk(
                 TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER, new Bundle(), callback);
         mSdkSandboxService.sendLoadCodeSuccessful();
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        callback.assertLoadSdkIsSuccessful();
 
         Mockito.verify(callback.asBinder())
                 .linkToDeath(deathRecipient.capture(), ArgumentMatchers.eq(0));
@@ -2306,7 +2306,7 @@ public class SdkSandboxManagerServiceUnitTest {
         mService.loadSdk(
                 TEST_PACKAGE, sdkName, TIME_APP_CALLED_SYSTEM_SERVER, new Bundle(), callback);
         mSdkSandboxService.sendLoadCodeSuccessful();
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        callback.assertLoadSdkIsSuccessful();
     }
 
     private void killSandbox() throws Exception {
