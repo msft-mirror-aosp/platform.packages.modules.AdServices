@@ -19,6 +19,7 @@ package com.android.adservices.data.adselection;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
+import androidx.room.AutoMigration;
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
@@ -31,13 +32,20 @@ import java.util.Objects;
 
 /** Room based database for Ad Selection. */
 @Database(
-        entities = {DBAdSelection.class, DBBuyerDecisionLogic.class, DBAdSelectionOverride.class},
-        version = AdSelectionDatabase.DATABASE_VERSION)
+        entities = {
+            DBAdSelection.class,
+            DBBuyerDecisionLogic.class,
+            DBAdSelectionOverride.class,
+            DBAdSelectionFromOutcomesOverride.class,
+            DBRegisteredAdEvent.class
+        },
+        version = AdSelectionDatabase.DATABASE_VERSION,
+        autoMigrations = {@AutoMigration(from = 1, to = 2), @AutoMigration(from = 2, to = 3)})
 @TypeConverters({FledgeRoomConverters.class})
 public abstract class AdSelectionDatabase extends RoomDatabase {
     private static final Object SINGLETON_LOCK = new Object();
 
-    public static final int DATABASE_VERSION = 1;
+    public static final int DATABASE_VERSION = 3;
     // TODO(b/230653780): Should we separate the DB.
     public static final String DATABASE_NAME = "adselection.db";
 

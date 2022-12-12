@@ -36,6 +36,8 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"Gi en app tilgang til API-en for modifisering av aktiveringstilstand for AdService."</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"Tilgang til API-en for aktiveringstilstand for AdService"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Gi en app tilgang til API-en for aktiveringstilstand for AdService."</string>
+    <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Tilgang til API-er for AdServicesManager"</string>
+    <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Gir en app tilgang til API-er for AdServicesManager."</string>
     <string name="app_label" msgid="5985320129629013968">"Android-system"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Bli med i Android-betaversjonen for annonsepersonvern"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android utforsker flere private måter apper kan vise deg annonser på"</string>
@@ -81,6 +83,7 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android-betaversjonen for annonsepersonvern har nye funksjoner som apper kan bruke for å vise deg annonser du kan være interessert i. Disse teknologiene bruker ikke enhetsidentifikatorer.\n\nAndroid kan anslå hvilke typer annonser du kan være interessert i, og lagre disse interessene midlertidig på enheten din. Dette gjør at apper kan vise deg relevante annonser uten å spore aktiviteten din på nettsteder og i apper fra andre utviklere."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Du har ingen blokkerte interesser"</string>
+    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Interessene er tilbakestilt"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Apper kan anslå interessene dine og midlertidig lagre disse med Android. Senere kan andre apper viser deg annonser basert på disse interessene.\n\nHvis du blokkerer en app, anslår den ikke flere interesser. Den legges ikke til i denne applisten igjen, med mindre du opphever blokkeringen av den. Interesser som allerede er anslått av appen, blir slettet, men du kan fremdeles se noen relaterte annonser."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Apper du har blokkert"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Tilbakestill interesser anslått av apper"</string>

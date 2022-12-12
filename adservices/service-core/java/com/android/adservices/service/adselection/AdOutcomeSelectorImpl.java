@@ -16,14 +16,15 @@
 
 package com.android.adservices.service.adselection;
 
-import android.adservices.common.AdSelectionSignals;
+import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
-import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdServicesHttpsClient;
+import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
+import com.android.adservices.service.profiling.Tracing;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.FluentFuture;
@@ -60,6 +61,7 @@ public class AdOutcomeSelectorImpl implements AdOutcomeSelector {
     @NonNull private final ListeningExecutorService mBackgroundExecutorService;
     @NonNull private final ScheduledThreadPoolExecutor mScheduledExecutor;
     @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
+    @NonNull private final AdSelectionDevOverridesHelper mAdSelectionDevOverridesHelper;
     @NonNull private final Flags mFlags;
 
     public AdOutcomeSelectorImpl(
@@ -68,6 +70,7 @@ public class AdOutcomeSelectorImpl implements AdOutcomeSelector {
             @NonNull ListeningExecutorService backgroundExecutor,
             @NonNull ScheduledThreadPoolExecutor scheduledExecutor,
             @NonNull AdServicesHttpsClient adServicesHttpsClient,
+            @NonNull AdSelectionDevOverridesHelper adSelectionDevOverridesHelper,
             @NonNull Flags flags) {
         Objects.requireNonNull(adSelectionScriptEngine);
         Objects.requireNonNull(lightweightExecutor);
@@ -81,37 +84,38 @@ public class AdOutcomeSelectorImpl implements AdOutcomeSelector {
         mLightweightExecutorService = lightweightExecutor;
         mBackgroundExecutorService = backgroundExecutor;
         mScheduledExecutor = scheduledExecutor;
+        mAdSelectionDevOverridesHelper = adSelectionDevOverridesHelper;
         mFlags = flags;
     }
 
     /**
      * Compares ads based on their bids and selection signals.
      *
-     * @param adSelectionIdBidMap list of ad selection id and bid pairs
-     * @param selectionSignals signals provided by seller for running ad Selection
-     * @param selectionLogicUri uri pointing to the JS logic
+     * @param adSelectionIdWithBidAndRenderUris list of ad selection id and bid pairs
+     * @param config {@link AdSelectionFromOutcomesConfig} instance
      * @return a Future of {@code Long} {code @AdSelectionId} of the winner. If no winner then
      *     returns null
      */
     @Override
     public FluentFuture<Long> runAdOutcomeSelector(
-            @NonNull List<AdSelectionIdWithBid> adSelectionIdBidMap,
-            @NonNull AdSelectionSignals selectionSignals,
-            @NonNull Uri selectionLogicUri) {
-        Objects.requireNonNull(adSelectionIdBidMap);
-        Objects.requireNonNull(selectionSignals);
-        Objects.requireNonNull(selectionLogicUri);
+            @NonNull List<AdSelectionIdWithBidAndRenderUri> adSelectionIdWithBidAndRenderUris,
+            @NonNull AdSelectionFromOutcomesConfig config) {
+        Objects.requireNonNull(adSelectionIdWithBidAndRenderUris);
+        Objects.requireNonNull(config);
 
         FluentFuture<String> selectionLogicJsFuture =
-                FluentFuture.from(getAdOutcomeSelectorLogic(selectionLogicUri));
+                FluentFuture.from(getAdOutcomeSelectorLogic(config));
 
         FluentFuture<Long> selectedOutcomeFuture =
                 selectionLogicJsFuture.transformAsync(
                         selectionLogic ->
                                 mAdSelectionScriptEngine.selectOutcome(
-                                        selectionLogic, adSelectionIdBidMap, selectionSignals),
+                                        selectionLogic,
+                                        adSelectionIdWithBidAndRenderUris,
+                                        config.getSelectionSignals()),
                         mLightweightExecutorService);
 
+        int traceCookie = Tracing.beginAsyncSection(Tracing.RUN_OUTCOME_SELECTION);
         return selectedOutcomeFuture
                 .withTimeout(
                         mFlags.getAdSelectionSelectingOutcomeTimeoutMs(),
@@ -119,11 +123,17 @@ public class AdOutcomeSelectorImpl implements AdOutcomeSelector {
                         mScheduledExecutor)
                 .catching(
                         TimeoutException.class,
-                        this::handleTimeoutError,
+                        e -> {
+                            Tracing.endAsyncSection(Tracing.RUN_OUTCOME_SELECTION, traceCookie);
+                            return handleTimeoutError(e);
+                        },
                         mLightweightExecutorService)
                 .catching(
                         IllegalStateException.class,
-                        this::handleIllegalStateException,
+                        e -> {
+                            Tracing.endAsyncSection(Tracing.RUN_OUTCOME_SELECTION, traceCookie);
+                            return handleIllegalStateException(e);
+                        },
                         mLightweightExecutorService);
     }
 
@@ -135,7 +145,7 @@ public class AdOutcomeSelectorImpl implements AdOutcomeSelector {
 
     /**
      * Handles {@link IllegalStateException} that can be thrown in {@link
-     * AdSelectionScriptEngine#selectOutcome} if the results status is failure or results contains
+     * AdSelectionScriptEngine#selectOutcome} if the result's status is failure or results contains
      * more than one item.
      */
     @Nullable
@@ -144,17 +154,23 @@ public class AdOutcomeSelectorImpl implements AdOutcomeSelector {
         throw new IllegalStateException(OUTCOME_SELECTION_JS_RETURNED_UNEXPECTED_RESULT);
     }
 
-    private ListenableFuture<String> getAdOutcomeSelectorLogic(Uri selectionLogicUri) {
+    private ListenableFuture<String> getAdOutcomeSelectorLogic(
+            AdSelectionFromOutcomesConfig config) {
         // TODO(b/254500329) Implement overrides
         FluentFuture<String> jsOverrideFuture =
-                FluentFuture.from(mBackgroundExecutorService.submit(() -> null));
+                FluentFuture.from(
+                        mBackgroundExecutorService.submit(
+                                () ->
+                                        mAdSelectionDevOverridesHelper.getSelectionLogicOverride(
+                                                config)));
 
         FluentFuture<String> jsLogicFuture =
                 jsOverrideFuture.transformAsync(
                         jsOverride -> {
                             if (jsOverride == null) {
                                 LogUtil.v("Fetching Outcome Selector Logic from the server");
-                                return mAdServicesHttpsClient.fetchPayload(selectionLogicUri);
+                                return mAdServicesHttpsClient.fetchPayload(
+                                        config.getSelectionLogicUri());
                             } else {
                                 LogUtil.d(
                                         "Developer options enabled and an override JS is provided "
@@ -168,7 +184,7 @@ public class AdOutcomeSelectorImpl implements AdOutcomeSelector {
         return jsLogicFuture.catching(
                 Exception.class,
                 e -> {
-                    LogUtil.e(e, "Exception encountered when fetching scoring logic");
+                    LogUtil.e(e, "Exception encountered when fetching outcome selection logic");
                     throw new IllegalStateException(MISSING_SCORING_LOGIC);
                 },
                 mLightweightExecutorService);

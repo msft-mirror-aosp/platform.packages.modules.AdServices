@@ -385,7 +385,7 @@ public final class EpochManagerTest {
         // Mock the flag to make test result deterministic
         Flags mockedFlags = Mockito.mock(Flags.class);
         when(mockedFlags.getNumberOfEpochsToKeepInHistory()).thenReturn(3);
-        when(mockedFlags.getEnableDatabaseSchemaVersion3()).thenReturn(true);
+        when(mockedFlags.getEnableDatabaseSchemaVersion5()).thenReturn(true);
         when(mockedFlags.getEnableTopicContributorsCheck()).thenReturn(false);
 
         EpochManager epochManager =

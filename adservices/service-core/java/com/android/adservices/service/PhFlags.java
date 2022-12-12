@@ -157,12 +157,20 @@ public final class PhFlags implements Flags {
             "fledge_ad_selection_selecting_outcome_timeout_ms";
     static final String KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS =
             "fledge_ad_selection_overall_timeout_ms";
+    static final String KEY_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS =
+            "fledge_ad_selection_from_outcomes_overall_timeout_ms";
     static final String KEY_FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S =
             "fledge_ad_selection_expiration_window_s";
     static final String KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS =
             "fledge_report_impression_overall_timeout_ms";
     static final String KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS =
             "fledge_ad_selection_bidding_timeout_per_buyer_ms";
+    static final String KEY_FLEDGE_HTTP_CACHE_ENABLE = "fledge_http_cache_enable";
+    static final String KEY_FLEDGE_HTTP_CACHE_ENABLE_JS_CACHING =
+            "fledge_http_cache_enable_js_caching";
+    static final String KEY_FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS =
+            "fledge_http_cache_default_max_age_seconds";
+    static final String KEY_FLEDGE_HTTP_CACHE_MAX_ENTRIES = "fledge_http_cache_max_entries";
 
     // FLEDGE Off device ad selection keys
     static final String KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS =
@@ -258,6 +266,13 @@ public final class PhFlags implements Flags {
 
     // Rate Limit keys
     static final String KEY_SDK_REQUEST_PERMITS_PER_SECOND = "sdk_request_permits_per_second";
+    static final String KEY_ADID_REQUEST_PERMITS_PER_SECOND = "adid_request_permits_per_second";
+    static final String KEY_APPSETID_REQUEST_PERMITS_PER_SECOND =
+            "appsetid_request_permits_per_second";
+    static final String KEY_MEASUREMENT_REGISTER_SOURCE_REQUEST_PERMITS_PER_SECOND =
+            "measurement_register_source_request_permits_per_second";
+    static final String KEY_MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND =
+            "measurement_register_web_source_request_permits_per_second";
 
     // Adservices enable status keys.
     static final String KEY_ADSERVICES_ENABLED = "adservice_enabled";
@@ -278,6 +293,9 @@ public final class PhFlags implements Flags {
 
     // Consent Manager debug mode keys.
     static final String KEY_CONSENT_MANAGER_DEBUG_MODE = "consent_manager_debug_mode";
+
+    // Source of truth to get consent for PPAPI
+    static final String KEY_CONSENT_SOURCE_OF_TRUTH = "consent_source_of_truth";
 
     // App/SDK AllowList/DenyList keys that have access to the web registration APIs
     static final String KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST = "web_context_client_allow_list";
@@ -305,7 +323,7 @@ public final class PhFlags implements Flags {
     static final String KEY_ENABLE_TOPIC_CONTRIBUTORS_CHECK = "enable_topic_contributors_check";
 
     // Database Schema Version Flags
-    static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_3 = "enable_database_schema_version_3";
+    static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_5 = "enable_database_schema_version_5";
 
     // Enrollment flags.
     static final String KEY_ENROLLMENT_BLOCKLIST_IDS = "enrollment_blocklist_ids";
@@ -882,6 +900,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public long getAdSelectionFromOutcomesOverallTimeoutMs() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS,
+                /* defaultValue */ FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS);
+    }
+
+    @Override
     public long getAdSelectionOffDeviceOverallTimeoutMs() {
         return DeviceConfig.getLong(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -895,6 +921,38 @@ public final class PhFlags implements Flags {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS,
                 /* defaultValue */ FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS);
+    }
+
+    @Override
+    public boolean getFledgeHttpCachingEnabled() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_HTTP_CACHE_ENABLE,
+                /* defaultValue */ FLEDGE_HTTP_CACHE_ENABLE);
+    }
+
+    @Override
+    public boolean getFledgeHttpJsCachingEnabled() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_HTTP_CACHE_ENABLE_JS_CACHING,
+                /* defaultValue */ FLEDGE_HTTP_CACHE_ENABLE_JS_CACHING);
+    }
+
+    @Override
+    public long getFledgeHttpCacheMaxEntries() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_HTTP_CACHE_MAX_ENTRIES,
+                /* defaultValue */ FLEDGE_HTTP_CACHE_MAX_ENTRIES);
+    }
+
+    @Override
+    public long getFledgeHttpCacheMaxAgeSeconds() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS,
+                /* defaultValue */ FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS);
     }
 
     // MDD related flags.
@@ -1347,29 +1405,56 @@ public final class PhFlags implements Flags {
     // Rate Limit Flags.
     @Override
     public float getSdkRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                KEY_SDK_REQUEST_PERMITS_PER_SECOND, SDK_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
+    public float getAdIdRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                KEY_ADID_REQUEST_PERMITS_PER_SECOND, ADID_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
+    public float getAppSetIdRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                KEY_APPSETID_REQUEST_PERMITS_PER_SECOND, APPSETID_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
+    public float getMeasurementRegisterSourceRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                KEY_MEASUREMENT_REGISTER_SOURCE_REQUEST_PERMITS_PER_SECOND,
+                MEASUREMENT_REGISTER_SOURCE_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
+    public float getMeasurementRegisterWebSourceRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                KEY_MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND,
+                MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    private float getPermitsPerSecond(String flagName, float defaultValue) {
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
         try {
-            String sdkPermitString =
-                    SystemProperties.get(getSystemPropertyName(KEY_SDK_REQUEST_PERMITS_PER_SECOND));
-            if (!TextUtils.isEmpty(sdkPermitString)) {
-                return parseFloat(sdkPermitString);
+            final String permitString = SystemProperties.get(getSystemPropertyName(flagName));
+            if (!TextUtils.isEmpty(permitString)) {
+                return parseFloat(permitString);
             }
         } catch (NumberFormatException e) {
-            LogUtil.e(e, "Failed to parse SdkRequestPermitsPerSecond");
-            return SDK_REQUEST_PERMITS_PER_SECOND;
+            LogUtil.e(e, "Failed to parse %s", flagName);
+            return defaultValue;
         }
 
-        float sdkRequestPermitsPerSecond =
-                DeviceConfig.getFloat(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        /* flagName */ KEY_SDK_REQUEST_PERMITS_PER_SECOND,
-                        /* defaultValue */ SDK_REQUEST_PERMITS_PER_SECOND);
+        final float permitsPerSecond =
+                DeviceConfig.getFloat(DeviceConfig.NAMESPACE_ADSERVICES, flagName, defaultValue);
 
-        if (sdkRequestPermitsPerSecond <= 0) {
-            throw new IllegalArgumentException("sdkRequestPermitsPerSecond should > 0");
+        if (permitsPerSecond <= 0) {
+            throw new IllegalArgumentException(flagName + " should > 0");
         }
-        return sdkRequestPermitsPerSecond;
+        return permitsPerSecond;
     }
 
     @Override
@@ -1604,6 +1689,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public int getConsentSourceOfTruth() {
+        return DeviceConfig.getInt(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_CONSENT_SOURCE_OF_TRUTH,
+                /* defaultValue */ DEFAULT_CONSENT_SOURCE_OF_TRUTH);
+    }
+
+    @Override
     public long getMaxResponseBasedRegistrationPayloadSizeBytes() {
         return DeviceConfig.getLong(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -1655,11 +1748,11 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getEnableDatabaseSchemaVersion3() {
+    public boolean getEnableDatabaseSchemaVersion5() {
         return DeviceConfig.getBoolean(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_ENABLE_DATABASE_SCHEMA_VERSION_3,
-                /* defaultValue */ ENABLE_DATABASE_SCHEMA_VERSION_3);
+                /* flagName */ KEY_ENABLE_DATABASE_SCHEMA_VERSION_5,
+                /* defaultValue */ ENABLE_DATABASE_SCHEMA_VERSION_5);
     }
 
     @Override
@@ -1945,6 +2038,19 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS
                         + " = "
                         + getFledgeCustomAudienceMaxNumAds());
+        writer.println("\t" + KEY_FLEDGE_HTTP_CACHE_ENABLE + " = " + getFledgeHttpCachingEnabled());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_HTTP_CACHE_ENABLE_JS_CACHING
+                        + " = "
+                        + getFledgeHttpJsCachingEnabled());
+        writer.println(
+                "\t" + KEY_FLEDGE_HTTP_CACHE_MAX_ENTRIES + " = " + getFledgeHttpCacheMaxEntries());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS
+                        + " = "
+                        + getFledgeHttpCacheMaxAgeSeconds());
         writer.println(
                 "\t"
                         + KEY_FLEDGE_BACKGROUND_FETCH_ENABLED
@@ -2020,6 +2126,11 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS
                         + " = "
                         + getAdSelectionOverallTimeoutMs());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS
+                        + " = "
+                        + getAdSelectionFromOutcomesOverallTimeoutMs());
         writer.println(
                 "\t"
                         + KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS

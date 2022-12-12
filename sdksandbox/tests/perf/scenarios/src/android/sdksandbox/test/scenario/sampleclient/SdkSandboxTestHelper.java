@@ -26,13 +26,14 @@ import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.Until;
 
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 
 /** Helper class for Sdk Sandbox e2e perf tests. */
 public class SdkSandboxTestHelper {
     private static final UiDevice sUiDevice = UiDevice.getInstance(getInstrumentation());
 
     private static final long UI_NAVIGATION_WAIT_MS = 1000;
+    private static final long UI_WAIT_LOADSDK_MS = 500;
+    private static final long UI_RETRIES_WAIT_LOADSDK = 10;
     private static final String SANDBOX_TEST_CLIENT_APP = "com.android.sdksandboxclient";
     private static final String LOAD_BUTTON = "load_code_button";
     private static final String RENDER_BUTTON = "request_surface_button";
@@ -48,13 +49,21 @@ public class SdkSandboxTestHelper {
         if (getLoadSdkButton() != null) {
             getLoadSdkButton().click();
         } else {
-            throw new RuntimeException("Did not find 'Load SDK' button.");
+            throw new RuntimeException("Did not find 'Load SDKs' button.");
         }
 
-        // wait until loadSdk
-        SystemClock.sleep(TimeUnit.SECONDS.toMillis(1));
+        int retries = 0;
+        boolean sdkLoaded = false;
+        // wait until loadSdk.
+        while (!sdkLoaded && retries < UI_RETRIES_WAIT_LOADSDK) {
+            SystemClock.sleep(UI_WAIT_LOADSDK_MS);
+            if (getLoadSdkButton().getText().equals("Unload SDKs")) {
+                sdkLoaded = true;
+            }
+            retries++;
+        }
 
-        assertThat(getLoadSdkButton().getText()).isEqualTo("Unload SDK");
+        assertThat(getLoadSdkButton().getText()).isEqualTo("Unload SDKs");
     }
 
     /** Remote render ad on sandbox client test app by clicking request surface button. */

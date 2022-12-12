@@ -18,6 +18,7 @@ package com.android.adservices.service.adselection;
 
 import static com.android.adservices.service.js.JSScriptArgument.numericArg;
 import static com.android.adservices.service.js.JSScriptArgument.recordArg;
+import static com.android.adservices.service.js.JSScriptArgument.stringArg;
 
 import com.android.adservices.service.js.JSScriptArgument;
 
@@ -33,9 +34,9 @@ public class SelectAdsFromOutcomesArgument {
     static final String BID_FIELD_NAME = "bid";
 
     /** Parses Json object for ad selection id and bid to {@code Pair< Long, Double >} */
-    public static AdSelectionIdWithBid parseJsonResponse(JSONObject jsonObject) {
+    public static AdSelectionIdWithBidAndRenderUri parseJsonResponse(JSONObject jsonObject) {
         try {
-            return AdSelectionIdWithBid.builder()
+            return AdSelectionIdWithBidAndRenderUri.builder()
                     .setAdSelectionId(jsonObject.getLong(ID_FIELD_NAME))
                     .setBid(jsonObject.getDouble(BID_FIELD_NAME))
                     .build();
@@ -46,10 +47,13 @@ public class SelectAdsFromOutcomesArgument {
 
     /** Converts {@code Pair< Long, Double >} object to Json object */
     public static JSScriptArgument asScriptArgument(
-            String name, AdSelectionIdWithBid adSelectionIdWithBid) {
+            String name, AdSelectionIdWithBidAndRenderUri adSelectionIdWithBidAndRenderUri) {
         return recordArg(
                 name,
-                numericArg(ID_FIELD_NAME, adSelectionIdWithBid.getAdSelectionId()),
-                numericArg(BID_FIELD_NAME, adSelectionIdWithBid.getBid()));
+                // Parse as a string, so we won't lose precision in JS
+                stringArg(
+                        ID_FIELD_NAME,
+                        Long.toString(adSelectionIdWithBidAndRenderUri.getAdSelectionId())),
+                numericArg(BID_FIELD_NAME, adSelectionIdWithBidAndRenderUri.getBid()));
     }
 }

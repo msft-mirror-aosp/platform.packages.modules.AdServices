@@ -36,6 +36,8 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"Membolehkan apl mengakses API pengubahsuaian keadaan pendayaan AdService."</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"Akses kepada API keadaan pendayaan AdService"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Membolehkan aplikasi mengakses API keadaan pendayaan AdService."</string>
+    <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Akses kepada API AdServicesManager"</string>
+    <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Membenarkan aplikasi mengakses API AdServicesManager."</string>
     <string name="app_label" msgid="5985320129629013968">"Sistem Android"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Sertai beta privasi iklan Android"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android sedang meneroka lebih banyak cara yang peribadi untuk apl memaparkan iklan kepada anda"</string>
@@ -81,6 +83,7 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Kotak Pasir Privasi"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Beta privasi iklan Android menyediakan ciri baharu yang boleh digunakan oleh apl untuk memaparkan iklan yang mungkin anda suka kepada anda. Teknologi ini tidak menggunakan pengecam peranti.\n\nAndroid boleh menganggarkan jenis iklan yang mungkin anda minati dan menyimpan minat ini pada peranti anda buat sementara waktu. Hal ini membolehkan apl memaparkan iklan yang berkaitan kepada anda tanpa menjejaki aktiviti anda merentas laman web dan apl daripada pembangun lain."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Anda tidak mempunyai minat yang disekat"</string>
+    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Minat ditetapkan semula"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Apl boleh menganggarkan minat anda dan menyimpan minat ini dengan Android buat sementara waktu. Kemudian, apl lain boleh memaparkan iklan berdasarkan minat ini kepada anda.\n\nJika anda menyekat apl, apl itu tidak akan menganggarkan minat lagi. Apl tersebut tidak akan ditambahkan pada senarai apl ini lagi melainkan anda menyahsekat apl. Minat yang telah dianggarkan oleh apl akan dipadamkan, tetapi anda mungkin masih melihat beberapa iklan yang berkaitan."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Apl yang telah anda sekat"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Tetapkan semula minat yang dianggarkan oleh apl"</string>
@@ -472,7 +475,7 @@
     <string name="topic10363" msgid="5464708619861040861">"Sumber Bahasa"</string>
     <string name="topic10364" msgid="4685400848805560054">"Kajian Bahasa Asing"</string>
     <string name="topic10365" msgid="5196231842716190887">"Alat &amp; Sumber Terjemahan"</string>
-    <string name="topic10366" msgid="7460927054539097025">"Peta"</string>
+    <string name="topic10366" msgid="7460927054539097025">"Maps"</string>
     <string name="topic10367" msgid="3900361839783743700">"Sains"</string>
     <string name="topic10368" msgid="2069447039109930660">"Realiti Terimbuh &amp; Maya"</string>
     <string name="topic10369" msgid="5747888306428024793">"Sains Biologi"</string>

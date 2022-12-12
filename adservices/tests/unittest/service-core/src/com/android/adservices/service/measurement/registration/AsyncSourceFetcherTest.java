@@ -263,54 +263,6 @@ public final class AsyncSourceFetcherTest {
     }
 
     @Test
-    public void testBasicSourceRequestWithoutAdIdPermission() throws Exception {
-        RegistrationRequest request = buildRequestWithoutAdIdPermission(DEFAULT_REGISTRATION);
-        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
-        when(mUrlConnection.getResponseCode()).thenReturn(200);
-        when(mUrlConnection.getHeaderFields())
-                .thenReturn(
-                        Map.of(
-                                "Attribution-Reporting-Register-Source",
-                                List.of(
-                                        "{\n"
-                                                + "  \"destination\": \""
-                                                + DEFAULT_DESTINATION
-                                                + "\",\n"
-                                                + "  \"priority\": \""
-                                                + DEFAULT_PRIORITY
-                                                + "\",\n"
-                                                + "  \"expiry\": \""
-                                                + DEFAULT_EXPIRY
-                                                + "\",\n"
-                                                + "  \"source_event_id\": \""
-                                                + DEFAULT_EVENT_ID
-                                                + "\",\n"
-                                                + "  \"debug_key\": \""
-                                                + DEBUG_KEY
-                                                + "\"\n"
-                                                + "}\n")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
-        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
-        // Execution
-        Optional<Source> fetch =
-                mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
-        // Assertion
-        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
-        assertTrue(fetch.isPresent());
-        Source result = fetch.get();
-        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(DEFAULT_DESTINATION, result.getAppDestination().toString());
-        assertEquals(DEFAULT_PRIORITY, result.getPriority());
-        assertEquals(
-                result.getEventTime() + TimeUnit.SECONDS.toMillis(DEFAULT_EXPIRY),
-                result.getExpiryTime());
-        assertEquals(DEFAULT_EVENT_ID, result.getEventId());
-        assertNull(result.getDebugKey());
-        verify(mUrlConnection).setRequestMethod("POST");
-    }
-
-    @Test
     public void testSourceRequestWithPostInstallAttributes() throws Exception {
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
@@ -986,6 +938,206 @@ public final class AsyncSourceFetcherTest {
                 result.getExpiryTime());
         verify(mUrlConnection).setRequestMethod("POST");
     }
+
+    @Test
+    public void testBasicSourceRequestWithDebugReportingHeader() throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\","
+                                                + "\"source_event_id\":\""
+                                                + DEFAULT_EVENT_ID
+                                                + "\","
+                                                + "\"debug_reporting\":\"true\"}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+
+        // Assertion
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestination().toString());
+        assertEquals(DEFAULT_EVENT_ID, result.getEventId());
+        assertTrue(result.isDebugReporting());
+        assertEquals(
+                result.getEventTime()
+                        + TimeUnit.SECONDS.toMillis(
+                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
+                result.getExpiryTime());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testBasicSourceRequestWithInvalidDebugReportingHeader() throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\","
+                                                + "\"source_event_id\":\""
+                                                + DEFAULT_EVENT_ID
+                                                + "\","
+                                                + "\"debug_reporting\":\"invalid\"}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+
+        // Assertion
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestination().toString());
+        assertEquals(DEFAULT_EVENT_ID, result.getEventId());
+        assertFalse(result.isDebugReporting());
+        assertEquals(
+                result.getEventTime()
+                        + TimeUnit.SECONDS.toMillis(
+                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
+                result.getExpiryTime());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testBasicSourceRequestWithNullDebugReportingHeader() throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\","
+                                                + "\"source_event_id\":\""
+                                                + DEFAULT_EVENT_ID
+                                                + "\","
+                                                + "\"debug_reporting\":\"null\"}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+
+        // Assertion
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestination().toString());
+        assertEquals(DEFAULT_EVENT_ID, result.getEventId());
+        assertFalse(result.isDebugReporting());
+        assertEquals(
+                result.getEventTime()
+                        + TimeUnit.SECONDS.toMillis(
+                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
+                result.getExpiryTime());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testBasicSourceRequestWithInvalidNoQuotesDebugReportingHeader() throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\","
+                                                + "\"source_event_id\":\""
+                                                + DEFAULT_EVENT_ID
+                                                + "\","
+                                                + "\"debug_reporting\":null}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+
+        // Assertion
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestination().toString());
+        assertEquals(DEFAULT_EVENT_ID, result.getEventId());
+        assertFalse(result.isDebugReporting());
+        assertEquals(
+                result.getEventTime()
+                        + TimeUnit.SECONDS.toMillis(
+                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
+                result.getExpiryTime());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testBasicSourceRequestWithoutDebugReportingHeader() throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\","
+                                                + "\"source_event_id\":\""
+                                                + DEFAULT_EVENT_ID
+                                                + "\"}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+
+        // Assertion
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestination().toString());
+        assertEquals(DEFAULT_EVENT_ID, result.getEventId());
+        assertFalse(result.isDebugReporting());
+        assertEquals(
+                result.getEventTime()
+                        + TimeUnit.SECONDS.toMillis(
+                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
+                result.getExpiryTime());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
     @Test
     public void testNotOverHttps() throws Exception {
         RegistrationRequest request = buildRequest(WebUtil.validUrl("http://foo.test"));
@@ -1830,8 +1982,9 @@ public final class AsyncSourceFetcherTest {
                 result.getExpiryTime());
         verify(mUrlConnection).setRequestMethod("POST");
     }
+
     @Test
-    public void fetchWebSourcesSuccessWithoutAdIdPermission() throws IOException {
+    public void fetchWebSourcesSuccessWithoutArDebugPermission() throws IOException {
         // Setup
         WebSourceRegistrationRequest request =
                 buildWebSourceRegistrationRequest(
@@ -2416,14 +2569,9 @@ public final class AsyncSourceFetcherTest {
     }
     private RegistrationRequest buildRequest(String registrationUri) {
         return buildDefaultRegistrationRequestBuilder(registrationUri)
-                .setAdIdPermissionGranted(true)
                 .build();
     }
-    private RegistrationRequest buildRequestWithoutAdIdPermission(String registrationUri) {
-        return buildDefaultRegistrationRequestBuilder(registrationUri)
-                .setAdIdPermissionGranted(false)
-                .build();
-    }
+
 
     public static AsyncRegistration appSourceRegistrationRequest(
             RegistrationRequest registrationRequest) {
@@ -2475,12 +2623,11 @@ public final class AsyncSourceFetcherTest {
                 System.currentTimeMillis(),
                 redirectType,
                 redirectCount,
-                registrationRequest.isAdIdPermissionGranted());
+                false);
     }
 
     private static AsyncRegistration webSourceRegistrationRequest(
-            WebSourceRegistrationRequest webSourceRegistrationRequest,
-            boolean adIdPermissionGranted) {
+            WebSourceRegistrationRequest webSourceRegistrationRequest, boolean arDebugPermission) {
         if (webSourceRegistrationRequest.getSourceParams().size() > 0) {
             WebSourceParams webSourceParams = webSourceRegistrationRequest.getSourceParams().get(0);
             // Necessary for testing
@@ -2521,7 +2668,7 @@ public final class AsyncSourceFetcherTest {
                     System.currentTimeMillis(),
                     AsyncRegistration.RedirectType.NONE,
                     0,
-                    adIdPermissionGranted);
+                    arDebugPermission);
         }
         return null;
     }

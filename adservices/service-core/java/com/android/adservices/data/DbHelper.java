@@ -31,7 +31,7 @@ import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV2
 import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV3;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.data.topics.migration.ITopicsDbMigrator;
-import com.android.adservices.data.topics.migration.TopicDbMigratorV3;
+import com.android.adservices.data.topics.migration.TopicDbMigratorV5;
 import com.android.adservices.service.FlagsFactory;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -45,10 +45,10 @@ import java.util.List;
  * get the same reference.
  */
 public class DbHelper extends SQLiteOpenHelper {
-    // Version 3: Add TopicContributors Table for Topics API, guarded by feature flag.
-    public static final int DATABASE_VERSION_V3 = 3;
+    // Version 5: Add TopicContributors Table for Topics API, guarded by feature flag.
+    public static final int DATABASE_VERSION_V5 = 5;
 
-    static final int CURRENT_DATABASE_VERSION = 2;
+    static final int CURRENT_DATABASE_VERSION = 3;
     private static final String DATABASE_NAME = "adservices.db";
 
     private static DbHelper sSingleton = null;
@@ -104,9 +104,7 @@ public class DbHelper extends SQLiteOpenHelper {
         db.execSQL("PRAGMA foreign_keys=ON");
     }
 
-    /**
-     * Wraps getReadableDatabase to catch SQLiteException and log error.
-     */
+    /** Wraps getReadableDatabase to catch SQLiteException and log error. */
     @Nullable
     public SQLiteDatabase safeGetReadableDatabase() {
         try {
@@ -146,6 +144,25 @@ public class DbHelper extends SQLiteOpenHelper {
         }
     }
 
+    // TODO(b/261934022): Support a framework as upgrade.
+    @Override
+    public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        // Only downgrade if it's triggered by value change of Flag enable_database_schema_version_5
+        if (oldVersion == DATABASE_VERSION_V5
+                && newVersion == CURRENT_DATABASE_VERSION
+                && !FlagsFactory.getFlags().getEnableDatabaseSchemaVersion5()) {
+            LogUtil.e(
+                    "Has to downgrade database version from %d to %d. The reason is"
+                            + " TopicContributorsTable was enabled and now disabled. Dropping"
+                            + " TopicContributorsTable...",
+                    DATABASE_VERSION_V5, CURRENT_DATABASE_VERSION);
+            db.execSQL("DROP TABLE IF EXISTS " + TopicsTables.TopicContributorsContract.TABLE);
+            return;
+        }
+
+        super.onDowngrade(db, oldVersion, newVersion);
+    }
+
     public long getDbFileSize() {
         return mDbFile != null && mDbFile.exists() ? mDbFile.length() : -1;
     }
@@ -155,7 +172,7 @@ public class DbHelper extends SQLiteOpenHelper {
      * introduced in Version 3.
      */
     public boolean supportsTopicContributorsTable() {
-        return mDbVersion >= DATABASE_VERSION_V3;
+        return mDbVersion >= DATABASE_VERSION_V5;
     }
 
     /** Get Migrators in order for Measurement. */
@@ -167,15 +184,16 @@ public class DbHelper extends SQLiteOpenHelper {
     /** Get Migrators in order for Topics. */
     @VisibleForTesting
     public List<ITopicsDbMigrator> topicsGetOrderedDbMigrators() {
-        return ImmutableList.of(new TopicDbMigratorV3());
+        return ImmutableList.of(new TopicDbMigratorV5());
     }
 
-    // Get the database version to create. It may be different as LATEST_DATABASE_VERSION, depending
+    // Get the database version to create. It may be different as CURRENT_DATABASE_VERSION,
+    // depending
     // on Flags status.
     @VisibleForTesting
     static int getDatabaseVersionToCreate() {
-        return FlagsFactory.getFlags().getEnableDatabaseSchemaVersion3()
-                ? DATABASE_VERSION_V3
+        return FlagsFactory.getFlags().getEnableDatabaseSchemaVersion5()
+                ? DATABASE_VERSION_V5
                 : CURRENT_DATABASE_VERSION;
     }
 }

@@ -40,7 +40,7 @@ public class AdSelectionFromOutcomesConfigFixture {
                 .setSeller(SAMPLE_SELLER)
                 .setAdSelectionIds(Collections.singletonList(SAMPLE_AD_SELECTION_ID_1))
                 .setSelectionSignals(SAMPLE_SELECTION_SIGNALS)
-                .setSelectionUri(SAMPLE_SELECTION_LOGIC_URI_1)
+                .setSelectionLogicUri(SAMPLE_SELECTION_LOGIC_URI_1)
                 .build();
     }
 
@@ -50,7 +50,7 @@ public class AdSelectionFromOutcomesConfigFixture {
                 .setSeller(seller)
                 .setAdSelectionIds(Collections.singletonList(SAMPLE_AD_SELECTION_ID_1))
                 .setSelectionSignals(SAMPLE_SELECTION_SIGNALS)
-                .setSelectionUri(SAMPLE_SELECTION_LOGIC_URI_1)
+                .setSelectionLogicUri(SAMPLE_SELECTION_LOGIC_URI_1)
                 .build();
     }
 
@@ -60,7 +60,7 @@ public class AdSelectionFromOutcomesConfigFixture {
                 .setSeller(SAMPLE_SELLER)
                 .setAdSelectionIds(adOutcomes)
                 .setSelectionSignals(SAMPLE_SELECTION_SIGNALS)
-                .setSelectionUri(SAMPLE_SELECTION_LOGIC_URI_1)
+                .setSelectionLogicUri(SAMPLE_SELECTION_LOGIC_URI_1)
                 .build();
     }
 
@@ -69,7 +69,7 @@ public class AdSelectionFromOutcomesConfigFixture {
                 .setSeller(SAMPLE_SELLER)
                 .setAdSelectionIds(Collections.singletonList(SAMPLE_AD_SELECTION_ID_1))
                 .setSelectionSignals(SAMPLE_SELECTION_SIGNALS)
-                .setSelectionUri(selectionUri)
+                .setSelectionLogicUri(selectionUri)
                 .build();
     }
 
@@ -79,7 +79,7 @@ public class AdSelectionFromOutcomesConfigFixture {
                 .setSeller(AdTechIdentifier.fromString(selectionUri.getHost()))
                 .setAdSelectionIds(adOutcomes)
                 .setSelectionSignals(selectionSignals)
-                .setSelectionUri(selectionUri)
+                .setSelectionLogicUri(selectionUri)
                 .build();
     }
 
@@ -89,7 +89,7 @@ public class AdSelectionFromOutcomesConfigFixture {
                 .setSeller(seller)
                 .setAdSelectionIds(Collections.singletonList(SAMPLE_AD_SELECTION_ID_1))
                 .setSelectionSignals(SAMPLE_SELECTION_SIGNALS)
-                .setSelectionUri(selectionUri)
+                .setSelectionLogicUri(selectionUri)
                 .build();
     }
 
@@ -102,7 +102,7 @@ public class AdSelectionFromOutcomesConfigFixture {
                 .setSeller(seller)
                 .setAdSelectionIds(adOutcomes)
                 .setSelectionSignals(selectionSignals)
-                .setSelectionUri(selectionUri)
+                .setSelectionLogicUri(selectionUri)
                 .build();
     }
 }

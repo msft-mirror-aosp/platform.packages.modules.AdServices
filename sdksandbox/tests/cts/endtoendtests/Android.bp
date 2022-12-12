@@ -26,6 +26,7 @@ android_test {
         "androidx.test.runner",
         "truth-prebuilt",
         "SdkSandboxTestUtils",
+        "CtsSdkProviderApi",
     ],
     libs: [
         "android.test.base",
@@ -33,14 +34,8 @@ android_test {
         "android.test.runner",
     ],
     data: [
-      ":LoadSdkSuccessfullySdkProvider",
-      ":LoadSdkAndCheckClassloaderSdkProvider",
-      ":GetLoadedSdkLibInfoSuccessfully",
-      ":LoadSdkSuccessfullySdkProviderTwo",
-      ":LoadSdkWithInternalErrorSdkProvider",
-      ":RequestSurfacePackageSuccessfullySdkProvider",
-      ":RequestSurfacePackageWithInternalErrorSdkProvider",
-      ":CodeProviderWithResources",
+      ":SdkSandboxManagerCtsProvider",
+      ":EmptySdkProviderApp",
     ],
     min_sdk_version: "Tiramisu",
     target_sdk_version: "Tiramisu",
@@ -68,7 +63,7 @@ android_test {
         "android.test.runner",
     ],
     data: [
-      ":LoadSdkSuccessfullySdkProvider",
+      ":SdkSandboxManagerCtsProvider",
     ],
     test_config: "DisabledAndroidTest.xml",
     manifest: "DisabledAndroidManifest.xml",

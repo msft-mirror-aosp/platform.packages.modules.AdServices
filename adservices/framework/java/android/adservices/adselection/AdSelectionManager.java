@@ -125,6 +125,9 @@ public class AdSelectionManager {
      *
      * <p>If the {@link LimitExceededException} is thrown, it is caused when the calling package
      * exceeds the allowed rate limits and is throttled.
+     *
+     * <p>If the {@link SecurityException} is thrown, it is caused when the caller is not authorized
+     * or permission is not requested.
      */
     @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void selectAds(
@@ -191,24 +194,35 @@ public class AdSelectionManager {
      * the corresponding error message.
      *
      * <p>The input {@code adSelectionFromOutcomesConfig} contains:
-     * <li>{@code Seller} is required to be a registered {@link
-     *     android.adservices.common.AdTechIdentifier}. Otherwise, {@link IllegalStateException}
-     *     will be thrown.
-     * <li>{@code List of ad selection ids} should exist and come from {@link
-     *     AdSelectionManager#selectAds} calls originated from the same application. Otherwise,
-     *     {@link IllegalArgumentException} for input validation will raise listing violating ad
-     *     selection ids.
-     * <li>{@code Selection logic URI} should match the {@code seller} host. Otherwise, {@link
-     *     IllegalArgumentException} will be thrown.
      *
-     *     <p>If the {@link IllegalArgumentException} is thrown, it is caused by invalid input
-     *     argument the API received to run the ad selection.
+     * <ul>
+     *   <li>{@code Seller} is required to be a registered {@link
+     *       android.adservices.common.AdTechIdentifier}. Otherwise, {@link IllegalStateException}
+     *       will be thrown.
+     *   <li>{@code List of ad selection ids} should exist and come from {@link
+     *       AdSelectionManager#selectAds} calls originated from the same application. Otherwise,
+     *       {@link IllegalArgumentException} for input validation will raise listing violating ad
+     *       selection ids.
+     *   <li>{@code Selection logic URI} should match the {@code seller} host. Otherwise, {@link
+     *       IllegalArgumentException} will be thrown.
+     * </ul>
      *
-     *     <p>If the {@link IllegalStateException} is thrown with error message "Failure of
-     *     AdSelection services.", it is caused by an internal failure of the ad selection service.
+     * <p>If the {@link IllegalArgumentException} is thrown, it is caused by invalid input argument
+     * the API received to run the ad selection.
      *
-     * @hide
+     * <p>If the {@link IllegalStateException} is thrown with error message "Failure of AdSelection
+     * services.", it is caused by an internal failure of the ad selection service.
+     *
+     * <p>If the {@link TimeoutException} is thrown, it is caused when a timeout is encountered
+     * during bidding, scoring, or overall selection process to find winning Ad.
+     *
+     * <p>If the {@link LimitExceededException} is thrown, it is caused when the calling package
+     * exceeds the allowed rate limits and is throttled.
+     *
+     * <p>If the {@link SecurityException} is thrown, it is caused when the caller is not authorized
+     * or permission is not requested.
      */
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void selectAds(
             @NonNull AdSelectionFromOutcomesConfig adSelectionFromOutcomesConfig,
             @NonNull @CallbackExecutor Executor executor,
@@ -233,7 +247,7 @@ public class AdSelectionManager {
                             executor.execute(
                                     () -> {
                                         if (resultParcel == null) {
-                                            receiver.onResult(null);
+                                            receiver.onResult(AdSelectionOutcome.NO_OUTCOME);
                                         } else {
                                             receiver.onResult(
                                                     new AdSelectionOutcome.Builder()

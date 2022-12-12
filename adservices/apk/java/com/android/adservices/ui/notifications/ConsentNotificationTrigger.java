@@ -33,6 +33,7 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.UIStats;
@@ -45,12 +46,104 @@ public class ConsentNotificationTrigger {
     private static final int NOTIFICATION_PRIORITY = NotificationCompat.PRIORITY_MAX;
 
     /**
+     * Shows consent notification as the highest priority notification to the user.
+     *
+     * @param context Context which is used to display {@link NotificationCompat}
+     */
+    public static void showConsentNotification(@NonNull Context context, boolean isEuDevice) {
+        UIStats uiStats =
+                new UIStats.Builder()
+                        .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
+                        .setRegion(
+                                isEuDevice
+                                        ? AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU
+                                        : AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW)
+                        .setAction(
+                                AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__REQUESTED_NOTIFICATION)
+                        .build();
+        AdServicesLoggerImpl.getInstance().logUIStats(uiStats);
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
+
+        if (!notificationManager.areNotificationsEnabled()) {
+            ConsentManager.getInstance(context).recordNotificationDisplayed();
+            // TODO(b/242001860): add logging
+            return;
+        }
+
+        // For the ROW devices, set the consent to GIVEN (enabled).
+        // For the EU devices, set the consent to REVOKED (disabled)
+        if (!isEuDevice) {
+            ConsentManager.getInstance(context).enable(context);
+        } else {
+            ConsentManager.getInstance(context).disable(context);
+        }
+
+        createNotificationChannel(context);
+
+        // check the Ga UX flag to get the title and text for notification
+        NotificationCompat.Builder consentNotificationBuilder =
+                FlagsFactory.getFlags().getGaUxFeatureEnabled()
+                        ? getGaConsentNotificationBuilder(context, isEuDevice)
+                        : getConsentNotificationBuilder(context, isEuDevice);
+
+        notificationManager.notify(NOTIFICATION_ID, consentNotificationBuilder.build());
+        ConsentManager.getInstance(context).recordNotificationDisplayed();
+    }
+
+    /**
+     * Returns a {@link NotificationCompat.Builder} which can be used to display consent
+     * notification to the user when GaUxFeature flag is enabled.
+     *
+     * @param context {@link Context} which is used to prepare a {@link NotificationCompat}.
+     */
+    private static NotificationCompat.Builder getGaConsentNotificationBuilder(
+            @NonNull Context context, boolean isEuDevice) {
+        Intent intent = new Intent(context, ConsentNotificationActivity.class);
+        intent.putExtra(IS_EU_DEVICE_ARGUMENT_KEY, isEuDevice);
+        PendingIntent pendingIntent =
+                PendingIntent.getActivity(context, 1, intent, PendingIntent.FLAG_IMMUTABLE);
+        NotificationCompat.BigTextStyle textStyle =
+                new NotificationCompat.BigTextStyle()
+                        .bigText(
+                                isEuDevice
+                                        ? context.getString(
+                                                R.string.notificationUI_notification_content_eu)
+                                        : context.getString(
+                                                R.string.notificationUI_notification_content));
+        return new NotificationCompat.Builder(context, CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_android_icon_small)
+                .setContentTitle(
+                        context.getString(
+                                isEuDevice
+                                        ? R.string.notificationUI_notification_ga_title_eu
+                                        : R.string.notificationUI_notification_ga_title))
+                .setContentText(
+                        context.getString(
+                                isEuDevice
+                                        ? R.string.notificationUI_notification_ga_content_eu
+                                        : R.string.notificationUI_notification_ga_content))
+                .setStyle(textStyle)
+                .setPriority(NOTIFICATION_PRIORITY)
+                .setAutoCancel(true)
+                .setContentIntent(pendingIntent)
+                .addAction(
+                        isEuDevice
+                                ? R.string.notificationUI_notification_cta_eu
+                                : R.string.notificationUI_notification_cta,
+                        context.getString(
+                                isEuDevice
+                                        ? R.string.notificationUI_notification_cta_eu
+                                        : R.string.notificationUI_notification_cta),
+                        pendingIntent);
+    }
+
+    /**
      * Returns a {@link NotificationCompat.Builder} which can be used to display consent
      * notification to the user.
      *
      * @param context {@link Context} which is used to prepare a {@link NotificationCompat}.
      */
-    public static NotificationCompat.Builder getConsentNotificationBuilder(
+    private static NotificationCompat.Builder getConsentNotificationBuilder(
             @NonNull Context context, boolean isEuDevice) {
         Intent intent = new Intent(context, ConsentNotificationActivity.class);
         intent.putExtra(IS_EU_DEVICE_ARGUMENT_KEY, isEuDevice);
@@ -90,43 +183,6 @@ public class ConsentNotificationTrigger {
                                         ? R.string.notificationUI_notification_cta_eu
                                         : R.string.notificationUI_notification_cta),
                         pendingIntent);
-    }
-
-    /**
-     * Shows consent notification as the highest priority notification to the user.
-     *
-     * @param context Context which is used to display {@link NotificationCompat}
-     */
-    public static void showConsentNotification(@NonNull Context context, boolean isEuDevice) {
-        UIStats uiStats = new UIStats.Builder()
-                .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
-                .setRegion(
-                        isEuDevice
-                                ? AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU
-                                : AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW)
-                .setAction(
-                        AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__REQUESTED_NOTIFICATION)
-                .build();
-        AdServicesLoggerImpl.getInstance().logUIStats(uiStats);
-        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
-
-        if (!notificationManager.areNotificationsEnabled()) {
-            ConsentManager.getInstance(context).recordNotificationDisplayed();
-            // TODO(b/242001860): add logging
-            return;
-        }
-
-        // if the device is not an EU device and notifications are not disabled, set the consent
-        if (!isEuDevice) {
-            ConsentManager.getInstance(context).enable(context);
-        }
-
-        createNotificationChannel(context);
-        NotificationCompat.Builder consentNotificationBuilder =
-                getConsentNotificationBuilder(context, isEuDevice);
-
-        notificationManager.notify(NOTIFICATION_ID, consentNotificationBuilder.build());
-        ConsentManager.getInstance(context).recordNotificationDisplayed();
     }
 
     private static void createNotificationChannel(@NonNull Context context) {

@@ -16,10 +16,11 @@
 
 package com.android.adservices.service.measurement.aggregation;
 
-import com.android.adservices.service.measurement.FilterData;
+import com.android.adservices.service.measurement.FilterMap;
 
 import java.math.BigInteger;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -31,14 +32,14 @@ public class AggregateTriggerData {
 
     private BigInteger mKey;
     private Set<String> mSourceKeys;
-    private Optional<FilterData> mFilter;
-    private Optional<FilterData> mNotFilter;
+    private Optional<List<FilterMap>> mFilterSet;
+    private Optional<List<FilterMap>> mNotFilterSet;
 
     private AggregateTriggerData() {
         mKey = null;
         mSourceKeys = new HashSet<>();
-        mFilter = Optional.empty();
-        mNotFilter = Optional.empty();
+        mFilterSet = Optional.empty();
+        mNotFilterSet = Optional.empty();
     }
 
     @Override
@@ -49,8 +50,8 @@ public class AggregateTriggerData {
         AggregateTriggerData attributionTriggerData = (AggregateTriggerData) obj;
         return Objects.equals(mKey, attributionTriggerData.mKey)
                 && Objects.equals(mSourceKeys, attributionTriggerData.mSourceKeys)
-                && Objects.equals(mFilter, attributionTriggerData.mFilter)
-                && Objects.equals(mNotFilter, attributionTriggerData.mNotFilter);
+                && Objects.equals(mFilterSet, attributionTriggerData.mFilterSet)
+                && Objects.equals(mNotFilterSet, attributionTriggerData.mNotFilterSet);
     }
 
     @Override
@@ -76,15 +77,15 @@ public class AggregateTriggerData {
      * Returns the filter which controls when aggregate trigger data ise used based on impression
      * side information.
      */
-    public Optional<FilterData> getFilter() {
-        return mFilter;
+    public Optional<List<FilterMap>> getFilterSet() {
+        return mFilterSet;
     }
 
     /**
      * Returns the not_filter, reverse of filter.
      */
-    public Optional<FilterData> getNotFilter() {
-        return mNotFilter;
+    public Optional<List<FilterMap>> getNotFilterSet() {
+        return mNotFilterSet;
     }
 
     /**
@@ -116,16 +117,16 @@ public class AggregateTriggerData {
         /**
          * See {@link AggregateTriggerData#getFilter()}.
          */
-        public Builder setFilter(FilterData filter) {
-            mBuilding.mFilter = Optional.of(filter);
+        public Builder setFilterSet(List<FilterMap> filterSet) {
+            mBuilding.mFilterSet = Optional.of(filterSet);
             return this;
         }
 
         /**
          * See {@link AggregateTriggerData#getNotFilter()}
          */
-        public Builder setNotFilter(FilterData notFilter) {
-            mBuilding.mNotFilter = Optional.of(notFilter);
+        public Builder setNotFilterSet(List<FilterMap> notFilterSet) {
+            mBuilding.mNotFilterSet = Optional.of(notFilterSet);
             return this;
         }
 

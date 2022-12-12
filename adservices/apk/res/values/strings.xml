@@ -66,6 +66,11 @@
     <!-- Description of an application permission that lets it access AdService's enablement state API. [CHAR LIMIT=NONE] -->
     <string name="permdesc_accessAdServicesState">Allows an application to access AdService’s enablement state API.</string>
 
+    <!-- Title of an application permission that lets it access AdServicesManager’s APIs. [CHAR LIMIT=NONE] -->
+    <string name="permlab_accessAdServicesManager">Access to AdServicesManager’s APIs</string>
+    <!-- Description of an application permission that lets it access AdServicesManager’s APIs. [CHAR LIMIT=NONE] -->
+    <string name="permdesc_accessAdServicesManager">Allows an application to access AdServicesManager’s APIs.</string>
+
     <!-- Settings App UI strings -->
 
     <!--*****************************************************************************************-->
@@ -156,6 +161,24 @@
     <string name="notificationUI_how_it_works_expanded_text5">&#8226;&#160;&#160;Interests estimated by apps</string>
     <!-- Text that is part of an additional explainer of how the privacy sandbox works. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_how_it_works_expanded_text6">Apps can estimate your interests and temporarily save these with Android. For example, an app you use to buy running shoes might estimate your interest as \"running marathons.\"\n\nLater, based on this interest, a different app can show you an ad related to marathons.\n\nIn your privacy settings, you can manage the list of apps that have saved interests.</string>
+
+    <!-- Text for the GA notification strings ******************************************************-->
+
+    <!-- ROW Detailed Ga Notification Activity Landing Page UI strings *****************************-->
+    <string name="notificationUI_header_ga_title" translatable="false">New ad privacy controls</string>
+    <string name="notificationUI_container1_ga_title" translatable="false">New protections limit data sharing</string>
+    <string name="notificationUI_container2_ga_title" translatable="false">Data stored on your device</string>
+    <string name="notificationUI_notification_ga_title" translatable="false">New ad privacy controls</string>
+    <string name="notificationUI_notification_ga_content" translatable="false">Choose your interests and set up controls for the ads you see</string>
+
+    <!-- Eu Detailed Ga Notification Activity Landing Page UI strings ******************************************************-->
+    <string name="notificationUI_header_ga_title_eu" translatable="false">Android ads privacy features</string>
+    <string name="notificationUI_container1_control_ga_text_eu" translatable="false">Learn more about ads on Android</string>
+    <string name="notificationUI_container1_body_text_ga_eu" translatable="false">New protections help limit data collection and sharing by apps and advertisers.</string>
+    <string name="notificationUI_notification_ga_title_eu" translatable="false">Try new ads privacy controls</string>
+    <string name="notificationUI_notification_ga_content_eu" translatable="false">@string/notificationUI_notification_ga_content</string>
+    <string name="notificationUI_confirmation_ga_title_eu" translatable="false">Other types of data stored on your devices</string>
+    <string name="notificationUI_confirmation_ga_text_eu" translatable="false">We’re finding new ways to limit what apps can learn about you when they show you personalized ads. For example:\n\n • Apps can collect only limited types of data to measure the performance of their ads, such as the time of day an ad was shown to you.\n\n • Apps can estimate your interests based on how you use them. Later, another app you use can ask Android for these interests to show you more useful ads. You can see a list of apps that estimate your interests, and remove the ones you don’t want.</string>
 
     <!-- Settings App UI main view strings ******************************************************-->
     <!-- Title text of the main view. [CHAR LIMIT=NONE] -->
@@ -1194,5 +1217,4 @@
     <string name="topic10445">Travel Agencies &amp; Services</string>
     <!-- Text for the topic name for topic Travel Guides &amp; Travelogues. [CHAR LIMIT=NONE] -->
     <string name="topic10446">Travel Guides &amp; Travelogues</string>
-
 </resources>
