@@ -48,7 +48,9 @@ public class DbHelper extends SQLiteOpenHelper {
     // Version 5: Add TopicContributors Table for Topics API, guarded by feature flag.
     public static final int DATABASE_VERSION_V5 = 5;
 
-    static final int CURRENT_DATABASE_VERSION = 3;
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
+    public static final int CURRENT_DATABASE_VERSION = 3;
+
     private static final String DATABASE_NAME = "adservices.db";
 
     private static DbHelper sSingleton = null;
@@ -153,10 +155,10 @@ public class DbHelper extends SQLiteOpenHelper {
                 && !FlagsFactory.getFlags().getEnableDatabaseSchemaVersion5()) {
             LogUtil.e(
                     "Has to downgrade database version from %d to %d. The reason is"
-                            + " TopicContributorsTable was enabled and now disabled. Dropping"
-                            + " TopicContributorsTable...",
+                            + " TopicContributorsTable was enabled and now disabled. ",
                     DATABASE_VERSION_V5, CURRENT_DATABASE_VERSION);
-            db.execSQL("DROP TABLE IF EXISTS " + TopicsTables.TopicContributorsContract.TABLE);
+
+            // Return here to prevent parent class to throw on SQLiteException
             return;
         }
 
