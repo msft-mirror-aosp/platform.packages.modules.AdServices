@@ -22,7 +22,9 @@ import android.adservices.common.AdServicesStatusUtils;
 import android.annotation.NonNull;
 import android.content.Context;
 
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 
 /** Resolves whether user consent has been provided or not to use the PPAPI. */
@@ -36,7 +38,12 @@ public class UserConsentAccessResolver implements IAccessResolver {
 
     @Override
     public boolean isAllowed(@NonNull Context context) {
-        AdServicesApiConsent userConsent = mConsentManager.getConsent();
+        AdServicesApiConsent userConsent;
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            userConsent = mConsentManager.getConsent(AdServicesApiType.MEASUREMENTS);
+        } else {
+            userConsent = mConsentManager.getConsent();
+        }
         return userConsent.isGiven();
     }
 
