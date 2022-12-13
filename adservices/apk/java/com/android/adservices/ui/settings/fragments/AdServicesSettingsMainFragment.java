@@ -25,6 +25,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
 import com.android.adservices.ui.settings.delegates.MainActionDelegate;
 import com.android.adservices.ui.settings.viewmodels.MainViewModel;
@@ -47,7 +48,12 @@ public class AdServicesSettingsMainFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        setupViewModel();
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            // the entry point of Apps, Topics, Measurement should be visible all the time
+            requireView().findViewById(R.id.privacy_sandbox_controls).setVisibility(View.VISIBLE);
+        } else {
+            setupViewModel();
+        }
     }
 
     @Override
