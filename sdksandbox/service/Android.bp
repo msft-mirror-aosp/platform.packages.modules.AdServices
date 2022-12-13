@@ -76,6 +76,8 @@ java_sdk_library {
         "//packages/modules/AdServices:__subpackages__",
     ],
     impl_library_visibility: [
+        "//packages/modules/AdServices/adservices/service",
+        "//packages/modules/AdServices/adservices/tests/unittest/system-service",
         "//packages/modules/AdServices/sdksandbox/tests/unittest",
         "//packages/modules/AdServices/sdksandbox/tests/testutils",
         "//frameworks/base/services/tests/mockingservicestests",

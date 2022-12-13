@@ -692,4 +692,17 @@ public final class SdkSandboxManager {
             }
         }
     }
+
+    /**
+     * Return the AdServicesManager
+     *
+     * @hide
+     */
+    public IBinder getAdServicesManager() {
+        try {
+            return mService.getAdServicesManager();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
 }
