@@ -49,6 +49,7 @@ import android.webkit.WebView;
 
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.modules.utils.build.SdkLevel;
 
 import dalvik.system.PathClassLoader;
 
@@ -62,6 +63,8 @@ import java.util.Objects;
 public class SdkSandboxServiceImpl extends Service {
 
     private static final String TAG = "SdkSandbox";
+    // TODO(b/255937439): Guard the feature with a feature flag
+    private static final boolean FEATURE_CUSTOMIZED_CONTEXT_ENABLED = SdkLevel.isAtLeastU();
 
     private final Object mLock = new Object();
     // Mapping from sdk name to its holder
@@ -367,27 +370,26 @@ public class SdkSandboxServiceImpl extends Service {
             }
         }
 
-        ClassLoader loader = getClassLoader(applicationInfo);
+        Context baseContext;
+        try {
+            baseContext = createBaseContext(applicationInfo, sdkCeDataDir, sdkDeDataDir);
+        } catch (PackageManager.NameNotFoundException e) {
+            sendLoadError(
+                    callback,
+                    ILoadSdkInSandboxCallback.LOAD_SDK_INTERNAL_ERROR,
+                    "Package name not found " + sdkName + ". errorMsg: " + e.getMessage(),
+                    sandboxLatencyInfo);
+            return;
+        }
 
-        // We want to ensure that SandboxedSdkContext.getSystemService() will return different
-        // instances for different SandboxedSdkContext contexts, so that different SDKs
-        // running in the same sdk sandbox process don't share the same manager instance.
-        // Because SandboxedSdkContext is a ContextWrapper, it delegates the getSystemService()
-        // call to its base context. If we use an application context here as a base context
-        // when creating an instance of SandboxedSdkContext it will mean that all instances of
-        // SandboxedSdkContext will return the same manager instances.
+        final ClassLoader loader =
+                FEATURE_CUSTOMIZED_CONTEXT_ENABLED
+                        ? baseContext.getClassLoader()
+                        : getClassLoader(applicationInfo);
 
-        // In order to create per-SandboxedSdkContext instances in getSystemService, each
-        // SandboxedSdkContext needs to have use ContextImpl as a base context. The ContextImpl
-        // is hidden, so we can't instantiate it directly. However, the
-        // createCredentialProtectedStorageContext() will always create a new ContextImpl
-        // object, which is why we are using it as a base context when creating an instance of
-        // SandboxedSdkContext.
-        // TODO(b/242889021): make this detail internal to SandboxedSdkContext
-        Context ctx = mInjector.getContext().createCredentialProtectedStorageContext();
         SandboxedSdkContext sandboxedSdkContext =
                 new SandboxedSdkContext(
-                        ctx,
+                        baseContext,
                         loader,
                         callingPackageName,
                         applicationInfo,
@@ -407,6 +409,24 @@ public class SdkSandboxServiceImpl extends Service {
                 mInjector,
                 sandboxLatencyInfo,
                 sdkHolderToSdkSandboxServiceCallback);
+    }
+
+    private Context createBaseContext(
+            ApplicationInfo applicationInfo, String sdkCeDataDir, String sdkDeDataDir)
+            throws PackageManager.NameNotFoundException {
+        // We want to ensure that SandboxedSdkContext.getSystemService() will return different
+        // instances for different SandboxedSdkContext contexts, so that different SDKs
+        // running in the same sdk sandbox process don't share the same manager instance.
+        // Because SandboxedSdkContext is a ContextWrapper, it delegates the getSystemService()
+        // call to its base context. If we use an application context here as a base context
+        // when creating an instance of SandboxedSdkContext it will mean that all instances of
+        // SandboxedSdkContext will return the same manager instances.
+
+        // In order to create per-SandboxedSdkContext instances in getSystemService, each
+        // SandboxedSdkContext needs to have its own instance of ContextImpl as a base context. The
+        // instance should have sdk-specific information infused so that system services get the
+        // correct information from the base context.
+        return mInjector.getContext().createCredentialProtectedStorageContext();
     }
 
     private void unloadSdkInternal(@NonNull String sdkName) {
