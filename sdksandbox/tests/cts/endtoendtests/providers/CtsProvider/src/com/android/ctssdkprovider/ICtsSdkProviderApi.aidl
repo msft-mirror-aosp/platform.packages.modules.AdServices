@@ -17,4 +17,6 @@ package com.android.ctssdkprovider;
 interface ICtsSdkProviderApi {
     void checkClassloaders();
     void checkResourcesAndAssets();
+    boolean isPermissionGranted (String permissionName);
+    void testStoragePaths();
 }

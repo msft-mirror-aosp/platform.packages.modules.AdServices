@@ -27,6 +27,7 @@ import android.content.res.AssetManager;
 import android.content.res.Resources;
 
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.modules.utils.build.SdkLevel;
 
 import java.io.File;
 
@@ -47,6 +48,9 @@ import java.io.File;
  * @hide
  */
 public final class SandboxedSdkContext extends ContextWrapper {
+
+    // TODO(b/255937439): Guard the feature with a feature flag
+    private static final boolean FEATURE_CUSTOMIZED_CONTEXT_ENABLED = SdkLevel.isAtLeastU();
 
     private final Resources mResources;
     private final AssetManager mAssets;
@@ -183,6 +187,9 @@ public final class SandboxedSdkContext extends ContextWrapper {
     @Override
     @Nullable
     public Resources getResources() {
+        if (FEATURE_CUSTOMIZED_CONTEXT_ENABLED) {
+            return getBaseContext().getResources();
+        }
         return mResources;
     }
 
@@ -190,6 +197,9 @@ public final class SandboxedSdkContext extends ContextWrapper {
     @Override
     @Nullable
     public AssetManager getAssets() {
+        if (FEATURE_CUSTOMIZED_CONTEXT_ENABLED) {
+            return getBaseContext().getAssets();
+        }
         return mAssets;
     }
 
@@ -197,6 +207,10 @@ public final class SandboxedSdkContext extends ContextWrapper {
     @Override
     @Nullable
     public File getDataDir() {
+        if (FEATURE_CUSTOMIZED_CONTEXT_ENABLED) {
+            return getBaseContext().getDataDir();
+        }
+
         File res = null;
         if (isCredentialProtectedStorage()) {
             res = mCeDataDir;
@@ -225,6 +239,9 @@ public final class SandboxedSdkContext extends ContextWrapper {
 
     @Override
     public ClassLoader getClassLoader() {
+        if (FEATURE_CUSTOMIZED_CONTEXT_ENABLED) {
+            return getBaseContext().getClassLoader();
+        }
         return mClassLoader;
     }
 }
