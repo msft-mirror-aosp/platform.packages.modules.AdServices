@@ -48,7 +48,9 @@ public class DbHelper extends SQLiteOpenHelper {
     // Version 5: Add TopicContributors Table for Topics API, guarded by feature flag.
     public static final int DATABASE_VERSION_V5 = 5;
 
-    static final int CURRENT_DATABASE_VERSION = 3;
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
+    public static final int CURRENT_DATABASE_VERSION = 3;
+
     private static final String DATABASE_NAME = "adservices.db";
 
     private static DbHelper sSingleton = null;
@@ -104,9 +106,7 @@ public class DbHelper extends SQLiteOpenHelper {
         db.execSQL("PRAGMA foreign_keys=ON");
     }
 
-    /**
-     * Wraps getReadableDatabase to catch SQLiteException and log error.
-     */
+    /** Wraps getReadableDatabase to catch SQLiteException and log error. */
     @Nullable
     public SQLiteDatabase safeGetReadableDatabase() {
         try {
@@ -144,6 +144,25 @@ public class DbHelper extends SQLiteOpenHelper {
                     "Topics DB Upgrade is not performed! oldVersion: %d, newVersion: %d.",
                     oldVersion, newVersion);
         }
+    }
+
+    // TODO(b/261934022): Support a framework as upgrade.
+    @Override
+    public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        // Only downgrade if it's triggered by value change of Flag enable_database_schema_version_5
+        if (oldVersion == DATABASE_VERSION_V5
+                && newVersion == CURRENT_DATABASE_VERSION
+                && !FlagsFactory.getFlags().getEnableDatabaseSchemaVersion5()) {
+            LogUtil.e(
+                    "Has to downgrade database version from %d to %d. The reason is"
+                            + " TopicContributorsTable was enabled and now disabled. ",
+                    DATABASE_VERSION_V5, CURRENT_DATABASE_VERSION);
+
+            // Return here to prevent parent class to throw on SQLiteException
+            return;
+        }
+
+        super.onDowngrade(db, oldVersion, newVersion);
     }
 
     public long getDbFileSize() {

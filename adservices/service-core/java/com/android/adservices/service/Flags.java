@@ -726,7 +726,9 @@ public interface Flags extends Dumpable {
      * which means the PP API is enabled. This flag is used for emergency turning off the whole PP
      * API.
      */
-    boolean GLOBAL_KILL_SWITCH = false; // By default, the PP API is enabled.
+    // Starting M-2023-05, global kill switch is enabled in the binary. Prior to this (namely in
+    // M-2022-11), the value of this flag in the binary was false.
+    boolean GLOBAL_KILL_SWITCH = true;
 
     default boolean getGlobalKillSwitch() {
         return GLOBAL_KILL_SWITCH;

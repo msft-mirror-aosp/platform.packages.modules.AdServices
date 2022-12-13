@@ -419,8 +419,10 @@ public class MaintenanceJobServiceTest {
 
     @Test
     public void testScheduleIfNeeded_Success() {
-        // Mock static method FlagsFactory.getFlags() to return test Flags.
-        ExtendedMockito.doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
+        doReturn(false).when(mMockFlags).getGlobalKillSwitch();
+
+        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
         // The first invocation of scheduleIfNeeded() schedules the job.
         assertThat(MaintenanceJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false))
@@ -429,8 +431,15 @@ public class MaintenanceJobServiceTest {
 
     @Test
     public void testScheduleIfNeeded_ScheduledWithSameParameters() {
-        // Mock static method FlagsFactory.getFlags() to return test Flags.
-        ExtendedMockito.doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
+        // Mock Flags in order to change values within this test
+        doReturn(TEST_FLAGS.getMaintenanceJobPeriodMs())
+                .when(mMockFlags)
+                .getMaintenanceJobPeriodMs();
+        doReturn(TEST_FLAGS.getMaintenanceJobFlexMs()).when(mMockFlags).getMaintenanceJobFlexMs();
+        doReturn(false).when(mMockFlags).getGlobalKillSwitch();
+
+        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
         // The first invocation of scheduleIfNeeded() schedules the job.
         assertThat(MaintenanceJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false))
@@ -467,8 +476,15 @@ public class MaintenanceJobServiceTest {
 
     @Test
     public void testScheduleIfNeeded_forceRun() {
-        // Mock static method FlagsFactory.getFlags() to return test Flags.
-        ExtendedMockito.doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
+        // Mock Flags in order to change values within this test
+        doReturn(TEST_FLAGS.getMaintenanceJobPeriodMs())
+                .when(mMockFlags)
+                .getMaintenanceJobPeriodMs();
+        doReturn(TEST_FLAGS.getMaintenanceJobFlexMs()).when(mMockFlags).getMaintenanceJobFlexMs();
+        doReturn(false).when(mMockFlags).getGlobalKillSwitch();
+
+        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
         // The first invocation of scheduleIfNeeded() schedules the job.
         assertThat(MaintenanceJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false))
