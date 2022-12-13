@@ -152,6 +152,10 @@ public class Throttler {
         final double registerSource = flags.getMeasurementRegisterSourceRequestPermitsPerSecond();
         final double registerWebSource =
                 flags.getMeasurementRegisterWebSourceRequestPermitsPerSecond();
+        final double topicsApiAppRequestPermitsPerSecond =
+                flags.getTopicsApiAppRequestPermitsPerSecond();
+        final double topicsApiSdkRequestPermitsPerSecond =
+                flags.getTopicsApiSdkRequestPermitsPerSecond();
 
         mRateLimitPerApiMap.put(ApiKey.UNKNOWN, defaultPermitsPerSecond);
 
@@ -171,8 +175,9 @@ public class Throttler {
         mRateLimitPerApiMap.put(
                 ApiKey.MEASUREMENT_API_REGISTER_WEB_TRIGGER, defaultPermitsPerSecond);
 
-        mRateLimitPerApiMap.put(ApiKey.TOPICS_API_APP_PACKAGE_NAME, defaultPermitsPerSecond);
-        mRateLimitPerApiMap.put(ApiKey.TOPICS_API_SDK_NAME, defaultPermitsPerSecond);
+        mRateLimitPerApiMap.put(
+                ApiKey.TOPICS_API_APP_PACKAGE_NAME, topicsApiAppRequestPermitsPerSecond);
+        mRateLimitPerApiMap.put(ApiKey.TOPICS_API_SDK_NAME, topicsApiSdkRequestPermitsPerSecond);
     }
 
     /**
