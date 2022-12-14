@@ -309,6 +309,9 @@ public final class PhFlags implements Flags {
             "max_response_based_registration_size_bytes";
 
     // UI keys
+    static final String KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL =
+            "mdd_ui_ota_strings_manifest_file_url";
+
     static final String KEY_UI_DIALOGS_FEATURE_ENABLED = "ui_dialogs_feature_enabled";
 
     static final String KEY_GA_UX_FEATURE_ENABLED = "ga_ux_enabled";
@@ -1470,6 +1473,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public String getUiOtaStringsManifestFileUrl() {
+        return DeviceConfig.getString(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL,
+                /* defaultValue */ UI_OTA_STRINGS_MANIFEST_FILE_URL);
+    }
+
+    @Override
     public boolean getAdServicesEnabled() {
         // if the global kill switch is enabled, feature should be disabled.
         if (getGlobalKillSwitch()) {
@@ -1817,6 +1828,11 @@ public final class PhFlags implements Flags {
                 "\t" + KEY_MEASUREMENT_MANIFEST_FILE_URL + " = " + getMeasurementManifestFileUrl());
         writer.println(
                 "\t"
+                        + KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL
+                        + " = "
+                        + getUiOtaStringsManifestFileUrl());
+        writer.println(
+                "\t"
                         + KEY_DOWNLOADER_CONNECTION_TIMEOUT_MS
                         + " = "
                         + getDownloaderConnectionTimeoutMs());
@@ -1832,7 +1848,6 @@ public final class PhFlags implements Flags {
                         + KEY_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL
                         + " = "
                         + getMddTopicsClassifierManifestFileUrl());
-
         writer.println("==== AdServices PH Flags Dump Topics related flags ====");
         writer.println("\t" + KEY_TOPICS_EPOCH_JOB_PERIOD_MS + " = " + getTopicsEpochJobPeriodMs());
         writer.println("\t" + KEY_TOPICS_EPOCH_JOB_FLEX_MS + " = " + getTopicsEpochJobFlexMs());
