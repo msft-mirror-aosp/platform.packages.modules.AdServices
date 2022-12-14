@@ -1791,6 +1791,9 @@ public class PhFlagsTest {
 
     @Test
     public void testGetAdServicesEnabled() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // Without any overriding, the value is the hard coded constant.
         assertThat(FlagsFactory.getFlags().getAdServicesEnabled()).isEqualTo(ADSERVICES_ENABLED);
 
@@ -1849,6 +1852,9 @@ public class PhFlagsTest {
 
     @Test
     public void testMeasurementKillSwitch() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // Without any overriding, the value is the hard coded constant.
         assertThat(FlagsFactory.getFlags().getMeasurementKillSwitch())
                 .isEqualTo(MEASUREMENT_KILL_SWITCH);
@@ -1863,14 +1869,13 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getMeasurementKillSwitch()).isEqualTo(phOverridingValue);
-
-        Flags flags = FlagsFactory.getFlagsForTest();
-        assertThat(flags.getMeasurementApiDeleteRegistrationsKillSwitch())
-                .isEqualTo(MEASUREMENT_KILL_SWITCH);
     }
 
     @Test
     public void testMeasurementKillSwitch_globalOverride() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // Without any overriding, the value is the hard coded constant.
         assertThat(FlagsFactory.getFlags().getMeasurementKillSwitch())
                 .isEqualTo(MEASUREMENT_KILL_SWITCH);
@@ -1888,6 +1893,9 @@ public class PhFlagsTest {
 
     @Test
     public void testGetMeasurementApiDeleteRegistrationsKillSwitch() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementApiDeleteRegistrationsKillSwitch())
                 .isEqualTo(MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH);
@@ -1902,14 +1910,13 @@ public class PhFlagsTest {
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getMeasurementApiDeleteRegistrationsKillSwitch())
                 .isEqualTo(phOverrideValue);
-
-        Flags flags = FlagsFactory.getFlagsForTest();
-        assertThat(flags.getMeasurementApiDeleteRegistrationsKillSwitch())
-                .isEqualTo(MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH);
     }
 
     @Test
     public void testGetMeasurementApiDeleteRegistrationsKillSwitch_measurementOverride() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementApiDeleteRegistrationsKillSwitch())
                 .isEqualTo(MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH);
@@ -1928,6 +1935,9 @@ public class PhFlagsTest {
 
     @Test
     public void testGetMeasurementApiDeleteRegistrationsKillSwitch_globalOverride() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementApiDeleteRegistrationsKillSwitch())
                 .isEqualTo(MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH);
@@ -1946,6 +1956,9 @@ public class PhFlagsTest {
 
     @Test
     public void testGetMeasurementApiStatusKillSwitch() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementApiStatusKillSwitch())
                 .isEqualTo(MEASUREMENT_API_STATUS_KILL_SWITCH);
@@ -1959,14 +1972,13 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getMeasurementApiStatusKillSwitch()).isEqualTo(phOverrideValue);
-
-        Flags flags = FlagsFactory.getFlagsForTest();
-        assertThat(flags.getMeasurementApiStatusKillSwitch())
-                .isEqualTo(MEASUREMENT_API_STATUS_KILL_SWITCH);
     }
 
     @Test
     public void testGetMeasurementApiStatusKillSwitch_measurementOverride() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementApiStatusKillSwitch())
                 .isEqualTo(MEASUREMENT_API_STATUS_KILL_SWITCH);
@@ -1984,6 +1996,9 @@ public class PhFlagsTest {
 
     @Test
     public void testGetMeasurementApiStatusKillSwitch_globalOverride() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementApiStatusKillSwitch())
                 .isEqualTo(MEASUREMENT_API_STATUS_KILL_SWITCH);
@@ -2001,6 +2016,9 @@ public class PhFlagsTest {
 
     @Test
     public void testGetMeasurementApiRegisterSourceKillSwitch() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementApiRegisterSourceKillSwitch())
                 .isEqualTo(MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH);
@@ -2014,14 +2032,13 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getMeasurementApiRegisterSourceKillSwitch()).isEqualTo(phOverrideValue);
-
-        Flags flags = FlagsFactory.getFlagsForTest();
-        assertThat(flags.getMeasurementApiRegisterSourceKillSwitch())
-                .isEqualTo(MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH);
     }
 
     @Test
     public void testGetMeasurementApiRegisterSourceKillSwitch_measurementOverride() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementApiRegisterSourceKillSwitch())
                 .isEqualTo(MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH);
@@ -2039,6 +2056,9 @@ public class PhFlagsTest {
 
     @Test
     public void testGetMeasurementApiRegisterSourceKillSwitch_globalOverride() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementApiRegisterSourceKillSwitch())
                 .isEqualTo(MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH);
@@ -2056,6 +2076,9 @@ public class PhFlagsTest {
 
     @Test
     public void testGetMeasurementApiRegisterTriggerKillSwitch() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementApiRegisterTriggerKillSwitch())
                 .isEqualTo(MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH);
@@ -2069,14 +2092,13 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getMeasurementApiRegisterTriggerKillSwitch()).isEqualTo(phOverrideValue);
-
-        Flags flags = FlagsFactory.getFlagsForTest();
-        assertThat(flags.getMeasurementApiRegisterTriggerKillSwitch())
-                .isEqualTo(MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH);
     }
 
     @Test
     public void testGetMeasurementApiRegisterTriggerKillSwitch_measurementOverride() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementApiRegisterTriggerKillSwitch())
                 .isEqualTo(MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH);
@@ -2094,6 +2116,9 @@ public class PhFlagsTest {
 
     @Test
     public void testGetMeasurementApiRegisterTriggerKillSwitch_globalOverride() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementApiRegisterTriggerKillSwitch())
                 .isEqualTo(MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH);
@@ -2111,6 +2136,9 @@ public class PhFlagsTest {
 
     @Test
     public void testGetMeasurementApiRegisterWebSourceKillSwitch() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementApiRegisterWebSourceKillSwitch())
                 .isEqualTo(MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH);
@@ -2125,14 +2153,13 @@ public class PhFlagsTest {
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getMeasurementApiRegisterWebSourceKillSwitch())
                 .isEqualTo(phOverrideValue);
-
-        Flags flags = FlagsFactory.getFlagsForTest();
-        assertThat(flags.getMeasurementApiRegisterWebSourceKillSwitch())
-                .isEqualTo(MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH);
     }
 
     @Test
     public void testGetMeasurementApiRegisterWebSourceKillSwitch_measurementOverride() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementApiRegisterWebSourceKillSwitch())
                 .isEqualTo(MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH);
@@ -2151,6 +2178,9 @@ public class PhFlagsTest {
 
     @Test
     public void testGetMeasurementApiRegisterWebSourceKillSwitch_globalOverride() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementApiRegisterWebSourceKillSwitch())
                 .isEqualTo(MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH);
@@ -2169,6 +2199,9 @@ public class PhFlagsTest {
 
     @Test
     public void testGetMeasurementApiRegisterWebTriggerKillSwitch() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementApiRegisterWebTriggerKillSwitch())
                 .isEqualTo(MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH);
@@ -2183,14 +2216,13 @@ public class PhFlagsTest {
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getMeasurementApiRegisterWebTriggerKillSwitch())
                 .isEqualTo(phOverrideValue);
-
-        Flags flags = FlagsFactory.getFlagsForTest();
-        assertThat(flags.getMeasurementApiRegisterWebTriggerKillSwitch())
-                .isEqualTo(MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH);
     }
 
     @Test
     public void testGetMeasurementApiRegisterWebTriggerKillSwitch_measurementOverride() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementApiRegisterWebTriggerKillSwitch())
                 .isEqualTo(MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH);
@@ -2209,6 +2241,9 @@ public class PhFlagsTest {
 
     @Test
     public void testGetMeasurementApiRegisterWebTriggerKillSwitch_globalOverride() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementApiRegisterWebTriggerKillSwitch())
                 .isEqualTo(MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH);
@@ -2227,6 +2262,9 @@ public class PhFlagsTest {
 
     @Test
     public void testGetMeasurementJobAggregateFallbackReportingKillSwitch() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementJobAggregateFallbackReportingKillSwitch())
                 .isEqualTo(MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH);
@@ -2241,14 +2279,13 @@ public class PhFlagsTest {
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getMeasurementJobAggregateFallbackReportingKillSwitch())
                 .isEqualTo(phOverrideValue);
-
-        Flags flags = FlagsFactory.getFlagsForTest();
-        assertThat(flags.getMeasurementJobAggregateFallbackReportingKillSwitch())
-                .isEqualTo(MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH);
     }
 
     @Test
     public void testGetMeasurementJobAggregateFallbackReportingKillSwitch_measurementOverride() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementJobAggregateFallbackReportingKillSwitch())
                 .isEqualTo(MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH);
@@ -2267,6 +2304,9 @@ public class PhFlagsTest {
 
     @Test
     public void testGetMeasurementJobAggregateFallbackReportingKillSwitch_globalOverride() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementJobAggregateFallbackReportingKillSwitch())
                 .isEqualTo(MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH);
@@ -2285,6 +2325,9 @@ public class PhFlagsTest {
 
     @Test
     public void testGetMeasurementJobAggregateReportingKillSwitch() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementJobAggregateReportingKillSwitch())
                 .isEqualTo(MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH);
@@ -2299,14 +2342,13 @@ public class PhFlagsTest {
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getMeasurementJobAggregateReportingKillSwitch())
                 .isEqualTo(phOverrideValue);
-
-        Flags flags = FlagsFactory.getFlagsForTest();
-        assertThat(flags.getMeasurementJobAggregateReportingKillSwitch())
-                .isEqualTo(MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH);
     }
 
     @Test
     public void testGetMeasurementJobAggregateReportingKillSwitch_measurementOverride() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementJobAggregateReportingKillSwitch())
                 .isEqualTo(MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH);
@@ -2325,6 +2367,9 @@ public class PhFlagsTest {
 
     @Test
     public void testGetMeasurementJobAggregateReportingKillSwitch_globalOverride() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementJobAggregateReportingKillSwitch())
                 .isEqualTo(MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH);
@@ -2343,6 +2388,9 @@ public class PhFlagsTest {
 
     @Test
     public void testGetMeasurementJobAttributionKillSwitch() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementJobAttributionKillSwitch())
                 .isEqualTo(MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH);
@@ -2356,14 +2404,13 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getMeasurementJobAttributionKillSwitch()).isEqualTo(phOverrideValue);
-
-        Flags flags = FlagsFactory.getFlagsForTest();
-        assertThat(flags.getMeasurementJobAttributionKillSwitch())
-                .isEqualTo(MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH);
     }
 
     @Test
     public void testGetMeasurementJobAttributionKillSwitch_measurementOverride() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementJobAttributionKillSwitch())
                 .isEqualTo(MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH);
@@ -2381,6 +2428,9 @@ public class PhFlagsTest {
 
     @Test
     public void testGetMeasurementJobAttributionKillSwitch_globalOverride() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementJobAttributionKillSwitch())
                 .isEqualTo(MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH);
@@ -2398,6 +2448,9 @@ public class PhFlagsTest {
 
     @Test
     public void testGetMeasurementJobDeleteExpiredKillSwitch() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementJobDeleteExpiredKillSwitch())
                 .isEqualTo(MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH);
@@ -2411,14 +2464,13 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getMeasurementJobDeleteExpiredKillSwitch()).isEqualTo(phOverrideValue);
-
-        Flags flags = FlagsFactory.getFlagsForTest();
-        assertThat(flags.getMeasurementJobDeleteExpiredKillSwitch())
-                .isEqualTo(MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH);
     }
 
     @Test
     public void testGetMeasurementJobDeleteExpiredKillSwitch_measurementOverride() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementJobDeleteExpiredKillSwitch())
                 .isEqualTo(MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH);
@@ -2436,6 +2488,9 @@ public class PhFlagsTest {
 
     @Test
     public void testGetMeasurementJobDeleteExpiredKillSwitch_globalOverride() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementJobDeleteExpiredKillSwitch())
                 .isEqualTo(MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH);
@@ -2453,6 +2508,9 @@ public class PhFlagsTest {
 
     @Test
     public void testGetMeasurementJobDeleteUninstalledKillSwitch() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementJobDeleteUninstalledKillSwitch())
                 .isEqualTo(MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH);
@@ -2467,14 +2525,13 @@ public class PhFlagsTest {
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getMeasurementJobDeleteUninstalledKillSwitch())
                 .isEqualTo(phOverrideValue);
-
-        Flags flags = FlagsFactory.getFlagsForTest();
-        assertThat(flags.getMeasurementJobDeleteUninstalledKillSwitch())
-                .isEqualTo(MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH);
     }
 
     @Test
     public void testGetMeasurementJobDeleteUninstalledKillSwitch_measurementOverride() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementJobDeleteUninstalledKillSwitch())
                 .isEqualTo(MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH);
@@ -2493,6 +2550,9 @@ public class PhFlagsTest {
 
     @Test
     public void testGetMeasurementJobDeleteUninstalledKillSwitch_globalOverride() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementJobDeleteUninstalledKillSwitch())
                 .isEqualTo(MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH);
@@ -2511,6 +2571,9 @@ public class PhFlagsTest {
 
     @Test
     public void testGetMeasurementJobEventFallbackReportingKillSwitch() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementJobEventFallbackReportingKillSwitch())
                 .isEqualTo(MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH);
@@ -2525,14 +2588,13 @@ public class PhFlagsTest {
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getMeasurementJobEventFallbackReportingKillSwitch())
                 .isEqualTo(phOverrideValue);
-
-        Flags flags = FlagsFactory.getFlagsForTest();
-        assertThat(flags.getMeasurementJobEventFallbackReportingKillSwitch())
-                .isEqualTo(MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH);
     }
 
     @Test
     public void testGetMeasurementJobEventFallbackReportingKillSwitch_measurementOverride() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementJobEventFallbackReportingKillSwitch())
                 .isEqualTo(MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH);
@@ -2551,6 +2613,9 @@ public class PhFlagsTest {
 
     @Test
     public void testGetMeasurementJobEventFallbackReportingKillSwitch_globalOverride() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementJobEventFallbackReportingKillSwitch())
                 .isEqualTo(MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH);
@@ -2569,6 +2634,9 @@ public class PhFlagsTest {
 
     @Test
     public void testGetMeasurementJobEventReportingKillSwitch() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementJobEventReportingKillSwitch())
                 .isEqualTo(MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH);
@@ -2582,14 +2650,13 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getMeasurementJobEventReportingKillSwitch()).isEqualTo(phOverrideValue);
-
-        Flags flags = FlagsFactory.getFlagsForTest();
-        assertThat(flags.getMeasurementJobEventReportingKillSwitch())
-                .isEqualTo(MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH);
     }
 
     @Test
     public void testGetMeasurementJobEventReportingKillSwitch_measurementOverride() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementJobEventReportingKillSwitch())
                 .isEqualTo(MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH);
@@ -2607,6 +2674,9 @@ public class PhFlagsTest {
 
     @Test
     public void testGetMeasurementJobEventReportingKillSwitch_globalOverride() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementJobEventReportingKillSwitch())
                 .isEqualTo(MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH);
@@ -2624,6 +2694,9 @@ public class PhFlagsTest {
 
     @Test
     public void testGetMeasurementReceiverInstallAttributionKillSwitch() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementReceiverInstallAttributionKillSwitch())
                 .isEqualTo(MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH);
@@ -2638,14 +2711,13 @@ public class PhFlagsTest {
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getMeasurementReceiverInstallAttributionKillSwitch())
                 .isEqualTo(phOverrideValue);
-
-        Flags flags = FlagsFactory.getFlagsForTest();
-        assertThat(flags.getMeasurementReceiverInstallAttributionKillSwitch())
-                .isEqualTo(MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH);
     }
 
     @Test
     public void testGetMeasurementReceiverInstallAttributionKillSwitch_measurementOverride() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementReceiverInstallAttributionKillSwitch())
                 .isEqualTo(MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH);
@@ -2664,6 +2736,9 @@ public class PhFlagsTest {
 
     @Test
     public void testGetMeasurementReceiverInstallAttributionKillSwitch_globalOverride() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementReceiverInstallAttributionKillSwitch())
                 .isEqualTo(MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH);
@@ -2682,6 +2757,9 @@ public class PhFlagsTest {
 
     @Test
     public void testGetMeasurementReceiverDeletePackagesKillSwitch() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementReceiverDeletePackagesKillSwitch())
                 .isEqualTo(MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH);
@@ -2696,14 +2774,13 @@ public class PhFlagsTest {
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getMeasurementReceiverDeletePackagesKillSwitch())
                 .isEqualTo(phOverrideValue);
-
-        Flags flags = FlagsFactory.getFlagsForTest();
-        assertThat(flags.getMeasurementReceiverDeletePackagesKillSwitch())
-                .isEqualTo(MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH);
     }
 
     @Test
     public void testGetMeasurementReceiverDeletePackagesKillSwitch_measurementOverride() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementReceiverDeletePackagesKillSwitch())
                 .isEqualTo(MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH);
@@ -2722,6 +2799,9 @@ public class PhFlagsTest {
 
     @Test
     public void testGetMeasurementReceiverDeletePackagesKillSwitch_globalOverride() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getMeasurementReceiverDeletePackagesKillSwitch())
                 .isEqualTo(MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH);
@@ -2757,6 +2837,9 @@ public class PhFlagsTest {
 
     @Test
     public void testGetMeasurementRegistrationJobQueueKillSwitch() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overrides the Registration Job Queue kill switch should be off
         assertThat(FlagsFactory.getFlags().getAsyncRegistrationJobQueueKillSwitch())
                 .isEqualTo(MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH);
@@ -2775,6 +2858,9 @@ public class PhFlagsTest {
 
     @Test
     public void testGetMeasurementRegistrationJobQueueKillSwitch_measurementOverride() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overrides the Registration Job Queue kill switch should be off
         assertThat(FlagsFactory.getFlags().getAsyncRegistrationJobQueueKillSwitch())
                 .isEqualTo(MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH);
@@ -2793,6 +2879,9 @@ public class PhFlagsTest {
 
     @Test
     public void testGetMeasurementRegistrationJobQueueKillSwitch_globalOverride() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overrides the Registration Job Queue kill switch should be off
         assertThat(FlagsFactory.getFlags().getAsyncRegistrationJobQueueKillSwitch())
                 .isEqualTo(MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH);
@@ -2845,6 +2934,9 @@ public class PhFlagsTest {
 
     @Test
     public void testGetTopicsKillSwitch() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // Without any overriding, the value is the hard coded constant.
         assertThat(FlagsFactory.getFlags().getTopicsKillSwitch()).isEqualTo(TOPICS_KILL_SWITCH);
 
@@ -2862,6 +2954,9 @@ public class PhFlagsTest {
 
     @Test
     public void testGetMddBackgroundTaskKillSwitch() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // Without any overriding, the value is the hard coded constant.
         assertThat(FlagsFactory.getFlags().getMddBackgroundTaskKillSwitch())
                 .isEqualTo(MDD_BACKGROUND_TASK_KILL_SWITCH);
@@ -2945,11 +3040,11 @@ public class PhFlagsTest {
 
     @Test
     public void test_globalKillswitchOverrides_getTopicsKillSwitch() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // Without any overriding, Topics Killswitch is off.
         assertThat(FlagsFactory.getFlags().getTopicsKillSwitch()).isEqualTo(TOPICS_KILL_SWITCH);
-
-        // Without any overriding, Global Killswitch is off.
-        assertThat(FlagsFactory.getFlags().getGlobalKillSwitch()).isEqualTo(GLOBAL_KILL_SWITCH);
 
         // Now overriding with the value from PH.
         final boolean phOverridingValue = true;
@@ -2969,6 +3064,9 @@ public class PhFlagsTest {
 
     @Test
     public void testGetFledgeSelectAdsKillSwitch() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overrides the Ad Selection Service kill switch should be off
         assertThat(FlagsFactory.getFlags().getFledgeSelectAdsKillSwitch())
                 .isEqualTo(FLEDGE_SELECT_ADS_KILL_SWITCH);
@@ -2987,6 +3085,9 @@ public class PhFlagsTest {
 
     @Test
     public void testGetFledgeCustomAudienceServiceKillSwitch() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overrides the Custom Audience Service kill switch should be off
         assertThat(FlagsFactory.getFlags().getFledgeCustomAudienceServiceKillSwitch())
                 .isEqualTo(FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH);
@@ -3005,6 +3106,9 @@ public class PhFlagsTest {
 
     @Test
     public void testGetFledgeGlobalKillSwitchOverridesOtherFledgeKillSwitches() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         // without any overrides the Fledge API kill switch should be off
         assertThat(FlagsFactory.getFlags().getFledgeSelectAdsKillSwitch())
                 .isEqualTo(FLEDGE_SELECT_ADS_KILL_SWITCH);
@@ -3577,6 +3681,15 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getConsentSourceOfTruth()).isEqualTo(phOverridingValue);
+    }
+
+    private void disableGlobalKillSwitch() {
+        // Override the global_kill_switch to test other flag values.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_GLOBAL_KILL_SWITCH,
+                Boolean.toString(false),
+                /* makeDefault */ false);
     }
 
     private void setEnrollmentBlocklist(String blocklistFlag) {
