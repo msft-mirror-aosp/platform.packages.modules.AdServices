@@ -26,7 +26,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -36,7 +35,6 @@ import static org.mockito.Mockito.when;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteException;
 
 import androidx.test.core.app.ApplicationProvider;
 
@@ -155,17 +153,6 @@ public class DbHelperTest {
 
         // Verify no error if migrate db from V5 to V3
         dbHelper.onDowngrade(db, DATABASE_VERSION_V5, CURRENT_DATABASE_VERSION);
-    }
-
-    @Test
-    public void testOnDowngrade_nonTopicsV5ToV3() {
-        DbHelper dbHelper = spy(DbTestUtil.getDbHelperForTest());
-        SQLiteDatabase db = mock(SQLiteDatabase.class);
-
-        // Parent class doesn't implement onDowngrade() and will throw an SQLiteException
-        assertThrows(
-                SQLiteException.class,
-                () -> dbHelper.onDowngrade(db, /* oldVersion */ 5, /* newVersion */ 2));
     }
 
     @Test
