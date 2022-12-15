@@ -29,6 +29,9 @@
       "name": "SdkSandboxRestrictionsHostTest[com.google.android.adservices.apex]"
     },
     {
+      "name": "SdkSandboxMetricsHostTest[com.google.android.adservices.apex]"
+    },
+    {
       "name": "SdkSandboxStorageHostTest[com.google.android.adservices.apex]",
       "options": [
         {
@@ -76,6 +79,9 @@
     },
     {
       "name": "SdkSandboxRestrictionsHostTest"
+    },
+    {
+      "name": "SdkSandboxMetricsHostTest"
     },
     {
       "name": "SdkSandboxStorageHostTest",
