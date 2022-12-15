@@ -117,16 +117,7 @@
       "name": "CtsAccessibilityTestCases"
     },
     {
-      "name": "CtsActivityManagerBackgroundActivityTestCases"
-    },
-    {
-      "name": "CtsActivityRecognitionTestCases"
-    },
-    {
       "name": "CtsAlarmManagerTestCases"
-    },
-    {
-      "name": "CtsAmbientContextServiceTestCases"
     },
     {
       "name": "CtsAndroidAppTestCases"
@@ -135,19 +126,10 @@
       "name": "CtsAnimationTestCases"
     },
     {
-      "name": "CtsAppEnumerationTestCases"
-    },
-    {
       "name": "CtsAppExitTestCases"
     },
     {
-      "name": "CtsAppOps2TestCases"
-    },
-    {
       "name": "CtsAppOpsTestCases"
-    },
-    {
-      "name": "CtsAppSearchTestCases"
     },
     {
       "name": "CtsAppTestCases"
@@ -157,18 +139,6 @@
     },
     {
       "name": "CtsAutoFillServiceTestCases"
-    },
-    {
-      "name": "CtsBackupTestCases"
-    },
-    {
-      "name": "CtsBatterySavingTestCases"
-    },
-    {
-      "name": "CtsBlobStoreTestCases"
-    },
-    {
-      "name": "CtsBluetoothTestCases"
     },
     {
       "name": "CtsCameraTestCases"
@@ -186,25 +156,13 @@
       "name": "CtsDpiTestCases"
     },
     {
-      "name": "CtsDreamsTestCases"
-    },
-    {
-      "name": "CtsDropBoxManagerTestCases"
-    },
-    {
       "name": "CtsFragmentTestCases"
     },
     {
       "name": "CtsGameManagerTestCases"
     },
     {
-      "name": "CtsGameServiceTestCases"
-    },
-    {
       "name": "CtsGraphicsTestCases"
-    },
-    {
-      "name": "CtsHardwareTestCases"
     },
     {
       "name": "CtsInputMethodTestCases"
@@ -213,19 +171,103 @@
       "name": "CtsInputMethodTestCases32"
     },
     {
-      "name": "CtsInputTestCases"
-    },
-    {
-      "name": "CtsInstantAppTests"
-    },
-    {
       "name": "CtsJniTestCases"
     },
     {
-      "name": "CtsKeystorePerformanceTestCases"
+      "name": "CtsMediaAudioTestCases"
     },
     {
-      "name": "CtsKeystoreTestCases"
+      "name": "CtsMediaCodecTestCases"
+    },
+    {
+      "name": "CtsMediaMiscTestCases"
+    },
+    {
+      "name": "CtsMediaRecorderTestCases"
+    },
+    {
+      "name": "CtsMultiUserTestCases"
+    },
+    {
+      "name": "CtsNativeMediaAAudioTestCases"
+    },
+    {
+      "name": "CtsNativeNetPlatformTestCases"
+    },
+    {
+      "name": "CtsOsTestCases"
+    },
+    {
+      "name": "CtsPackageInstallAppOpDefaultTestCases"
+    },
+    {
+      "name": "CtsPackageUninstallTestCases"
+    },
+    {
+      "name": "CtsPermission2TestCases"
+    },
+    {
+      "name": "CtsPermission5TestCases"
+    },
+    {
+      "name": "CtsPermissionTestCases"
+    },
+    {
+      "name": "CtsPermissionTestCasesTelephony"
+    },
+    {
+      "name": "CtsPreferenceTestCases"
+    },
+    {
+      "name": "CtsRenderscriptTestCases"
+    },
+    {
+      "name": "CtsSensorPrivacyTestCases"
+    },
+    {
+      "name": "CtsSensorRatePermissionTestCases"
+    },
+    {
+      "name": "CtsSensorTestCases"
+    },
+    {
+      "name": "CtsSystemUiTestCases"
+    },
+    {
+      "name": "CtsTextTestCases"
+    },
+    {
+      "name": "CtsToastTestCases"
+    },
+    {
+      "name": "CtsTranslationTestCases"
+    },
+    {
+      "name": "CtsUiAutomationTestCases "
+    },
+    {
+      "name": "CtsUiRenderingTestCases"
+    },
+    {
+      "name": "CtsUsageStatsTestCases"
+    },
+    {
+      "name": "CtsUtilTestCases"
+    },
+    {
+      "name": "CtsViewReceiveContentTestCases"
+    },
+    {
+      "name": "CtsVirtualDevicesTestCases"
+    },
+    {
+      "name": "CtsVoiceInteractionTestCases"
+    },
+    {
+      "name": "CtsWebkitTestCases"
+    },
+    {
+      "name": "CtsWidgetTestCases"
     }
   ]
 }
