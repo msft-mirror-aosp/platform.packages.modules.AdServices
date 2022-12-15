@@ -25,7 +25,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.Manifest;
 import android.app.sdksandbox.SdkSandboxManager;
-import android.app.sdksandbox.testutils.EmptyActivity;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallback;
 import android.content.Context;
@@ -53,7 +52,9 @@ public class SdkSandboxRestrictionsTestApp {
 
     private static final String SDK_PACKAGE = "com.android.tests.sdkprovider.restrictionstest";
 
-    @Rule public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(EmptyActivity.class);
+    @Rule
+    public final ActivityScenarioRule mRule =
+            new ActivityScenarioRule<>(SdkSandboxEmptyActivity.class);
 
     @Before
     public void setup() {
