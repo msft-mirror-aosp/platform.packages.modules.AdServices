@@ -15,7 +15,8 @@
   ~ limitations under the License.
   -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.android.tests.sdkprovider.crashtest">
+          package="com.android.tests.sdkprovider.crashtest"
+          android:versionCode="1">
     <application>
         <sdk-library android:name="com.android.tests.sdkprovider.crashtest"
                      android:versionMajor="1" />
