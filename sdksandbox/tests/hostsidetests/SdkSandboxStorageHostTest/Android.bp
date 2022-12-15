@@ -43,6 +43,7 @@ java_defaults {
     name: "SdkSandboxStorageHostTestDefaults",
     srcs: [
         "app/src/**/SdkSandboxStorageTestApp.java",
+        "app/src/**/TestActivity.java",
         ":framework-sdksandbox-sources",
         ":sdksandbox_aidl",
         ":sdksandbox-sources",
