@@ -146,6 +146,12 @@ public class DbHelper extends SQLiteOpenHelper {
         }
     }
 
+    @Override
+    public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        LogUtil.d("Downgrade database version from %d to %d.", oldVersion, newVersion);
+        // prevent parent class to throw SQLiteException
+    }
+
     public long getDbFileSize() {
         return mDbFile != null && mDbFile.exists() ? mDbFile.length() : -1;
     }
