@@ -24,6 +24,7 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.fail;
 
 import android.app.sdksandbox.SdkSandboxManager;
+import android.app.sdksandbox.testutils.EmptyActivity;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.app.usage.StorageStats;
 import android.app.usage.StorageStatsManager;
@@ -65,7 +66,7 @@ public class SdkSandboxStorageTestApp {
     private static final String JAVA_FILE_NOT_FOUND_MSG =
             "open failed: ENOENT (No such file or directory)";
 
-    @Rule public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(TestActivity.class);
+    @Rule public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(EmptyActivity.class);
 
     private Context mContext;
     private SdkSandboxManager mSdkSandboxManager;

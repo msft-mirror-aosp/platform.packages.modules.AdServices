@@ -37,6 +37,9 @@
       ]
     },
     {
+      "name": "SdkSandboxMetricsHostTest[com.google.android.adservices.apex]"
+    },
+    {
       "name": "SdkSandboxManagerDisabledTests[com.google.android.adservices.apex]"
     },
     {
@@ -84,6 +87,9 @@
           "exclude-annotation": "android.platform.test.annotations.LargeTest"
         }
       ]
+    },
+    {
+      "name": "SdkSandboxMetricsHostTest"
     },
     {
       "name": "SdkSandboxManagerDisabledTests"
