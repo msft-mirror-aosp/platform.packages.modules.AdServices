@@ -101,6 +101,7 @@ bootclasspath_fragment {
         // result in a build failure due to inconsistent flags.
         package_prefixes: [
             "android.adservices",
+            "android.app.adservices",
             "android.app.sdksandbox",
             "com.android.adservices",
         ],

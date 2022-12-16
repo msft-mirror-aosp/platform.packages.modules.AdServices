@@ -33,6 +33,12 @@ public class AdSelectionSignalsTest {
     private static final int DESCRIBE_CONTENTS_EXPECTATION = 0;
 
     @Test
+    public void testAdSelectionSignalsGetSizeInBytes() {
+        AdSelectionSignals identicalId = AdSelectionSignals.fromString(SIGNALS_STRING);
+        assertEquals(identicalId.toString().getBytes().length, SIGNALS_STRING.getBytes().length);
+    }
+
+    @Test
     public void testAdSelectionSignalsCreatorArray() {
         Assert.assertArrayEquals(
                 new AdSelectionSignals[ARRAY_SIZE],

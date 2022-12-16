@@ -16,8 +16,12 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.adservices.service.common.Throttler.ApiKey.ADID_API_APP_PACKAGE_NAME;
+import static com.android.adservices.service.common.Throttler.ApiKey.APPSETID_API_APP_PACKAGE_NAME;
 import static com.android.adservices.service.common.Throttler.ApiKey.MEASUREMENT_API_REGISTER_SOURCE;
 import static com.android.adservices.service.common.Throttler.ApiKey.MEASUREMENT_API_REGISTER_TRIGGER;
+import static com.android.adservices.service.common.Throttler.ApiKey.MEASUREMENT_API_REGISTER_WEB_SOURCE;
+import static com.android.adservices.service.common.Throttler.ApiKey.UNKNOWN;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.mock;
 
@@ -102,20 +106,38 @@ public class ThrottlerTest {
     public void testTryAcquire_withThreePermitsPerSecond() {
         // Create a throttler with 3 permits per second.
         Throttler throttler = createThrottler(3);
-        assertThat(throttler.tryAcquire(MEASUREMENT_API_REGISTER_SOURCE, "sdk1")).isTrue();
-        assertThat(throttler.tryAcquire(MEASUREMENT_API_REGISTER_SOURCE, "sdk1")).isTrue();
-        assertThat(throttler.tryAcquire(MEASUREMENT_API_REGISTER_SOURCE, "sdk1")).isTrue();
-
-        // tryAcquire should return false as it has used the 3 permits per second
-        assertThat(throttler.tryAcquire(MEASUREMENT_API_REGISTER_SOURCE, "sdk1")).isFalse();
+        assertAcquireSeveralTimes(throttler, MEASUREMENT_API_REGISTER_SOURCE, 3);
 
         // Calling a different API.
-        assertThat(throttler.tryAcquire(MEASUREMENT_API_REGISTER_TRIGGER, "sdk1")).isTrue();
-        assertThat(throttler.tryAcquire(MEASUREMENT_API_REGISTER_TRIGGER, "sdk1")).isTrue();
-        assertThat(throttler.tryAcquire(MEASUREMENT_API_REGISTER_TRIGGER, "sdk1")).isTrue();
+        assertAcquireSeveralTimes(throttler, MEASUREMENT_API_REGISTER_TRIGGER, 3);
+    }
 
-        // tryAcquire should return false as it has used the 3 permits per second
-        assertThat(throttler.tryAcquire(MEASUREMENT_API_REGISTER_TRIGGER, "sdk1")).isFalse();
+    @Test
+    public void testTryAcquire_withSeveralFlagsDifferentPermitsPerSecond() {
+        // Create a throttler with several flags
+        final Flags flags = mock(Flags.class);
+        doReturn(1F).when(flags).getSdkRequestPermitsPerSecond();
+        doReturn(2F).when(flags).getAdIdRequestPermitsPerSecond();
+        doReturn(3F).when(flags).getAppSetIdRequestPermitsPerSecond();
+        doReturn(4F).when(flags).getMeasurementRegisterSourceRequestPermitsPerSecond();
+        doReturn(5F).when(flags).getMeasurementRegisterWebSourceRequestPermitsPerSecond();
+
+        final Throttler throttler = new Throttler(flags);
+
+        // Default ApiKey configured with 1 request per second
+        assertAcquireSeveralTimes(throttler, UNKNOWN, 1);
+
+        // Ad id ApiKey configured with 2 request per second
+        assertAcquireSeveralTimes(throttler, ADID_API_APP_PACKAGE_NAME, 2);
+
+        // App set id ApiKey configured with 3 request per second
+        assertAcquireSeveralTimes(throttler, APPSETID_API_APP_PACKAGE_NAME, 3);
+
+        // Register Source ApiKey configured with 4 request per second
+        assertAcquireSeveralTimes(throttler, MEASUREMENT_API_REGISTER_SOURCE, 4);
+
+        // Register Web Source ApiKey configured with 5 request per second
+        assertAcquireSeveralTimes(throttler, MEASUREMENT_API_REGISTER_WEB_SOURCE, 5);
     }
 
     @Test
@@ -131,12 +153,10 @@ public class ThrottlerTest {
         Throttler throttler = Throttler.getInstance(flags);
 
         // tryAcquire should return false after 1 permit
-        assertThat(throttler.tryAcquire(MEASUREMENT_API_REGISTER_SOURCE, "sdk1")).isTrue();
-        assertThat(throttler.tryAcquire(MEASUREMENT_API_REGISTER_SOURCE, "sdk1")).isFalse();
+        assertAcquireSeveralTimes(throttler, MEASUREMENT_API_REGISTER_SOURCE, 1);
 
         // Calling a different API. tryAcquire should return false after 1 permit
-        assertThat(throttler.tryAcquire(MEASUREMENT_API_REGISTER_TRIGGER, "sdk1")).isTrue();
-        assertThat(throttler.tryAcquire(MEASUREMENT_API_REGISTER_TRIGGER, "sdk1")).isFalse();
+        assertAcquireSeveralTimes(throttler, MEASUREMENT_API_REGISTER_TRIGGER, 1);
 
         // Reset throttler state.
         // If another class calls getInstance, it can be initialized to its original state
@@ -148,6 +168,15 @@ public class ThrottlerTest {
         assertThrows(NullPointerException.class, () -> Throttler.getInstance(null));
     }
 
+    private void assertAcquireSeveralTimes(
+            Throttler throttler, Throttler.ApiKey apiKey, int validTimes) {
+        final String defaultRequester = "requester";
+        for (int i = 0; i < validTimes; i++) {
+            assertThat(throttler.tryAcquire(apiKey, defaultRequester)).isTrue();
+        }
+        assertThat(throttler.tryAcquire(apiKey, defaultRequester)).isFalse();
+    }
+
     private Throttler createThrottler(float permitsPerSecond) {
         final Flags flags = createFlags(permitsPerSecond);
         return new Throttler(flags);
@@ -156,6 +185,14 @@ public class ThrottlerTest {
     private Flags createFlags(float permitsPerSecond) {
         final Flags flags = mock(Flags.class);
         doReturn(permitsPerSecond).when(flags).getSdkRequestPermitsPerSecond();
+        doReturn(permitsPerSecond)
+                .when(flags)
+                .getMeasurementRegisterSourceRequestPermitsPerSecond();
+        doReturn(permitsPerSecond)
+                .when(flags)
+                .getMeasurementRegisterWebSourceRequestPermitsPerSecond();
+        doReturn(permitsPerSecond).when(flags).getTopicsApiSdkRequestPermitsPerSecond();
+        doReturn(permitsPerSecond).when(flags).getTopicsApiAppRequestPermitsPerSecond();
         return flags;
     }
 }

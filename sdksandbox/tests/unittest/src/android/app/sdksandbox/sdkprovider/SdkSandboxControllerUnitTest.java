@@ -79,7 +79,9 @@ public class SdkSandboxControllerUnitTest {
 
     @After
     public void tearDown() {
-        mStaticMockSession.finishMocking();
+        if (mStaticMockSession != null) {
+            mStaticMockSession.finishMocking();
+        }
     }
 
     @Test

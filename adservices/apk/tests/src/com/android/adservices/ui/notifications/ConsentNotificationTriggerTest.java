@@ -40,6 +40,7 @@ import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -65,6 +66,8 @@ public class ConsentNotificationTriggerTest {
 
     private MockitoSession mStaticMockSession = null;
 
+    @Mock Flags mMockFlags;
+
     @Before
     public void setUp() {
         mContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
@@ -77,11 +80,17 @@ public class ConsentNotificationTriggerTest {
         MockitoAnnotations.initMocks(this);
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
+                        .spyStatic(ConsentManager.class)
                         .spyStatic(FlagsFactory.class)
                         .strictness(Strictness.WARN)
                         .initMocks(this)
                         .startMocking();
         try {
+            // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+            ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+            doReturn(false).when(mMockFlags).getGaUxFeatureEnabled();
+
+            doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any(Context.class)));
             ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
             mNotificationManager = mContext.getSystemService(NotificationManager.class);
             final String expectedTitle =
@@ -92,6 +101,9 @@ public class ConsentNotificationTriggerTest {
             ConsentNotificationTrigger.showConsentNotification(mContext, true);
             Thread.sleep(1000); // wait 1s to make sure that Notification is displayed.
 
+            verify(mConsentManager).disable(any(Context.class));
+            verify(mConsentManager).recordNotificationDisplayed();
+            verifyNoMoreInteractions(mConsentManager);
             assertThat(mNotificationManager.getActiveNotifications()).hasLength(1);
             final Notification notification =
                     mNotificationManager.getActiveNotifications()[0].getNotification();
@@ -130,10 +142,15 @@ public class ConsentNotificationTriggerTest {
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(ConsentManager.class)
+                        .spyStatic(FlagsFactory.class)
                         .strictness(Strictness.WARN)
                         .initMocks(this)
                         .startMocking();
         try {
+            // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+            ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+            doReturn(false).when(mMockFlags).getGaUxFeatureEnabled();
+
             doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any(Context.class)));
             mNotificationManager = mContext.getSystemService(NotificationManager.class);
             final String expectedTitle =
@@ -187,10 +204,14 @@ public class ConsentNotificationTriggerTest {
                 ExtendedMockito.mockitoSession()
                         .spyStatic(NotificationManagerCompat.class)
                         .spyStatic(ConsentManager.class)
+                        .spyStatic(FlagsFactory.class)
                         .strictness(Strictness.WARN)
                         .initMocks(this)
                         .startMocking();
         try {
+            // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+            ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+            doReturn(false).when(mMockFlags).getGaUxFeatureEnabled();
 
             doReturn(mNotificationManagerCompat)
                     .when(() -> NotificationManagerCompat.from(any(Context.class)));

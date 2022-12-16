@@ -36,6 +36,8 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"Надає додатку доступ до API змінення стану ввімкнення AdService."</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"Доступ до API стану ввімкнення AdService"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Надає додатку доступ до API стану ввімкнення AdService."</string>
+    <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Доступ до AdServicesManager API"</string>
+    <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Надає додатку доступ до AdServicesManager API."</string>
     <string name="app_label" msgid="5985320129629013968">"Система Android"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Приєднайтеся до програми \"Конфіденційність у сфері реклами Android (бета-версія)\""</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android шукає більш захищені способи показу вам реклами в додатках"</string>
@@ -81,6 +83,7 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Програма \"Конфіденційність у сфері реклами Android (бета-версія)\" надає додаткам нові можливості для показу реклами, яка має вам сподобатися. Ці технології не використовують ідентифікатори пристроїв.\n\nСистема Android може визначати типи оголошень, які мають вас зацікавити, і тимчасово зберігає дані про такі інтереси на вашому пристрої. Завдяки цьому додатки, не відстежуючи ваші дії на веб-сайтах і в додатках інших розробників, показують вам доречну рекламу."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"У вас немає заблокованих інтересів"</string>
+    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Інтереси скинуто"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Додатки можуть визначати ваші інтереси та тимчасово зберігати їх у системі Android. Згодом інший додаток може показувати вам рекламу на основі цих інтересів.\n\nЯкщо ви заблокуєте додаток, він більше не визначатиме ваші інтереси. Доки ви не розблокуєте додаток, він більше не з’явиться в цьому списку. Інтереси, визначені додатком раніше, буде видалено, але деякі пов’язані оголошення можуть показуватися й надалі."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Додатки, які ви заблокували"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Скинути інтереси, визначені додатками"</string>

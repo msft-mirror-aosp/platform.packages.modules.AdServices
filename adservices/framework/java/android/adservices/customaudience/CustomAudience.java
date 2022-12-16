@@ -401,7 +401,7 @@ public final class CustomAudience implements Parcelable {
          * Sets the URI to fetch bidding logic from for use in the ad selection process. The URI
          * must use HTTPS.
          *
-         * <p>See {@link #getBiddingLogicUri()} ()} for more information.
+         * <p>See {@link #getBiddingLogicUri()} for more information.
          */
         @NonNull
         public CustomAudience.Builder setBiddingLogicUri(@NonNull Uri biddingLogicUri) {

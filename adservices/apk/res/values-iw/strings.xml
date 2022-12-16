@@ -40,6 +40,8 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"‏מאפשרת לאפליקציה לגשת לשינוי מצב ההפעלה של ממשק ה-API ב-AdService."</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"‏גישה למצב ההפעלה של ממשק ה-API ב-AdService"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"‏מאפשרת לאפליקציה לגשת למצב ההפעלה של ממשק ה-API ב-AdService."</string>
+    <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"‏גישה לממשק ה-API של AdServicesManager"</string>
+    <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"‏ההגדרה הזו מאפשרת לאפליקציה לגשת לממשק ה-API של AdServicesManager."</string>
     <string name="app_label" msgid="5985320129629013968">"‏מערכת Android"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"‏רוצה להצטרף לתוכנית הבטא של פרטיות במודעות ב-Android?"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"‏מערכת Android בודקת איך האפליקציות יכולות להציג לך מודעות בדרכים פרטיות יותר"</string>
@@ -85,6 +87,7 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"ארגז חול לפרטיות"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"‏תוכנית הבטא של פרטיות במודעות ב-Android מספקת תכונות חדשות שמאפשרות לאפליקציות להציג לך מודעות שעשויות להיות רלוונטיות עבורך. בטכנולוגיות האלה לא נעשה שימוש במזהי המכשיר.\n\nמערכת Android יכולה להעריך אילו סוגי מודעות עשויים לעניין אותך, ולשמור את תחומי העניין האלה באופן זמני על המכשיר. באופן הזה, האפליקציות יכולות להציג לך מודעות רלוונטיות בלי לעקוב אחרי הפעילות שלך באתרים ובאפליקציות של מפתחים אחרים."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"לא חסמת אף תחום עניין"</string>
+    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"תחומי העניין אופסו"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"‏האפליקציות יכולות להעריך את תחומי העניין שלך ולשמור אותם באופן זמני באמצעות Android. בהמשך, אפליקציות אחרות יוכלו להציג לך מודעות על סמך תחומי העניין האלה.\n\nאם בחרת לחסום אפליקציה מסוימת, היא לא תוכל להעריך את תחומי העניין שלך יותר. האפליקציה הזו לא תתווסף שוב לרשימת האפליקציות אלא אם החסימה תבוטל. כל תחומי העניין שהאפליקציה כבר העריכה יימחקו, אך יכול להיות שעדיין יוצגו לך כמה מודעות קשורות."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"אפליקציות שחסמת"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"איפוס הנתונים שהוערכו על ידי האפליקציות"</string>

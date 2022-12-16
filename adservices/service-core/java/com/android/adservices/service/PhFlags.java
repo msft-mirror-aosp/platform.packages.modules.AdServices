@@ -147,20 +147,30 @@ public final class PhFlags implements Flags {
             "fledge_background_fetch_max_response_size_b";
 
     // FLEDGE Ad Selection keys
-    static final String KEY_FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT =
-            "fledge_ad_selection_concurrent_bidding_count";
+    static final String KEY_FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT =
+            "fledge_ad_selection_max_concurrent_bidding_count";
     static final String KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS =
             "fledge_ad_selection_bidding_timeout_per_ca_ms";
     static final String KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS =
             "fledge_ad_selection_scoring_timeout_ms";
+    static final String KEY_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS =
+            "fledge_ad_selection_selecting_outcome_timeout_ms";
     static final String KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS =
             "fledge_ad_selection_overall_timeout_ms";
+    static final String KEY_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS =
+            "fledge_ad_selection_from_outcomes_overall_timeout_ms";
     static final String KEY_FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S =
             "fledge_ad_selection_expiration_window_s";
     static final String KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS =
             "fledge_report_impression_overall_timeout_ms";
     static final String KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS =
             "fledge_ad_selection_bidding_timeout_per_buyer_ms";
+    static final String KEY_FLEDGE_HTTP_CACHE_ENABLE = "fledge_http_cache_enable";
+    static final String KEY_FLEDGE_HTTP_CACHE_ENABLE_JS_CACHING =
+            "fledge_http_cache_enable_js_caching";
+    static final String KEY_FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS =
+            "fledge_http_cache_default_max_age_seconds";
+    static final String KEY_FLEDGE_HTTP_CACHE_MAX_ENTRIES = "fledge_http_cache_max_entries";
 
     // FLEDGE Off device ad selection keys
     static final String KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS =
@@ -256,6 +266,17 @@ public final class PhFlags implements Flags {
 
     // Rate Limit keys
     static final String KEY_SDK_REQUEST_PERMITS_PER_SECOND = "sdk_request_permits_per_second";
+    static final String KEY_ADID_REQUEST_PERMITS_PER_SECOND = "adid_request_permits_per_second";
+    static final String KEY_APPSETID_REQUEST_PERMITS_PER_SECOND =
+            "appsetid_request_permits_per_second";
+    static final String KEY_MEASUREMENT_REGISTER_SOURCE_REQUEST_PERMITS_PER_SECOND =
+            "measurement_register_source_request_permits_per_second";
+    static final String KEY_MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND =
+            "measurement_register_web_source_request_permits_per_second";
+    static final String KEY_TOPICS_API_APP_REQUEST_PERMITS_PER_SECOND =
+            "topics_api_app_request_permits_per_second";
+    static final String KEY_TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND =
+            "topics_api_sdk_request_permits_per_second";
 
     // Adservices enable status keys.
     static final String KEY_ADSERVICES_ENABLED = "adservice_enabled";
@@ -277,6 +298,9 @@ public final class PhFlags implements Flags {
     // Consent Manager debug mode keys.
     static final String KEY_CONSENT_MANAGER_DEBUG_MODE = "consent_manager_debug_mode";
 
+    // Source of truth to get consent for PPAPI
+    static final String KEY_CONSENT_SOURCE_OF_TRUTH = "consent_source_of_truth";
+
     // App/SDK AllowList/DenyList keys that have access to the web registration APIs
     static final String KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST = "web_context_client_allow_list";
 
@@ -285,6 +309,9 @@ public final class PhFlags implements Flags {
             "max_response_based_registration_size_bytes";
 
     // UI keys
+    static final String KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL =
+            "mdd_ui_ota_strings_manifest_file_url";
+
     static final String KEY_UI_DIALOGS_FEATURE_ENABLED = "ui_dialogs_feature_enabled";
 
     static final String KEY_GA_UX_FEATURE_ENABLED = "ga_ux_enabled";
@@ -296,14 +323,14 @@ public final class PhFlags implements Flags {
     static final String KEY_OFF_DEVICE_AD_SELECTION_ENABLED = "enable_off_device_ad_selection";
 
     // Interval in which to run Registration Job Queue Service.
-    static final String KEY_REGISTRATION_JOB_QUEUE_INTERVAL_MS =
-            "key_registration_job_queue_interval_ms";
+    static final String KEY_ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS =
+            "key_async_registration_job_queue_interval_ms";
 
     // Feature Flags
     static final String KEY_ENABLE_TOPIC_CONTRIBUTORS_CHECK = "enable_topic_contributors_check";
 
     // Database Schema Version Flags
-    static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_3 = "enable_database_schema_version_3";
+    static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_5 = "enable_database_schema_version_5";
 
     // Enrollment flags.
     static final String KEY_ENROLLMENT_BLOCKLIST_IDS = "enrollment_blocklist_ids";
@@ -317,11 +344,11 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public long getRegistrationJobQueueIntervalMs() {
+    public long getAsyncRegistrationJobQueueIntervalMs() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_REGISTRATION_JOB_QUEUE_INTERVAL_MS,
+                /* flagName */ KEY_ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS,
                 /* defaultValue */ ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS);
     }
 
@@ -832,11 +859,11 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public int getAdSelectionConcurrentBiddingCount() {
+    public int getAdSelectionMaxConcurrentBiddingCount() {
         return DeviceConfig.getInt(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT,
-                /* defaultValue */ FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT);
+                /* flagName */ KEY_FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT,
+                /* defaultValue */ FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT);
     }
 
     @Override
@@ -864,11 +891,27 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public long getAdSelectionSelectingOutcomeTimeoutMs() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS,
+                /* defaultValue */ FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS);
+    }
+
+    @Override
     public long getAdSelectionOverallTimeoutMs() {
         return DeviceConfig.getLong(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS,
                 /* defaultValue */ FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS);
+    }
+
+    @Override
+    public long getAdSelectionFromOutcomesOverallTimeoutMs() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS,
+                /* defaultValue */ FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS);
     }
 
     @Override
@@ -885,6 +928,38 @@ public final class PhFlags implements Flags {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS,
                 /* defaultValue */ FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS);
+    }
+
+    @Override
+    public boolean getFledgeHttpCachingEnabled() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_HTTP_CACHE_ENABLE,
+                /* defaultValue */ FLEDGE_HTTP_CACHE_ENABLE);
+    }
+
+    @Override
+    public boolean getFledgeHttpJsCachingEnabled() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_HTTP_CACHE_ENABLE_JS_CACHING,
+                /* defaultValue */ FLEDGE_HTTP_CACHE_ENABLE_JS_CACHING);
+    }
+
+    @Override
+    public long getFledgeHttpCacheMaxEntries() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_HTTP_CACHE_MAX_ENTRIES,
+                /* defaultValue */ FLEDGE_HTTP_CACHE_MAX_ENTRIES);
+    }
+
+    @Override
+    public long getFledgeHttpCacheMaxAgeSeconds() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS,
+                /* defaultValue */ FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS);
     }
 
     // MDD related flags.
@@ -931,10 +1006,18 @@ public final class PhFlags implements Flags {
         // hard-coded value.
         return SystemProperties.getBoolean(
                 getSystemPropertyName(KEY_GLOBAL_KILL_SWITCH),
-                /* defaultValue */ DeviceConfig.getBoolean(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        /* flagName */ KEY_GLOBAL_KILL_SWITCH,
-                        /* defaultValue */ GLOBAL_KILL_SWITCH));
+                /* defaultValue */
+                isEmulator()
+                        ? false
+                        : DeviceConfig.getBoolean(
+                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                /* flagName */ KEY_GLOBAL_KILL_SWITCH,
+                                /* defaultValue */ GLOBAL_KILL_SWITCH));
+    }
+
+    // Return if the device is an emulator or not.
+    private boolean isEmulator() {
+        return SystemProperties.getBoolean("ro.boot.qemu", false);
     }
 
     // MEASUREMENT Killswitches
@@ -1165,7 +1248,7 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getRegistrationJobQueueKillSwitch() {
+    public boolean getAsyncRegistrationJobQueueKillSwitch() {
         // We check the Global Killswitch first then Measurement Killswitch.
         // As a result, it overrides all other killswitches.
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
@@ -1337,29 +1420,72 @@ public final class PhFlags implements Flags {
     // Rate Limit Flags.
     @Override
     public float getSdkRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                KEY_SDK_REQUEST_PERMITS_PER_SECOND, SDK_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
+    public float getAdIdRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                KEY_ADID_REQUEST_PERMITS_PER_SECOND, ADID_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
+    public float getAppSetIdRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                KEY_APPSETID_REQUEST_PERMITS_PER_SECOND, APPSETID_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
+    public float getMeasurementRegisterSourceRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                KEY_MEASUREMENT_REGISTER_SOURCE_REQUEST_PERMITS_PER_SECOND,
+                MEASUREMENT_REGISTER_SOURCE_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
+    public float getMeasurementRegisterWebSourceRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                KEY_MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND,
+                MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
+    public float getTopicsApiAppRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                KEY_TOPICS_API_APP_REQUEST_PERMITS_PER_SECOND,
+                TOPICS_API_APP_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
+    public float getTopicsApiSdkRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                KEY_TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND,
+                TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    private float getPermitsPerSecond(String flagName, float defaultValue) {
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
         try {
-            String sdkPermitString =
-                    SystemProperties.get(getSystemPropertyName(KEY_SDK_REQUEST_PERMITS_PER_SECOND));
-            if (!TextUtils.isEmpty(sdkPermitString)) {
-                return parseFloat(sdkPermitString);
+            final String permitString = SystemProperties.get(getSystemPropertyName(flagName));
+            if (!TextUtils.isEmpty(permitString)) {
+                return parseFloat(permitString);
             }
         } catch (NumberFormatException e) {
-            LogUtil.e(e, "Failed to parse SdkRequestPermitsPerSecond");
-            return SDK_REQUEST_PERMITS_PER_SECOND;
+            LogUtil.e(e, "Failed to parse %s", flagName);
+            return defaultValue;
         }
 
-        float sdkRequestPermitsPerSecond =
-                DeviceConfig.getFloat(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        /* flagName */ KEY_SDK_REQUEST_PERMITS_PER_SECOND,
-                        /* defaultValue */ SDK_REQUEST_PERMITS_PER_SECOND);
+        return DeviceConfig.getFloat(DeviceConfig.NAMESPACE_ADSERVICES, flagName, defaultValue);
+    }
 
-        if (sdkRequestPermitsPerSecond <= 0) {
-            throw new IllegalArgumentException("sdkRequestPermitsPerSecond should > 0");
-        }
-        return sdkRequestPermitsPerSecond;
+    @Override
+    public String getUiOtaStringsManifestFileUrl() {
+        return DeviceConfig.getString(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL,
+                /* defaultValue */ UI_OTA_STRINGS_MANIFEST_FILE_URL);
     }
 
     @Override
@@ -1369,10 +1495,12 @@ public final class PhFlags implements Flags {
             return false;
         }
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_ADSERVICES_ENABLED,
-                /* defaultValue */ ADSERVICES_ENABLED);
+        return isEmulator()
+                ? true
+                : DeviceConfig.getBoolean(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_ADSERVICES_ENABLED,
+                        /* defaultValue */ ADSERVICES_ENABLED);
     }
 
     @Override
@@ -1594,6 +1722,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public int getConsentSourceOfTruth() {
+        return DeviceConfig.getInt(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_CONSENT_SOURCE_OF_TRUTH,
+                /* defaultValue */ DEFAULT_CONSENT_SOURCE_OF_TRUTH);
+    }
+
+    @Override
     public long getMaxResponseBasedRegistrationPayloadSizeBytes() {
         return DeviceConfig.getLong(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -1645,11 +1781,11 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getEnableDatabaseSchemaVersion3() {
+    public boolean getEnableDatabaseSchemaVersion5() {
         return DeviceConfig.getBoolean(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_ENABLE_DATABASE_SCHEMA_VERSION_3,
-                /* defaultValue */ ENABLE_DATABASE_SCHEMA_VERSION_3);
+                /* flagName */ KEY_ENABLE_DATABASE_SCHEMA_VERSION_5,
+                /* defaultValue */ ENABLE_DATABASE_SCHEMA_VERSION_5);
     }
 
     @Override
@@ -1702,6 +1838,11 @@ public final class PhFlags implements Flags {
                 "\t" + KEY_MEASUREMENT_MANIFEST_FILE_URL + " = " + getMeasurementManifestFileUrl());
         writer.println(
                 "\t"
+                        + KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL
+                        + " = "
+                        + getUiOtaStringsManifestFileUrl());
+        writer.println(
+                "\t"
                         + KEY_DOWNLOADER_CONNECTION_TIMEOUT_MS
                         + " = "
                         + getDownloaderConnectionTimeoutMs());
@@ -1717,7 +1858,6 @@ public final class PhFlags implements Flags {
                         + KEY_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL
                         + " = "
                         + getMddTopicsClassifierManifestFileUrl());
-
         writer.println("==== AdServices PH Flags Dump Topics related flags ====");
         writer.println("\t" + KEY_TOPICS_EPOCH_JOB_PERIOD_MS + " = " + getTopicsEpochJobPeriodMs());
         writer.println("\t" + KEY_TOPICS_EPOCH_JOB_FLEX_MS + " = " + getTopicsEpochJobFlexMs());
@@ -1935,6 +2075,19 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS
                         + " = "
                         + getFledgeCustomAudienceMaxNumAds());
+        writer.println("\t" + KEY_FLEDGE_HTTP_CACHE_ENABLE + " = " + getFledgeHttpCachingEnabled());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_HTTP_CACHE_ENABLE_JS_CACHING
+                        + " = "
+                        + getFledgeHttpJsCachingEnabled());
+        writer.println(
+                "\t" + KEY_FLEDGE_HTTP_CACHE_MAX_ENTRIES + " = " + getFledgeHttpCacheMaxEntries());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS
+                        + " = "
+                        + getFledgeHttpCacheMaxAgeSeconds());
         writer.println(
                 "\t"
                         + KEY_FLEDGE_BACKGROUND_FETCH_ENABLED
@@ -1982,9 +2135,9 @@ public final class PhFlags implements Flags {
                         + getFledgeBackgroundFetchMaxResponseSizeB());
         writer.println(
                 "\t"
-                        + KEY_FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT
+                        + KEY_FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT
                         + " = "
-                        + getAdSelectionConcurrentBiddingCount());
+                        + getAdSelectionMaxConcurrentBiddingCount());
         writer.println(
                 "\t"
                         + KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS
@@ -2002,9 +2155,19 @@ public final class PhFlags implements Flags {
                         + getAdSelectionScoringTimeoutMs());
         writer.println(
                 "\t"
+                        + KEY_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS
+                        + " = "
+                        + getAdSelectionSelectingOutcomeTimeoutMs());
+        writer.println(
+                "\t"
                         + KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS
                         + " = "
                         + getAdSelectionOverallTimeoutMs());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS
+                        + " = "
+                        + getAdSelectionFromOutcomesOverallTimeoutMs());
         writer.println(
                 "\t"
                         + KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS

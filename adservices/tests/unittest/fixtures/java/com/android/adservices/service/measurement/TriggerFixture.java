@@ -62,31 +62,31 @@ public final class TriggerFixture {
         public static final Uri REGISTRANT = Uri.parse("android-app://com.registrant");
         public static final String ENROLLMENT_ID = "enrollment-id";
         public static final String TOP_LEVEL_FILTERS_JSON_STRING =
-                "{\n"
+                "[{\n"
                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
-                        + "}\n";
+                        + "}]\n";
 
         public static final String TOP_LEVEL_NOT_FILTERS_JSON_STRING =
-                "{\"geo\": [], \"source_type\": [\"event\"]}";
+                "[{\"geo\": [], \"source_type\": [\"event\"]}]";
 
         public static final String EVENT_TRIGGERS =
                 "[\n"
                         + "{\n"
                         + "  \"trigger_data\": \"5\",\n"
                         + "  \"priority\": \"123\",\n"
-                        + "  \"filters\": {\n"
+                        + "  \"filters\": [{\n"
                         + "    \"source_type\": [\"navigation\"],\n"
                         + "    \"key_1\": [\"value_1\"] \n"
-                        + "   }\n"
+                        + "   }]\n"
                         + "},\n"
                         + "{\n"
                         + "  \"trigger_data\": \"0\",\n"
                         + "  \"priority\": \"124\",\n"
                         + "  \"deduplication_key\": \"101\",\n"
-                        + "  \"filters\": {\n"
+                        + "  \"filters\": [{\n"
                         + "     \"source_type\": [\"event\"]\n"
-                        + "   }\n"
+                        + "   }]\n"
                         + "}\n"
                         + "]\n";
 
@@ -107,8 +107,8 @@ public final class TriggerFixture {
         public static final UnsignedLong DEBUG_KEY = new UnsignedLong(27836L);
 
         public static final AggregatableAttributionTrigger buildAggregatableAttributionTrigger() {
-            final FilterData filter =
-                    new FilterData.Builder()
+            final FilterMap filter =
+                    new FilterMap.Builder()
                             .setAttributionFilterMap(
                                     Map.of(
                                             "product",
@@ -123,7 +123,7 @@ public final class TriggerFixture {
                                     new AggregateTriggerData.Builder()
                                             .setKey(BigInteger.ONE)
                                             .setSourceKeys(Set.of("sourceKey"))
-                                            .setFilter(filter)
+                                            .setFilterSet(List.of(filter))
                                             .build()))
                     .build();
         }

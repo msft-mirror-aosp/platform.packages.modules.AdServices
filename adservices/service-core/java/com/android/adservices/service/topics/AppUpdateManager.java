@@ -312,8 +312,8 @@ public class AppUpdateManager {
         Pair<String, String> appOnlyCaller = Pair.create(app, EMPTY_SDK);
         Pair<String, String> appSdkCaller = Pair.create(app, sdk);
 
-        // Get ReturnedTopics and CallerCanLearnTopics  for past epochs in
-        // [epochId - numberOfLookBackEpochs, epochId - 1].
+        // Get ReturnedTopics for past epochs in [currentEpochId - numberOfLookBackEpochs,
+        // currentEpochId - 1].
         // TODO(b/237436146): Create an object class for Returned Topics.
         Map<Long, Map<Pair<String, String>, Topic>> pastReturnedTopics =
                 mTopicsDao.retrieveReturnedTopics(currentEpochId - 1, numberOfLookBackEpochs);
@@ -337,10 +337,13 @@ public class AppUpdateManager {
             // If so, the same topic should be assigned to the sdk.
             if (pastReturnedTopics.get(epochId) != null
                     && pastReturnedTopics.get(epochId).containsKey(appOnlyCaller)) {
+                // This is the top Topic assigned to this app-only caller.
                 Topic appReturnedTopic = pastReturnedTopics.get(epochId).get(appOnlyCaller);
 
-                // For current epoch, check whether sdk can learn this topic for past observed
-                // epochs in [epochId - numberOfLookBackEpochs + 1, epochId]
+                // For this epochId, check whether sdk can learn this topic for past
+                // numberOfLookBackEpochs observed epochs, i.e.
+                // [epochId - numberOfLookBackEpochs + 1, epochId]
+                // pastCallerCanLearnTopicsMap = Map<Topic, Set<Caller>>. Caller = App or Sdk
                 Map<Topic, Set<String>> pastCallerCanLearnTopicsMap =
                         mTopicsDao.retrieveCallerCanLearnTopicsMap(epochId, numberOfLookBackEpochs);
                 List<Topic> pastTopTopic = mTopicsDao.retrieveTopTopics(epochId);

@@ -20,6 +20,7 @@ import static android.view.MotionEvent.ACTION_BUTTON_PRESS;
 import static android.view.MotionEvent.obtain;
 
 import static com.android.adservices.service.measurement.reporting.AggregateReportSender.AGGREGATE_ATTRIBUTION_REPORT_URI_PATH;
+import static com.android.adservices.service.measurement.reporting.DebugReportSender.DEBUG_REPORT_URI_PATH;
 import static com.android.adservices.service.measurement.reporting.EventReportSender.EVENT_ATTRIBUTION_REPORT_URI_PATH;
 
 import android.content.AttributionSource;
@@ -71,6 +72,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 /**
  * End-to-end test from source and trigger registration to attribution reporting. Extensions of
@@ -91,7 +93,8 @@ public abstract class E2ETest {
 
     enum ReportType {
         EVENT,
-        AGGREGATE
+        AGGREGATE,
+        DEBUG_REPORT
     }
 
     private enum OutputType {
@@ -114,6 +117,11 @@ public abstract class E2ETest {
         String HISTOGRAMS = "histograms";
         String SOURCE_DEBUG_KEY = "source_debug_key";
         String TRIGGER_DEBUG_KEY = "trigger_debug_key";
+    }
+
+    interface DebugReportPayloadKeys {
+        String TYPE = "type";
+        String BODY = "body";
     }
 
     interface AggregateHistogramKeys {
@@ -143,7 +151,9 @@ public abstract class E2ETest {
         String SOURCE_WEB_DESTINATION_URI_KEY = "web_destination";
         String SOURCE_VERIFIED_DESTINATION_URI_KEY = "verified_destination";
         String REGISTRATION_URI_KEY = "attribution_src_url";
-        String IS_ADID_PERMISSION_GRANTED_KEY = "is_adid_permission_granted";
+        String HAS_AD_ID_PERMISSION = "has_ad_id_permission";
+        String DEBUG_KEY = "debug_key";
+        String DEBUG_REPORTING_KEY = "debug_reporting";
         String INPUT_EVENT_KEY = "source_type";
         String SOURCE_VIEW_TYPE = "event";
         String TIMESTAMP_KEY = "timestamp";
@@ -151,6 +161,7 @@ public abstract class E2ETest {
         String AGGREGATE_REPORT_OBJECTS_KEY = "aggregatable_results";
         String DEBUG_EVENT_REPORT_OBJECTS_KEY = "debug_event_level_results";
         String DEBUG_AGGREGATE_REPORT_OBJECTS_KEY = "debug_aggregatable_results";
+        String DEBUG_REPORT_OBJECTS_KEY = "debug_report_results";
         String INSTALLS_KEY = "installs";
         String UNINSTALLS_KEY = "uninstalls";
         String INSTALLS_URI_KEY = "uri";
@@ -244,14 +255,15 @@ public abstract class E2ETest {
         }
     }
 
-    static Collection<Object[]> data(String testDirName) throws IOException, JSONException {
+    static Collection<Object[]> data(String testDirName, Function<String, String> preprocessor)
+            throws IOException, JSONException {
         AssetManager assetManager = sContext.getAssets();
         List<InputStream> inputStreams = new ArrayList<>();
         String[] testDirectoryList = assetManager.list(testDirName);
         for (String testFile : testDirectoryList) {
             inputStreams.add(assetManager.open(testDirName + "/" + testFile));
         }
-        return getTestCasesFrom(inputStreams, testDirectoryList);
+        return getTestCasesFrom(inputStreams, testDirectoryList, preprocessor);
     }
 
     public static Map<String, List<Map<String, List<String>>>> getUriToResponseHeadersMap(
@@ -320,11 +332,15 @@ public abstract class E2ETest {
     }
 
     static String getReportUrl(ReportType reportType, String origin) {
-        return origin
-                + "/"
-                + (reportType == ReportType.EVENT
-                        ? EVENT_ATTRIBUTION_REPORT_URI_PATH
-                        : AGGREGATE_ATTRIBUTION_REPORT_URI_PATH);
+        String reportUrl = null;
+        if (reportType == ReportType.EVENT) {
+            reportUrl = EVENT_ATTRIBUTION_REPORT_URI_PATH;
+        } else if (reportType == ReportType.AGGREGATE) {
+            reportUrl = AGGREGATE_ATTRIBUTION_REPORT_URI_PATH;
+        } else if (reportType == ReportType.DEBUG_REPORT) {
+            reportUrl = DEBUG_REPORT_URI_PATH;
+        }
+        return origin + "/" + reportUrl;
     }
 
     static void clearDatabase() {
@@ -431,6 +447,19 @@ public abstract class E2ETest {
         return Arrays.hashCode(objArray);
     }
 
+    private static int hashForDebugReportObject(OutputType outputType, JSONObject obj) {
+        Object[] objArray = new Object[3];
+        String url = obj.optString(TestFormatJsonMapping.REPORT_TO_KEY, "");
+        objArray[0] =
+                outputType == OutputType.EXPECTED
+                        ? url
+                        : getReportUrl(ReportType.DEBUG_REPORT, url);
+        JSONObject payload = obj.optJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
+        objArray[1] = payload.optString(DebugReportPayloadKeys.TYPE, "");
+        objArray[2] = payload.optString(DebugReportPayloadKeys.BODY, "");
+        return Arrays.hashCode(objArray);
+    }
+
     // Used in interop tests, where we have known discrepancies.
     private static double normaliseDouble(double d) {
         return d == 0.0024263D ? 0.0024D : d;
@@ -495,6 +524,25 @@ public abstract class E2ETest {
         return matchReportTimeAndReportTo(ReportType.AGGREGATE, obj1, obj2);
     }
 
+    private static boolean areEqualDebugReportJsons(JSONObject obj1, JSONObject obj2)
+            throws JSONException {
+        JSONObject payload1 = obj1.getJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
+        JSONObject payload2 = obj2.getJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
+        if (!payload1.optString(DebugReportPayloadKeys.TYPE, "")
+                .equals(payload2.optString(DebugReportPayloadKeys.TYPE, ""))) {
+            return false;
+        }
+        if (!payload1.optString(DebugReportPayloadKeys.BODY, "")
+                .equals(payload2.optString(DebugReportPayloadKeys.BODY, ""))) {
+            return false;
+        }
+        return obj1.optString(TestFormatJsonMapping.REPORT_TO_KEY)
+                .equals(
+                        getReportUrl(
+                                ReportType.DEBUG_REPORT,
+                                obj2.optString(TestFormatJsonMapping.REPORT_TO_KEY)));
+    }
+
     private static String getComparableHistograms(@Nullable JSONArray arr) {
         if (arr == null) {
             return "";
@@ -533,11 +581,18 @@ public abstract class E2ETest {
                 Comparator.comparing(obj -> hashForAggregateReportObject(outputType, obj)));
     }
 
+    private static void sortDebugReportObjects(
+            OutputType outputType, List<JSONObject> debugReportObjects) {
+        debugReportObjects.sort(
+                Comparator.comparing(obj -> hashForDebugReportObject(outputType, obj)));
+    }
+
     private static boolean areEqual(ReportObjects p1, ReportObjects p2) throws JSONException {
         if (p1.mEventReportObjects.size() != p2.mEventReportObjects.size()
                 || p1.mAggregateReportObjects.size() != p2.mAggregateReportObjects.size()
                 || p1.mDebugAggregateReportObjects.size() != p2.mDebugAggregateReportObjects.size()
-                || p1.mDebugEventReportObjects.size() != p2.mDebugEventReportObjects.size()) {
+                || p1.mDebugEventReportObjects.size() != p2.mDebugEventReportObjects.size()
+                || p1.mDebugReportObjects.size() != p2.mDebugReportObjects.size()) {
             return false;
         }
         for (int i = 0; i < p1.mEventReportObjects.size(); i++) {
@@ -565,6 +620,12 @@ public abstract class E2ETest {
                 return false;
             }
         }
+        for (int i = 0; i < p1.mDebugReportObjects.size(); i++) {
+            if (!areEqualDebugReportJsons(
+                    p1.mDebugReportObjects.get(i), p2.mDebugReportObjects.get(i))) {
+                return false;
+            }
+        }
 
         return true;
     }
@@ -584,7 +645,9 @@ public abstract class E2ETest {
                             + "Expected aggregate report objects: %s\n\n"
                             + "Actual aggregate report objects: %s\n"
                             + "Expected debug aggregate report objects: %s\n\n"
-                            + "Actual debug aggregate report objects: %s\n",
+                            + "Actual debug aggregate report objects: %s\n"
+                            + "Expected debug report objects: %s\n\n"
+                            + "Actual debug report objects: %s\n",
                         prettify(
                                 expectedOutput.mEventReportObjects,
                                 actualOutput.mEventReportObjects),
@@ -594,7 +657,9 @@ public abstract class E2ETest {
                         expectedOutput.mAggregateReportObjects,
                         actualOutput.mAggregateReportObjects,
                         expectedOutput.mDebugAggregateReportObjects,
-                        actualOutput.mDebugAggregateReportObjects)
+                        actualOutput.mDebugAggregateReportObjects,
+                        expectedOutput.mDebugReportObjects,
+                        actualOutput.mDebugReportObjects)
                 + getDatastoreState();
     }
 
@@ -744,6 +809,10 @@ public abstract class E2ETest {
         return reportingJobsActions;
     }
 
+    static String preprocessTestJson(String json) {
+        return json.replaceAll("\\.test(?=[\"\\/])", ".com");
+    }
+
     /**
      * Builds and returns test cases from a JSON InputStream to be used by JUnit parameterized
      * tests.
@@ -753,7 +822,8 @@ public abstract class E2ETest {
      * PrivacyParamsProvider privacyParamsProvider, String name]}
      */
     private static Collection<Object[]> getTestCasesFrom(List<InputStream> inputStreams,
-            String[] filenames) throws IOException, JSONException {
+            String[] filenames, Function<String, String> preprocessor)
+            throws IOException, JSONException {
         List<Object[]> testCases = new ArrayList<>();
 
         for (int i = 0; i < inputStreams.size(); i++) {
@@ -763,7 +833,7 @@ public abstract class E2ETest {
             inputStreams.get(i).close();
             String json = new String(buffer, StandardCharsets.UTF_8);
 
-            JSONObject testObj = new JSONObject(json.replaceAll("\\.test(?=[\"\\/])", ".com"));
+            JSONObject testObj = new JSONObject(preprocessor.apply(json));
             String name = filenames[i];
             JSONObject input = testObj.getJSONObject(TestFormatJsonMapping.TEST_INPUT_KEY);
             JSONObject output = testObj.getJSONObject(TestFormatJsonMapping.TEST_OUTPUT_KEY);
@@ -947,12 +1017,21 @@ public abstract class E2ETest {
                 debugAggregateReportObjects.add(debugAggregateReportObjectsArray.getJSONObject(i));
             }
         }
+        List<JSONObject> debugReportObjects = new ArrayList<>();
+        if (!output.isNull(TestFormatJsonMapping.DEBUG_REPORT_OBJECTS_KEY)) {
+            JSONArray debugReportObjectsArray =
+                    output.getJSONArray(TestFormatJsonMapping.DEBUG_REPORT_OBJECTS_KEY);
+            for (int i = 0; i < debugReportObjectsArray.length(); i++) {
+                debugReportObjects.add(debugReportObjectsArray.getJSONObject(i));
+            }
+        }
 
         return new ReportObjects(
                 eventReportObjects,
                 aggregateReportObjects,
                 debugEventReportObjects,
-                debugAggregateReportObjects);
+                debugAggregateReportObjects,
+                debugReportObjects);
     }
 
     /**
@@ -968,9 +1047,11 @@ public abstract class E2ETest {
         db.delete("msmt_async_registration_contract", null, null);
     }
 
-    abstract void processAction(RegisterSource sourceRegistration) throws IOException;
+    abstract void processAction(RegisterSource sourceRegistration)
+            throws IOException, JSONException;
 
-    abstract void processAction(RegisterWebSource sourceRegistration) throws IOException;
+    abstract void processAction(RegisterWebSource sourceRegistration)
+            throws IOException, JSONException;
 
     abstract void processAction(RegisterTrigger triggerRegistration)
             throws IOException, JSONException;
@@ -992,6 +1073,8 @@ public abstract class E2ETest {
         sortAggregateReportObjects(
                 OutputType.EXPECTED, mExpectedOutput.mDebugAggregateReportObjects);
         sortAggregateReportObjects(OutputType.ACTUAL, mActualOutput.mDebugAggregateReportObjects);
+        sortDebugReportObjects(OutputType.EXPECTED, mExpectedOutput.mDebugReportObjects);
+        sortDebugReportObjects(OutputType.ACTUAL, mActualOutput.mDebugReportObjects);
         Assert.assertTrue(getTestFailureMessage(mExpectedOutput, mActualOutput),
                 areEqual(mExpectedOutput, mActualOutput));
     }

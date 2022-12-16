@@ -25,7 +25,7 @@ import android.os.Parcelable;
 /** Exception thrown by {@link SdkSandboxManager#loadSdk} */
 public final class LoadSdkException extends Exception implements Parcelable {
 
-    private final @SdkSandboxManager.LoadSdkErrorCode int mLoadSdkErrorCode;
+    @SdkSandboxManager.LoadSdkErrorCode private final int mLoadSdkErrorCode;
     private final Bundle mExtraInformation;
 
     /**
@@ -36,7 +36,7 @@ public final class LoadSdkException extends Exception implements Parcelable {
      * @param extraInfo Extra error information. This is empty if there is no such information.
      */
     public LoadSdkException(@NonNull Throwable cause, @NonNull Bundle extraInfo) {
-        this(SdkSandboxManager.LOAD_SDK_SDK_DEFINED_ERROR, "", cause, extraInfo);
+        this(SdkSandboxManager.LOAD_SDK_SDK_DEFINED_ERROR, cause.getMessage(), cause, extraInfo);
     }
 
     /**
@@ -93,16 +93,15 @@ public final class LoadSdkException extends Exception implements Parcelable {
         mExtraInformation = extraInfo;
     }
 
-    private LoadSdkException(@NonNull Parcel in) {
-        mLoadSdkErrorCode = in.readInt();
-        mExtraInformation = in.readBundle();
-    }
-
-    public static final @NonNull Creator<LoadSdkException> CREATOR =
+    @NonNull
+    public static final Creator<LoadSdkException> CREATOR =
             new Creator<LoadSdkException>() {
                 @Override
                 public LoadSdkException createFromParcel(Parcel in) {
-                    return new LoadSdkException(in);
+                    int errorCode = in.readInt();
+                    String message = in.readString();
+                    Bundle extraInformation = in.readBundle();
+                    return new LoadSdkException(errorCode, message, null, extraInformation);
                 }
 
                 @Override
@@ -116,7 +115,8 @@ public final class LoadSdkException extends Exception implements Parcelable {
      *
      * @return The loadSdk result code.
      */
-    public @SdkSandboxManager.LoadSdkErrorCode int getLoadSdkErrorCode() {
+    @SdkSandboxManager.LoadSdkErrorCode
+    public int getLoadSdkErrorCode() {
         return mLoadSdkErrorCode;
     }
 
@@ -138,6 +138,7 @@ public final class LoadSdkException extends Exception implements Parcelable {
     @Override
     public void writeToParcel(@NonNull Parcel destination, int flags) {
         destination.writeInt(mLoadSdkErrorCode);
+        destination.writeString(this.getMessage());
         destination.writeBundle(mExtraInformation);
     }
 }
