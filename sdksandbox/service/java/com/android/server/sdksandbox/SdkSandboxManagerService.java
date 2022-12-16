@@ -18,6 +18,8 @@ package com.android.server.sdksandbox;
 
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND;
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE;
+import static android.app.sdksandbox.SdkSandboxManager.EXTRA_SANDBOXED_ACTIVITY_HANDLER;
+import static android.app.sdksandbox.SdkSandboxManager.EXTRA_SANDBOXED_ACTIVITY_SDK_NAME;
 import static android.app.sdksandbox.SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR;
 import static android.app.sdksandbox.SdkSandboxManager.LOAD_SDK_SDK_SANDBOX_DISABLED;
 import static android.app.sdksandbox.SdkSandboxManager.REQUEST_SURFACE_PACKAGE_SDK_NOT_LOADED;
@@ -1704,6 +1706,20 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
     }
 
+    // For testing as SANDBOXED_ACTIVITY_HANDLER_KEY is hidden from
+    // SdkSandboxManagerServiceUnitTests
+    @NonNull
+    public String getSandboxedActivityHandlerKey() {
+        return EXTRA_SANDBOXED_ACTIVITY_HANDLER;
+    }
+
+    // For testing as SANDBOXED_ACTIVITY_SDK_NAME_KEY is hidden from
+    // SdkSandboxManagerServiceUnitTests
+    @NonNull
+    public String getSandboxedActivitySdkNameKey() {
+        return EXTRA_SANDBOXED_ACTIVITY_SDK_NAME;
+    }
+
     private class LocalImpl implements SdkSandboxManagerLocal {
 
         @NonNull
@@ -1767,6 +1783,37 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         @Override
         public void enforceAllowedToStartOrBindService(@NonNull Intent intent) {
             SdkSandboxManagerService.this.enforceAllowedToStartOrBindService(intent);
+        }
+
+        @Override
+        public void enforceAllowedToHostSandboxedActivity(
+                @NonNull Intent intent, int clientAppUid, @NonNull String clientAppPackageName) {
+            if (Process.isSdkSandboxUid(clientAppUid)) {
+                throw new SecurityException(
+                        "Sandbox process is not allowed to start SandboxedActivity");
+            }
+            final CallingInfo callingInfo = new CallingInfo(clientAppUid, clientAppPackageName);
+            if (mServiceProvider.getBoundServiceForApp(callingInfo) == null) {
+                throw new SecurityException(
+                        "There is no sandbox process running for the caller uid"
+                                + ": "
+                                + clientAppUid);
+            }
+            Bundle extras = intent.getExtras();
+            if (extras == null
+                    || extras.getBinder(getSandboxedActivityHandlerKey()) == null
+                    || extras.getString(getSandboxedActivitySdkNameKey()) == null) {
+                throw new IllegalArgumentException(
+                        "Intent should contain two extra params, First has "
+                                + "key = "
+                                + getSandboxedActivityHandlerKey()
+                                + "with value is an IBinder "
+                                + "identifier for a registered SandboxedActivityHandler"
+                                + "and Second has key = "
+                                + getSandboxedActivitySdkNameKey()
+                                + "with value is the name of SDK registered "
+                                + "SandboxedActivityHandler");
+            }
         }
     }
 }
