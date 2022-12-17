@@ -28,7 +28,10 @@ import com.android.internal.annotations.VisibleForTesting;
  * TopicContributors Table.
  */
 public class TopicDbMigratorV5 extends AbstractTopicsDbMigrator {
+    // Following go/gmscore-flagging-best-practices, we should clean dated table when upgrading and
+    // do nothing when downgrading.
     private static final String[] QUERIES_TO_PERFORM = {
+        "DROP TABLE IF EXISTS " + TopicsTables.TopicContributorsContract.TABLE,
         TopicsTables.CREATE_TABLE_TOPIC_CONTRIBUTORS
     };
 

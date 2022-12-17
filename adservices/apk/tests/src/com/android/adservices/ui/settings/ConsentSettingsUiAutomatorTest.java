@@ -57,6 +57,7 @@ public class ConsentSettingsUiAutomatorTest {
         final String launcherPackage = sDevice.getLauncherPackageName();
         assertThat(launcherPackage).isNotNull();
         sDevice.wait(Until.hasObject(By.pkg(launcherPackage).depth(0)), LAUNCH_TIMEOUT);
+        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled false");
     }
 
     @After

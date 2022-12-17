@@ -273,6 +273,10 @@ public final class PhFlags implements Flags {
             "measurement_register_source_request_permits_per_second";
     static final String KEY_MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND =
             "measurement_register_web_source_request_permits_per_second";
+    static final String KEY_TOPICS_API_APP_REQUEST_PERMITS_PER_SECOND =
+            "topics_api_app_request_permits_per_second";
+    static final String KEY_TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND =
+            "topics_api_sdk_request_permits_per_second";
 
     // Adservices enable status keys.
     static final String KEY_ADSERVICES_ENABLED = "adservice_enabled";
@@ -305,6 +309,9 @@ public final class PhFlags implements Flags {
             "max_response_based_registration_size_bytes";
 
     // UI keys
+    static final String KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL =
+            "mdd_ui_ota_strings_manifest_file_url";
+
     static final String KEY_UI_DIALOGS_FEATURE_ENABLED = "ui_dialogs_feature_enabled";
 
     static final String KEY_GA_UX_FEATURE_ENABLED = "ga_ux_enabled";
@@ -999,10 +1006,18 @@ public final class PhFlags implements Flags {
         // hard-coded value.
         return SystemProperties.getBoolean(
                 getSystemPropertyName(KEY_GLOBAL_KILL_SWITCH),
-                /* defaultValue */ DeviceConfig.getBoolean(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        /* flagName */ KEY_GLOBAL_KILL_SWITCH,
-                        /* defaultValue */ GLOBAL_KILL_SWITCH));
+                /* defaultValue */
+                isEmulator()
+                        ? false
+                        : DeviceConfig.getBoolean(
+                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                /* flagName */ KEY_GLOBAL_KILL_SWITCH,
+                                /* defaultValue */ GLOBAL_KILL_SWITCH));
+    }
+
+    // Return if the device is an emulator or not.
+    private boolean isEmulator() {
+        return SystemProperties.getBoolean("ro.boot.qemu", false);
     }
 
     // MEASUREMENT Killswitches
@@ -1435,6 +1450,20 @@ public final class PhFlags implements Flags {
                 MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND);
     }
 
+    @Override
+    public float getTopicsApiAppRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                KEY_TOPICS_API_APP_REQUEST_PERMITS_PER_SECOND,
+                TOPICS_API_APP_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
+    public float getTopicsApiSdkRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                KEY_TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND,
+                TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND);
+    }
+
     private float getPermitsPerSecond(String flagName, float defaultValue) {
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
@@ -1448,13 +1477,15 @@ public final class PhFlags implements Flags {
             return defaultValue;
         }
 
-        final float permitsPerSecond =
-                DeviceConfig.getFloat(DeviceConfig.NAMESPACE_ADSERVICES, flagName, defaultValue);
+        return DeviceConfig.getFloat(DeviceConfig.NAMESPACE_ADSERVICES, flagName, defaultValue);
+    }
 
-        if (permitsPerSecond <= 0) {
-            throw new IllegalArgumentException(flagName + " should > 0");
-        }
-        return permitsPerSecond;
+    @Override
+    public String getUiOtaStringsManifestFileUrl() {
+        return DeviceConfig.getString(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL,
+                /* defaultValue */ UI_OTA_STRINGS_MANIFEST_FILE_URL);
     }
 
     @Override
@@ -1464,10 +1495,12 @@ public final class PhFlags implements Flags {
             return false;
         }
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_ADSERVICES_ENABLED,
-                /* defaultValue */ ADSERVICES_ENABLED);
+        return isEmulator()
+                ? true
+                : DeviceConfig.getBoolean(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_ADSERVICES_ENABLED,
+                        /* defaultValue */ ADSERVICES_ENABLED);
     }
 
     @Override
@@ -1805,6 +1838,11 @@ public final class PhFlags implements Flags {
                 "\t" + KEY_MEASUREMENT_MANIFEST_FILE_URL + " = " + getMeasurementManifestFileUrl());
         writer.println(
                 "\t"
+                        + KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL
+                        + " = "
+                        + getUiOtaStringsManifestFileUrl());
+        writer.println(
+                "\t"
                         + KEY_DOWNLOADER_CONNECTION_TIMEOUT_MS
                         + " = "
                         + getDownloaderConnectionTimeoutMs());
@@ -1820,7 +1858,6 @@ public final class PhFlags implements Flags {
                         + KEY_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL
                         + " = "
                         + getMddTopicsClassifierManifestFileUrl());
-
         writer.println("==== AdServices PH Flags Dump Topics related flags ====");
         writer.println("\t" + KEY_TOPICS_EPOCH_JOB_PERIOD_MS + " = " + getTopicsEpochJobPeriodMs());
         writer.println("\t" + KEY_TOPICS_EPOCH_JOB_FLEX_MS + " = " + getTopicsEpochJobFlexMs());

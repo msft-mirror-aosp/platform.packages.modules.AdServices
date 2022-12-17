@@ -609,11 +609,8 @@ public interface Flags extends Dumpable {
      * The number of epoch to look back to do garbage collection for old epoch data. Assume current
      * Epoch is T, then any epoch data of (T-NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY-1) (inclusive)
      * should be erased
-     *
-     * <p>In order to provide enough epochs to assign topics for newly installed apps, keep
-     * TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS more epochs in database.
      */
-    int NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY = TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS * 2;
+    int NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY = TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS;
 
     /*
      * Return the number of epochs to keep in the history
@@ -726,7 +723,9 @@ public interface Flags extends Dumpable {
      * which means the PP API is enabled. This flag is used for emergency turning off the whole PP
      * API.
      */
-    boolean GLOBAL_KILL_SWITCH = false; // By default, the PP API is enabled.
+    // Starting M-2023-05, global kill switch is enabled in the binary. Prior to this (namely in
+    // M-2022-11), the value of this flag in the binary was false.
+    boolean GLOBAL_KILL_SWITCH = true;
 
     default boolean getGlobalKillSwitch() {
         return GLOBAL_KILL_SWITCH;
@@ -989,6 +988,7 @@ public interface Flags extends Dumpable {
                 || getMeasurementKillSwitch()
                 || MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH;
     }
+
     /**
      * Measurement Job Debug Reporting Kill Switch. The default value is false which means Debug
      * Reporting Job is enabled. This flag is used for emergency turning off the Debug Reporting
@@ -1245,6 +1245,18 @@ public interface Flags extends Dumpable {
      */
     float MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND = 5;
 
+    /**
+     * PP API Rate Limit for Topics API based on App Package name. This is the max allowed QPS for
+     * one API client to one PP API. Negative Value means skipping the rate limiting checking.
+     */
+    float TOPICS_API_APP_REQUEST_PERMITS_PER_SECOND = 1;
+
+    /**
+     * PP API Rate Limit for Topics API based on Sdk Name. This is the max allowed QPS for one API
+     * client to one PP API. Negative Value means skipping the rate limiting checking.
+     */
+    float TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND = 1;
+
     /** Returns the Sdk Request Permits Per Second. */
     default float getSdkRequestPermitsPerSecond() {
         return SDK_REQUEST_PERMITS_PER_SECOND;
@@ -1258,6 +1270,16 @@ public interface Flags extends Dumpable {
     /** Returns the App Set Ad Request Permits Per Second. */
     default float getAppSetIdRequestPermitsPerSecond() {
         return APPSETID_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the Topics API Based On App Package Name Request Permits Per Second. */
+    default float getTopicsApiAppRequestPermitsPerSecond() {
+        return TOPICS_API_APP_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the Topics API Based On Sdk Name Request Permits Per Second. */
+    default float getTopicsApiSdkRequestPermitsPerSecond() {
+        return TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND;
     }
 
     /** Returns the Measurement Register Source Request Permits Per Second. */
@@ -1439,6 +1461,15 @@ public interface Flags extends Dumpable {
         return MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES;
     }
 
+    /** Ui OTA strings manifest file url, used for MDD download. */
+    String UI_OTA_STRINGS_MANIFEST_FILE_URL =
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-ui-ota-strings/1341/95580b00edbd8cbf62bfa0df9ebd79fba1e5b7ca";
+
+    /** UI OTA strings manifest file url. */
+    default String getUiOtaStringsManifestFileUrl() {
+        return UI_OTA_STRINGS_MANIFEST_FILE_URL;
+    }
+
     /** UI Dialogs feature enabled. */
     boolean UI_DIALOGS_FEATURE_ENABLED = false;
 
@@ -1464,6 +1495,7 @@ public interface Flags extends Dumpable {
     }
 
     long ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS = (int) TimeUnit.HOURS.toMillis(1);
+
     /** Returns the interval in which to run Registration Job Queue Service. */
     default long getAsyncRegistrationJobQueueIntervalMs() {
         return ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS;

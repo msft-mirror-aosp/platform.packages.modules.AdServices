@@ -34,6 +34,7 @@ import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -113,7 +114,9 @@ public class TopicsManagerMddTest {
         overridePercentageForRandomTopic(TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
     }
 
+    // TODO(b/261611866): Enable the test again after resolving flakiness.
     @Test
+    @Ignore
     public void testTopicsManager_downloadModelViaMdd_runOnDeviceClassifier() throws Exception {
         // Set up test flags for on-device classification.
         setupFlagsForOnDeviceClassifier();
