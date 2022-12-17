@@ -562,6 +562,10 @@ public class SdkSandboxStorageManagerUnitTest {
         @Override
         public void enforceAllowedToStartOrBindService(@NonNull Intent intent) {}
 
+        @Override
+        public void enforceAllowedToHostSandboxedActivity(
+                @NonNull Intent intent, int clientAppUid, @NonNull String clientAppPackageName) {}
+
         @NonNull
         @Override
         public String getSdkSandboxProcessNameForInstrumentation(
