@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-package com.android.tests.sdksandbox;
+package android.app.sdksandbox.testutils;
 
 import android.app.Activity;
 
-public class SdkSandboxEmptyActivity extends Activity {}
+public class EmptyActivity extends Activity {}

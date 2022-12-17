@@ -24,7 +24,8 @@
 
     <application>
         <uses-library android:name="android.test.runner" />
-        <activity android:name=".TestActivity" android:exported="true"
+        <activity android:name="android.app.sdksandbox.testutils.EmptyActivity"
+                  android:exported="true"
                   android:turnScreenOn="true"
                   android:keepScreenOn="true"
                   android:showWhenLocked="true">

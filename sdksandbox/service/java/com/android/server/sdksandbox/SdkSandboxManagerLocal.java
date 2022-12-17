@@ -69,6 +69,19 @@ public interface SdkSandboxManagerLocal {
     void enforceAllowedToStartOrBindService(@NonNull Intent intent);
 
     /**
+     * Enforces that the caller app is allowed to start a {@code SandboxedActivity} inside its
+     * sandbox process.
+     *
+     * @param intent the activity intent
+     * @param clientAppUid uid of the client app
+     * @param clientAppPackageName package name of the client app
+     * @throws SecurityException if the caller app is not allowed to start {@code
+     *     SandboxedActivity}.
+     */
+    void enforceAllowedToHostSandboxedActivity(
+            @NonNull Intent intent, int clientAppUid, @NonNull String clientAppPackageName);
+
+    /**
      * Returns name of the sdk sandbox process that corresponds to the given client app.
      *
      * @param clientAppInfo {@link ApplicationInfo} of the given client app

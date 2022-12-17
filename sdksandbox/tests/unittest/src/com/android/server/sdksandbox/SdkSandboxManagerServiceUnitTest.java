@@ -859,6 +859,95 @@ public class SdkSandboxManagerServiceUnitTest {
                 () -> mSdkSandboxManagerLocal.enforceAllowedToStartActivity(disallowedIntent));
     }
 
+    @Test(expected = SecurityException.class)
+    public void testEnforceAllowedToHostSandboxedActivityFailIfNoSandboxProcees() {
+        SdkSandboxManagerLocal mSdkSandboxManagerLocal = mService.getLocalManager();
+        mSdkSandboxManagerLocal.enforceAllowedToHostSandboxedActivity(
+                new Intent(), Process.myUid(), TEST_PACKAGE);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testEnforceAllowedToHostSandboxedActivityFailIfIntentHasNoExtras()
+            throws RemoteException {
+        loadSdk(SDK_NAME);
+
+        SdkSandboxManagerLocal mSdkSandboxManagerLocal = mService.getLocalManager();
+        mSdkSandboxManagerLocal.enforceAllowedToHostSandboxedActivity(
+                new Intent(), Process.myUid(), TEST_PACKAGE);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testEnforceAllowedToHostSandboxedActivityFailIfIntentHasNoHandlerExtra()
+            throws RemoteException {
+        loadSdk(SDK_NAME);
+
+        SdkSandboxManagerLocal mSdkSandboxManagerLocal = mService.getLocalManager();
+        Intent intent = new Intent();
+        Bundle params = new Bundle();
+        params.putString(mService.getSandboxedActivitySdkNameKey(), SDK_NAME);
+        intent.putExtras(new Bundle());
+        mSdkSandboxManagerLocal.enforceAllowedToHostSandboxedActivity(
+                intent, Process.myUid(), TEST_PACKAGE);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testEnforceAllowedToHostSandboxedActivityFailIfIntentHasWrongTypeOfHandlerExtra()
+            throws RemoteException {
+        loadSdk(SDK_NAME);
+
+        SdkSandboxManagerLocal mSdkSandboxManagerLocal = mService.getLocalManager();
+        Intent intent = new Intent();
+        Bundle params = new Bundle();
+        params.putString(mService.getSandboxedActivityHandlerKey(), "");
+        params.putString(mService.getSandboxedActivitySdkNameKey(), SDK_NAME);
+        intent.putExtras(params);
+        mSdkSandboxManagerLocal.enforceAllowedToHostSandboxedActivity(
+                intent, Process.myUid(), TEST_PACKAGE);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testEnforceAllowedToHostSandboxedActivityFailIfIntentHasNoSdkNameExtra()
+            throws RemoteException {
+        loadSdk(SDK_NAME);
+
+        SdkSandboxManagerLocal mSdkSandboxManagerLocal = mService.getLocalManager();
+        Intent intent = new Intent();
+        Bundle params = new Bundle();
+        params.putBinder(mService.getSandboxedActivityHandlerKey(), new Binder());
+        intent.putExtras(params);
+        mSdkSandboxManagerLocal.enforceAllowedToHostSandboxedActivity(
+                intent, Process.myUid(), TEST_PACKAGE);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testEnforceAllowedToHostSandboxedActivityFailIfIntentHasWrongTypeOfSdkNameExtra()
+            throws RemoteException {
+        loadSdk(SDK_NAME);
+
+        SdkSandboxManagerLocal mSdkSandboxManagerLocal = mService.getLocalManager();
+        Intent intent = new Intent();
+        Bundle params = new Bundle();
+        params.putBinder(mService.getSandboxedActivityHandlerKey(), new Binder());
+        params.putInt(mService.getSandboxedActivitySdkNameKey(), 0);
+        intent.putExtras(params);
+        mSdkSandboxManagerLocal.enforceAllowedToHostSandboxedActivity(
+                intent, Process.myUid(), TEST_PACKAGE);
+    }
+
+    @Test
+    public void testEnforceAllowedToHostSandboxedActivitySuccess() throws Exception {
+        loadSdk(SDK_NAME);
+
+        SdkSandboxManagerLocal mSdkSandboxManagerLocal = mService.getLocalManager();
+        Intent intent = new Intent();
+        Bundle params = new Bundle();
+        params.putBinder(mService.getSandboxedActivityHandlerKey(), new Binder());
+        params.putString(mService.getSandboxedActivitySdkNameKey(), SDK_NAME);
+        intent.putExtras(params);
+        mSdkSandboxManagerLocal.enforceAllowedToHostSandboxedActivity(
+                intent, Process.myUid(), TEST_PACKAGE);
+    }
+
     @Test
     public void testGetSdkSandboxProcessNameForInstrumentation() throws Exception {
         final SdkSandboxManagerLocal localManager = mService.getLocalManager();
