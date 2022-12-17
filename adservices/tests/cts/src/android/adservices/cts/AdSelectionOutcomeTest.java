@@ -46,6 +46,19 @@ public class AdSelectionOutcomeTest {
     }
 
     @Test
+    public void testBuildAdSelectionOutcomeChecksIfOutcomeIsEmpty() {
+        AdSelectionOutcome notEmptyOutcome =
+                new AdSelectionOutcome.Builder()
+                        .setAdSelectionId(TEST_AD_SELECTION_ID)
+                        .setRenderUri(VALID_RENDER_URI)
+                        .build();
+        AdSelectionOutcome emptyOutcome = AdSelectionOutcome.NO_OUTCOME;
+
+        assertThat(notEmptyOutcome.hasOutcome()).isTrue();
+        assertThat(emptyOutcome.hasOutcome()).isFalse();
+    }
+
+    @Test
     public void testAdSelectionOutcomeWithSameValuesAreEqual() {
         AdSelectionOutcome obj1 =
                 new AdSelectionOutcome.Builder()
