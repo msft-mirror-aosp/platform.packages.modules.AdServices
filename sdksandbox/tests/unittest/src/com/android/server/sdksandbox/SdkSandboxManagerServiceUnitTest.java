@@ -1940,15 +1940,12 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
-    public void testLoadSdkFailsWhenSandboxDisabled() throws Exception {
+    public void testLoadSdkFailsWhenSandboxDisabled() {
         disableNetworkPermissionChecks();
         disableForegroundCheck();
         SdkSandboxManagerService.SdkSandboxSettingsListener listener =
                 mService.getSdkSandboxSettingsListener();
         listener.setKillSwitchState(true);
-        // Sleep needed to avoid deadlock.
-        // TODO(b/257255118): Remove this sleep.
-        Thread.sleep(500);
         listener.onPropertiesChanged(
                 new DeviceConfig.Properties(
                         DeviceConfig.NAMESPACE_ADSERVICES,
