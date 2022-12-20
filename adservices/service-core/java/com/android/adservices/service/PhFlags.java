@@ -1003,18 +1003,10 @@ public final class PhFlags implements Flags {
         // hard-coded value.
         return SystemProperties.getBoolean(
                 getSystemPropertyName(KEY_GLOBAL_KILL_SWITCH),
-                /* defaultValue */
-                isEmulator()
-                        ? false
-                        : DeviceConfig.getBoolean(
-                                DeviceConfig.NAMESPACE_ADSERVICES,
-                                /* flagName */ KEY_GLOBAL_KILL_SWITCH,
-                                /* defaultValue */ GLOBAL_KILL_SWITCH));
-    }
-
-    // Return if the device is an emulator or not.
-    private boolean isEmulator() {
-        return SystemProperties.getBoolean("ro.boot.qemu", false);
+                /* defaultValue */ DeviceConfig.getBoolean(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_GLOBAL_KILL_SWITCH,
+                        /* defaultValue */ GLOBAL_KILL_SWITCH));
     }
 
     // MEASUREMENT Killswitches
@@ -1484,12 +1476,10 @@ public final class PhFlags implements Flags {
             return false;
         }
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return isEmulator()
-                ? true
-                : DeviceConfig.getBoolean(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        /* flagName */ KEY_ADSERVICES_ENABLED,
-                        /* defaultValue */ ADSERVICES_ENABLED);
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ADSERVICES_ENABLED,
+                /* defaultValue */ ADSERVICES_ENABLED);
     }
 
     @Override
