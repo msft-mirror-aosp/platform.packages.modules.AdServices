@@ -3326,7 +3326,7 @@ public class PhFlagsTest {
         assertThat(FlagsFactory.getFlags().getNumberOfEpochsToKeepInHistory())
                 .isEqualTo(NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY);
 
-        final long phOverridingValue = 6;
+        final long phOverridingValue = 1;
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY,

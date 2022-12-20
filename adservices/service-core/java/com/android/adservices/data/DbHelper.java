@@ -146,23 +146,10 @@ public class DbHelper extends SQLiteOpenHelper {
         }
     }
 
-    // TODO(b/261934022): Support a framework as upgrade.
     @Override
     public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        // Only downgrade if it's triggered by value change of Flag enable_database_schema_version_5
-        if (oldVersion == DATABASE_VERSION_V5
-                && newVersion == CURRENT_DATABASE_VERSION
-                && !FlagsFactory.getFlags().getEnableDatabaseSchemaVersion5()) {
-            LogUtil.e(
-                    "Has to downgrade database version from %d to %d. The reason is"
-                            + " TopicContributorsTable was enabled and now disabled. ",
-                    DATABASE_VERSION_V5, CURRENT_DATABASE_VERSION);
-
-            // Return here to prevent parent class to throw on SQLiteException
-            return;
-        }
-
-        super.onDowngrade(db, oldVersion, newVersion);
+        LogUtil.d("Downgrade database version from %d to %d.", oldVersion, newVersion);
+        // prevent parent class to throw SQLiteException
     }
 
     public long getDbFileSize() {

@@ -42,21 +42,22 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
     public void checkClassloaders() {
         final ClassLoader ownClassloader = getClass().getClassLoader();
         if (ownClassloader == null) {
-            throw new RuntimeException("SdkProvider loaded in top-level classloader");
+            throw new IllegalStateException("SdkProvider loaded in top-level classloader");
         }
 
         final ClassLoader contextClassloader = mContext.getClassLoader();
         if (!ownClassloader.equals(contextClassloader)) {
-            throw new RuntimeException("Different SdkProvider and Context classloaders");
+            throw new IllegalStateException("Different SdkProvider and Context classloaders");
         }
 
         try {
             Class<?> loadedClazz = ownClassloader.loadClass(SdkSandboxServiceImpl.class.getName());
             if (!ownClassloader.equals(loadedClazz.getClassLoader())) {
-                throw new RuntimeException("SdkSandboxServiceImpl loaded with wrong classloader");
+                throw new IllegalStateException(
+                        "SdkSandboxServiceImpl loaded with wrong classloader");
             }
         } catch (ClassNotFoundException ex) {
-            throw new RuntimeException("Couldn't find class bundled with SdkProvider", ex);
+            throw new IllegalStateException("Couldn't find class bundled with SdkProvider", ex);
         }
     }
 
@@ -66,10 +67,10 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
         String stringRes = resources.getString(R.string.test_string);
         int integerRes = resources.getInteger(R.integer.test_integer);
         if (!stringRes.equals(STRING_RESOURCE)) {
-            throw new RuntimeException(createErrorMessage(STRING_RESOURCE, stringRes));
+            throw new IllegalStateException(createErrorMessage(STRING_RESOURCE, stringRes));
         }
         if (integerRes != INTEGER_RESOURCE) {
-            throw new RuntimeException(
+            throw new IllegalStateException(
                     createErrorMessage(
                             String.valueOf(INTEGER_RESOURCE), String.valueOf(integerRes)));
         }
@@ -79,10 +80,10 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
                 new BufferedReader(new InputStreamReader(assets.open(ASSET_FILE)))) {
             String readAsset = reader.readLine();
             if (!readAsset.equals(STRING_ASSET)) {
-                throw new RuntimeException(createErrorMessage(STRING_ASSET, readAsset));
+                throw new IllegalStateException(createErrorMessage(STRING_ASSET, readAsset));
             }
         } catch (IOException e) {
-            throw new RuntimeException("File not found: " + ASSET_FILE);
+            throw new IllegalStateException("File not found: " + ASSET_FILE);
         }
     }
 
