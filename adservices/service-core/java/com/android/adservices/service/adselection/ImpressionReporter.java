@@ -491,10 +491,10 @@ public class ImpressionReporter {
                                             ctx.mDBAdSelectionEntry.getContextualSignals()),
                                     ctx.mDBAdSelectionEntry.getCustomAudienceSignals()))
                     .transform(
-                            resultUri ->
+                            buyerReportingResult ->
                                     Pair.create(
                                             new ReportingUris(
-                                                    resultUri,
+                                                    buyerReportingResult.getReportingUri(),
                                                     sellerReportingResult.getReportingUri()),
                                             ctx),
                             mLightweightExecutorService);
