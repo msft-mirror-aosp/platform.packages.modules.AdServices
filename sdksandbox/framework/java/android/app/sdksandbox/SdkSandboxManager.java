@@ -26,6 +26,7 @@ import android.annotation.SdkConstant;
 import android.annotation.SystemApi;
 import android.annotation.SystemService;
 import android.annotation.TestApi;
+import android.app.sdksandbox.sdkprovider.SdkSandboxActivityHandler;
 import android.app.sdksandbox.sdkprovider.SdkSandboxController;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -139,7 +140,7 @@ public final class SdkSandboxManager {
 
     /**
      * The key for an element in {@code SandboxedActivity} intent extra params, the value is an
-     * {@code SandboxedActivityHandler} registered by an SDK.
+     * {@link SdkSandboxActivityHandler} registered by an SDK.
      *
      * @hide
      */

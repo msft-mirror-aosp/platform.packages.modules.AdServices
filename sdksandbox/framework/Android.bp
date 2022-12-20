@@ -50,6 +50,9 @@ java_defaults {
     name: "framework-sdksandbox-jarjar-defaults",
     jarjar_rules: ":framework-sdksandbox-jarjar",
     static_libs: ["modules-utils-build"],
+    libs: [
+        "androidx.annotation_annotation",
+    ],
 }
 
 java_sdk_library {
