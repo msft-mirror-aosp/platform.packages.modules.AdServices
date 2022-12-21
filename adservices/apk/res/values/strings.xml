@@ -1217,10 +1217,23 @@
     <string name="topic10445">Travel Agencies &amp; Services</string>
     <!-- Text for the topic name for topic Travel Guides &amp; Travelogues. [CHAR LIMIT=NONE] -->
     <string name="topic10446">Travel Guides &amp; Travelogues</string>
+    <!-- Text for the topic subtitle in the settings UI showing On and the count of topics. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_topics_subtitle">On / <xliff:g id="topics_count" example="7">%1$d</xliff:g> topics</string>
+    <!-- Text for the apps subtitle in the settings UI showing On and the count of apps. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_apps_subtitle">On / <xliff:g id="apps_count" example="6">%1$d</xliff:g> apps</string>
+    <!-- Text for subtitle in the settings UI showing measurement consent is On.[CHAR LIMIT=NONE] -->
+    <string name="settingsUI_subtitle_consent_on">On</string>
+    <!-- Text for the any subtitle in the settings UI showing whose consent is Off.[CHAR LIMIT=NONE] -->
+    <string name="settingsUI_subtitle_consent_off">Off</string>
     <string name="settingsUI_dialog_measurement_opt_out_title" translatable="false">Turn off measurement?</string>
-    <string name="settingsUI_topics_switch_title" translatable="false">Use ad topics</string>
-    <string name="settingsUI_measurement_switch_title" translatable="false">Use ad measurement</string>
-    <string name="settingsUI_apps_switch_title" translatable="false">Use app-suggested ads</string>
-    <string name="settingsUI_dialog_topics_opt_out_title" translatable="false">Turn off topics?</string>
-    <string name="settingsUI_dialog_apps_opt_out_title" translatable="false">Turn off Fledge?</string>
+    <!-- Text for the toggle in the topics page.[CHAR LIMIT=NONE] -->
+    <string name="settingsUI_topics_switch_title">Allow ad topics</string>
+    <!-- Text for the toggle in the measurement page.[CHAR LIMIT=NONE] -->
+    <string name="settingsUI_measurement_switch_title">Allow ad measurement</string>
+    <!-- Text for the toggle in the apps page.[CHAR LIMIT=NONE] -->
+    <string name="settingsUI_apps_switch_title">Allow app-suggested ads</string>
+    <!-- Text for the speed bump of resetting ad topics.[CHAR LIMIT=NONE] -->
+    <string name="settingsUI_dialog_topics_opt_out_title">Reset all topics?</string>
+    <!-- Text for the speed bump of resetting app-suggested ads data .[CHAR LIMIT=NONE] -->
+    <string name="settingsUI_dialog_apps_opt_out_title">Reset ads suggested by apps?</string>
 </resources>
