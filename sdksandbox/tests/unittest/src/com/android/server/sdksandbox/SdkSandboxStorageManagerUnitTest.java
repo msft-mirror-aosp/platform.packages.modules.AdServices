@@ -23,6 +23,7 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.FileUtils;
+import android.os.IBinder;
 import android.os.UserHandle;
 
 import androidx.annotation.NonNull;
@@ -594,5 +595,8 @@ public class SdkSandboxStorageManagerUnitTest {
                 @NonNull String clientAppPackageName, int clientAppUid) {
             return mInstrumentationRunning;
         }
+
+        @Override
+        public void registerAdServicesManagerService(IBinder iBinder) {}
     }
 }
