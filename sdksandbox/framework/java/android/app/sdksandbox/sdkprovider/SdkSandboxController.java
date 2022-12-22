@@ -142,7 +142,6 @@ public class SdkSandboxController {
      *
      * @param sdkSandboxActivityHandler is the {@link SdkSandboxActivityHandler} to register.
      * @return {@link IBinder} uniquely identify the passed {@link SdkSandboxActivityHandler}.
-     * @hide
      */
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     @NonNull
@@ -169,7 +168,6 @@ public class SdkSandboxController {
      * the {@link Activity} will fail to start.
      *
      * @param sdkSandboxActivityHandler is the {@link SdkSandboxActivityHandler} to unregister.
-     * @hide
      */
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     @NonNull

@@ -37,8 +37,6 @@ import androidx.annotation.RequiresApi;
  * SdkSandboxActivityHandler#onActivityCreated(Activity)} which happens when the caller app calls
  * {@link android.app.sdksandbox.SdkSandboxManager#startSdkSandboxActivity(Activity, IBinder)} using
  * the same {@link IBinder} identifier for the registered {@link SdkSandboxActivityHandler}.
- *
- * @hide
  */
 @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
 public interface SdkSandboxActivityHandler {

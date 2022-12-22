@@ -564,7 +564,6 @@ public final class SdkSandboxManager {
      *     Activity} by calling {@link Activity#startActivity(Intent)} against it.
      * @param sdkActivityToken the identifier that is shared by the SDK which requests the {@link
      *     Activity}.
-     * @hide
      */
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     public void startSdkSandboxActivity(

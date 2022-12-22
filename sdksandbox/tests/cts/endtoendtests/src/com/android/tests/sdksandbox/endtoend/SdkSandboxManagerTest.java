@@ -26,8 +26,10 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
+import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SandboxedSdk;
@@ -41,13 +43,16 @@ import android.content.pm.PackageManager;
 import android.content.pm.PermissionInfo;
 import android.os.Binder;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.os.Parcel;
+import android.os.RemoteException;
 
 import androidx.lifecycle.Lifecycle;
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.ctssdkprovider.IActivityStarter;
 import com.android.ctssdkprovider.ICtsSdkProviderApi;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -568,11 +573,65 @@ public class SdkSandboxManagerTest {
         assertThat(sdk.getProcessImportance()).isEqualTo(getAppProcessImportance());
     }
 
+    @Test
+    public void testStartSdkSandboxedActivity() {
+        assumeTrue(SdkLevel.isAtLeastU());
+
+        // Load SDK in sandbox
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(SDK_NAME_1, new Bundle(), Runnable::run, callback);
+        callback.assertLoadSdkIsSuccessful();
+
+        SandboxedSdk sandboxedSdk = callback.getSandboxedSdk();
+        assertNotNull(sandboxedSdk);
+        ICtsSdkProviderApi sdk =
+                ICtsSdkProviderApi.Stub.asInterface(callback.getSandboxedSdk().getInterface());
+
+        mRule.getScenario()
+                .onActivity(
+                        activity -> {
+                            ActivityStarter activityStarter = new ActivityStarter(activity);
+                            try {
+                                sdk.startActivity(activityStarter);
+                                // Wait for the activity to start and send confirmation back
+                                Thread.sleep(1000);
+                                assertThat(activityStarter.isActivityStarted()).isTrue();
+                            } catch (Exception e) {
+                                fail(
+                                        "Exception is thrown while starting activity: "
+                                                + e.getMessage());
+                            }
+                        });
+    }
+
     private int getAppProcessImportance() {
         ActivityManager.RunningAppProcessInfo processInfo =
                 new ActivityManager.RunningAppProcessInfo();
         ActivityManager.getMyMemoryState(processInfo);
         return processInfo.importance;
+    }
+
+    private class ActivityStarter extends IActivityStarter.Stub {
+        private Activity mActivity;
+        private boolean mActivityStarted = false;
+
+        ActivityStarter(Activity activity) {
+            this.mActivity = activity;
+        }
+
+        @Override
+        public void startActivity(IBinder token) throws RemoteException {
+            mSdkSandboxManager.startSdkSandboxActivity(mActivity, token);
+        }
+        // SDK will call this function to notify that the activity is successfully created
+        @Override
+        public void activityStartedSuccessfully() {
+            mActivityStarted = true;
+        }
+
+        public boolean isActivityStarted() {
+            return mActivityStarted;
+        }
     }
 
     private Bundle getRequestSurfacePackageParams() {
