@@ -532,11 +532,14 @@ public abstract class AdSelectionRunner {
             @NonNull String buyerDecisionLogicJS,
             @NonNull String callerPackageName) {
         final int traceCookie = Tracing.beginAsyncSection(Tracing.PERSIST_AD_SELECTION);
-        final long adSelectionId = mAdSelectionIdGenerator.generateId();
-        LogUtil.v("Persisting Ad Selection Result for Id:%d", adSelectionId);
         return mBackgroundExecutorService.submit(
                 () -> {
-                    // TODO : b/230568647 retry ID generation in case of collision
+                    long adSelectionId = mAdSelectionIdGenerator.generateId();
+                    // Retry ID generation in case of collision
+                    while (mAdSelectionEntryDao.doesAdSelectionIdExist(adSelectionId)) {
+                        adSelectionId = mAdSelectionIdGenerator.generateId();
+                    }
+                    LogUtil.v("Persisting Ad Selection Result for Id:%d", adSelectionId);
                     DBAdSelection dbAdSelection;
                     dbAdSelectionBuilder
                             .setAdSelectionId(adSelectionId)
