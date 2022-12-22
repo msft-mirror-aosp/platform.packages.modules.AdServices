@@ -16,29 +16,45 @@
 
 package android.adservices.test.scenario.adservices.fledge;
 
+import android.Manifest;
+import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
+import android.adservices.common.AdData;
+import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudience;
+import android.adservices.customaudience.TrustedBiddingData;
 import android.adservices.test.scenario.adservices.utils.StaticAdTechServerUtils;
 import android.content.Context;
+import android.net.Uri;
 import android.platform.test.scenario.annotation.Scenario;
 import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.platform.app.InstrumentationRegistry;
+
+import com.android.compatibility.common.util.ShellUtils;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.base.Ticker;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import java.io.InputStream;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
@@ -53,16 +69,16 @@ public class SelectAdsTestServerLatency {
 
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
-    private static final String LOG_LABEL_P50_5G = "SELECT_ADS_LATENCY_P50_5G";
-    private static final String LOG_LABEL_P90_5G = "SELECT_ADS_LATENCY_P90_5G";
-
-    private static final int NUMBER_OF_CUSTOM_AUDIENCES_MEDIUM = 10;
-    private static final int NUMBER_ADS_PER_CA_MEDIUM = 5;
     private static final int API_RESPONSE_TIMEOUT_SECONDS = 100;
     private static final int DELAY_TO_AVOID_THROTTLE = 1001;
-
-    private static final String AD_SELECTION_FAILURE_MESSAGE =
-            "Ad selection outcome is not expected";
+    // The number of ms to sleep after killing the adservices process so it has time to recover
+    public static final long SLEEP_MS_AFTER_KILL = 2000L;
+    // Command to kill the adservices process
+    public static final String KILL_ADSERVICES_CMD =
+            "su 0 killall -9 com.google.android.adservices.api";
+    // Command prevent activity manager from backing off on restarting the adservices process
+    public static final String DISABLE_ADSERVICES_BACKOFF_CMD =
+            "am service-restart-backoff disable com.google.android.adservices.api";
 
     private final Context mContext = ApplicationProvider.getApplicationContext();
     private final AdSelectionClient mAdSelectionClient =
@@ -83,16 +99,36 @@ public class SelectAdsTestServerLatency {
             };
     private List<CustomAudience> mCustomAudiences = new ArrayList<>();
 
-    @Rule public SelectAdsFlagRule mSelectAdsFlagRule = new SelectAdsFlagRule();
-
     @BeforeClass
     public static void setupBeforeClass() {
         StaticAdTechServerUtils.warmupServers();
+        // Disable backoff since we will be killing the process between tests
+        ShellUtils.runShellCommand(DISABLE_ADSERVICES_BACKOFF_CMD);
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+
+        ShellUtils.runShellCommand(
+                "device_config put adservices fledge_ad_selection_bidding_timeout_per_ca_ms "
+                        + "120000");
+        ShellUtils.runShellCommand(
+                "device_config put adservices fledge_ad_selection_scoring_timeout_ms 120000");
+        ShellUtils.runShellCommand(
+                "device_config put adservices fledge_ad_selection_overall_timeout_ms 120000");
+        ShellUtils.runShellCommand(
+                "device_config put adservices fledge_ad_selection_bidding_timeout_per_buyer_ms "
+                        + "120000");
+        ShellUtils.runShellCommand("setprop debug.adservices.disable_fledge_enrollment_check true");
+        ShellUtils.runShellCommand("device_config put adservices global_kill_switch false");
+        ShellUtils.runShellCommand(
+                "device_config put adservices adservice_system_service_enabled true");
     }
 
     @Before
-    public void setup() {
+    public void setup() throws Exception {
         mCustomAudiences.clear();
+        ShellUtils.runShellCommand(KILL_ADSERVICES_CMD);
+        Thread.sleep(SLEEP_MS_AFTER_KILL);
     }
 
     @After
@@ -101,69 +137,142 @@ public class SelectAdsTestServerLatency {
     }
 
     @Test
-    public void selectAds_oneBuyer_realServer() throws Exception {
-        StaticAdTechServerUtils staticAdTechServerUtils =
-                StaticAdTechServerUtils.withNumberOfBuyers(1);
-        List<CustomAudience> customAudiences =
-                staticAdTechServerUtils.createAndGetCustomAudiences(
-                        NUMBER_OF_CUSTOM_AUDIENCES_MEDIUM, NUMBER_ADS_PER_CA_MEDIUM);
-        joinCustomAudiences(customAudiences);
-
+    public void selectAds_oneBuyerLargeCAs() throws Exception {
+        // 1 Seller, 1 Buyer, 71 Custom Audiences
+        ImmutableList<CustomAudience> cas =
+                readCustomAudiences("CustomAudiencesOneBuyerLargeCAs.json");
+        joinCustomAudiences(cas);
+        AdSelectionConfig config = readAdSelectionConfig("AdSelectionConfigOneBuyerLargeCAs.json");
         Stopwatch timer = Stopwatch.createStarted(mTicker);
+
         AdSelectionOutcome outcome =
                 mAdSelectionClient
-                        .selectAds(staticAdTechServerUtils.createAndGetAdSelectionConfig())
+                        .selectAds(config)
                         .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         timer.stop();
 
-        // TODO(b/259248789) : Modify SelectAdsLatencyHelper to parse all log queries beginning with
-        //  SELECT_ADS_LATENCY and use LOG_LABEL_REAL_SERVER_ONE_BUYER_P50 below instead of
-        //  LOG_LABEL_P50_5G
         Log.i(
                 TAG,
                 "("
-                        + generateLogLabel("selectAds_oneBuyer_realServer")
+                        + generateLogLabel("selectAds_oneBuyerLargeCAs")
                         + ": "
                         + timer.elapsed(TimeUnit.MILLISECONDS)
                         + " ms)");
-        Assert.assertEquals(
-                AD_SELECTION_FAILURE_MESSAGE,
-                createExpectedWinningUri(
-                        /* buyerIndex = */ 0, "GENERIC_CA_1", NUMBER_ADS_PER_CA_MEDIUM),
-                outcome.getRenderUri().toString());
+        Assert.assertFalse(outcome.getRenderUri().toString().isEmpty());
     }
 
     @Test
-    public void selectAds_fiveBuyers_realServer() throws Exception {
-        StaticAdTechServerUtils staticAdTechServerUtils =
-                StaticAdTechServerUtils.withNumberOfBuyers(5);
-        mCustomAudiences =
-                staticAdTechServerUtils.createAndGetCustomAudiences(
-                        NUMBER_OF_CUSTOM_AUDIENCES_MEDIUM, NUMBER_ADS_PER_CA_MEDIUM);
-        joinCustomAudiences(mCustomAudiences);
-
+    public void selectAds_fiveBuyersLargeCAs() throws Exception {
+        // 1 Seller, 5 Buyer, each buyer has 71 Custom Audiences
+        ImmutableList<CustomAudience> cas =
+                readCustomAudiences("CustomAudiencesFiveBuyersLargeCAs.json");
+        joinCustomAudiences(cas);
+        AdSelectionConfig config =
+                readAdSelectionConfig("AdSelectionConfigFiveBuyersLargeCAs.json");
         Stopwatch timer = Stopwatch.createStarted(mTicker);
+
         AdSelectionOutcome outcome =
                 mAdSelectionClient
-                        .selectAds(staticAdTechServerUtils.createAndGetAdSelectionConfig())
+                        .selectAds(config)
                         .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         timer.stop();
 
-        // TODO(b/259248789) : Modify SelectAdsLatencyHelper to parse all log queries beginning with
-        //  SELECT_ADS_LATENCY and use LOG_LABEL_REAL_SERVER_FIVE_BUYERS_P50 below instead of
-        //  LOG_LABEL_P90_5G
         Log.i(
                 TAG,
                 "("
-                        + generateLogLabel("selectAds_fiveBuyers_realServer")
+                        + generateLogLabel("selectAds_fiveBuyersLargeCAs")
                         + ": "
                         + timer.elapsed(TimeUnit.MILLISECONDS)
                         + " ms)");
-        Assert.assertEquals(
-                AD_SELECTION_FAILURE_MESSAGE,
-                createExpectedWinningUri(
-                        /* buyerIndex = */ 4, "GENERIC_CA_1", NUMBER_ADS_PER_CA_MEDIUM),
-                outcome.getRenderUri().toString());
+        Assert.assertFalse(outcome.getRenderUri().toString().isEmpty());
+    }
+
+    private ImmutableList<CustomAudience> readCustomAudiences(String fileName) throws Exception {
+        ImmutableList.Builder<CustomAudience> customAudienceBuilder = ImmutableList.builder();
+        InputStream is = ApplicationProvider.getApplicationContext().getAssets().open(fileName);
+        JSONArray customAudiencesJson = new JSONArray(new String(is.readAllBytes()));
+        is.close();
+
+        for (int i = 0; i < customAudiencesJson.length(); i++) {
+            JSONObject caJson = customAudiencesJson.getJSONObject(i);
+            JSONObject trustedBiddingDataJson = caJson.getJSONObject("trustedBiddingData");
+            JSONArray trustedBiddingKeysJson =
+                    trustedBiddingDataJson.getJSONArray("trustedBiddingKeys");
+            JSONArray adsJson = caJson.getJSONArray("ads");
+
+            ImmutableList.Builder<String> biddingKeys = ImmutableList.builder();
+            for (int index = 0; index < trustedBiddingKeysJson.length(); index++) {
+                biddingKeys.add(trustedBiddingKeysJson.getString(index));
+            }
+
+            ImmutableList.Builder<AdData> adDatas = ImmutableList.builder();
+            for (int index = 0; index < adsJson.length(); index++) {
+                JSONObject adJson = adsJson.getJSONObject(index);
+                adDatas.add(
+                        new AdData.Builder()
+                                .setRenderUri(Uri.parse(adJson.getString("render_uri")))
+                                .setMetadata(adJson.getString("metadata"))
+                                .build());
+            }
+
+            customAudienceBuilder.add(
+                    new CustomAudience.Builder()
+                            .setBuyer(AdTechIdentifier.fromString(caJson.getString("buyer")))
+                            .setName(caJson.getString("name"))
+                            .setActivationTime(Instant.now())
+                            .setExpirationTime(Instant.now().plus(90000, ChronoUnit.SECONDS))
+                            .setDailyUpdateUri(Uri.parse(caJson.getString("dailyUpdateUri")))
+                            .setUserBiddingSignals(
+                                    AdSelectionSignals.fromString(
+                                            caJson.getString("userBiddingSignals")))
+                            .setTrustedBiddingData(
+                                    new TrustedBiddingData.Builder()
+                                            .setTrustedBiddingKeys(biddingKeys.build())
+                                            .setTrustedBiddingUri(
+                                                    Uri.parse(
+                                                            trustedBiddingDataJson.getString(
+                                                                    "trustedBiddingUri")))
+                                            .build())
+                            .setBiddingLogicUri(Uri.parse(caJson.getString("biddingLogicUri")))
+                            .setAds(adDatas.build())
+                            .build());
+        }
+        return customAudienceBuilder.build();
+    }
+
+    private AdSelectionConfig readAdSelectionConfig(String fileName) throws Exception {
+        InputStream is = ApplicationProvider.getApplicationContext().getAssets().open(fileName);
+        JSONObject adSelectionConfigJson = new JSONObject(new String(is.readAllBytes()));
+        JSONArray buyersJson = adSelectionConfigJson.getJSONArray("custom_audience_buyers");
+        JSONObject perBuyerSignalsJson = adSelectionConfigJson.getJSONObject("per_buyer_signals");
+        is.close();
+
+        ImmutableList.Builder<AdTechIdentifier> buyersBuilder = ImmutableList.builder();
+        ImmutableMap.Builder<AdTechIdentifier, AdSelectionSignals> perBuyerSignals =
+                ImmutableMap.builder();
+        for (int i = 0; i < buyersJson.length(); i++) {
+            AdTechIdentifier buyer = AdTechIdentifier.fromString(buyersJson.getString(i));
+            buyersBuilder.add(buyer);
+            perBuyerSignals.put(
+                    buyer,
+                    AdSelectionSignals.fromString(perBuyerSignalsJson.getString(buyer.toString())));
+        }
+
+        return new AdSelectionConfig.Builder()
+                .setSeller(AdTechIdentifier.fromString(adSelectionConfigJson.getString("seller")))
+                .setDecisionLogicUri(
+                        Uri.parse(adSelectionConfigJson.getString("decision_logic_uri")))
+                .setAdSelectionSignals(
+                        AdSelectionSignals.fromString(
+                                adSelectionConfigJson.getString("auction_signals")))
+                .setSellerSignals(
+                        AdSelectionSignals.fromString(
+                                adSelectionConfigJson.getString("seller_signals")))
+                .setTrustedScoringSignalsUri(
+                        Uri.parse(adSelectionConfigJson.getString("trusted_scoring_signal_uri")))
+                .setPerBuyerSignals(perBuyerSignals.build())
+                .setCustomAudienceBuyers(buyersBuilder.build())
+                .build();
     }
 
     private void joinCustomAudiences(List<CustomAudience> customAudiences) throws Exception {
@@ -182,11 +291,6 @@ public class SelectAdsTestServerLatency {
                     .leaveCustomAudience(ca.getBuyer(), ca.getName())
                     .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         }
-    }
-
-    private String createExpectedWinningUri(
-            int buyerIndex, String customAudienceName, int adNumber) {
-        return StaticAdTechServerUtils.getAdRenderUri(buyerIndex, customAudienceName, adNumber);
     }
 
     private String generateLogLabel(String testName) {
