@@ -316,6 +316,10 @@ public final class PhFlags implements Flags {
     static final String KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL =
             "mdd_ui_ota_strings_manifest_file_url";
 
+    static final String KEY_UI_OTA_STRINGS_FEATURE_ENABLED = "ui_ota_strings_feature_enabled";
+
+    static final String KEY_UI_OTA_STRINGS_DOWNLOAD_DEADLINE = "ui_ota_strings_download_deadline";
+
     static final String KEY_UI_DIALOGS_FEATURE_ENABLED = "ui_dialogs_feature_enabled";
 
     static final String KEY_GA_UX_FEATURE_ENABLED = "ga_ux_enabled";
@@ -1502,6 +1506,25 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getUiOtaStringsFeatureEnabled() {
+        if (getGlobalKillSwitch()) {
+            return false;
+        }
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_UI_OTA_STRINGS_FEATURE_ENABLED,
+                /* defaultValue */ UI_OTA_STRINGS_FEATURE_ENABLED);
+    }
+
+    @Override
+    public long getUiOtaStringsDownloadDeadline() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_UI_OTA_STRINGS_DOWNLOAD_DEADLINE,
+                /* defaultValue */ UI_OTA_STRINGS_DOWNLOAD_DEADLINE);
+    }
+
+    @Override
     public boolean getAdServicesEnabled() {
         // if the global kill switch is enabled, feature should be disabled.
         if (getGlobalKillSwitch()) {
@@ -2244,7 +2267,16 @@ public final class PhFlags implements Flags {
         writer.println("==== AdServices PH Flags Dump UI Related Flags ====");
         writer.println(
                 "\t" + KEY_UI_DIALOGS_FEATURE_ENABLED + " = " + getUIDialogsFeatureEnabled());
-
+        writer.println(
+                "\t"
+                        + KEY_UI_OTA_STRINGS_FEATURE_ENABLED
+                        + " = "
+                        + getUiOtaStringsFeatureEnabled());
+        writer.println(
+                "\t"
+                        + KEY_UI_OTA_STRINGS_DOWNLOAD_DEADLINE
+                        + " = "
+                        + getUiOtaStringsDownloadDeadline());
         writer.println("==== AdServices PH Flags Dump STATUS ====");
         writer.println("\t" + KEY_ADSERVICES_ENABLED + " = " + getAdServicesEnabled());
         writer.println(

@@ -22,6 +22,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.when;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -38,6 +39,8 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.enrollment.EnrollmentTables;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.dx.mockito.inline.extended.StaticMockitoSession;
 
@@ -109,6 +112,7 @@ public class MobileDataDownloadTest {
     private DbHelper mDbHelper;
 
     @Mock Flags mMockFlags;
+    @Mock ConsentManager mConsentManager;
 
     @Before
     public void setup() {
@@ -121,6 +125,7 @@ public class MobileDataDownloadTest {
                         .spyStatic(FlagsFactory.class)
                         .spyStatic(MobileDataDownloadFactory.class)
                         .spyStatic(EnrollmentDao.class)
+                        .spyStatic(ConsentManager.class)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
 
@@ -135,6 +140,11 @@ public class MobileDataDownloadTest {
                 MobileDataDownloadFactory.getFileDownloader(mContext, mMockFlags, mFileStorage);
 
         mDbHelper = DbTestUtil.getDbHelperForTest();
+
+        when(mConsentManager.getConsent()).thenReturn(AdServicesApiConsent.GIVEN);
+        // Mock static method ConsentManager.getInstance() to return test ConsentManager
+        ExtendedMockito.doReturn(mConsentManager)
+                .when(() -> ConsentManager.getInstance(any(Context.class)));
     }
 
     @After

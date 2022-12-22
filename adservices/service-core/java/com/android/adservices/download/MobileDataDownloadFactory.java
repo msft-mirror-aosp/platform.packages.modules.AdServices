@@ -24,6 +24,7 @@ import androidx.annotation.NonNull;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.consent.ConsentManager;
 
 import com.google.android.downloader.AndroidDownloaderLogger;
 import com.google.android.downloader.ConnectivityHandler;
@@ -219,6 +220,9 @@ public class MobileDataDownloadFactory {
 
         return ManifestFileGroupPopulator.builder()
                 .setContext(context)
+                // topics resources should not be downloaded pre-consent
+                .setEnabledSupplier(
+                        () -> ConsentManager.getInstance(context).getConsent().isGiven())
                 .setBackgroundExecutor(AdServicesExecutors.getBackgroundExecutor())
                 .setFileDownloader(() -> fileDownloader)
                 .setFileStorage(fileStorage)
@@ -262,6 +266,13 @@ public class MobileDataDownloadFactory {
 
         return ManifestFileGroupPopulator.builder()
                 .setContext(context)
+                // OTA resources can be downloaded pre-consent before notification, or with consent
+                .setEnabledSupplier(
+                        () ->
+                                !ConsentManager.getInstance(context).wasGaUxNotificationDisplayed()
+                                        || ConsentManager.getInstance(context)
+                                                .getConsent()
+                                                .isGiven())
                 .setBackgroundExecutor(AdServicesExecutors.getBackgroundExecutor())
                 .setFileDownloader(() -> fileDownloader)
                 .setFileStorage(fileStorage)
@@ -305,6 +316,9 @@ public class MobileDataDownloadFactory {
 
         return ManifestFileGroupPopulator.builder()
                 .setContext(context)
+                // measurement resources should not be downloaded pre-consent
+                .setEnabledSupplier(
+                        () -> ConsentManager.getInstance(context).getConsent().isGiven())
                 .setBackgroundExecutor(AdServicesExecutors.getBackgroundExecutor())
                 .setFileDownloader(() -> fileDownloader)
                 .setFileStorage(fileStorage)
