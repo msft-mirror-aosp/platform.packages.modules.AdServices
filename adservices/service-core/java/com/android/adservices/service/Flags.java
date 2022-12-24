@@ -517,6 +517,9 @@ public interface Flags extends Dumpable {
 
     long FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS = 2000;
 
+    // TODO(b/263055427): Replace with a more realistic number after getting input from ad-techs
+    long FLEDGE_REPORT_IMPRESSION_MAX_EVENT_URI_ENTRIES_COUNT = 100;
+
     /** Returns the timeout constant in milliseconds that limits the bidding per CA */
     default long getAdSelectionBiddingTimeoutPerCaMs() {
         return FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
@@ -570,6 +573,15 @@ public interface Flags extends Dumpable {
      */
     default long getReportImpressionOverallTimeoutMs() {
         return FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
+    }
+
+    /**
+     * Returns the maximum number of {@link
+     * com.android.adservices.data.adselection.DBRegisteredAdEvent} that an ad-tech can register in
+     * one call to {@code reportImpression}.
+     */
+    default long getReportImpressionMaxEventUriEntriesCount() {
+        return FLEDGE_REPORT_IMPRESSION_MAX_EVENT_URI_ENTRIES_COUNT;
     }
 
     // 24 hours in seconds

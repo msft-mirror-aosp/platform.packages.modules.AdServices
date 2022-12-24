@@ -163,6 +163,8 @@ public final class PhFlags implements Flags {
             "fledge_ad_selection_expiration_window_s";
     static final String KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS =
             "fledge_report_impression_overall_timeout_ms";
+    static final String KEY_FLEDGE_REPORT_IMPRESSION_MAX_EVENT_URI_ENTRIES_COUNT =
+            "fledge_report_impression_max_event_uri_entries_count";
     static final String KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS =
             "fledge_ad_selection_bidding_timeout_per_buyer_ms";
     static final String KEY_FLEDGE_HTTP_CACHE_ENABLE = "fledge_http_cache_enable";
@@ -931,6 +933,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public long getReportImpressionMaxEventUriEntriesCount() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_REPORT_IMPRESSION_MAX_EVENT_URI_ENTRIES_COUNT,
+                /* defaultValue */ FLEDGE_REPORT_IMPRESSION_MAX_EVENT_URI_ENTRIES_COUNT);
+    }
+
+    @Override
     public boolean getFledgeHttpCachingEnabled() {
         return DeviceConfig.getBoolean(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -1006,18 +1016,10 @@ public final class PhFlags implements Flags {
         // hard-coded value.
         return SystemProperties.getBoolean(
                 getSystemPropertyName(KEY_GLOBAL_KILL_SWITCH),
-                /* defaultValue */
-                isEmulator()
-                        ? false
-                        : DeviceConfig.getBoolean(
-                                DeviceConfig.NAMESPACE_ADSERVICES,
-                                /* flagName */ KEY_GLOBAL_KILL_SWITCH,
-                                /* defaultValue */ GLOBAL_KILL_SWITCH));
-    }
-
-    // Return if the device is an emulator or not.
-    private boolean isEmulator() {
-        return SystemProperties.getBoolean("ro.boot.qemu", false);
+                /* defaultValue */ DeviceConfig.getBoolean(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_GLOBAL_KILL_SWITCH,
+                        /* defaultValue */ GLOBAL_KILL_SWITCH));
     }
 
     // MEASUREMENT Killswitches
@@ -1495,12 +1497,10 @@ public final class PhFlags implements Flags {
             return false;
         }
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return isEmulator()
-                ? true
-                : DeviceConfig.getBoolean(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        /* flagName */ KEY_ADSERVICES_ENABLED,
-                        /* defaultValue */ ADSERVICES_ENABLED);
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ADSERVICES_ENABLED,
+                /* defaultValue */ ADSERVICES_ENABLED);
     }
 
     @Override
@@ -2178,6 +2178,11 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS
                         + " = "
                         + getReportImpressionOverallTimeoutMs());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_REPORT_IMPRESSION_MAX_EVENT_URI_ENTRIES_COUNT
+                        + " = "
+                        + getReportImpressionMaxEventUriEntriesCount());
         writer.println(
                 "\t"
                         + KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDE

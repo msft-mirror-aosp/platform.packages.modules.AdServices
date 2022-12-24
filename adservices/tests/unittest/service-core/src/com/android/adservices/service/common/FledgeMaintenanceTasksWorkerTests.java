@@ -34,6 +34,8 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
+import com.google.common.collect.ImmutableList;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -152,7 +154,7 @@ public class FledgeMaintenanceTasksWorkerTests {
                         DB_BUYER_DECISION_LOGIC.getBiddingLogicUri()));
 
         // Add valid registered ad event
-        mAdSelectionEntryDao.persistDBRegisteredAdEvent(DB_REGISTERED_EVENT);
+        mAdSelectionEntryDao.persistDBRegisteredAdEvents(ImmutableList.of(DB_REGISTERED_EVENT));
 
         assertTrue(
                 mAdSelectionEntryDao.doesRegisteredAdEventExist(
@@ -198,8 +200,8 @@ public class FledgeMaintenanceTasksWorkerTests {
                         EXPIRED_DB_BUYER_DECISION_LOGIC.getBiddingLogicUri()));
 
         // Add valid and expired registered ad events
-        mAdSelectionEntryDao.persistDBRegisteredAdEvent(DB_REGISTERED_EVENT);
-        mAdSelectionEntryDao.persistDBRegisteredAdEvent(EXPIRED_DB_REGISTERED_EVENT);
+        mAdSelectionEntryDao.persistDBRegisteredAdEvents(
+                ImmutableList.of(DB_REGISTERED_EVENT, EXPIRED_DB_REGISTERED_EVENT));
 
         assertTrue(
                 mAdSelectionEntryDao.doesRegisteredAdEventExist(
