@@ -1325,8 +1325,6 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
         public void rebootToLockedDevice() throws Exception {
             // Setup screenlock
-            mTest.getDevice().executeShellCommand(
-                    "settings put global require_password_to_decrypt 0");
             mTest.getDevice().executeShellCommand("locksettings set-disabled false");
             String response = mTest.getDevice().executeShellCommand("locksettings set-pin 1234");
             if (!response.contains("1234")) {
@@ -1352,8 +1350,6 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
                 unlockDevice();
                 mTest.getDevice().executeShellCommand("locksettings clear --old 1234");
                 mTest.getDevice().executeShellCommand("locksettings set-disabled true");
-                mTest.getDevice().executeShellCommand(
-                        "settings delete global require_password_to_decrypt");
             } finally {
                 // Get ourselves back into a known-good state
                 mTest.getDevice().rebootUntilOnline();
