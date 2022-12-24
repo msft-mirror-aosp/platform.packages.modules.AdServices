@@ -22,7 +22,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.common.AdData;
-import android.net.Uri;
+import android.adservices.common.AdDataFixture;
+import android.adservices.common.CommonFixture;
 import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
@@ -32,9 +33,8 @@ import org.junit.Test;
 /** Unit tests for {@link AdWithBid} */
 @SmallTest
 public final class AdWithBidTest {
-    private static final AdData VALID_AD_DATA = new AdData(
-            new Uri.Builder().path("valid.example.com/testing/hello").build(),
-            "{'example': 'metadata', 'valid': true}");
+    private static final AdData VALID_AD_DATA =
+            AdDataFixture.getValidAdDataByBuyer(CommonFixture.VALID_BUYER_1, 0);
     private static final double TEST_BID = 1.0;
 
     @Test
