@@ -373,9 +373,11 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         List<AdData> ads =
                 customAudience.getAds().stream()
                         .map(
-                                adData -> {
-                                    return new AdData(adData.getRenderUri(), adData.getMetadata());
-                                })
+                                adData ->
+                                        new AdData.Builder()
+                                                .setRenderUri(adData.getRenderUri())
+                                                .setMetadata(adData.getMetadata())
+                                                .build())
                         .collect(Collectors.toList());
         int traceCookie = Tracing.beginAsyncSection(Tracing.RUN_BIDDING);
         FluentFuture<List<AdWithBid>> adsWithBids =
