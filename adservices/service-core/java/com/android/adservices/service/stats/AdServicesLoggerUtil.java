@@ -49,7 +49,7 @@ public class AdServicesLoggerUtil {
         int resultCode;
         if (t instanceof AppImportanceFilter.WrongCallingApplicationStateException) {
             resultCode = STATUS_BACKGROUND_CALLER;
-        } else if (t instanceof UncheckedTimeoutException | t instanceof TimeoutException) {
+        } else if (t instanceof UncheckedTimeoutException || t instanceof TimeoutException) {
             resultCode = STATUS_TIMEOUT;
         } else if (t instanceof FledgeAuthorizationFilter.AdTechNotAllowedException
                 || t instanceof FledgeAllowListsFilter.AppNotAllowedException) {

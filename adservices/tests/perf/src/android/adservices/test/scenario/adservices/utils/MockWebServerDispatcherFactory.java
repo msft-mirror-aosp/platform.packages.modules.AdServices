@@ -70,6 +70,8 @@ public final class MockWebServerDispatcherFactory {
     private static final String SELLER_REPORTING_PATH = "/reporting/seller";
     private static final String BUYER_BIDDING_LOGIC_URI_PATH =
             "/buyer/bidding/simple_logic_with_delay";
+    private static final String BUYER_BIDDING_LOGIC_URI_PATH_FIXED_BID =
+            "/buyer/bidding/simple_logic_with_delay_fixed_bid";
     private static final String DEFAULT_DECISION_LOGIC_JS_WITH_EXECUTION_TIME_FORMAT =
             "function scoreAd(ad, bid, auction_config, seller_signals,"
                     + " trusted_scoring_signals, contextual_signal, user_signal,"
@@ -91,6 +93,19 @@ public final class MockWebServerDispatcherFactory {
                     + " const start = Date.now(); let now = start; while (now-start < %d) "
                     + "{now=Date.now();}\n"
                     + " return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
+                    + "}\n"
+                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
+                    + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
+                    + " return {'status': 0, 'results': {'reporting_uri': '%s"
+                    + "' } };\n"
+                    + "}";
+    private static final String DEFAULT_BIDDING_LOGIC_JS_FIXED_BID =
+            "function generateBid(ad, auction_signals, per_buyer_signals,"
+                    + " trusted_bidding_signals, contextual_signals,"
+                    + " custom_audience_signals) { \n"
+                    + " const start = Date.now(); let now = start; while (now-start < %d) "
+                    + "{now=Date.now();}\n"
+                    + " return {'status': 0, 'ad': ad, 'bid': 1 };\n"
                     + "}\n"
                     + "function reportWin(ad_selection_signals, per_buyer_signals,"
                     + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
@@ -124,53 +139,6 @@ public final class MockWebServerDispatcherFactory {
                 scoringJsPercentileToExecutionTimeMs.get(percentile),
                 NETWORK_TO_BANDWIDTH.get(network),
                 mockWebServerRule);
-    }
-
-    private static Dispatcher create(
-            int decisionLogicFetchDelayMs,
-            int biddingLogicFetchDelayMs,
-            int scoringSignalFetchDelayMs,
-            int biddingSignalFetchDelayMs,
-            int biddingLogicExecutionRunMs,
-            int scoringLogicExecutionRunMs,
-            MockWebServerRule mockWebServerRule) {
-
-        return new Dispatcher() {
-            @Override
-            public MockResponse dispatch(RecordedRequest request) {
-                if (DECISION_LOGIC_PATH.equals(request.getPath())) {
-                    return new MockResponse()
-                            .setBodyDelayTimeMs(decisionLogicFetchDelayMs)
-                            .setBody(
-                                    getDecisionLogicJS(
-                                            scoringLogicExecutionRunMs,
-                                            mockWebServerRule
-                                                    .uriForPath(SELLER_REPORTING_PATH)
-                                                    .toString()));
-                } else if (BUYER_BIDDING_LOGIC_URI_PATH.equals(request.getPath())) {
-                    return new MockResponse()
-                            .setBodyDelayTimeMs(biddingLogicFetchDelayMs)
-                            .setBody(
-                                    getBiddingLogicJS(
-                                            biddingLogicExecutionRunMs,
-                                            mockWebServerRule
-                                                    .uriForPath(BUYER_REPORTING_PATH)
-                                                    .toString()));
-                } else if (BUYER_REPORTING_PATH.equals(request.getPath())
-                        || SELLER_REPORTING_PATH.equals(request.getPath())) {
-                    return new MockResponse().setBody("");
-                } else if (request.getPath().startsWith(TRUSTED_SCORING_SIGNAL_PATH)) {
-                    return new MockResponse()
-                            .setBodyDelayTimeMs(scoringSignalFetchDelayMs)
-                            .setBody(TRUSTED_SCORING_SIGNALS.toString());
-                } else if (request.getPath().startsWith(TRUSTED_BIDDING_SIGNALS_PATH)) {
-                    return new MockResponse()
-                            .setBodyDelayTimeMs(biddingSignalFetchDelayMs)
-                            .setBody(TRUSTED_BIDDING_SIGNALS.toString());
-                }
-                return new MockResponse().setResponseCode(404);
-            }
-        };
     }
 
     private static Dispatcher create(
@@ -214,6 +182,19 @@ public final class MockWebServerDispatcherFactory {
                                             mockWebServerRule
                                                     .uriForPath(BUYER_REPORTING_PATH)
                                                     .toString()));
+                } else if (BUYER_BIDDING_LOGIC_URI_PATH_FIXED_BID.equals((request.getPath()))) {
+                    return new MockResponse()
+                            .setBodyDelayTimeMs(
+                                    (int)
+                                            (biddingLogicFetchDelayMs
+                                                    * getThrottlingFactor(bandwidth, mNumRequests)))
+                            .setBody(
+                                    getBiddingLogicJS(
+                                            biddingLogicExecutionRunMs,
+                                            mockWebServerRule
+                                                    .uriForPath(BUYER_REPORTING_PATH)
+                                                    .toString(),
+                                            DEFAULT_BIDDING_LOGIC_JS_FIXED_BID));
                 } else if (BUYER_REPORTING_PATH.equals(request.getPath())
                         || SELLER_REPORTING_PATH.equals(request.getPath())) {
                     return new MockResponse().setBody("");
@@ -256,6 +237,10 @@ public final class MockWebServerDispatcherFactory {
         return BUYER_BIDDING_LOGIC_URI_PATH;
     }
 
+    public static String getBiddingLogicUriPathFixedBid() {
+        return BUYER_BIDDING_LOGIC_URI_PATH_FIXED_BID;
+    }
+
     public static String getDecisionLogicPath() {
         return DECISION_LOGIC_PATH;
     }
@@ -282,10 +267,15 @@ public final class MockWebServerDispatcherFactory {
 
     private static String getBiddingLogicJS(
             int biddingLogicExecutionRunMs, String buyerReportingUri) {
-        return String.format(
-                DEFAULT_BIDDING_LOGIC_JS_WITH_EXECUTION_TIME_FORMAT,
+        return getBiddingLogicJS(
                 biddingLogicExecutionRunMs,
-                buyerReportingUri);
+                buyerReportingUri,
+                DEFAULT_BIDDING_LOGIC_JS_WITH_EXECUTION_TIME_FORMAT);
+    }
+
+    private static String getBiddingLogicJS(
+            int biddingLogicExecutionRunMs, String buyerReportingUri, String script) {
+        return String.format(script, biddingLogicExecutionRunMs, buyerReportingUri);
     }
 
     private static Map<String, Map<Integer, Integer>> generateNetworkMap(

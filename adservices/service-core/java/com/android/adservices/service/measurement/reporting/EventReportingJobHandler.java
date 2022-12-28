@@ -187,7 +187,7 @@ public class EventReportingJobHandler {
         return eventReportSender.sendReport(adTechDomain, eventReportPayload);
     }
 
-    private static void logReportingStats(int resultCode) {
+    private void logReportingStats(int resultCode) {
         AdServicesLoggerImpl.getInstance()
                 .logMeasurementReports(
                         new MeasurementReportsStats.Builder()

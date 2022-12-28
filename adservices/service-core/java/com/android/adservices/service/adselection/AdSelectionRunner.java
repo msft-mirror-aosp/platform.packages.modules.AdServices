@@ -24,7 +24,6 @@ import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionInput;
 import android.adservices.adselection.AdSelectionResponse;
-import android.adservices.adselection.Tracing;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.exceptions.AdServicesException;
@@ -50,6 +49,7 @@ import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.js.JSScriptEngine;
+import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
@@ -532,11 +532,14 @@ public abstract class AdSelectionRunner {
             @NonNull String buyerDecisionLogicJS,
             @NonNull String callerPackageName) {
         final int traceCookie = Tracing.beginAsyncSection(Tracing.PERSIST_AD_SELECTION);
-        final long adSelectionId = mAdSelectionIdGenerator.generateId();
-        LogUtil.v("Persisting Ad Selection Result for Id:%d", adSelectionId);
         return mBackgroundExecutorService.submit(
                 () -> {
-                    // TODO : b/230568647 retry ID generation in case of collision
+                    long adSelectionId = mAdSelectionIdGenerator.generateId();
+                    // Retry ID generation in case of collision
+                    while (mAdSelectionEntryDao.doesAdSelectionIdExist(adSelectionId)) {
+                        adSelectionId = mAdSelectionIdGenerator.generateId();
+                    }
+                    LogUtil.v("Persisting Ad Selection Result for Id:%d", adSelectionId);
                     DBAdSelection dbAdSelection;
                     dbAdSelectionBuilder
                             .setAdSelectionId(adSelectionId)
@@ -550,8 +553,8 @@ public abstract class AdSelectionRunner {
                                     .setBuyerDecisionLogicJs(buyerDecisionLogicJS)
                                     .setBiddingLogicUri(dbAdSelection.getBiddingLogicUri())
                                     .build());
-                    Tracing.endAsyncSection(Tracing.PERSIST_AD_SELECTION, traceCookie);
                     mAdSelectionExecutionLogger.endPersistAdSelection();
+                    Tracing.endAsyncSection(Tracing.PERSIST_AD_SELECTION, traceCookie);
                     return dbAdSelection;
                 });
     }

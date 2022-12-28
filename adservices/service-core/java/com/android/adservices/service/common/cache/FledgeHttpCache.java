@@ -20,6 +20,7 @@ import android.annotation.NonNull;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.service.profiling.Tracing;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.net.HttpHeaders;
@@ -46,6 +47,7 @@ public class FledgeHttpCache implements HttpCache {
     @VisibleForTesting static final String PROPERTY_NO_STORE = "no-store";
     // TODO(b/259751285) support max-age cache header
     @VisibleForTesting static final String PROPERTY_MAX_AGE = "max-age";
+    @VisibleForTesting static final String PROPERTY_MAX_AGE_SEPARATOR = "=";
 
     public FledgeHttpCache(
             @NonNull CacheEntryDao cacheEntryDao, long maxAgeSeconds, long maxEntriesCount) {
@@ -77,6 +79,7 @@ public class FledgeHttpCache implements HttpCache {
      */
     @Override
     public DBCacheEntry get(URL url) {
+        int traceCookie = Tracing.beginAsyncSection(Tracing.CACHE_GET);
         incrementRequestCount();
         DBCacheEntry entry = mCacheEntryDao.getCacheEntry(url.toString(), Instant.now());
         if (entry != null) {
@@ -84,6 +87,7 @@ public class FledgeHttpCache implements HttpCache {
             incrementHitCount();
         }
         notifyObservers(CacheEventType.GET);
+        Tracing.endAsyncSection(Tracing.CACHE_GET, traceCookie);
         return entry;
     }
 
@@ -96,23 +100,25 @@ public class FledgeHttpCache implements HttpCache {
      */
     @Override
     public void put(URL url, String body, Map<String, List<String>> requestPropertiesMap) {
+        int traceCookie = Tracing.beginAsyncSection(Tracing.CACHE_PUT);
         List<String> cacheProperties = requestPropertiesMap.get(HttpHeaders.CACHE_CONTROL);
         if ((cacheProperties != null)
                 && (cacheProperties.contains(PROPERTY_NO_CACHE)
                         || cacheProperties.contains(PROPERTY_NO_STORE))) {
             return;
         }
-
+        long requestMaxAge = getRequestMaxAgeSeconds(cacheProperties);
         LogUtil.v("Caching results for Url: %s", url.toString());
         DBCacheEntry entry =
                 DBCacheEntry.builder()
                         .setUrl(url.toString())
                         .setResponseBody(body)
                         .setCreationTimestamp(Instant.now())
-                        .setMaxAgeSeconds(mMaxAgeSeconds)
+                        .setMaxAgeSeconds(Math.min(requestMaxAge, mMaxAgeSeconds))
                         .build();
         mCacheEntryDao.persistCacheEntry(entry);
         notifyObservers(CacheEventType.PUT);
+        Tracing.endAsyncSection(Tracing.CACHE_PUT, traceCookie);
     }
 
     @Override
@@ -180,6 +186,25 @@ public class FledgeHttpCache implements HttpCache {
             return 0;
         }
         return getHitCount() / totalRequests;
+    }
+
+    @VisibleForTesting
+    long getRequestMaxAgeSeconds(final List<String> cacheProperties) {
+        if (cacheProperties == null) {
+            return mMaxAgeSeconds;
+        }
+        return Math.abs(
+                cacheProperties.parallelStream()
+                        .filter(property -> property.startsWith(PROPERTY_MAX_AGE))
+                        .map(
+                                maxAgeProperty ->
+                                        Long.valueOf(
+                                                maxAgeProperty.substring(
+                                                        maxAgeProperty.lastIndexOf(
+                                                                        PROPERTY_MAX_AGE_SEPARATOR)
+                                                                + 1)))
+                        .findFirst()
+                        .orElse(mMaxAgeSeconds));
     }
 
     private void prune() {

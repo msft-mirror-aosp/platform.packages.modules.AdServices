@@ -16,7 +16,7 @@
 
 package com.android.adservices.download;
 
-import static com.android.adservices.download.MddTaskScheduler.KEY_MDD_TASK_TAG;
+import static com.android.adservices.download.MddJobService.KEY_MDD_TASK_TAG;
 import static com.android.adservices.service.AdServicesConfig.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB_ID;
 import static com.android.adservices.service.AdServicesConfig.MDD_CHARGING_PERIODIC_TASK_JOB_ID;
 import static com.android.adservices.service.AdServicesConfig.MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID;

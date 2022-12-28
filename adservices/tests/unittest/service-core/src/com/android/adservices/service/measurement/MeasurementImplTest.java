@@ -95,6 +95,7 @@ public final class MeasurementImplTest {
     private static final Uri APP_DESTINATION = Uri.parse("android-app://com.app_destination");
     private static final Uri OTHER_APP_DESTINATION =
             Uri.parse("android-app://com.other_app_destination");
+    private static final boolean DEFAULT_AD_ID_PERMISSION = false;
 
     private static final WebSourceParams INPUT_SOURCE_REGISTRATION_1 =
             new WebSourceParams.Builder(REGISTRATION_URI_1).setDebugKeyAllowed(true).build();
@@ -138,7 +139,6 @@ public final class MeasurementImplTest {
                         webTriggerRegistrationRequest,
                         DEFAULT_CONTEXT.getAttributionSource().getPackageName(),
                         SDK_PACKAGE_NAME)
-                .setAdIdPermissionGranted(true)
                 .build();
     }
     private static WebSourceRegistrationRequestInternal createWebSourceRegistrationRequest(
@@ -162,7 +162,6 @@ public final class MeasurementImplTest {
                         DEFAULT_CONTEXT.getAttributionSource().getPackageName(),
                         SDK_PACKAGE_NAME,
                         REQUEST_TIME)
-                .setAdIdPermissionGranted(true)
                 .build();
     }
     @Before
@@ -213,6 +212,7 @@ public final class MeasurementImplTest {
                 mMeasurementImpl.registerWebSource(
                         createWebSourceRegistrationRequest(
                                 APP_DESTINATION, WEB_DESTINATION, OTHER_WEB_DESTINATION),
+                        DEFAULT_AD_ID_PERMISSION,
                         System.currentTimeMillis());
         assertEquals(STATUS_INVALID_ARGUMENT, result);
     }
@@ -277,6 +277,7 @@ public final class MeasurementImplTest {
         final int result =
                 mMeasurementImpl.registerWebSource(
                         createWebSourceRegistrationRequest(null, INVALID_WEB_DESTINATION, null),
+                        DEFAULT_AD_ID_PERMISSION,
                         System.currentTimeMillis());
         assertEquals(STATUS_INVALID_ARGUMENT, result);
     }
@@ -286,6 +287,7 @@ public final class MeasurementImplTest {
         final int result =
                 mMeasurementImpl.registerWebTrigger(
                         createWebTriggerRegistrationRequest(INVALID_WEB_DESTINATION),
+                        DEFAULT_AD_ID_PERMISSION,
                         System.currentTimeMillis());
         assertEquals(STATUS_INVALID_ARGUMENT, result);
     }
@@ -295,6 +297,7 @@ public final class MeasurementImplTest {
                 mMeasurementImpl.registerWebSource(
                         createWebSourceRegistrationRequest(
                                 APP_DESTINATION, WEB_DESTINATION, OTHER_APP_DESTINATION),
+                        DEFAULT_AD_ID_PERMISSION,
                         System.currentTimeMillis());
         assertEquals(STATUS_INVALID_ARGUMENT, result);
     }

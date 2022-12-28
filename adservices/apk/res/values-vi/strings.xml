@@ -36,6 +36,8 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"Cho phép ứng dụng truy cập API sửa đổi trạng thái bật của AdService."</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"Truy cập API trạng thái bật của AdService"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Cho phép ứng dụng truy cập API trạng thái bật của AdService."</string>
+    <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Truy cập vào các AdServicesManager API"</string>
+    <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Cho phép ứng dụng truy cập vào các AdServicesManager API."</string>
     <string name="app_label" msgid="5985320129629013968">"Hệ thống Android"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Tham gia phiên bản beta về quyền riêng tư trong quảng cáo của Android"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android đang khám phá nhiều cách bảo mật hơn để các ứng dụng có thể hiển thị quảng cáo cho bạn"</string>
@@ -81,8 +83,7 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Hộp cát về quyền riêng tư"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Bản beta về quyền riêng tư trong quảng cáo của Android cung cấp các tính năng mới mà ứng dụng có thể dùng để hiển thị những quảng cáo bạn có thể thích. Các công nghệ này không sử dụng số nhận dạng thiết bị.\n\nAndroid có thể ước tính các loại quảng cáo mà bạn có thể quan tâm và tạm thời lưu những sở thích này trên thiết bị của bạn. Điều này cho phép các ứng dụng hiển thị những quảng cáo có liên quan mà không cần theo dõi hoạt động của bạn trên các trang web cũng như ứng dụng từ nhà phát triển khác."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Bạn không có sở thích nào bị chặn"</string>
-    <!-- no translation found for settingsUI_topics_are_reset (7539323750312329931) -->
-    <skip />
+    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Mối quan tâm đã được đặt lại"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Các ứng dụng có thể ước tính sở thích của bạn và tạm thời lưu những sở thích này trong Android. Sau đó, một ứng dụng khác có thể hiển thị cho bạn quảng cáo dựa trên những sở thích này.\n\nNếu bạn chặn một ứng dụng, ứng dụng đó sẽ không ước tính thêm sở thích nào nữa. Ứng dụng bị chặn sẽ không được thêm lại vào danh sách ứng dụng này trừ khi bạn bỏ chặn. Các sở thích đã được ứng dụng ước tính sẽ bị xóa, nhưng bạn vẫn có thể thấy một số quảng cáo có liên quan."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Các ứng dụng bạn đã chặn"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Đặt lại sở thích do ứng dụng ước tính"</string>

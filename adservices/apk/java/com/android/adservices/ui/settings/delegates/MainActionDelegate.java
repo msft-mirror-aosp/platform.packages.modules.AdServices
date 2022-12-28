@@ -103,19 +103,25 @@ public class MainActionDelegate extends BaseActionDelegate {
      */
     public void initMainFragment(AdServicesSettingsMainFragment fragment) {
         mAdServicesSettingsMainActivity.setTitle(R.string.settingsUI_main_view_title);
-        configureConsentSwitch(fragment);
+        // Hide the main toggle and the entry point of Measurement
+        // in Main page behind the GaUxFeature Flag
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            MainSwitchBar mainSwitchBar =
+                    mAdServicesSettingsMainActivity.findViewById(R.id.main_switch_bar);
+            mainSwitchBar.setVisibility(View.GONE);
+            configureMeasurementButton(fragment);
+        } else {
+            configureConsentSwitch(fragment);
+        }
+
         configureTopicsButton(fragment);
         configureAppsButton(fragment);
-        // Hide the point entry of Measurement in Main page behind the GaUxFeature Flag
-        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
-            configureMeasurementButton(fragment);
-        }
     }
 
     private void configureConsentSwitch(AdServicesSettingsMainFragment fragment) {
         MainSwitchBar mainSwitchBar =
                 mAdServicesSettingsMainActivity.findViewById(R.id.main_switch_bar);
-
+        mainSwitchBar.setVisibility(View.VISIBLE);
         mMainViewModel.getConsent().observe(fragment, mainSwitchBar::setChecked);
 
         mainSwitchBar.setOnClickListener(

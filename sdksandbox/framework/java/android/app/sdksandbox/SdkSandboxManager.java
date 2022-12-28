@@ -45,35 +45,32 @@ import java.util.Set;
 import java.util.concurrent.Executor;
 
 /**
- * Provides APIs to load {@link android.content.pm.SharedLibraryInfo#TYPE_SDK_PACKAGE SDKs}
- * into SDK sandbox process, and then interact with them.
+ * Provides APIs to load {@link android.content.pm.SharedLibraryInfo#TYPE_SDK_PACKAGE SDKs} into the
+ * SDK sandbox process, and then interact with them.
  *
- * <p>{@code SdkSandbox} is a java process running in a separate uid range. Each app has its own
- * SDK sandbox process.
+ * <p>SDK sandbox is a java process running in a separate uid range. Each app may have its own SDK
+ * sandbox process.
  *
- * <p>First app needs to declare {@code SDKs} it depends on in it's {@code AndroidManifest.xml}
- * using {@code <uses-sdk-library>} tag. App can only load {@code SDKs} it depends on into the
- * {@code SdkSandbox}.
- *
- * <p>Note: All APIs defined in this class are not stable and subject to change.
+ * <p>The app first needs to declare SDKs it depends on in its manifest using the {@code
+ * <uses-sdk-library>} tag. Apps may only load SDKs they depend on into the SDK sandbox.
  *
  * @see android.content.pm.SharedLibraryInfo#TYPE_SDK_PACKAGE
- * @see
- * <a href="https://developer.android.com/design-for-safety/ads/sdk-runtime">SDK runtime design proposal</a>
+ * @see <a href="https://developer.android.com/design-for-safety/ads/sdk-runtime">SDK Runtime design
+ *     proposal</a>
  */
 @SystemService(SDK_SANDBOX_SERVICE)
 public final class SdkSandboxManager {
 
     /**
-     * Use with {@link Context#getSystemService(String)} to retrieve a {@link SdkSandboxManager} for
-     * interacting with the SDKs belonging to this client application.
+     * Use with {@link Context#getSystemService(String)} to retrieve an {@link SdkSandboxManager}
+     * for interacting with the SDKs belonging to this client application.
      */
     public static final String SDK_SANDBOX_SERVICE = "sdk_sandbox";
 
     /**
-     * Sdk sandbox process is not available.
+     * SDK sandbox process is not available.
      *
-     * <p>This indicates that the sdk sandbox process is not available, either because it has died,
+     * <p>This indicates that the SDK sandbox process is not available, either because it has died,
      * disconnected or was not created in the first place.
      */
     public static final int SDK_SANDBOX_PROCESS_NOT_AVAILABLE = 503;
@@ -89,7 +86,7 @@ public final class SdkSandboxManager {
     /**
      * SDK is already loaded.
      *
-     * <p>This indicates that client application tried to reload the same SDk by calling {@link
+     * <p>This indicates that client application tried to reload the same SDK by calling {@link
      * SdkSandboxManager#loadSdk(String, Bundle, Executor, OutcomeReceiver)} after being
      * successfully loaded.
      */
@@ -160,18 +157,18 @@ public final class SdkSandboxManager {
     public @interface RequestSurfacePackageErrorCode {}
 
     /**
-     * SDK Sandbox is disabled.
+     * SDK sandbox is disabled.
      *
-     * <p>{@link SdkSandboxManager} APIs are hidden. Attempts at calling them will result in
-     * {@link UnsupportedOperationException}.
+     * <p>{@link SdkSandboxManager} APIs are hidden. Attempts at calling them will result in {@link
+     * UnsupportedOperationException}.
      */
     public static final int SDK_SANDBOX_STATE_DISABLED = 0;
 
     /**
-     * SDK Sandbox is enabled.
+     * SDK sandbox is enabled.
      *
      * <p>App can use {@link SdkSandboxManager} APIs to load {@code SDKs} it depends on into the
-     * corresponding {@code SdkSandbox} process.
+     * corresponding SDK sandbox process.
      */
     public static final int SDK_SANDBOX_STATE_ENABLED_PROCESS_ISOLATION = 2;
 
@@ -237,16 +234,14 @@ public final class SdkSandboxManager {
         mSyncManager = SharedPreferencesSyncManager.getInstance(context, binder);
     }
 
-    /**
-     * Returns current state of the {@code SdkSandbox}.
-     */
+    /** Returns the current state of the availability of the SDK sandbox feature. */
     @SdkSandboxState
     public static int getSdkSandboxState() {
         return SDK_SANDBOX_STATE_ENABLED_PROCESS_ISOLATION;
     }
 
     /**
-     * Stop the SDK sandbox process corresponding to the app.
+     * Stops the SDK sandbox process corresponding to the app.
      *
      * @hide
      */
@@ -261,13 +256,13 @@ public final class SdkSandboxManager {
     }
 
     /**
-     * Add a callback which gets registered for sdk sandbox lifecycle events, such as sdk sandbox
+     * Adds a callback which gets registered for SDK sandbox lifecycle events, such as SDK sandbox
      * death. If the sandbox has not yet been created when this is called, the request will be
      * stored until a sandbox is created, at which point it is activated for that sandbox. Multiple
      * callbacks can be added to detect death.
      *
      * @param callbackExecutor the {@link Executor} on which to invoke the callback
-     * @param callback the {@link SdkSandboxProcessDeathCallback} which will receive sdk sandbox
+     * @param callback the {@link SdkSandboxProcessDeathCallback} which will receive SDK sandbox
      *     lifecycle events.
      */
     public void addSdkSandboxProcessDeathCallback(
@@ -292,7 +287,7 @@ public final class SdkSandboxManager {
     }
 
     /**
-     * Remove an {@link SdkSandboxProcessDeathCallback} that was previously added using {@link
+     * Removes an {@link SdkSandboxProcessDeathCallback} that was previously added using {@link
      * SdkSandboxManager#addSdkSandboxProcessDeathCallback(Executor,
      * SdkSandboxProcessDeathCallback)}
      *
@@ -323,27 +318,27 @@ public final class SdkSandboxManager {
     }
 
     /**
-     * Load SDK in a SDK sandbox java process.
+     * Loads SDK in an SDK sandbox java process.
      *
-     * <p>It loads SDK library with {@code sdkName} to a sandbox process asynchronously, caller
-     * should be notified through {@code receiver}.
+     * <p>Loads SDK library with {@code sdkName} to an SDK sandbox process asynchronously. The
+     * caller will be notified through the {@code receiver}.
      *
-     * <p>App should already declare {@code SDKs} it depends on in its {@code AndroidManifest} using
-     * {@code <use-sdk-library>} tag. App can only load {@code SDKs} it depends on into the {@code
-     * SdkSandbox}.
+     * <p>The caller should already declare {@code SDKs} it depends on in its manifest using {@code
+     * <uses-sdk-library>} tag. The caller may only load {@code SDKs} it depends on into the SDK
+     * sandbox.
      *
-     * <p>When client application loads the first SDK, a new {@code SdkSandbox} process will be
-     * created, otherwise other SDKs will be loaded into the same sandbox which already created for
-     * the client application.
+     * <p>When the client application loads the first SDK, a new SDK sandbox process will be
+     * created. If a sandbox has already been created for the client application, additional SDKs
+     * will be loaded into the same sandbox.
      *
      * <p>This API may only be called while the caller is running in the foreground. Calls from the
-     * background will result in a {@link SecurityException} being thrown.
+     * background will result in returning {@link LoadSdkException} in the {@code receiver}.
      *
      * @param sdkName name of the SDK to be loaded.
      * @param params additional parameters to be passed to the SDK in the form of a {@link Bundle}
      *     as agreed between the client and the SDK.
      * @param executor the {@link Executor} on which to invoke the receiver.
-     * @param receiver This either returns a {@link SandboxedSdk} on a successful run, or {@link
+     * @param receiver This either receives a {@link SandboxedSdk} on a successful run, or {@link
      *     LoadSdkException}.
      */
     public void loadSdk(
@@ -370,9 +365,9 @@ public final class SdkSandboxManager {
     }
 
     /**
-     * Fetches information about Sdks that are loaded in the sandbox.
+     * Fetches information about SDKs that are loaded in the sandbox.
      *
-     * @return List of {@link SandboxedSdk} containing all currently loaded sdks
+     * @return List of {@link SandboxedSdk} containing all currently loaded SDKs.
      */
     public @NonNull List<SandboxedSdk> getSandboxedSdks() {
         try {
@@ -410,32 +405,32 @@ public final class SdkSandboxManager {
     }
 
     /**
-     * Send a request for a surface package to the sdk.
+     * Sends a request for a surface package to the SDK.
      *
-     * <p>After client application receives a signal about a successful SDK loading, and has added a
-     * {@link android.view.SurfaceView} to the view hierarchy, it may asynchronously request a
-     * {@link SurfacePackage} to render a view from the SDK.
+     * <p>After the client application receives a signal about a successful SDK loading, and has
+     * added a {@link android.view.SurfaceView} to the view hierarchy, it may asynchronously request
+     * a {@link SurfacePackage} to render a view from the SDK.
      *
-     * <p>When the {@link SurfacePackage} is ready, {@code onResult} function of the {@code
-     * receiver} will be called with Bundle, that bundle will contain the key {@code
-     * EXTRA_SURFACE_PACKAGE} with value present the requested {@link SurfacePackage}.
+     * <p>When the {@link SurfacePackage} is ready, the {@link OutcomeReceiver#onResult} callback of
+     * the passed {@code receiver} will be invoked. This callback will contain a {@link Bundle}
+     * object, which will contain the key {@link SdkSandboxManager#EXTRA_SURFACE_PACKAGE} whose
+     * associated value is the requested {@link SurfacePackage}.
+     *
+     * <p>The passed {@code params} must contain the following keys: {@link
+     * SdkSandboxManager#EXTRA_WIDTH_IN_PIXELS}, {@link SdkSandboxManager#EXTRA_HEIGHT_IN_PIXELS},
+     * {@link SdkSandboxManager#EXTRA_DISPLAY_ID} and {@link SdkSandboxManager#EXTRA_HOST_TOKEN}. If
+     * any of these keys are missing or invalid, an {@link IllegalArgumentException} will be thrown.
      *
      * <p>This API may only be called while the caller is running in the foreground. Calls from the
-     * background will result in a {@link SecurityException} being thrown.
+     * background will result in returning RequestSurfacePackageException in the {@code receiver}.
      *
-     * @param sdkName name of the SDK loaded into sdk sandbox.
-     * @param params the parameters which the client application passes to the SDK, it should
-     *     contain the following params: (EXTRA_WIDTH_IN_PIXELS, EXTRA_HEIGHT_IN_PIXELS,
-     *     EXTRA_DISPLAY_ID, EXTRA_HOST_TOKEN). If any of these params is missing, an
-     *     IllegalArgumentException will be thrown. Any additional parameters may be passed as
-     *     agreed between the client and the SDK.
+     * @param sdkName name of the SDK loaded into the SDK sandbox.
+     * @param params the parameters which the client application passes to the SDK.
      * @param callbackExecutor the {@link Executor} on which to invoke the callback
-     * @param receiver This either returns a {@link Bundle} on success which should contain the key
-     *     EXTRA_SURFACE_PACKAGE with value of {@link SurfacePackage} response, or {@link
-     *     RequestSurfacePackageException} on failure.
-     * @throws IllegalArgumentException if any of the following params (EXTRA_WIDTH_IN_PIXELS,
-     *     EXTRA_HEIGHT_IN_PIXELS, EXTRA_DISPLAY_ID, EXTRA_HOST_TOKEN) are missing from the Bundle
-     *     or passed with the wrong value or type.
+     * @param receiver This either returns a {@link Bundle} on success which will contain the key
+     *     {@link SdkSandboxManager#EXTRA_SURFACE_PACKAGE} with a {@link SurfacePackage} value, or
+     *     {@link RequestSurfacePackageException} on failure.
+     * @throws IllegalArgumentException if {@code params} does not contain all required keys.
      * @see android.app.sdksandbox.SdkSandboxManager#EXTRA_WIDTH_IN_PIXELS
      * @see android.app.sdksandbox.SdkSandboxManager#EXTRA_HEIGHT_IN_PIXELS
      * @see android.app.sdksandbox.SdkSandboxManager#EXTRA_DISPLAY_ID
@@ -542,10 +537,10 @@ public final class SdkSandboxManager {
     }
 
     /**
-     * Adds keys to set of keys being synced from app's default {@link SharedPreferences} to
-     * SdkSandbox.
+     * Adds keys to set of keys being synced from app's default {@link SharedPreferences} to the SDK
+     * sandbox.
      *
-     * <p>Synced data will be available for sdks to read using the {@link
+     * <p>Synced data will be available for SDKs to read using the {@link
      * SdkSandboxController#getClientSharedPreferences()} API.
      *
      * <p>To stop syncing any key that has been added using this API, use {@link
@@ -572,7 +567,7 @@ public final class SdkSandboxManager {
      * Removes keys from set of keys that have been added using {@link
      * #addSyncedSharedPreferencesKeys(Set)}
      *
-     * <p>Removed keys will be erased from SdkSandbox if they have been synced already.
+     * <p>Removed keys will be erased from the SDK sandbox if they have been synced already.
      *
      * @param keys set of key names that should no longer be synced to Sandbox.
      */
@@ -587,7 +582,7 @@ public final class SdkSandboxManager {
 
     /**
      * Returns the set keys that are being synced from app's default {@link SharedPreferences} to
-     * SdkSandbox.
+     * the SDK sandbox.
      */
     @NonNull
     public Set<String> getSyncedSharedPreferencesKeys() {
@@ -690,6 +685,19 @@ public final class SdkSandboxManager {
                                 + "Error: "
                                 + e.getMessage());
             }
+        }
+    }
+
+    /**
+     * Return the AdServicesManager
+     *
+     * @hide
+     */
+    public IBinder getAdServicesManager() {
+        try {
+            return mService.getAdServicesManager();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
         }
     }
 }

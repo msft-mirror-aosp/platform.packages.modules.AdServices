@@ -16,11 +16,21 @@
 
 package com.android.adservices.service.customaudience;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.START_ELAPSED_TIMESTAMP;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.STOP_ELAPSED_TIMESTAMP;
+import static com.android.adservices.service.stats.AdServicesLoggerUtil.UNSET;
+import static com.android.adservices.service.stats.UpdateCustomAudienceExecutionLoggerTest.UPDATE_CUSTOM_AUDIENCE_START_TIMESTAMP;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
+
+import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
@@ -40,6 +50,10 @@ import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetc
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.Clock;
+import com.android.adservices.service.stats.UpdateCustomAudienceExecutionLogger;
+import com.android.adservices.service.stats.UpdateCustomAudienceProcessReportedStats;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.mockwebserver.Dispatcher;
@@ -52,6 +66,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.MockitoSession;
 
@@ -74,6 +90,13 @@ public class BackgroundFetchRunnerTest {
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
 
     private Uri mFetchUri;
+    @Mock Clock mClockMock;
+    @Mock AdServicesLogger mAdServicesLoggerMock;
+    private UpdateCustomAudienceExecutionLogger mUpdateCustomAudienceExecutionLogger;
+
+    @Captor
+    private ArgumentCaptor<UpdateCustomAudienceProcessReportedStats>
+            mUpdateCustomAudienceProcessReportedStatsArgumentCaptor;
 
     @Before
     public void setup() {
@@ -84,7 +107,9 @@ public class BackgroundFetchRunnerTest {
                         .spyStatic(FlagsFactory.class)
                         .initMocks(this)
                         .startMocking();
-
+        when(mClockMock.elapsedRealtime()).thenReturn(START_ELAPSED_TIMESTAMP);
+        mUpdateCustomAudienceExecutionLogger =
+                new UpdateCustomAudienceExecutionLogger(mClockMock, mAdServicesLoggerMock);
         mBackgroundFetchRunnerSpy =
                 ExtendedMockito.spy(
                         new BackgroundFetchRunner(
@@ -194,13 +219,16 @@ public class BackgroundFetchRunnerTest {
                                 CommonFixture.VALID_BUYER_1)
                         .setEligibleUpdateTime(expectedEligibleUpdateTime)
                         .build();
-
-        mBackgroundFetchRunnerSpy.updateCustomAudience(CommonFixture.FIXED_NOW, originalFetchData);
+        when(mClockMock.elapsedRealtime())
+                .thenReturn(UPDATE_CUSTOM_AUDIENCE_START_TIMESTAMP, STOP_ELAPSED_TIMESTAMP);
+        mBackgroundFetchRunnerSpy.updateCustomAudience(
+                CommonFixture.FIXED_NOW, originalFetchData, mUpdateCustomAudienceExecutionLogger);
 
         verify(mCustomAudienceDaoMock)
                 .updateCustomAudienceAndBackgroundFetchData(
                         eq(expectedFetchData), eq(updatableData));
         verify(mCustomAudienceDaoMock, never()).persistCustomAudienceBackgroundFetchData(any());
+        verifyUpdateCustomAudienceLogging(UNSET, UNSET, STATUS_SUCCESS);
     }
 
     @Test
@@ -223,13 +251,16 @@ public class BackgroundFetchRunnerTest {
                         .setEligibleUpdateTime(originalEligibleUpdateTime)
                         .setNumValidationFailures(1)
                         .build();
-
-        mBackgroundFetchRunnerSpy.updateCustomAudience(CommonFixture.FIXED_NOW, originalFetchData);
+        when(mClockMock.elapsedRealtime())
+                .thenReturn(UPDATE_CUSTOM_AUDIENCE_START_TIMESTAMP, STOP_ELAPSED_TIMESTAMP);
+        mBackgroundFetchRunnerSpy.updateCustomAudience(
+                CommonFixture.FIXED_NOW, originalFetchData, mUpdateCustomAudienceExecutionLogger);
 
         verify(mCustomAudienceDaoMock, never())
                 .updateCustomAudienceAndBackgroundFetchData(any(), any());
         verify(mCustomAudienceDaoMock)
                 .persistCustomAudienceBackgroundFetchData(eq(expectedFetchData));
+        verifyUpdateCustomAudienceLogging(UNSET, UNSET, STATUS_INTERNAL_ERROR);
     }
 
     @Test
@@ -400,5 +431,21 @@ public class BackgroundFetchRunnerTest {
         assertEquals(1, mockWebServer.getRequestCount());
         RecordedRequest fetchRequest = mockWebServer.takeRequest();
         assertEquals(mFetchPath, fetchRequest.getPath());
+    }
+
+    private void verifyUpdateCustomAudienceLogging(
+            int numOfAds, int dataSizeOfAdsInBytes, int resultCode) {
+        verify(mAdServicesLoggerMock)
+                .logUpdateCustomAudienceProcessReportedStats(
+                        mUpdateCustomAudienceProcessReportedStatsArgumentCaptor.capture());
+        UpdateCustomAudienceProcessReportedStats updateCustomAudienceProcessReportedStats =
+                mUpdateCustomAudienceProcessReportedStatsArgumentCaptor.getValue();
+
+        assertThat(updateCustomAudienceProcessReportedStats.getLatencyInMills())
+                .isEqualTo((int) (STOP_ELAPSED_TIMESTAMP - UPDATE_CUSTOM_AUDIENCE_START_TIMESTAMP));
+        assertThat(updateCustomAudienceProcessReportedStats.getResultCode()).isEqualTo(resultCode);
+        assertThat(updateCustomAudienceProcessReportedStats.getNumOfAds()).isEqualTo(numOfAds);
+        assertThat(updateCustomAudienceProcessReportedStats.getDataSizeOfAdsInBytes())
+                .isEqualTo(dataSizeOfAdsInBytes);
     }
 }

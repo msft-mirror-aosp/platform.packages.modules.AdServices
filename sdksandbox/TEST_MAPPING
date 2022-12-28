@@ -90,6 +90,9 @@
     },
     {
       "name": "SdkSandboxPerfScenarioTests"
+    },
+    {
+      "name": "SdkSandboxTestUtilsExampleTest"
     }
   ],
   "postsubmit": [
