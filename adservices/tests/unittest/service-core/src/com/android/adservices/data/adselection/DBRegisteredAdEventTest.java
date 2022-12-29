@@ -43,10 +43,10 @@ public class DBRegisteredAdEventTest {
                         .setEventUri(EVENT_REPORTING_URI)
                         .build();
 
-        assertEquals(dbRegisteredAdEvent.getAdSelectionId(), AD_SELECTION_ID);
-        assertEquals(dbRegisteredAdEvent.getEventType(), EVENT_TYPE_CLICK);
-        assertEquals(dbRegisteredAdEvent.getDestination(), DESTINATION_SELLER);
-        assertEquals(dbRegisteredAdEvent.getEventUri(), EVENT_REPORTING_URI);
+        assertEquals(AD_SELECTION_ID, dbRegisteredAdEvent.getAdSelectionId());
+        assertEquals(EVENT_TYPE_CLICK, dbRegisteredAdEvent.getEventType());
+        assertEquals(DESTINATION_SELLER, dbRegisteredAdEvent.getDestination());
+        assertEquals(EVENT_REPORTING_URI, dbRegisteredAdEvent.getEventUri());
     }
 
     @Test
