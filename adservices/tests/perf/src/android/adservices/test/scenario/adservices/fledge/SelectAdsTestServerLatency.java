@@ -158,6 +158,55 @@ public class SelectAdsTestServerLatency {
         }
     }
 
+    @Test
+    public void selectAds_oneBuyerOneCAOneAdPerCA() throws Exception {
+        // 1 Seller, 1 Buyer, 1 Custom Audience, 1 Ad
+        sCustomAudiences.addAll(readCustomAudiences("CustomAudiencesOneBuyerOneCAOneAd.json"));
+        joinCustomAudiences(sCustomAudiences);
+        AdSelectionConfig config =
+                readAdSelectionConfig("AdSelectionConfigOneBuyerOneCAOneAd.json");
+        Stopwatch timer = Stopwatch.createStarted(mTicker);
+
+        AdSelectionOutcome outcome =
+                AD_SELECTION_CLIENT
+                        .selectAds(config)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        timer.stop();
+
+        Log.i(
+                TAG,
+                "("
+                        + generateLogLabel("selectAds_oneBuyerOneCAOneAdPerCA")
+                        + ": "
+                        + timer.elapsed(TimeUnit.MILLISECONDS)
+                        + " ms)");
+        Assert.assertFalse(outcome.getRenderUri().toString().isEmpty());
+    }
+
+    @Test
+    public void selectAds_fiveBuyersTwoCAsFiveAdsPerCA() throws Exception {
+        sCustomAudiences.addAll(
+                readCustomAudiences("CustomAudiencesFiveBuyersTwoCAsFiveAdsPerCA.json"));
+        joinCustomAudiences(sCustomAudiences);
+        AdSelectionConfig config =
+                readAdSelectionConfig("AdSelectionConfigFiveBuyersTwoCAsFiveAdsPerCA.json");
+        Stopwatch timer = Stopwatch.createStarted(mTicker);
+
+        AdSelectionOutcome outcome =
+                AD_SELECTION_CLIENT
+                        .selectAds(config)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        timer.stop();
+
+        Log.i(
+                TAG,
+                "("
+                        + generateLogLabel("selectAds_fiveBuyerTwoCAsFiveAdsPerCA")
+                        + ": "
+                        + timer.elapsed(TimeUnit.MILLISECONDS)
+                        + " ms)");
+        Assert.assertFalse(outcome.getRenderUri().toString().isEmpty());
+    }
 
     @Test
     public void selectAds_oneBuyerLargeCAs() throws Exception {
