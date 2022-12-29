@@ -45,6 +45,7 @@ import com.google.common.collect.ImmutableMap;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -80,15 +81,15 @@ public class SelectAdsTestServerLatency {
     public static final String DISABLE_ADSERVICES_BACKOFF_CMD =
             "am service-restart-backoff disable com.google.android.adservices.api";
 
-    private final Context mContext = ApplicationProvider.getApplicationContext();
-    private final AdSelectionClient mAdSelectionClient =
+    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
+    private static final AdSelectionClient AD_SELECTION_CLIENT =
             new AdSelectionClient.Builder()
-                    .setContext(mContext)
+                    .setContext(CONTEXT)
                     .setExecutor(CALLBACK_EXECUTOR)
                     .build();
-    private final AdvertisingCustomAudienceClient mCustomAudienceClient =
+    private static final AdvertisingCustomAudienceClient CUSTOM_AUDIENCE_CLIENT =
             new AdvertisingCustomAudienceClient.Builder()
-                    .setContext(mContext)
+                    .setContext(CONTEXT)
                     .setExecutor(CALLBACK_EXECUTOR)
                     .build();
     private final Ticker mTicker =
@@ -97,11 +98,12 @@ public class SelectAdsTestServerLatency {
                     return android.os.SystemClock.elapsedRealtimeNanos();
                 }
             };
-    private List<CustomAudience> mCustomAudiences = new ArrayList<>();
+    private static List<CustomAudience> sCustomAudiences;
 
     @BeforeClass
     public static void setupBeforeClass() {
         StaticAdTechServerUtils.warmupServers();
+        sCustomAudiences = new ArrayList<>();
         // Disable backoff since we will be killing the process between tests
         ShellUtils.runShellCommand(DISABLE_ADSERVICES_BACKOFF_CMD);
         InstrumentationRegistry.getInstrumentation()
@@ -124,29 +126,49 @@ public class SelectAdsTestServerLatency {
                 "device_config put adservices adservice_system_service_enabled true");
     }
 
+    @AfterClass
+    public static void tearDownAfterClass() throws Exception {
+        for (CustomAudience ca : sCustomAudiences) {
+            Thread.sleep(DELAY_TO_AVOID_THROTTLE);
+            CUSTOM_AUDIENCE_CLIENT
+                    .leaveCustomAudience(ca.getBuyer(), ca.getName())
+                    .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        }
+    }
+
     @Before
     public void setup() throws Exception {
-        mCustomAudiences.clear();
         ShellUtils.runShellCommand(KILL_ADSERVICES_CMD);
         Thread.sleep(SLEEP_MS_AFTER_KILL);
     }
 
     @After
     public void tearDown() throws Exception {
-        leaveCustomAudiences(mCustomAudiences);
+        List<CustomAudience> removedCAs = new ArrayList<>();
+        try {
+            for (CustomAudience ca : sCustomAudiences) {
+                Thread.sleep(DELAY_TO_AVOID_THROTTLE);
+                CUSTOM_AUDIENCE_CLIENT
+                        .leaveCustomAudience(ca.getBuyer(), ca.getName())
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+                removedCAs.add(ca);
+            }
+        } finally {
+            sCustomAudiences.removeAll(removedCAs);
+        }
     }
+
 
     @Test
     public void selectAds_oneBuyerLargeCAs() throws Exception {
         // 1 Seller, 1 Buyer, 71 Custom Audiences
-        ImmutableList<CustomAudience> cas =
-                readCustomAudiences("CustomAudiencesOneBuyerLargeCAs.json");
-        joinCustomAudiences(cas);
+        sCustomAudiences.addAll(readCustomAudiences("CustomAudiencesOneBuyerLargeCAs.json"));
+        joinCustomAudiences(sCustomAudiences);
         AdSelectionConfig config = readAdSelectionConfig("AdSelectionConfigOneBuyerLargeCAs.json");
         Stopwatch timer = Stopwatch.createStarted(mTicker);
 
         AdSelectionOutcome outcome =
-                mAdSelectionClient
+                AD_SELECTION_CLIENT
                         .selectAds(config)
                         .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         timer.stop();
@@ -164,15 +186,14 @@ public class SelectAdsTestServerLatency {
     @Test
     public void selectAds_fiveBuyersLargeCAs() throws Exception {
         // 1 Seller, 5 Buyer, each buyer has 71 Custom Audiences
-        ImmutableList<CustomAudience> cas =
-                readCustomAudiences("CustomAudiencesFiveBuyersLargeCAs.json");
-        joinCustomAudiences(cas);
+        sCustomAudiences.addAll(readCustomAudiences("CustomAudiencesFiveBuyersLargeCAs.json"));
+        joinCustomAudiences(sCustomAudiences);
         AdSelectionConfig config =
                 readAdSelectionConfig("AdSelectionConfigFiveBuyersLargeCAs.json");
         Stopwatch timer = Stopwatch.createStarted(mTicker);
 
         AdSelectionOutcome outcome =
-                mAdSelectionClient
+                AD_SELECTION_CLIENT
                         .selectAds(config)
                         .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         timer.stop();
@@ -278,17 +299,8 @@ public class SelectAdsTestServerLatency {
     private void joinCustomAudiences(List<CustomAudience> customAudiences) throws Exception {
         for (CustomAudience ca : customAudiences) {
             Thread.sleep(DELAY_TO_AVOID_THROTTLE);
-            mCustomAudienceClient
+            CUSTOM_AUDIENCE_CLIENT
                     .joinCustomAudience(ca)
-                    .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        }
-    }
-
-    private void leaveCustomAudiences(List<CustomAudience> customAudiences) throws Exception {
-        for (CustomAudience ca : customAudiences) {
-            Thread.sleep(DELAY_TO_AVOID_THROTTLE);
-            mCustomAudienceClient
-                    .leaveCustomAudience(ca.getBuyer(), ca.getName())
                     .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         }
     }
