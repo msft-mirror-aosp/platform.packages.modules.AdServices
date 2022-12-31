@@ -23,6 +23,7 @@ import androidx.lifecycle.Observer;
 
 import com.android.adservices.api.R;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.PhFlags;
 import com.android.adservices.ui.settings.DialogManager;
 import com.android.adservices.ui.settings.activities.BlockedTopicsActivity;
@@ -30,6 +31,7 @@ import com.android.adservices.ui.settings.activities.TopicsActivity;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsTopicsFragment;
 import com.android.adservices.ui.settings.viewmodels.TopicsViewModel;
 import com.android.adservices.ui.settings.viewmodels.TopicsViewModel.TopicsViewModelUiEvent;
+import com.android.settingslib.widget.MainSwitchBar;
 
 /**
  * Delegate class that helps AdServices Settings fragments to respond to all view model/user events.
@@ -58,6 +60,17 @@ public class TopicsActionDelegate extends BaseActionDelegate {
                     }
                     try {
                         switch (event) {
+                            case SWITCH_ON_TOPICS:
+                                mTopicsViewModel.setTopicsConsent(true);
+                                break;
+                            case SWITCH_OFF_TOPICS:
+                                if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
+                                    DialogManager.showTopicsOptOutDialog(
+                                            mTopicsActivity, mTopicsViewModel);
+                                } else {
+                                    mTopicsViewModel.setTopicsConsent(false);
+                                }
+                                break;
                             case BLOCK_TOPIC:
                                 logUIAction(ActionEnum.BLOCK_TOPIC_SELECTED);
                                 if (PhFlags.getInstance().getUIDialogsFeatureEnabled()) {
@@ -95,8 +108,20 @@ public class TopicsActionDelegate extends BaseActionDelegate {
      */
     public void initTopicsFragment(AdServicesSettingsTopicsFragment fragment) {
         mTopicsActivity.setTitle(R.string.settingsUI_topics_view_title);
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            configureTopicsConsentSwitch(fragment);
+        }
         configureBlockedTopicsFragmentButton(fragment);
         configureResetTopicsButton(fragment);
+    }
+
+    private void configureTopicsConsentSwitch(AdServicesSettingsTopicsFragment fragment) {
+        MainSwitchBar topicsSwitchBar = mTopicsActivity.findViewById(R.id.topics_switch_bar);
+        topicsSwitchBar.setVisibility(View.VISIBLE);
+
+        mTopicsViewModel.getTopicsConsent().observe(fragment, topicsSwitchBar::setChecked);
+        topicsSwitchBar.setOnClickListener(
+                switchBar -> mTopicsViewModel.consentSwitchClickHandler((MainSwitchBar) switchBar));
     }
 
     private void configureBlockedTopicsFragmentButton(AdServicesSettingsTopicsFragment fragment) {
