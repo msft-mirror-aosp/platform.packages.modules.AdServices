@@ -55,6 +55,7 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ProviderInfo;
 import android.content.pm.ResolveInfo;
 import android.os.Binder;
 import android.os.Bundle;
@@ -189,6 +190,15 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             "enforce_broadcast_receiver_restrictions";
 
     private static final boolean DEFAULT_VALUE_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS = false;
+
+    /**
+     * Property to enforce content provider restrictions for SDK sandbox processes. If the value of
+     * this property is {@code true}, the restrictions will be enforced.
+     */
+    private static final String PROPERTY_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS =
+            "enforce_content_provider_restrictions";
+
+    private static final boolean DEFAULT_VALUE_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS = false;
 
     static class Injector {
         private final Context mContext;
@@ -1874,6 +1884,32 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         @Override
         public void enforceAllowedToStartOrBindService(@NonNull Intent intent) {
             SdkSandboxManagerService.this.enforceAllowedToStartOrBindService(intent);
+        }
+
+        @Override
+        public boolean canAccessContentProviderFromSdkSandbox(@NonNull ProviderInfo providerInfo) {
+            // TODO(b/229200204): Implement a starter set of restrictions
+            if (!Process.isSdkSandboxUid(Binder.getCallingUid())) {
+                return true;
+            }
+
+            /**
+             * By clearing the calling identity, system server identity is set which allows us to
+             * call {@DeviceConfig.getBoolean}
+             */
+            final long token = Binder.clearCallingIdentity();
+
+            try {
+                if (DeviceConfig.getBoolean(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        PROPERTY_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS,
+                        DEFAULT_VALUE_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS)) {
+                    return false;
+                }
+                return true;
+            } finally {
+                Binder.restoreCallingIdentity(token);
+            }
         }
 
         @Override
