@@ -97,7 +97,7 @@ public class SdkSandboxManagerUnitTest {
         Mockito.verify(mBinder)
                 .loadSdk(
                         Mockito.eq(mContext.getPackageName()),
-                        Mockito.any(IBinder.class),
+                        Mockito.nullable(IBinder.class),
                         Mockito.eq(SDK_NAME),
                         callingTimeArgumentCaptor.capture(),
                         Mockito.eq(params),
@@ -130,7 +130,7 @@ public class SdkSandboxManagerUnitTest {
         Mockito.verify(mBinder)
                 .loadSdk(
                         Mockito.eq(mContext.getPackageName()),
-                        Mockito.any(IBinder.class),
+                        Mockito.nullable(IBinder.class),
                         Mockito.eq(SDK_NAME),
                         Mockito.anyLong(),
                         Mockito.eq(params),
@@ -401,7 +401,7 @@ public class SdkSandboxManagerUnitTest {
         Mockito.verify(mBinder)
                 .loadSdk(
                         Mockito.eq(mContext.getPackageName()),
-                        Mockito.any(IBinder.class),
+                        Mockito.nullable(IBinder.class),
                         Mockito.eq(SDK_NAME),
                         Mockito.anyLong(),
                         Mockito.eq(params),
@@ -429,7 +429,7 @@ public class SdkSandboxManagerUnitTest {
         Mockito.verify(mBinder)
                 .loadSdk(
                         Mockito.eq(mContext.getPackageName()),
-                        Mockito.any(IBinder.class),
+                        Mockito.nullable(IBinder.class),
                         Mockito.eq(SDK_NAME),
                         Mockito.anyLong(),
                         Mockito.eq(params),

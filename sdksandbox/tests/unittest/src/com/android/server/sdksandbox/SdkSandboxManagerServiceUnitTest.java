@@ -244,7 +244,7 @@ public class SdkSandboxManagerServiceUnitTest {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         mService.loadSdk(
                 TEST_PACKAGE,
-                callback.asBinder(),
+                null,
                 SDK_NAME,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
@@ -260,7 +260,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
         mService.loadSdk(
                 "does.not.exist",
-                callback.asBinder(),
+                null,
                 SDK_NAME,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
@@ -277,7 +277,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
         mService.loadSdk(
                 SDK_PROVIDER_PACKAGE,
-                callback.asBinder(),
+                null,
                 SDK_NAME,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
@@ -296,7 +296,7 @@ public class SdkSandboxManagerServiceUnitTest {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         mService.loadSdk(
                 TEST_PACKAGE,
-                callback.asBinder(),
+                null,
                 "does.not.exist",
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
@@ -318,7 +318,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
         mService.loadSdk(
                 TEST_PACKAGE,
-                callback.asBinder(),
+                null,
                 SDK_NAME,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
@@ -336,7 +336,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
         mService.loadSdk(
                 TEST_PACKAGE,
-                callback.asBinder(),
+                null,
                 SDK_NAME,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
@@ -357,7 +357,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
         mService.loadSdk(
                 TEST_PACKAGE,
-                callback.asBinder(),
+                null,
                 SDK_NAME,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
@@ -379,7 +379,7 @@ public class SdkSandboxManagerServiceUnitTest {
             FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
             mService.loadSdk(
                     TEST_PACKAGE,
-                    callback.asBinder(),
+                    null,
                     SDK_NAME,
                     TIME_APP_CALLED_SYSTEM_SERVER,
                     new Bundle(),
@@ -394,7 +394,7 @@ public class SdkSandboxManagerServiceUnitTest {
             FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
             mService.loadSdk(
                     TEST_PACKAGE,
-                    callback.asBinder(),
+                    null,
                     SDK_NAME,
                     TIME_APP_CALLED_SYSTEM_SERVER,
                     new Bundle(),
@@ -417,7 +417,7 @@ public class SdkSandboxManagerServiceUnitTest {
             FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
             mService.loadSdk(
                     TEST_PACKAGE,
-                    callback.asBinder(),
+                    null,
                     SDK_NAME,
                     TIME_APP_CALLED_SYSTEM_SERVER,
                     new Bundle(),
@@ -429,7 +429,7 @@ public class SdkSandboxManagerServiceUnitTest {
             FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
             mService.loadSdk(
                     TEST_PACKAGE,
-                    callback.asBinder(),
+                    null,
                     SDK_NAME,
                     TIME_APP_CALLED_SYSTEM_SERVER,
                     new Bundle(),
@@ -452,7 +452,7 @@ public class SdkSandboxManagerServiceUnitTest {
             FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
             mService.loadSdk(
                     TEST_PACKAGE,
-                    callback.asBinder(),
+                    null,
                     SDK_NAME,
                     TIME_APP_CALLED_SYSTEM_SERVER,
                     new Bundle(),
@@ -475,7 +475,7 @@ public class SdkSandboxManagerServiceUnitTest {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         mService.loadSdk(
                 TEST_PACKAGE,
-                callback.asBinder(),
+                null,
                 SDK_NAME,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
@@ -566,7 +566,7 @@ public class SdkSandboxManagerServiceUnitTest {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         mService.loadSdk(
                 TEST_PACKAGE,
-                callback.asBinder(),
+                null,
                 SDK_NAME,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
@@ -654,7 +654,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
         mService.loadSdk(
                 TEST_PACKAGE,
-                callback.asBinder(),
+                null,
                 SDK_NAME,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
@@ -710,7 +710,7 @@ public class SdkSandboxManagerServiceUnitTest {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         mService.loadSdk(
                 TEST_PACKAGE,
-                callback.asBinder(),
+                null,
                 SDK_NAME,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
@@ -868,7 +868,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
         mService.loadSdk(
                 TEST_PACKAGE,
-                callback.asBinder(),
+                null,
                 SDK_NAME,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
@@ -1111,7 +1111,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
         mService.loadSdk(
                 TEST_PACKAGE,
-                callback.asBinder(),
+                null,
                 SDK_NAME,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
@@ -1161,7 +1161,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
         mService.loadSdk(
                 TEST_PACKAGE,
-                callback.asBinder(),
+                null,
                 SDK_NAME,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
@@ -1240,7 +1240,7 @@ public class SdkSandboxManagerServiceUnitTest {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         mService.loadSdk(
                 TEST_PACKAGE,
-                callback.asBinder(),
+                null,
                 SDK_NAME,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
@@ -1591,7 +1591,7 @@ public class SdkSandboxManagerServiceUnitTest {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         mService.loadSdk(
                 TEST_PACKAGE,
-                callback.asBinder(),
+                null,
                 SDK_NAME,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
@@ -1671,7 +1671,7 @@ public class SdkSandboxManagerServiceUnitTest {
             FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
             mService.loadSdk(
                     TEST_PACKAGE,
-                    callback.asBinder(),
+                    null,
                     SDK_NAME,
                     TIME_APP_CALLED_SYSTEM_SERVER,
                     new Bundle(),
@@ -1684,7 +1684,7 @@ public class SdkSandboxManagerServiceUnitTest {
             FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
             mService.loadSdk(
                     TEST_PACKAGE,
-                    callback.asBinder(),
+                    null,
                     SDK_NAME,
                     TIME_APP_CALLED_SYSTEM_SERVER,
                     new Bundle(),
@@ -1718,7 +1718,7 @@ public class SdkSandboxManagerServiceUnitTest {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         mService.loadSdk(
                 TEST_PACKAGE,
-                callback.asBinder(),
+                null,
                 "RANDOM",
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
@@ -1774,7 +1774,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
         service.loadSdk(
                 TEST_PACKAGE,
-                callback.asBinder(),
+                null,
                 SDK_NAME,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
@@ -1821,7 +1821,7 @@ public class SdkSandboxManagerServiceUnitTest {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         mService.loadSdk(
                 TEST_PACKAGE,
-                callback.asBinder(),
+                null,
                 SDK_NAME,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
@@ -2190,7 +2190,7 @@ public class SdkSandboxManagerServiceUnitTest {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         mService.loadSdk(
                 TEST_PACKAGE,
-                callback.asBinder(),
+                null,
                 SDK_NAME,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
@@ -2503,7 +2503,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
         mService.loadSdk(
                 TEST_PACKAGE,
-                callback.asBinder(),
+                null,
                 SDK_NAME,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
@@ -2551,12 +2551,7 @@ public class SdkSandboxManagerServiceUnitTest {
         disableForegroundCheck();
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         mService.loadSdk(
-                TEST_PACKAGE,
-                callback.asBinder(),
-                sdkName,
-                TIME_APP_CALLED_SYSTEM_SERVER,
-                new Bundle(),
-                callback);
+                TEST_PACKAGE, null, sdkName, TIME_APP_CALLED_SYSTEM_SERVER, new Bundle(), callback);
         mSdkSandboxService.sendLoadCodeSuccessful();
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
     }
