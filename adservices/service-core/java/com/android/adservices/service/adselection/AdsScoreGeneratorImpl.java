@@ -22,7 +22,6 @@ import static com.android.adservices.service.stats.AdServicesLoggerUtil.getResul
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdWithBid;
-import android.adservices.adselection.Tracing;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
@@ -35,6 +34,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.internal.annotations.VisibleForTesting;
 

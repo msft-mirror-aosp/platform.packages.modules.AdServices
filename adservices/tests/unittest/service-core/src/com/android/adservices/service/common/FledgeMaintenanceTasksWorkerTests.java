@@ -29,10 +29,14 @@ import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.DBBuyerDecisionLogic;
+import com.android.adservices.data.adselection.DBRegisteredAdEvent;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
+import com.google.common.collect.ImmutableList;
+
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.MockitoSession;
@@ -47,6 +51,10 @@ public class FledgeMaintenanceTasksWorkerTests {
 
     private static final long AD_SELECTION_ID_1 = 12345L;
     private static final long AD_SELECTION_ID_2 = 23456L;
+
+    private static final String CLICK_EVENT = "click";
+    private static final int SELLER_DESTINATION = DBRegisteredAdEvent.DESTINATION_SELLER;
+    private static final Uri SELLER_CLICK_URI = Uri.parse("https://www.seller.com/" + CLICK_EVENT);
 
     private static final DBAdSelection DB_AD_SELECTION =
             new DBAdSelection.Builder()
@@ -64,6 +72,14 @@ public class FledgeMaintenanceTasksWorkerTests {
             new DBBuyerDecisionLogic.Builder()
                     .setBuyerDecisionLogicJs("buyerDecisionLogicJS")
                     .setBiddingLogicUri(BIDDING_LOGIC_URI)
+                    .build();
+
+    private static final DBRegisteredAdEvent DB_REGISTERED_EVENT =
+            DBRegisteredAdEvent.builder()
+                    .setAdSelectionId(AD_SELECTION_ID_1)
+                    .setEventType(CLICK_EVENT)
+                    .setDestination(SELLER_DESTINATION)
+                    .setEventUri(SELLER_CLICK_URI)
                     .build();
 
     private static final DBAdSelection EXPIRED_DB_AD_SELECTION =
@@ -87,8 +103,17 @@ public class FledgeMaintenanceTasksWorkerTests {
                     .setBiddingLogicUri(EXPIRED_BIDDING_LOGIC_URI)
                     .build();
 
+    private static final DBRegisteredAdEvent EXPIRED_DB_REGISTERED_EVENT =
+            DBRegisteredAdEvent.builder()
+                    .setAdSelectionId(AD_SELECTION_ID_2)
+                    .setEventType(CLICK_EVENT)
+                    .setDestination(SELLER_DESTINATION)
+                    .setEventUri(SELLER_CLICK_URI)
+                    .build();
+
     private AdSelectionEntryDao mAdSelectionEntryDao;
     private FledgeMaintenanceTasksWorker mFledgeMaintenanceTasksWorker;
+    private MockitoSession mMockitoSession;
 
     @Before
     public void setup() {
@@ -99,38 +124,61 @@ public class FledgeMaintenanceTasksWorkerTests {
                         .build()
                         .adSelectionEntryDao();
 
+        mMockitoSession =
+                ExtendedMockito.mockitoSession().spyStatic(FlagsFactory.class).startMocking();
+        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+        ExtendedMockito.doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
+
         mFledgeMaintenanceTasksWorker = new FledgeMaintenanceTasksWorker(mAdSelectionEntryDao);
+    }
+
+    @After
+    public void teardown() {
+        if (mMockitoSession != null) {
+            mMockitoSession.finishMocking();
+        }
     }
 
     @Test
     public void testFledgeMaintenanceWorkerDoesNotRemoveValidData() throws Exception {
-        // Add valid and expired ad selections
+        // Add valid ad selection
         mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION);
 
         assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(DB_AD_SELECTION.getAdSelectionId()));
 
-        // Add valid and expired buyer decision logics
+        // Add valid decision logic
         mAdSelectionEntryDao.persistBuyerDecisionLogic(DB_BUYER_DECISION_LOGIC);
 
         assertTrue(
                 mAdSelectionEntryDao.doesBuyerDecisionLogicExist(
                         DB_BUYER_DECISION_LOGIC.getBiddingLogicUri()));
 
+        // Add valid registered ad event
+        mAdSelectionEntryDao.persistDBRegisteredAdEvents(ImmutableList.of(DB_REGISTERED_EVENT));
+
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                        DB_REGISTERED_EVENT.getAdSelectionId(),
+                        DB_REGISTERED_EVENT.getEventType(),
+                        DB_REGISTERED_EVENT.getDestination()));
+
+        // Clear expired data
+        mFledgeMaintenanceTasksWorker.clearExpiredAdSelectionData();
+
         // Assert that valid data was not cleared
         assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(DB_AD_SELECTION.getAdSelectionId()));
         assertTrue(
                 mAdSelectionEntryDao.doesBuyerDecisionLogicExist(
                         DB_BUYER_DECISION_LOGIC.getBiddingLogicUri()));
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                        DB_REGISTERED_EVENT.getAdSelectionId(),
+                        DB_REGISTERED_EVENT.getEventType(),
+                        DB_REGISTERED_EVENT.getDestination()));
     }
 
     @Test
     public void testFledgeMaintenanceWorkerRemovesExpiredData() throws Exception {
-        MockitoSession mockitoSession =
-                ExtendedMockito.mockitoSession().spyStatic(FlagsFactory.class).startMocking();
-
-        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-        ExtendedMockito.doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
-
         // Add valid and expired ad selections
         mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION);
         mAdSelectionEntryDao.persistAdSelection(EXPIRED_DB_AD_SELECTION);
@@ -151,6 +199,22 @@ public class FledgeMaintenanceTasksWorkerTests {
                 mAdSelectionEntryDao.doesBuyerDecisionLogicExist(
                         EXPIRED_DB_BUYER_DECISION_LOGIC.getBiddingLogicUri()));
 
+        // Add valid and expired registered ad events
+        mAdSelectionEntryDao.persistDBRegisteredAdEvents(
+                ImmutableList.of(DB_REGISTERED_EVENT, EXPIRED_DB_REGISTERED_EVENT));
+
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                        DB_REGISTERED_EVENT.getAdSelectionId(),
+                        DB_REGISTERED_EVENT.getEventType(),
+                        DB_REGISTERED_EVENT.getDestination()));
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                        EXPIRED_DB_REGISTERED_EVENT.getAdSelectionId(),
+                        EXPIRED_DB_REGISTERED_EVENT.getEventType(),
+                        EXPIRED_DB_REGISTERED_EVENT.getDestination()));
+
+        // Clear expired data
         mFledgeMaintenanceTasksWorker.clearExpiredAdSelectionData();
 
         // Assert expired data was removed
@@ -160,13 +224,21 @@ public class FledgeMaintenanceTasksWorkerTests {
         assertFalse(
                 mAdSelectionEntryDao.doesBuyerDecisionLogicExist(
                         EXPIRED_DB_BUYER_DECISION_LOGIC.getBiddingLogicUri()));
+        assertFalse(
+                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                        EXPIRED_DB_REGISTERED_EVENT.getAdSelectionId(),
+                        EXPIRED_DB_REGISTERED_EVENT.getEventType(),
+                        EXPIRED_DB_REGISTERED_EVENT.getDestination()));
 
         // Assert that valid data was not cleared
         assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(DB_AD_SELECTION.getAdSelectionId()));
         assertTrue(
                 mAdSelectionEntryDao.doesBuyerDecisionLogicExist(
                         DB_BUYER_DECISION_LOGIC.getBiddingLogicUri()));
-
-        mockitoSession.finishMocking();
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                        DB_REGISTERED_EVENT.getAdSelectionId(),
+                        DB_REGISTERED_EVENT.getEventType(),
+                        DB_REGISTERED_EVENT.getDestination()));
     }
 }

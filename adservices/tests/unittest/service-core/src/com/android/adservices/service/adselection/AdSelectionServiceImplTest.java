@@ -25,6 +25,8 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZE
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
+import static com.android.adservices.data.adselection.DBRegisteredAdEvent.DESTINATION_BUYER;
+import static com.android.adservices.data.adselection.DBRegisteredAdEvent.DESTINATION_SELLER;
 import static com.android.adservices.service.adselection.ImpressionReporter.REPORT_IMPRESSION_THROTTLED;
 import static com.android.adservices.service.adselection.ImpressionReporter.UNABLE_TO_FIND_AD_SELECTION_WITH_GIVEN_ID;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
@@ -175,6 +177,20 @@ public class AdSelectionServiceImplTest {
     private static final int SHORT_API_NAME_RESET_ALL_OVERRIDES =
             AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_AD_SELECTION_CONFIG_REMOTE_OVERRIDES;
     private static final String TIMEOUT_MESSAGE = "Timed out:";
+
+    // Event reporting contestants
+    private static final String CLICK_EVENT_SELLER = "click_seller";
+    private static final String HOVER_EVENT_SELLER = "hover_seller";
+
+    private static final String CLICK_SELLER_PATH = "/click/seller";
+    private static final String HOVER_SELLER_PATH = "/hover/seller";
+
+    private static final String CLICK_EVENT_BUYER = "click_buyer";
+    private static final String HOVER_EVENT_BUYER = "hover_buyer";
+
+    private static final String CLICK_BUYER_PATH = "/click/buyer";
+    private static final String HOVER_BUYER_PATH = "/hover/buyer";
+
     private final ExecutorService mLightweightExecutorService =
             AdServicesExecutors.getLightWeightExecutor();
     private final ExecutorService mBackgroundExecutorService =
@@ -368,6 +384,887 @@ public class AdSelectionServiceImplTest {
         ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
 
         assertTrue(callback.mIsSuccess);
+        RecordedRequest fetchRequest = server.takeRequest();
+        assertEquals(mFetchJavaScriptPathSeller, fetchRequest.getPath());
+
+        List<String> notifications =
+                ImmutableList.of(server.takeRequest().getPath(), server.takeRequest().getPath());
+
+        assertThat(notifications).containsExactly(mSellerReportingPath, mBuyerReportingPath);
+
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
+    }
+
+    @Test
+    public void testReportImpressionSuccessfullyRegistersEventUris() throws Exception {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+
+        Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+
+        Uri biddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
+
+        Uri clickUriSeller = mMockWebServerRule.uriForPath(CLICK_SELLER_PATH);
+        Uri hoverUriSeller = mMockWebServerRule.uriForPath(HOVER_SELLER_PATH);
+        Uri clickUriBuyer = mMockWebServerRule.uriForPath(CLICK_BUYER_PATH);
+        Uri hoverUriBuyer = mMockWebServerRule.uriForPath(HOVER_BUYER_PATH);
+
+        String sellerDecisionLogicJs =
+                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) "
+                        + "{\n"
+                        + "    registerAdBeacon('click_seller', '"
+                        + clickUriSeller
+                        + "');\n"
+                        + "    registerAdBeacon('hover_seller', '"
+                        + hoverUriSeller
+                        + "');\n"
+                        + " return {'status': 0, 'results': {'signals_for_buyer':"
+                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
+                        + sellerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        String buyerDecisionLogicJs =
+                "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer ,"
+                        + "contextual_signals, custom_audience_signals) {\n"
+                        + "    registerAdBeacon('click_buyer', '"
+                        + clickUriBuyer
+                        + "');\n"
+                        + "    registerAdBeacon('hover_buyer', '"
+                        + hoverUriBuyer
+                        + "');\n"
+                        + " return {'status': 0, 'results': {'reporting_uri': '"
+                        + buyerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                new MockResponse().setBody(sellerDecisionLogicJs),
+                                new MockResponse(),
+                                new MockResponse()));
+
+        DBBuyerDecisionLogic dbBuyerDecisionLogic =
+                new DBBuyerDecisionLogic.Builder()
+                        .setBiddingLogicUri(biddingLogicUri)
+                        .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
+                        .build();
+
+        DBAdSelection dbAdSelection =
+                new DBAdSelection.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setCustomAudienceSignals(mCustomAudienceSignals)
+                        .setContextualSignals(mContextualSignals.toString())
+                        .setBiddingLogicUri(biddingLogicUri)
+                        .setWinningAdRenderUri(RENDER_URI)
+                        .setWinningAdBid(BID)
+                        .setCreationTimestamp(ACTIVATION_TIME)
+                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                        .build();
+
+        mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
+        mAdSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
+
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
+
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mAppImportanceFilter,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        CONTEXT,
+                        mConsentManagerMock,
+                        mAdServicesLoggerMock,
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAllowListsFilterSpy);
+
+        ReportImpressionInput input =
+                new ReportImpressionInput.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionConfig(adSelectionConfig)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
+                        .build();
+        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
+
+        assertTrue(callback.mIsSuccess);
+
+        // Check that database has correct seller registered events
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                        AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
+        assertEquals(
+                clickUriSeller,
+                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                        AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
+
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                        AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
+        assertEquals(
+                hoverUriSeller,
+                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                        AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
+
+        // Check that database has correct buyer registered events
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                        AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
+        assertEquals(
+                clickUriBuyer,
+                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                        AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
+
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                        AD_SELECTION_ID, HOVER_EVENT_BUYER, DESTINATION_BUYER));
+        assertEquals(
+                hoverUriBuyer,
+                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                        AD_SELECTION_ID, HOVER_EVENT_BUYER, DESTINATION_BUYER));
+
+        RecordedRequest fetchRequest = server.takeRequest();
+        assertEquals(mFetchJavaScriptPathSeller, fetchRequest.getPath());
+
+        List<String> notifications =
+                ImmutableList.of(server.takeRequest().getPath(), server.takeRequest().getPath());
+
+        assertThat(notifications).containsExactly(mSellerReportingPath, mBuyerReportingPath);
+
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
+    }
+
+    @Test
+    public void testReportImpressionSucceedsButDesNotRegisterUrisThatFailDomainValidation()
+            throws Exception {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+
+        Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+
+        Uri biddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
+
+        // Register uris with valid domains
+        Uri hoverUriSeller = mMockWebServerRule.uriForPath(HOVER_SELLER_PATH);
+        Uri clickUriBuyer = mMockWebServerRule.uriForPath(CLICK_BUYER_PATH);
+
+        // Register uris with invalid domains by instantiating another mock server
+        MockWebServer differentServer = new MockWebServer();
+        differentServer.play();
+        Uri clickUriSeller = Uri.parse(differentServer.getUrl(CLICK_SELLER_PATH).toString());
+        Uri hoverUriBuyer = Uri.parse(differentServer.getUrl(HOVER_BUYER_PATH).toString());
+
+        String sellerDecisionLogicJs =
+                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) "
+                        + "{\n"
+                        + "    registerAdBeacon('click_seller', '"
+                        + clickUriSeller
+                        + "');\n"
+                        + "    registerAdBeacon('hover_seller', '"
+                        + hoverUriSeller
+                        + "');\n"
+                        + " return {'status': 0, 'results': {'signals_for_buyer':"
+                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
+                        + sellerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        String buyerDecisionLogicJs =
+                "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer ,"
+                        + "contextual_signals, custom_audience_signals) {\n"
+                        + "    registerAdBeacon('click_buyer', '"
+                        + clickUriBuyer
+                        + "');\n"
+                        + "    registerAdBeacon('hover_buyer', '"
+                        + hoverUriBuyer
+                        + "');\n"
+                        + " return {'status': 0, 'results': {'reporting_uri': '"
+                        + buyerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                new MockResponse().setBody(sellerDecisionLogicJs),
+                                new MockResponse(),
+                                new MockResponse()));
+
+        DBBuyerDecisionLogic dbBuyerDecisionLogic =
+                new DBBuyerDecisionLogic.Builder()
+                        .setBiddingLogicUri(biddingLogicUri)
+                        .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
+                        .build();
+
+        DBAdSelection dbAdSelection =
+                new DBAdSelection.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setCustomAudienceSignals(mCustomAudienceSignals)
+                        .setContextualSignals(mContextualSignals.toString())
+                        .setBiddingLogicUri(biddingLogicUri)
+                        .setWinningAdRenderUri(RENDER_URI)
+                        .setWinningAdBid(BID)
+                        .setCreationTimestamp(ACTIVATION_TIME)
+                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                        .build();
+
+        mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
+        mAdSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
+
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
+
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mAppImportanceFilter,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        CONTEXT,
+                        mConsentManagerMock,
+                        mAdServicesLoggerMock,
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAllowListsFilterSpy);
+
+        ReportImpressionInput input =
+                new ReportImpressionInput.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionConfig(adSelectionConfig)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
+                        .build();
+        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
+
+        assertTrue(callback.mIsSuccess);
+
+        // Check that seller click uri was not registered
+        assertFalse(
+                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                        AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
+
+        // Check that seller hover uri was registered
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                        AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
+        assertEquals(
+                hoverUriSeller,
+                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                        AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
+
+        // Check that buyer click uri was registered
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                        AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
+        assertEquals(
+                clickUriBuyer,
+                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                        AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
+
+        // Check that buyer hover uri was not registered
+        assertFalse(
+                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                        AD_SELECTION_ID, HOVER_EVENT_BUYER, DESTINATION_BUYER));
+
+        RecordedRequest fetchRequest = server.takeRequest();
+        assertEquals(mFetchJavaScriptPathSeller, fetchRequest.getPath());
+
+        List<String> notifications =
+                ImmutableList.of(server.takeRequest().getPath(), server.takeRequest().getPath());
+
+        assertThat(notifications).containsExactly(mSellerReportingPath, mBuyerReportingPath);
+
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
+    }
+
+    @Test
+    public void testReportImpressionSucceedsButDesNotRegisterMalformedUris() throws Exception {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+
+        Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+
+        Uri biddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
+
+        // Register valid uris
+        Uri hoverUriSeller = mMockWebServerRule.uriForPath(HOVER_SELLER_PATH);
+        Uri clickUriBuyer = mMockWebServerRule.uriForPath(CLICK_BUYER_PATH);
+
+        // Register malformed uris
+        Uri clickUriSeller = Uri.parse(CLICK_SELLER_PATH);
+        Uri hoverUriBuyer = Uri.parse(HOVER_BUYER_PATH);
+
+        String sellerDecisionLogicJs =
+                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) "
+                        + "{\n"
+                        + "    registerAdBeacon('click_seller', '"
+                        + clickUriSeller
+                        + "');\n"
+                        + "    registerAdBeacon('hover_seller', '"
+                        + hoverUriSeller
+                        + "');\n"
+                        + " return {'status': 0, 'results': {'signals_for_buyer':"
+                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
+                        + sellerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        String buyerDecisionLogicJs =
+                "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer ,"
+                        + "contextual_signals, custom_audience_signals) {\n"
+                        + "    registerAdBeacon('click_buyer', '"
+                        + clickUriBuyer
+                        + "');\n"
+                        + "    registerAdBeacon('hover_buyer', '"
+                        + hoverUriBuyer
+                        + "');\n"
+                        + " return {'status': 0, 'results': {'reporting_uri': '"
+                        + buyerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                new MockResponse().setBody(sellerDecisionLogicJs),
+                                new MockResponse(),
+                                new MockResponse()));
+
+        DBBuyerDecisionLogic dbBuyerDecisionLogic =
+                new DBBuyerDecisionLogic.Builder()
+                        .setBiddingLogicUri(biddingLogicUri)
+                        .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
+                        .build();
+
+        DBAdSelection dbAdSelection =
+                new DBAdSelection.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setCustomAudienceSignals(mCustomAudienceSignals)
+                        .setContextualSignals(mContextualSignals.toString())
+                        .setBiddingLogicUri(biddingLogicUri)
+                        .setWinningAdRenderUri(RENDER_URI)
+                        .setWinningAdBid(BID)
+                        .setCreationTimestamp(ACTIVATION_TIME)
+                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                        .build();
+
+        mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
+        mAdSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
+
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
+
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mAppImportanceFilter,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        CONTEXT,
+                        mConsentManagerMock,
+                        mAdServicesLoggerMock,
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAllowListsFilterSpy);
+
+        ReportImpressionInput input =
+                new ReportImpressionInput.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionConfig(adSelectionConfig)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
+                        .build();
+        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
+
+        assertTrue(callback.mIsSuccess);
+
+        // Check that seller click uri was not registered
+        assertFalse(
+                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                        AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
+
+        // Check that seller hover uri was registered
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                        AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
+        assertEquals(
+                hoverUriSeller,
+                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                        AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
+
+        // Check that buyer click uri was registered
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                        AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
+        assertEquals(
+                clickUriBuyer,
+                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                        AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
+
+        // Check that buyer hover uri was not registered
+        assertFalse(
+                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                        AD_SELECTION_ID, HOVER_EVENT_BUYER, DESTINATION_BUYER));
+
+        RecordedRequest fetchRequest = server.takeRequest();
+        assertEquals(mFetchJavaScriptPathSeller, fetchRequest.getPath());
+
+        List<String> notifications =
+                ImmutableList.of(server.takeRequest().getPath(), server.takeRequest().getPath());
+
+        assertThat(notifications).containsExactly(mSellerReportingPath, mBuyerReportingPath);
+
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
+    }
+
+    @Test
+    public void testReportImpressionOnlyRegisterSellerUrisWhenBuyerJSFails() throws Exception {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+
+        Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+
+        Uri biddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
+
+        Uri clickUriSeller = mMockWebServerRule.uriForPath(CLICK_SELLER_PATH);
+        Uri hoverUriSeller = mMockWebServerRule.uriForPath(HOVER_SELLER_PATH);
+        Uri clickUriBuyer = mMockWebServerRule.uriForPath(CLICK_BUYER_PATH);
+        Uri hoverUriBuyer = mMockWebServerRule.uriForPath(HOVER_BUYER_PATH);
+
+        String sellerDecisionLogicJs =
+                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) "
+                        + "{\n"
+                        + "    registerAdBeacon('click_seller', '"
+                        + clickUriSeller
+                        + "');\n"
+                        + "    registerAdBeacon('hover_seller', '"
+                        + hoverUriSeller
+                        + "');\n"
+                        + " return {'status': 0, 'results': {'signals_for_buyer':"
+                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
+                        + sellerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        String buyerDecisionLogicJs =
+                "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer ,"
+                        + "contextual_signals, custom_audience_signals) {\n"
+                        + "    registerAdBeacon('click_buyer', '"
+                        + clickUriBuyer
+                        + "');\n"
+                        + "    registerAdBeacon('hover_buyer', '"
+                        + hoverUriBuyer
+                        + "');\n"
+                        + " return {'status': -1, 'results': {'reporting_uri': '"
+                        + buyerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                new MockResponse().setBody(sellerDecisionLogicJs),
+                                new MockResponse(),
+                                new MockResponse()));
+
+        DBBuyerDecisionLogic dbBuyerDecisionLogic =
+                new DBBuyerDecisionLogic.Builder()
+                        .setBiddingLogicUri(biddingLogicUri)
+                        .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
+                        .build();
+
+        DBAdSelection dbAdSelection =
+                new DBAdSelection.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setCustomAudienceSignals(mCustomAudienceSignals)
+                        .setContextualSignals(mContextualSignals.toString())
+                        .setBiddingLogicUri(biddingLogicUri)
+                        .setWinningAdRenderUri(RENDER_URI)
+                        .setWinningAdBid(BID)
+                        .setCreationTimestamp(ACTIVATION_TIME)
+                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                        .build();
+
+        mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
+        mAdSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
+
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
+
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mAppImportanceFilter,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        CONTEXT,
+                        mConsentManagerMock,
+                        mAdServicesLoggerMock,
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAllowListsFilterSpy);
+
+        ReportImpressionInput input =
+                new ReportImpressionInput.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionConfig(adSelectionConfig)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
+                        .build();
+        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
+
+        assertFalse(callback.mIsSuccess);
+
+        // Check that database has correct seller registered events
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                        AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
+        assertEquals(
+                clickUriSeller,
+                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                        AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
+
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                        AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
+        assertEquals(
+                hoverUriSeller,
+                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                        AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
+
+        // Check that buyer events were not registered
+        assertFalse(
+                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                        AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
+
+        assertFalse(
+                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                        AD_SELECTION_ID, HOVER_EVENT_BUYER, DESTINATION_BUYER));
+
+        assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_INTERNAL_ERROR);
+
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_INTERNAL_ERROR),
+                        anyInt());
+    }
+
+    @Test
+    public void testReportImpressionDoesNotRegisterUrisWhenSellerJSFails() throws Exception {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+
+        Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+
+        Uri biddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
+
+        Uri clickUriSeller = mMockWebServerRule.uriForPath(CLICK_SELLER_PATH);
+        Uri hoverUriSeller = mMockWebServerRule.uriForPath(HOVER_SELLER_PATH);
+        Uri clickUriBuyer = mMockWebServerRule.uriForPath(CLICK_BUYER_PATH);
+        Uri hoverUriBuyer = mMockWebServerRule.uriForPath(HOVER_BUYER_PATH);
+
+        String sellerDecisionLogicJs =
+                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) "
+                        + "{\n"
+                        + "    registerAdBeacon('click_seller', '"
+                        + clickUriSeller
+                        + "');\n"
+                        + "    registerAdBeacon('hover_seller', '"
+                        + hoverUriSeller
+                        + "');\n"
+                        + " return {'status': -1, 'results': {'signals_for_buyer':"
+                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
+                        + sellerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        String buyerDecisionLogicJs =
+                "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer ,"
+                        + "contextual_signals, custom_audience_signals) {\n"
+                        + "    registerAdBeacon('click_buyer', '"
+                        + clickUriBuyer
+                        + "');\n"
+                        + "    registerAdBeacon('hover_buyer', '"
+                        + hoverUriBuyer
+                        + "');\n"
+                        + " return {'status': 0, 'results': {'reporting_uri': '"
+                        + buyerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                new MockResponse().setBody(sellerDecisionLogicJs),
+                                new MockResponse(),
+                                new MockResponse()));
+
+        DBBuyerDecisionLogic dbBuyerDecisionLogic =
+                new DBBuyerDecisionLogic.Builder()
+                        .setBiddingLogicUri(biddingLogicUri)
+                        .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
+                        .build();
+
+        DBAdSelection dbAdSelection =
+                new DBAdSelection.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setCustomAudienceSignals(mCustomAudienceSignals)
+                        .setContextualSignals(mContextualSignals.toString())
+                        .setBiddingLogicUri(biddingLogicUri)
+                        .setWinningAdRenderUri(RENDER_URI)
+                        .setWinningAdBid(BID)
+                        .setCreationTimestamp(ACTIVATION_TIME)
+                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                        .build();
+
+        mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
+        mAdSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
+
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
+
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mAppImportanceFilter,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        CONTEXT,
+                        mConsentManagerMock,
+                        mAdServicesLoggerMock,
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAllowListsFilterSpy);
+
+        ReportImpressionInput input =
+                new ReportImpressionInput.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionConfig(adSelectionConfig)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
+                        .build();
+        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
+
+        assertFalse(callback.mIsSuccess);
+
+        // Check that no events were registered
+        assertFalse(
+                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                        AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
+
+        assertFalse(
+                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                        AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
+
+        assertFalse(
+                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                        AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
+
+        assertFalse(
+                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                        AD_SELECTION_ID, HOVER_EVENT_BUYER, DESTINATION_BUYER));
+
+        assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_INTERNAL_ERROR);
+
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_INTERNAL_ERROR),
+                        anyInt());
+    }
+
+    @Test
+    public void testReportImpressionDoesNotRegisterMoreThanMaxEventUrisFromPhFlag()
+            throws Exception {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+
+        Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+
+        Uri biddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
+
+        Uri clickUriSeller = mMockWebServerRule.uriForPath(CLICK_SELLER_PATH);
+        Uri hoverUriSeller = mMockWebServerRule.uriForPath(HOVER_SELLER_PATH);
+        Uri clickUriBuyer = mMockWebServerRule.uriForPath(CLICK_BUYER_PATH);
+        Uri hoverUriBuyer = mMockWebServerRule.uriForPath(HOVER_BUYER_PATH);
+
+        String sellerDecisionLogicJs =
+                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) "
+                        + "{\n"
+                        + "    registerAdBeacon('click_seller', '"
+                        + clickUriSeller
+                        + "');\n"
+                        + "    registerAdBeacon('hover_seller', '"
+                        + hoverUriSeller
+                        + "');\n"
+                        + " return {'status': 0, 'results': {'signals_for_buyer':"
+                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
+                        + sellerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        String buyerDecisionLogicJs =
+                "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer ,"
+                        + "contextual_signals, custom_audience_signals) {\n"
+                        + "    registerAdBeacon('click_buyer', '"
+                        + clickUriBuyer
+                        + "');\n"
+                        + "    registerAdBeacon('hover_buyer', '"
+                        + hoverUriBuyer
+                        + "');\n"
+                        + " return {'status': 0, 'results': {'reporting_uri': '"
+                        + buyerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                new MockResponse().setBody(sellerDecisionLogicJs),
+                                new MockResponse(),
+                                new MockResponse()));
+
+        DBBuyerDecisionLogic dbBuyerDecisionLogic =
+                new DBBuyerDecisionLogic.Builder()
+                        .setBiddingLogicUri(biddingLogicUri)
+                        .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
+                        .build();
+
+        DBAdSelection dbAdSelection =
+                new DBAdSelection.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setCustomAudienceSignals(mCustomAudienceSignals)
+                        .setContextualSignals(mContextualSignals.toString())
+                        .setBiddingLogicUri(biddingLogicUri)
+                        .setWinningAdRenderUri(RENDER_URI)
+                        .setWinningAdBid(BID)
+                        .setCreationTimestamp(ACTIVATION_TIME)
+                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                        .build();
+
+        mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
+        mAdSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
+
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
+
+        // Create new flag with overridden value so that only one pairing per ad-tech can be
+        // registered
+        Flags flagsWithSmallerMaxEventUris =
+                new FlagsWithEnrollmentCheckEnabledSwitch(false) {
+                    @Override
+                    public long getReportImpressionMaxEventUriEntriesCount() {
+                        return 1;
+                    }
+                };
+
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mAppImportanceFilter,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        CONTEXT,
+                        mConsentManagerMock,
+                        mAdServicesLoggerMock,
+                        flagsWithSmallerMaxEventUris,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAllowListsFilterSpy);
+
+        ReportImpressionInput input =
+                new ReportImpressionInput.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionConfig(adSelectionConfig)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
+                        .build();
+        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
+
+        assertTrue(callback.mIsSuccess);
+
+        // Check that only the first seller event uri pairing was registered
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                        AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
+        assertEquals(
+                clickUriSeller,
+                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                        AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
+
+        assertFalse(
+                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                        AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
+
+        // Check that only the first buyer event uri pairing was registered
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                        AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
+        assertEquals(
+                clickUriBuyer,
+                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                        AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
+
+        assertFalse(
+                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                        AD_SELECTION_ID, HOVER_EVENT_BUYER, DESTINATION_BUYER));
+
         RecordedRequest fetchRequest = server.takeRequest();
         assertEquals(mFetchJavaScriptPathSeller, fetchRequest.getPath());
 
@@ -1244,6 +2141,173 @@ public class AdSelectionServiceImplTest {
         ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
 
         assertTrue(callback.mIsSuccess);
+        List<String> notifications =
+                ImmutableList.of(server.takeRequest().getPath(), server.takeRequest().getPath());
+
+        assertThat(notifications).containsExactly(mSellerReportingPath, mBuyerReportingPath);
+
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
+    }
+
+    @Test
+    public void testReportImpressionUseDevOverrideForSellerJSSuccessfullyRegistersEventUris()
+            throws Exception {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+
+        Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+
+        Uri clickUriSeller = mMockWebServerRule.uriForPath(CLICK_SELLER_PATH);
+        Uri hoverUriSeller = mMockWebServerRule.uriForPath(HOVER_SELLER_PATH);
+        Uri clickUriBuyer = mMockWebServerRule.uriForPath(CLICK_BUYER_PATH);
+        Uri hoverUriBuyer = mMockWebServerRule.uriForPath(HOVER_BUYER_PATH);
+
+        String sellerDecisionLogicJs =
+                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) "
+                        + "{\n"
+                        + "    registerAdBeacon('click_seller', '"
+                        + clickUriSeller
+                        + "');\n"
+                        + "    registerAdBeacon('hover_seller', '"
+                        + hoverUriSeller
+                        + "');\n"
+                        + " return {'status': 0, 'results': {'signals_for_buyer':"
+                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
+                        + sellerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        String buyerDecisionLogicJs =
+                "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer ,"
+                        + "contextual_signals, custom_audience_signals) {\n"
+                        + "    registerAdBeacon('click_buyer', '"
+                        + clickUriBuyer
+                        + "');\n"
+                        + "    registerAdBeacon('hover_buyer', '"
+                        + hoverUriBuyer
+                        + "');\n"
+                        + " return {'status': 0, 'results': {'reporting_uri': '"
+                        + buyerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                // There is no need to fetch JS
+                                new MockResponse(), new MockResponse()));
+
+        DBBuyerDecisionLogic dbBuyerDecisionLogic =
+                new DBBuyerDecisionLogic.Builder()
+                        .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
+                        .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
+                        .build();
+
+        DBAdSelection dbAdSelection =
+                new DBAdSelection.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setCustomAudienceSignals(mCustomAudienceSignals)
+                        .setContextualSignals(mContextualSignals.toString())
+                        .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
+                        .setWinningAdRenderUri(RENDER_URI)
+                        .setWinningAdBid(BID)
+                        .setCreationTimestamp(ACTIVATION_TIME)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
+                        .build();
+
+        mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
+        mAdSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
+
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
+
+        // Set dev override for this AdSelection
+
+        DBAdSelectionOverride adSelectionOverride =
+                DBAdSelectionOverride.builder()
+                        .setAdSelectionConfigId(
+                                AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(
+                                        adSelectionConfig))
+                        .setAppPackageName(TEST_PACKAGE_NAME)
+                        .setDecisionLogicJS(sellerDecisionLogicJs)
+                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.toString())
+                        .build();
+        mAdSelectionEntryDao.persistAdSelectionOverride(adSelectionOverride);
+
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(
+                        DevContext.builder()
+                                .setDevOptionsEnabled(true)
+                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
+                                .build());
+
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mAppImportanceFilter,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        CONTEXT,
+                        mConsentManagerMock,
+                        mAdServicesLoggerMock,
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAllowListsFilterSpy);
+        ReportImpressionInput input =
+                new ReportImpressionInput.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionConfig(adSelectionConfig)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
+                        .build();
+        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
+
+        assertTrue(callback.mIsSuccess);
+
+        // Check that database has correct seller registered events
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                        AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
+        assertEquals(
+                clickUriSeller,
+                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                        AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
+
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                        AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
+        assertEquals(
+                hoverUriSeller,
+                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                        AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
+
+        // Check that database has correct buyer registered events
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                        AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
+        assertEquals(
+                clickUriBuyer,
+                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                        AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
+
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                        AD_SELECTION_ID, HOVER_EVENT_BUYER, DESTINATION_BUYER));
+        assertEquals(
+                hoverUriBuyer,
+                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                        AD_SELECTION_ID, HOVER_EVENT_BUYER, DESTINATION_BUYER));
+
         List<String> notifications =
                 ImmutableList.of(server.takeRequest().getPath(), server.takeRequest().getPath());
 

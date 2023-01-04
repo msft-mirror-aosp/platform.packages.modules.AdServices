@@ -36,6 +36,13 @@
                 android:text="@string/settingsUI_apps_view_subtitle"
                 style="@style/MainStyle.Body2" />
 
+            <com.android.settingslib.widget.MainSwitchBar
+                android:id="@+id/apps_switch_bar"
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:title="@string/settingsUI_apps_switch_title"
+                android:textDirection="locale"
+                android:visibility="gone"/>
             <LinearLayout
                 android:id="@+id/no_apps_message"
                 android:layout_width="match_parent"

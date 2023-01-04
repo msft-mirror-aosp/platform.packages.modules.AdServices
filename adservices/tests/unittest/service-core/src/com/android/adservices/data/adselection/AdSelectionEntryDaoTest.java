@@ -28,6 +28,8 @@ import android.net.Uri;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.google.common.collect.ImmutableList;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -737,7 +739,8 @@ public class AdSelectionEntryDaoTest {
                 mAdSelectionEntryDao.doesRegisteredAdEventExist(
                         AD_SELECTION_ID_1, CLICK_EVENT, BUYER_DESTINATION));
 
-        mAdSelectionEntryDao.persistDBRegisteredAdEvent(DB_REGISTERED_EVENT_SELLER_CLICK_1);
+        mAdSelectionEntryDao.persistDBRegisteredAdEvents(
+                ImmutableList.of(DB_REGISTERED_EVENT_SELLER_CLICK_1));
 
         assertTrue(
                 mAdSelectionEntryDao.doesRegisteredAdEventExist(
@@ -756,8 +759,8 @@ public class AdSelectionEntryDaoTest {
                 mAdSelectionEntryDao.doesRegisteredAdEventExist(
                         AD_SELECTION_ID_1, CLICK_EVENT, BUYER_DESTINATION));
 
-        mAdSelectionEntryDao.persistDBRegisteredAdEvent(DB_REGISTERED_EVENT_SELLER_CLICK_1);
-        mAdSelectionEntryDao.persistDBRegisteredAdEvent(DB_REGISTERED_EVENT_BUYER_1);
+        mAdSelectionEntryDao.persistDBRegisteredAdEvents(
+                ImmutableList.of(DB_REGISTERED_EVENT_SELLER_CLICK_1, DB_REGISTERED_EVENT_BUYER_1));
 
         assertTrue(
                 mAdSelectionEntryDao.doesRegisteredAdEventExist(
@@ -785,7 +788,8 @@ public class AdSelectionEntryDaoTest {
                 mAdSelectionEntryDao.doesRegisteredAdEventExist(
                         AD_SELECTION_ID_1, CLICK_EVENT, SELLER_DESTINATION));
 
-        mAdSelectionEntryDao.persistDBRegisteredAdEvent(DB_REGISTERED_EVENT_SELLER_CLICK_1);
+        mAdSelectionEntryDao.persistDBRegisteredAdEvents(
+                ImmutableList.of(DB_REGISTERED_EVENT_SELLER_CLICK_1));
 
         assertTrue(
                 mAdSelectionEntryDao.doesRegisteredAdEventExist(
@@ -798,7 +802,8 @@ public class AdSelectionEntryDaoTest {
                         AD_SELECTION_ID_1, CLICK_EVENT, SELLER_DESTINATION));
 
         // Overwrite primary key with another uri
-        mAdSelectionEntryDao.persistDBRegisteredAdEvent(DB_REGISTERED_EVENT_SELLER_1_DIFFERENT_URI);
+        mAdSelectionEntryDao.persistDBRegisteredAdEvents(
+                ImmutableList.of(DB_REGISTERED_EVENT_SELLER_1_DIFFERENT_URI));
 
         // Asserts different uri is returned
         assertEquals(
@@ -812,8 +817,9 @@ public class AdSelectionEntryDaoTest {
         mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_1);
 
         // Added registered event data with same adSelectionId as DB_AD_SELECTION_1
-        mAdSelectionEntryDao.persistDBRegisteredAdEvent(DB_REGISTERED_EVENT_SELLER_CLICK_1);
-        mAdSelectionEntryDao.persistDBRegisteredAdEvent(DB_REGISTERED_EVENT_SELLER_HOVER_1);
+        mAdSelectionEntryDao.persistDBRegisteredAdEvents(
+                ImmutableList.of(
+                        DB_REGISTERED_EVENT_SELLER_CLICK_1, DB_REGISTERED_EVENT_SELLER_HOVER_1));
 
         assertTrue(
                 mAdSelectionEntryDao.doesRegisteredAdEventExist(
@@ -823,11 +829,12 @@ public class AdSelectionEntryDaoTest {
                         AD_SELECTION_ID_1, HOVER_EVENT, SELLER_DESTINATION));
 
         // Simulating stale registered event data by inserting data with different adSelectionIds
-        mAdSelectionEntryDao.persistDBRegisteredAdEvent(DB_REGISTERED_EVENT_SELLER_CLICK_2);
-        mAdSelectionEntryDao.persistDBRegisteredAdEvent(DB_REGISTERED_EVENT_SELLER_HOVER_2);
-
-        mAdSelectionEntryDao.persistDBRegisteredAdEvent(DB_REGISTERED_EVENT_SELLER_CLICK_3);
-        mAdSelectionEntryDao.persistDBRegisteredAdEvent(DB_REGISTERED_EVENT_SELLER_HOVER_3);
+        mAdSelectionEntryDao.persistDBRegisteredAdEvents(
+                ImmutableList.of(
+                        DB_REGISTERED_EVENT_SELLER_CLICK_2,
+                        DB_REGISTERED_EVENT_SELLER_HOVER_2,
+                        DB_REGISTERED_EVENT_SELLER_CLICK_3,
+                        DB_REGISTERED_EVENT_SELLER_HOVER_3));
 
         assertTrue(
                 mAdSelectionEntryDao.doesRegisteredAdEventExist(

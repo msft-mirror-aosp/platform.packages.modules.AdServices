@@ -34,6 +34,7 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doNothing;
@@ -171,7 +172,7 @@ public class ConsentManagerTest {
         mConsentDatastore = ConsentManager.createAndInitializeDataStore(mContextSpy);
         mAppConsentDao = spy(new AppConsentDao(mDatastore, mPackageManagerMock));
         mEnrollmentDao = spy(new EnrollmentDao(mContextSpy, DbTestUtil.getDbHelperForTest()));
-        mAdServicesManager = new AdServicesManager(mContextSpy, mMockIAdServicesManager);
+        mAdServicesManager = new AdServicesManager(mMockIAdServicesManager);
         doReturn(mAdServicesManager).when(mContextSpy).getSystemService(AdServicesManager.class);
 
         // Default to use PPAPI consent to test migration-irrelevant logics.
@@ -378,9 +379,11 @@ public class ConsentManagerTest {
                 () -> BackgroundJobsManager.scheduleAllBackgroundJobs(any(Context.class)));
         ExtendedMockito.verify(
                 () -> EpochJobService.scheduleIfNeeded(any(Context.class), eq(false)));
-        ExtendedMockito.verify(() -> MddJobService.scheduleIfNeeded(any(Context.class), eq(false)));
         ExtendedMockito.verify(
-                () -> MaintenanceJobService.scheduleIfNeeded(any(Context.class), eq(false)));
+                () -> MddJobService.scheduleIfNeeded(any(Context.class), eq(false)), times(3));
+        ExtendedMockito.verify(
+                () -> MaintenanceJobService.scheduleIfNeeded(any(Context.class), eq(false)),
+                times(2));
         ExtendedMockito.verify(
                 () -> AggregateReportingJobService.scheduleIfNeeded(any(Context.class), eq(false)));
         ExtendedMockito.verify(
@@ -1293,6 +1296,158 @@ public class ConsentManagerTest {
         verify(mAdServicesLoggerImpl, times(1)).logUIStats(expectedUIStats);
     }
 
+    @Test
+    public void testConsentPerApiIsGivenAfterEnabling_PpApiOnly()
+            throws RemoteException, IOException {
+        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
+        boolean isGiven = true;
+        int consentSourceOfTruth = Flags.PPAPI_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(isGiven, consentSourceOfTruth);
+
+        spyConsentManager.enable(mContextSpy, AdServicesApiType.TOPICS);
+
+        assertThat(spyConsentManager.getConsent(AdServicesApiType.TOPICS).isGiven()).isTrue();
+        verify(spyConsentManager)
+                .setConsentPerApiToPpApi(eq(AdServicesApiType.TOPICS), eq(/* isGiven */ true));
+
+        verify(spyConsentManager).resetTopicsAndBlockedTopics();
+    }
+
+    @Test
+    public void testConsentPerApiIsGivenAfterEnabling_SystemServerOnly()
+            throws RemoteException, IOException {
+        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
+        boolean isGiven = true;
+        int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForConsentPerApiTesting(
+                        isGiven, consentSourceOfTruth, AdServicesApiType.TOPICS.toConsentApiType());
+
+        spyConsentManager.enable(mContextSpy, AdServicesApiType.TOPICS);
+
+        assertThat(spyConsentManager.getConsent(AdServicesApiType.TOPICS).isGiven()).isTrue();
+        ExtendedMockito.verify(
+                () ->
+                        ConsentManager.setPerApiConsentToSystemServer(
+                                any(),
+                                eq(AdServicesApiType.TOPICS.toConsentApiType()),
+                                eq(isGiven)));
+        verify(mMockIAdServicesManager).getConsent(ConsentParcel.TOPICS);
+        verify(spyConsentManager).resetTopicsAndBlockedTopics();
+    }
+
+    @Test
+    public void testConsentPerApiIsGivenAfterEnabling_PpApiAndSystemServer()
+            throws RemoteException, IOException {
+        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
+        boolean isGiven = true;
+        int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForConsentPerApiTesting(
+                        isGiven, consentSourceOfTruth, AdServicesApiType.TOPICS.toConsentApiType());
+
+        spyConsentManager.enable(mContextSpy, AdServicesApiType.TOPICS);
+
+        assertThat(spyConsentManager.getConsent(AdServicesApiType.TOPICS).isGiven()).isTrue();
+        ExtendedMockito.verify(
+                () ->
+                        ConsentManager.setPerApiConsentToSystemServer(
+                                any(),
+                                eq(AdServicesApiType.TOPICS.toConsentApiType()),
+                                eq(isGiven)));
+        verify(mMockIAdServicesManager, times(2)).getConsent(ConsentParcel.TOPICS);
+        verify(spyConsentManager)
+                .setConsentPerApiToPpApi(eq(AdServicesApiType.TOPICS), eq(/* isGiven */ true));
+        verify(spyConsentManager).resetTopicsAndBlockedTopics();
+    }
+
+    @Test
+    public void testAllThreeConsentsPerApiAreGivenAggregatedConsentIsSet_PpApiOnly()
+            throws RemoteException, IOException {
+        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
+        boolean isGiven = true;
+        int consentSourceOfTruth = Flags.PPAPI_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(isGiven, consentSourceOfTruth);
+
+        spyConsentManager.enable(mContextSpy, AdServicesApiType.TOPICS);
+        spyConsentManager.enable(mContextSpy, AdServicesApiType.FLEDGE);
+        spyConsentManager.enable(mContextSpy, AdServicesApiType.MEASUREMENTS);
+
+        assertThat(spyConsentManager.getConsent(AdServicesApiType.TOPICS).isGiven()).isTrue();
+        assertThat(spyConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven()).isTrue();
+        assertThat(spyConsentManager.getConsent(AdServicesApiType.MEASUREMENTS).isGiven()).isTrue();
+        assertThat(spyConsentManager.getConsent().isGiven()).isTrue();
+        verify(spyConsentManager)
+                .setConsentPerApiToPpApi(eq(AdServicesApiType.TOPICS), eq(/* isGiven */ true));
+        verify(spyConsentManager)
+                .setConsentPerApiToPpApi(eq(AdServicesApiType.FLEDGE), eq(/* isGiven */ true));
+        verify(spyConsentManager)
+                .setConsentPerApiToPpApi(
+                        eq(AdServicesApiType.MEASUREMENTS), eq(/* isGiven */ true));
+        verify(spyConsentManager, times(3)).setAggregatedConsentToPpApi();
+
+        verifyDataCleanup(spyConsentManager);
+    }
+
+    @Test
+    public void testAllConsentAreRevokedClenaupIsExecuted() throws IOException, RemoteException {
+        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
+        boolean isGiven = true;
+        int consentSourceOfTruth = Flags.PPAPI_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(isGiven, consentSourceOfTruth);
+
+        // set up the initial state
+        spyConsentManager.enable(mContextSpy, AdServicesApiType.TOPICS);
+        spyConsentManager.enable(mContextSpy, AdServicesApiType.FLEDGE);
+        spyConsentManager.enable(mContextSpy, AdServicesApiType.MEASUREMENTS);
+
+        assertThat(spyConsentManager.getConsent(AdServicesApiType.TOPICS).isGiven()).isTrue();
+        assertThat(spyConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven()).isTrue();
+        assertThat(spyConsentManager.getConsent(AdServicesApiType.MEASUREMENTS).isGiven()).isTrue();
+        assertThat(spyConsentManager.getConsent().isGiven()).isTrue();
+        verify(spyConsentManager)
+                .setConsentPerApiToPpApi(eq(AdServicesApiType.TOPICS), eq(/* isGiven */ true));
+        verify(spyConsentManager)
+                .setConsentPerApiToPpApi(eq(AdServicesApiType.FLEDGE), eq(/* isGiven */ true));
+        verify(spyConsentManager)
+                .setConsentPerApiToPpApi(
+                        eq(AdServicesApiType.MEASUREMENTS), eq(/* isGiven */ true));
+        verify(spyConsentManager, times(3)).setAggregatedConsentToPpApi();
+
+        // disable all the consent one by one
+        spyConsentManager.disable(mContextSpy, AdServicesApiType.TOPICS);
+        spyConsentManager.disable(mContextSpy, AdServicesApiType.FLEDGE);
+        spyConsentManager.disable(mContextSpy, AdServicesApiType.MEASUREMENTS);
+
+        assertThat(spyConsentManager.getConsent(AdServicesApiType.TOPICS).isGiven()).isFalse();
+        assertThat(spyConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven()).isFalse();
+        assertThat(spyConsentManager.getConsent(AdServicesApiType.MEASUREMENTS).isGiven())
+                .isFalse();
+        assertThat(spyConsentManager.getConsent().isGiven()).isFalse();
+
+        ExtendedMockito.verify(
+                () ->
+                        BackgroundJobsManager.unscheduleJobsPerApi(
+                                any(JobScheduler.class), eq(AdServicesApiType.TOPICS)));
+        ExtendedMockito.verify(
+                () ->
+                        BackgroundJobsManager.unscheduleJobsPerApi(
+                                any(JobScheduler.class), eq(AdServicesApiType.FLEDGE)));
+        ExtendedMockito.verify(
+                () ->
+                        BackgroundJobsManager.unscheduleJobsPerApi(
+                                any(JobScheduler.class), eq(AdServicesApiType.MEASUREMENTS)));
+        ExtendedMockito.verify(
+                () -> BackgroundJobsManager.unscheduleAllBackgroundJobs(any(JobScheduler.class)));
+
+        verify(spyConsentManager, times(2)).resetTopicsAndBlockedTopics();
+        verify(spyConsentManager, times(2)).resetAppsAndBlockedApps();
+        verify(spyConsentManager, times(2)).resetMeasurement();
+    }
+
     // Note this method needs to be invoked after other private variables are initialized.
     private ConsentManager getConsentManagerByConsentSourceOfTruth(int consentSourceOfTruth) {
         return new ConsentManager(
@@ -1322,6 +1477,31 @@ public class ConsentManagerTest {
                         ? ConsentParcel.createGivenConsent(ConsentParcel.ALL_API)
                         : ConsentParcel.createRevokedConsent(ConsentParcel.ALL_API);
         doReturn(consentParcel).when(mMockIAdServicesManager).getConsent(ConsentParcel.ALL_API);
+        doReturn(isGiven).when(mMockIAdServicesManager).wasNotificationDisplayed();
+        doNothing().when(mMockIAdServicesManager).recordNotificationDisplayed();
+
+        return consentManager;
+    }
+
+    private ConsentManager getSpiedConsentManagerForConsentPerApiTesting(
+            boolean isGiven,
+            int consentSourceOfTruth,
+            @ConsentParcel.ConsentApiType int consentApiType)
+            throws RemoteException {
+        ConsentManager consentManager =
+                spy(getConsentManagerByConsentSourceOfTruth(consentSourceOfTruth));
+
+        // Disable IPC calls
+        ExtendedMockito.doNothing()
+                .when(
+                        () ->
+                                ConsentManager.setPerApiConsentToSystemServer(
+                                        any(), anyInt(), anyBoolean()));
+        ConsentParcel consentParcel =
+                isGiven
+                        ? ConsentParcel.createGivenConsent(consentApiType)
+                        : ConsentParcel.createRevokedConsent(consentApiType);
+        doReturn(consentParcel).when(mMockIAdServicesManager).getConsent(consentApiType);
         doReturn(isGiven).when(mMockIAdServicesManager).wasNotificationDisplayed();
         doNothing().when(mMockIAdServicesManager).recordNotificationDisplayed();
 

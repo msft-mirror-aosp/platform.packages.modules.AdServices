@@ -17,15 +17,16 @@
 package android.app.adservices;
 
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_MANAGER;
-import static android.app.adservices.AdServicesManager.AD_SERVICES_SYSTEM_SERVICE;
 
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
-import android.annotation.SystemService;
 import android.app.adservices.consent.ConsentParcel;
+import android.app.sdksandbox.SdkSandboxManager;
 import android.content.Context;
+import android.os.IBinder;
 import android.os.RemoteException;
 
+import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
 
@@ -35,15 +36,29 @@ import java.util.Objects;
  *
  * @hide
  */
-@SystemService(AD_SERVICES_SYSTEM_SERVICE)
-public class AdServicesManager {
-    public static final String AD_SERVICES_SYSTEM_SERVICE = "adservices_manager";
-
+public final class AdServicesManager {
+    private static AdServicesManager sSingleton;
     private final IAdServicesManager mService;
 
-    @SuppressWarnings("unused")
-    public AdServicesManager(@NonNull Context unusedContext, @NonNull IAdServicesManager binder) {
-        mService = binder;
+    @VisibleForTesting
+    public AdServicesManager(@NonNull IAdServicesManager iAdServicesManager) {
+        Objects.requireNonNull(iAdServicesManager, "AdServicesManager is NULL!");
+        mService = iAdServicesManager;
+    }
+
+    /** Get the singleton of AdServicesManager */
+    public static AdServicesManager getInstance(@NonNull Context context) {
+        synchronized (AdServicesManager.class) {
+            if (sSingleton == null) {
+                // TODO(b/262282035): Fix this work around in U+.
+                // Get the AdServicesManagerService's Binder from the SdkSandboxManager.
+                // This is a workaround for b/262282035.
+                IBinder iBinder =
+                        context.getSystemService(SdkSandboxManager.class).getAdServicesManager();
+                sSingleton = new AdServicesManager(IAdServicesManager.Stub.asInterface(iBinder));
+            }
+        }
+        return sSingleton;
     }
 
     /** Return the User Consent */

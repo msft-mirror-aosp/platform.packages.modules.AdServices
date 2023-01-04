@@ -38,7 +38,11 @@ public final class AdDataTest {
 
     @Test
     public void testBuildValidAdDataSuccess() {
-        AdData validAdData = new AdData(VALID_RENDER_URI, VALID_METADATA);
+        AdData validAdData =
+                new AdData.Builder()
+                        .setRenderUri(VALID_RENDER_URI)
+                        .setMetadata(VALID_METADATA)
+                        .build();
 
         assertThat(validAdData.getRenderUri()).isEqualTo(VALID_RENDER_URI);
         assertThat(validAdData.getMetadata()).isEqualTo(VALID_METADATA);
@@ -46,7 +50,11 @@ public final class AdDataTest {
 
     @Test
     public void testParcelValidAdDataSuccess() {
-        AdData validAdData = new AdData(VALID_RENDER_URI, VALID_METADATA);
+        AdData validAdData =
+                new AdData.Builder()
+                        .setRenderUri(VALID_RENDER_URI)
+                        .setMetadata(VALID_METADATA)
+                        .build();
 
         Parcel p = Parcel.obtain();
         validAdData.writeToParcel(p, 0);
@@ -59,18 +67,20 @@ public final class AdDataTest {
 
     @Test
     public void testBuildNullUriAdDataFails() {
-        assertThrows(NullPointerException.class, () -> {
-            new AdData(null, VALID_METADATA);
-        });
+        assertThrows(
+                NullPointerException.class,
+                () -> new AdData.Builder().setRenderUri(null).setMetadata(VALID_METADATA).build());
     }
 
     @Test
     public void testBuildNullMetadataAdDataFails() {
         assertThrows(
                 NullPointerException.class,
-                () -> {
-                    new AdData(VALID_RENDER_URI, null);
-                });
+                () ->
+                        new AdData.Builder()
+                                .setRenderUri(VALID_RENDER_URI)
+                                .setMetadata(null)
+                                .build());
     }
 
     @Test

@@ -147,6 +147,15 @@ public class DbHelperTest {
     }
 
     @Test
+    public void testOnDowngrade_topicsV5ToV3() {
+        DbHelper dbHelper = spy(DbTestUtil.getDbHelperForTest());
+        SQLiteDatabase db = mock(SQLiteDatabase.class);
+
+        // Verify no error if migrate db from V5 to V3
+        dbHelper.onDowngrade(db, DATABASE_VERSION_V5, CURRENT_DATABASE_VERSION);
+    }
+
+    @Test
     public void testSupportsTopicContributorsTable() {
         DbHelper dbHelperV2 =
                 new DbHelper(

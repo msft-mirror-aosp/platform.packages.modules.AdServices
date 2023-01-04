@@ -408,6 +408,11 @@ public class BackgroundFetchJobServiceTest {
         public boolean getFledgeBackgroundFetchEnabled() {
             return true;
         }
+
+        @Override
+        public boolean getGlobalKillSwitch() {
+            return false;
+        }
     }
 
     private static class FlagsWithDisabledBgF implements Flags {
@@ -425,6 +430,11 @@ public class BackgroundFetchJobServiceTest {
         public long getFledgeBackgroundFetchJobFlexMs() {
             throw new IllegalStateException("This configured value should not be called");
         }
+
+        @Override
+        public boolean getGlobalKillSwitch() {
+            return false;
+        }
     }
 
     private static class FlagsWithKillSwitchOn implements Flags {
@@ -440,6 +450,11 @@ public class BackgroundFetchJobServiceTest {
         public boolean getFledgeBackgroundFetchEnabled() {
             return true;
         }
+
+        @Override
+        public boolean getGlobalKillSwitch() {
+            return false;
+        }
     }
 
     private static class FlagsWithKillSwitchOff implements Flags {
@@ -452,6 +467,11 @@ public class BackgroundFetchJobServiceTest {
         @Override
         public boolean getFledgeBackgroundFetchEnabled() {
             return true;
+        }
+
+        @Override
+        public boolean getGlobalKillSwitch() {
+            return false;
         }
     }
 }

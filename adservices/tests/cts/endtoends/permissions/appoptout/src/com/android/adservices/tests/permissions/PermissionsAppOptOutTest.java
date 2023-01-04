@@ -22,6 +22,8 @@ import static org.junit.Assert.assertThrows;
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
+import android.adservices.adselection.AdSelectionFromOutcomesConfig;
+import android.adservices.adselection.AdSelectionFromOutcomesConfigFixture;
 import android.adservices.adselection.ReportImpressionRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
@@ -149,7 +151,7 @@ public class PermissionsAppOptOutTest {
     }
 
     @Test
-    public void testNoEnrollment_selectAds() {
+    public void testNoEnrollment_selectAds_adSelectionConfig() {
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfig(
                         AdTechIdentifier.fromString("seller.example.com"));
@@ -168,7 +170,7 @@ public class PermissionsAppOptOutTest {
     }
 
     @Test
-    public void testWithEnrollment_selectAds() {
+    public void testWithEnrollment_selectAds_adSelectionConfig() {
         // The "test.com" buyer is a pre-seeded enrolled ad tech
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfig(
@@ -186,6 +188,45 @@ public class PermissionsAppOptOutTest {
                 assertThrows(
                         ExecutionException.class,
                         () -> mAdSelectionClient.selectAds(adSelectionConfig).get());
+        assertThat(exception.getMessage()).isNotEqualTo(CALLER_NOT_AUTHORIZED);
+    }
+
+    @Test
+    public void testNoEnrollment_selectAds_adSelectionFromOutcomesConfig() {
+        AdSelectionFromOutcomesConfig config =
+                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
+                        AdTechIdentifier.fromString("seller.example.com"));
+
+        AdSelectionClient mAdSelectionClient =
+                new AdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
+        ExecutionException exception =
+                assertThrows(
+                        ExecutionException.class, () -> mAdSelectionClient.selectAds(config).get());
+        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+    }
+
+    @Test
+    public void testWithEnrollment_selectAds_adSelectionFromOutcomesConfig() {
+        // The "test.com" buyer is a pre-seeded enrolled ad tech
+        AdSelectionFromOutcomesConfig config =
+                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
+                        AdTechIdentifier.fromString("test.com"));
+
+        AdSelectionClient mAdSelectionClient =
+                new AdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
+        // When the ad tech is properly enrolled, just verify that the error thrown is not due to
+        // enrollment
+        ExecutionException exception =
+                assertThrows(
+                        ExecutionException.class, () -> mAdSelectionClient.selectAds(config).get());
         assertThat(exception.getMessage()).isNotEqualTo(CALLER_NOT_AUTHORIZED);
     }
 

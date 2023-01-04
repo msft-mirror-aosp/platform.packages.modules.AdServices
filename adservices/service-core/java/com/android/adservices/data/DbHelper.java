@@ -48,7 +48,9 @@ public class DbHelper extends SQLiteOpenHelper {
     // Version 5: Add TopicContributors Table for Topics API, guarded by feature flag.
     public static final int DATABASE_VERSION_V5 = 5;
 
-    static final int CURRENT_DATABASE_VERSION = 3;
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
+    public static final int CURRENT_DATABASE_VERSION = 3;
+
     private static final String DATABASE_NAME = "adservices.db";
 
     private static DbHelper sSingleton = null;
@@ -104,9 +106,7 @@ public class DbHelper extends SQLiteOpenHelper {
         db.execSQL("PRAGMA foreign_keys=ON");
     }
 
-    /**
-     * Wraps getReadableDatabase to catch SQLiteException and log error.
-     */
+    /** Wraps getReadableDatabase to catch SQLiteException and log error. */
     @Nullable
     public SQLiteDatabase safeGetReadableDatabase() {
         try {
@@ -144,6 +144,12 @@ public class DbHelper extends SQLiteOpenHelper {
                     "Topics DB Upgrade is not performed! oldVersion: %d, newVersion: %d.",
                     oldVersion, newVersion);
         }
+    }
+
+    @Override
+    public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        LogUtil.d("Downgrade database version from %d to %d.", oldVersion, newVersion);
+        // prevent parent class to throw SQLiteException
     }
 
     public long getDbFileSize() {

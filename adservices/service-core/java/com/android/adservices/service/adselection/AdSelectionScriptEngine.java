@@ -24,7 +24,6 @@ import static com.google.common.util.concurrent.Futures.transform;
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdWithBid;
-import android.adservices.adselection.Tracing;
 import android.adservices.common.AdData;
 import android.adservices.common.AdSelectionSignals;
 import android.annotation.NonNull;
@@ -36,6 +35,7 @@ import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
 import com.android.adservices.service.js.JSScriptEngine;
+import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
 import com.android.internal.annotations.VisibleForTesting;
