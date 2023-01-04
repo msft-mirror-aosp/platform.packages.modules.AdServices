@@ -60,4 +60,20 @@ public class AdSelectionDatabaseMigrationTest {
         c.moveToFirst();
         assertEquals(adSelectionOverridesTable, c.getString(c.getColumnIndex(COLUMN_NAME_NAME)));
     }
+
+    @Test
+    public void testMigrate2To3() throws IOException {
+        String registeredAdEventsTable = "registered_ad_events";
+
+        SupportSQLiteDatabase db = helper.createDatabase(TEST_DB, 2);
+        Cursor c = db.query(String.format(QUERY_TABLES_FROM_SQL_MASTER, registeredAdEventsTable));
+        assertEquals(0, c.getCount());
+
+        // Re-open the database with version 3 and provide MIGRATION_2_3 as the migration process.
+        db = helper.runMigrationsAndValidate(TEST_DB, 3, true);
+        c = db.query(String.format(QUERY_TABLES_FROM_SQL_MASTER, registeredAdEventsTable));
+        assertEquals(1, c.getCount());
+        c.moveToFirst();
+        assertEquals(registeredAdEventsTable, c.getString(c.getColumnIndex(COLUMN_NAME_NAME)));
+    }
 }

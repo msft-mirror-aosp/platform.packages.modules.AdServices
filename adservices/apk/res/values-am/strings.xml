@@ -36,10 +36,8 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"አንድ መተግበሪያ የAdService የማስቻል ሁኔታ ለውጥ ኤፒአይን እንዲደርስ ያስችላል።"</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"የAdService የማስቻል ሁኔታ ኤፒአይ መዳረሻ"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"አንድ መተግበሪያ የAdService የማስቻል ሁኔታ ኤፒአይን እንዲደርስ ያስችላል።"</string>
-    <!-- no translation found for permlab_accessAdServicesManager (4816332609066703740) -->
-    <skip />
-    <!-- no translation found for permdesc_accessAdServicesManager (2619300431637689524) -->
-    <skip />
+    <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"የAdServicesManager ኤፒአዮች መዳረሻ"</string>
+    <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"አንድ መተግበሪያ የAdServicesManager ኤፒአዮችን እንዲደርስ ይፈቅዳል።"</string>
     <string name="app_label" msgid="5985320129629013968">"የAndroid ስርዓት"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"የAndroid ማስታወቂያዎች የግላዊነት ቅድመ ይሁንታን ይቀላቀሉ"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android መተግበሪያዎች ይበልጥ ግላዊ የሆኑ ለእርስዎ ማስታወቂያዎችን የሚያሳዩባቸው መንገዶችን እያሰሰ ነው"</string>
@@ -180,7 +178,7 @@
     <string name="topic10066" msgid="5984396525358003559">"የቴሌቪዥን ሳይሳዊ ልብወለድ እና ምናባዊ ትርዒቶች"</string>
     <string name="topic10067" msgid="6404637729885733437">"ምስላዊ ሥነ-ጥበብ እና ንድፍ"</string>
     <string name="topic10068" msgid="4589856961950168493">"ንድፍ"</string>
-    <string name="topic10069" msgid="3129378082034151991">"ስዕል"</string>
+    <string name="topic10069" msgid="3129378082034151991">"ሥዕል"</string>
     <string name="topic10070" msgid="2570256568661324147">"የፎቶግራፍ እና ዲጂታል ሥነ ጥበባት"</string>
     <string name="topic10071" msgid="1288722040962471254">"መኪናዎች እና ተሸከርካሪዎች"</string>
     <string name="topic10072" msgid="9155509766616567261">"የጭነት መኪናዎች እና ተጎታቾች"</string>
@@ -362,7 +360,7 @@
     <string name="topic10248" msgid="8471339627212674032">"የቪድዮ ጨዋታ ማሻሻያዎች እና ተጨማሪዎች"</string>
     <string name="topic10249" msgid="5076706536204559962">"ትምህርታዊ ጨዋታዎች"</string>
     <string name="topic10250" msgid="6083030595195401083">"ቤተሰብ ተኮር ጨዋታዎች እና እንቅስቃሴዎች"</string>
-    <string name="topic10251" msgid="99237306730665104">"ስዕል መሳል እና ማቅለም"</string>
+    <string name="topic10251" msgid="99237306730665104">"ሥዕል መሳል እና ማቅለም"</string>
     <string name="topic10252" msgid="6543039575961394064">"የአለባበስ እና የፋሽን ጨዋታዎች"</string>
     <string name="topic10253" msgid="566596668186874227">"እንቆቅልሾች እና የአዕምሮ ጨዋታዎች"</string>
     <string name="topic10254" msgid="5732147617072023634">"የሚና ጨዋታዎች"</string>

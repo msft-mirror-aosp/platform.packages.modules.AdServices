@@ -46,11 +46,11 @@ public final class AggregateTriggerDataTest {
 
         assertEquals(attributionTriggerData.getKey().longValue(), 5L);
         assertEquals(attributionTriggerData.getSourceKeys().size(), 3);
-        assertTrue(attributionTriggerData.getFilter().isPresent());
-        FilterMap filterMap = attributionTriggerData.getFilter().get();
-        FilterMap nonFilteredData = attributionTriggerData.getNotFilter().get();
-        assertEquals(2, filterMap.getAttributionFilterMap().get("ctid").size());
-        assertEquals(1, nonFilteredData.getAttributionFilterMap().get("nctid").size());
+        assertTrue(attributionTriggerData.getFilterSet().isPresent());
+        List<FilterMap> filterSet = attributionTriggerData.getFilterSet().get();
+        List<FilterMap> nonFilteredSet = attributionTriggerData.getNotFilterSet().get();
+        assertEquals(2, filterSet.get(0).getAttributionFilterMap().get("ctid").size());
+        assertEquals(1, nonFilteredSet.get(0).getAttributionFilterMap().get("nctid").size());
     }
 
     @Test
@@ -59,8 +59,8 @@ public final class AggregateTriggerDataTest {
                 new AggregateTriggerData.Builder().build();
         assertNull(attributionTriggerData.getKey());
         assertEquals(attributionTriggerData.getSourceKeys().size(), 0);
-        assertFalse(attributionTriggerData.getFilter().isPresent());
-        assertFalse(attributionTriggerData.getNotFilter().isPresent());
+        assertFalse(attributionTriggerData.getFilterSet().isPresent());
+        assertFalse(attributionTriggerData.getNotFilterSet().isPresent());
     }
 
     @Test
@@ -99,8 +99,8 @@ public final class AggregateTriggerDataTest {
                                 new HashSet<>(
                                         Arrays.asList(
                                                 "campCounts", "campGeoCounts", "campGeoValue")))
-                        .setFilter(filterMap)
-                        .setNotFilter(nonFilterMap)
+                        .setFilterSet(List.of(filterMap))
+                        .setNotFilterSet(List.of(nonFilterMap))
                         .build();
         final Set<AggregateTriggerData> dataSet1 = Set.of(data1);
         final Set<AggregateTriggerData> dataSet2 = Set.of(data2);
@@ -128,8 +128,8 @@ public final class AggregateTriggerDataTest {
                 .setKey(BigInteger.valueOf(5L))
                 .setSourceKeys(
                         new HashSet<>(Arrays.asList("campCounts", "campGeoCounts", "campGeoValue")))
-                .setFilter(filterMap)
-                .setNotFilter(nonFilterMap)
+                .setFilterSet(List.of(filterMap))
+                .setNotFilterSet(List.of(nonFilterMap))
                 .build();
     }
 }

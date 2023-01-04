@@ -31,7 +31,7 @@ public class FileUtil {
     public static final int CONVERSION_FACTOR_FROM_BYTES_TO_KB = 1024;
 
     /** Calculate the storage of SDK iteratively */
-    public static float getStorageInKbForPaths(List<String> paths) {
+    public static int getStorageInKbForPaths(List<String> paths) {
         float storageSize = 0;
         for (int i = 0; i < paths.size(); i++) {
             final File dir = new File(paths.get(i));
@@ -60,7 +60,7 @@ public class FileUtil {
         return sizeInBytes;
     }
 
-    private static float convertByteToKb(float storageSize) {
-        return storageSize / CONVERSION_FACTOR_FROM_BYTES_TO_KB;
+    private static int convertByteToKb(float storageSize) {
+        return (int) (storageSize / CONVERSION_FACTOR_FROM_BYTES_TO_KB);
     }
 }

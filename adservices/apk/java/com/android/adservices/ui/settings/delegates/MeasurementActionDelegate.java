@@ -15,19 +15,19 @@
  */
 package com.android.adservices.ui.settings.delegates;
 
-import static com.android.adservices.ui.settings.viewmodels.MeasurementViewModel.MeasurementViewModelUiEvent.RESET_MEASUREMENT;
-
 import android.view.View;
 
 import androidx.lifecycle.Observer;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.PhFlags;
 import com.android.adservices.ui.settings.DialogManager;
 import com.android.adservices.ui.settings.activities.MeasurementActivity;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsMeasurementFragment;
 import com.android.adservices.ui.settings.viewmodels.MeasurementViewModel;
 import com.android.adservices.ui.settings.viewmodels.MeasurementViewModel.MeasurementViewModelUiEvent;
+import com.android.settingslib.widget.MainSwitchBar;
 
 /**
  * Delegate class that helps AdServices Settings fragments to respond to all view model/user events.
@@ -51,14 +51,27 @@ public class MeasurementActionDelegate extends BaseActionDelegate {
                         return;
                     }
                     try {
-                        if (event == RESET_MEASUREMENT) {
-                            logUIAction(ActionEnum.RESET_TOPIC_SELECTED);
-                            if (PhFlags.getInstance().getUIDialogsFeatureEnabled()) {
-                                DialogManager.showResetMeasurementDialog(
-                                        mMeasurementActivity, mMeasurementViewModel);
-                            } else {
-                                mMeasurementViewModel.resetMeasurement();
-                            }
+                        switch (event) {
+                            case SWITCH_ON_MEASUREMENT:
+                                mMeasurementViewModel.setMeasurementConsent(true);
+                                break;
+                            case SWITCH_OFF_MEASUREMENT:
+                                if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
+                                    DialogManager.showMeasurementOptOutDialog(
+                                            mMeasurementActivity, mMeasurementViewModel);
+                                } else {
+                                    mMeasurementViewModel.setMeasurementConsent(false);
+                                }
+                                break;
+                            case RESET_MEASUREMENT:
+                                logUIAction(ActionEnum.RESET_TOPIC_SELECTED);
+                                if (PhFlags.getInstance().getUIDialogsFeatureEnabled()) {
+                                    DialogManager.showResetMeasurementDialog(
+                                            mMeasurementActivity, mMeasurementViewModel);
+                                } else {
+                                    mMeasurementViewModel.resetMeasurement();
+                                }
+                                break;
                         }
                     } finally {
                         mMeasurementViewModel.uiEventHandled();
@@ -73,6 +86,7 @@ public class MeasurementActionDelegate extends BaseActionDelegate {
      */
     public void initMeasurementFragment(AdServicesSettingsMeasurementFragment fragment) {
         mMeasurementActivity.setTitle(R.string.settingsUI_measurement_view_title);
+        configureMeasurementConsentSwitch(fragment);
         configureResetMeasurementButton(fragment);
     }
 
@@ -82,5 +96,16 @@ public class MeasurementActionDelegate extends BaseActionDelegate {
 
         resetMeasurementButton.setOnClickListener(
                 view -> mMeasurementViewModel.resetMeasurementButtonClickHandler());
+    }
+
+    private void configureMeasurementConsentSwitch(AdServicesSettingsMeasurementFragment fragment) {
+        MainSwitchBar measurementSwitchBar =
+                mMeasurementActivity.findViewById(R.id.measurement_switch_bar);
+        mMeasurementViewModel
+                .getMeasurementConsent()
+                .observe(fragment, measurementSwitchBar::setChecked);
+        measurementSwitchBar.setOnClickListener(
+                switchBar ->
+                        mMeasurementViewModel.consentSwitchClickHandler((MainSwitchBar) switchBar));
     }
 }

@@ -42,7 +42,7 @@ public class FileUtilUnitTest {
     @Before
     public void setup() {
         Context context = InstrumentationRegistry.getInstrumentation().getContext();
-        mTestDir = context.getDataDir().getPath();
+        mTestDir = context.getDir("test_dir", Context.MODE_PRIVATE).getPath();
     }
 
     @After
@@ -52,7 +52,7 @@ public class FileUtilUnitTest {
 
     @Test
     public void testGetStorageInformationForPaths_noFiles() {
-        assertThat(FileUtil.getStorageInKbForPaths(Arrays.asList(mTestDir))).isEqualTo(0.0F);
+        assertThat(FileUtil.getStorageInKbForPaths(Arrays.asList(mTestDir))).isEqualTo(0);
     }
 
     @Test
@@ -65,7 +65,7 @@ public class FileUtilUnitTest {
             createFile(filePath, files.get(i), /*sizeInMb=*/ 1);
         }
 
-        assertThat(FileUtil.getStorageInKbForPaths(Arrays.asList(filePath))).isEqualTo(2048F);
+        assertThat(FileUtil.getStorageInKbForPaths(Arrays.asList(filePath))).isEqualTo(2048);
     }
 
     private void createFile(String path, String filename, int sizeInMb) throws IOException {

@@ -64,6 +64,7 @@ public class NotificationActivityUiAutomatorTest {
     private static Intent sIntent;
     private MockitoSession mStaticMockSession;
 
+    // TODO(b/261216850): Migrate this NotificationActivity to non-mock test
     @Mock private Flags mMockFlags;
 
     @Before
@@ -78,11 +79,15 @@ public class NotificationActivityUiAutomatorTest {
                         .strictness(Strictness.WARN)
                         .initMocks(this)
                         .startMocking();
+
         doReturn(true).when(mMockFlags).getUIDialogsFeatureEnabled();
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         ConsentManager consentManager = mock(ConsentManager.class);
         ExtendedMockito.doReturn(consentManager)
                 .when(() -> ConsentManager.getInstance(any(Context.class)));
+
+        ExtendedMockito.doReturn(false).when(mMockFlags).getGaUxFeatureEnabled();
+
         ExtendedMockito.doNothing()
                 .when(() -> BackgroundJobsManager.scheduleAllBackgroundJobs(any(Context.class)));
 
@@ -104,10 +109,14 @@ public class NotificationActivityUiAutomatorTest {
     }
 
     @After
-    public void teardown() {
+    public void teardown() throws IOException {
         if (mStaticMockSession != null) {
             mStaticMockSession.finishMocking();
         }
+        // kill the previous apps to avoid starting the same locality as the previous activity in
+        // the next test
+        Runtime.getRuntime()
+                .exec(new String[] {"am", "force-stop", "com.android.adservices.tests.ui"});
     }
 
     @Test
@@ -157,6 +166,108 @@ public class NotificationActivityUiAutomatorTest {
         assertThat(acceptedTitle.exists()).isTrue();
     }
 
+    @Test
+    public void notificationEuGaTest() throws UiObjectNotFoundException, InterruptedException {
+        ExtendedMockito.doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
+
+        startActivity(true);
+
+        UiObject notificationEuGaTitle = getElement(R.string.notificationUI_header_ga_title_eu);
+        assertThat(notificationEuGaTitle.exists()).isTrue();
+
+        UiObject leftControlButton =
+                getElement(R.string.notificationUI_left_control_button_text_eu);
+        UiObject rightControlButton =
+                getElement(R.string.notificationUI_right_control_button_text_eu);
+        UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
+
+        verifyControlsAndMoreButtonAreDisplayed(leftControlButton, rightControlButton, moreButton);
+    }
+
+    @Test
+    public void notificationRowGaTest() throws UiObjectNotFoundException, InterruptedException {
+        ExtendedMockito.doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
+
+        startActivity(false);
+
+        UiObject notificationGaTitle = getElement(R.string.notificationUI_header_ga_title);
+        assertThat(notificationGaTitle.exists()).isTrue();
+
+        UiObject leftControlButton = getElement(R.string.notificationUI_left_control_button_text);
+        UiObject rightControlButton = getElement(R.string.notificationUI_right_control_button_text);
+        UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
+
+        verifyControlsAndMoreButtonAreDisplayed(leftControlButton, rightControlButton, moreButton);
+    }
+
+    @Test
+    public void acceptedConfirmationScreenGaTest()
+            throws UiObjectNotFoundException, InterruptedException {
+        ExtendedMockito.doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
+
+        startActivity(true);
+
+        UiObject leftControlButton =
+                getElement(R.string.notificationUI_left_control_button_text_eu);
+        UiObject rightControlButton =
+                getElement(R.string.notificationUI_right_control_button_text_eu);
+        UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
+
+        verifyControlsAndMoreButtonAreDisplayed(leftControlButton, rightControlButton, moreButton);
+
+        rightControlButton.click();
+
+        UiObject acceptedTitle = getElement(R.string.notificationUI_confirmation_ga_title_eu);
+        assertThat(acceptedTitle.exists()).isTrue();
+    }
+
+    @Test
+    public void declinedConfirmationScreenGaTest()
+            throws UiObjectNotFoundException, InterruptedException {
+        ExtendedMockito.doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
+
+        startActivity(true);
+
+        UiObject leftControlButton =
+                getElement(R.string.notificationUI_left_control_button_text_eu);
+        UiObject rightControlButton =
+                getElement(R.string.notificationUI_right_control_button_text_eu);
+        UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
+
+        verifyControlsAndMoreButtonAreDisplayed(leftControlButton, rightControlButton, moreButton);
+
+        rightControlButton.click();
+
+        UiObject acceptedTitle = getElement(R.string.notificationUI_confirmation_ga_title_eu);
+        assertThat(acceptedTitle.exists()).isTrue();
+    }
+
+    private void verifyControlsAndMoreButtonAreDisplayed(
+            UiObject leftControlButton, UiObject rightControlButton, UiObject moreButton)
+            throws UiObjectNotFoundException, InterruptedException {
+        UiObject scrollView =
+                sDevice.findObject(new UiSelector().className("android.widget.ScrollView"));
+
+        if (scrollView.isScrollable()) {
+            // there should be a more button
+            assertThat(leftControlButton.exists()).isFalse();
+            assertThat(rightControlButton.exists()).isFalse();
+            assertThat(moreButton.exists()).isTrue();
+
+            while (moreButton.exists()) {
+                moreButton.click();
+                Thread.sleep(2000);
+            }
+            assertThat(leftControlButton.exists()).isTrue();
+            assertThat(rightControlButton.exists()).isTrue();
+            assertThat(moreButton.exists()).isFalse();
+        } else {
+            assertThat(leftControlButton.exists()).isTrue();
+            assertThat(rightControlButton.exists()).isTrue();
+            assertThat(moreButton.exists()).isFalse();
+        }
+    }
+
     private void startActivity(boolean isEUActivity) {
         // Send intent
         sIntent.putExtra("isEUDevice", isEUActivity);
@@ -173,4 +284,5 @@ public class NotificationActivityUiAutomatorTest {
     private UiObject getElement(int resId) {
         return sDevice.findObject(new UiSelector().text(getString(resId)));
     }
+
 }

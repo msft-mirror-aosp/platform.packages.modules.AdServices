@@ -23,7 +23,6 @@ import static android.adservices.common.AdServicesCommonManager.AD_SERVICES_COMM
 import static android.adservices.customaudience.CustomAudienceManager.CUSTOM_AUDIENCE_SERVICE;
 import static android.adservices.measurement.MeasurementManager.MEASUREMENT_SERVICE;
 import static android.adservices.topics.TopicsManager.TOPICS_SERVICE;
-import static android.app.adservices.AdServicesManager.AD_SERVICES_SYSTEM_SERVICE;
 
 import android.adservices.adid.AdIdManager;
 import android.adservices.adselection.AdSelectionManager;
@@ -34,8 +33,6 @@ import android.adservices.measurement.MeasurementManager;
 import android.adservices.topics.TopicsManager;
 import android.annotation.SystemApi;
 import android.app.SystemServiceRegistry;
-import android.app.adservices.AdServicesManager;
-import android.app.adservices.IAdServicesManager;
 import android.app.sdksandbox.SdkSandboxSystemServiceRegistry;
 import android.content.Context;
 
@@ -118,13 +115,5 @@ public class AdServicesFrameworkInitializer {
         SystemServiceRegistry.registerContextAwareService(AD_SERVICES_COMMON_SERVICE,
                 AdServicesCommonManager.class,
                 (c) -> new AdServicesCommonManager(c));
-
-        LogUtil.d("Registering Adservices's AdServicesManager.");
-        SystemServiceRegistry.registerContextAwareService(
-                AD_SERVICES_SYSTEM_SERVICE,
-                AdServicesManager.class,
-                (context, service) ->
-                        new AdServicesManager(
-                                context, IAdServicesManager.Stub.asInterface(service)));
     }
 }
