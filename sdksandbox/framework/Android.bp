@@ -41,6 +41,17 @@ filegroup {
     path: "java",
 }
 
+filegroup {
+    name: "framework-sdksandbox-jarjar",
+    srcs: ["jarjar_rules.txt"]
+}
+
+java_defaults {
+    name: "framework-sdksandbox-jarjar-defaults",
+    jarjar_rules: ":framework-sdksandbox-jarjar",
+    static_libs: ["modules-utils-build"],
+}
+
 java_sdk_library {
     name: "framework-sdksandbox",
     srcs: [":framework-sdksandbox-sources"],
@@ -52,6 +63,7 @@ java_sdk_library {
     defaults: [
         "framework-module-defaults",
         "sdksandbox-java-defaults",
+        "framework-sdksandbox-jarjar-defaults",
     ],
     impl_library_visibility: [
         "//packages/modules/AdServices:__subpackages__",

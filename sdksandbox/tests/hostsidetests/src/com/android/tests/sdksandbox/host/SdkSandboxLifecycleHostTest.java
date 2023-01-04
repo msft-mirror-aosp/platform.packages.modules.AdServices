@@ -18,6 +18,9 @@ package com.android.tests.sdksandbox.host;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assume.assumeTrue;
+
+import com.android.modules.utils.build.testing.DeviceSdkLevel;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
@@ -39,11 +42,13 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
 
     private static final String APP_ACTIVITY = "SdkSandboxTestActivity";
     private static final String APP_2_ACTIVITY = "SdkSandboxTestActivity2";
+    private static final String APP_2_EMPTY_ACTIVITY = "SdkSandboxEmptyActivity";
 
     private static final String CODE_APK = "TestCodeProvider.apk";
     private static final String CODE_APK_2 = "TestCodeProvider2.apk";
 
     private static final String APP_2_PROCESS_NAME = "com.android.sdksandbox.processname";
+    private static final String APP_2_PROCESS_NAME_2 = "com.android.sdksandbox.emptyactivity";
     private static final String SANDBOX_2_PROCESS_NAME = APP_2_PROCESS_NAME
                                                             + "_sdk_sandbox";
     /**
@@ -56,6 +61,7 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
             APP_SHARED_2_PACKAGE + "_sdk_sandbox";
 
     private boolean mWasRoot;
+    private DeviceSdkLevel mDeviceSdkLevel;
 
     private void startActivity(String pkg, String activity) throws Exception {
         getDevice().executeShellCommand(String.format("am start -W -n %s/.%s", pkg, activity));
@@ -73,6 +79,8 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
 
         mWasRoot = getDevice().isAdbRoot();
         getDevice().enableAdbRoot();
+
+        mDeviceSdkLevel = new DeviceSdkLevel(getDevice());
     }
 
     @After
@@ -196,18 +204,61 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
         try {
             getDevice()
                     .executeShellCommand("device_config put adservices disable_sdk_sandbox false");
-            startActivity(APP_PACKAGE, APP_ACTIVITY);
+            startActivity(APP_2_PACKAGE, APP_2_ACTIVITY);
             String processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
-            assertThat(processDump).contains(APP_PACKAGE + '\n');
-            assertThat(processDump).contains(SANDBOX_1_PROCESS_NAME);
+            assertThat(processDump).contains(APP_2_PROCESS_NAME + '\n');
+            assertThat(processDump).contains(SANDBOX_2_PROCESS_NAME);
 
             getDevice()
                     .executeShellCommand("device_config put adservices disable_sdk_sandbox true");
-            waitForProcessDeath(SANDBOX_1_PROCESS_NAME);
+            waitForProcessDeath(SANDBOX_2_PROCESS_NAME);
+            if (mDeviceSdkLevel.isDeviceAtLeastU()) {
+                waitForProcessDeath(APP_2_PROCESS_NAME);
+            }
 
             processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
-            assertThat(processDump).contains(APP_PACKAGE + '\n');
-            assertThat(processDump).doesNotContain(SANDBOX_1_PROCESS_NAME);
+            // In U+ the app should be killed when the sandbox is killed.
+            if (mDeviceSdkLevel.isDeviceAtLeastU()) {
+                assertThat(processDump).doesNotContain(APP_2_PROCESS_NAME + '\n');
+            } else {
+                assertThat(processDump).contains(APP_2_PROCESS_NAME + '\n');
+            }
+            assertThat(processDump).doesNotContain(SANDBOX_2_PROCESS_NAME);
+        } finally {
+            getDevice().executeShellCommand("cmd sdk_sandbox set-state --enabled");
+        }
+    }
+
+    @Test
+    public void testSpecificAppProcessIsKilledOnSandboxDeath() throws Exception {
+        assumeTrue(mDeviceSdkLevel.isDeviceAtLeastU());
+
+        try {
+            getDevice()
+                    .executeShellCommand("device_config put adservices disable_sdk_sandbox false");
+
+            // Start two activities running in two different processes for the same app. One
+            // activity loads an SDK while the other does nothing.
+            startActivity(APP_2_PACKAGE, APP_2_EMPTY_ACTIVITY);
+            startActivity(APP_2_PACKAGE, APP_2_ACTIVITY);
+            String processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
+            assertThat(processDump).contains(APP_2_PROCESS_NAME + '\n');
+            assertThat(processDump).contains(APP_2_PROCESS_NAME_2 + '\n');
+            assertThat(processDump).contains(SANDBOX_2_PROCESS_NAME);
+
+            // Kill the sandbox.
+            getDevice()
+                    .executeShellCommand("device_config put adservices disable_sdk_sandbox true");
+            waitForProcessDeath(SANDBOX_2_PROCESS_NAME);
+            waitForProcessDeath(APP_2_PROCESS_NAME + '\n');
+
+            // Only the app process which loaded the SDK should die. The other app process should
+            // still be alive.
+            processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
+            assertThat(processDump).doesNotContain(APP_2_PROCESS_NAME + '\n');
+            assertThat(processDump).doesNotContain(SANDBOX_2_PROCESS_NAME);
+            assertThat(processDump).contains(APP_2_PROCESS_NAME_2 + '\n');
+
         } finally {
             getDevice().executeShellCommand("cmd sdk_sandbox set-state --enabled");
         }
