@@ -42,16 +42,16 @@ import java.util.Set;
 
 public class TriggerTest {
     private static final String TOP_LEVEL_FILTERS_JSON_STRING =
-            "{\n"
+            "[{\n"
                     + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                     + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
-                    + "}\n";
+                    + "}]\n";
 
     private static final String TOP_LEVEL_FILTERS_JSON_STRING_X =
-            "{\n"
+            "[{\n"
                     + "  \"key_1x\": [\"value_1\", \"value_2\"],\n"
                     + "  \"key_2x\": [\"value_1\", \"value_2\"]\n"
-                    + "}\n";
+                    + "}]\n";
 
     private static final String EVENT_TRIGGERS =
             "[\n"
@@ -59,10 +59,10 @@ public class TriggerTest {
                     + "  \"trigger_data\": \"1\",\n"
                     + "  \"priority\": \"345678\",\n"
                     + "  \"deduplication_key\": \"2345678\",\n"
-                    + "  \"filters\": {\n"
+                    + "  \"filters\": [{\n"
                     + "    \"source_type\": [\"navigation\"],\n"
                     + "    \"key_1\": [\"value_1\"] \n"
-                    + "   }\n"
+                    + "   }]\n"
                     + "}"
                     + "]\n";
 
@@ -104,6 +104,8 @@ public class TriggerTest {
                         .setEventTriggers(EVENT_TRIGGERS)
                         .setTriggerTime(5L)
                         .setIsDebugReporting(true)
+                        .setAdIdPermission(true)
+                        .setArDebugPermission(true)
                         .setStatus(Trigger.Status.PENDING)
                         .setRegistrant(Uri.parse("android-app://com.example.abc"))
                         .setAggregateTriggerData(aggregateTriggerDatas.toString())
@@ -123,6 +125,8 @@ public class TriggerTest {
                         .setEventTriggers(EVENT_TRIGGERS)
                         .setTriggerTime(5L)
                         .setIsDebugReporting(true)
+                        .setAdIdPermission(true)
+                        .setArDebugPermission(true)
                         .setStatus(Trigger.Status.PENDING)
                         .setRegistrant(Uri.parse("android-app://com.example.abc"))
                         .setAggregateTriggerData(aggregateTriggerDatas.toString())
@@ -327,8 +331,8 @@ public class TriggerTest {
         JSONObject jsonObject1 = new JSONObject();
         jsonObject1.put("key_piece", "0x400");
         jsonObject1.put("source_keys", new JSONArray(Arrays.asList("campaignCounts")));
-        jsonObject1.put("filters", createFilterJSONObject());
-        jsonObject1.put("not_filters", createFilterJSONObject());
+        jsonObject1.put("filters", createFilterJSONArray());
+        jsonObject1.put("not_filters", createFilterJSONArray());
         JSONObject jsonObject2 = new JSONObject();
         jsonObject2.put("key_piece", "0xA80");
         jsonObject2.put("source_keys", new JSONArray(Arrays.asList("geoValue", "noMatch")));
@@ -352,12 +356,12 @@ public class TriggerTest {
         assertEquals(aggregateTrigger.getTriggerData().get(0).getKey().intValue(), 1024);
         assertTrue(aggregateTrigger.getTriggerData().get(0)
                 .getSourceKeys().contains("campaignCounts"));
-        assertTrue(aggregateTrigger.getTriggerData().get(0).getFilter().isPresent());
-        assertEquals(aggregateTrigger.getTriggerData().get(0).getFilter()
-                .get().getAttributionFilterMap().size(), 2);
-        assertTrue(aggregateTrigger.getTriggerData().get(0).getNotFilter().isPresent());
-        assertEquals(aggregateTrigger.getTriggerData().get(0).getNotFilter()
-                .get().getAttributionFilterMap().size(), 2);
+        assertTrue(aggregateTrigger.getTriggerData().get(0).getFilterSet().isPresent());
+        assertEquals(aggregateTrigger.getTriggerData().get(0).getFilterSet().get()
+                .get(0).getAttributionFilterMap().size(), 2);
+        assertTrue(aggregateTrigger.getTriggerData().get(0).getNotFilterSet().isPresent());
+        assertEquals(aggregateTrigger.getTriggerData().get(0).getNotFilterSet().get()
+                .get(0).getAttributionFilterMap().size(), 2);
 
         assertEquals(aggregateTrigger.getTriggerData().get(1).getKey().intValue(), 2688);
         assertEquals(aggregateTrigger.getTriggerData().get(1).getSourceKeys().size(), 2);
@@ -438,20 +442,21 @@ public class TriggerTest {
     @Test
     public void parseEventTriggers() throws JSONException {
         // setup
-        JSONObject filters1 =
+        JSONObject filtersMap1 =
                 new JSONObject(
                         "{\n"
                                 + "    \"filter_key_1\": [\"filter_value_1\"], \n"
                                 + "    \"filter_key_2\": [\"filter_value_2\"] \n"
                                 + "   }");
-        JSONObject notFilters1 =
+        JSONObject notFiltersMap1 =
                 new JSONObject(
                         "{\n"
                                 + "    \"not_filter_key_1\": [\"not_filter_value_1\", "
                                 + "\"not_filter_value_2\"]"
                                 + "   }");
-        JSONObject notFilters2 =
+        JSONObject notFiltersMap2 =
                 new JSONObject("{\n" + "    \"key_1\": [\"value_1_x\"] \n" + "   }");
+
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
@@ -462,49 +467,47 @@ public class TriggerTest {
                                         + "  \"trigger_data\": \"2\",\n"
                                         + "  \"priority\": \"2\",\n"
                                         + "  \"deduplication_key\": \"2\",\n"
-                                        + "  \"filters\": {\n"
+                                        + "  \"filters\": [{\n"
                                         + "    \"filter_key_1\": [\"filter_value_1\"], \n"
                                         + "    \"filter_key_2\": [\"filter_value_2\"] \n"
-                                        + "   },\n"
-                                        + "  \"not_filters\": {\n"
+                                        + "   }],\n"
+                                        + "  \"not_filters\": [{\n"
                                         + "    \"not_filter_key_1\": [\"not_filter_value_1\", "
                                         + "\"not_filter_value_2\"]"
-                                        + "   }\n"
+                                        + "   }]\n"
                                         + "},"
                                         + "{\n"
                                         + "  \"trigger_data\": \"3\",\n"
                                         + "  \"priority\": \"3\",\n"
                                         + "  \"deduplication_key\": \"3\",\n"
-                                        + "  \"not_filters\": {\n"
+                                        + "  \"not_filters\": [{\n"
                                         + "    \"key_1\": [\"value_1_x\"] \n"
-                                        + "   }\n"
+                                        + "   }]\n"
                                         + "}"
                                         + "]\n")
                         .setTriggerTime(234324L)
                         .build();
         EventTrigger eventTrigger1 =
-                new EventTrigger.Builder()
+                new EventTrigger.Builder(new UnsignedLong(2L))
                         .setTriggerPriority(2L)
-                        .setTriggerData(new UnsignedLong(2L))
                         .setDedupKey(new UnsignedLong(2L))
-                        .setFilter(
+                        .setFilterSet(List.of(
                                 new FilterMap.Builder()
-                                        .buildFilterData(filters1)
-                                        .build())
-                        .setNotFilter(
+                                        .buildFilterData(filtersMap1)
+                                        .build()))
+                        .setNotFilterSet(List.of(
                                 new FilterMap.Builder()
-                                        .buildFilterData(notFilters1)
-                                        .build())
+                                        .buildFilterData(notFiltersMap1)
+                                        .build()))
                         .build();
         EventTrigger eventTrigger2 =
-                new EventTrigger.Builder()
+                new EventTrigger.Builder(new UnsignedLong(3L))
                         .setTriggerPriority(3L)
-                        .setTriggerData(new UnsignedLong(3L))
                         .setDedupKey(new UnsignedLong(3L))
-                        .setNotFilter(
+                        .setNotFilterSet(List.of(
                                 new FilterMap.Builder()
-                                        .buildFilterData(notFilters2)
-                                        .build())
+                                        .buildFilterData(notFiltersMap2)
+                                        .build()))
                         .build();
 
         // Action
@@ -542,11 +545,13 @@ public class TriggerTest {
                                 .build());
     }
 
-    private JSONObject createFilterJSONObject() throws JSONException {
+    private JSONArray createFilterJSONArray() throws JSONException {
         JSONObject filterMap = new JSONObject();
         filterMap.put("conversion_subdomain",
                 new JSONArray(Arrays.asList("electronics.megastore")));
         filterMap.put("product", new JSONArray(Arrays.asList("1234", "2345")));
-        return filterMap;
+        JSONArray filterSet = new JSONArray();
+        filterSet.put(filterMap);
+        return filterSet;
     }
 }

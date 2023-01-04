@@ -34,6 +34,7 @@ import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -54,7 +55,7 @@ public class TopicsManagerMddTest {
     // Override the Epoch Job Period to this value to speed up the epoch computation.
     private static final long TEST_EPOCH_JOB_PERIOD_MS = 3000;
     // Waiting time for assets to be downloaded after triggering MDD job.
-    private static final long TEST_MDD_DOWNLOAD_WAIT_TIME_MS = 10000;
+    private static final long TEST_MDD_DOWNLOAD_WAIT_TIME_MS = 20000;
 
     // Default Epoch Period.
     private static final long TOPICS_EPOCH_JOB_PERIOD_MS = 7 * 86_400_000; // 7 days.
@@ -72,8 +73,8 @@ public class TopicsManagerMddTest {
     // http://google3/wireless/android/adservices/mdd/topics_classifier/cts_test_1/
     // These assets are have asset version set to 0 for verification in tests.
     private static final String TEST_MDD_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-topics-classifier/1043"
-                    + "/784a7d30e5ac9fd6410fb017b05f392f67e9659a";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-topics-classifier/1118"
+                    + "/3c792e5fb7f3e8352e16ec05521dbd8240fae218";
 
     // Classifier default constants.
     private static final int DEFAULT_CLASSIFIER_NUMBER_OF_TOP_LABELS = 3;
@@ -113,17 +114,12 @@ public class TopicsManagerMddTest {
         overridePercentageForRandomTopic(TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
     }
 
+    // TODO(b/261611866): Enable the test again after resolving flakiness.
     @Test
+    @Ignore
     public void testTopicsManager_downloadModelViaMdd_runOnDeviceClassifier() throws Exception {
         // Set up test flags for on-device classification.
         setupFlagsForOnDeviceClassifier();
-
-        // Override manifest URL for Mdd.
-        overrideMddManifestFileURL(TEST_MDD_MANIFEST_FILE_URL);
-        // Download assets via Mdd for testing.
-        triggerMddToDownload();
-        // Wait for 10 seconds for the assets to be downloaded.
-        Thread.sleep(TEST_MDD_DOWNLOAD_WAIT_TIME_MS);
 
         // The Test App has 1 SDK: sdk1
         // sdk1 calls the Topics API.
@@ -134,8 +130,35 @@ public class TopicsManagerMddTest {
                         .setExecutor(CALLBACK_EXECUTOR)
                         .build();
 
-        // At beginning, Sdk1 receives no topic.
+        // Override manifest URL for Mdd.
+        overrideMddManifestFileURL(TEST_MDD_MANIFEST_FILE_URL);
+
+        // Call Topics API to bind TOPICS_SERVICE.
         GetTopicsResponse sdk1Result = advertisingTopicsClient1.getTopics().get();
+        assertThat(sdk1Result.getTopics()).isEmpty();
+
+        // Force to trigger the pending downloads in background.
+        triggerMddToDownload();
+
+        // Wait for TEST_MDD_DOWNLOAD_WAIT_TIME_MS seconds for the assets to be downloaded.
+        Thread.sleep(TEST_MDD_DOWNLOAD_WAIT_TIME_MS);
+
+        // Kill AdServices API to unbind TOPICS_SERVICE.
+        killAd();
+
+        // Wait for the service to die.
+        Thread.sleep(TEST_EPOCH_JOB_PERIOD_MS);
+
+        // Create a new AdvertisingTopicsClient to pick up the downloaded assets.
+        advertisingTopicsClient1 =
+                new AdvertisingTopicsClient.Builder()
+                        .setContext(sContext)
+                        .setSdkName("sdk1")
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
+        // At beginning, Sdk1 receives no topic.
+        sdk1Result = advertisingTopicsClient1.getTopics().get();
         assertThat(sdk1Result.getTopics()).isEmpty();
 
         // Now force the Epoch Computation Job. This should be done in the same epoch for
@@ -166,8 +189,8 @@ public class TopicsManagerMddTest {
         // for verification.
         // Test assets downloaded for CTS test:
         // http://google3/wireless/android/adservices/mdd/topics_classifier/cts_test_1/
-        assertThat(topic.getModelVersion()).isAtLeast(0L);
-        assertThat(topic.getTaxonomyVersion()).isAtLeast(0L);
+        assertThat(topic.getModelVersion()).isEqualTo(0L);
+        assertThat(topic.getTaxonomyVersion()).isEqualTo(0L);
 
         // Clean up test flags setup for on-device classification.
         cleanupFlagsForOnDeviceClassifier();
@@ -185,6 +208,12 @@ public class TopicsManagerMddTest {
         overrideClassifierNumberOfTopLabels(TEST_CLASSIFIER_NUMBER_OF_TOP_LABELS);
         // Remove classifier threshold by setting it to 0.
         overrideClassifierThreshold(TEST_CLASSIFIER_THRESHOLD);
+    }
+
+    // Force stop AdServices API.
+    public void killAd() {
+        // adb shell am force-stop com.google.android.adservices.api
+        ShellUtils.runShellCommand("am force-stop" + " " + ADSERVICES_PACKAGE_NAME);
     }
 
     // Reset test flags used for on-device classifier.

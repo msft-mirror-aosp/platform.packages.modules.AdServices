@@ -719,7 +719,7 @@ public class SdkSandboxTest {
         private float mSdkStorage;
 
         @Override
-        public void onStorageInfoComputed(float sharedStorage, float sdkStorage) {
+        public void onStorageInfoComputed(int sharedStorage, int sdkStorage) {
             mSharedStorage = sharedStorage;
             mSdkStorage = sdkStorage;
         }

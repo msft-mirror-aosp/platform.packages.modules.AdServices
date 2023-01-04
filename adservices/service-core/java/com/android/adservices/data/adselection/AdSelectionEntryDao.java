@@ -63,6 +63,15 @@ public interface AdSelectionEntryDao {
     void persistAdSelectionOverride(DBAdSelectionOverride adSelectionOverride);
 
     /**
+     * Adds a list of registered events to the table registered_ad_events
+     *
+     * @param registeredAdEvents is the list of {@link DBRegisteredAdEvent} objects to write to the
+     *     table registered_ad_events.
+     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void persistDBRegisteredAdEvents(List<DBRegisteredAdEvent> registeredAdEvents);
+
+    /**
      * Checks if there is a row in the ad selection data with the unique key ad_selection_id
      *
      * @param adSelectionId which is the key to query the corresponding ad selection data.
@@ -98,6 +107,22 @@ public interface AdSelectionEntryDao {
                     + " :adSelectionConfigId AND app_package_name = :appPackageName LIMIT 1)")
     boolean doesAdSelectionOverrideExistForPackageName(
             String adSelectionConfigId, String appPackageName);
+
+    /**
+     * Checks if there is a row in the registered_ad_events table that matches the primary key
+     * combination of adSelectionId, eventType, and destination
+     *
+     * @param adSelectionId serves as the primary key denoting the ad selection process this entry
+     *     id associated with
+     * @param eventType the event type
+     * @param destination denotes buyer, seller, etc.
+     */
+    @Query(
+            "SELECT EXISTS(SELECT 1 FROM registered_ad_events WHERE ad_selection_id ="
+                    + " :adSelectionId AND event_type = :eventType AND destination = :destination"
+                    + " LIMIT 1)")
+    boolean doesRegisteredAdEventExist(
+            long adSelectionId, String eventType, @DBRegisteredAdEvent.Destination int destination);
 
     /**
      * Get the ad selection entry by its unique key ad_selection_id.
@@ -204,6 +229,19 @@ public interface AdSelectionEntryDao {
                     + " :appPackageName")
     @Nullable
     String getTrustedScoringSignalsOverride(String adSelectionConfigId, String appPackageName);
+
+    /**
+     * Gets the event uri that was registered with the primary key combination of {@code
+     * adSelectionId}, {@code eventType}, and {@code destination}.
+     *
+     * @return event uri if exists.
+     */
+    @Query(
+            "SELECT event_uri FROM registered_ad_events WHERE ad_selection_id = :adSelectionId"
+                    + " AND event_type = :eventType AND destination = :destination")
+    @Nullable
+    Uri getRegisteredAdEventUri(
+            long adSelectionId, String eventType, @DBRegisteredAdEvent.Destination int destination);
 
     /**
      * Clean up expired adSelection entries if it is older than the given timestamp. If
@@ -342,4 +380,15 @@ public interface AdSelectionEntryDao {
             "DELETE FROM ad_selection_from_outcomes_overrides WHERE app_package_name = "
                     + ":appPackageName")
     void removeAllAdSelectionFromOutcomesOverrides(String appPackageName);
+
+    /**
+     * Clean up registered_event entries in batch if the {@code adSelectionId} no longer exists in
+     * the table ad_selection.
+     */
+    @Query(
+            "DELETE FROM registered_ad_events WHERE ad_selection_id NOT IN "
+                    + "( SELECT DISTINCT ad_selection_id "
+                    + "FROM ad_selection "
+                    + "WHERE ad_selection_id is NOT NULL)")
+    void removeExpiredRegisteredAdEvents();
 }

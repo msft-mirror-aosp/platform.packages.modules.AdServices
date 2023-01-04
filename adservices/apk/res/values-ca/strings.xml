@@ -36,10 +36,8 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"Permet que una aplicació accedeixi a l\'API de modificació de l\'estat d\'activació d\'AdService."</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"Accedir a l\'API d\'estat d\'activació d\'AdService"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Permet que una aplicació accedeixi a l\'API d\'estat d\'activació d\'AdService."</string>
-    <!-- no translation found for permlab_accessAdServicesManager (4816332609066703740) -->
-    <skip />
-    <!-- no translation found for permdesc_accessAdServicesManager (2619300431637689524) -->
-    <skip />
+    <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Accés a les API d\'AdServicesManager"</string>
+    <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Permet que una aplicació accedeixi a les API d\'AdServicesManager."</string>
     <string name="app_label" msgid="5985320129629013968">"Sistema Android"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Uneix-te a la versió beta de la privadesa d\'anuncis d\'Android"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android està explorant maneres més privades perquè les aplicacions et mostrin anuncis"</string>
@@ -273,7 +271,7 @@
     <string name="topic10159" msgid="6146958285117174314">"Ordinadors"</string>
     <string name="topic10160" msgid="6624820395549466426">"Portàtils"</string>
     <string name="topic10161" msgid="912458758908978530">"Treball en xarxa"</string>
-    <string name="topic10162" msgid="6717352131379507693">"Informàtica en núvol i computació distribuïda"</string>
+    <string name="topic10162" msgid="6717352131379507693">"Informàtica al núvol i computació distribuïda"</string>
     <string name="topic10163" msgid="6344926622025055321">"Programació"</string>
     <string name="topic10164" msgid="4228888249078845459">"Programari"</string>
     <string name="topic10165" msgid="5507908999219967161">"Programari de música i àudio"</string>
@@ -401,7 +399,7 @@
     <string name="topic10287" msgid="6766203044518402938">"Teleconferència"</string>
     <string name="topic10288" msgid="3883137694557636622">"Eines en línia i aplicacions web"</string>
     <string name="topic10289" msgid="3392995633794787676">"Serveis web"</string>
-    <string name="topic10290" msgid="3118880486702986341">"Emmagatzematge en núvol"</string>
+    <string name="topic10290" msgid="3118880486702986341">"Emmagatzematge al núvol"</string>
     <string name="topic10291" msgid="6025855926350955094">"Disseny i desenvolupament web"</string>
     <string name="topic10292" msgid="3069720659823056935">"Allotjament web"</string>
     <string name="topic10293" msgid="2489957780009828409">"Feines i ensenyament"</string>
