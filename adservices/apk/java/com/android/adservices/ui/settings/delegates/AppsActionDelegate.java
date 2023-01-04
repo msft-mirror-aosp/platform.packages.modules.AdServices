@@ -23,6 +23,7 @@ import android.view.View;
 import androidx.lifecycle.Observer;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.consent.App;
 import com.android.adservices.ui.settings.DialogManager;
@@ -31,6 +32,7 @@ import com.android.adservices.ui.settings.activities.BlockedAppsActivity;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsAppsFragment;
 import com.android.adservices.ui.settings.viewmodels.AppsViewModel;
 import com.android.adservices.ui.settings.viewmodels.AppsViewModel.AppsViewModelUiEvent;
+import com.android.settingslib.widget.MainSwitchBar;
 
 import java.io.IOException;
 
@@ -61,6 +63,17 @@ public class AppsActionDelegate extends BaseActionDelegate {
                     }
                     try {
                         switch (event) {
+                            case SWITCH_ON_APPS:
+                                mAppsViewModel.setAppsConsent(true);
+                                break;
+                            case SWITCH_OFF_APPS:
+                                if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
+                                    DialogManager.showAppsOptOutDialog(
+                                            mAppsActivity, mAppsViewModel);
+                                } else {
+                                    mAppsViewModel.setAppsConsent(false);
+                                }
+                                break;
                             case BLOCK_APP:
                                 logUIAction(ActionEnum.BLOCK_APP_SELECTED);
                                 if (PhFlags.getInstance().getUIDialogsFeatureEnabled()) {
@@ -103,8 +116,20 @@ public class AppsActionDelegate extends BaseActionDelegate {
      */
     public void initAppsFragment(AdServicesSettingsAppsFragment fragment) {
         mAppsActivity.setTitle(R.string.settingsUI_apps_view_title);
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            configureAppsConsentSwitch(fragment);
+        }
         configureBlockedAppsFragmentButton(fragment);
         configureResetAppsButton(fragment);
+    }
+
+    private void configureAppsConsentSwitch(AdServicesSettingsAppsFragment fragment) {
+        MainSwitchBar appsSwitchBar = mAppsActivity.findViewById(R.id.apps_switch_bar);
+        appsSwitchBar.setVisibility(View.VISIBLE);
+
+        mAppsViewModel.getAppsConsent().observe(fragment, appsSwitchBar::setChecked);
+        appsSwitchBar.setOnClickListener(
+                switchBar -> mAppsViewModel.consentSwitchClickHandler((MainSwitchBar) switchBar));
     }
 
     private void configureBlockedAppsFragmentButton(AdServicesSettingsAppsFragment fragment) {
