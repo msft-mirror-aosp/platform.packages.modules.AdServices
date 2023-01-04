@@ -24,6 +24,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.cache.DBCacheEntry;
 import com.android.adservices.service.common.cache.HttpCache;
+import com.android.adservices.service.profiling.Tracing;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.base.Charsets;
@@ -188,6 +189,7 @@ public class AdServicesHttpsClient {
     private String doFetchPayload(
             @NonNull URL url, @NonNull ClosingFuture.DeferredCloser closer, boolean useCache)
             throws IOException {
+        int traceCookie = Tracing.beginAsyncSection(Tracing.FETCH_PAYLOAD);
         LogUtil.v("Downloading payload from: \"%s\"", url.toString());
         if (useCache) {
             DBCacheEntry cachedEntry = mCache.get(url);
@@ -197,6 +199,7 @@ public class AdServicesHttpsClient {
             }
             LogUtil.v("Cache miss for url: %s", url.toString());
         }
+        int httpTraceCookie = Tracing.beginAsyncSection(Tracing.HTTP_REQUEST);
         HttpsURLConnection urlConnection;
         try {
             urlConnection = setupConnection(url);
@@ -230,6 +233,8 @@ public class AdServicesHttpsClient {
         } finally {
             maybeDisconnect(urlConnection);
             maybeClose(inputStream);
+            Tracing.endAsyncSection(Tracing.HTTP_REQUEST, httpTraceCookie);
+            Tracing.endAsyncSection(Tracing.FETCH_PAYLOAD, traceCookie);
         }
     }
 

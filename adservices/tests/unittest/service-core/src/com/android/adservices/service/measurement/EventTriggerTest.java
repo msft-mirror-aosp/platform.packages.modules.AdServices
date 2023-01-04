@@ -24,6 +24,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
 
+import java.util.List;
 import java.util.Set;
 
 public class EventTriggerTest {
@@ -69,8 +70,8 @@ public class EventTriggerTest {
         assertEquals(0L, eventTrigger.getTriggerPriority());
         assertNotNull(eventTrigger.getTriggerData());
         assertNull(eventTrigger.getDedupKey());
-        assertFalse(eventTrigger.getFilterData().isPresent());
-        assertFalse(eventTrigger.getNotFilterData().isPresent());
+        assertFalse(eventTrigger.getFilterSet().isPresent());
+        assertFalse(eventTrigger.getNotFilterSet().isPresent());
     }
 
     @Test
@@ -79,17 +80,27 @@ public class EventTriggerTest {
                 new EventTrigger.Builder(new UnsignedLong(101L))
                         .setTriggerPriority(1L)
                         .setDedupKey(new UnsignedLong(1001L))
-                        .setFilter(new FilterMap.Builder().buildFilterData(sFilterMap1).build())
-                        .setNotFilter(
-                                new FilterMap.Builder().buildFilterData(sNotFilterMap1).build())
+                        .setFilterSet(List.of(
+                                new FilterMap.Builder()
+                                        .buildFilterData(sFilterMap1)
+                                        .build()))
+                        .setNotFilterSet(List.of(
+                                new FilterMap.Builder()
+                                        .buildFilterData(sNotFilterMap1)
+                                        .build()))
                         .build();
         EventTrigger eventTrigger2 =
                 new EventTrigger.Builder(new UnsignedLong(101L))
                         .setTriggerPriority(1L)
                         .setDedupKey(new UnsignedLong(1001L))
-                        .setFilter(new FilterMap.Builder().buildFilterData(sFilterMap1).build())
-                        .setNotFilter(
-                                new FilterMap.Builder().buildFilterData(sNotFilterMap1).build())
+                        .setFilterSet(List.of(
+                                new FilterMap.Builder()
+                                        .buildFilterData(sFilterMap1)
+                                        .build()))
+                        .setNotFilterSet(List.of(
+                                new FilterMap.Builder()
+                                        .buildFilterData(sNotFilterMap1)
+                                        .build()))
                         .build();
 
         assertEquals(eventTrigger1, eventTrigger2);
@@ -112,19 +123,29 @@ public class EventTriggerTest {
                         .build());
         assertNotEquals(
                 new EventTrigger.Builder(new UnsignedLong(0L))
-                        .setFilter(new FilterMap.Builder().buildFilterData(sFilterMap1).build())
+                        .setFilterSet(List.of(
+                                new FilterMap.Builder()
+                                        .buildFilterData(sFilterMap1)
+                                        .build()))
                         .build(),
                 new EventTrigger.Builder(new UnsignedLong(0L))
-                        .setFilter(new FilterMap.Builder().buildFilterData(sFilterMap2).build())
+                        .setFilterSet(List.of(
+                                new FilterMap.Builder()
+                                        .buildFilterData(sFilterMap2)
+                                        .build()))
                         .build());
         assertNotEquals(
                 new EventTrigger.Builder(new UnsignedLong(0L))
-                        .setNotFilter(
-                                new FilterMap.Builder().buildFilterData(sNotFilterMap1).build())
+                        .setNotFilterSet(List.of(
+                                new FilterMap.Builder()
+                                        .buildFilterData(sNotFilterMap1)
+                                        .build()))
                         .build(),
                 new EventTrigger.Builder(new UnsignedLong(0L))
-                        .setNotFilter(
-                                new FilterMap.Builder().buildFilterData(sNotFilterMap2).build())
+                        .setNotFilterSet(List.of(
+                                new FilterMap.Builder()
+                                        .buildFilterData(sNotFilterMap2)
+                                        .build()))
                         .build());
     }
 
@@ -146,9 +167,14 @@ public class EventTriggerTest {
                 new EventTrigger.Builder(new UnsignedLong(101L))
                         .setTriggerPriority(2L)
                         .setDedupKey(new UnsignedLong(1001L))
-                        .setFilter(new FilterMap.Builder().buildFilterData(sFilterMap1).build())
-                        .setNotFilter(
-                                new FilterMap.Builder().buildFilterData(sNotFilterMap1).build())
+                        .setFilterSet(List.of(
+                                new FilterMap.Builder()
+                                        .buildFilterData(sFilterMap1)
+                                        .build()))
+                        .setNotFilterSet(List.of(
+                                new FilterMap.Builder()
+                                        .buildFilterData(sNotFilterMap1)
+                                        .build()))
                         .build();
         Set<EventTrigger> eventTriggerSet1 = Set.of(eventTrigger1);
         Set<EventTrigger> eventTriggerSet2 = Set.of(eventTrigger2);
@@ -172,8 +198,14 @@ public class EventTriggerTest {
         return new EventTrigger.Builder(new UnsignedLong(101L))
                 .setTriggerPriority(1L)
                 .setDedupKey(new UnsignedLong(1001L))
-                .setFilter(new FilterMap.Builder().buildFilterData(sFilterMap1).build())
-                .setNotFilter(new FilterMap.Builder().buildFilterData(sNotFilterMap1).build())
+                .setFilterSet(List.of(
+                        new FilterMap.Builder()
+                                .buildFilterData(sFilterMap1)
+                                .build()))
+                .setNotFilterSet(List.of(
+                        new FilterMap.Builder()
+                                .buildFilterData(sNotFilterMap1)
+                                .build()))
                 .build();
     }
 }

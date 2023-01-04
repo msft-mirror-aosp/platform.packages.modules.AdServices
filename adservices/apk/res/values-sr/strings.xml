@@ -36,10 +36,8 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"Дозвољава апликацији да приступа API-ју за измену омогућавања Adservice-a."</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"Приступ API-ју за омогућавање Adservice-a"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Дозвољава апликацији да приступа API-ју за омогућавање Adservice-a."</string>
-    <!-- no translation found for permlab_accessAdServicesManager (4816332609066703740) -->
-    <skip />
-    <!-- no translation found for permdesc_accessAdServicesManager (2619300431637689524) -->
-    <skip />
+    <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Приступ API-јима за AdServicesManager"</string>
+    <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Дозвољава апликацији да приступа API-јима за AdServicesManager."</string>
     <string name="app_label" msgid="5985320129629013968">"Android систем"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Придружите се бета верзији Android приватности за огласе"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android истражује приватније начине да вам апликације приказују огласе"</string>

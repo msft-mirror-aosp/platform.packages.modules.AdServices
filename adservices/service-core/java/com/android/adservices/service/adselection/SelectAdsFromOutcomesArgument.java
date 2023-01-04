@@ -21,31 +21,21 @@ import static com.android.adservices.service.js.JSScriptArgument.recordArg;
 import static com.android.adservices.service.js.JSScriptArgument.stringArg;
 
 import com.android.adservices.service.js.JSScriptArgument;
-
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.android.internal.annotations.VisibleForTesting;
 
 /**
  * A wrapper class for {@code AdSelectionId} and {@code Bid} pair to support the conversion to JS
  * Script parameter and from JS result string.
  */
 public class SelectAdsFromOutcomesArgument {
-    static final String ID_FIELD_NAME = "id";
-    static final String BID_FIELD_NAME = "bid";
+    @VisibleForTesting static final String ID_FIELD_NAME = "id";
 
-    /** Parses Json object for ad selection id and bid to {@code Pair< Long, Double >} */
-    public static AdSelectionIdWithBidAndRenderUri parseJsonResponse(JSONObject jsonObject) {
-        try {
-            return AdSelectionIdWithBidAndRenderUri.builder()
-                    .setAdSelectionId(jsonObject.getLong(ID_FIELD_NAME))
-                    .setBid(jsonObject.getDouble(BID_FIELD_NAME))
-                    .build();
-        } catch (JSONException e) {
-            throw new IllegalArgumentException("Invalid value for ad selection id, bid pair", e);
-        }
-    }
+    @VisibleForTesting static final String BID_FIELD_NAME = "bid";
 
-    /** Converts {@code Pair< Long, Double >} object to Json object */
+    // No instance of this class is supposed to be created
+    private SelectAdsFromOutcomesArgument() {}
+
+    /** Converts {@link AdSelectionIdWithBidAndRenderUri} object to Json object */
     public static JSScriptArgument asScriptArgument(
             String name, AdSelectionIdWithBidAndRenderUri adSelectionIdWithBidAndRenderUri) {
         return recordArg(
