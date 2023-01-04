@@ -15,12 +15,10 @@
  */
 package com.android.server.adservices;
 
-import static android.app.adservices.AdServicesManager.AD_SERVICES_SYSTEM_SERVICE;
-
 import android.adservices.common.AdServicesPermissions;
 import android.annotation.RequiresPermission;
-import android.app.adservices.ConsentParcel;
 import android.app.adservices.IAdServicesManager;
+import android.app.adservices.consent.ConsentParcel;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -34,7 +32,9 @@ import android.os.UserHandle;
 import android.provider.DeviceConfig;
 
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.server.LocalManagerRegistry;
 import com.android.server.SystemService;
+import com.android.server.sdksandbox.SdkSandboxManagerLocal;
 
 import java.io.IOException;
 import java.util.List;
@@ -108,20 +108,36 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
             super(context);
             mService =
                     new AdServicesManagerService(
-                            getContext(), new UserInstanceManager(ADSERVICES_BASE_DIR));
+                            context, new UserInstanceManager(ADSERVICES_BASE_DIR));
         }
 
         /** @hide */
         @Override
         public void onStart() {
-            publishBinderService(AD_SERVICES_SYSTEM_SERVICE, mService);
             LogUtil.d("AdServicesManagerService started!");
+
+            // TODO(b/262282035): Fix this work around in U+.
+            // TODO(b/263128170): Add cts-root tests to make sure that we can start the
+            //  AdServicesManager in U+
+
+            // Register the AdServicesManagerService with the SdkSandboxManagerService.
+            // This is a workaround for b/262282035.
+            // This works since we start the SdkSandboxManagerService before the
+            // AdServicesManagerService in the SystemServer.java
+            SdkSandboxManagerLocal sdkSandboxManagerLocal =
+                    LocalManagerRegistry.getManager(SdkSandboxManagerLocal.class);
+            if (sdkSandboxManagerLocal != null) {
+                sdkSandboxManagerLocal.registerAdServicesManagerService(mService);
+            } else {
+                throw new IllegalStateException(
+                        "SdkSandboxManagerLocal not found when registering AdServicesManager!");
+            }
         }
     }
 
     @Override
     @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
-    public ConsentParcel getConsent() {
+    public ConsentParcel getConsent(@ConsentParcel.ConsentApiType int consentApiType) {
         enforceAdServicesManagerPermission();
 
         final int userIdentifier = getUserIdentifier();
@@ -130,10 +146,10 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         try {
             return mUserInstanceManager
                     .getOrCreateUserConsentManagerInstance(userIdentifier)
-                    .getConsent();
+                    .getConsent(consentApiType);
         } catch (IOException e) {
             LogUtil.e(e, "Fail to getConsent with exception. Return REVOKED!");
-            return ConsentParcel.REVOKED;
+            return ConsentParcel.createRevokedConsent(consentApiType);
         }
     }
 

@@ -66,6 +66,7 @@ public class MobileDataDownloadFactory {
     private static final String MDD_METADATA_SHARED_PREFERENCES = "mdd_metadata_store";
     private static final String TOPICS_MANIFEST_ID = "TopicsManifestId";
     private static final String MEASUREMENT_MANIFEST_ID = "MeasurementManifestId";
+    private static final String UI_OTA_STRINGS_MANIFEST_ID = "UiOtaStringsManifestId";
 
     private static final int MAX_ADB_LOGCAT_SIZE = 4000;
 
@@ -89,7 +90,6 @@ public class MobileDataDownloadFactory {
                         MobileDataDownloadBuilder.newBuilder()
                                 .setContext(context)
                                 .setControlExecutor(getControlExecutor())
-                                .setTaskScheduler(Optional.of(new MddTaskScheduler(context)))
                                 .setNetworkUsageMonitor(networkUsageMonitor)
                                 .setFileStorage(fileStorage)
                                 .setFileDownloaderSupplier(() -> fileDownloader)
@@ -98,6 +98,9 @@ public class MobileDataDownloadFactory {
                                                 context, flags, fileStorage, fileDownloader))
                                 .addFileGroupPopulator(
                                         getMeasurementManifestPopulator(
+                                                context, flags, fileStorage, fileDownloader))
+                                .addFileGroupPopulator(
+                                        getUiOtaStringsManifestPopulator(
                                                 context, flags, fileStorage, fileDownloader))
                                 .setLoggerOptional(getMddLogger(flags))
                                 .setFlagsOptional(Optional.of(MddFlags.getInstance()))
@@ -121,7 +124,6 @@ public class MobileDataDownloadFactory {
         return MobileDataDownloadBuilder.newBuilder()
                 .setContext(context)
                 .setControlExecutor(getControlExecutor())
-                .setTaskScheduler(Optional.of(new MddTaskScheduler(context)))
                 .setNetworkUsageMonitor(networkUsageMonitor)
                 .setFileStorage(fileStorage)
                 .setFileDownloaderSupplier(() -> fileDownloader)
@@ -256,6 +258,48 @@ public class MobileDataDownloadFactory {
                 // TODO(b/239265537): Enable Dedup using Etag.
                 .setDedupDownloadWithEtag(false)
                 // TODO(b/243829623): use proper Logger.
+                .setLogger(
+                        new Logger() {
+                            @Override
+                            public void log(MessageLite event, int eventCode) {
+                                // A no-op logger.
+                            }
+                        })
+                .build();
+    }
+
+    @NonNull
+    private static ManifestFileGroupPopulator getUiOtaStringsManifestPopulator(
+            @NonNull Context context,
+            @NonNull Flags flags,
+            @NonNull SynchronousFileStorage fileStorage,
+            @NonNull FileDownloader fileDownloader) {
+
+        ManifestFileFlag manifestFileFlag =
+                ManifestFileFlag.newBuilder()
+                        .setManifestId(UI_OTA_STRINGS_MANIFEST_ID)
+                        .setManifestFileUrl(flags.getUiOtaStringsManifestFileUrl())
+                        .build();
+
+        ManifestConfigFileParser manifestConfigFileParser =
+                new ManifestConfigFileParser(
+                        fileStorage, AdServicesExecutors.getBackgroundExecutor());
+
+        return ManifestFileGroupPopulator.builder()
+                .setContext(context)
+                .setBackgroundExecutor(AdServicesExecutors.getBackgroundExecutor())
+                .setFileDownloader(() -> fileDownloader)
+                .setFileStorage(fileStorage)
+                .setManifestFileFlagSupplier(() -> manifestFileFlag)
+                .setManifestConfigParser(manifestConfigFileParser)
+                .setMetadataStore(
+                        SharedPreferencesManifestFileMetadata.createFromContext(
+                                context, /*InstanceId*/
+                                Optional.absent(),
+                                AdServicesExecutors.getBackgroundExecutor()))
+                // TODO(b/239265537): Enable dedup using etag.
+                .setDedupDownloadWithEtag(false)
+                // TODO(b/236761740): user proper Logger.
                 .setLogger(
                         new Logger() {
                             @Override

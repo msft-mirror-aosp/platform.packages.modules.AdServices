@@ -37,6 +37,7 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
+import android.os.StrictMode;
 import android.preference.PreferenceManager;
 import android.text.InputType;
 import android.util.Log;
@@ -83,6 +84,7 @@ public class MainActivity extends Activity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        enableStrictMode();
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mSdkSandboxManager = getApplicationContext().getSystemService(SdkSandboxManager.class);
@@ -140,7 +142,6 @@ public class MainActivity extends Activity {
                                 public void onResult(SandboxedSdk sandboxedSdk) {
                                     makeToast("All SDKs Loaded successfully!");
                                     Log.d(TAG, "All SDKs Loaded successfully!");
-                                    // TODO(b/253449573): Add constant string for unload Sdk.
                                     mLoadButton.setText("Unload SDKs");
                                 }
 
@@ -339,5 +340,16 @@ public class MainActivity extends Activity {
             makeToast("Failed: " + error.getMessage());
             Log.e(TAG, error.getMessage(), error);
         }
+    }
+
+    private void enableStrictMode() {
+        StrictMode.setThreadPolicy(
+                new StrictMode.ThreadPolicy.Builder()
+                        .detectAll()
+                        .penaltyLog()
+                        .penaltyDeath()
+                        .build());
+        StrictMode.setVmPolicy(
+                new StrictMode.VmPolicy.Builder().detectAll().penaltyLog().penaltyDeath().build());
     }
 }

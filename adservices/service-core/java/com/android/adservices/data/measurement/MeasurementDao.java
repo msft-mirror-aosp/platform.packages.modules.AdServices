@@ -109,6 +109,10 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.TriggerContract.DEBUG_KEY,
                 getNullableUnsignedLong(trigger.getDebugKey()));
         values.put(MeasurementTables.TriggerContract.DEBUG_REPORTING, trigger.isDebugReporting());
+        values.put(MeasurementTables.TriggerContract.AD_ID_PERMISSION, trigger.hasAdIdPermission());
+        values.put(
+                MeasurementTables.TriggerContract.AR_DEBUG_PERMISSION,
+                trigger.hasArDebugPermission());
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.TriggerContract.TABLE,
                         /*nullColumnHack=*/null, values);
@@ -295,6 +299,10 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.SourceContract.DEBUG_KEY,
                 getNullableUnsignedLong(source.getDebugKey()));
         values.put(MeasurementTables.SourceContract.DEBUG_REPORTING, source.isDebugReporting());
+        values.put(MeasurementTables.SourceContract.AD_ID_PERMISSION, source.hasAdIdPermission());
+        values.put(
+                MeasurementTables.SourceContract.AR_DEBUG_PERMISSION,
+                source.hasArDebugPermission());
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.SourceContract.TABLE,
                         /*nullColumnHack=*/null, values);
@@ -1525,7 +1533,7 @@ class MeasurementDao implements IMeasurementDao {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.DebugReportContract.ID, UUID.randomUUID().toString());
         values.put(MeasurementTables.DebugReportContract.TYPE, debugReport.getType());
-        values.put(MeasurementTables.DebugReportContract.BODY, debugReport.getBody());
+        values.put(MeasurementTables.DebugReportContract.BODY, debugReport.getBody().toString());
         values.put(
                 MeasurementTables.DebugReportContract.ENROLLMENT_ID, debugReport.getEnrollmentId());
         long rowId =
@@ -1830,6 +1838,9 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.AsyncRegistrationContract.DEBUG_KEY_ALLOWED,
                 asyncRegistration.getDebugKeyAllowed());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.AD_ID_PERMISSION,
+                asyncRegistration.hasAdIdPermission());
         long rowId =
                 mSQLTransaction
                         .getDatabase()
