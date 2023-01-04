@@ -55,6 +55,7 @@ public class AsyncRegistration {
     private long mLastProcessingTime;
     private final RegistrationType mType;
     private final boolean mDebugKeyAllowed;
+    private final boolean mAdIdPermission;
 
     @IntDef(value = {
             RedirectType.NONE,
@@ -85,6 +86,7 @@ public class AsyncRegistration {
         mLastProcessingTime = builder.mLastProcessingTime;
         mType = builder.mType;
         mDebugKeyAllowed = builder.mDebugKeyAllowed;
+        mAdIdPermission = builder.mAdIdPermission;
     }
 
     /** Unique identifier for the {@link AsyncRegistration}. */
@@ -177,6 +179,11 @@ public class AsyncRegistration {
         return mDebugKeyAllowed;
     }
 
+    /** Indicates whether Ad Id permission is enabled. */
+    public boolean hasAdIdPermission() {
+        return mAdIdPermission;
+    }
+
     /** Increments the retry count of the current record. */
     public void incrementRetryCount() {
         ++mRetryCount;
@@ -221,6 +228,7 @@ public class AsyncRegistration {
         private long mLastProcessingTime;
         private AsyncRegistration.RegistrationType mType;
         private boolean mDebugKeyAllowed;
+        private boolean mAdIdPermission;
 
         /** See {@link AsyncRegistration#getId()}. */
         @NonNull
@@ -341,6 +349,13 @@ public class AsyncRegistration {
         @NonNull
         public Builder setDebugKeyAllowed(boolean debugKeyAllowed) {
             mDebugKeyAllowed = debugKeyAllowed;
+            return this;
+        }
+
+        /** See {@link AsyncRegistration#hasAdIdPermission()}. */
+        @NonNull
+        public Builder setAdIdPermission(boolean adIdPermission) {
+            mAdIdPermission = adIdPermission;
             return this;
         }
 

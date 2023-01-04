@@ -28,6 +28,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.PackageChangedReceiver;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.measurement.AsyncRegistrationQueueJobService;
 import com.android.adservices.service.measurement.DeleteExpiredJobService;
@@ -91,7 +92,13 @@ public class MeasurementService extends Service {
     }
 
     private boolean hasUserConsent() {
-        return ConsentManager.getInstance(this).getConsent().isGiven();
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            return ConsentManager.getInstance(this)
+                    .getConsent(AdServicesApiType.MEASUREMENTS)
+                    .isGiven();
+        } else {
+            return ConsentManager.getInstance(this).getConsent().isGiven();
+        }
     }
 
     private void schedulePeriodicJobsIfNeeded() {

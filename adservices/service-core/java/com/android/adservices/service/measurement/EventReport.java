@@ -18,9 +18,11 @@ package com.android.adservices.service.measurement;
 
 import android.annotation.IntDef;
 import android.net.Uri;
+import android.util.Pair;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.service.measurement.util.DebugKey;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import java.lang.annotation.Retention;
@@ -250,9 +252,7 @@ public class EventReport {
             return this;
         }
 
-        /**
-         * See {@link EventReport#getEnrollmentId()} ()}
-         */
+        /** See {@link EventReport#getEnrollmentId()} */
         public Builder setEnrollmentId(String enrollmentId) {
             mBuilding.mEnrollmentId = enrollmentId;
             return this;
@@ -314,7 +314,7 @@ public class EventReport {
             return this;
         }
 
-        /** See {@link EventReport#getDebugReportStatus()} ()} */
+        /** See {@link EventReport#getDebugReportStatus()}} */
         public Builder setDebugReportStatus(@DebugReportStatus int debugReportStatus) {
             mBuilding.mDebugReportStatus = debugReportStatus;
             return this;
@@ -328,21 +328,19 @@ public class EventReport {
             return this;
         }
 
-        /**
-         * See {@link EventReport#getRandomizedTriggerRate()} ()}
-         */
+        /** See {@link EventReport#getRandomizedTriggerRate()}} */
         public Builder setRandomizedTriggerRate(double randomizedTriggerRate) {
             mBuilding.mRandomizedTriggerRate = randomizedTriggerRate;
             return this;
         }
 
-        /** See {@link EventReport#getSourceDebugKey()} ()} */
+        /** See {@link EventReport#getSourceDebugKey()}} */
         public Builder setSourceDebugKey(UnsignedLong sourceDebugKey) {
             mBuilding.mSourceDebugKey = sourceDebugKey;
             return this;
         }
 
-        /** See {@link EventReport#getTriggerDebugKey()} ()} */
+        /** See {@link EventReport#getTriggerDebugKey()}} */
         public Builder setTriggerDebugKey(UnsignedLong triggerDebugKey) {
             mBuilding.mTriggerDebugKey = triggerDebugKey;
             return this;
@@ -378,16 +376,18 @@ public class EventReport {
                             trigger.getDestinationType());
             mBuilding.mSourceType = source.getSourceType();
             mBuilding.mRandomizedTriggerRate = source.getRandomAttributionProbability();
+            Pair<UnsignedLong, UnsignedLong> debugKeyPair = DebugKey.getDebugKeys(source, trigger);
+            mBuilding.mSourceDebugKey = debugKeyPair.first;
+            mBuilding.mTriggerDebugKey = debugKeyPair.second;
             mBuilding.mDebugReportStatus = DebugReportStatus.NONE;
-            if (source.getDebugKey() != null || trigger.getDebugKey() != null) {
+            if (mBuilding.mSourceDebugKey != null || mBuilding.mTriggerDebugKey != null) {
                 mBuilding.mDebugReportStatus = DebugReportStatus.PENDING;
             }
-            mBuilding.mSourceDebugKey = source.getDebugKey();
-            mBuilding.mTriggerDebugKey = trigger.getDebugKey();
             mBuilding.mSourceId = source.getId();
             mBuilding.mTriggerId = trigger.getId();
             return this;
         }
+
 
         private UnsignedLong getTruncatedTriggerData(Source source, EventTrigger eventTrigger) {
             UnsignedLong triggerData = eventTrigger.getTriggerData();

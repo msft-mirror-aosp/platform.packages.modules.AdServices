@@ -24,6 +24,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
+import com.android.adservices.service.profiling.Tracing;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.FluentFuture;
@@ -114,6 +115,7 @@ public class AdOutcomeSelectorImpl implements AdOutcomeSelector {
                                         config.getSelectionSignals()),
                         mLightweightExecutorService);
 
+        int traceCookie = Tracing.beginAsyncSection(Tracing.RUN_OUTCOME_SELECTION);
         return selectedOutcomeFuture
                 .withTimeout(
                         mFlags.getAdSelectionSelectingOutcomeTimeoutMs(),
@@ -121,11 +123,17 @@ public class AdOutcomeSelectorImpl implements AdOutcomeSelector {
                         mScheduledExecutor)
                 .catching(
                         TimeoutException.class,
-                        this::handleTimeoutError,
+                        e -> {
+                            Tracing.endAsyncSection(Tracing.RUN_OUTCOME_SELECTION, traceCookie);
+                            return handleTimeoutError(e);
+                        },
                         mLightweightExecutorService)
                 .catching(
                         IllegalStateException.class,
-                        this::handleIllegalStateException,
+                        e -> {
+                            Tracing.endAsyncSection(Tracing.RUN_OUTCOME_SELECTION, traceCookie);
+                            return handleIllegalStateException(e);
+                        },
                         mLightweightExecutorService);
     }
 

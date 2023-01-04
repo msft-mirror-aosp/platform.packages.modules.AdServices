@@ -46,6 +46,23 @@ public class DBAdSelectionFromOutcomesOverrideTest {
     }
 
     @Test
+    public void testCreateDBAdSelectionOverride() {
+        DBAdSelectionFromOutcomesOverride dbAdSelectionFromOutcomesOverride =
+                DBAdSelectionFromOutcomesOverride.create(
+                        AD_SELECTION_FROM_OUTCOMES_CONFIG_ID,
+                        APP_PACKAGE_NAME,
+                        SELECTION_LOGIC_JS,
+                        SELECTION_SIGNALS);
+
+        assertEquals(
+                dbAdSelectionFromOutcomesOverride.getAdSelectionFromOutcomesConfigId(),
+                AD_SELECTION_FROM_OUTCOMES_CONFIG_ID);
+        assertEquals(dbAdSelectionFromOutcomesOverride.getAppPackageName(), APP_PACKAGE_NAME);
+        assertEquals(dbAdSelectionFromOutcomesOverride.getSelectionLogicJs(), SELECTION_LOGIC_JS);
+        assertEquals(dbAdSelectionFromOutcomesOverride.getSelectionSignals(), SELECTION_SIGNALS);
+    }
+
+    @Test
     public void testBuildDBAdSelectionFromOutcomesOverrideNoConfigIdFailure() {
         assertThrows(
                 IllegalStateException.class,

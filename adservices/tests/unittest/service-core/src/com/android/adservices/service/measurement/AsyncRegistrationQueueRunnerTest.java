@@ -1880,7 +1880,12 @@ public class AsyncRegistrationQueueRunnerTest {
         ArgumentCaptor<DatastoreManager.ThrowingCheckedConsumer> consumerArgCaptor =
                 ArgumentCaptor.forClass(DatastoreManager.ThrowingCheckedConsumer.class);
         EnqueueAsyncRegistration.appSourceOrTriggerRegistrationRequest(
-                request, APP_TOP_ORIGIN, 100, mEnrollmentDao, datastoreManager);
+                request,
+                /* adIdPermission */ true,
+                APP_TOP_ORIGIN,
+                /* requestTime */ 100,
+                mEnrollmentDao,
+                datastoreManager);
 
         // Execution
         asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker(2L, (short) 5);
@@ -1989,7 +1994,6 @@ public class AsyncRegistrationQueueRunnerTest {
                         Uri.parse(registrationUri),
                         sDefaultContext.getAttributionSource().getPackageName(),
                         SDK_PACKAGE_NAME)
-                .setAdIdPermissionGranted(true)
                 .build();
     }
 
