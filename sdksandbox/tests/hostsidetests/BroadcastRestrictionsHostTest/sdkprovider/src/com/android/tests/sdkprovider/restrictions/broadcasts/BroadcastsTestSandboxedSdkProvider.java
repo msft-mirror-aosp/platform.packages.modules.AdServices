@@ -28,7 +28,7 @@ import android.view.View;
 
 public class BroadcastsTestSandboxedSdkProvider extends SandboxedSdkProvider {
 
-    public class BroadcastTestSdkImpl extends IBroadcastSdkApi.Stub {
+    static class BroadcastTestSdkImpl extends IBroadcastSdkApi.Stub {
         private final Context mContext;
 
         public BroadcastTestSdkImpl(Context sdkContext) {
