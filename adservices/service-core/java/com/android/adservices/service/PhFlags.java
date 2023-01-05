@@ -1499,10 +1499,12 @@ public final class PhFlags implements Flags {
 
     @Override
     public String getUiOtaStringsManifestFileUrl() {
-        return DeviceConfig.getString(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL,
-                /* defaultValue */ UI_OTA_STRINGS_MANIFEST_FILE_URL);
+        return SystemProperties.get(
+                getSystemPropertyName(KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL),
+                /* defaultValue */ DeviceConfig.getString(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL,
+                        /* defaultValue */ UI_OTA_STRINGS_MANIFEST_FILE_URL));
     }
 
     @Override
@@ -1510,10 +1512,12 @@ public final class PhFlags implements Flags {
         if (getGlobalKillSwitch()) {
             return false;
         }
-        return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_UI_OTA_STRINGS_FEATURE_ENABLED,
-                /* defaultValue */ UI_OTA_STRINGS_FEATURE_ENABLED);
+        return SystemProperties.getBoolean(
+                getSystemPropertyName(KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL),
+                /* defaultValue */ DeviceConfig.getBoolean(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_UI_OTA_STRINGS_FEATURE_ENABLED,
+                        /* defaultValue */ UI_OTA_STRINGS_FEATURE_ENABLED));
     }
 
     @Override

@@ -20,6 +20,8 @@ import android.view.MenuItem;
 
 import androidx.core.view.WindowCompat;
 
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.ui.OTAResourcesManager;
 import com.android.settingslib.collapsingtoolbar.CollapsingToolbarBaseActivity;
 
 /**
@@ -32,6 +34,9 @@ public abstract class AdServicesBaseActivity extends CollapsingToolbarBaseActivi
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()) {
+            OTAResourcesManager.applyOTAResources(getApplicationContext(), false);
+        }
     }
 
     @Override
