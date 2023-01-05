@@ -19,6 +19,7 @@ package com.android.sdksandbox.app;
 import android.app.Activity;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
+import android.app.sdksandbox.testutils.FakeSdkSandboxProcessDeathCallback;
 import android.os.Bundle;
 
 public class SdkSandboxTestActivity extends Activity {
@@ -33,6 +34,10 @@ public class SdkSandboxTestActivity extends Activity {
         SdkSandboxManager sdkSandboxManager =
                 getApplicationContext().getSystemService(SdkSandboxManager.class);
         assert sdkSandboxManager != null;
+
+        // Add a callback so that this app does not die when the sandbox dies.
+        sdkSandboxManager.addSdkSandboxProcessDeathCallback(
+                Runnable::run, new FakeSdkSandboxProcessDeathCallback());
 
         Bundle params = new Bundle();
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();

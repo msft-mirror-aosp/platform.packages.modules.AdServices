@@ -37,6 +37,7 @@ import android.util.Log;
 import android.view.SurfaceControlViewHost.SurfacePackage;
 
 import com.android.internal.annotations.GuardedBy;
+import com.android.modules.utils.build.SdkLevel;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -401,9 +402,19 @@ public final class SdkSandboxManager {
         Objects.requireNonNull(receiver, "receiver should not be null");
         final LoadSdkReceiverProxy callbackProxy =
                 new LoadSdkReceiverProxy(executor, receiver, mService);
+
+        IBinder appProcessBinderObject;
+        // Context.getIApplicationThreadBinder() only exists on U+. If it does not exist, just pass
+        // in any binder object originating from this app process.
+        if (SdkLevel.isAtLeastU()) {
+            appProcessBinderObject = mContext.getIApplicationThreadBinder();
+        } else {
+            appProcessBinderObject = callbackProxy.asBinder();
+        }
         try {
             mService.loadSdk(
                     mContext.getPackageName(),
+                    appProcessBinderObject,
                     sdkName,
                     /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
                     params,

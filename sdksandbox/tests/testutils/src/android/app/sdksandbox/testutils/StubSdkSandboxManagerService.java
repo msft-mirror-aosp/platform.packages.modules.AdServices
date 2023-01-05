@@ -40,6 +40,7 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
     @Override
     public void loadSdk(
             String callingPackageName,
+            IBinder clientApplicationThreadBinder,
             String sdkName,
             long timeAppCalledSystemServer,
             Bundle params,

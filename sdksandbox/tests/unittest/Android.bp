@@ -94,7 +94,10 @@ android_test {
         "src/android/app/sdksandbox/**/*.java",
         ":framework-sdksandbox-sources",
     ],
-    defaults: ["SdkSandboxUnitTestsDefault"],
+    defaults: [
+        "SdkSandboxUnitTestsDefault",
+        "framework-sdksandbox-jarjar-defaults",
+    ],
     manifest: "SdkSandboxFrameworkManifest.xml",
     test_config: "SdkSandboxFrameworkTest.xml",
     data: [
