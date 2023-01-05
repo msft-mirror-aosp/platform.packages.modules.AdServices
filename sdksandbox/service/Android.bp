@@ -76,6 +76,7 @@ java_sdk_library {
     ],
     static_libs: [
         "sdksandbox-statsd",
+        "modules-utils-build",
         "modules-utils-backgroundthread",
         "modules-utils-shell-command-handler",
     ],

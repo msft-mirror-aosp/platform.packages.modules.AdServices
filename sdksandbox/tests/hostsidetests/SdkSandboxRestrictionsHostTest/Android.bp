@@ -65,7 +65,9 @@ android_test_helper_app {
     defaults: ["platform_app_defaults"],
     srcs: [
        "sdkprovider/src/**/*.java",
-       ":framework-sdksandbox-sources",
+    ],
+    libs: [
+        "framework-sdksandbox.impl",
     ],
     platform_apis: true,
     min_sdk_version: "33",

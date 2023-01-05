@@ -77,6 +77,7 @@ import android.webkit.WebViewUpdateService;
 import com.android.adservices.AdServicesCommon;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.modules.utils.build.SdkLevel;
 import com.android.sdksandbox.IComputeSdkStorageCallback;
 import com.android.sdksandbox.IRequestSurfacePackageFromSdkCallback;
 import com.android.sdksandbox.ISdkSandboxDisabledCallback;
@@ -84,6 +85,7 @@ import com.android.sdksandbox.ISdkSandboxService;
 import com.android.sdksandbox.service.stats.SdkSandboxStatsLog;
 import com.android.server.LocalManagerRegistry;
 import com.android.server.SystemService;
+import com.android.server.am.ActivityManagerLocal;
 import com.android.server.pm.PackageManagerLocal;
 
 import java.io.FileDescriptor;
@@ -113,6 +115,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     private final Context mContext;
 
     private final ActivityManager mActivityManager;
+    private final ActivityManagerLocal mActivityManagerLocal;
     private final Handler mHandler;
     private final SdkSandboxStorageManager mSdkSandboxStorageManager;
     private final SdkSandboxServiceProvider mServiceProvider;
@@ -206,6 +209,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         mServiceProvider = provider;
         mInjector = injector;
         mActivityManager = mContext.getSystemService(ActivityManager.class);
+        mActivityManagerLocal = LocalManagerRegistry.getManager(ActivityManagerLocal.class);
         mLocalManager = new LocalImpl();
         mSdkSandboxPulledAtoms = sdkSandboxPulledAtoms;
 
@@ -390,6 +394,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     @Override
     public void loadSdk(
             String callingPackageName,
+            IBinder callingApplicationThreadBinder,
             String sdkName,
             long timeAppCalledSystemServer,
             Bundle params,
@@ -423,6 +428,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             try {
                 loadSdkWithClearIdentity(
                         callingInfo,
+                        callingApplicationThreadBinder,
                         sdkName,
                         params,
                         callback,
@@ -444,6 +450,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private void loadSdkWithClearIdentity(
             CallingInfo callingInfo,
+            IBinder callingApplicationThreadBinder,
             String sdkName,
             Bundle params,
             ILoadSdkCallback callback,
@@ -510,8 +517,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             synchronized (mLock) {
                 if (!mCallingInfosWithDeathRecipients.containsKey(callingInfo)) {
                     Log.d(TAG, "Registering " + callingInfo + " for death notification");
-                    callback.asBinder().linkToDeath(() -> onAppDeath(callingInfo), 0);
-                    mCallingInfosWithDeathRecipients.put(callingInfo, callback.asBinder());
+                    callingApplicationThreadBinder.linkToDeath(() -> onAppDeath(callingInfo), 0);
+                    mCallingInfosWithDeathRecipients.put(
+                            callingInfo, callingApplicationThreadBinder);
                     mUidImportanceListener.startListening();
                 }
             }
@@ -1136,6 +1144,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private void onSdkSandboxDeath(CallingInfo callingInfo) {
         synchronized (mLock) {
+            killAppOnSandboxDeathIfNeededLocked(callingInfo);
             handleSandboxLifecycleCallbacksLocked(callingInfo);
             mSandboxBindingCallbacks.remove(callingInfo);
             // All SDK state is lost on death.
@@ -1149,6 +1158,27 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 mLoadSdkSessions.remove(callingInfo);
             }
         }
+    }
+
+    @GuardedBy("mLock")
+    private void killAppOnSandboxDeathIfNeededLocked(CallingInfo callingInfo) {
+        if (!SdkLevel.isAtLeastU()
+                || !mCallingInfosWithDeathRecipients.containsKey(callingInfo)
+                || mSandboxLifecycleCallbacks.containsKey(callingInfo)
+                || getLoadedSdksForApp(callingInfo).size() == 0) {
+            /* The app should not be killed in any one of the following cases:
+               1) The SDK level is not U+ (as app kill API is not supported in that case).
+               2) The app is already dead.
+               3) The app has registered at least one callback to deal with sandbox death.
+               4) The app has no SDKs loaded.
+            */
+            return;
+        }
+
+        // TODO(b/261442377): Only the processes that loaded some SDK should be killed. For now,
+        // kill the process that loaded the first SDK.
+        mActivityManagerLocal.killSdkSandboxClientAppProcess(
+                mCallingInfosWithDeathRecipients.get(callingInfo));
     }
 
     @GuardedBy("mLock")

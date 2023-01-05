@@ -34,6 +34,7 @@ import android.app.sdksandbox.testutils.FakeOutcomeReceiver;
 import android.content.Context;
 import android.os.Binder;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
 import android.util.Log;
@@ -96,6 +97,7 @@ public class SdkSandboxManagerUnitTest {
         Mockito.verify(mBinder)
                 .loadSdk(
                         Mockito.eq(mContext.getPackageName()),
+                        Mockito.any(IBinder.class),
                         Mockito.eq(SDK_NAME),
                         callingTimeArgumentCaptor.capture(),
                         Mockito.eq(params),
@@ -128,6 +130,7 @@ public class SdkSandboxManagerUnitTest {
         Mockito.verify(mBinder)
                 .loadSdk(
                         Mockito.eq(mContext.getPackageName()),
+                        Mockito.any(IBinder.class),
                         Mockito.eq(SDK_NAME),
                         Mockito.anyLong(),
                         Mockito.eq(params),
@@ -398,6 +401,7 @@ public class SdkSandboxManagerUnitTest {
         Mockito.verify(mBinder)
                 .loadSdk(
                         Mockito.eq(mContext.getPackageName()),
+                        Mockito.any(IBinder.class),
                         Mockito.eq(SDK_NAME),
                         Mockito.anyLong(),
                         Mockito.eq(params),
@@ -425,6 +429,7 @@ public class SdkSandboxManagerUnitTest {
         Mockito.verify(mBinder)
                 .loadSdk(
                         Mockito.eq(mContext.getPackageName()),
+                        Mockito.any(IBinder.class),
                         Mockito.eq(SDK_NAME),
                         Mockito.anyLong(),
                         Mockito.eq(params),
