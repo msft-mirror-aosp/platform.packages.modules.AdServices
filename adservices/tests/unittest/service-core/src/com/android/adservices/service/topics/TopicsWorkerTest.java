@@ -98,7 +98,7 @@ public class TopicsWorkerTest {
         DbTestUtil.deleteTable(TopicsTables.TopicContributorsContract.TABLE);
 
         mTopicsDao = new TopicsDao(mDbHelper);
-        mCacheManager = new CacheManager(mMockEpochManager, mTopicsDao, mMockFlags, mLogger);
+        mCacheManager = new CacheManager(mTopicsDao, mMockFlags, mLogger);
         AppUpdateManager appUpdateManager =
                 new AppUpdateManager(mDbHelper, mTopicsDao, new Random(), mMockFlags);
         mBlockedTopicsManager = new BlockedTopicsManager(mTopicsDao);

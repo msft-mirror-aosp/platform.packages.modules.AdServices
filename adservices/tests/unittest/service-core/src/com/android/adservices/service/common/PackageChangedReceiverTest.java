@@ -197,8 +197,9 @@ public class PackageChangedReceiverTest {
             Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
 
             // Verify method in AppUpdateManager is invoked
+            // getCurrentEpochId() is invoked twice: handleAppUninstallation() + loadCache()
             // Note that only package name is passed into following methods.
-            verify(mMockEpochManager).getCurrentEpochId();
+            verify(mMockEpochManager, times(2)).getCurrentEpochId();
             verify(mMockAppUpdateManager)
                     .handleAppUninstallationInRealTime(Uri.parse(SAMPLE_PACKAGE), epochId);
         } finally {
@@ -460,9 +461,10 @@ public class PackageChangedReceiverTest {
             // Grant some time to allow background thread to execute
             Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
 
-            // Verify method in AppUpdateManager is invoked
+            // Verify method in AppUpdateManager is invoked.
+            // getCurrentEpochId() is invoked twice: handleAppInstallation() + loadCache()
             // Note that only package name is passed into following methods.
-            verify(mMockEpochManager).getCurrentEpochId();
+            verify(mMockEpochManager, times(2)).getCurrentEpochId();
             verify(mMockAppUpdateManager)
                     .handleAppInstallationInRealTime(Uri.parse(SAMPLE_PACKAGE), epochId);
         } finally {
