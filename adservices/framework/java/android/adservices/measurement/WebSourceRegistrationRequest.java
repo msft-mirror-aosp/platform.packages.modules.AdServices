@@ -327,10 +327,6 @@ public final class WebSourceRegistrationRequest implements Parcelable {
         /** Pre-validates parameters and builds {@link WebSourceRegistrationRequest}. */
         @NonNull
         public WebSourceRegistrationRequest build() {
-            if (mAppDestination == null && mWebDestination == null) {
-                throw new IllegalArgumentException(
-                        "At least one of appDestination or webDestination needs to be provided");
-            }
             return new WebSourceRegistrationRequest(this);
         }
     }

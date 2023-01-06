@@ -1941,6 +1941,54 @@ public final class AsyncSourceFetcherTest {
         // Setup
         WebSourceRegistrationRequest request =
                 buildWebSourceRegistrationRequest(
+                        Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "\"destination\": \""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\n"
+                                                + "\"source_event_id\": \""
+                                                + EVENT_ID_1
+                                                + "\",\n"
+                                                + "  \"debug_key\": \""
+                                                + DEBUG_KEY
+                                                + "\"\n"
+                                                + "}\n")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertEquals(0, asyncRedirect.getRedirects().size());
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals(Uri.parse(DEFAULT_DESTINATION), result.getAppDestination());
+        assertEquals(EVENT_ID_1, result.getEventId());
+        assertEquals(
+                result.getEventTime()
+                        + TimeUnit.SECONDS.toMillis(
+                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
+                result.getExpiryTime());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void fetchWebSources_withValidation_success() throws IOException {
+        // Setup
+        WebSourceRegistrationRequest request =
+                buildWebSourceRegistrationRequest(
                         Arrays.asList(SOURCE_REGISTRATION_1),
                         DEFAULT_TOP_ORIGIN,
                         Uri.parse(DEFAULT_DESTINATION),
@@ -2069,6 +2117,7 @@ public final class AsyncSourceFetcherTest {
         assertFalse(fetch.isPresent());
         verify(mUrlConnection).setRequestMethod("POST");
     }
+
     @Test
     public void fetchWebSources_withExtendedHeaders_success() throws IOException, JSONException {
         // Setup
@@ -2721,8 +2770,10 @@ public final class AsyncSourceFetcherTest {
             Uri appDestination,
             Uri webDestination) {
         WebSourceRegistrationRequest.Builder webSourceRegistrationRequestBuilder =
-                new WebSourceRegistrationRequest.Builder(sourceParamsList, Uri.parse(topOrigin))
-                        .setAppDestination(appDestination);
+                new WebSourceRegistrationRequest.Builder(sourceParamsList, Uri.parse(topOrigin));
+        if (appDestination != null) {
+            webSourceRegistrationRequestBuilder.setAppDestination(appDestination);
+        }
         if (webDestination != null) {
             webSourceRegistrationRequestBuilder.setWebDestination(webDestination);
         }
