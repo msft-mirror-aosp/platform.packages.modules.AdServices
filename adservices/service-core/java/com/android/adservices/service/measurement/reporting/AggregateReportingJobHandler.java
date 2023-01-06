@@ -138,6 +138,7 @@ public class AggregateReportingJobHandler {
                 mDatastoreManager.runInTransactionWithResult((dao)
                         -> dao.getAggregateReport(aggregateReportId));
         if (!aggregateReportOpt.isPresent()) {
+            LogUtil.d("Aggregate report not found");
             return AdServicesStatusUtils.STATUS_IO_ERROR;
         }
         AggregateReport aggregateReport = aggregateReportOpt.get();
@@ -145,6 +146,7 @@ public class AggregateReportingJobHandler {
         if (mIsDebugInstance
                 && aggregateReport.getDebugReportStatus()
                         != AggregateReport.DebugReportStatus.PENDING) {
+            LogUtil.d("Debugging status is not pending");
             return AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
         }
         if (!mIsDebugInstance && aggregateReport.getStatus() != AggregateReport.Status.PENDING) {
@@ -156,6 +158,7 @@ public class AggregateReportingJobHandler {
             if (!reportingOrigin.isPresent()) {
                 // We do not know here what the cause is of the failure to retrieve the reporting
                 // origin. INTERNAL_ERROR seems the closest to a "catch-all" error code.
+                LogUtil.d("Report origin not present");
                 return AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
             }
             JSONObject aggregateReportJsonBody = createReportJsonPayload(
