@@ -55,6 +55,10 @@ public class SdkSandboxMetricsTestApp {
     private static final String VERSION_NAME = "1.0";
     private static final int VERSION_CODE = 1;
 
+    // Values declared in CrashTestSdkProviderManifest.xml
+    private static final String SDK_PACKAGE_NAME = "com.android.tests.sdkprovider.crashtest";
+    private static final int SDK_VERSION_CODE = 1;
+
     @Rule public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(EmptyActivity.class);
 
     private DropBoxManager mDropboxManager;
@@ -129,5 +133,9 @@ public class SdkSandboxMetricsTestApp {
                         String.format(
                                 "SdkSandbox-Client-Package: %s v%d (%s)",
                                 PACKAGE_NAME, VERSION_CODE, VERSION_NAME));
+        assertThat(mCrashEntryText)
+                .contains(
+                        String.format(
+                                "SdkSandbox-Library: %s v%d", SDK_PACKAGE_NAME, SDK_VERSION_CODE));
     }
 }
