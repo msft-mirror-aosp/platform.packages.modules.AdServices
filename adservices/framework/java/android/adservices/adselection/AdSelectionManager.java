@@ -125,6 +125,9 @@ public class AdSelectionManager {
      *
      * <p>If the {@link LimitExceededException} is thrown, it is caused when the calling package
      * exceeds the allowed rate limits and is throttled.
+     *
+     * <p>If the {@link SecurityException} is thrown, it is caused when the caller is not authorized
+     * or permission is not requested.
      */
     @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void selectAds(
@@ -157,6 +160,104 @@ public class AdSelectionManager {
                                                             .setRenderUri(
                                                                     resultParcel.getRenderUri())
                                                             .build()));
+                        }
+
+                        @Override
+                        public void onFailure(FledgeErrorResponse failureParcel) {
+                            executor.execute(
+                                    () -> {
+                                        receiver.onError(
+                                                AdServicesStatusUtils.asException(failureParcel));
+                                    });
+                        }
+                    });
+        } catch (NullPointerException e) {
+            LogUtil.e(e, "Unable to find the AdSelection service.");
+            receiver.onError(
+                    new IllegalStateException("Unable to find the AdSelection service.", e));
+        } catch (RemoteException e) {
+            LogUtil.e(e, "Failure of AdSelection service.");
+            receiver.onError(new IllegalStateException("Failure of AdSelection service.", e));
+        }
+    }
+
+    /**
+     * Selects an ad from the results of previously ran ad selections.
+     *
+     * <p>The input {@code adSelectionFromOutcomesConfig} is provided by the Ads SDK and the {@link
+     * AdSelectionFromOutcomesConfig} object is transferred via a Binder call. For this reason, the
+     * total size of these objects is bound to the Android IPC limitations. Failures to transfer the
+     * {@link AdSelectionFromOutcomesConfig} will throws an {@link TransactionTooLargeException}.
+     *
+     * <p>The output is passed by the receiver, which either returns an {@link AdSelectionOutcome}
+     * for a successful run, or an {@link Exception} includes the type of the exception thrown and
+     * the corresponding error message.
+     *
+     * <p>The input {@code adSelectionFromOutcomesConfig} contains:
+     *
+     * <ul>
+     *   <li>{@code Seller} is required to be a registered {@link
+     *       android.adservices.common.AdTechIdentifier}. Otherwise, {@link IllegalStateException}
+     *       will be thrown.
+     *   <li>{@code List of ad selection ids} should exist and come from {@link
+     *       AdSelectionManager#selectAds} calls originated from the same application. Otherwise,
+     *       {@link IllegalArgumentException} for input validation will raise listing violating ad
+     *       selection ids.
+     *   <li>{@code Selection logic URI} should match the {@code seller} host. Otherwise, {@link
+     *       IllegalArgumentException} will be thrown.
+     * </ul>
+     *
+     * <p>If the {@link IllegalArgumentException} is thrown, it is caused by invalid input argument
+     * the API received to run the ad selection.
+     *
+     * <p>If the {@link IllegalStateException} is thrown with error message "Failure of AdSelection
+     * services.", it is caused by an internal failure of the ad selection service.
+     *
+     * <p>If the {@link TimeoutException} is thrown, it is caused when a timeout is encountered
+     * during bidding, scoring, or overall selection process to find winning Ad.
+     *
+     * <p>If the {@link LimitExceededException} is thrown, it is caused when the calling package
+     * exceeds the allowed rate limits and is throttled.
+     *
+     * <p>If the {@link SecurityException} is thrown, it is caused when the caller is not authorized
+     * or permission is not requested.
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
+    public void selectAds(
+            @NonNull AdSelectionFromOutcomesConfig adSelectionFromOutcomesConfig,
+            @NonNull @CallbackExecutor Executor executor,
+            @NonNull OutcomeReceiver<AdSelectionOutcome, Exception> receiver) {
+        Objects.requireNonNull(adSelectionFromOutcomesConfig);
+        Objects.requireNonNull(executor);
+        Objects.requireNonNull(receiver);
+
+        try {
+            final AdSelectionService service = getService();
+            service.selectAdsFromOutcomes(
+                    new AdSelectionFromOutcomesInput.Builder()
+                            .setAdSelectionFromOutcomesConfig(adSelectionFromOutcomesConfig)
+                            .setCallerPackageName(getCallerPackageName())
+                            .build(),
+                    new CallerMetadata.Builder()
+                            .setBinderElapsedTimestamp(SystemClock.elapsedRealtime())
+                            .build(),
+                    new AdSelectionCallback.Stub() {
+                        @Override
+                        public void onSuccess(AdSelectionResponse resultParcel) {
+                            executor.execute(
+                                    () -> {
+                                        if (resultParcel == null) {
+                                            receiver.onResult(AdSelectionOutcome.NO_OUTCOME);
+                                        } else {
+                                            receiver.onResult(
+                                                    new AdSelectionOutcome.Builder()
+                                                            .setAdSelectionId(
+                                                                    resultParcel.getAdSelectionId())
+                                                            .setRenderUri(
+                                                                    resultParcel.getRenderUri())
+                                                            .build());
+                                        }
+                                    });
                         }
 
                         @Override

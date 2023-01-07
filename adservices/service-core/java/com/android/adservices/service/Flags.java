@@ -24,6 +24,9 @@ import android.util.Dumpable;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.service.adselection.AdOutcomeSelectorImpl;
+import com.android.adservices.service.common.cache.FledgeHttpCache;
+
 import com.google.common.collect.ImmutableList;
 
 import java.io.PrintWriter;
@@ -392,6 +395,10 @@ public interface Flags extends Dumpable {
     int FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS = 5 * 1000; // 5 seconds
     int FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS = 30 * 1000; // 30 seconds
     int FLEDGE_BACKGROUND_FETCH_MAX_RESPONSE_SIZE_B = 10 * 1024; // 10 KiB
+    boolean FLEDGE_HTTP_CACHE_ENABLE = true;
+    boolean FLEDGE_HTTP_CACHE_ENABLE_JS_CACHING = true;
+    long FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS = 2 * 24 * 60 * 60; // 2 days
+    long FLEDGE_HTTP_CACHE_MAX_ENTRIES = 100;
 
     /** Returns {@code true} if the FLEDGE Background Fetch is enabled. */
     default boolean getFledgeBackgroundFetchEnabled() {
@@ -470,11 +477,31 @@ public interface Flags extends Dumpable {
         return FLEDGE_BACKGROUND_FETCH_MAX_RESPONSE_SIZE_B;
     }
 
-    int FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT = 6;
+    /** Returns boolean, if the caching is enabled for {@link FledgeHttpCache} */
+    default boolean getFledgeHttpCachingEnabled() {
+        return FLEDGE_HTTP_CACHE_ENABLE;
+    }
+
+    /** Returns boolean, if the caching is enabled for JS for bidding and scoring */
+    default boolean getFledgeHttpJsCachingEnabled() {
+        return FLEDGE_HTTP_CACHE_ENABLE_JS_CACHING;
+    }
+
+    /** Returns max number of entries that should be persisted in cache */
+    default long getFledgeHttpCacheMaxEntries() {
+        return FLEDGE_HTTP_CACHE_MAX_ENTRIES;
+    }
+
+    /** Returns the default max age of entries in cache */
+    default long getFledgeHttpCacheMaxAgeSeconds() {
+        return FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS;
+    }
+
+    int FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT = 6;
 
     /** Returns the number of CA that can be bid in parallel for one Ad Selection */
-    default int getAdSelectionConcurrentBiddingCount() {
-        return FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT;
+    default int getAdSelectionMaxConcurrentBiddingCount() {
+        return FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT;
     }
 
     // TODO(b/240647148): Limits are increased temporarily, re-evaluate these numbers after
@@ -482,11 +509,16 @@ public interface Flags extends Dumpable {
     long FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS = 5000;
     long FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS = 10000;
     long FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS = 5000;
+    long FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS = 5000;
     // For *on device* ad selection.
     long FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS = 10000;
+    long FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS = 20_000;
     long FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS = 10_000;
 
     long FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS = 2000;
+
+    // TODO(b/263055427): Replace with a more realistic number after getting input from ad-techs
+    long FLEDGE_REPORT_IMPRESSION_MAX_EVENT_URI_ENTRIES_COUNT = 100;
 
     /** Returns the timeout constant in milliseconds that limits the bidding per CA */
     default long getAdSelectionBiddingTimeoutPerCaMs() {
@@ -504,11 +536,27 @@ public interface Flags extends Dumpable {
     }
 
     /**
+     * Returns the timeout constant in milliseconds that limits the {@link
+     * AdOutcomeSelectorImpl#runAdOutcomeSelector}
+     */
+    default long getAdSelectionSelectingOutcomeTimeoutMs() {
+        return FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
+    }
+
+    /**
      * Returns the timeout constant in milliseconds that limits the overall *on device* ad selection
      * orchestration.
      */
     default long getAdSelectionOverallTimeoutMs() {
         return FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
+    }
+
+    /**
+     * Returns the timeout constant in milliseconds that limits the overall *on device* ad selection
+     * from outcomes orchestration.
+     */
+    default long getAdSelectionFromOutcomesOverallTimeoutMs() {
+        return FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
     }
 
     /**
@@ -525,6 +573,15 @@ public interface Flags extends Dumpable {
      */
     default long getReportImpressionOverallTimeoutMs() {
         return FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
+    }
+
+    /**
+     * Returns the maximum number of {@link
+     * com.android.adservices.data.adselection.DBRegisteredAdEvent} that an ad-tech can register in
+     * one call to {@code reportImpression}.
+     */
+    default long getReportImpressionMaxEventUriEntriesCount() {
+        return FLEDGE_REPORT_IMPRESSION_MAX_EVENT_URI_ENTRIES_COUNT;
     }
 
     // 24 hours in seconds
@@ -564,11 +621,8 @@ public interface Flags extends Dumpable {
      * The number of epoch to look back to do garbage collection for old epoch data. Assume current
      * Epoch is T, then any epoch data of (T-NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY-1) (inclusive)
      * should be erased
-     *
-     * <p>In order to provide enough epochs to assign topics for newly installed apps, keep
-     * TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS more epochs in database.
      */
-    int NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY = TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS * 2;
+    int NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY = TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS;
 
     /*
      * Return the number of epochs to keep in the history
@@ -647,6 +701,33 @@ public interface Flags extends Dumpable {
         return CONSENT_MANAGER_DEBUG_MODE;
     }
 
+    /** Available sources of truth to get consent for PPAPI. */
+    @IntDef(
+            flag = true,
+            value = {
+                SYSTEM_SERVER_ONLY,
+                PPAPI_ONLY,
+                PPAPI_AND_SYSTEM_SERVER,
+            })
+    @Retention(RetentionPolicy.SOURCE)
+    @interface ConsentSourceOfTruth {}
+
+    /** Write and read consent from system server only. */
+    int SYSTEM_SERVER_ONLY = 0;
+    /** Write and read consent from PPAPI only */
+    int PPAPI_ONLY = 1;
+    /** Write consent to both PPAPI and system server. Read consent from system server only. */
+    int PPAPI_AND_SYSTEM_SERVER = 2;
+
+    /* Consent source of truth intended to be used by default. */
+    @ConsentSourceOfTruth int DEFAULT_CONSENT_SOURCE_OF_TRUTH = PPAPI_AND_SYSTEM_SERVER;
+
+    /** Returns the consent source of truth currently used for PPAPI. */
+    @ConsentSourceOfTruth
+    default int getConsentSourceOfTruth() {
+        return DEFAULT_CONSENT_SOURCE_OF_TRUTH;
+    }
+
     // Group of All Killswitches
 
     /**
@@ -654,7 +735,9 @@ public interface Flags extends Dumpable {
      * which means the PP API is enabled. This flag is used for emergency turning off the whole PP
      * API.
      */
-    boolean GLOBAL_KILL_SWITCH = false; // By default, the PP API is enabled.
+    // Starting M-2023-05, global kill switch is enabled in the binary. Prior to this (namely in
+    // M-2022-11), the value of this flag in the binary was false.
+    boolean GLOBAL_KILL_SWITCH = true;
 
     default boolean getGlobalKillSwitch() {
         return GLOBAL_KILL_SWITCH;
@@ -917,6 +1000,7 @@ public interface Flags extends Dumpable {
                 || getMeasurementKillSwitch()
                 || MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH;
     }
+
     /**
      * Measurement Job Debug Reporting Kill Switch. The default value is false which means Debug
      * Reporting Job is enabled. This flag is used for emergency turning off the Debug Reporting
@@ -1149,9 +1233,75 @@ public interface Flags extends Dumpable {
      */
     float SDK_REQUEST_PERMITS_PER_SECOND = 1; // allow max 1 request to any PP API per second.
 
+    /**
+     * PP API Rate Limit for ad id. This is the max allowed QPS for one API client to one PP API.
+     * Negative Value means skipping the rate limiting checking.
+     */
+    float ADID_REQUEST_PERMITS_PER_SECOND = 5;
+
+    /**
+     * PP API Rate Limit for app set id. This is the max allowed QPS for one API client to one PP
+     * API. Negative Value means skipping the rate limiting checking.
+     */
+    float APPSETID_REQUEST_PERMITS_PER_SECOND = 5;
+
+    /**
+     * PP API Rate Limit for measurement register source. This is the max allowed QPS for one API
+     * client to one PP API. Negative Value means skipping the rate limiting checking.
+     */
+    float MEASUREMENT_REGISTER_SOURCE_REQUEST_PERMITS_PER_SECOND = 5;
+
+    /**
+     * PP API Rate Limit for measurement register web source. This is the max allowed QPS for one
+     * API client to one PP API. Negative Value means skipping the rate limiting checking.
+     */
+    float MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND = 5;
+
+    /**
+     * PP API Rate Limit for Topics API based on App Package name. This is the max allowed QPS for
+     * one API client to one PP API. Negative Value means skipping the rate limiting checking.
+     */
+    float TOPICS_API_APP_REQUEST_PERMITS_PER_SECOND = 1;
+
+    /**
+     * PP API Rate Limit for Topics API based on Sdk Name. This is the max allowed QPS for one API
+     * client to one PP API. Negative Value means skipping the rate limiting checking.
+     */
+    float TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND = 1;
+
     /** Returns the Sdk Request Permits Per Second. */
     default float getSdkRequestPermitsPerSecond() {
         return SDK_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the Ad id Request Permits Per Second. */
+    default float getAdIdRequestPermitsPerSecond() {
+        return ADID_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the App Set Ad Request Permits Per Second. */
+    default float getAppSetIdRequestPermitsPerSecond() {
+        return APPSETID_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the Topics API Based On App Package Name Request Permits Per Second. */
+    default float getTopicsApiAppRequestPermitsPerSecond() {
+        return TOPICS_API_APP_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the Topics API Based On Sdk Name Request Permits Per Second. */
+    default float getTopicsApiSdkRequestPermitsPerSecond() {
+        return TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the Measurement Register Source Request Permits Per Second. */
+    default float getMeasurementRegisterSourceRequestPermitsPerSecond() {
+        return MEASUREMENT_REGISTER_SOURCE_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the Measurement Register Web Source Request Permits Per Second. */
+    default float getMeasurementRegisterWebSourceRequestPermitsPerSecond() {
+        return MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND;
     }
 
     // Flags for ad tech enrollment enforcement
@@ -1323,6 +1473,15 @@ public interface Flags extends Dumpable {
         return MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES;
     }
 
+    /** Ui OTA strings manifest file url, used for MDD download. */
+    String UI_OTA_STRINGS_MANIFEST_FILE_URL =
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-ui-ota-strings/1341/95580b00edbd8cbf62bfa0df9ebd79fba1e5b7ca";
+
+    /** UI OTA strings manifest file url. */
+    default String getUiOtaStringsManifestFileUrl() {
+        return UI_OTA_STRINGS_MANIFEST_FILE_URL;
+    }
+
     /** UI Dialogs feature enabled. */
     boolean UI_DIALOGS_FEATURE_ENABLED = false;
 
@@ -1331,9 +1490,26 @@ public interface Flags extends Dumpable {
         return UI_DIALOGS_FEATURE_ENABLED;
     }
 
+    /**
+     * GA UX enabled. It contains features that have to be enabled at the same time:
+     *
+     * <ul>
+     *   <li>Updated consent landing page
+     *   <li>Consent per API (instead of aggregated one)
+     *   <li>Separate page to control Measurement API
+     * </ul>
+     */
+    boolean GA_UX_FEATURE_ENABLED = false;
+
+    /** Returns if the GA UX feature is enabled. */
+    default boolean getGaUxFeatureEnabled() {
+        return GA_UX_FEATURE_ENABLED;
+    }
+
     long ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS = (int) TimeUnit.HOURS.toMillis(1);
+
     /** Returns the interval in which to run Registration Job Queue Service. */
-    default long getRegistrationJobQueueIntervalMs() {
+    default long getAsyncRegistrationJobQueueIntervalMs() {
         return ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS;
     }
 
@@ -1348,7 +1524,7 @@ public interface Flags extends Dumpable {
      * the Global Kill Switch, Measurement Kill Switch, or the Registration Job Queue Kill Switch
      * value is true.
      */
-    default boolean getRegistrationJobQueueKillSwitch() {
+    default boolean getAsyncRegistrationJobQueueKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
         return getGlobalKillSwitch()
                 || getMeasurementKillSwitch()
@@ -1370,12 +1546,12 @@ public interface Flags extends Dumpable {
         return ENABLE_TOPIC_CONTRIBUTORS_CHECK;
     }
 
-    /** Whether to enable database schema version 3 */
-    boolean ENABLE_DATABASE_SCHEMA_VERSION_3 = false;
+    /** Whether to enable database schema version 5 */
+    boolean ENABLE_DATABASE_SCHEMA_VERSION_5 = false;
 
-    /** @return if to enable database schema version 3. */
-    default boolean getEnableDatabaseSchemaVersion3() {
-        return ENABLE_DATABASE_SCHEMA_VERSION_3;
+    /** @return if to enable database schema version 5. */
+    default boolean getEnableDatabaseSchemaVersion5() {
+        return ENABLE_DATABASE_SCHEMA_VERSION_5;
     }
 
     /** Returns true if the given enrollmentId is blocked from using PP-API. */

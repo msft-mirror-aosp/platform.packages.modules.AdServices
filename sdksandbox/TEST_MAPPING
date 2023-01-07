@@ -37,7 +37,13 @@
       ]
     },
     {
+      "name": "CtsSdkSandboxWebkitTestCases[com.google.android.adservices.apex]"
+    },
+    {
       "name": "SdkSandboxManagerDisabledTests[com.google.android.adservices.apex]"
+    },
+    {
+     "name": "SdkSandboxPerfScenarioTests[com.google.android.adservices.apex]"
     }
   ],
   "mainline-postsubmit": [
@@ -52,6 +58,9 @@
     },
     {
       "name": "CtsSdkSandboxInprocessTests"
+    },
+    {
+      "name": "CtsSdkSandboxWebkitTestCases"
     },
     {
       "name": "SdkSandboxManagerServiceUnitTests"
@@ -84,6 +93,12 @@
     },
     {
       "name": "SdkSandboxManagerDisabledTests"
+    },
+    {
+      "name": "SdkSandboxPerfScenarioTests"
+    },
+    {
+      "name": "SdkSandboxTestUtilsExampleTest"
     }
   ],
   "postsubmit": [

@@ -15,28 +15,39 @@
  */
 package com.android.server.adservices;
 
+import android.adservices.common.AdServicesPermissions;
+import android.annotation.RequiresPermission;
+import android.app.adservices.IAdServicesManager;
+import android.app.adservices.consent.ConsentParcel;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.os.Binder;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.UserHandle;
 import android.provider.DeviceConfig;
-import android.util.Log;
 
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.server.LocalManagerRegistry;
 import com.android.server.SystemService;
+import com.android.server.sdksandbox.SdkSandboxManagerLocal;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 
-/**
- * @hide
- */
-public class AdServicesManagerService {
-    private static final String TAG = "AdServicesManagerService";
+/** @hide */
+public class AdServicesManagerService extends IAdServicesManager.Stub {
+    // The base directory for AdServices System Service.
+    private static final String SYSTEM_DATA = "/data/system/";
+    public static String ADSERVICES_BASE_DIR = SYSTEM_DATA + "adservices";
+    private static final String ERROR_MESSAGE_NOT_PERMITTED_TO_CALL_ADSERVICESMANAGER_API =
+            "Unauthorized caller. Permission to call AdServicesManager API is not granted in System"
+                    + " Server.";
 
     /**
      * Broadcast send from the system service to the AdServices module when a package has been
@@ -73,9 +84,12 @@ public class AdServicesManagerService {
                 registerPackagedChangedBroadcastReceivers();
             };
 
+    private final UserInstanceManager mUserInstanceManager;
+
     @VisibleForTesting
-    AdServicesManagerService(Context context) {
+    AdServicesManagerService(Context context, UserInstanceManager userInstanceManager) {
         mContext = context;
+        mUserInstanceManager = userInstanceManager;
 
         DeviceConfig.addOnPropertiesChangedListener(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -92,13 +106,106 @@ public class AdServicesManagerService {
         /** @hide */
         public Lifecycle(Context context) {
             super(context);
-            mService = new AdServicesManagerService(getContext());
+            mService =
+                    new AdServicesManagerService(
+                            context, new UserInstanceManager(ADSERVICES_BASE_DIR));
         }
 
         /** @hide */
         @Override
         public void onStart() {
-            Log.d(TAG, "AdServicesManagerService started!");
+            LogUtil.d("AdServicesManagerService started!");
+
+            // TODO(b/262282035): Fix this work around in U+.
+            // TODO(b/263128170): Add cts-root tests to make sure that we can start the
+            //  AdServicesManager in U+
+
+            // Register the AdServicesManagerService with the SdkSandboxManagerService.
+            // This is a workaround for b/262282035.
+            // This works since we start the SdkSandboxManagerService before the
+            // AdServicesManagerService in the SystemServer.java
+            SdkSandboxManagerLocal sdkSandboxManagerLocal =
+                    LocalManagerRegistry.getManager(SdkSandboxManagerLocal.class);
+            if (sdkSandboxManagerLocal != null) {
+                sdkSandboxManagerLocal.registerAdServicesManagerService(mService);
+            } else {
+                throw new IllegalStateException(
+                        "SdkSandboxManagerLocal not found when registering AdServicesManager!");
+            }
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public ConsentParcel getConsent(@ConsentParcel.ConsentApiType int consentApiType) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifier();
+
+        LogUtil.v("getConsent() for User Identifier %d", userIdentifier);
+        try {
+            return mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .getConsent(consentApiType);
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to getConsent with exception. Return REVOKED!");
+            return ConsentParcel.createRevokedConsent(consentApiType);
+        }
+    }
+
+    // Return the User Identifier from the CallingUid.
+    private int getUserIdentifier() {
+        return UserHandle.getUserHandleForUid(Binder.getCallingUid()).getIdentifier();
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void setConsent(ConsentParcel consentParcel) {
+        enforceAdServicesManagerPermission();
+
+        Objects.requireNonNull(consentParcel);
+
+        final int userIdentifier = getUserIdentifier();
+        LogUtil.v("setConsent() for User Identifier %d", userIdentifier);
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .setConsent(consentParcel);
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to persist the consent.");
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void recordNotificationDisplayed() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifier();
+        LogUtil.v("recordNotificationDisplayed() for User Identifier %d", userIdentifier);
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .recordNotificationDisplayed();
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to Record Notification Displayed.");
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public boolean wasNotificationDisplayed() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifier();
+        LogUtil.v("wasNotificationDisplayed() for User Identifier %d", userIdentifier);
+        try {
+            return mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .wasNotificationDisplayed();
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to get the wasNotificationDisplayed.");
+            return false;
         }
     }
 
@@ -115,7 +222,7 @@ public class AdServicesManagerService {
             if (FlagsFactory.getFlags().getAdServicesSystemServiceEnabled()) {
                 if (mSystemServicePackageChangedReceiver != null) {
                     // We already register the receiver.
-                    Log.d(TAG, "SystemServicePackageChangedReceiver is already registered.");
+                    LogUtil.d("SystemServicePackageChangedReceiver is already registered.");
                     return;
                 }
 
@@ -146,14 +253,14 @@ public class AdServicesManagerService {
                         packageChangedIntentFilter,
                         /* broadcastPermission */ null,
                         mHandler);
-                Log.d(TAG, "Package changed broadcast receivers registered.");
+                LogUtil.d("Package changed broadcast receivers registered.");
             } else {
                 // FlagsFactory.getFlags().getAdServicesSystemServiceEnabled() == false
-                Log.d(TAG, "AdServicesSystemServiceEnabled is FALSE.");
+                LogUtil.d("AdServicesSystemServiceEnabled is FALSE.");
 
                 // If there is a SystemServicePackageChangeReceiver, unregister it.
                 if (mSystemServicePackageChangedReceiver != null) {
-                    Log.d(TAG, "Unregistering the existing SystemServicePackageChangeReceiver");
+                    LogUtil.d("Unregistering the existing SystemServicePackageChangeReceiver");
                     mContext.unregisterReceiver(mSystemServicePackageChangedReceiver);
                     mSystemServicePackageChangedReceiver = null;
                     mHandlerThread.quitSafely();
@@ -184,7 +291,7 @@ public class AdServicesManagerService {
                 explicitBroadcast.setClassName(
                         info.activityInfo.packageName, info.activityInfo.name);
                 int uidChanged = intent.getIntExtra(Intent.EXTRA_UID, -1);
-                Log.v(TAG, "Package changed with UID " + uidChanged);
+                LogUtil.v("Package changed with UID " + uidChanged);
                 explicitBroadcast.putExtra(Intent.EXTRA_UID, uidChanged);
                 switch (intent.getAction()) {
                     case Intent.ACTION_PACKAGE_DATA_CLEARED:
@@ -207,5 +314,13 @@ public class AdServicesManagerService {
                 }
             }
         }
+    }
+
+    // Check if caller has permission to invoke AdServicesManager APIs.
+    @VisibleForTesting
+    void enforceAdServicesManagerPermission() {
+        mContext.enforceCallingPermission(
+                AdServicesPermissions.ACCESS_ADSERVICES_MANAGER,
+                ERROR_MESSAGE_NOT_PERMITTED_TO_CALL_ADSERVICESMANAGER_API);
     }
 }

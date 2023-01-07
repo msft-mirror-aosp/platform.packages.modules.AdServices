@@ -91,6 +91,15 @@
         android:description="@string/permdesc_accessAdServicesState"
         android:protectionLevel="signature|configurator" />
 
+    <!-- Permission to allow calling AdServiceManager's APIs. -->
+    <permission android:name="android.permission.ACCESS_ADSERVICES_MANAGER"
+                android:label="@string/permlab_accessAdServicesManager"
+                android:description="@string/permdesc_accessAdServicesManager"
+                android:protectionLevel="signature" />
+
+    <!-- Allow AdServicesApk (PPAPI) to call AdService's system service. -->
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_MANAGER" />
+
     <uses-permission android:name="android.permission.ACCESS_PRIVILEGED_AD_ID" />
     <uses-permission android:name="android.permission.ACCESS_PRIVILEGED_APP_SET_ID" />
 
@@ -102,6 +111,7 @@
             android:forceQueryable="true"
             android:allowBackup="false"
             android:supportsRtl="true"
+            android:icon="@drawable/ic_android_icon"
             android:theme="@style/FilterTouches">
         <!-- Activity for the main view of Adservices Settings UI-->
         <activity
@@ -154,6 +164,17 @@
             android:theme="@style/Theme.SubSettingsBase">
             <intent-filter android:priority="1">
                 <action android:name="android.adservices.ui.BLOCKED_APPS" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <!-- Activity for the ads measurement view of AdServices Settings UI-->
+        <activity
+            android:name="com.android.adservices.ui.settings.activities.MeasurementActivity"
+            android:exported="true"
+            android:theme="@style/Theme.SubSettingsBase">
+            <intent-filter android:priority="1">
+                <action android:name="android.adservices.ui.MEASUREMENT" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>

@@ -96,6 +96,10 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
         processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
         assertThat(processDump).doesNotContain(APP_PACKAGE + '\n');
         assertThat(processDump).doesNotContain(SANDBOX_1_PROCESS_NAME);
+
+        // Wait 5 seconds to ensure that the sandbox has not restarted dying.
+        Thread.sleep(5000);
+        waitForProcessDeath(SANDBOX_1_PROCESS_NAME);
     }
 
     @Test
@@ -144,21 +148,21 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
     @Test
     public void testAppAndSdkSandboxAreKilledForNonLoadedSdkUpdate() throws Exception {
         // Have the app load the first SDK.
-        startActivity(APP_PACKAGE, APP_ACTIVITY);
+        startActivity(APP_2_PACKAGE, APP_2_ACTIVITY);
 
         // Should see app/sdk sandbox running
         String processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
-        assertThat(processDump).contains(APP_PACKAGE + '\n');
-        assertThat(processDump).contains(SANDBOX_1_PROCESS_NAME);
+        assertThat(processDump).contains(APP_2_PROCESS_NAME + '\n');
+        assertThat(processDump).contains(SANDBOX_2_PROCESS_NAME);
 
         // Update package consumed by the app, but not loaded into the sandbox.
         installPackage(CODE_APK_2, "-d");
-        waitForProcessDeath(SANDBOX_1_PROCESS_NAME);
+        waitForProcessDeath(SANDBOX_2_PROCESS_NAME);
 
         // Should no longer see app/sdk sandbox running
         processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
-        assertThat(processDump).doesNotContain(APP_PACKAGE + '\n');
-        assertThat(processDump).doesNotContain(SANDBOX_1_PROCESS_NAME);
+        assertThat(processDump).doesNotContain(APP_2_PROCESS_NAME + '\n');
+        assertThat(processDump).doesNotContain(SANDBOX_2_PROCESS_NAME);
     }
 
     @Test

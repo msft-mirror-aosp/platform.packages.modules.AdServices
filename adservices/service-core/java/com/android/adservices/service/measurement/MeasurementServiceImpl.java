@@ -167,7 +167,9 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         sBackgroundExecutor.execute(
                 () -> {
                     performRegistration(
-                            (service) -> service.register(request, now()),
+                            (service) ->
+                                    service.register(
+                                            request, request.isAdIdPermissionGranted(), now()),
                             List.of(
                                     new KillSwitchAccessResolver(() -> isRegisterDisabled(request)),
                                     new ForegroundEnforcementAccessResolver(
@@ -226,7 +228,9 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                     final Supplier<Boolean> enforceForeground =
                             mFlags::getEnforceForegroundStatusForMeasurementRegisterWebSource;
                     performRegistration(
-                            (service) -> service.registerWebSource(request, now()),
+                            (service) ->
+                                    service.registerWebSource(
+                                            request, request.isAdIdPermissionGranted(), now()),
                             List.of(
                                     new KillSwitchAccessResolver(
                                             mFlags::getMeasurementApiRegisterWebSourceKillSwitch),
@@ -291,7 +295,9 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                     final Supplier<Boolean> enforceForeground =
                             mFlags::getEnforceForegroundStatusForMeasurementRegisterWebTrigger;
                     performRegistration(
-                            (service) -> service.registerWebTrigger(request, now()),
+                            (service) ->
+                                    service.registerWebTrigger(
+                                            request, request.isAdIdPermissionGranted(), now()),
                             List.of(
                                     new KillSwitchAccessResolver(
                                             mFlags::getMeasurementApiRegisterWebTriggerKillSwitch),
@@ -400,6 +406,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                 List.of(
                                         new KillSwitchAccessResolver(
                                                 mFlags::getMeasurementApiStatusKillSwitch),
+                                        new UserConsentAccessResolver(mConsentManager),
                                         new ForegroundEnforcementAccessResolver(
                                                 apiNameId,
                                                 callerUid,

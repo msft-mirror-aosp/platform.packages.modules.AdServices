@@ -194,10 +194,10 @@ public class TopicsManagerTest {
         assertThat(sdk3Result.getTopics()).hasSize(1);
         Topic topic = sdk3Result.getTopics().get(0);
 
-        // Top 5 classifications for empty string with v2 model are [10230, 10253, 10227, 10250,
-        // 10257]. This is computed by running the model on the device for empty string.
+        // Top 5 classifications for empty string with v3 model are [10230, 10228, 10253, 10232,
+        // 10140]. This is computed by running the model on the device for empty string.
         // topic is one of the 5 classification topics of the Test App.
-        List<Integer> expectedTopTopicIds = Arrays.asList(10230, 10253, 10227, 10250, 10257);
+        List<Integer> expectedTopTopicIds = Arrays.asList(10230, 10228, 10253, 10232, 10140);
         assertThat(topic.getTopicId()).isIn(expectedTopTopicIds);
 
         assertThat(topic.getModelVersion()).isAtLeast(2L);

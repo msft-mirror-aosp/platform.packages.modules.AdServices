@@ -62,6 +62,7 @@ public class ConsentNotificationJobService extends JobService {
                         .setMinimumLatency(initialDelay)
                         .setOverrideDeadline(deadline)
                         .setExtras(bundle)
+                        .setPersisted(true)
                         .build();
         jobScheduler.schedule(job);
         LogUtil.d("Scheduling Consent notification job ...");

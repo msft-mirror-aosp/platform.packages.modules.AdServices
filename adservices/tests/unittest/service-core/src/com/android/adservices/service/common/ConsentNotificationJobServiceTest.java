@@ -27,15 +27,17 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
+import android.app.job.JobInfo;
 import android.app.job.JobParameters;
+import android.app.job.JobScheduler;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.PersistableBundle;
 
-import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -45,7 +47,9 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
 import org.mockito.Spy;
@@ -55,18 +59,18 @@ import java.util.Calendar;
 import java.util.TimeZone;
 import java.util.concurrent.CountDownLatch;
 
-/** Unit test for {@link com.android.adservices.ui.notifications.ConsentNotificationJobService}. */
+/** Unit test for {@link com.android.adservices.service.common.ConsentNotificationJobService}. */
 public class ConsentNotificationJobServiceTest {
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
-
     @Spy
     private ConsentNotificationJobService mConsentNotificationJobService =
             new ConsentNotificationJobService();
 
+    @Mock Context mContext;
     @Mock JobParameters mMockJobParameters;
     @Mock PackageManager mPackageManager;
     @Mock AdServicesSyncUtil mAdservicesSyncUtil;
     @Mock PersistableBundle mPersistableBundle;
+    @Mock JobScheduler mMockJobScheduler;
     @Mock Flags mFlags;
     private MockitoSession mStaticMockSession = null;
 
@@ -98,7 +102,8 @@ public class ConsentNotificationJobServiceTest {
     /** Test successful onStart method execution when notification was not yet displayed. */
     @Test
     public void testOnStartJobAsyncUtilExecute() throws InterruptedException {
-        ConsentManager consentManager = spy(ConsentManager.getInstance(CONTEXT));
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+        ConsentManager consentManager = mock(ConsentManager.class);
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
         doReturn(mPackageManager).when(mConsentNotificationJobService).getPackageManager();
@@ -119,7 +124,6 @@ public class ConsentNotificationJobServiceTest {
                 .jobFinished(mMockJobParameters, false);
 
         doNothing().when(mAdservicesSyncUtil).execute(any(Context.class), any(Boolean.class));
-        doReturn(mFlags).when(FlagsFactory::getFlags);
         when(mFlags.getConsentNotificationDebugMode()).thenReturn(false);
 
         mConsentNotificationJobService.onStartJob(mMockJobParameters);
@@ -225,5 +229,19 @@ public class ConsentNotificationJobServiceTest {
         long deadline = ConsentNotificationJobService.calculateDeadline(calendar);
         assertThat(initialDelay).isEqualTo(0L);
         assertThat(deadline).isEqualTo(0L);
+    }
+
+    @Test
+    public void testSchedule_jobInfoIsPersisted() {
+        final ArgumentCaptor<JobInfo> argumentCaptor = ArgumentCaptor.forClass(JobInfo.class);
+        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        when(mContext.getSystemService(JobScheduler.class)).thenReturn(mMockJobScheduler);
+        when(mContext.getPackageName()).thenReturn("testSchedule_jobInfoIsPersisted");
+
+        ConsentNotificationJobService.schedule(mContext, true);
+
+        Mockito.verify(mMockJobScheduler, times(1)).schedule(argumentCaptor.capture());
+        assertThat(argumentCaptor.getValue()).isNotNull();
+        assertThat(argumentCaptor.getValue().isPersisted()).isTrue();
     }
 }

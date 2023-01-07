@@ -49,6 +49,7 @@ import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.measurement.inputverification.ClickVerifier;
 import com.android.adservices.service.measurement.registration.EnqueueAsyncRegistration;
@@ -145,7 +146,7 @@ public final class MeasurementImpl {
 
     /** Implement a registration request, returning a {@link AdServicesStatusUtils.StatusCode}. */
     @AdServicesStatusUtils.StatusCode
-    int register(@NonNull RegistrationRequest request, long requestTime) {
+    int register(@NonNull RegistrationRequest request, boolean adIdPermission, long requestTime) {
         mReadWriteLock.readLock().lock();
         try {
             switch (request.getRegistrationType()) {
@@ -153,6 +154,7 @@ public final class MeasurementImpl {
                 case RegistrationRequest.REGISTER_TRIGGER:
                     return EnqueueAsyncRegistration.appSourceOrTriggerRegistrationRequest(
                                     request,
+                                    adIdPermission,
                                     getRegistrant(request.getAppPackageName()),
                                     requestTime,
                                     mEnrollmentDao,
@@ -172,7 +174,10 @@ public final class MeasurementImpl {
      * Processes a source registration request delegated to OS from the caller, e.g. Chrome,
      * returning a status code.
      */
-    int registerWebSource(@NonNull WebSourceRegistrationRequestInternal request, long requestTime) {
+    int registerWebSource(
+            @NonNull WebSourceRegistrationRequestInternal request,
+            boolean adIdPermission,
+            long requestTime) {
         WebSourceRegistrationRequest sourceRegistrationRequest =
                 request.getSourceRegistrationRequest();
         if (!isValid(sourceRegistrationRequest)) {
@@ -184,6 +189,7 @@ public final class MeasurementImpl {
             boolean enqueueStatus =
                     EnqueueAsyncRegistration.webSourceRegistrationRequest(
                             sourceRegistrationRequest,
+                            adIdPermission,
                             getRegistrant(request.getAppPackageName()),
                             requestTime,
                             mEnrollmentDao,
@@ -204,7 +210,9 @@ public final class MeasurementImpl {
      * returning a status code.
      */
     int registerWebTrigger(
-            @NonNull WebTriggerRegistrationRequestInternal request, long requestTime) {
+            @NonNull WebTriggerRegistrationRequestInternal request,
+            boolean adIdPermission,
+            long requestTime) {
         WebTriggerRegistrationRequest triggerRegistrationRequest =
                 request.getTriggerRegistrationRequest();
         if (!isValid(triggerRegistrationRequest)) {
@@ -216,6 +224,7 @@ public final class MeasurementImpl {
             boolean enqueueStatus =
                     EnqueueAsyncRegistration.webTriggerRegistrationRequest(
                             triggerRegistrationRequest,
+                            adIdPermission,
                             getRegistrant(request.getAppPackageName()),
                             requestTime,
                             mEnrollmentDao,
@@ -253,7 +262,14 @@ public final class MeasurementImpl {
      * Implement a getMeasurementApiStatus request, returning a result code.
      */
     @MeasurementManager.MeasurementApiState int getMeasurementApiStatus() {
-        AdServicesApiConsent consent = ConsentManager.getInstance(mContext).getConsent();
+        AdServicesApiConsent consent;
+        if (mFlags.getGaUxFeatureEnabled()) {
+            consent =
+                    ConsentManager.getInstance(mContext).getConsent(AdServicesApiType.MEASUREMENTS);
+        } else {
+            consent = ConsentManager.getInstance(mContext).getConsent();
+        }
+
         if (consent.isGiven()) {
             return MeasurementManager.MEASUREMENT_API_STATE_ENABLED;
         } else {

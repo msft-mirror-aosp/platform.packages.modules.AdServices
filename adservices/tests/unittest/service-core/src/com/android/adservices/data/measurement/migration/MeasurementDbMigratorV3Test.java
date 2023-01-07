@@ -19,6 +19,8 @@ package com.android.adservices.data.measurement.migration;
 import static com.android.adservices.data.DbTestUtil.doesIndexExist;
 import static com.android.adservices.data.DbTestUtil.doesTableExistAndColumnCountMatch;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -26,9 +28,12 @@ import static org.junit.Assert.assertTrue;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.measurement.MeasurementTables;
+import com.android.adservices.service.measurement.AsyncRegistration;
+import com.android.adservices.service.measurement.WebUtil;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -39,6 +44,39 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTestBase {
+    private static final String FILTERS_V2_1 = "{\"id1\":[\"val11\",\"val12\"]}";
+    private static final String FILTERS_V2_2 = "{\"id2\":[\"val21\",\"val22\",\"val23\"]}";
+    private static final String FILTERS_V3_1;
+    private static final String FILTERS_V3_2;
+    private static final String EVENT_TRIGGERS_V2;
+    private static final String AGGREGATE_TRIGGER_DATA_V2;
+    private static final String EVENT_TRIGGERS_V3;
+    private static final String AGGREGATE_TRIGGER_DATA_V3;
+
+    static {
+        EVENT_TRIGGERS_V2 =
+                "[{\"trigger_data\":1,\"filters\":" + FILTERS_V2_1 + "},"
+                + "{\"trigger_data\":2,\"filters\":" + FILTERS_V2_1
+                + ",\"not_filters\":" + FILTERS_V2_2 + "},"
+                + "{\"priority\":100},{}]";
+        AGGREGATE_TRIGGER_DATA_V2 =
+                "[{\"key_piece\":\"0x400\",\"source_keys\":[\"key11\"],"
+                + "\"filters\":" + FILTERS_V2_1 + "},"
+                + "{\"key_piece\":\"0x800\",\"source_keys\":[\"key21\",\"key22\"],"
+                + "\"filters\":" + FILTERS_V2_1 + ",\"not_filters\":" + FILTERS_V2_2 + "}]";
+        FILTERS_V3_1 = "[" + FILTERS_V2_1 + "]";
+        FILTERS_V3_2 = "[" + FILTERS_V2_2 + "]";
+        EVENT_TRIGGERS_V3 =
+                "[{\"trigger_data\":1,\"filters\":" + FILTERS_V3_1 + "},"
+                + "{\"trigger_data\":2,\"filters\":" + FILTERS_V3_1
+                + ",\"not_filters\":" + FILTERS_V3_2 + "}]";
+        AGGREGATE_TRIGGER_DATA_V3 =
+                "[{\"key_piece\":\"0x400\",\"source_keys\":[\"key11\"],"
+                + "\"filters\":" + FILTERS_V3_1 + "},"
+                + "{\"key_piece\":\"0x800\",\"source_keys\":[\"key21\",\"key22\"],"
+                + "\"filters\":" + FILTERS_V3_1 + ",\"not_filters\":" + FILTERS_V3_2 + "}"
+                + "{\"priority\":100,\"trigger_data\":\"0\"},{\"trigger_data\":\"0\"}]";
+    }
 
     private static final String[][] INSERTED_EVENT_REPORT_DATA = {
         // id, destination, sourceId
@@ -58,6 +96,22 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
         {"5", "android-app://com.another.android.app", "random five"},
     };
 
+    private static final String[][] INSERTED_TRIGGER_DATA = {
+        // id, eventTriggers, aggregateTriggerData, filters, notFilters
+        {"1", null, null, null, null},
+        {"2", "{[]}", null, null, null},
+        {"3", "[}]", null, null, null},
+        {"4", EVENT_TRIGGERS_V2, AGGREGATE_TRIGGER_DATA_V2, FILTERS_V2_1, FILTERS_V2_2}
+    };
+
+    private static final String[][] MIGRATED_TRIGGER_DATA = {
+        // id, eventTriggers, aggregateTriggerData, filters, notFilters
+        {"1", "[]", null, null, null},
+        {"2", "[]", null, null, null},
+        {"3", "[]", null, null, null},
+        {"4", EVENT_TRIGGERS_V3, AGGREGATE_TRIGGER_DATA_V3, FILTERS_V3_1, FILTERS_V3_2}
+    };
+
     @Test
     public void performMigration_success_v2ToV3() throws JSONException {
         // Setup
@@ -69,8 +123,9 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
 
         insertV2Sources(db);
         insertEventReports(db);
-
+        insertTriggers(db);
         new MeasurementDbMigratorV3().performMigration(db, 2, 3);
+
         // To mimic real onUpgrade behaviour. Without closing the db, changes don't reflect.
         db.close();
 
@@ -78,7 +133,53 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
         db = dbHelper.getReadableDatabase();
         assertTrue(
                 doesTableExistAndColumnCountMatch(
-                        db, MeasurementTables.AsyncRegistrationContract.TABLE, 16));
+                        db, MeasurementTables.AsyncRegistrationContract.TABLE, 17));
+        assertTrue(
+                doesTableExistAndColumnCountMatch(
+                        db, MeasurementTables.EventReportContract.TABLE, 17));
+        assertTrue(
+                doesTableExistAndColumnCountMatch(db, MeasurementTables.AggregateReport.TABLE, 14));
+        assertTrue(
+                doesTableExistAndColumnCountMatch(
+                        db, MeasurementTables.AttributionContract.TABLE, 10));
+        assertTrue(
+                doesTableExistAndColumnCountMatch(db, MeasurementTables.SourceContract.TABLE, 25));
+        assertTrue(
+                doesTableExistAndColumnCountMatch(db, MeasurementTables.TriggerContract.TABLE, 16));
+        assertTrue(
+                doesTableExistAndColumnCountMatch(
+                        db, MeasurementTables.DebugReportContract.TABLE, 4));
+        assertTrue(doesIndexExist(db, "idx_msmt_attribution_ss_so_ds_do_ei_tt"));
+        assertSourceMigration(db);
+        assertEventReportMigration(db);
+        assertTriggerMigration(db);
+        db.close();
+    }
+
+    @Test
+    public void performMigration_twiceToSameVersion() throws JSONException {
+        // Setup
+        DbHelper dbHelper = getDbHelper(1);
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+
+        // Execution
+        new MeasurementDbMigratorV2().performMigration(db, 1, 2);
+        insertV2Sources(db);
+        insertTriggers(db);
+        insertEventReports(db);
+        new MeasurementDbMigratorV3().performMigration(db, 2, 3);
+
+        // Perform migration again.
+        new MeasurementDbMigratorV3().performMigration(db, 3, 3);
+
+        // To mimic real onUpgrade behaviour. Without closing the db, changes don't reflect.
+        db.close();
+
+        // Verify
+        db = dbHelper.getReadableDatabase();
+        assertTrue(
+                doesTableExistAndColumnCountMatch(
+                        db, MeasurementTables.AsyncRegistrationContract.TABLE, 17));
         assertTrue(
                 doesTableExistAndColumnCountMatch(
                         db, MeasurementTables.EventReportContract.TABLE, 17));
@@ -89,7 +190,33 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
                         db, MeasurementTables.AttributionContract.TABLE, 10));
         assertTrue(doesIndexExist(db, "idx_msmt_attribution_ss_so_ds_do_ei_tt"));
         assertSourceMigration(db);
+        assertTriggerMigration(db);
         assertEventReportMigration(db);
+        db.close();
+    }
+
+    @Test
+    public void insertAndRetrieveAsyncData_afterV3Migration() {
+        // Setup
+        DbHelper dbHelper = getDbHelper(1);
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        // Execution
+        new MeasurementDbMigratorV2().performMigration(db, 1, 2);
+        insertV2Sources(db);
+        insertEventReports(db);
+        insertTriggers(db);
+        new MeasurementDbMigratorV3().performMigration(db, 2, 3);
+        // To mimic real onUpgrade behaviour. Without closing the db, changes don't reflect.
+        db.close();
+
+        // Write a new asyncRegistrator row.
+        db = dbHelper.getWritableDatabase();
+        ContentValues asyncRegistrationRow = getAsyncRegistrationEntry();
+        db.insert(MeasurementTables.AsyncRegistrationContract.TABLE, null, asyncRegistrationRow);
+        db.close();
+
+        db = dbHelper.getReadableDatabase();
+        assertDbContainsAsyncRegistrationValues(db, asyncRegistrationRow);
     }
 
     @Override
@@ -109,6 +236,18 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
                     INSERTED_EVENT_REPORT_DATA[i][0],
                     INSERTED_EVENT_REPORT_DATA[i][1],
                     INSERTED_EVENT_REPORT_DATA[i][2]);
+        }
+    }
+
+    private static void insertTriggers(SQLiteDatabase db) {
+        for (int i = 0; i < INSERTED_TRIGGER_DATA.length; i++) {
+            insertTrigger(
+                    db,
+                    INSERTED_TRIGGER_DATA[i][0],
+                    INSERTED_TRIGGER_DATA[i][1],
+                    INSERTED_TRIGGER_DATA[i][2],
+                    INSERTED_TRIGGER_DATA[i][3],
+                    INSERTED_TRIGGER_DATA[i][4]);
         }
     }
 
@@ -152,6 +291,141 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
         db.insert(MeasurementTables.SourceContract.TABLE, null, invalidValues);
     }
 
+    private static ContentValues getAsyncRegistrationEntry() {
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.AsyncRegistrationContract.ID, "id");
+        values.put(MeasurementTables.AsyncRegistrationContract.ENROLLMENT_ID, "enrollment_id");
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.REGISTRATION_URI,
+                WebUtil.validUri("https://foo.test/bar?ad=134").toString());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.WEB_DESTINATION,
+                WebUtil.validUri("https://web-destination.test").toString());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.VERIFIED_DESTINATION,
+                Uri.parse("android-app://com.ver-app_destination").toString());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.OS_DESTINATION,
+                Uri.parse("android-app://com.app_destination").toString());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.REGISTRANT,
+                Uri.parse("android-app://com.registrant").toString());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.TOP_ORIGIN,
+                WebUtil.validUri("https://example.test").toString());
+        values.put(MeasurementTables.AsyncRegistrationContract.REDIRECT_COUNT, 0);
+        values.put(MeasurementTables.AsyncRegistrationContract.REQUEST_TIME, 0L);
+        values.put(MeasurementTables.AsyncRegistrationContract.RETRY_COUNT, 0L);
+        values.put(MeasurementTables.AsyncRegistrationContract.LAST_PROCESSING_TIME, 0L);
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.TYPE,
+                AsyncRegistration.RegistrationType.APP_SOURCE.ordinal());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.SOURCE_TYPE,
+                AsyncRegistration.RegistrationType.APP_SOURCE.ordinal());
+        values.put(MeasurementTables.AsyncRegistrationContract.DEBUG_KEY_ALLOWED, 1);
+        return values;
+    }
+
+    private static void assertDbContainsAsyncRegistrationValues(
+            SQLiteDatabase db, ContentValues values) {
+        Cursor cursor =
+                db.query(
+                        MeasurementTables.AsyncRegistrationContract.TABLE,
+                        /* columns= */ null,
+                        /* selection= */ null,
+                        /* selectionArgs= */ null,
+                        /* groupBy= */ null,
+                        /* having= */ null,
+                        /* orderBy= */ null,
+                        /* limit= */ null);
+        assertThat(cursor.getCount()).isEqualTo(1);
+        assertThat(cursor.moveToNext()).isTrue();
+        assertThat(
+                        cursor.getString(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AsyncRegistrationContract.ENROLLMENT_ID)))
+                .isEqualTo(values.get(MeasurementTables.AsyncRegistrationContract.ENROLLMENT_ID));
+        assertThat(
+                        cursor.getString(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AsyncRegistrationContract
+                                                .REGISTRATION_URI)))
+                .isEqualTo(
+                        values.get(MeasurementTables.AsyncRegistrationContract.REGISTRATION_URI));
+        assertThat(
+                        cursor.getString(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AsyncRegistrationContract
+                                                .WEB_DESTINATION)))
+                .isEqualTo(values.get(MeasurementTables.AsyncRegistrationContract.WEB_DESTINATION));
+        assertThat(
+                        cursor.getString(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AsyncRegistrationContract
+                                                .VERIFIED_DESTINATION)))
+                .isEqualTo(
+                        values.get(
+                                MeasurementTables.AsyncRegistrationContract.VERIFIED_DESTINATION));
+        assertThat(
+                        cursor.getString(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AsyncRegistrationContract
+                                                .OS_DESTINATION)))
+                .isEqualTo(values.get(MeasurementTables.AsyncRegistrationContract.OS_DESTINATION));
+        assertThat(
+                        cursor.getString(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AsyncRegistrationContract.REGISTRANT)))
+                .isEqualTo(values.get(MeasurementTables.AsyncRegistrationContract.REGISTRANT));
+        assertThat(
+                        cursor.getString(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AsyncRegistrationContract.TOP_ORIGIN)))
+                .isEqualTo(values.get(MeasurementTables.AsyncRegistrationContract.TOP_ORIGIN));
+        assertThat(
+                        cursor.getInt(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AsyncRegistrationContract
+                                                .REDIRECT_COUNT)))
+                .isEqualTo(values.get(MeasurementTables.AsyncRegistrationContract.REDIRECT_COUNT));
+        assertThat(
+                        cursor.getLong(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AsyncRegistrationContract.REQUEST_TIME)))
+                .isEqualTo(values.get(MeasurementTables.AsyncRegistrationContract.REQUEST_TIME));
+        assertThat(
+                        cursor.getLong(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AsyncRegistrationContract.RETRY_COUNT)))
+                .isEqualTo(values.get(MeasurementTables.AsyncRegistrationContract.RETRY_COUNT));
+        assertThat(
+                        cursor.getLong(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AsyncRegistrationContract
+                                                .LAST_PROCESSING_TIME)))
+                .isEqualTo(
+                        values.get(
+                                MeasurementTables.AsyncRegistrationContract.LAST_PROCESSING_TIME));
+        assertThat(
+                        cursor.getInt(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AsyncRegistrationContract.TYPE)))
+                .isEqualTo(values.get(MeasurementTables.AsyncRegistrationContract.TYPE));
+        assertThat(
+                        cursor.getInt(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AsyncRegistrationContract.SOURCE_TYPE)))
+                .isEqualTo(values.get(MeasurementTables.AsyncRegistrationContract.SOURCE_TYPE));
+        assertThat(
+                        cursor.getInt(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AsyncRegistrationContract
+                                                .DEBUG_KEY_ALLOWED)))
+                .isEqualTo(
+                        values.get(MeasurementTables.AsyncRegistrationContract.DEBUG_KEY_ALLOWED));
+    }
+
     private static void assertEventReportMigration(SQLiteDatabase db) {
         Cursor cursor = db.query(
                 MeasurementTables.EventReportContract.TABLE,
@@ -165,6 +439,24 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
                 null);
         while (cursor.moveToNext()) {
             assertEventReportMigrated(cursor);
+        }
+    }
+
+    private static void assertTriggerMigration(SQLiteDatabase db) {
+        Cursor cursor = db.query(
+                MeasurementTables.TriggerContract.TABLE,
+                new String[] {
+                    MeasurementTables.TriggerContract.ID,
+                    MeasurementTables.TriggerContract.EVENT_TRIGGERS,
+                    MeasurementTables.TriggerContract.AGGREGATE_TRIGGER_DATA,
+                    MeasurementTables.TriggerContract.FILTERS,
+                    MeasurementTables.TriggerContract.NOT_FILTERS
+                },
+                null, null, null, null,
+                /* orderBy */ MeasurementTables.TriggerContract.ID,
+                null);
+        while (cursor.moveToNext()) {
+            assertTriggerMigrated(cursor);
         }
     }
 
@@ -201,13 +493,24 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
         assertNull(aggregateSourceString2);
     }
 
-    private static void insertEventReport(SQLiteDatabase db, String id, String destination,
-            String sourceId) {
+    private static void insertEventReport(
+            SQLiteDatabase db, String id, String destination, String sourceId) {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.EventReportContract.ID, id);
         values.put(MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION, destination);
         values.put(MeasurementTables.EventReportContract.SOURCE_ID, sourceId);
         db.insert(MeasurementTables.EventReportContract.TABLE, null, values);
+    }
+
+    private static void insertTrigger(SQLiteDatabase db, String id, String eventTriggers,
+            String aggregateTriggerData, String filters, String notFilters) {
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.TriggerContract.ID, id);
+        values.put(MeasurementTables.TriggerContract.EVENT_TRIGGERS, eventTriggers);
+        values.put(MeasurementTables.TriggerContract.AGGREGATE_TRIGGER_DATA, aggregateTriggerData);
+        values.put(MeasurementTables.TriggerContract.FILTERS, filters);
+        values.put(MeasurementTables.TriggerContract.NOT_FILTERS, notFilters);
+        db.insert(MeasurementTables.TriggerContract.TABLE, null, values);
     }
 
     private static void assertEventReportMigrated(Cursor cursor) {
@@ -218,5 +521,19 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
                 MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION)));
         assertEquals(MIGRATED_EVENT_REPORT_DATA[i][2], cursor.getString(cursor.getColumnIndex(
                 MeasurementTables.EventReportContract.SOURCE_EVENT_ID)));
+    }
+
+    private static void assertTriggerMigrated(Cursor cursor) {
+        int i = cursor.getPosition();
+        assertEquals(MIGRATED_TRIGGER_DATA[i][0], cursor.getString(cursor.getColumnIndex(
+                MeasurementTables.TriggerContract.ID)));
+        assertEquals(MIGRATED_TRIGGER_DATA[i][1], cursor.getString(cursor.getColumnIndex(
+                MeasurementTables.TriggerContract.EVENT_TRIGGERS)));
+        assertEquals(MIGRATED_TRIGGER_DATA[i][2], cursor.getString(cursor.getColumnIndex(
+                MeasurementTables.TriggerContract.AGGREGATE_TRIGGER_DATA)));
+        assertEquals(MIGRATED_TRIGGER_DATA[i][3], cursor.getString(cursor.getColumnIndex(
+                MeasurementTables.TriggerContract.FILTERS)));
+        assertEquals(MIGRATED_TRIGGER_DATA[i][4], cursor.getString(cursor.getColumnIndex(
+                MeasurementTables.TriggerContract.FILTERS)));
     }
 }

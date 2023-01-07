@@ -36,6 +36,8 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"Επιτρέπει σε μια εφαρμογή να αποκτήσει πρόσβαση στο AdService’s enablement state modification API."</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"Πρόσβαση στο AdService’s enablement state API"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Επιτρέπει σε μια εφαρμογή να αποκτήσει πρόσβαση στο AdService’s enablement state API."</string>
+    <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Πρόσβαση στα API του AdServicesManager"</string>
+    <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Επιτρέπει σε μια εφαρμογή να αποκτήσει πρόσβαση στα API του AdServicesManager."</string>
     <string name="app_label" msgid="5985320129629013968">"Σύστημα Android"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Λάβετε μέρος στο πρόγραμμα beta απορρήτου διαφημίσεων του Android"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Το Android εξερευνά πιο ιδιωτικούς τρόπους για την εμφάνιση διαφημίσεων από εφαρμογές"</string>
@@ -81,6 +83,7 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Πλαίσιο ιδιωτικότητας"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Το πρόγραμμα beta απορρήτου διαφημίσεων του Android παρέχει νέες λειτουργίες τις οποίες μπορούν να χρησιμοποιούν οι εφαρμογές για να εμφανίζουν διαφημίσεις που μπορεί να σας αρέσουν. Αυτές οι τεχνολογίες δεν χρησιμοποιούν αναγνωριστικά συσκευών.\n\nΤο Android μπορεί να εκτιμήσει τα είδη διαφημίσεων που μπορεί να σας ενδιαφέρουν και να αποθηκεύσει αυτά τα ενδιαφέροντα προσωρινά στη συσκευή σας. Αυτό επιτρέπει στις εφαρμογές να εμφανίζουν διαφημίσεις που είναι συναφείς για εσάς, χωρίς να παρακολουθούν τη δραστηριότητά σας σε ιστοτόπους και εφαρμογές από άλλους προγραμματιστές."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Δεν έχετε αποκλεισμένα ενδιαφέροντα"</string>
+    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Έγινε επαναφορά των ενδιαφερόντων"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Οι εφαρμογές μπορούν να εκτιμήσουν τα ενδιαφέροντά σας και να τα αποθηκεύσουν προσωρινά με το Android. Αργότερα, μια διαφορετική εφαρμογή μπορεί να εμφανίσει μια διαφήμιση με βάση αυτά τα ενδιαφέροντα.\n\nΑν αποκλείσετε μια εφαρμογή, θα πάψει να εκτιμά άλλα ενδιαφέροντα. Δεν θα προστεθεί ξανά σε αυτήν τη λίστα εφαρμογών, παρά μόνο αν καταργήσετε τον αποκλεισμό της. Τα ενδιαφέροντα που έχουν ήδη εκτιμηθεί από την εφαρμογή θα διαγραφούν, αλλά ίσως συνεχίσετε να βλέπετε μερικές σχετικές διαφημίσεις."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Εφαρμογές που έχετε αποκλείσει"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Επαναφορά ενδιαφερόντων που έχουν εκτιμηθεί από εφαρμογές"</string>

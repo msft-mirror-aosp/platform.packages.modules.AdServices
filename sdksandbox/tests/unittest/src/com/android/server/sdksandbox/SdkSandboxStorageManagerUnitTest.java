@@ -23,6 +23,7 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.FileUtils;
+import android.os.IBinder;
 import android.os.UserHandle;
 
 import androidx.annotation.NonNull;
@@ -71,7 +72,7 @@ public class SdkSandboxStorageManagerUnitTest {
     @Before
     public void setup() throws Exception {
         Context context = InstrumentationRegistry.getInstrumentation().getContext();
-        mTestDir = context.getDataDir().getPath();
+        mTestDir = context.getDir("test_dir", Context.MODE_PRIVATE).getPath();
         mSpyContext = Mockito.spy(context);
 
         mPmMock = Mockito.mock(PackageManager.class);
@@ -94,11 +95,6 @@ public class SdkSandboxStorageManagerUnitTest {
         mSdkSandboxStorageManager =
                 new SdkSandboxStorageManager(
                         mSpyContext, mSdkSandboxManagerLocal, packageManagerLocal, mTestDir);
-    }
-
-    @After
-    public void teardown() throws Exception {
-        FileUtils.deleteContents(new File(mTestDir));
     }
 
     @After
@@ -599,5 +595,8 @@ public class SdkSandboxStorageManagerUnitTest {
                 @NonNull String clientAppPackageName, int clientAppUid) {
             return mInstrumentationRunning;
         }
+
+        @Override
+        public void registerAdServicesManagerService(IBinder iBinder) {}
     }
 }

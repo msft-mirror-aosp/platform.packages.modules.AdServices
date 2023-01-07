@@ -67,6 +67,7 @@ import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApp
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -148,8 +149,7 @@ public class TopicsServiceImplTest {
 
         DbHelper dbHelper = DbTestUtil.getDbHelperForTest();
         mTopicsDao = new TopicsDao(dbHelper);
-        CacheManager cacheManager =
-                new CacheManager(mMockEpochManager, mTopicsDao, mMockFlags, mLogger);
+        CacheManager cacheManager = new CacheManager(mTopicsDao, mMockFlags, mLogger);
 
         mBlockedTopicsManager = new BlockedTopicsManager(mTopicsDao);
         AppUpdateManager appUpdateManager =
@@ -182,6 +182,8 @@ public class TopicsServiceImplTest {
 
         DbTestUtil.deleteTable(TopicsTables.BlockedTopicsContract.TABLE);
         when(mConsentManager.getConsent()).thenReturn(AdServicesApiConsent.GIVEN);
+        when(mConsentManager.getConsent(AdServicesApiType.TOPICS))
+                .thenReturn(AdServicesApiConsent.GIVEN);
         when(mMockSdkContext.getPackageManager()).thenReturn(mPackageManager);
         when(mPackageManager.getPackageUid(TEST_APP_PACKAGE_NAME, 0)).thenReturn(Process.myUid());
 
@@ -219,8 +221,18 @@ public class TopicsServiceImplTest {
 
     @Test
     public void checkNoUserConsent() throws InterruptedException {
+        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(false);
         when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
         when(mConsentManager.getConsent()).thenReturn(AdServicesApiConsent.REVOKED);
+        invokeGetTopicsAndVerifyError(mContext, STATUS_USER_CONSENT_REVOKED);
+    }
+
+    @Test
+    public void checkNoUserConsent_gaUxFeatureEnabled() throws InterruptedException {
+        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
+        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        when(mConsentManager.getConsent(AdServicesApiType.TOPICS))
+                .thenReturn(AdServicesApiConsent.REVOKED);
         invokeGetTopicsAndVerifyError(mContext, STATUS_USER_CONSENT_REVOKED);
     }
 
@@ -449,6 +461,13 @@ public class TopicsServiceImplTest {
     @Test
     public void getTopics() throws Exception {
         when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        runGetTopics(createTestTopicsServiceImplInstance());
+    }
+
+    @Test
+    public void getTopicsGaUx() throws Exception {
+        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
         runGetTopics(createTestTopicsServiceImplInstance());
     }
 

@@ -21,6 +21,10 @@ import android.annotation.Nullable;
 import android.net.Uri;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.common.cache.CacheProviderFactory;
+import com.android.adservices.service.common.cache.DBCacheEntry;
+import com.android.adservices.service.common.cache.HttpCache;
+import com.android.adservices.service.profiling.Tracing;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.base.Charsets;
@@ -31,17 +35,24 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
+import org.json.JSONObject;
+
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
@@ -50,7 +61,7 @@ import javax.net.ssl.HttpsURLConnection;
 /**
  * This is an HTTPS client to be used by the PP API services. The primary uses of this client
  * include fetching payloads from ad tech-provided URIs and reporting on generated reporting URLs
- * through GET calls.
+ * through GET or POST calls.
  */
 public class AdServicesHttpsClient {
 
@@ -63,10 +74,11 @@ public class AdServicesHttpsClient {
     private static final String CONTENT_SIZE_ERROR = "Content size exceeds limit!";
     private final ListeningExecutorService mExecutorService;
     private final UriConverter mUriConverter;
+    private final HttpCache mCache;
 
     /**
      * Create an HTTPS client with the input {@link ExecutorService} and initial connect and read
-     * timeouts (in milliseconds).
+     * timeouts (in milliseconds). Using this constructor does not provide any caching.
      *
      * @param executorService an {@link ExecutorService} that allows connection and fetching to be
      *     executed outside the main calling thread
@@ -83,7 +95,13 @@ public class AdServicesHttpsClient {
             int connectTimeoutMs,
             int readTimeoutMs,
             long maxBytes) {
-        this(executorService, connectTimeoutMs, readTimeoutMs, maxBytes, new UriConverter());
+        this(
+                executorService,
+                connectTimeoutMs,
+                readTimeoutMs,
+                maxBytes,
+                new UriConverter(),
+                CacheProviderFactory.createNoOpCache());
     }
 
     /**
@@ -92,9 +110,17 @@ public class AdServicesHttpsClient {
      *
      * @param executorService an {@link ExecutorService} that allows connection and fetching to be
      *     executed outside the main calling thread
+     * @param cache A {@link HttpCache} that caches requests and response based on the use case
      */
-    public AdServicesHttpsClient(ExecutorService executorService) {
-        this(executorService, DEFAULT_TIMEOUT_MS, DEFAULT_TIMEOUT_MS, DEFAULT_MAX_BYTES);
+    public AdServicesHttpsClient(
+            @NonNull ExecutorService executorService, @NonNull HttpCache cache) {
+        this(
+                executorService,
+                DEFAULT_TIMEOUT_MS,
+                DEFAULT_TIMEOUT_MS,
+                DEFAULT_MAX_BYTES,
+                new UriConverter(),
+                cache);
     }
 
     @VisibleForTesting
@@ -103,12 +129,14 @@ public class AdServicesHttpsClient {
             int connectTimeoutMs,
             int readTimeoutMs,
             long maxBytes,
-            UriConverter uriConverter) {
+            UriConverter uriConverter,
+            @NonNull HttpCache cache) {
         mConnectTimeoutMs = connectTimeoutMs;
         mReadTimeoutMs = readTimeoutMs;
         mExecutorService = MoreExecutors.listeningDecorator(executorService);
         mMaxBytes = maxBytes;
         mUriConverter = uriConverter;
+        mCache = cache;
     }
 
     /** Opens the Url Connection */
@@ -117,7 +145,6 @@ public class AdServicesHttpsClient {
         Objects.requireNonNull(url);
         return url.openConnection();
     }
-
 
     @NonNull
     private HttpsURLConnection setupConnection(@NonNull URL url) throws IOException {
@@ -132,6 +159,16 @@ public class AdServicesHttpsClient {
         return urlConnection;
     }
 
+    @NonNull
+    private HttpsURLConnection setupPostConnectionWithJson(URL url) throws IOException {
+        Objects.requireNonNull(url);
+        HttpsURLConnection urlConnection = setupConnection(url);
+        urlConnection.setRequestMethod("POST");
+        urlConnection.setRequestProperty("Content-Type", "application/json");
+        urlConnection.setDoOutput(true);
+        return urlConnection;
+    }
+
     /**
      * Performs a GET request on the given URI in order to fetch a payload.
      *
@@ -140,19 +177,44 @@ public class AdServicesHttpsClient {
      */
     @NonNull
     public ListenableFuture<String> fetchPayload(@NonNull Uri uri) {
+        // TODO(b/260042942) : Refactor to let the Cache decide if caching should be used or not
+        return fetchPayload(uri, false);
+    }
+
+    /**
+     * Performs a GET request on the given URI in order to fetch a payload.
+     *
+     * @param uri a {@link Uri} pointing to a target server, converted to a URL for fetching
+     * @param useCache the intent to use cache for storing & retrieving results
+     * @return a string containing the fetched payload
+     */
+    @NonNull
+    public ListenableFuture<String> fetchPayload(@NonNull Uri uri, boolean useCache) {
         Objects.requireNonNull(uri);
         return ClosingFuture.from(mExecutorService.submit(() -> mUriConverter.toUrl(uri)))
                 .transformAsync(
                         (closer, url) ->
                                 ClosingFuture.from(
-                                        mExecutorService.submit(() -> doFetchPayload(url, closer))),
+                                        mExecutorService.submit(
+                                                () -> doFetchPayload(url, closer, useCache))),
                         mExecutorService)
                 .finishToFuture();
     }
 
-    private String doFetchPayload(@NonNull URL url, @NonNull ClosingFuture.DeferredCloser closer)
+    private String doFetchPayload(
+            @NonNull URL url, @NonNull ClosingFuture.DeferredCloser closer, boolean useCache)
             throws IOException {
+        int traceCookie = Tracing.beginAsyncSection(Tracing.FETCH_PAYLOAD);
         LogUtil.v("Downloading payload from: \"%s\"", url.toString());
+        if (useCache) {
+            DBCacheEntry cachedEntry = mCache.get(url);
+            if (cachedEntry != null) {
+                LogUtil.v("Cache hit for url: %s", url.toString());
+                return cachedEntry.getResponseBody();
+            }
+            LogUtil.v("Cache miss for url: %s", url.toString());
+        }
+        int httpTraceCookie = Tracing.beginAsyncSection(Tracing.HTTP_REQUEST);
         HttpsURLConnection urlConnection;
         try {
             urlConnection = setupConnection(url);
@@ -165,11 +227,18 @@ public class AdServicesHttpsClient {
         try {
             // TODO(b/237342352): Both connect and read timeouts are kludged in this method and if
             //  necessary need to be separated
+            Map<String, List<String>> requestPropertiesMap = urlConnection.getRequestProperties();
             inputStream = new BufferedInputStream(urlConnection.getInputStream());
             closer.eventuallyClose(new CloseableConnectionWrapper(urlConnection), mExecutorService);
             int responseCode = urlConnection.getResponseCode();
             if (isSuccessfulResponse(responseCode)) {
-                return fromInputStream(inputStream, urlConnection.getContentLengthLong());
+                String responseBody =
+                        fromInputStream(inputStream, urlConnection.getContentLengthLong());
+                if (useCache) {
+                    LogUtil.v("Putting data in cache for url: %s", url);
+                    mCache.put(url, responseBody, requestPropertiesMap);
+                }
+                return responseBody;
             } else {
                 throwError(urlConnection, responseCode);
                 return null;
@@ -179,28 +248,30 @@ public class AdServicesHttpsClient {
         } finally {
             maybeDisconnect(urlConnection);
             maybeClose(inputStream);
+            Tracing.endAsyncSection(Tracing.HTTP_REQUEST, httpTraceCookie);
+            Tracing.endAsyncSection(Tracing.FETCH_PAYLOAD, traceCookie);
         }
     }
 
     /**
-     * Performs a GET request on a Uri to perform reporting
+     * Performs a GET request on a Uri without reading the response.
      *
-     * @param uri Provided as a result of invoking buyer or seller javascript.
-     * @return an int that represents the HTTP response code in a successful case
+     * @param uri The URI to perform the GET request on.
      */
-    public ListenableFuture<Void> reportUri(@NonNull Uri uri) {
+    public ListenableFuture<Void> getAndReadNothing(@NonNull Uri uri) {
         Objects.requireNonNull(uri);
 
         return ClosingFuture.from(mExecutorService.submit(() -> mUriConverter.toUrl(uri)))
                 .transformAsync(
                         (closer, url) ->
                                 ClosingFuture.from(
-                                        mExecutorService.submit(() -> doReportUri(url, closer))),
+                                        mExecutorService.submit(
+                                                () -> doGetAndReadNothing(url, closer))),
                         mExecutorService)
                 .finishToFuture();
     }
 
-    private Void doReportUri(@NonNull URL url, @NonNull ClosingFuture.DeferredCloser closer)
+    private Void doGetAndReadNothing(@NonNull URL url, @NonNull ClosingFuture.DeferredCloser closer)
             throws IOException {
         LogUtil.v("Reporting to: \"%s\"", url.toString());
         HttpsURLConnection urlConnection;
@@ -218,9 +289,68 @@ public class AdServicesHttpsClient {
             closer.eventuallyClose(new CloseableConnectionWrapper(urlConnection), mExecutorService);
             int responseCode = urlConnection.getResponseCode();
             if (isSuccessfulResponse(responseCode)) {
-                LogUtil.d("Successfully reported for URl: " + url);
+                LogUtil.d("GET request succeeded for URL: " + url);
             } else {
-                LogUtil.w("Failed to report for URL: " + url);
+                LogUtil.d("GET request failed for URL: " + url);
+                throwError(urlConnection, responseCode);
+            }
+            return null;
+        } catch (SocketTimeoutException e) {
+            throw new IOException("Connection timed out while reading response!", e);
+        } finally {
+            maybeDisconnect(urlConnection);
+        }
+    }
+
+    /**
+     * Performs a POST request on a Uri and attaches {@code JSONObject} to the request
+     *
+     * @param uri to do the POST request on
+     * @param eventData Attached to the POST request.
+     */
+    public ListenableFuture<Void> postJson(@NonNull Uri uri, @NonNull JSONObject eventData) {
+        Objects.requireNonNull(uri);
+        Objects.requireNonNull(eventData);
+
+        return ClosingFuture.from(mExecutorService.submit(() -> mUriConverter.toUrl(uri)))
+                .transformAsync(
+                        (closer, url) ->
+                                ClosingFuture.from(
+                                        mExecutorService.submit(
+                                                () -> doPostJson(url, eventData, closer))),
+                        mExecutorService)
+                .finishToFuture();
+    }
+
+    private Void doPostJson(URL url, JSONObject eventData, ClosingFuture.DeferredCloser closer)
+            throws IOException {
+        LogUtil.v("Reporting to: \"%s\"", url.toString());
+        HttpsURLConnection urlConnection;
+
+        try {
+            urlConnection = setupPostConnectionWithJson(url);
+
+        } catch (IOException e) {
+            LogUtil.d(e, "Failed to open URL");
+            throw new IllegalArgumentException("Failed to open URL!");
+        }
+
+        try {
+            // TODO(b/237342352): Both connect and read timeouts are kludged in this method and if
+            //  necessary need to be separated
+            closer.eventuallyClose(new CloseableConnectionWrapper(urlConnection), mExecutorService);
+
+            OutputStream os = urlConnection.getOutputStream();
+            OutputStreamWriter osw = new OutputStreamWriter(os, StandardCharsets.UTF_8);
+            osw.write(eventData.toString());
+            osw.flush();
+            osw.close();
+
+            int responseCode = urlConnection.getResponseCode();
+            if (isSuccessfulResponse(responseCode)) {
+                LogUtil.d("POST request succeeded for URL: " + url);
+            } else {
+                LogUtil.d("POST request failed for URL: " + url);
                 throwError(urlConnection, responseCode);
             }
             return null;
@@ -386,5 +516,10 @@ public class AdServicesHttpsClient {
             }
             return url;
         }
+    }
+
+    /** @return the cache associated with this instance of client */
+    public HttpCache getAssociatedCache() {
+        return mCache;
     }
 }

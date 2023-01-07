@@ -36,6 +36,8 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"Nagbibigay-daan sa isang application na i-access ang enablement state modification API ng AdService."</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"Access sa enablement state API ng AdService"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Nagbibigay-daan sa isang application na i-access ang enablement state API ng AdService."</string>
+    <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Access sa mga API ng AdServicesManager"</string>
+    <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Nagbibigay-daan sa isang application na i-access ang mga API ng AdServicesManager."</string>
     <string name="app_label" msgid="5985320129629013968">"Android System"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Sumali sa beta ng privacy sa mga ad ng Android"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Nag-e-explore ang Android ng mga mas pribadong paraan para makapagpakita sa iyo ng mga ad ang mga app"</string>
@@ -81,6 +83,7 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Nagbibigay ang beta ng privacy sa mga ad ng Android ng mga bagong feature na magagamit ng mga app para magpakita sa iyo ng mga ad na posibleng magustuhan mo. Hindi gumagamit ang mga teknolohiyang ito ng mga identifier ng device.\n\nMatatantya ng Android ang mga uri ng mga ad kung saan ka posibleng may interes, at pansamantalang sine-save ang mga interes sa device mo. Nagbibigay-daan ito sa mga app na magpakita sa iyo ng mga may kaugnayang ad, nang hindi sinusubaybayan ang aktibidad mo sa mga website at app mula sa iba pang developer."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Wala kang naka-block na interes"</string>
+    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Na-reset ang mga interes"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Puwedeng tantyahin ng mga app ang iyong mga interes at pansamantalang i-save ang mga ito sa Android. Sa pagtagal, puwedeng may ibang app na magpakita sa iyo ng ad batay sa mga interes na ito.\n\nKung iba-block mo ang isang app, hindi na ito magtatantya ng mga interes. Hindi ito idaragdag ulit sa listahan ng mga app na ito maliban na lang kung i-unblock mo ito. Made-delete ang mga interes na tinatantya na ng app, pero posibleng makakita ka pa rin ng ilang nauugnay na ad."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Mga app na na-block mo"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"I-reset ang mga interes na tinatantya ng mga app"</string>

@@ -20,20 +20,20 @@ import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.Context;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
-import android.os.Looper;
 import android.os.RemoteException;
 import android.util.Log;
 import android.view.View;
 
 import androidx.annotation.Nullable;
-import androidx.test.annotation.UiThreadTest;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This class contains all the binding logic needed for a test suite within an SDK. To set up SDK
@@ -70,9 +70,30 @@ public abstract class SdkSandboxTestScenarioRunner extends SandboxedSdkProvider 
 
         ISdkSandboxTestExecutor.Stub testExecutor =
                 new ISdkSandboxTestExecutor.Stub() {
-                    public void executeTest(
-                            String testName,
-                            Bundle testParams,
+                    public List<String> retrieveAnnotatedMethods(String annotationName) {
+                        List<String> annotatedMethods = new ArrayList<>();
+
+                        try {
+                            Class<? extends Annotation> annotation =
+                                    Class.forName(annotationName).asSubclass(Annotation.class);
+                            Method[] testInstanceMethods =
+                                    mTestInstance.getClass().getDeclaredMethods();
+
+                            for (final Method method : testInstanceMethods) {
+                                if (method.isAnnotationPresent(annotation)) {
+                                    annotatedMethods.add(method.getName());
+                                }
+                            }
+                        } catch (Exception e) {
+                            Log.e(TAG, "Failed to find methods with annotations");
+                        }
+
+                        return annotatedMethods;
+                    }
+
+                    public void invokeMethod(
+                            String methodName,
+                            Bundle methodParams,
                             ISdkSandboxResultCallback resultCallback) {
                         try {
                             // We allow test authors to write a test without the bundle parameters
@@ -80,31 +101,18 @@ public abstract class SdkSandboxTestScenarioRunner extends SandboxedSdkProvider 
                             // We will first look for the test name with a bundle parameter
                             // if we don't find that, we will load the test without a parameter.
                             boolean hasParams = true;
-                            Method testMethod =
-                                    findTest(testName, /*throwException*/ false, Bundle.class);
-                            if (testMethod == null) {
+                            Method methodFound =
+                                    findMethodOnTestInstance(
+                                            methodName, /*throwException*/ false, Bundle.class);
+                            if (methodFound == null) {
                                 hasParams = false;
-                                testMethod = findTest(testName, /*throwException*/ true);
+                                methodFound =
+                                        findMethodOnTestInstance(
+                                                methodName, /*throwException*/ true);
                             }
 
-                            if (testMethod.isAnnotationPresent(UiThreadTest.class)) {
-                                // The method reference has to be final before being
-                                // used inside a lambda to ensure the variant stays the
-                                // same
-                                final Method method = testMethod;
-                                final boolean params = hasParams;
-                                new Handler(Looper.getMainLooper())
-                                        .post(
-                                                () -> {
-                                                    invokeTestMethod(
-                                                            method,
-                                                            params,
-                                                            testParams,
-                                                            resultCallback);
-                                                });
-                            } else {
-                                invokeTestMethod(testMethod, hasParams, testParams, resultCallback);
-                            }
+                            invokeMethodOnTestInstance(
+                                    methodFound, hasParams, methodParams, resultCallback);
                         } catch (NoSuchMethodException error) {
                             try {
                                 resultCallback.onError(getStackTrace(error));
@@ -123,10 +131,11 @@ public abstract class SdkSandboxTestScenarioRunner extends SandboxedSdkProvider 
         return mBinder;
     }
 
-    private Method findTest(String testName, boolean throwException, Class<?>... parameterTypes)
+    private Method findMethodOnTestInstance(
+            String methodName, boolean throwException, Class<?>... parameterTypes)
             throws NoSuchMethodException {
         try {
-            return mTestInstance.getClass().getMethod(testName, parameterTypes);
+            return mTestInstance.getClass().getMethod(methodName, parameterTypes);
         } catch (NoSuchMethodException error) {
             if (throwException) {
                 throw error;
@@ -135,7 +144,7 @@ public abstract class SdkSandboxTestScenarioRunner extends SandboxedSdkProvider 
         }
     }
 
-    private void invokeTestMethod(
+    private void invokeMethodOnTestInstance(
             final Method method,
             final boolean hasParams,
             final Bundle params,
