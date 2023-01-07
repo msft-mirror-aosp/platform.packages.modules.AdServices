@@ -16,7 +16,7 @@
 
 package com.android.adservices.data.adselection;
 
-import android.annotation.IntDef;
+import android.adservices.adselection.ReportInteractionInput;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
@@ -25,9 +25,6 @@ import androidx.room.Entity;
 
 import com.google.auto.value.AutoValue;
 import com.google.auto.value.AutoValue.CopyAnnotations;
-
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 
 /**
  * This POJO represents the DBRegisteredAdInteraction data in the registered_ad_interactions table
@@ -39,14 +36,6 @@ import java.lang.annotation.RetentionPolicy;
         tableName = "registered_ad_interactions",
         primaryKeys = {"ad_selection_id", "interaction_key", "destination"})
 public abstract class DBRegisteredAdInteraction {
-    public static final int DESTINATION_SELLER = 0;
-    public static final int DESTINATION_BUYER = 1;
-    // Will move this @IntDef to a public request object when it is ready
-    @IntDef(
-            prefix = {"DESTINATION_"},
-            value = {DESTINATION_SELLER, DESTINATION_BUYER})
-    @Retention(RetentionPolicy.SOURCE)
-    public @interface Destination {}
 
     /**
      * @return adSelectionId, the unique identifier for the ad selection process associated with
@@ -68,7 +57,7 @@ public abstract class DBRegisteredAdInteraction {
      */
     @CopyAnnotations
     @ColumnInfo(name = "destination")
-    @Destination
+    @ReportInteractionInput.Destination
     public abstract int getDestination();
 
     /** @return Uri to be used during interaction reporting */
@@ -82,7 +71,7 @@ public abstract class DBRegisteredAdInteraction {
     public static DBRegisteredAdInteraction create(
             long adSelectionId,
             String interactionKey,
-            @Destination int destination,
+            @ReportInteractionInput.Destination int destination,
             Uri interactionReportingUri) {
         return builder()
                 .setAdSelectionId(adSelectionId)
@@ -113,7 +102,7 @@ public abstract class DBRegisteredAdInteraction {
         /** Sets the destination for the {@link DBRegisteredAdInteraction} entry. */
         @NonNull
         public abstract DBRegisteredAdInteraction.Builder setDestination(
-                @Destination int destination);
+                @ReportInteractionInput.Destination int destination);
 
         /** Sets the interactionReportingUri for the {@link DBRegisteredAdInteraction} entry. */
         @NonNull

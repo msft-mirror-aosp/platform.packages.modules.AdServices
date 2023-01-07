@@ -16,14 +16,16 @@
 
 package com.android.adservices.service.adselection;
 
-import static com.android.adservices.data.adselection.DBRegisteredAdInteraction.DESTINATION_BUYER;
-import static com.android.adservices.data.adselection.DBRegisteredAdInteraction.DESTINATION_SELLER;
+import static android.adservices.adselection.ReportInteractionInput.DESTINATION_BUYER;
+import static android.adservices.adselection.ReportInteractionInput.DESTINATION_SELLER;
+
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
+import android.adservices.adselection.ReportInteractionInput;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
@@ -595,7 +597,7 @@ public class ImpressionReporter {
             @NonNull List<InteractionUriRegistrationInfo> interactionUriRegistrationInfos,
             @NonNull AdTechUriValidator validator,
             long adSelectionId,
-            @DBRegisteredAdInteraction.Destination int destination) {
+            @ReportInteractionInput.Destination int destination) {
         long numSellerEventUriEntries = 0;
         long maxRegisteredAdEventsPerAdTech = mFlags.getReportImpressionMaxEventUriEntriesCount();
 
