@@ -175,8 +175,10 @@ public class AsyncSourceFetcher {
             result.setFilterData(
                     json.getJSONObject(SourceHeaderContract.FILTER_DATA).toString());
         }
+
+        Uri appUri = null;
         if (!json.isNull(SourceHeaderContract.DESTINATION)) {
-            Uri appUri = Uri.parse(json.getString(SourceHeaderContract.DESTINATION));
+            appUri = Uri.parse(json.getString(SourceHeaderContract.DESTINATION));
             if (appUri.getScheme() == null) {
                 LogUtil.d("App destination is missing app scheme, adding.");
                 appUri = Uri.parse(mDefaultAndroidAppUriPrefix + appUri);
@@ -187,15 +189,21 @@ public class AsyncSourceFetcher {
                         appUri.getScheme());
                 return false;
             }
-            if (shouldValidateDestinationWebSource
-                    && appDestinationFromRequest != null
-                    && !appDestinationFromRequest.equals(appUri)) {
-                LogUtil.d("Expected destination to match with the supplied one!");
-                return false;
-            }
+        }
+
+        if (shouldValidateDestinationWebSource
+                && appDestinationFromRequest != null // Only validate when non-null in request
+                && !appDestinationFromRequest.equals(appUri)) {
+            LogUtil.d("Expected destination to match with the supplied one!");
+            return false;
+        }
+
+        if (appUri != null) {
             result.setAppDestination(getBaseUri(appUri));
         }
+
         if (shouldValidateDestinationWebSource
+                && webDestinationFromRequest != null // Only validate when non-null in request
                 && !doUriFieldsMatch(
                         json, SourceHeaderContract.WEB_DESTINATION, webDestinationFromRequest)) {
             LogUtil.d("Expected web_destination to match with ths supplied one!");
