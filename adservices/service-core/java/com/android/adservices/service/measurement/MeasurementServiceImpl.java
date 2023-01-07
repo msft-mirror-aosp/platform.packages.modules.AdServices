@@ -406,6 +406,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                 List.of(
                                         new KillSwitchAccessResolver(
                                                 mFlags::getMeasurementApiStatusKillSwitch),
+                                        new UserConsentAccessResolver(mConsentManager),
                                         new ForegroundEnforcementAccessResolver(
                                                 apiNameId,
                                                 callerUid,

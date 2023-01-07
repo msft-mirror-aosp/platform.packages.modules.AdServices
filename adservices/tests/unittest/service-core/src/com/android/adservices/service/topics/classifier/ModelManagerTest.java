@@ -466,15 +466,15 @@ public class ModelManagerTest {
                 .containsExactly("taxonomy_type", "taxonomy_version", "build_id", "updated_date");
 
         // The property "version_info" should have attribution "taxonomy_version"
-        // and its value should be "2".
+        // and its value should be "3".
         assertThat(mProductionClassifierAssetsMetadata.get("version_info").get("taxonomy_version"))
-                .isEqualTo("2");
+                .isEqualTo("3");
 
         // The property "version_info" should have attribution "build_id"
-        // and its value should be "2". This is used for comparing the model version with MDD
+        // and its value should be "3". This is used for comparing the model version with MDD
         // downloaded model.
         assertThat(mProductionClassifierAssetsMetadata.get("version_info").get("build_id"))
-                .isEqualTo("2");
+                .isEqualTo("3");
 
         // The property "version_info" should have attribution "taxonomy_type"
         // and its value should be "chrome_and_mobile_taxonomy".
@@ -491,7 +491,7 @@ public class ModelManagerTest {
         // The asset "labels_topics" should have attribution "asset_version" and its value should be
         // "2"
         assertThat(mProductionClassifierAssetsMetadata.get("labels_topics").get("asset_version"))
-                .isEqualTo("2");
+                .isEqualTo("3");
 
         // The asset "labels_topics" should have attribution "path" and its value should be
         // "assets/classifier/labels_topics.txt"
@@ -499,9 +499,9 @@ public class ModelManagerTest {
                 .isEqualTo("assets/classifier/labels_topics.txt");
 
         // The asset "labels_topics" should have attribution "updated_date" and its value should be
-        // "2022-07-29"
+        // "2022-09-10"
         assertThat(mProductionClassifierAssetsMetadata.get("labels_topics").get("updated_date"))
-                .isEqualTo("2022-07-29");
+                .isEqualTo("2022-09-10");
 
         // There should contain 5 metadata attributions in asset "topic_id_to_name"
         assertThat(mProductionClassifierAssetsMetadata.get("topic_id_to_name")).hasSize(4);
@@ -547,15 +547,15 @@ public class ModelManagerTest {
                 .containsExactly("taxonomy_type", "taxonomy_version", "build_id", "updated_date");
 
         // The property "version_info" should have attribution "taxonomy_version"
-        // and its value should be "2".
+        // and its value should be "3".
         assertThat(mProductionClassifierAssetsMetadata.get("version_info").get("taxonomy_version"))
-                .isEqualTo("2");
+                .isEqualTo("3");
 
         // The property "version_info" should have attribution "build_id"
-        // and its value should be "2". This is used for comparing the model version with MDD
+        // and its value should be "3". This is used for comparing the model version with MDD
         // downloaded model.
         assertThat(mProductionClassifierAssetsMetadata.get("version_info").get("build_id"))
-                .isEqualTo("2");
+                .isEqualTo("3");
 
         // The property "version_info" should have attribution "taxonomy_type"
         // and its value should be "chrome_and_mobile_taxonomy".
@@ -572,7 +572,7 @@ public class ModelManagerTest {
         // The asset "labels_topics" should have attribution "asset_version" and its value should be
         // "2"
         assertThat(mProductionClassifierAssetsMetadata.get("labels_topics").get("asset_version"))
-                .isEqualTo("2");
+                .isEqualTo("3");
 
         // The asset "labels_topics" should have attribution "path" and its value should be
         // "assets/classifier/labels_topics.txt"
@@ -580,9 +580,9 @@ public class ModelManagerTest {
                 .isEqualTo("assets/classifier/labels_topics.txt");
 
         // The asset "labels_topics" should have attribution "updated_date" and its value should be
-        // "2022-07-29"
+        // "2022-09-10"
         assertThat(mProductionClassifierAssetsMetadata.get("labels_topics").get("updated_date"))
-                .isEqualTo("2022-07-29");
+                .isEqualTo("2022-09-10");
 
         // There should contain 5 metadata attributions in asset "topic_id_to_name"
         assertThat(mProductionClassifierAssetsMetadata.get("topic_id_to_name")).hasSize(4);
