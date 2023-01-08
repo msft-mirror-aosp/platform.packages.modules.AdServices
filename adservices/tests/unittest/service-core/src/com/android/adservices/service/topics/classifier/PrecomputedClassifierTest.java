@@ -132,8 +132,8 @@ public class PrecomputedClassifierTest {
                 .isEqualTo(
                         EpochComputationClassifierStats.builder()
                                 .setTopicIds(ImmutableList.of(10222, 10223, 10116, 10243, 10254))
-                                .setBuildId(3)
-                                .setAssetVersion("3")
+                                .setBuildId(2)
+                                .setAssetVersion("2")
                                 .setClassifierType(
                                         AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__PRECOMPUTED_CLASSIFIER)
                                 .setOnDeviceClassifierStatus(
@@ -159,8 +159,8 @@ public class PrecomputedClassifierTest {
                 .isEqualTo(
                         EpochComputationClassifierStats.builder()
                                 .setTopicIds(ImmutableList.of())
-                                .setBuildId(3)
-                                .setAssetVersion("3")
+                                .setBuildId(2)
+                                .setAssetVersion("2")
                                 .setClassifierType(
                                         AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__PRECOMPUTED_CLASSIFIER)
                                 .setOnDeviceClassifierStatus(
