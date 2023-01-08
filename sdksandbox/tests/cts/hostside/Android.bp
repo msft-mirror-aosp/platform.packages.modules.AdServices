@@ -37,6 +37,7 @@ java_test_host {
         ":SdkSandboxDataIsolationTestProvider",
         ":SdkSandboxStorageTestProvider",
         ":SdkSandboxMediationTestProvider",
+        ":SdkSandboxMultiUserTestProvider",
     ],
 }
 
@@ -120,6 +121,21 @@ android_test_helper_app {
     ],
     static_libs: [
         "CtsMediationTestSdkApi",
+        "compatibility-device-util-axt",
+    ],
+    min_sdk_version: "33",
+    target_sdk_version: "33",
+}
+
+android_test_helper_app {
+    name: "SdkSandboxMultiUserTestProvider",
+    manifest: "provider/MultiUserTestManifest.xml",
+    defaults: ["platform_app_defaults"],
+    certificate: ":sdksandbox-test",
+    srcs: [
+       "provider/src/**/multiusertest/*.java",
+    ],
+    static_libs: [
         "compatibility-device-util-axt",
     ],
     min_sdk_version: "33",

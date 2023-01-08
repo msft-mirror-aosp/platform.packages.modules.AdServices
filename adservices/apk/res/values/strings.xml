@@ -1217,4 +1217,10 @@
     <string name="topic10445">Travel Agencies &amp; Services</string>
     <!-- Text for the topic name for topic Travel Guides &amp; Travelogues. [CHAR LIMIT=NONE] -->
     <string name="topic10446">Travel Guides &amp; Travelogues</string>
+    <string name="settingsUI_dialog_measurement_opt_out_title" translatable="false">Turn off measurement?</string>
+    <string name="settingsUI_topics_switch_title" translatable="false">Use ad topics</string>
+    <string name="settingsUI_measurement_switch_title" translatable="false">Use ad measurement</string>
+    <string name="settingsUI_apps_switch_title" translatable="false">Use app-suggested ads</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" translatable="false">Turn off topics?</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" translatable="false">Turn off Fledge?</string>
 </resources>

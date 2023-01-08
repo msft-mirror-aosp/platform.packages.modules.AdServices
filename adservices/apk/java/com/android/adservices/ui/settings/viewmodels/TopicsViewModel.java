@@ -24,8 +24,12 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsTopicsFragment;
+import com.android.settingslib.widget.MainSwitchBar;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -43,9 +47,12 @@ public class TopicsViewModel extends AndroidViewModel {
     private final MutableLiveData<ImmutableList<Topic>> mTopics;
     private final MutableLiveData<ImmutableList<Topic>> mBlockedTopics;
     private final ConsentManager mConsentManager;
+    private final MutableLiveData<Boolean> mTopicsConsent;
 
     /** UI event triggered by view model */
     public enum TopicsViewModelUiEvent {
+        SWITCH_ON_TOPICS,
+        SWITCH_OFF_TOPICS,
         BLOCK_TOPIC,
         RESET_TOPICS,
         DISPLAY_BLOCKED_TOPICS_FRAGMENT,
@@ -53,19 +60,25 @@ public class TopicsViewModel extends AndroidViewModel {
 
     public TopicsViewModel(@NonNull Application application) {
         super(application);
-
         mConsentManager = ConsentManager.getInstance(application);
         mTopics = new MutableLiveData<>(getTopicsFromConsentManager());
         mBlockedTopics = new MutableLiveData<>(getBlockedTopicsFromConsentManager());
+        mTopicsConsent =
+                FlagsFactory.getFlags().getGaUxFeatureEnabled()
+                        ? new MutableLiveData<>(getTopicsConsentFromConsentManager())
+                        : null;
     }
 
     @VisibleForTesting
-    public TopicsViewModel(@NonNull Application application, ConsentManager consentManager) {
+    public TopicsViewModel(
+            @NonNull Application application,
+            ConsentManager consentManager,
+            Boolean topicsConsent) {
         super(application);
-
         mConsentManager = consentManager;
         mTopics = new MutableLiveData<>(getTopicsFromConsentManager());
         mBlockedTopics = new MutableLiveData<>(getBlockedTopicsFromConsentManager());
+        mTopicsConsent = new MutableLiveData<>(topicsConsent);
     }
 
     /**
@@ -156,5 +169,47 @@ public class TopicsViewModel extends AndroidViewModel {
 
     private ImmutableList<Topic> getBlockedTopicsFromConsentManager() {
         return mConsentManager.getTopicsWithRevokedConsent();
+    }
+
+    /**
+     * Provides {@link AdServicesApiConsent} displayed in {@link AdServicesSettingsTopicsFragment}
+     * as a Switch value.
+     *
+     * @return mTopicsConsent indicates if user has consented to Topics Api usage.
+     */
+    public MutableLiveData<Boolean> getTopicsConsent() {
+        return mTopicsConsent;
+    }
+
+    /**
+     * Sets the user consent for PP APIs.
+     *
+     * @param newTopicsConsentValue the new value that user consent should be set to for Topics PP
+     *     APIs.
+     */
+    public void setTopicsConsent(Boolean newTopicsConsentValue) {
+        if (newTopicsConsentValue) {
+            mConsentManager.enable(getApplication(), AdServicesApiType.TOPICS);
+        } else {
+            mConsentManager.disable(getApplication(), AdServicesApiType.TOPICS);
+        }
+        mTopicsConsent.postValue(getTopicsConsentFromConsentManager());
+    }
+    /**
+     * Triggers opt out process for Privacy Sandbox. Also reverts the switch state, since
+     * confirmation dialog will handle switch change.
+     */
+    public void consentSwitchClickHandler(MainSwitchBar topicsSwitchBar) {
+        if (topicsSwitchBar.isChecked()) {
+            topicsSwitchBar.setChecked(false);
+            mEventTrigger.postValue(new Pair<>(TopicsViewModelUiEvent.SWITCH_ON_TOPICS, null));
+        } else {
+            topicsSwitchBar.setChecked(true);
+            mEventTrigger.postValue(new Pair<>(TopicsViewModelUiEvent.SWITCH_OFF_TOPICS, null));
+        }
+    }
+
+    private boolean getTopicsConsentFromConsentManager() {
+        return mConsentManager.getConsent(AdServicesApiType.TOPICS).isGiven();
     }
 }
