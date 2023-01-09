@@ -39,7 +39,7 @@ java_library {
         "guava",
     ],
     libs: [
-        "framework-adservices",
+        "framework-adservices-lib",
         "framework-sdksandbox",
         "framework-annotations-lib", // For @SystemApi, etc
         "unsupportedappusage", // for android.compat.annotation.UnsupportedAppUsage
