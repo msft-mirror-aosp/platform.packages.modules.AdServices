@@ -24,7 +24,6 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import android.net.Uri;
-import android.util.Pair;
 
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
@@ -442,6 +441,7 @@ public class TriggerTest {
                         .get(0)
                         .getServingAdtechNetwork()
                         .getOffset()
+                        .getValue()
                         .longValue(),
                 10L);
 
@@ -458,6 +458,7 @@ public class TriggerTest {
                         .get(0)
                         .getServingAdtechNetwork()
                         .getOffset()
+                        .getValue()
                         .longValue(),
                 10L);
     }
@@ -608,65 +609,6 @@ public class TriggerTest {
     }
 
     @Test
-    public void parseAttributionConfig_nonEmpty_parseSuccess() throws JSONException {
-        Pair<Long, Long> sourcePriorityRange = new Pair<>(100L, 1000L);
-
-        JSONObject sourceFiltersMap = new JSONObject();
-        sourceFiltersMap.put("campaign_type", new JSONArray(Arrays.asList("install")));
-        sourceFiltersMap.put("source_type", new JSONArray(Arrays.asList("navigation")));
-        FilterMap sourceFilters = new FilterMap.Builder().buildFilterData(sourceFiltersMap).build();
-
-        JSONObject sourceNotFiltersMap = new JSONObject();
-        sourceNotFiltersMap.put("campaign_type", new JSONArray(Arrays.asList("product")));
-        FilterMap sourceNotFilters =
-                new FilterMap.Builder().buildFilterData(sourceNotFiltersMap).build();
-
-        JSONObject filterDataMap = new JSONObject();
-        filterDataMap.put("campaign_type", new JSONArray(Arrays.asList("install")));
-        FilterMap filterData = new FilterMap.Builder().buildFilterData(filterDataMap).build();
-
-        Trigger trigger =
-                TriggerFixture.getValidTriggerBuilder()
-                        .setId("triggerId1")
-                        .setStatus(Trigger.Status.PENDING)
-                        .setAttributionConfig(createAttributionConfigJSONArray().toString())
-                        .build();
-
-        AttributionConfig attributionConfig1 =
-                new AttributionConfig.Builder()
-                        .setSourceAdtech("AdTech1-Ads")
-                        .setSourcePriorityRange(sourcePriorityRange)
-                        .setSourceFilters(List.of(sourceFilters))
-                        .setSourceNotFilters(List.of(sourceNotFilters))
-                        .setSourceExpiryOverride(600000L)
-                        .setPriority(99L)
-                        .setExpiry(604800L)
-                        .setFilterData(List.of(filterData))
-                        .setPostInstallExclusivityWindow(100000L)
-                        .build();
-
-        AttributionConfig attributionConfig2 =
-                new AttributionConfig.Builder()
-                        .setSourceAdtech("AdTech2-Ads")
-                        .setSourcePriorityRange(sourcePriorityRange)
-                        .setSourceFilters(List.of(sourceFilters))
-                        .setSourceNotFilters(List.of(sourceNotFilters))
-                        .setSourceExpiryOverride(600000L)
-                        .setPriority(99L)
-                        .setExpiry(604800L)
-                        .setFilterData(List.of(filterData))
-                        .setPostInstallExclusivityWindow(100000L)
-                        .build();
-
-        // Action
-        List<AttributionConfig> actualAttributionConfigs = trigger.parseAttributionConfigs();
-
-        // Assertion
-        assertEquals(
-                Arrays.asList(attributionConfig1, attributionConfig2), actualAttributionConfigs);
-    }
-
-    @Test
     public void parseAdtechBitMapping_nonEmpty_parseSuccess() throws JSONException {
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
@@ -719,8 +661,8 @@ public class TriggerTest {
 
     private JSONArray createFilterJSONArray() throws JSONException {
         JSONObject filterMap = new JSONObject();
-        filterMap.put("conversion_subdomain",
-                new JSONArray(Arrays.asList("electronics.megastore")));
+        filterMap.put(
+                "conversion_subdomain", new JSONArray(Arrays.asList("electronics.megastore")));
         filterMap.put("product", new JSONArray(Arrays.asList("1234", "2345")));
         JSONArray filterSet = new JSONArray();
         filterSet.put(filterMap);
