@@ -45,6 +45,8 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class CustomizedSdkContextTest {
     private static final String SDK_NAME_1 = "com.android.ctssdkprovider";
+    private static final String SDK_NAME_2 = "com.android.emptysdkprovider";
+
     // TODO(b/255937439): Guard the feature with a feature flag
     private static final boolean FEATURE_CUSTOMIZED_CONTEXT_ENABLED = SdkLevel.isAtLeastU();
 
@@ -69,6 +71,7 @@ public class CustomizedSdkContextTest {
     public void tearDown() {
         try {
             mSdkSandboxManager.unloadSdk(SDK_NAME_1);
+            mSdkSandboxManager.unloadSdk(SDK_NAME_2);
         } catch (Exception ignored) {
         }
     }
@@ -92,20 +95,55 @@ public class CustomizedSdkContextTest {
         // Verify sdk context has the same permissions granted
         loadSdk();
         for (int i = 0; i < sdkSandboxPackage.requestedPermissions.length; i++) {
-            final String permissionName = sdkSandboxPackage.requestedPermissions[i];
-            boolean result = mSdk.isPermissionGranted(permissionName);
-            assertWithMessage("Sdk does not have permission: " + permissionName)
-                    .that(result)
-                    .isTrue();
+            for (int j = 0; j < 2; j++) {
+                boolean useApplicationContext = (j == 0);
+                final String permissionName = sdkSandboxPackage.requestedPermissions[i];
+
+                boolean result = mSdk.isPermissionGranted(permissionName, useApplicationContext);
+                assertWithMessage(
+                                "Sdk does not have permission: "
+                                        + permissionName
+                                        + ". useApplicationContext: "
+                                        + useApplicationContext)
+                        .that(result)
+                        .isTrue();
+            }
         }
+    }
+
+    /** Test that sdk context instances are different while application context is same */
+    @Test
+    public void testSdkContextInstances() throws Exception {
+        loadEmptySdk(); // So that sandbox does not die in the middle of test
+
+        loadSdk();
+        int contextHashCode = mSdk.getContextHashCode(false);
+        int appContextHashCode = mSdk.getContextHashCode(true);
+
+        mSdkSandboxManager.unloadSdk(SDK_NAME_1);
+        loadSdk();
+
+        int contextHashCode2 = mSdk.getContextHashCode(false);
+        int appContextHashCode2 = mSdk.getContextHashCode(true);
+
+        // Ensure that sdk gets different instance of sdk context
+        assertThat(contextHashCode).isNotEqualTo(contextHashCode2);
+        // However, they have the same instance of application context
+        assertThat(appContextHashCode).isEqualTo(appContextHashCode2);
     }
 
     private void loadSdk() {
         final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_NAME_1, new Bundle(), Runnable::run, callback);
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        callback.assertLoadSdkIsSuccessful();
         assertNotNull(callback.getSandboxedSdk());
         assertNotNull(callback.getSandboxedSdk().getInterface());
         mSdk = ICtsSdkProviderApi.Stub.asInterface(callback.getSandboxedSdk().getInterface());
+    }
+
+    private void loadEmptySdk() {
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(SDK_NAME_2, new Bundle(), Runnable::run, callback);
+        callback.assertLoadSdkIsSuccessful();
     }
 }
