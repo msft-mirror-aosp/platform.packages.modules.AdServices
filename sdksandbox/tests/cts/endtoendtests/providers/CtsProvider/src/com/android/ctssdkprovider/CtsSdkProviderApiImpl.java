@@ -96,8 +96,15 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
     }
 
     @Override
-    public boolean isPermissionGranted(String permissionName) {
-        return mContext.checkSelfPermission(permissionName) == PackageManager.PERMISSION_GRANTED;
+    public boolean isPermissionGranted(String permissionName, boolean useApplicationContext) {
+        final Context cut = useApplicationContext ? mContext.getApplicationContext() : mContext;
+        return cut.checkSelfPermission(permissionName) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    @Override
+    public int getContextHashCode(boolean useApplicationContext) {
+        final Context cut = useApplicationContext ? mContext.getApplicationContext() : mContext;
+        return cut.hashCode();
     }
 
     @Override
