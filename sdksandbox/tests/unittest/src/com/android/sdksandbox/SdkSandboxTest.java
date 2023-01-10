@@ -35,6 +35,7 @@ import android.os.Binder;
 import android.os.Bundle;
 import android.os.Looper;
 import android.os.Process;
+import android.provider.DeviceConfig;
 import android.view.SurfaceControlViewHost;
 
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -97,6 +98,8 @@ public class SdkSandboxTest {
     private static final SandboxLatencyInfo SANDBOX_LATENCY_INFO =
             new SandboxLatencyInfo(TIME_SYSTEM_SERVER_CALLED_SANDBOX);
 
+    private static boolean sCustomizedSdkContextEnabled;
+
     private Context mContext;
     private InjectorForTest mInjector;
 
@@ -127,6 +130,21 @@ public class SdkSandboxTest {
     public static void setupClass() {
         // Required to create a SurfaceControlViewHost
         Looper.prepare();
+
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .adoptShellPermissionIdentity();
+        try {
+            sCustomizedSdkContextEnabled =
+                    DeviceConfig.getBoolean(
+                            DeviceConfig.NAMESPACE_ADSERVICES,
+                            "sdksandbox_customized_sdk_context_enabled",
+                            false);
+        } finally {
+            InstrumentationRegistry.getInstrumentation()
+                    .getUiAutomation()
+                    .dropShellPermissionIdentity();
+        }
     }
 
     @Before
@@ -158,7 +176,7 @@ public class SdkSandboxTest {
         assertThrows(
                 IllegalStateException.class, () -> SdkSandboxLocalSingleton.getExistingInstance());
 
-        mService.initialize(new StubSdkToServiceLink());
+        mService.initialize(new StubSdkToServiceLink(), sCustomizedSdkContextEnabled);
 
         assertThat(SdkSandboxLocalSingleton.getExistingInstance()).isNotNull();
     }
@@ -168,7 +186,7 @@ public class SdkSandboxTest {
         // First write some data
         mService.syncDataFromClient(TEST_UPDATE);
 
-        mService.initialize(new StubSdkToServiceLink());
+        mService.initialize(new StubSdkToServiceLink(), sCustomizedSdkContextEnabled);
 
         assertThat(mService.getClientSharedPreferences().getAll()).isEmpty();
     }

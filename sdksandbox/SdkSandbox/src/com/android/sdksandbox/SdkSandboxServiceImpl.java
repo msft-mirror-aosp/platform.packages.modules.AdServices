@@ -49,7 +49,6 @@ import android.webkit.WebView;
 
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
-import com.android.modules.utils.build.SdkLevel;
 
 import dalvik.system.PathClassLoader;
 
@@ -63,14 +62,13 @@ import java.util.Objects;
 public class SdkSandboxServiceImpl extends Service {
 
     private static final String TAG = "SdkSandbox";
-    // TODO(b/255937439): Guard the feature with a feature flag
-    private static final boolean FEATURE_CUSTOMIZED_CONTEXT_ENABLED = SdkLevel.isAtLeastU();
 
     // Mapping from sdk name to its holder
     @GuardedBy("mHeldSdk")
     private final Map<String, SandboxedSdkHolder> mHeldSdk = new ArrayMap<>();
 
     private volatile boolean mInitialized;
+    private boolean mCustomizedSdkContextEnabled;
     private Injector mInjector;
     private ISdkSandboxService.Stub mBinder;
 
@@ -121,13 +119,16 @@ public class SdkSandboxServiceImpl extends Service {
      *
      * @param sdkToServiceCallback for initialization of {@link SdkSandboxLocalSingleton}
      */
-    public void initialize(ISdkToServiceCallback sdkToServiceCallback) {
+    public void initialize(
+            ISdkToServiceCallback sdkToServiceCallback, boolean isCustomizedSdkContextEnabled) {
         enforceCallerIsSystemServer();
 
         if (mInitialized) {
             Log.e(TAG, "Sandbox is already initialized");
             return;
         }
+
+        mCustomizedSdkContextEnabled = isCustomizedSdkContextEnabled;
 
         SdkSandboxLocalSingleton.initInstance(sdkToServiceCallback.asBinder());
 
@@ -382,7 +383,7 @@ public class SdkSandboxServiceImpl extends Service {
         }
 
         final ClassLoader loader =
-                FEATURE_CUSTOMIZED_CONTEXT_ENABLED
+                mCustomizedSdkContextEnabled
                         ? baseContext.getClassLoader()
                         : getClassLoader(applicationInfo);
 
@@ -394,7 +395,8 @@ public class SdkSandboxServiceImpl extends Service {
                         applicationInfo,
                         sdkName,
                         sdkCeDataDir,
-                        sdkDeDataDir);
+                        sdkDeDataDir,
+                        mCustomizedSdkContextEnabled);
 
         final SandboxedSdkHolder sandboxedSdkHolder = new SandboxedSdkHolder();
         sandboxedSdkHolder.init(
@@ -425,7 +427,7 @@ public class SdkSandboxServiceImpl extends Service {
         // SandboxedSdkContext needs to have its own instance of ContextImpl as a base context. The
         // instance should have sdk-specific information infused so that system services get the
         // correct information from the base context.
-        if (FEATURE_CUSTOMIZED_CONTEXT_ENABLED) {
+        if (mCustomizedSdkContextEnabled) {
             final ApplicationInfo ai = new ApplicationInfo(applicationInfo);
             // Create customized context by modifying ApplicationInfo accordingly
             ai.dataDir = sdkCeDataDir;
@@ -477,9 +479,12 @@ public class SdkSandboxServiceImpl extends Service {
 
     final class SdkSandboxServiceDelegate extends ISdkSandboxService.Stub {
         @Override
-        public void initialize(@NonNull ISdkToServiceCallback sdkToServiceCallback) {
+        public void initialize(
+                @NonNull ISdkToServiceCallback sdkToServiceCallback,
+                boolean isCustomizedSdkContextEnabled) {
             Objects.requireNonNull(sdkToServiceCallback, "sdkToServiceCallback should not be null");
-            SdkSandboxServiceImpl.this.initialize(sdkToServiceCallback);
+            SdkSandboxServiceImpl.this.initialize(
+                    sdkToServiceCallback, isCustomizedSdkContextEnabled);
         }
 
         @Override
