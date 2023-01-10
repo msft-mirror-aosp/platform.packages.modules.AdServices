@@ -111,35 +111,6 @@ public class MobileDataDownloadFactory {
         }
     }
 
-    /** Returns a MobileDataDownload instance for testing. */
-    @VisibleForTesting
-    @NonNull
-    static MobileDataDownload getMddForTesting(@NonNull Context context, @NonNull Flags flags) {
-        context = context.getApplicationContext();
-        SynchronousFileStorage fileStorage = getFileStorage(context);
-        FileDownloader fileDownloader = getFileDownloader(context, flags, fileStorage);
-        NetworkUsageMonitor networkUsageMonitor =
-                new NetworkUsageMonitor(context, System::currentTimeMillis);
-
-        return MobileDataDownloadBuilder.newBuilder()
-                .setContext(context)
-                .setControlExecutor(getControlExecutor())
-                .setNetworkUsageMonitor(networkUsageMonitor)
-                .setFileStorage(fileStorage)
-                .setFileDownloaderSupplier(() -> fileDownloader)
-                .addFileGroupPopulator(
-                        getTopicsManifestPopulator(context, flags, fileStorage, fileDownloader))
-                .addFileGroupPopulator(
-                        getMeasurementManifestPopulator(
-                                context, flags, fileStorage, fileDownloader))
-                .setLoggerOptional(getMddLogger(flags))
-                // Use default MDD flags so that it does not need to access DeviceConfig
-                // which is inaccessible from Unit Tests.
-                .setFlagsOptional(
-                        Optional.of(new com.google.android.libraries.mobiledatadownload.Flags() {}))
-                .build();
-    }
-
     // Connectivity constraints will be checked by JobScheduler/WorkManager instead.
     private static class NoOpConnectivityHandler implements ConnectivityHandler {
         @Override
@@ -166,7 +137,8 @@ public class MobileDataDownloadFactory {
     }
 
     @NonNull
-    private static ListeningExecutorService getControlExecutor() {
+    @VisibleForTesting
+    static ListeningExecutorService getControlExecutor() {
         return AdServicesExecutors.getBackgroundExecutor();
     }
 
@@ -180,8 +152,8 @@ public class MobileDataDownloadFactory {
         // TODO(b/219594618): Switch to use CronetUrlEngine.
         return new PlatformUrlEngine(
                 AdServicesExecutors.getBlockingExecutor(),
-                /* connectTimeoutMs = */ flags.getDownloaderConnectionTimeoutMs(),
-                /* readTimeoutMs = */ flags.getDownloaderReadTimeoutMs());
+                /* connectTimeoutMs= */ flags.getDownloaderConnectionTimeoutMs(),
+                /* readTimeoutMs= */ flags.getDownloaderReadTimeoutMs());
     }
 
     @NonNull
@@ -190,7 +162,8 @@ public class MobileDataDownloadFactory {
     }
 
     @NonNull
-    private static FileDownloader getFileDownloader(
+    @VisibleForTesting
+    static FileDownloader getFileDownloader(
             @NonNull Context context,
             @NonNull Flags flags,
             @NonNull SynchronousFileStorage fileStorage) {
@@ -227,7 +200,8 @@ public class MobileDataDownloadFactory {
 
     // Create the Manifest File Group Populator for Topics Classifier.
     @NonNull
-    private static ManifestFileGroupPopulator getTopicsManifestPopulator(
+    @VisibleForTesting
+    static ManifestFileGroupPopulator getTopicsManifestPopulator(
             @NonNull Context context,
             @NonNull Flags flags,
             @NonNull SynchronousFileStorage fileStorage,
@@ -269,7 +243,8 @@ public class MobileDataDownloadFactory {
     }
 
     @NonNull
-    private static ManifestFileGroupPopulator getUiOtaStringsManifestPopulator(
+    @VisibleForTesting
+    static ManifestFileGroupPopulator getUiOtaStringsManifestPopulator(
             @NonNull Context context,
             @NonNull Flags flags,
             @NonNull SynchronousFileStorage fileStorage,
@@ -311,7 +286,8 @@ public class MobileDataDownloadFactory {
     }
 
     @NonNull
-    private static ManifestFileGroupPopulator getMeasurementManifestPopulator(
+    @VisibleForTesting
+    static ManifestFileGroupPopulator getMeasurementManifestPopulator(
             @NonNull Context context,
             @NonNull Flags flags,
             @NonNull SynchronousFileStorage fileStorage,

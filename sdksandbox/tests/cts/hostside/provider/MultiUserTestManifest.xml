@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  ~ Copyright (C) 2021 The Android Open Source Project
+  ~ Copyright (C) 2022 The Android Open Source Project
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -14,13 +14,13 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="com.android.sdksandbox.cts.provider.multiusertest">
 
-<resources>
-    <string name="title_activity_main" description="Launcher title">Sdk Sandbox Test</string>
-    <string name="load_code_provider">Load Code Providers</string>
-    <string name="load_surface_package">Load Surface Package</string>
-    <string name="create_file">Create File</string>
-    <string name="play_video">Play Video</string>
-    <string name="sync_keys">Sync Keys</string>
-    <string name="enable_sdk_sdk">Enable SDK SDK comm</string>
-</resources>
+    <application>
+        <sdk-library android:name="com.android.sdksandbox.cts.provider.multiusertest"
+                     android:versionMajor="1" />
+        <property android:name="android.sdksandbox.PROPERTY_SDK_PROVIDER_CLASS_NAME"
+                  android:value="com.android.sdksandbox.cts.provider.multiusertest.SdkSandboxMultiUserTestProvider" />
+    </application>
+</manifest>
