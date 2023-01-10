@@ -30,6 +30,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.EpochComputationClassifierStats;
 import com.android.adservices.service.topics.AppInfo;
+import com.android.adservices.service.topics.CacheManager;
 import com.android.adservices.service.topics.PackageManagerUtil;
 
 import com.google.common.collect.ImmutableList;
@@ -69,9 +70,11 @@ public class OnDeviceClassifier implements Classifier {
     private final PackageManagerUtil mPackageManagerUtil;
     private final Random mRandom;
     private final ModelManager mModelManager;
+    private final CacheManager mCacheManager;
 
     private BertNLClassifier mBertNLClassifier;
     private ImmutableList<Integer> mLabels;
+    private List<Integer> mBlockedTopicIds;
     private long mModelVersion;
     private long mLabelsVersion;
     private int mBuildId;
@@ -84,6 +87,7 @@ public class OnDeviceClassifier implements Classifier {
             @NonNull PackageManagerUtil packageManagerUtil1,
             @NonNull Random random,
             @NonNull ModelManager modelManager,
+            @NonNull CacheManager cacheManager,
             @NonNull AdServicesLogger logger) {
         mPreprocessor = preprocessor;
         mPackageManagerUtil = packageManagerUtil1;
@@ -91,6 +95,7 @@ public class OnDeviceClassifier implements Classifier {
         mLoaded = false;
         mAppInfoMap = ImmutableMap.of();
         mModelManager = modelManager;
+        mCacheManager = cacheManager;
         mLogger = logger;
     }
 
@@ -197,6 +202,7 @@ public class OnDeviceClassifier implements Classifier {
                 .sorted((c1, c2) -> Float.compare(c2.getScore(), c1.getScore())) // Reverse sorted.
                 .filter(category -> isAboveThreshold(category, classifierThresholdValue))
                 .map(OnDeviceClassifier::convertCategoryLabelToTopicId)
+                .filter(topicId -> !mBlockedTopicIds.contains(topicId))
                 .map(this::createTopic)
                 .limit(numberOfTopLabels)
                 .collect(Collectors.toList());
@@ -309,6 +315,12 @@ public class OnDeviceClassifier implements Classifier {
 
         // Load labels.
         mLabels = mModelManager.retrieveLabels();
+
+        // Load blocked topic IDs.
+        mBlockedTopicIds =
+                mCacheManager.getTopicsWithRevokedConsent().stream()
+                        .map(Topic::getTopic)
+                        .collect(Collectors.toList());
 
         // Load classifier assets metadata.
         ImmutableMap<String, ImmutableMap<String, String>> classifierAssetsMetadata =
