@@ -24,6 +24,7 @@ android_test {
     static_libs: [
         "androidx.test.ext.junit",
         "androidx.test.runner",
+        "compatibility-device-util-axt-minus-dexmaker",
         "truth-prebuilt",
         "modules-utils-build",
         "SdkSandboxTestUtils",
