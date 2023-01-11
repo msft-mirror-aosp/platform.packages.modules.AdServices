@@ -124,7 +124,7 @@ public class SelectAdsTestServerLatency {
         ShellUtils.runShellCommand("device_config put adservices global_kill_switch false");
         ShellUtils.runShellCommand(
                 "device_config put adservices adservice_system_service_enabled true");
-        ShellUtils.runShellCommand("device_config put set_sync_disabled_for_tests persistent");
+        ShellUtils.runShellCommand("device_config set_sync_disabled_for_tests persistent");
     }
 
     @AfterClass
@@ -135,7 +135,7 @@ public class SelectAdsTestServerLatency {
                     .leaveCustomAudience(ca.getBuyer(), ca.getName())
                     .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         }
-        ShellUtils.runShellCommand("device_config put set_sync_disabled_for_tests none");
+        ShellUtils.runShellCommand("device_config set_sync_disabled_for_tests none");
     }
 
     @Before
