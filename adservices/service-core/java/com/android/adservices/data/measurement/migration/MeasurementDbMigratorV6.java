@@ -20,9 +20,9 @@ import android.database.sqlite.SQLiteDatabase;
 
 import com.android.adservices.data.measurement.MeasurementTables;
 
-/** Migrates Measurement DB from user version 3 to 4. */
+/** Migrates Measurement DB from user version 3 to 6. */
 public class MeasurementDbMigratorV6 extends AbstractMeasurementDbMigrator {
-    private static final String[] ALTER_STATEMENTS_VER_4 = {
+    private static final String[] ALTER_STATEMENTS_VER_6 = {
         String.format(
                 "ALTER TABLE %1$s RENAME COLUMN %2$s TO %3$s",
                 MeasurementTables.SourceContract.TABLE,
@@ -31,17 +31,46 @@ public class MeasurementDbMigratorV6 extends AbstractMeasurementDbMigrator {
         String.format(
                 "ALTER TABLE %1$s ADD %2$s INTEGER",
                 MeasurementTables.SourceContract.TABLE,
-                MeasurementTables.SourceContract.AGGREGATE_REPORT_DEDUP_KEYS)
+                MeasurementTables.SourceContract.AGGREGATE_REPORT_DEDUP_KEYS),
+        String.format(
+                "ALTER TABLE %1$s ADD %2$s INTEGER",
+                MeasurementTables.SourceContract.TABLE,
+                MeasurementTables.SourceContract.EVENT_REPORT_WINDOW),
+        String.format(
+                "ALTER TABLE %1$s ADD %2$s INTEGER",
+                MeasurementTables.SourceContract.TABLE,
+                MeasurementTables.SourceContract.AGGREGATABLE_REPORT_WINDOW)
     };
 
+    public static final String UPDATE_SOURCE_STATEMENT = String.format(
+            "UPDATE %1$s SET %2$s = %3$s, %4$s = %3$s",
+            MeasurementTables.SourceContract.TABLE,
+            MeasurementTables.SourceContract.EVENT_REPORT_WINDOW,
+            MeasurementTables.SourceContract.EXPIRY_TIME,
+            MeasurementTables.SourceContract.AGGREGATABLE_REPORT_WINDOW);
+
     public MeasurementDbMigratorV6() {
-        super(4);
+        super(6);
     }
 
     @Override
     protected void performMigration(SQLiteDatabase db) {
-        for (String sql : ALTER_STATEMENTS_VER_4) {
-            db.execSQL(sql);
+        if (!MigrationHelpers.isColumnPresent(
+                        db,
+                        MeasurementTables.SourceContract.TABLE,
+                        MeasurementTables.SourceContract.EVENT_REPORT_WINDOW)
+                && !MigrationHelpers.isColumnPresent(
+                        db,
+                        MeasurementTables.SourceContract.TABLE,
+                        MeasurementTables.SourceContract.AGGREGATABLE_REPORT_WINDOW)) {
+            for (String sql : ALTER_STATEMENTS_VER_6) {
+                db.execSQL(sql);
+            }
+            migrateSourceData(db);
         }
+    }
+
+    private static void migrateSourceData(SQLiteDatabase db) {
+        db.execSQL(UPDATE_SOURCE_STATEMENT);
     }
 }

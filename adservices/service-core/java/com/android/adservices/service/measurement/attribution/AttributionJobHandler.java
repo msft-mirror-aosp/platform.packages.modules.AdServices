@@ -146,6 +146,11 @@ class AttributionJobHandler {
 
     private boolean maybeGenerateAggregateReport(Source source, Trigger trigger,
             IMeasurementDao measurementDao) throws DatastoreException {
+
+        if (trigger.getTriggerTime() > source.getAggregatableReportWindow()) {
+            return false;
+        }
+
         int numReports =
                 measurementDao.getNumAggregateReportsPerDestination(
                         trigger.getAttributionDestination(), trigger.getDestinationType());
@@ -267,6 +272,10 @@ class AttributionJobHandler {
     private boolean maybeGenerateEventReport(
             Source source, Trigger trigger, IMeasurementDao measurementDao)
             throws DatastoreException {
+        if (trigger.getTriggerTime() > source.getEventReportWindow()) {
+            return false;
+        }
+
         int numReports =
                 measurementDao.getNumEventReportsPerDestination(
                         trigger.getAttributionDestination(), trigger.getDestinationType());
