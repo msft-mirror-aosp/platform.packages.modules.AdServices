@@ -399,12 +399,11 @@ public final class SdkSandboxManager {
                 new LoadSdkReceiverProxy(executor, receiver, mService);
 
         IBinder appProcessBinderObject;
-        // Context.getIApplicationThreadBinder() only exists on U+. If it does not exist, just pass
-        // in any binder object originating from this app process.
+        // Context.getIApplicationThreadBinder() only exists on U+.
         if (SdkLevel.isAtLeastU()) {
             appProcessBinderObject = mContext.getIApplicationThreadBinder();
         } else {
-            appProcessBinderObject = callbackProxy.asBinder();
+            appProcessBinderObject = null;
         }
         try {
             mService.loadSdk(
