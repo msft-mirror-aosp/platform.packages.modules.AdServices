@@ -43,6 +43,7 @@ import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.util.Pair;
 
 import androidx.test.core.app.ApplicationProvider;
 
@@ -188,8 +189,8 @@ public class MeasurementDaoTest {
             assertEquals(validSource.getAttributionMode(), source.getAttributionMode());
             assertEquals(validSource.getAggregateSource(), source.getAggregateSource());
             assertEquals(validSource.getFilterData(), source.getFilterData());
-            assertEquals(validSource.getAggregateContributions(),
-                    source.getAggregateContributions());
+            assertEquals(
+                    validSource.getAggregateContributions(), source.getAggregateContributions());
             assertEquals(validSource.isDebugReporting(), source.isDebugReporting());
             assertEquals(validSource.getSharedAggregationKeys(), source.getSharedAggregationKeys());
             assertEquals(validSource.getRegistrationId(), source.getRegistrationId());
@@ -4791,6 +4792,50 @@ public class MeasurementDaoTest {
                     // Assertion
                     assertEquals(expectedMatchingSources, actualMatchingSources);
                 });
+    }
+
+    @Test
+    public void insertIgnoredSourceForEnrollment_success() {
+        // Setup
+        DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        // Need to insert sources before, to honor the foreign key constraint
+        AbstractDbIntegrationTest.insertToDb(createSourceBuilder().setId("s1").build(), db);
+        AbstractDbIntegrationTest.insertToDb(createSourceBuilder().setId("s2").build(), db);
+
+        Pair<String, String> entry11 = new Pair<>("s1", "e1");
+        Pair<String, String> entry21 = new Pair<>("s2", "e1");
+        Pair<String, String> entry22 = new Pair<>("s2", "e2");
+
+        dm.runInTransaction(
+                dao -> {
+                    // Execution
+                    dao.insertIgnoredSourceForEnrollment(entry11.first, entry11.second);
+                    dao.insertIgnoredSourceForEnrollment(entry21.first, entry21.second);
+                    dao.insertIgnoredSourceForEnrollment(entry22.first, entry22.second);
+
+                    // Assertion
+                    queryAndAssertSourceEntries(db, "e1", Arrays.asList("s1", "s2"));
+                    queryAndAssertSourceEntries(db, "e2", Collections.singletonList("s2"));
+                });
+    }
+
+    private void queryAndAssertSourceEntries(
+            SQLiteDatabase db, String enrollmentId, List<String> expectedSourceIds) {
+        try (Cursor cursor =
+                db.query(
+                        XnaIgnoredSourcesContract.TABLE,
+                        new String[] {XnaIgnoredSourcesContract.SOURCE_ID},
+                        XnaIgnoredSourcesContract.ENROLLMENT_ID + " = ?",
+                        new String[] {enrollmentId},
+                        null,
+                        null,
+                        null)) {
+            assertEquals(expectedSourceIds.size(), cursor.getCount());
+            for (int i = 0; i < expectedSourceIds.size() && cursor.moveToNext(); i++) {
+                assertEquals(expectedSourceIds.get(i), cursor.getString(0));
+            }
+        }
     }
 
     private Source.Builder createSourceBuilder() {
