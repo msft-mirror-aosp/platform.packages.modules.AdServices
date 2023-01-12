@@ -1713,6 +1713,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 // are only interested when the process is no longer in the foreground.
                 return;
             }
+            if (SdkLevel.isAtLeastU()) {
+                // On U+, the priority of the sandbox is matched with the calling app, no need to
+                // unbind.
+                return;
+            }
             synchronized (mLock) {
                 for (int i = 0; i < mCallingInfosWithDeathRecipients.size(); i++) {
                     final CallingInfo callingInfo = mCallingInfosWithDeathRecipients.keyAt(i);
