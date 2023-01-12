@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.adselection;
 
+import static com.android.adservices.data.adselection.DBRegisteredAdEvent.DESTINATION_BUYER;
+import static com.android.adservices.data.adselection.DBRegisteredAdEvent.DESTINATION_SELLER;
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
 
@@ -37,6 +39,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelectionEntry;
+import com.android.adservices.data.adselection.DBRegisteredAdEvent;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.common.AdTechUriValidator;
@@ -62,6 +65,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 
 import org.json.JSONException;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -77,6 +81,7 @@ public class ImpressionReporter {
             "Caller package name does not match name used in ad selection";
 
     private static final String REPORTING_URI_FIELD_NAME = "reporting URI";
+    private static final String EVENT_URI_FIELD_NAME = "event URI";
 
     @VisibleForTesting
     static final String REPORT_IMPRESSION_THROTTLED = "Report impression exceeded rate limit";
@@ -385,8 +390,19 @@ public class ImpressionReporter {
                         mLightweightExecutorService)
                 .transformAsync(
                         sellerResultAndCtx ->
+                                commitSellerRegisteredEvents(
+                                        sellerResultAndCtx.first, sellerResultAndCtx.second),
+                        mLightweightExecutorService)
+                .transformAsync(
+                        sellerResultAndCtx ->
                                 invokeBuyerScript(
                                         sellerResultAndCtx.first, sellerResultAndCtx.second),
+                        mLightweightExecutorService)
+                .transformAsync(
+                        reportingResultsAndCtx ->
+                                commitBuyerRegisteredEvents(
+                                        reportingResultsAndCtx.first,
+                                        reportingResultsAndCtx.second),
                         mLightweightExecutorService);
     }
 
@@ -460,7 +476,7 @@ public class ImpressionReporter {
         }
     }
 
-    private FluentFuture<Pair<ReportingUris, ReportingContext>> invokeBuyerScript(
+    private FluentFuture<Pair<ReportingResults, ReportingContext>> invokeBuyerScript(
             ReportImpressionScriptEngine.SellerReportingResult sellerReportingResult,
             ReportingContext ctx) {
         LogUtil.v("Invoking buyer script");
@@ -471,10 +487,7 @@ public class ImpressionReporter {
         if (isContextual) {
             return FluentFuture.from(
                     Futures.immediateFuture(
-                            Pair.create(
-                                    new ReportingUris(
-                                            null, sellerReportingResult.getReportingUri()),
-                                    ctx)));
+                            Pair.create(new ReportingResults(null, sellerReportingResult), ctx)));
         }
         final CustomAudienceSignals customAudienceSignals =
                 Objects.requireNonNull(ctx.mDBAdSelectionEntry.getCustomAudienceSignals());
@@ -493,14 +506,124 @@ public class ImpressionReporter {
                     .transform(
                             buyerReportingResult ->
                                     Pair.create(
-                                            new ReportingUris(
-                                                    buyerReportingResult.getReportingUri(),
-                                                    sellerReportingResult.getReportingUri()),
+                                            new ReportingResults(
+                                                    buyerReportingResult, sellerReportingResult),
                                             ctx),
                             mLightweightExecutorService);
         } catch (JSONException e) {
             throw new IllegalArgumentException("Invalid JSON args", e);
         }
+    }
+
+    private FluentFuture<Pair<ReportImpressionScriptEngine.SellerReportingResult, ReportingContext>>
+            commitSellerRegisteredEvents(
+                    ReportImpressionScriptEngine.SellerReportingResult sellerReportingResult,
+                    ReportingContext ctx) {
+        // Validate seller uri before reporting
+        AdTechUriValidator sellerValidator =
+                new AdTechUriValidator(
+                        ValidatorUtil.AD_TECH_ROLE_SELLER,
+                        ctx.mAdSelectionConfig.getSeller().toString(),
+                        this.getClass().getSimpleName(),
+                        EVENT_URI_FIELD_NAME);
+
+        return FluentFuture.from(
+                mBackgroundExecutorService.submit(
+                        () -> {
+                            commitRegisteredAdEventsToDatabase(
+                                    sellerReportingResult.getEventUris(),
+                                    sellerValidator,
+                                    ctx.mDBAdSelectionEntry.getAdSelectionId(),
+                                    DESTINATION_SELLER);
+                            return Pair.create(sellerReportingResult, ctx);
+                        }));
+    }
+
+    private FluentFuture<Pair<ReportingUris, ReportingContext>> commitBuyerRegisteredEvents(
+            ReportingResults reportingResults, ReportingContext ctx) {
+        if (Objects.isNull(reportingResults.mBuyerReportingResult)) {
+            return FluentFuture.from(
+                    Futures.immediateFuture(
+                            Pair.create(
+                                    new ReportingUris(
+                                            null,
+                                            reportingResults.mSellerReportingResult
+                                                    .getReportingUri()),
+                                    ctx)));
+        }
+
+        CustomAudienceSignals customAudienceSignals =
+                Objects.requireNonNull(ctx.mDBAdSelectionEntry.getCustomAudienceSignals());
+
+        AdTechUriValidator buyerValidator =
+                new AdTechUriValidator(
+                        ValidatorUtil.AD_TECH_ROLE_BUYER,
+                        customAudienceSignals.getBuyer().toString(),
+                        this.getClass().getSimpleName(),
+                        REPORTING_URI_FIELD_NAME);
+
+        return FluentFuture.from(
+                mBackgroundExecutorService.submit(
+                        () -> {
+                            commitRegisteredAdEventsToDatabase(
+                                    reportingResults.mBuyerReportingResult.getEventUris(),
+                                    buyerValidator,
+                                    ctx.mDBAdSelectionEntry.getAdSelectionId(),
+                                    DESTINATION_BUYER);
+                            return Pair.create(
+                                    new ReportingUris(
+                                            reportingResults.mBuyerReportingResult
+                                                    .getReportingUri(),
+                                            reportingResults.mSellerReportingResult
+                                                    .getReportingUri()),
+                                    ctx);
+                        }));
+    }
+
+    /**
+     * Iterates through each {@link EventUriRegistrationInfo}, validates each {@link
+     * EventUriRegistrationInfo#getEventUri()}, and commits it to the {@code registered_events}
+     * table if it's valid. Note: For system health purposes, we will only commit a maximum of
+     * {@code mMaxRegisteredAdEventsPerAdTech} entries to the database.
+     */
+    private void commitRegisteredAdEventsToDatabase(
+            @NonNull List<EventUriRegistrationInfo> eventUriRegistrationInfos,
+            @NonNull AdTechUriValidator validator,
+            long adSelectionId,
+            @DBRegisteredAdEvent.Destination int destination) {
+        long numSellerEventUriEntries = 0;
+        long maxRegisteredAdEventsPerAdTech = mFlags.getReportImpressionMaxEventUriEntriesCount();
+
+        List<DBRegisteredAdEvent> adEventsToRegister = new ArrayList<>();
+
+        for (EventUriRegistrationInfo uriRegistrationInfo : eventUriRegistrationInfos) {
+            if (numSellerEventUriEntries >= maxRegisteredAdEventsPerAdTech) {
+                LogUtil.v(
+                        "Registered maximum number of registeredAEvents for this ad-tech! The rest"
+                                + " in this list will be skipped.");
+                break;
+            }
+            Uri uriToValidate = uriRegistrationInfo.getEventUri();
+            try {
+                validator.validate(uriToValidate);
+                DBRegisteredAdEvent dbRegisteredAdEvent =
+                        DBRegisteredAdEvent.builder()
+                                .setAdSelectionId(adSelectionId)
+                                .setEventType(uriRegistrationInfo.getEventType())
+                                .setEventUri(uriToValidate)
+                                .setDestination(destination)
+                                .build();
+                adEventsToRegister.add(dbRegisteredAdEvent);
+                numSellerEventUriEntries++;
+            } catch (IllegalArgumentException e) {
+                LogUtil.v(
+                        String.format(
+                                "Uri %s failed validation! Skipping persistence of this event URI"
+                                        + " pair.",
+                                uriToValidate));
+            }
+        }
+        mAdSelectionEntryDao.persistDBRegisteredAdEvents(adEventsToRegister);
     }
 
     /**
@@ -666,6 +789,23 @@ public class ImpressionReporter {
 
             this.buyerReportingUri = buyerReportingUri;
             this.sellerReportingUri = sellerReportingUri;
+        }
+    }
+
+    private static final class ReportingResults {
+        @Nullable
+        public final ReportImpressionScriptEngine.BuyerReportingResult mBuyerReportingResult;
+
+        @NonNull
+        public final ReportImpressionScriptEngine.SellerReportingResult mSellerReportingResult;
+
+        private ReportingResults(
+                @Nullable ReportImpressionScriptEngine.BuyerReportingResult buyerReportingResult,
+                @NonNull ReportImpressionScriptEngine.SellerReportingResult sellerReportingResult) {
+            Objects.requireNonNull(sellerReportingResult);
+
+            mBuyerReportingResult = buyerReportingResult;
+            mSellerReportingResult = sellerReportingResult;
         }
     }
 }
