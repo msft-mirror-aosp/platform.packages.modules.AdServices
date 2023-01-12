@@ -48,7 +48,11 @@ java_library {
     defaults: [
         "sdksandbox-java-defaults",
     ],
-    static_libs: [], //do not add any other static libs to SdkSandbox, else proguard will shrink it.
+    static_libs: [
+        // TODO(b/255937439): Remove this once feature flag is implemented and we no
+        // longer use SdkLevel
+        "modules-utils-build" 
+    ], //do not add any other static libs to SdkSandbox, else proguard will shrink it.
 }
 
 android_app {

@@ -417,7 +417,7 @@ public class SdkSandboxManagerTest {
     public void testResourcesAndAssets() throws Exception {
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_NAME_1, new Bundle(), Runnable::run, callback);
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        callback.assertLoadSdkIsSuccessful();
 
         SandboxedSdk sandboxedSdk = callback.getSandboxedSdk();
         assertNotNull(sandboxedSdk);
