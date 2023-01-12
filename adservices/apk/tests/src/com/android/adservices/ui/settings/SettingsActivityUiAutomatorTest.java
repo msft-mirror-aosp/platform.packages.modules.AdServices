@@ -46,6 +46,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.common.BackgroundJobsManager;
 import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.App;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -136,6 +137,16 @@ public class SettingsActivityUiAutomatorTest {
         ExtendedMockito.doReturn(mConsentManager)
                 .when(() -> ConsentManager.getInstance(any(Context.class)));
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(mConsentManager)
+                .getConsent(AdServicesApiType.TOPICS);
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(mConsentManager)
+                .getConsent(AdServicesApiType.FLEDGE);
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(mConsentManager)
+                .getConsent(AdServicesApiType.MEASUREMENTS);
+
         doNothing().when(mConsentManager).enable(any(Context.class));
         doNothing().when(mConsentManager).disable(any(Context.class));
         startActivityFromHomeAndCheckMainSwitch();

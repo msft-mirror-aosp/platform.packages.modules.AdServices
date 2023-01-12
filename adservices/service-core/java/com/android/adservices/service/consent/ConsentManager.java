@@ -167,11 +167,7 @@ public class ConsentManager {
                 // Execute one-time consent migration if needed.
                 int consentSourceOfTruth = FlagsFactory.getFlags().getConsentSourceOfTruth();
                 BooleanFileDatastore datastore = createAndInitializeDataStore(context);
-                AdServicesManager adServicesManager =
-                        context.getSystemService(AdServicesManager.class);
-                if (adServicesManager == null) {
-                    throw new RuntimeException("Adservices System Server is not available!");
-                }
+                AdServicesManager adServicesManager = AdServicesManager.getInstance(context);
                 handleConsentMigrationIfNeeded(
                         context, datastore, adServicesManager, consentSourceOfTruth);
 

@@ -17,6 +17,7 @@ package com.android.adservices.ui.settings.delegates;
 
 import android.content.Intent;
 import android.view.View;
+import android.widget.TextView;
 
 import androidx.lifecycle.Observer;
 
@@ -103,19 +104,25 @@ public class MainActionDelegate extends BaseActionDelegate {
      */
     public void initMainFragment(AdServicesSettingsMainFragment fragment) {
         mAdServicesSettingsMainActivity.setTitle(R.string.settingsUI_main_view_title);
-        configureConsentSwitch(fragment);
+        // Hide the main toggle and the entry point of Measurement
+        // in Main page behind the GaUxFeature Flag
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            MainSwitchBar mainSwitchBar =
+                    mAdServicesSettingsMainActivity.findViewById(R.id.main_switch_bar);
+            mainSwitchBar.setVisibility(View.GONE);
+            configureMeasurementButton(fragment);
+        } else {
+            configureConsentSwitch(fragment);
+        }
+
         configureTopicsButton(fragment);
         configureAppsButton(fragment);
-        // Hide the point entry of Measurement in Main page behind the GaUxFeature Flag
-        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
-            configureMeasurementButton(fragment);
-        }
     }
 
     private void configureConsentSwitch(AdServicesSettingsMainFragment fragment) {
         MainSwitchBar mainSwitchBar =
                 mAdServicesSettingsMainActivity.findViewById(R.id.main_switch_bar);
-
+        mainSwitchBar.setVisibility(View.VISIBLE);
         mMainViewModel.getConsent().observe(fragment, mainSwitchBar::setChecked);
 
         mainSwitchBar.setOnClickListener(
@@ -139,5 +146,77 @@ public class MainActionDelegate extends BaseActionDelegate {
         measurementButton.setVisibility(View.VISIBLE);
         measurementButton.setOnClickListener(
                 preference -> mMainViewModel.measurementClickHandler());
+    }
+
+    /**
+     * Configure the subtitles of topics/apps/measurement that can display the state of their
+     * preferences (ON or OFF of the consent of topics/apps/measurement and the number of
+     * topics/apps with consent) on the Settings main page
+     *
+     * @param fragment the fragment to be initialized.
+     */
+    public void configureSubtitles(AdServicesSettingsMainFragment fragment) {
+        configureMeasurementSubtitle(fragment);
+        configureAppsSubtitle(fragment);
+        configureTopicsSubtitle(fragment);
+    }
+
+    /**
+     * Configure the subtitle of measurement that can display the state (ON or OFF) of the
+     * measurement consent on the Settings main page
+     *
+     * @param fragment the fragment to be initialized.
+     */
+    private void configureMeasurementSubtitle(AdServicesSettingsMainFragment fragment) {
+        TextView measurementSubtitle =
+                fragment.requireView().findViewById(R.id.measurement_preference_subtitle);
+        if (mMainViewModel.getMeasurementConsentFromConsentManager()) {
+            measurementSubtitle.setText(R.string.settingsUI_subtitle_consent_on);
+        } else {
+            measurementSubtitle.setText(R.string.settingsUI_subtitle_consent_off);
+        }
+    }
+
+    /**
+     * Configure the subtitle of topics that can display the state of topics preference (ON or OFF
+     * of the topic consent and the number of topics with consent) on the Settings main page
+     *
+     * @param fragment the fragment to be initialized.
+     */
+    private void configureTopicsSubtitle(AdServicesSettingsMainFragment fragment) {
+        TextView topicsSubtitle =
+                fragment.requireView().findViewById(R.id.topics_preference_subtitle);
+        topicsSubtitle.setVisibility(View.VISIBLE);
+        if (mMainViewModel.getTopicsConsentFromConsentManager()) {
+            topicsSubtitle.setText(
+                    mAdServicesSettingsMainActivity
+                            .getResources()
+                            .getString(
+                                    R.string.settingsUI_topics_subtitle,
+                                    mMainViewModel.getCountOfTopics()));
+        } else {
+            topicsSubtitle.setText(R.string.settingsUI_subtitle_consent_off);
+        }
+    }
+
+    /**
+     * Configure the subtitle of apps that can display the state of apps preference (ON or OFF of
+     * the topic consent and the number of topics with consent) on the Settings main page
+     *
+     * @param fragment the fragment to be initialized.
+     */
+    private void configureAppsSubtitle(AdServicesSettingsMainFragment fragment) {
+        TextView appsSubtitle = fragment.requireView().findViewById(R.id.apps_preference_subtitle);
+        appsSubtitle.setVisibility(View.VISIBLE);
+        if (mMainViewModel.getAppsConsentFromConsentManager()) {
+            appsSubtitle.setText(
+                    mAdServicesSettingsMainActivity
+                            .getResources()
+                            .getString(
+                                    R.string.settingsUI_apps_subtitle,
+                                    mMainViewModel.getCountOfApps()));
+        } else {
+            appsSubtitle.setText(R.string.settingsUI_subtitle_consent_off);
+        }
     }
 }

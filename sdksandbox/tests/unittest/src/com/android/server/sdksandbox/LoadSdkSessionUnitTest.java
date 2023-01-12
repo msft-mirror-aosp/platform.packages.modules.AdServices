@@ -49,7 +49,7 @@ public class LoadSdkSessionUnitTest {
     @Before
     public void setup() {
         mContext = InstrumentationRegistry.getInstrumentation().getContext();
-        mInjector = new SdkSandboxManagerService.Injector();
+        mInjector = new SdkSandboxManagerService.Injector(mContext);
         mSdkSandboxService = new FakeSdkSandboxService();
         mTestCallingInfo = new CallingInfo(Process.myUid(), TEST_PACKAGE);
     }

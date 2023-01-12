@@ -72,6 +72,7 @@ public class PackageChangedReceiverTest {
     private static final String SAMPLE_PACKAGE = "com.example.measurement.sampleapp";
     private static final String PACKAGE_SCHEME = "package:";
     private static final int BACKGROUND_THREAD_TIMEOUT_MS = 50;
+    private static final int DEFAULT_PACKAGE_UID = -1;
 
     @Mock PackageChangedReceiver mMockPackageChangedReceiver;
     @Mock EpochManager mMockEpochManager;
@@ -159,6 +160,8 @@ public class PackageChangedReceiverTest {
         intent.setAction(PackageChangedReceiver.PACKAGE_CHANGED_BROADCAST);
         intent.setData(Uri.parse(PACKAGE_SCHEME + SAMPLE_PACKAGE));
         intent.putExtra(PackageChangedReceiver.ACTION_KEY, value);
+        intent.putExtra(Intent.EXTRA_UID, 0);
+
         return intent;
     }
 
@@ -197,8 +200,9 @@ public class PackageChangedReceiverTest {
             Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
 
             // Verify method in AppUpdateManager is invoked
+            // getCurrentEpochId() is invoked twice: handleAppUninstallation() + loadCache()
             // Note that only package name is passed into following methods.
-            verify(mMockEpochManager).getCurrentEpochId();
+            verify(mMockEpochManager, times(2)).getCurrentEpochId();
             verify(mMockAppUpdateManager)
                     .handleAppUninstallationInRealTime(Uri.parse(SAMPLE_PACKAGE), epochId);
         } finally {
@@ -435,6 +439,70 @@ public class PackageChangedReceiverTest {
         }
     }
 
+    /**
+     * Tests that when no packageUid is present via the Intent Extra, consent data for all apps
+     * needs to be cleared.
+     */
+    @Test
+    public void testReceivePackageFullyRemoved_consent_noPackageUid()
+            throws InterruptedException, IOException {
+        Intent intent = createDefaultIntentWithAction(PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
+        intent.removeExtra(Intent.EXTRA_UID);
+
+        validateConsentClearedWhenPackageUidAbsent(intent);
+    }
+
+    /**
+     * Tests that wen packageUid is explicitly set to the default value via the Intent Extra,
+     * consent data for all apps needs to be cleared.
+     */
+    @Test
+    public void testReceivePackageFullyRemoved_consent_packageUidIsExplicitlyDefault()
+            throws InterruptedException, IOException {
+        Intent intent = createDefaultIntentWithAction(PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
+        intent.putExtra(Intent.EXTRA_UID, DEFAULT_PACKAGE_UID);
+
+        validateConsentClearedWhenPackageUidAbsent(intent);
+    }
+
+    private void validateConsentClearedWhenPackageUidAbsent(Intent intent)
+            throws IOException, InterruptedException {
+        // Start a mockitoSession to mock static method
+        // Lenient added to allow easy disabling of other APIs' methods
+        MockitoSession session =
+                ExtendedMockito.mockitoSession()
+                        .mockStatic(AppConsentDao.class)
+                        .strictness(Strictness.LENIENT)
+                        .initMocks(this)
+                        .startMocking();
+        try {
+            // Mock static method AppConsentDao.getInstance() executed on a separate thread
+            doReturn(mAppConsentDaoMock).when(() -> AppConsentDao.getInstance(any()));
+
+            CountDownLatch completionLatch = new CountDownLatch(1);
+            doAnswer(
+                            unusedInvocation -> {
+                                completionLatch.countDown();
+                                return null;
+                            })
+                    .when(mAppConsentDaoMock)
+                    .clearAllConsentData();
+
+            // Initialize package receiver meant for Consent
+            PackageChangedReceiver spyReceiver = createSpyPackageReceiverForConsent();
+            spyReceiver.onReceive(sContext, intent);
+
+            // Package UID is expected to be -1 if there is no EXTRA_UID in the Intent's Extra.
+            verify(spyReceiver).consentOnPackageFullyRemoved(any(), any(), eq(DEFAULT_PACKAGE_UID));
+
+            // Verify method inside background thread executes
+            assertThat(completionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
+            verify(mAppConsentDaoMock).clearAllConsentData();
+        } finally {
+            session.finishMocking();
+        }
+    }
+
     @Test
     public void testReceivePackageAdded_topics() throws InterruptedException {
         final long epochId = 1;
@@ -460,9 +528,10 @@ public class PackageChangedReceiverTest {
             // Grant some time to allow background thread to execute
             Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
 
-            // Verify method in AppUpdateManager is invoked
+            // Verify method in AppUpdateManager is invoked.
+            // getCurrentEpochId() is invoked twice: handleAppInstallation() + loadCache()
             // Note that only package name is passed into following methods.
-            verify(mMockEpochManager).getCurrentEpochId();
+            verify(mMockEpochManager, times(2)).getCurrentEpochId();
             verify(mMockAppUpdateManager)
                     .handleAppInstallationInRealTime(Uri.parse(SAMPLE_PACKAGE), epochId);
         } finally {

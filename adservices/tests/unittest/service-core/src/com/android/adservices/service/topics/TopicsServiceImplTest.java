@@ -149,8 +149,7 @@ public class TopicsServiceImplTest {
 
         DbHelper dbHelper = DbTestUtil.getDbHelperForTest();
         mTopicsDao = new TopicsDao(dbHelper);
-        CacheManager cacheManager =
-                new CacheManager(mMockEpochManager, mTopicsDao, mMockFlags, mLogger);
+        CacheManager cacheManager = new CacheManager(mTopicsDao, mMockFlags, mLogger);
 
         mBlockedTopicsManager = new BlockedTopicsManager(mTopicsDao);
         AppUpdateManager appUpdateManager =
