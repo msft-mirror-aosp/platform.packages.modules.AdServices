@@ -120,6 +120,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     private final SdkSandboxStorageManager mSdkSandboxStorageManager;
     private final SdkSandboxServiceProvider mServiceProvider;
 
+    @GuardedBy("mLock")
+    private IBinder mAdServicesManager;
+
     private final Object mLock = new Object();
 
     /**
@@ -177,6 +180,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     private static final boolean DEFAULT_VALUE_DISABLE_SDK_SANDBOX = true;
 
     static class Injector {
+        private final Context mContext;
+
+        Injector(Context context) {
+            mContext = context;
+        }
 
         private static final boolean IS_EMULATOR =
                 SystemProperties.getBoolean("ro.boot.qemu", false);
@@ -193,25 +201,29 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         boolean isEmulator() {
             return IS_EMULATOR;
         }
+
+        SdkSandboxServiceProvider getSdkSandboxServiceProvider() {
+            return new SdkSandboxServiceProviderImpl(mContext);
+        }
+
+        SdkSandboxPulledAtoms getSdkSandboxPulledAtoms() {
+            return new SdkSandboxPulledAtoms();
+        }
+    }
+
+    SdkSandboxManagerService(Context context) {
+        this(context, new Injector(context));
     }
 
     @VisibleForTesting
-    SdkSandboxManagerService(Context context, SdkSandboxServiceProvider provider) {
-        this(context, provider, new Injector(), new SdkSandboxPulledAtoms());
-    }
-
-    SdkSandboxManagerService(
-            Context context,
-            SdkSandboxServiceProvider provider,
-            Injector injector,
-            SdkSandboxPulledAtoms sdkSandboxPulledAtoms) {
+    SdkSandboxManagerService(Context context, Injector injector) {
         mContext = context;
-        mServiceProvider = provider;
         mInjector = injector;
+        mServiceProvider = mInjector.getSdkSandboxServiceProvider();
         mActivityManager = mContext.getSystemService(ActivityManager.class);
         mActivityManagerLocal = LocalManagerRegistry.getManager(ActivityManagerLocal.class);
         mLocalManager = new LocalImpl();
-        mSdkSandboxPulledAtoms = sdkSandboxPulledAtoms;
+        mSdkSandboxPulledAtoms = mInjector.getSdkSandboxPulledAtoms();
 
         PackageManagerLocal packageManagerLocal =
                 LocalManagerRegistry.getManager(PackageManagerLocal.class);
@@ -255,8 +267,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         final long timeSystemServerReceivedCallFromApp = mInjector.getCurrentTime();
 
         final int callingUid = Binder.getCallingUid();
-        final CallingInfo callingInfo = new CallingInfo(callingUid, callingPackageName);
-        enforceCallingPackageBelongsToUid(callingInfo);
+        final CallingInfo callingInfo = CallingInfo.fromBinder(mContext, callingPackageName);
 
         SdkSandboxStatsLog.write(
                 SdkSandboxStatsLog.SANDBOX_API_CALLED,
@@ -320,8 +331,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         final long timeSystemServerReceivedCallFromApp = mInjector.getCurrentTime();
 
         final int callingUid = Binder.getCallingUid();
-        final CallingInfo callingInfo = new CallingInfo(callingUid, callingPackageName);
-        enforceCallingPackageBelongsToUid(callingInfo);
+        final CallingInfo callingInfo = CallingInfo.fromBinder(mContext, callingPackageName);
 
         SdkSandboxStatsLog.write(
                 SdkSandboxStatsLog.SANDBOX_API_CALLED,
@@ -360,8 +370,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         final long timeSystemServerReceivedCallFromApp = mInjector.getCurrentTime();
 
         final int callingUid = Binder.getCallingUid();
-        final CallingInfo callingInfo = new CallingInfo(callingUid, callingPackageName);
-        enforceCallingPackageBelongsToUid(callingInfo);
+        final CallingInfo callingInfo = CallingInfo.fromBinder(mContext, callingPackageName);
 
         SdkSandboxStatsLog.write(
                 SdkSandboxStatsLog.SANDBOX_API_CALLED,
@@ -404,8 +413,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             final long timeSystemServerReceivedCallFromApp = mInjector.getCurrentTime();
 
             final int callingUid = Binder.getCallingUid();
-            final CallingInfo callingInfo = new CallingInfo(callingUid, callingPackageName);
-            enforceCallingPackageBelongsToUid(callingInfo);
+            final CallingInfo callingInfo =
+                    CallingInfo.fromBinderWithApplicationThread(
+                            mContext, callingPackageName, callingApplicationThreadBinder);
             enforceCallerHasNetworkAccess(callingPackageName);
             enforceCallerRunsInForeground(callingInfo);
             synchronized (mLock) {
@@ -428,7 +438,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             try {
                 loadSdkWithClearIdentity(
                         callingInfo,
-                        callingApplicationThreadBinder,
                         sdkName,
                         params,
                         callback,
@@ -450,7 +459,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private void loadSdkWithClearIdentity(
             CallingInfo callingInfo,
-            IBinder callingApplicationThreadBinder,
             String sdkName,
             Bundle params,
             ILoadSdkCallback callback,
@@ -517,9 +525,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             synchronized (mLock) {
                 if (!mCallingInfosWithDeathRecipients.containsKey(callingInfo)) {
                     Log.d(TAG, "Registering " + callingInfo + " for death notification");
-                    callingApplicationThreadBinder.linkToDeath(() -> onAppDeath(callingInfo), 0);
-                    mCallingInfosWithDeathRecipients.put(
-                            callingInfo, callingApplicationThreadBinder);
+                    final IBinder callingApplicationThreadBinder =
+                            callingInfo.getApplicationThreadBinder();
+                    callback.asBinder().linkToDeath(() -> onAppDeath(callingInfo), 0);
+                    // Note that we keep a reference to the IBinder that we called linkToDeath() on,
+                    // to make sure that it isn't unlinked if we were to drop this reference.
+                    mCallingInfosWithDeathRecipients.put(callingInfo, callback.asBinder());
                     mUidImportanceListener.startListening();
                 }
             }
@@ -548,8 +559,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         final long timeSystemServerReceivedCallFromApp = mInjector.getCurrentTime();
 
         final int callingUid = Binder.getCallingUid();
-        final CallingInfo callingInfo = new CallingInfo(callingUid, callingPackageName);
-        enforceCallingPackageBelongsToUid(callingInfo);
+        final CallingInfo callingInfo = CallingInfo.fromBinder(mContext, callingPackageName);
         enforceCallerRunsInForeground(callingInfo);
 
         SdkSandboxStatsLog.write(
@@ -679,8 +689,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                             + callingPackageName);
 
             final int callingUid = Binder.getCallingUid();
-            final CallingInfo callingInfo = new CallingInfo(callingUid, callingPackageName);
-            enforceCallingPackageBelongsToUid(callingInfo);
+            final CallingInfo callingInfo = CallingInfo.fromBinder(mContext, callingPackageName);
             enforceCallerRunsInForeground(callingInfo);
 
             SdkSandboxStatsLog.write(
@@ -821,7 +830,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             final long timeSystemServerReceivedCallFromApp = mInjector.getCurrentTime();
 
             final int callingUid = Binder.getCallingUid();
-            final CallingInfo callingInfo = new CallingInfo(callingUid, callingPackageName);
+            final CallingInfo callingInfo = CallingInfo.fromBinder(mContext, callingPackageName);
             enforceCallingPackageBelongsToUid(callingInfo);
 
             SdkSandboxStatsLog.write(
@@ -1178,7 +1187,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         // TODO(b/261442377): Only the processes that loaded some SDK should be killed. For now,
         // kill the process that loaded the first SDK.
         mActivityManagerLocal.killSdkSandboxClientAppProcess(
-                mCallingInfosWithDeathRecipients.get(callingInfo));
+                callingInfo.getApplicationThreadBinder());
     }
 
     @GuardedBy("mLock")
@@ -1205,9 +1214,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     @Override
     public void stopSdkSandbox(String callingPackageName) {
-        final int callingUid = Binder.getCallingUid();
-        final CallingInfo callingInfo = new CallingInfo(callingUid, callingPackageName);
-        enforceCallingPackageBelongsToUid(callingInfo);
+        final CallingInfo callingInfo = CallingInfo.fromBinder(mContext, callingPackageName);
 
         mContext.enforceCallingPermission(
                 STOP_SDK_SANDBOX_PERMISSION,
@@ -1218,6 +1225,19 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             stopSdkSandboxService(callingInfo, "App requesting sandbox kill");
         } finally {
             Binder.restoreCallingIdentity(token);
+        }
+    }
+
+    @Override
+    public IBinder getAdServicesManager() {
+        synchronized (mLock) {
+            return mAdServicesManager;
+        }
+    }
+
+    private void registerAdServicesManagerService(IBinder iBinder) {
+        synchronized (mLock) {
+            mAdServicesManager = iBinder;
         }
     }
 
@@ -1666,8 +1686,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         public Lifecycle(Context context) {
             super(context);
-            SdkSandboxServiceProvider provider = new SdkSandboxServiceProviderImpl(getContext());
-            mService = new SdkSandboxManagerService(getContext(), provider);
+            mService = new SdkSandboxManagerService(getContext());
         }
 
         @Override
@@ -1751,6 +1770,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     }
 
     private class LocalImpl implements SdkSandboxManagerLocal {
+        @Override
+        public void registerAdServicesManagerService(IBinder iBinder) {
+            SdkSandboxManagerService.this.registerAdServicesManagerService(iBinder);
+        }
 
         @NonNull
         @Override

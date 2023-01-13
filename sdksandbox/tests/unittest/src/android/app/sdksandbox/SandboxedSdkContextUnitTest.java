@@ -64,10 +64,14 @@ public class SandboxedSdkContextUnitTest {
         ApplicationInfo info = context.getPackageManager().getApplicationInfo(
                 RESOURCES_PACKAGE,
                 PackageManager.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES);
+        info.dataDir = SDK_CE_DATA_DIR;
+        info.credentialProtectedDataDir = SDK_CE_DATA_DIR;
+        info.deviceProtectedDataDir = SDK_DE_DATA_DIR;
+        Context baseContext = context.createApplicationContext(info, 0);
         mSandboxedSdkContext =
                 new SandboxedSdkContext(
-                        InstrumentationRegistry.getContext(),
-                        getClass().getClassLoader(),
+                        baseContext,
+                        baseContext.getClassLoader(),
                         CLIENT_PACKAGE_NAME,
                         info,
                         SDK_NAME,
@@ -119,15 +123,16 @@ public class SandboxedSdkContextUnitTest {
 
     @Test
     public void testClassLoader() {
-        assertThat(mSandboxedSdkContext.getClassLoader()).isEqualTo(getClass().getClassLoader());
+        assertThat(mSandboxedSdkContext.getClassLoader())
+                .isEqualTo(mSandboxedSdkContext.getBaseContext().getClassLoader());
     }
 
     @Test
     public void testGetDataDir_CredentialEncrypted() throws Exception {
-        assertThat(mSandboxedSdkContext.getDataDir().toString()).isEqualTo(SDK_CE_DATA_DIR);
+        Context baseContext = mSandboxedSdkContext.getBaseContext();
+        assertThat(baseContext.getDataDir().toString()).isEqualTo(SDK_CE_DATA_DIR);
 
-        Context superClass = mSandboxedSdkContext;
-        assertThat(superClass.getDataDir().toString()).isEqualTo(SDK_CE_DATA_DIR);
+        assertThat(mSandboxedSdkContext.getDataDir().toString()).isEqualTo(SDK_CE_DATA_DIR);
 
         Context ceContext = mSandboxedSdkContext.createCredentialProtectedStorageContext();
         assertThat(ceContext.isCredentialProtectedStorage()).isTrue();
@@ -139,9 +144,6 @@ public class SandboxedSdkContextUnitTest {
         Context deContext = mSandboxedSdkContext.createDeviceProtectedStorageContext();
         assertThat(deContext.isDeviceProtectedStorage()).isTrue();
         assertThat(deContext.getDataDir().toString()).isEqualTo(SDK_DE_DATA_DIR);
-
-        Context superClass = deContext;
-        assertThat(superClass.getDataDir().toString()).isEqualTo(SDK_DE_DATA_DIR);
     }
 
     @Test

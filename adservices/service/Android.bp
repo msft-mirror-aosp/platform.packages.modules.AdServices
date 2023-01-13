@@ -36,6 +36,8 @@ java_sdk_library {
     libs: [
         "framework-configinfrastructure",
         "framework-adservices.impl",
+        // Workaround for b/262282035. Needed to access the SdkSandboxManagerLocal.
+        "service-sdksandbox.impl",
     ],
     static_libs: [
         "modules-utils-preconditions",

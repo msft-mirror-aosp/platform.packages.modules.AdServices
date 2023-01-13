@@ -30,14 +30,14 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.UPDATE_CUS
 
 import javax.annotation.concurrent.ThreadSafe;
 
-/** AdServicesLogger that log stats to StatsD */
+/** {@link AdServicesLogger} that log stats to StatsD */
 @ThreadSafe
 public class StatsdAdServicesLogger implements AdServicesLogger {
     private static volatile StatsdAdServicesLogger sStatsdAdServicesLogger;
 
     private StatsdAdServicesLogger() {}
 
-    /** Returns an instance of WestWorldAdServicesLogger. */
+    /** Returns an instance of {@link StatsdAdServicesLogger}. */
     public static StatsdAdServicesLogger getInstance() {
         if (sStatsdAdServicesLogger == null) {
             synchronized (StatsdAdServicesLogger.class) {

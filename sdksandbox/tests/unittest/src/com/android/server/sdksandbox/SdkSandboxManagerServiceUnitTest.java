@@ -105,14 +105,15 @@ public class SdkSandboxManagerServiceUnitTest {
     private SdkSandboxManagerService mService;
     private ActivityManager mAmSpy;
     private FakeSdkSandboxService mSdkSandboxService;
-    private FakeSdkSandboxProvider mProvider;
     private MockitoSession mStaticMockSession = null;
     private Context mSpyContext;
     private SdkSandboxManagerService.Injector mInjector;
     private int mClientAppUid;
     private PackageManagerLocal mPmLocal;
     private ActivityManagerLocal mAmLocal;
-    private SdkSandboxPulledAtoms mSdkSandboxPulledAtoms;
+
+    private static FakeSdkSandboxProvider sProvider;
+    private static SdkSandboxPulledAtoms sSdkSandboxPulledAtoms;
 
     private static final String CLIENT_PACKAGE_NAME = "com.android.client";
     private static final String SDK_NAME = "com.android.codeprovider";
@@ -174,7 +175,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 TIME_SANDBOX_CALLED_SDK,
                 TIME_SDK_CALL_COMPLETED,
                 TIME_SANDBOX_CALLED_SYSTEM_SERVER);
-        mProvider = new FakeSdkSandboxProvider(mSdkSandboxService);
+        sProvider = new FakeSdkSandboxProvider(mSdkSandboxService);
 
         // Populate LocalManagerRegistry
         mPmLocal = Mockito.mock(PackageManagerLocal.class);
@@ -184,13 +185,11 @@ public class SdkSandboxManagerServiceUnitTest {
         ExtendedMockito.doReturn(mAmLocal)
                 .when(() -> LocalManagerRegistry.getManager(ActivityManagerLocal.class));
 
-        mSdkSandboxPulledAtoms = Mockito.spy(new SdkSandboxPulledAtoms());
+        sSdkSandboxPulledAtoms = Mockito.spy(new SdkSandboxPulledAtoms());
 
-        mInjector = Mockito.spy(new InjectorForTest());
+        mInjector = Mockito.spy(new InjectorForTest(mSpyContext));
 
-        mService =
-                new SdkSandboxManagerService(
-                        mSpyContext, mProvider, mInjector, mSdkSandboxPulledAtoms);
+        mService = new SdkSandboxManagerService(mSpyContext, mInjector);
         mService.forceEnableSandbox();
 
         mClientAppUid = Process.myUid();
@@ -244,7 +243,7 @@ public class SdkSandboxManagerServiceUnitTest {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         mService.loadSdk(
                 TEST_PACKAGE,
-                callback.asBinder(),
+                null,
                 SDK_NAME,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
@@ -260,7 +259,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
         mService.loadSdk(
                 "does.not.exist",
-                callback.asBinder(),
+                null,
                 SDK_NAME,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
@@ -277,7 +276,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
         mService.loadSdk(
                 SDK_PROVIDER_PACKAGE,
-                callback.asBinder(),
+                null,
                 SDK_NAME,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
@@ -296,7 +295,7 @@ public class SdkSandboxManagerServiceUnitTest {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         mService.loadSdk(
                 TEST_PACKAGE,
-                callback.asBinder(),
+                null,
                 "does.not.exist",
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
@@ -318,7 +317,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
         mService.loadSdk(
                 TEST_PACKAGE,
-                callback.asBinder(),
+                null,
                 SDK_NAME,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
@@ -336,7 +335,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
         mService.loadSdk(
                 TEST_PACKAGE,
-                callback.asBinder(),
+                null,
                 SDK_NAME,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
@@ -357,7 +356,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
         mService.loadSdk(
                 TEST_PACKAGE,
-                callback.asBinder(),
+                null,
                 SDK_NAME,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
@@ -379,7 +378,7 @@ public class SdkSandboxManagerServiceUnitTest {
             FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
             mService.loadSdk(
                     TEST_PACKAGE,
-                    callback.asBinder(),
+                    null,
                     SDK_NAME,
                     TIME_APP_CALLED_SYSTEM_SERVER,
                     new Bundle(),
@@ -394,7 +393,7 @@ public class SdkSandboxManagerServiceUnitTest {
             FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
             mService.loadSdk(
                     TEST_PACKAGE,
-                    callback.asBinder(),
+                    null,
                     SDK_NAME,
                     TIME_APP_CALLED_SYSTEM_SERVER,
                     new Bundle(),
@@ -417,7 +416,7 @@ public class SdkSandboxManagerServiceUnitTest {
             FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
             mService.loadSdk(
                     TEST_PACKAGE,
-                    callback.asBinder(),
+                    null,
                     SDK_NAME,
                     TIME_APP_CALLED_SYSTEM_SERVER,
                     new Bundle(),
@@ -429,7 +428,7 @@ public class SdkSandboxManagerServiceUnitTest {
             FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
             mService.loadSdk(
                     TEST_PACKAGE,
-                    callback.asBinder(),
+                    null,
                     SDK_NAME,
                     TIME_APP_CALLED_SYSTEM_SERVER,
                     new Bundle(),
@@ -452,7 +451,7 @@ public class SdkSandboxManagerServiceUnitTest {
             FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
             mService.loadSdk(
                     TEST_PACKAGE,
-                    callback.asBinder(),
+                    null,
                     SDK_NAME,
                     TIME_APP_CALLED_SYSTEM_SERVER,
                     new Bundle(),
@@ -475,7 +474,7 @@ public class SdkSandboxManagerServiceUnitTest {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         mService.loadSdk(
                 TEST_PACKAGE,
-                callback.asBinder(),
+                null,
                 SDK_NAME,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
@@ -566,7 +565,7 @@ public class SdkSandboxManagerServiceUnitTest {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         mService.loadSdk(
                 TEST_PACKAGE,
-                callback.asBinder(),
+                null,
                 SDK_NAME,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
@@ -654,7 +653,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
         mService.loadSdk(
                 TEST_PACKAGE,
-                callback.asBinder(),
+                null,
                 SDK_NAME,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
@@ -710,7 +709,7 @@ public class SdkSandboxManagerServiceUnitTest {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         mService.loadSdk(
                 TEST_PACKAGE,
-                callback.asBinder(),
+                null,
                 SDK_NAME,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
@@ -864,11 +863,11 @@ public class SdkSandboxManagerServiceUnitTest {
         ILoadSdkCallback.Stub callback = Mockito.spy(ILoadSdkCallback.Stub.class);
         int callingUid = Binder.getCallingUid();
         final CallingInfo callingInfo = new CallingInfo(callingUid, TEST_PACKAGE);
-        assertThat(mProvider.getBoundServiceForApp(callingInfo)).isNull();
+        assertThat(sProvider.getBoundServiceForApp(callingInfo)).isNull();
 
         mService.loadSdk(
                 TEST_PACKAGE,
-                callback.asBinder(),
+                null,
                 SDK_NAME,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
@@ -879,9 +878,9 @@ public class SdkSandboxManagerServiceUnitTest {
         Mockito.verify(callback.asBinder(), Mockito.times(1))
                 .linkToDeath(deathRecipient.capture(), Mockito.eq(0));
 
-        assertThat(mProvider.getBoundServiceForApp(callingInfo)).isNotNull();
+        assertThat(sProvider.getBoundServiceForApp(callingInfo)).isNotNull();
         deathRecipient.getValue().binderDied();
-        assertThat(mProvider.getBoundServiceForApp(callingInfo)).isNull();
+        assertThat(sProvider.getBoundServiceForApp(callingInfo)).isNull();
     }
 
     /* Tests resources defined in CodeProviderWithResources may be read. */
@@ -1050,7 +1049,7 @@ public class SdkSandboxManagerServiceUnitTest {
         final CallingInfo callingInfo = new CallingInfo(Process.myUid(), TEST_PACKAGE);
 
         // Check that sdk sandbox for TEST_PACKAGE is bound
-        assertThat(mProvider.getBoundServiceForApp(callingInfo)).isNotNull();
+        assertThat(sProvider.getBoundServiceForApp(callingInfo)).isNotNull();
 
         final SdkSandboxManagerLocal localManager = mService.getLocalManager();
         localManager.notifyInstrumentationStarted(TEST_PACKAGE, Process.myUid());
@@ -1058,7 +1057,7 @@ public class SdkSandboxManagerServiceUnitTest {
         // Verify that sdk sandbox was killed
         Mockito.verify(mAmSpy)
                 .killUid(Mockito.eq(Process.toSdkSandboxUid(Process.myUid())), Mockito.anyString());
-        assertThat(mProvider.getBoundServiceForApp(callingInfo)).isNull();
+        assertThat(sProvider.getBoundServiceForApp(callingInfo)).isNull();
     }
 
     @Test
@@ -1071,11 +1070,11 @@ public class SdkSandboxManagerServiceUnitTest {
         final CallingInfo callingInfo = new CallingInfo(Process.myUid(), TEST_PACKAGE);
 
         // Check that sdk sandbox for TEST_PACKAGE is bound
-        assertThat(mProvider.getBoundServiceForApp(callingInfo)).isNotNull();
+        assertThat(sProvider.getBoundServiceForApp(callingInfo)).isNotNull();
 
         final SdkSandboxManagerLocal localManager = mService.getLocalManager();
         localManager.notifyInstrumentationStarted(TEST_PACKAGE, Process.myUid());
-        assertThat(mProvider.getBoundServiceForApp(callingInfo)).isNull();
+        assertThat(sProvider.getBoundServiceForApp(callingInfo)).isNull();
 
         // Try load again, it should throw SecurityException
         FakeLoadSdkCallbackBinder callback2 = new FakeLoadSdkCallbackBinder();
@@ -1105,13 +1104,13 @@ public class SdkSandboxManagerServiceUnitTest {
         localManager.notifyInstrumentationStarted(TEST_PACKAGE, Process.myUid());
 
         final CallingInfo callingInfo = new CallingInfo(Process.myUid(), TEST_PACKAGE);
-        assertThat(mProvider.getBoundServiceForApp(callingInfo)).isNull();
+        assertThat(sProvider.getBoundServiceForApp(callingInfo)).isNull();
 
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
 
         mService.loadSdk(
                 TEST_PACKAGE,
-                callback.asBinder(),
+                null,
                 SDK_NAME,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
@@ -1136,7 +1135,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 callback2);
         mSdkSandboxService.sendLoadCodeSuccessful();
         assertThat(callback2.isLoadSdkSuccessful()).isTrue();
-        assertThat(mProvider.getBoundServiceForApp(callingInfo)).isNotNull();
+        assertThat(sProvider.getBoundServiceForApp(callingInfo)).isNotNull();
     }
 
     @Test
@@ -1161,7 +1160,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
         mService.loadSdk(
                 TEST_PACKAGE,
-                callback.asBinder(),
+                null,
                 SDK_NAME,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
@@ -1219,7 +1218,7 @@ public class SdkSandboxManagerServiceUnitTest {
         mService.unloadSdk(TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER);
 
         // One SDK should still be loaded, therefore the sandbox should still be alive.
-        assertThat(mProvider.getBoundServiceForApp(callingInfo)).isNotNull();
+        assertThat(sProvider.getBoundServiceForApp(callingInfo)).isNotNull();
 
         mService.unloadSdk(
                 TEST_PACKAGE, SDK_PROVIDER_RESOURCES_SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER);
@@ -1227,7 +1226,7 @@ public class SdkSandboxManagerServiceUnitTest {
         // No more SDKs should be loaded at this point. Verify that the sandbox has been killed.
         Mockito.verify(mAmSpy)
                 .killUid(Mockito.eq(Process.toSdkSandboxUid(Process.myUid())), Mockito.anyString());
-        assertThat(mProvider.getBoundServiceForApp(callingInfo)).isNull();
+        assertThat(sProvider.getBoundServiceForApp(callingInfo)).isNull();
     }
 
     @Test
@@ -1240,7 +1239,7 @@ public class SdkSandboxManagerServiceUnitTest {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         mService.loadSdk(
                 TEST_PACKAGE,
-                callback.asBinder(),
+                null,
                 SDK_NAME,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
@@ -1319,7 +1318,7 @@ public class SdkSandboxManagerServiceUnitTest {
             throws Exception {
         // Ensure a sandbox service is already bound for the client
         final CallingInfo callingInfo = new CallingInfo(Process.myUid(), TEST_PACKAGE);
-        mProvider.bindService(callingInfo, Mockito.mock(ServiceConnection.class));
+        sProvider.bindService(callingInfo, Mockito.mock(ServiceConnection.class));
 
         // Sync data from client
         final Bundle data = new Bundle();
@@ -1347,7 +1346,7 @@ public class SdkSandboxManagerServiceUnitTest {
         mService.stopSdkSandbox(TEST_PACKAGE);
         int callingUid = Binder.getCallingUid();
         final CallingInfo callingInfo = new CallingInfo(callingUid, TEST_PACKAGE);
-        assertThat(mProvider.getBoundServiceForApp(callingInfo)).isEqualTo(null);
+        assertThat(sProvider.getBoundServiceForApp(callingInfo)).isEqualTo(null);
     }
 
     @Test(expected = SecurityException.class)
@@ -1591,7 +1590,7 @@ public class SdkSandboxManagerServiceUnitTest {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         mService.loadSdk(
                 TEST_PACKAGE,
-                callback.asBinder(),
+                null,
                 SDK_NAME,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
@@ -1671,7 +1670,7 @@ public class SdkSandboxManagerServiceUnitTest {
             FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
             mService.loadSdk(
                     TEST_PACKAGE,
-                    callback.asBinder(),
+                    null,
                     SDK_NAME,
                     TIME_APP_CALLED_SYSTEM_SERVER,
                     new Bundle(),
@@ -1684,7 +1683,7 @@ public class SdkSandboxManagerServiceUnitTest {
             FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
             mService.loadSdk(
                     TEST_PACKAGE,
-                    callback.asBinder(),
+                    null,
                     SDK_NAME,
                     TIME_APP_CALLED_SYSTEM_SERVER,
                     new Bundle(),
@@ -1718,7 +1717,7 @@ public class SdkSandboxManagerServiceUnitTest {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         mService.loadSdk(
                 TEST_PACKAGE,
-                callback.asBinder(),
+                null,
                 "RANDOM",
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
@@ -1763,18 +1762,12 @@ public class SdkSandboxManagerServiceUnitTest {
                 .when(binder)
                 .linkToDeath(Mockito.any(), Mockito.anyInt());
 
-        SdkSandboxManagerService.Injector injector =
-                Mockito.mock(SdkSandboxManagerService.Injector.class);
-
-        SdkSandboxManagerService service =
-                new SdkSandboxManagerService(
-                        mSpyContext, mProvider, injector, new SdkSandboxPulledAtoms());
-        Mockito.when(injector.getCurrentTime())
+        Mockito.when(mInjector.getCurrentTime())
                 .thenReturn(TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP, TIME_FAILURE_HANDLED);
 
-        service.loadSdk(
+        mService.loadSdk(
                 TEST_PACKAGE,
-                callback.asBinder(),
+                null,
                 SDK_NAME,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
@@ -1810,7 +1803,7 @@ public class SdkSandboxManagerServiceUnitTest {
         disableNetworkPermissionChecks();
         disableForegroundCheck();
 
-        mProvider.disableBinding();
+        sProvider.disableBinding();
 
         Mockito.when(mInjector.getCurrentTime())
                 .thenReturn(
@@ -1821,7 +1814,7 @@ public class SdkSandboxManagerServiceUnitTest {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         mService.loadSdk(
                 TEST_PACKAGE,
-                callback.asBinder(),
+                null,
                 SDK_NAME,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
@@ -2170,19 +2163,16 @@ public class SdkSandboxManagerServiceUnitTest {
                         Map.of(PROPERTY_DISABLE_SANDBOX, "true")));
         int callingUid = Binder.getCallingUid();
         final CallingInfo callingInfo = new CallingInfo(callingUid, TEST_PACKAGE);
-        assertThat(mProvider.getBoundServiceForApp(callingInfo)).isEqualTo(null);
+        assertThat(sProvider.getBoundServiceForApp(callingInfo)).isEqualTo(null);
     }
 
     @Test
-    public void testLoadSdkFailsWhenSandboxDisabled() throws Exception {
+    public void testLoadSdkFailsWhenSandboxDisabled() {
         disableNetworkPermissionChecks();
         disableForegroundCheck();
         SdkSandboxManagerService.SdkSandboxSettingsListener listener =
                 mService.getSdkSandboxSettingsListener();
         listener.setKillSwitchState(true);
-        // Sleep needed to avoid deadlock.
-        // TODO(b/257255118): Remove this sleep.
-        Thread.sleep(500);
         listener.onPropertiesChanged(
                 new DeviceConfig.Properties(
                         DeviceConfig.NAMESPACE_ADSERVICES,
@@ -2190,7 +2180,7 @@ public class SdkSandboxManagerServiceUnitTest {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         mService.loadSdk(
                 TEST_PACKAGE,
-                callback.asBinder(),
+                null,
                 SDK_NAME,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
@@ -2503,7 +2493,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
         mService.loadSdk(
                 TEST_PACKAGE,
-                callback.asBinder(),
+                null,
                 SDK_NAME,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
@@ -2530,7 +2520,7 @@ public class SdkSandboxManagerServiceUnitTest {
         // Assume sdk storage information calculated and sent
         mSdkSandboxService.sendStorageInfoToSystemServer();
 
-        Mockito.verify(mSdkSandboxPulledAtoms)
+        Mockito.verify(sSdkSandboxPulledAtoms)
                 .logStorage(mClientAppUid, /*sharedStorage=*/ 0, /*sdkStorage=*/ 0);
     }
 
@@ -2551,12 +2541,7 @@ public class SdkSandboxManagerServiceUnitTest {
         disableForegroundCheck();
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         mService.loadSdk(
-                TEST_PACKAGE,
-                callback.asBinder(),
-                sdkName,
-                TIME_APP_CALLED_SYSTEM_SERVER,
-                new Bundle(),
-                callback);
+                TEST_PACKAGE, null, sdkName, TIME_APP_CALLED_SYSTEM_SERVER, new Bundle(), callback);
         mSdkSandboxService.sendLoadCodeSuccessful();
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
     }
@@ -2574,7 +2559,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
     // Restart sandbox which creates a new sandbox service binder.
     private void restartAndSetSandboxService() throws Exception {
-        mSdkSandboxService = mProvider.restartSandbox();
+        mSdkSandboxService = sProvider.restartSandbox();
     }
 
     /** Fake service provider that returns local instance of {@link SdkSandboxServiceProvider} */
@@ -2653,10 +2638,23 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     public static class InjectorForTest extends SdkSandboxManagerService.Injector {
+        InjectorForTest(Context context) {
+            super(context);
+        }
 
         @Override
         public long getCurrentTime() {
             return TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP;
+        }
+
+        @Override
+        public SdkSandboxServiceProvider getSdkSandboxServiceProvider() {
+            return sProvider;
+        }
+
+        @Override
+        public SdkSandboxPulledAtoms getSdkSandboxPulledAtoms() {
+            return sSdkSandboxPulledAtoms;
         }
     }
 }

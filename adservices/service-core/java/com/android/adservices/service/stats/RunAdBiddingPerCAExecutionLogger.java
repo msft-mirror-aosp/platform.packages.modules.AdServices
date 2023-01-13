@@ -32,8 +32,8 @@ import java.util.Objects;
 
 /**
  * Class for logging the run ad bidding per CA process. It provides the functions to collect the
- * process and its subcomponent processes and log the data into the de-identified WestWorld logs.
- * This class collect data for the telemetry atoms:
+ * process and its subcomponent processes and log the data into the statsd logs. This class collects
+ * data for the telemetry atoms:
  *
  * <ul>
  *   <li>RunAdBiddingPerCAProcessReportedStats for bidding per CA stage:
@@ -49,8 +49,7 @@ import java.util.Objects;
  * </ul>
  *
  * <p>Only the runAdBiddingPerCA process should call the close method to record the end state
- * regardless success or failure and log the generated atom proto into the WestWorld de-identified
- * logger.
+ * regardless success or failure and log the generated atom proto into the statsd logger.
  *
  * <p>Each subprocess should call its corresponding start method if it starts, and only call the end
  * method for successful completion. In failure cases, the exceptions thrown should propagate to the
