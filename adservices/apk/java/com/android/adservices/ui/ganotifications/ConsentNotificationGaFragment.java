@@ -93,7 +93,7 @@ public class ConsentNotificationGaFragment extends Fragment {
         if (mIsEUDevice) {
             rootView =
                     inflater.inflate(
-                            R.layout.consent_notification_ga_fragment_eu, container, false);
+                            R.layout.consent_notification_topics_fragment_eu, container, false);
         } else {
             rootView =
                     inflater.inflate(R.layout.consent_notification_ga_fragment, container, false);
