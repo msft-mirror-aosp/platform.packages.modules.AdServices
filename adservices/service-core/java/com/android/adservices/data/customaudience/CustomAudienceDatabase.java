@@ -80,6 +80,7 @@ public abstract class CustomAudienceDatabase extends RoomDatabase {
             if (sSingleton == null) {
                 sSingleton =
                         Room.databaseBuilder(context, CustomAudienceDatabase.class, DATABASE_NAME)
+                                .fallbackToDestructiveMigration()
                                 .build();
             }
             return sSingleton;

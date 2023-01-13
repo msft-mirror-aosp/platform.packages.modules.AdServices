@@ -55,6 +55,7 @@ public abstract class SharedStorageDatabase extends RoomDatabase {
             if (sSingleton == null) {
                 sSingleton =
                         Room.databaseBuilder(context, SharedStorageDatabase.class, DATABASE_NAME)
+                                .fallbackToDestructiveMigration()
                                 .build();
             }
             return sSingleton;
