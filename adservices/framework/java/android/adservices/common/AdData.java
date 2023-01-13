@@ -47,23 +47,6 @@ public final class AdData implements Parcelable {
                 }
             };
 
-    /**
-     * Represents data specific to a single ad that is necessary for ad selection and rendering.
-     *
-     * @param renderUri a URI pointing to the ad's rendering assets
-     * @param metadata buyer ad metadata represented as a JSON string
-     * @hide
-     * @deprecated use Builder to build the obj instead of this constructor.
-     */
-    // TODO(b/230782527): Remove this constructor.
-    @Deprecated
-    public AdData(@NonNull Uri renderUri, @NonNull String metadata) {
-        Objects.requireNonNull(renderUri);
-        Objects.requireNonNull(metadata);
-        mRenderUri = renderUri;
-        mMetadata = metadata;
-    }
-
     private AdData(@NonNull AdData.Builder builder) {
         mRenderUri = builder.mRenderUri;
         mMetadata = builder.mMetadata;

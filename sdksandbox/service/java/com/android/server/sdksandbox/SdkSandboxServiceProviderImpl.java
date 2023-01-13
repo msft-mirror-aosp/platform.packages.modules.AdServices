@@ -29,6 +29,7 @@ import android.util.ArrayMap;
 import android.util.Log;
 
 import com.android.internal.annotations.GuardedBy;
+import com.android.modules.utils.build.SdkLevel;
 import com.android.sdksandbox.ISdkSandboxService;
 import com.android.server.LocalManagerRegistry;
 import com.android.server.am.ActivityManagerLocal;
@@ -89,9 +90,27 @@ class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
             String sandboxProcessName = getProcessName(callingPackageName)
                     + SANDBOX_PROCESS_NAME_SUFFIX;
             try {
-                boolean bound = mActivityManagerLocal.bindSdkSandboxService(intent,
-                        serviceConnection, callingInfo.getUid(), callingPackageName,
-                        sandboxProcessName, Context.BIND_AUTO_CREATE);
+                boolean bound;
+                if (SdkLevel.isAtLeastU()) {
+                    bound =
+                            mActivityManagerLocal.bindSdkSandboxService(
+                                    intent,
+                                    serviceConnection,
+                                    callingInfo.getUid(),
+                                    callingInfo.getApplicationThreadBinder(),
+                                    callingPackageName,
+                                    sandboxProcessName,
+                                    Context.BIND_AUTO_CREATE);
+                } else {
+                    bound =
+                            mActivityManagerLocal.bindSdkSandboxService(
+                                    intent,
+                                    serviceConnection,
+                                    callingInfo.getUid(),
+                                    callingPackageName,
+                                    sandboxProcessName,
+                                    Context.BIND_AUTO_CREATE);
+                }
                 if (!bound) {
                     mContext.unbindService(serviceConnection);
                     notifyFailedBinding(serviceConnection);

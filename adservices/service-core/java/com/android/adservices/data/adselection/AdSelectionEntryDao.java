@@ -63,12 +63,13 @@ public interface AdSelectionEntryDao {
     void persistAdSelectionOverride(DBAdSelectionOverride adSelectionOverride);
 
     /**
-     * Adds a registered event to the table registered_ad_events
+     * Adds a list of registered events to the table registered_ad_events
      *
-     * @param registeredAdEvent is the registeredAdEvent to write to the table registered_ad_events.
+     * @param registeredAdEvents is the list of {@link DBRegisteredAdEvent} objects to write to the
+     *     table registered_ad_events.
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void persistDBRegisteredAdEvent(DBRegisteredAdEvent registeredAdEvent);
+    void persistDBRegisteredAdEvents(List<DBRegisteredAdEvent> registeredAdEvents);
 
     /**
      * Checks if there is a row in the ad selection data with the unique key ad_selection_id

@@ -90,7 +90,8 @@ public final class RegisterWebTrigger implements Action {
                                             triggerParams.getString(
                                                     TestFormatJsonMapping.REGISTRATION_URI_KEY)))
                             .setDebugKeyAllowed(
-                                    triggerParams.optBoolean(TestFormatJsonMapping.DEBUG_KEY, true))
+                                    triggerParams.optBoolean(
+                                            TestFormatJsonMapping.DEBUG_KEY, false))
                             .build());
         }
 

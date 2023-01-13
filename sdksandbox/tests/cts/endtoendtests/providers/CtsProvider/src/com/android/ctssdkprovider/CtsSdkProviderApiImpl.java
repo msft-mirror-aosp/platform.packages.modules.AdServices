@@ -17,6 +17,7 @@
 package com.android.ctssdkprovider;
 
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
 
@@ -28,6 +29,13 @@ import java.io.InputStreamReader;
 
 public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
     private Context mContext;
+    private static final String CLIENT_PACKAGE_NAME = "com.android.tests.sdksandbox.endtoend";
+    private static final String SDK_NAME = "com.android.ctssdkprovider";
+
+    private static final String SDK_CE_DATA_DIR =
+            "/data/misc_ce/0/sdksandbox/" + CLIENT_PACKAGE_NAME;
+    private static final String SDK_DE_DATA_DIR =
+            "/data/misc_de/0/sdksandbox/" + CLIENT_PACKAGE_NAME;
 
     private static final String STRING_RESOURCE = "Test String";
     private static final int INTEGER_RESOURCE = 1234;
@@ -42,21 +50,22 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
     public void checkClassloaders() {
         final ClassLoader ownClassloader = getClass().getClassLoader();
         if (ownClassloader == null) {
-            throw new RuntimeException("SdkProvider loaded in top-level classloader");
+            throw new IllegalStateException("SdkProvider loaded in top-level classloader");
         }
 
         final ClassLoader contextClassloader = mContext.getClassLoader();
         if (!ownClassloader.equals(contextClassloader)) {
-            throw new RuntimeException("Different SdkProvider and Context classloaders");
+            throw new IllegalStateException("Different SdkProvider and Context classloaders");
         }
 
         try {
             Class<?> loadedClazz = ownClassloader.loadClass(SdkSandboxServiceImpl.class.getName());
             if (!ownClassloader.equals(loadedClazz.getClassLoader())) {
-                throw new RuntimeException("SdkSandboxServiceImpl loaded with wrong classloader");
+                throw new IllegalStateException(
+                        "SdkSandboxServiceImpl loaded with wrong classloader");
             }
         } catch (ClassNotFoundException ex) {
-            throw new RuntimeException("Couldn't find class bundled with SdkProvider", ex);
+            throw new IllegalStateException("Couldn't find class bundled with SdkProvider", ex);
         }
     }
 
@@ -66,10 +75,10 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
         String stringRes = resources.getString(R.string.test_string);
         int integerRes = resources.getInteger(R.integer.test_integer);
         if (!stringRes.equals(STRING_RESOURCE)) {
-            throw new RuntimeException(createErrorMessage(STRING_RESOURCE, stringRes));
+            throw new IllegalStateException(createErrorMessage(STRING_RESOURCE, stringRes));
         }
         if (integerRes != INTEGER_RESOURCE) {
-            throw new RuntimeException(
+            throw new IllegalStateException(
                     createErrorMessage(
                             String.valueOf(INTEGER_RESOURCE), String.valueOf(integerRes)));
         }
@@ -79,10 +88,54 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
                 new BufferedReader(new InputStreamReader(assets.open(ASSET_FILE)))) {
             String readAsset = reader.readLine();
             if (!readAsset.equals(STRING_ASSET)) {
-                throw new RuntimeException(createErrorMessage(STRING_ASSET, readAsset));
+                throw new IllegalStateException(createErrorMessage(STRING_ASSET, readAsset));
             }
         } catch (IOException e) {
-            throw new RuntimeException("File not found: " + ASSET_FILE);
+            throw new IllegalStateException("File not found: " + ASSET_FILE);
+        }
+    }
+
+    @Override
+    public boolean isPermissionGranted(String permissionName, boolean useApplicationContext) {
+        final Context cut = useApplicationContext ? mContext.getApplicationContext() : mContext;
+        return cut.checkSelfPermission(permissionName) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    @Override
+    public int getContextHashCode(boolean useApplicationContext) {
+        final Context cut = useApplicationContext ? mContext.getApplicationContext() : mContext;
+        return cut.hashCode();
+    }
+
+    @Override
+    public void testStoragePaths() {
+        // Verify CE data directories
+        {
+            final String sdkPathPrefix = SDK_CE_DATA_DIR + "/" + SDK_NAME;
+            final String dataDir = mContext.getDataDir().getPath();
+            if (!dataDir.startsWith(sdkPathPrefix)) {
+                throw new IllegalStateException("Data dir for CE is wrong: " + dataDir);
+            }
+
+            final String fileDir = mContext.getFilesDir().getPath();
+            if (!fileDir.startsWith(sdkPathPrefix)) {
+                throw new IllegalStateException("File dir for CE is wrong: " + fileDir);
+            }
+        }
+
+        // Verify DE data directories
+        {
+            final Context cut = mContext.createDeviceProtectedStorageContext();
+            final String sdkPathPrefix = SDK_DE_DATA_DIR + "/" + SDK_NAME;
+            final String dataDir = cut.getDataDir().getPath();
+            if (!dataDir.startsWith(sdkPathPrefix)) {
+                throw new IllegalStateException("Data dir for DE is wrong: " + dataDir);
+            }
+
+            final String fileDir = cut.getFilesDir().getPath();
+            if (!fileDir.startsWith(sdkPathPrefix)) {
+                throw new IllegalStateException("File dir for DE is wrong: " + fileDir);
+            }
         }
     }
 

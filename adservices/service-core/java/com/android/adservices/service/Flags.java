@@ -517,6 +517,9 @@ public interface Flags extends Dumpable {
 
     long FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS = 2000;
 
+    // TODO(b/263055427): Replace with a more realistic number after getting input from ad-techs
+    long FLEDGE_REPORT_IMPRESSION_MAX_EVENT_URI_ENTRIES_COUNT = 100;
+
     /** Returns the timeout constant in milliseconds that limits the bidding per CA */
     default long getAdSelectionBiddingTimeoutPerCaMs() {
         return FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
@@ -572,6 +575,15 @@ public interface Flags extends Dumpable {
         return FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
     }
 
+    /**
+     * Returns the maximum number of {@link
+     * com.android.adservices.data.adselection.DBRegisteredAdEvent} that an ad-tech can register in
+     * one call to {@code reportImpression}.
+     */
+    default long getReportImpressionMaxEventUriEntriesCount() {
+        return FLEDGE_REPORT_IMPRESSION_MAX_EVENT_URI_ENTRIES_COUNT;
+    }
+
     // 24 hours in seconds
     long FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S = 60 * 60 * 24;
 
@@ -609,11 +621,8 @@ public interface Flags extends Dumpable {
      * The number of epoch to look back to do garbage collection for old epoch data. Assume current
      * Epoch is T, then any epoch data of (T-NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY-1) (inclusive)
      * should be erased
-     *
-     * <p>In order to provide enough epochs to assign topics for newly installed apps, keep
-     * TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS more epochs in database.
      */
-    int NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY = TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS * 2;
+    int NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY = TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS;
 
     /*
      * Return the number of epochs to keep in the history

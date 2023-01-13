@@ -19,6 +19,7 @@ package com.android.adservices.service.measurement.util;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import android.net.Uri;
 import android.util.Pair;
 
 import androidx.test.filters.SmallTest;
@@ -37,23 +38,111 @@ public class DebugKeyTest {
 
     private static final UnsignedLong SOURCE_DEBUG_KEY = new UnsignedLong(111111L);
     private static final UnsignedLong TRIGGER_DEBUG_KEY = new UnsignedLong(222222L);
+    public static final String TRIGGER_ID = "triggerId1";
+    public static final long TRIGGER_TIME = 234324L;
+    public static final Uri REGISTRANT = Uri.parse("android-app://com.registrant.different");
 
     @Test
-    public void testDebugKeys_adIdPermission_debugKeys() {
+    public void testSourceAppTriggerApp_adIdPermission_debugKeysPresent() {
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
-                        .setId("triggerId1")
+                        .setId(TRIGGER_ID)
                         .setStatus(Trigger.Status.PENDING)
-                        .setTriggerTime(234324L)
+                        .setTriggerTime(TRIGGER_TIME)
                         .setAdIdPermission(true)
-                        .setArDebugPermission(false)
                         .setDestinationType(EventSurfaceType.APP)
                         .setDebugKey(TRIGGER_DEBUG_KEY)
                         .build();
         Source source =
                 SourceFixture.getValidSourceBuilder()
                         .setAdIdPermission(true)
-                        .setArDebugPermission(false)
+                        .setDebugKey(SOURCE_DEBUG_KEY)
+                        .setPublisherType(EventSurfaceType.APP)
+                        .build();
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair = DebugKey.getDebugKeys(source, trigger);
+        assertEquals(SOURCE_DEBUG_KEY, debugKeyPair.first);
+        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+    }
+
+    @Test
+    public void testSourceAppTriggerApp_noAdIdPermission_debugKeysAbsent() {
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId(TRIGGER_ID)
+                        .setStatus(Trigger.Status.PENDING)
+                        .setTriggerTime(TRIGGER_TIME)
+                        .setAdIdPermission(false)
+                        .setDestinationType(EventSurfaceType.APP)
+                        .setDebugKey(TRIGGER_DEBUG_KEY)
+                        .build();
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setAdIdPermission(false)
+                        .setDebugKey(SOURCE_DEBUG_KEY)
+                        .setPublisherType(EventSurfaceType.APP)
+                        .build();
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair = DebugKey.getDebugKeys(source, trigger);
+        assertNull(debugKeyPair.first);
+        assertNull(debugKeyPair.second);
+    }
+
+    @Test
+    public void testSourceAppTriggerApp_sourceAdId_sourceDebugKeyPresent() {
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId(TRIGGER_ID)
+                        .setStatus(Trigger.Status.PENDING)
+                        .setTriggerTime(TRIGGER_TIME)
+                        .setDestinationType(EventSurfaceType.APP)
+                        .setDebugKey(TRIGGER_DEBUG_KEY)
+                        .build();
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setAdIdPermission(true)
+                        .setDebugKey(SOURCE_DEBUG_KEY)
+                        .setPublisherType(EventSurfaceType.APP)
+                        .build();
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair = DebugKey.getDebugKeys(source, trigger);
+        assertEquals(SOURCE_DEBUG_KEY, debugKeyPair.first);
+        assertNull(debugKeyPair.second);
+    }
+
+    @Test
+    public void testSourceAppTriggerApp_triggerAdId_triggerDebugKeyPresent() {
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId(TRIGGER_ID)
+                        .setStatus(Trigger.Status.PENDING)
+                        .setTriggerTime(TRIGGER_TIME)
+                        .setAdIdPermission(true)
+                        .setDestinationType(EventSurfaceType.APP)
+                        .setDebugKey(TRIGGER_DEBUG_KEY)
+                        .build();
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setDebugKey(SOURCE_DEBUG_KEY)
+                        .setPublisherType(EventSurfaceType.APP)
+                        .build();
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair = DebugKey.getDebugKeys(source, trigger);
+        assertNull(debugKeyPair.first);
+        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+    }
+
+    @Test
+    public void testSourceWebTriggerWeb_arDebugPermission_sameRegistrant_debugKeysPresent() {
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId(TRIGGER_ID)
+                        .setStatus(Trigger.Status.PENDING)
+                        .setTriggerTime(TRIGGER_TIME)
+                        .setArDebugPermission(true)
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setDebugKey(TRIGGER_DEBUG_KEY)
+                        .build();
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setArDebugPermission(true)
+                        .setPublisherType(EventSurfaceType.WEB)
                         .setDebugKey(SOURCE_DEBUG_KEY)
                         .build();
         Pair<UnsignedLong, UnsignedLong> debugKeyPair = DebugKey.getDebugKeys(source, trigger);
@@ -62,21 +151,20 @@ public class DebugKeyTest {
     }
 
     @Test
-    public void testDebugKeys_no_adIdPermission_no_debugKeys() {
+    public void testSourceWebTriggerWeb_noArDebugPermission_debugKeysAbsent() {
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
-                        .setId("triggerId1")
+                        .setId(TRIGGER_ID)
                         .setStatus(Trigger.Status.PENDING)
-                        .setTriggerTime(234324L)
-                        .setAdIdPermission(false)
+                        .setTriggerTime(TRIGGER_TIME)
                         .setArDebugPermission(false)
-                        .setDestinationType(EventSurfaceType.APP)
+                        .setDestinationType(EventSurfaceType.WEB)
                         .setDebugKey(TRIGGER_DEBUG_KEY)
                         .build();
         Source source =
                 SourceFixture.getValidSourceBuilder()
-                        .setAdIdPermission(false)
                         .setArDebugPermission(false)
+                        .setPublisherType(EventSurfaceType.WEB)
                         .setDebugKey(SOURCE_DEBUG_KEY)
                         .build();
         Pair<UnsignedLong, UnsignedLong> debugKeyPair = DebugKey.getDebugKeys(source, trigger);
@@ -85,12 +173,12 @@ public class DebugKeyTest {
     }
 
     @Test
-    public void testWebDebugKeys_adIdPermission_arDebugPermission_debugKeys() {
+    public void testSourceWebTriggerWeb_arDebugPermission_differentRegistrant_debugKeysAbsent() {
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
-                        .setId("triggerId1")
+                        .setId(TRIGGER_ID)
                         .setStatus(Trigger.Status.PENDING)
-                        .setTriggerTime(234324L)
+                        .setTriggerTime(TRIGGER_TIME)
                         .setAdIdPermission(true)
                         .setArDebugPermission(true)
                         .setDestinationType(EventSurfaceType.WEB)
@@ -98,35 +186,100 @@ public class DebugKeyTest {
                         .build();
         Source source =
                 SourceFixture.getValidSourceBuilder()
-                        .setAdIdPermission(true)
+                        .setRegistrant(REGISTRANT)
                         .setArDebugPermission(true)
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .setDebugKey(SOURCE_DEBUG_KEY)
+                        .build();
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair = DebugKey.getDebugKeys(source, trigger);
+        assertNull(debugKeyPair.first);
+        assertNull(debugKeyPair.second);
+    }
+
+    @Test
+    public void testSourceWebTriggerWeb_sourceArDebugSameRegistrant_sourceDebugKeysPresent() {
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId(TRIGGER_ID)
+                        .setStatus(Trigger.Status.PENDING)
+                        .setTriggerTime(TRIGGER_TIME)
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setDebugKey(TRIGGER_DEBUG_KEY)
+                        .build();
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setArDebugPermission(true)
+                        .setPublisherType(EventSurfaceType.WEB)
                         .setDebugKey(SOURCE_DEBUG_KEY)
                         .build();
         Pair<UnsignedLong, UnsignedLong> debugKeyPair = DebugKey.getDebugKeys(source, trigger);
         assertEquals(SOURCE_DEBUG_KEY, debugKeyPair.first);
+        assertNull(debugKeyPair.second);
+    }
+
+    @Test
+    public void testSourceWebTriggerWeb_triggerArDebugSameRegistrant_triggerDebugKeysPresent() {
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId(TRIGGER_ID)
+                        .setStatus(Trigger.Status.PENDING)
+                        .setTriggerTime(TRIGGER_TIME)
+                        .setArDebugPermission(true)
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setDebugKey(TRIGGER_DEBUG_KEY)
+                        .build();
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .setDebugKey(SOURCE_DEBUG_KEY)
+                        .build();
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair = DebugKey.getDebugKeys(source, trigger);
+        assertNull(debugKeyPair.first);
         assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
     }
 
     @Test
-    public void testWebDebugKeys_arDebugPermission_sameRegistrant_debugKeys() {
+    public void testSourceAppTriggerWeb_debugKeysAbsent() {
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
-                        .setId("triggerId1")
+                        .setId(TRIGGER_ID)
                         .setStatus(Trigger.Status.PENDING)
-                        .setTriggerTime(234324L)
-                        .setAdIdPermission(false)
+                        .setTriggerTime(TRIGGER_TIME)
                         .setArDebugPermission(true)
                         .setDestinationType(EventSurfaceType.WEB)
                         .setDebugKey(TRIGGER_DEBUG_KEY)
                         .build();
         Source source =
                 SourceFixture.getValidSourceBuilder()
-                        .setAdIdPermission(false)
-                        .setArDebugPermission(true)
+                        .setAdIdPermission(true)
                         .setDebugKey(SOURCE_DEBUG_KEY)
+                        .setPublisherType(EventSurfaceType.APP)
                         .build();
         Pair<UnsignedLong, UnsignedLong> debugKeyPair = DebugKey.getDebugKeys(source, trigger);
-        assertEquals(SOURCE_DEBUG_KEY, debugKeyPair.first);
-        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        assertNull(debugKeyPair.first);
+        assertNull(debugKeyPair.second);
+    }
+
+    @Test
+    public void testSourceWebTriggerApp_debugKeysAbsent() {
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId(TRIGGER_ID)
+                        .setStatus(Trigger.Status.PENDING)
+                        .setTriggerTime(TRIGGER_TIME)
+                        .setAdIdPermission(true)
+                        .setDestinationType(EventSurfaceType.APP)
+                        .setDebugKey(TRIGGER_DEBUG_KEY)
+                        .build();
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setArDebugPermission(true)
+                        .setDebugKey(SOURCE_DEBUG_KEY)
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .build();
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair = DebugKey.getDebugKeys(source, trigger);
+        assertNull(debugKeyPair.first);
+        assertNull(debugKeyPair.second);
     }
 }
+

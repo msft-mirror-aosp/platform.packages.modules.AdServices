@@ -1,26 +1,38 @@
 {
-  "description": "One web source and one web trigger that match. Event report task within the expiry window sends one report. Source and Web registrants are the same, ar_debug permission is enabled and ad id permission is disabled. Expected debug event reports.",
+  "description": "One app source and one web trigger that match. Ar debug enabled, debug keys not attached",
   "input": {
-    "web_sources": [{
+    "sources": [{
       "registration_request": {
-        "source_origin": "android-app://example.1s1.test",
+        "attribution_src_url": "https://www.ad-tech1.test",
         "source_type": "navigation",
-        "web_destination": "https://example.2d1.test",
-        "registrant": "example.1s1.test",
-        "source_params": [{
-          "attribution_src_url": "https://www.ad-tech1.test",
-          "debug_key" : true
-        }]
+        "registrant": "example.1s1.test"
       },
       "responses": [{
         "url": "https://www.ad-tech1.test",
         "response": {
           "Attribution-Reporting-Register-Source": {
             "source_event_id": "1",
-            "web_destination": "https://example.2d1.test",
+            "destination": "android-app://example.1d1.test",
+            "web_destination": "https://example.1d1.test",
             "priority": "100",
             "expiry": "172801",
-            "debug_key": "347982378"
+            "debug_key": "347982378",
+            "filter_data": {
+              "conversion_subdomain": [
+                "electronics.megastore"
+              ],
+              "product": [
+                "1234",
+                "234"
+              ],
+              "ctid": [
+                "id"
+              ]
+            },
+            "aggregation_keys": {
+              "campaignCounts": "0x159",
+              "geoValue": "0x5"
+            }
           },
           "Location": null,
           "Attribution-Reporting-Redirect": null
@@ -30,8 +42,8 @@
     }],
     "web_triggers": [{
       "registration_request": {
-        "destination_origin": "https://example.2d1.test",
-        "registrant": "example.1s1.test",
+        "destination_origin": "https://example.1d1.test",
+        "registrant": "example.1d1.test",
         "trigger_params": [{
           "attribution_src_url": "https://www.ad-tech1.test",
           "debug_key" : true
@@ -61,27 +73,11 @@
       "report_time": "800176400001",
       "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
       "payload": {
-        "attribution_destination": "https://2d1.test",
+        "attribution_destination": "https://1d1.com",
         "source_event_id": "1",
         "trigger_data": "2",
         "source_type": "navigation",
-        "randomized_trigger_rate": 0.0024263,
-        "source_debug_key" : "347982378",
-        "trigger_debug_key" : "8971346783"
-      }
-    }],
-    "aggregatable_results": [],
-    "debug_event_level_results": [{
-      "report_time": "800176400001",
-      "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
-      "payload": {
-        "attribution_destination": "https://2d1.test",
-        "source_event_id": "1",
-        "trigger_data": "2",
-        "source_type": "navigation",
-        "randomized_trigger_rate": 0.0024263,
-        "source_debug_key" : "347982378",
-        "trigger_debug_key" : "8971346783"
+        "randomized_trigger_rate": 0.017022
       }
     }]
   }
