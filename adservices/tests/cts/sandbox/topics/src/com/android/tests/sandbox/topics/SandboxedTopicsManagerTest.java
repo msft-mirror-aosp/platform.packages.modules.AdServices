@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.topics.GetTopicsResponse;
 import android.annotation.NonNull;
+import android.app.Instrumentation;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.content.Context;
@@ -35,6 +36,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -74,6 +76,9 @@ public class SandboxedTopicsManagerTest {
 
     @Before
     public void setup() throws TimeoutException, InterruptedException {
+        // Skip the test if it runs on Automotive, or Wear.
+        Assume.assumeTrue(isHardwareSupported());
+
         // We need to skip 3 epochs so that if there is any usage from other test runs, it will
         // not be used for epoch retrieval.
         Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
@@ -158,6 +163,14 @@ public class SandboxedTopicsManagerTest {
     private void forceEpochComputationJob() {
         ShellUtils.runShellCommand(
                 "cmd jobscheduler run -f" + " " + getAdServicesPackageName() + " " + EPOCH_JOB_ID);
+    }
+
+    // Adservices doesn't support non-phone device. Return false if the target is not supported.
+    private static boolean isHardwareSupported() {
+        final Instrumentation inst = InstrumentationRegistry.getInstrumentation();
+        PackageManager pm = inst.getContext().getPackageManager();
+        return !pm.hasSystemFeature(PackageManager.FEATURE_WATCH)
+                && !pm.hasSystemFeature(PackageManager.FEATURE_AUTOMOTIVE);
     }
 
     // Used to get the package name. Copied over from com.android.adservices.AndroidServiceBinder
