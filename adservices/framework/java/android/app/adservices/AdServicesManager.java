@@ -108,4 +108,85 @@ public final class AdServicesManager {
             throw e.rethrowFromSystemServer();
         }
     }
+
+    /**
+     * Saves information to the storage that notification was displayed for the first time to the
+     * user.
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void recordGaUxNotificationDisplayed() {
+        try {
+            mService.recordGaUxNotificationDisplayed();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Returns information whether Consent GA UX Notification was displayed or not.
+     *
+     * @return true if Consent GA UX Notification was displayed, otherwise false.
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public boolean wasGaUxNotificationDisplayed() {
+        try {
+            return mService.wasGaUxNotificationDisplayed();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Saves information to the storage that topics consent page was displayed for the first time to
+     * the user.
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void recordTopicsConsentPageDisplayed() {
+        try {
+            mService.recordTopicsConsentPageDisplayed();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Returns information whether topics Consent page was displayed or not.
+     *
+     * @return true if topics consent page was displayed, otherwise false.
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public boolean wasTopicsConsentPageDisplayed() {
+        try {
+            return mService.wasTopicsConsentPageDisplayed();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Saves information to the storage that fledge and msmt consent page was displayed for the
+     * first time to the user.
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void recordFledgeAndMsmtConsentPageDisplayed() {
+        try {
+            mService.recordFledgeAndMsmtConsentPageDisplayed();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Returns information whether fledge and msmt Consent page was displayed or not.
+     *
+     * @return true if fledge and msmt consent page was displayed, otherwise false.
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public boolean wasFledgeAndMsmtConsentPageDisplayed() {
+        try {
+            return mService.wasFledgeAndMsmtConsentPageDisplayed();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
 }

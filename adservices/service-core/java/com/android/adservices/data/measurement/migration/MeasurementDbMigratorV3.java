@@ -290,7 +290,7 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
                         MeasurementTables.TriggerContract.ID + " = ?",
                         new String[] {id});
         if (rowCount != 1) {
-            LogUtil.d("MeasurementDbMigratorV4: failed to update event trigger record.");
+            LogUtil.d("MeasurementDbMigratorV3: failed to update event trigger record.");
         }
     }
 
