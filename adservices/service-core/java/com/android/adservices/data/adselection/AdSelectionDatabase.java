@@ -59,6 +59,7 @@ public abstract class AdSelectionDatabase extends RoomDatabase {
             if (Objects.isNull(sSingleton)) {
                 sSingleton =
                         Room.databaseBuilder(context, AdSelectionDatabase.class, DATABASE_NAME)
+                                .fallbackToDestructiveMigration()
                                 .build();
             }
             return sSingleton;
