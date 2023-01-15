@@ -78,6 +78,16 @@ public class ConsentManager {
     @VisibleForTesting
     static final String NOTIFICATION_DISPLAYED_ONCE = "NOTIFICATION-DISPLAYED-ONCE";
 
+    @VisibleForTesting
+    static final String GA_UX_NOTIFICATION_DISPLAYED_ONCE = "GA-UX-NOTIFICATION-DISPLAYED-ONCE";
+
+    @VisibleForTesting
+    static final String TOPICS_CONSENT_PAGE_DISPLAYED = "TOPICS-CONSENT-PAGE-DISPLAYED";
+
+    @VisibleForTesting
+    static final String FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED =
+            "FLEDGE-AND-MSMT-CONSENT-PAGE-DISPLAYED";
+
     @VisibleForTesting static final String CONSENT_KEY = "CONSENT";
     private static final String ERROR_MESSAGE_WHILE_SET_CONTENT = "setConsent method failed.";
     private static final String ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH =
@@ -662,6 +672,187 @@ public class ConsentManager {
         }
     }
 
+    /**
+     * Saves information to the storage that GA UX notification was displayed for the first time to
+     * the user.
+     *
+     * <p>To write to PPAPI if consent source of truth is PPAPI_ONLY or dual sources. To write to
+     * system server if consent source of truth is SYSTEM_SERVER_ONLY or dual sources.
+     */
+    public void recordGaUxNotificationDisplayed() {
+        synchronized (ConsentManager.class) {
+            try {
+                switch (mConsentSourceOfTruth) {
+                    case Flags.PPAPI_ONLY:
+                        mDatastore.put(GA_UX_NOTIFICATION_DISPLAYED_ONCE, true);
+                        break;
+                    case Flags.SYSTEM_SERVER_ONLY:
+                        mAdServicesManager.recordGaUxNotificationDisplayed();
+                        break;
+                    case Flags.PPAPI_AND_SYSTEM_SERVER:
+                        mDatastore.put(GA_UX_NOTIFICATION_DISPLAYED_ONCE, true);
+                        mAdServicesManager.recordGaUxNotificationDisplayed();
+                        break;
+                    default:
+                        throw new RuntimeException(ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                }
+            } catch (IOException | RuntimeException e) {
+                throw new RuntimeException("Record GA UX Notification Displayed failed", e);
+            }
+        }
+    }
+
+    /**
+     * Retrieves if GA UX notification has been displayed.
+     *
+     * <p>To read from PPAPI consent if source of truth is PPAPI. To read from system server consent
+     * if source of truth is system server or dual sources.
+     *
+     * @return true if GA UX Consent Notification was displayed, otherwise false.
+     */
+    public Boolean wasGaUxNotificationDisplayed() {
+        synchronized (ConsentManager.class) {
+            try {
+                switch (mConsentSourceOfTruth) {
+                    case Flags.PPAPI_ONLY:
+                        return mDatastore.get(GA_UX_NOTIFICATION_DISPLAYED_ONCE);
+                    case Flags.SYSTEM_SERVER_ONLY:
+                        // Intentional fallthrough
+                    case Flags.PPAPI_AND_SYSTEM_SERVER:
+                        return mAdServicesManager.wasGaUxNotificationDisplayed();
+                    default:
+                        LogUtil.e(ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                        return false;
+                }
+            } catch (RuntimeException e) {
+                LogUtil.e(e, "Get GA UX notification failed.");
+            }
+
+            return false;
+        }
+    }
+
+    /**
+     * Saves information to the storage that topics consent page was displayed for the first time to
+     * the user.
+     *
+     * <p>To write to PPAPI if consent source of truth is PPAPI_ONLY or dual sources. To write to
+     * system server if consent source of truth is SYSTEM_SERVER_ONLY or dual sources.
+     */
+    public void recordTopicsConsentPageDisplayed() {
+        synchronized (ConsentManager.class) {
+            try {
+                switch (mConsentSourceOfTruth) {
+                    case Flags.PPAPI_ONLY:
+                        mDatastore.put(TOPICS_CONSENT_PAGE_DISPLAYED, true);
+                        break;
+                    case Flags.SYSTEM_SERVER_ONLY:
+                        mAdServicesManager.recordTopicsConsentPageDisplayed();
+                        break;
+                    case Flags.PPAPI_AND_SYSTEM_SERVER:
+                        mDatastore.put(TOPICS_CONSENT_PAGE_DISPLAYED, true);
+                        mAdServicesManager.recordTopicsConsentPageDisplayed();
+                        break;
+                    default:
+                        throw new RuntimeException(ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                }
+            } catch (IOException | RuntimeException e) {
+                throw new RuntimeException("Record Topics Consent Page Displayed failed", e);
+            }
+        }
+    }
+
+    /**
+     * Retrieves if topics consent page has been displayed.
+     *
+     * <p>To read from PPAPI consent if source of truth is PPAPI. To read from system server consent
+     * if source of truth is system server or dual sources.
+     *
+     * @return true if topics consent page was displayed, otherwise false.
+     */
+    public Boolean wasTopicsConsentPageDisplayed() {
+        synchronized (ConsentManager.class) {
+            try {
+                switch (mConsentSourceOfTruth) {
+                    case Flags.PPAPI_ONLY:
+                        return mDatastore.get(TOPICS_CONSENT_PAGE_DISPLAYED);
+                    case Flags.SYSTEM_SERVER_ONLY:
+                        // Intentional fallthrough
+                    case Flags.PPAPI_AND_SYSTEM_SERVER:
+                        return mAdServicesManager.wasTopicsConsentPageDisplayed();
+                    default:
+                        LogUtil.e(ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                        return false;
+                }
+            } catch (RuntimeException e) {
+                LogUtil.e(e, "Get Topics Consent Page Displayed failed.");
+            }
+
+            return false;
+        }
+    }
+
+    /**
+     * Saves information to the storage that fledge and msmt consent page was displayed for the
+     * first time to the user.
+     *
+     * <p>To write to PPAPI if consent source of truth is PPAPI_ONLY or dual sources. To write to
+     * system server if consent source of truth is SYSTEM_SERVER_ONLY or dual sources.
+     */
+    public void recordFledgeAndMsmtConsentPageDisplayed() {
+        synchronized (ConsentManager.class) {
+            try {
+                switch (mConsentSourceOfTruth) {
+                    case Flags.PPAPI_ONLY:
+                        mDatastore.put(FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED, true);
+                        break;
+                    case Flags.SYSTEM_SERVER_ONLY:
+                        mAdServicesManager.recordFledgeAndMsmtConsentPageDisplayed();
+                        break;
+                    case Flags.PPAPI_AND_SYSTEM_SERVER:
+                        mDatastore.put(FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED, true);
+                        mAdServicesManager.recordFledgeAndMsmtConsentPageDisplayed();
+                        break;
+                    default:
+                        throw new RuntimeException(ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                }
+            } catch (IOException | RuntimeException e) {
+                throw new RuntimeException(
+                        "Record FLEDGE and MSMT Consent Page Displayed failed", e);
+            }
+        }
+    }
+
+    /**
+     * Retrieves if fledge and msmt consent page has been displayed.
+     *
+     * <p>To read from PPAPI consent if source of truth is PPAPI. To read from system server consent
+     * if source of truth is system server or dual sources.
+     *
+     * @return true if fledge and msmt consent page was displayed, otherwise false.
+     */
+    public Boolean wasFledgeAndMsmtConsentPageDisplayed() {
+        synchronized (ConsentManager.class) {
+            try {
+                switch (mConsentSourceOfTruth) {
+                    case Flags.PPAPI_ONLY:
+                        return mDatastore.get(FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED);
+                    case Flags.SYSTEM_SERVER_ONLY:
+                        // Intentional fallthrough
+                    case Flags.PPAPI_AND_SYSTEM_SERVER:
+                        return mAdServicesManager.wasFledgeAndMsmtConsentPageDisplayed();
+                    default:
+                        LogUtil.e(ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                        return false;
+                }
+            } catch (RuntimeException e) {
+                LogUtil.e(e, "Get Fledge Consent Page Displayed failed.");
+            }
+
+            return false;
+        }
+    }
+
     @VisibleForTesting
     static BooleanFileDatastore createAndInitializeDataStore(@NonNull Context context) {
         BooleanFileDatastore booleanFileDatastore =
@@ -674,6 +865,15 @@ public class ConsentManager {
             // in the parameter (similar to SP apply etc.)
             if (booleanFileDatastore.get(NOTIFICATION_DISPLAYED_ONCE) == null) {
                 booleanFileDatastore.put(NOTIFICATION_DISPLAYED_ONCE, false);
+            }
+            if (booleanFileDatastore.get(GA_UX_NOTIFICATION_DISPLAYED_ONCE) == null) {
+                booleanFileDatastore.put(GA_UX_NOTIFICATION_DISPLAYED_ONCE, false);
+            }
+            if (booleanFileDatastore.get(TOPICS_CONSENT_PAGE_DISPLAYED) == null) {
+                booleanFileDatastore.put(TOPICS_CONSENT_PAGE_DISPLAYED, false);
+            }
+            if (booleanFileDatastore.get(FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED) == null) {
+                booleanFileDatastore.put(FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED, false);
             }
         } catch (IOException | IllegalArgumentException | NullPointerException e) {
             throw new RuntimeException("Failed to initialize the File Datastore!", e);

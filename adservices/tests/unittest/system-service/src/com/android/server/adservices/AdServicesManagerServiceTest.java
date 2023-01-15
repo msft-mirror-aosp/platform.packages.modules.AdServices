@@ -388,6 +388,45 @@ public class AdServicesManagerServiceTest {
         assertThrows(SecurityException.class, () -> service.getConsent(ConsentParcel.ALL_API));
     }
 
+    @Test
+    public void testRecordGaUxNotificationDisplayed() throws IOException {
+        AdServicesManagerService service =
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+        // Since unit test cannot execute an IPC call currently, disable the permission check.
+        disableEnforceAdServicesManagerPermission(service);
+
+        // First, the notification displayed is false.
+        assertThat(service.wasGaUxNotificationDisplayed()).isFalse();
+        service.recordGaUxNotificationDisplayed();
+        assertThat(service.wasGaUxNotificationDisplayed()).isTrue();
+    }
+
+    @Test
+    public void testRecordTopicsConsentPageDisplayed() throws IOException {
+        AdServicesManagerService service =
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+        // Since unit test cannot execute an IPC call currently, disable the permission check.
+        disableEnforceAdServicesManagerPermission(service);
+
+        // First, the topic consent page displayed is false.
+        assertThat(service.wasTopicsConsentPageDisplayed()).isFalse();
+        service.recordTopicsConsentPageDisplayed();
+        assertThat(service.wasTopicsConsentPageDisplayed()).isTrue();
+    }
+
+    @Test
+    public void testRecordFledgeConsentPageDisplayed() throws IOException {
+        AdServicesManagerService service =
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+        // Since unit test cannot execute an IPC call currently, disable the permission check.
+        disableEnforceAdServicesManagerPermission(service);
+
+        // First, the fledge consent page displayed is false.
+        assertThat(service.wasFledgeAndMsmtConsentPageDisplayed()).isFalse();
+        service.recordFledgeAndMsmtConsentPageDisplayed();
+        assertThat(service.wasFledgeAndMsmtConsentPageDisplayed()).isTrue();
+    }
+
     // Since unit test cannot execute an IPC call, disable the permission check.
     private void disableEnforceAdServicesManagerPermission(AdServicesManagerService service) {
         doNothing().when(service).enforceAdServicesManagerPermission();
