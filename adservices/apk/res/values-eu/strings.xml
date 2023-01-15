@@ -343,7 +343,7 @@
     <string name="topic10231" msgid="7620407218897744361">"Bideojokoen lehiaketak"</string>
     <string name="topic10232" msgid="3029734447275709941">"Gidatzeko jokoak eta lasterketa-jokoak"</string>
     <string name="topic10233" msgid="8318075279868138231">"Borroka-jokoak"</string>
-    <string name="topic10234" msgid="3899847414436099153">"Jokoei buruzko erreferentziak eta iritziak"</string>
+    <string name="topic10234" msgid="3899847414436099153">"Bideojokoei buruzko erreferentziak eta iritziak"</string>
     <string name="topic10235" msgid="5851356242523630529">"Bideojokoetarako tranpak eta iradokizunak"</string>
     <string name="topic10236" msgid="1986665634014804954">"Jokalari anitzeko joko masiboak"</string>
     <string name="topic10237" msgid="5569920221620447713">"Musika- eta dantza-jokoak"</string>
@@ -556,4 +556,22 @@
     <string name="topic10444" msgid="2075863187654728611">"Trafikoaren eta ibilbideen antolatzaileak"</string>
     <string name="topic10445" msgid="3460421948068980869">"Bidaia-agentziak eta zerbitzuak"</string>
     <string name="topic10446" msgid="5333138740720504195">"Bidaia-gidak eta bidaia-dokumentalak"</string>
+    <!-- no translation found for settingsUI_topics_subtitle (6545976434367750110) -->
+    <skip />
+    <!-- no translation found for settingsUI_apps_subtitle (387595280958995973) -->
+    <skip />
+    <!-- no translation found for settingsUI_subtitle_consent_on (7522464537194619022) -->
+    <skip />
+    <!-- no translation found for settingsUI_subtitle_consent_off (1604274030685784887) -->
+    <skip />
+    <!-- no translation found for settingsUI_topics_switch_title (5856255848598189791) -->
+    <skip />
+    <!-- no translation found for settingsUI_measurement_switch_title (6623116680555954932) -->
+    <skip />
+    <!-- no translation found for settingsUI_apps_switch_title (1308209012769248890) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_topics_opt_out_title (7100008407947225099) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_apps_opt_out_title (632296780673559302) -->
+    <skip />
 </resources>
