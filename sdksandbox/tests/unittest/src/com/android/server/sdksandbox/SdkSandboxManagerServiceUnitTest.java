@@ -40,7 +40,6 @@ import android.app.sdksandbox.ILoadSdkCallback;
 import android.app.sdksandbox.ISdkSandboxManager;
 import android.app.sdksandbox.ISharedPreferencesSyncCallback;
 import android.app.sdksandbox.LoadSdkException;
-import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.SharedPreferencesUpdate;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallbackBinder;
@@ -55,8 +54,6 @@ import android.content.ServiceConnection;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.UserInfo;
-import android.content.res.AssetManager;
-import android.content.res.Resources;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -87,9 +84,7 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 
-import java.io.BufferedReader;
 import java.io.FileDescriptor;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -881,41 +876,6 @@ public class SdkSandboxManagerServiceUnitTest {
         assertThat(sProvider.getBoundServiceForApp(callingInfo)).isNotNull();
         deathRecipient.getValue().binderDied();
         assertThat(sProvider.getBoundServiceForApp(callingInfo)).isNull();
-    }
-
-    /* Tests resources defined in CodeProviderWithResources may be read. */
-    @Test
-    public void testCodeContextResourcesAndAssets() throws Exception {
-        Context context = InstrumentationRegistry.getInstrumentation().getContext();
-        PackageManager pm = context.getPackageManager();
-        ApplicationInfo info = pm.getApplicationInfo(SDK_PROVIDER_RESOURCES_PACKAGE,
-                PackageManager.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES);
-        assertThat(info).isNotNull();
-        SandboxedSdkContext sandboxedSdkContext =
-                new SandboxedSdkContext(
-                        context,
-                        getClass().getClassLoader(),
-                        CLIENT_PACKAGE_NAME,
-                        info,
-                        SDK_NAME,
-                        null,
-                        null);
-        Resources resources = sandboxedSdkContext.getResources();
-
-        int integerId = resources.getIdentifier("test_integer", "integer",
-                SDK_PROVIDER_RESOURCES_PACKAGE);
-        assertThat(integerId).isNotEqualTo(0);
-        assertThat(resources.getInteger(integerId)).isEqualTo(1234);
-
-        int stringId = resources.getIdentifier("test_string", "string",
-                SDK_PROVIDER_RESOURCES_PACKAGE);
-        assertThat(stringId).isNotEqualTo(0);
-        assertThat(resources.getString(stringId)).isEqualTo("Test String");
-
-        AssetManager assetManager = resources.getAssets();
-        BufferedReader reader = new BufferedReader(
-                new InputStreamReader(assetManager.open("test-asset.txt")));
-        assertThat(reader.readLine()).isEqualTo("This is a test asset");
     }
 
     /** Tests that only allowed intents may be sent from the sdk sandbox. */

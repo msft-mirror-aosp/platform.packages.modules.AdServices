@@ -25,16 +25,26 @@ import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.os.Bundle;
+import android.os.Process;
+import android.os.StrictMode;
+import android.provider.DeviceConfig;
 import android.test.mock.MockContext;
 import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.test.InstrumentationRegistry;
 
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
+
+import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.mockito.Mockito;
+import org.mockito.MockitoSession;
+import org.mockito.quality.Strictness;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -58,25 +68,72 @@ public class SandboxedSdkContextUnitTest {
     private static final String SDK_CE_DATA_DIR = "/data/misc_ce/0/sdksandbox/com.foo/sdk@123";
     private static final String SDK_DE_DATA_DIR = "/data/misc_de/0/sdksandbox/com.foo/sdk@123";
 
+    private static boolean sCustomizedSdkContextEnabled;
+
+    private MockitoSession mStaticMockSession;
+
+    @BeforeClass
+    public static void setUpClass() throws Exception {
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .adoptShellPermissionIdentity();
+        try {
+            sCustomizedSdkContextEnabled =
+                    DeviceConfig.getBoolean(
+                            DeviceConfig.NAMESPACE_ADSERVICES,
+                            "sdksandbox_customized_sdk_context_enabled",
+                            false);
+        } finally {
+            InstrumentationRegistry.getInstrumentation()
+                    .getUiAutomation()
+                    .dropShellPermissionIdentity();
+        }
+    }
+
     @Before
     public void setUp() throws Exception {
-        Context context = InstrumentationRegistry.getContext();
-        ApplicationInfo info = context.getPackageManager().getApplicationInfo(
-                RESOURCES_PACKAGE,
-                PackageManager.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES);
-        info.dataDir = SDK_CE_DATA_DIR;
-        info.credentialProtectedDataDir = SDK_CE_DATA_DIR;
-        info.deviceProtectedDataDir = SDK_DE_DATA_DIR;
-        Context baseContext = context.createApplicationContext(info, 0);
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .strictness(Strictness.LENIENT)
+                        .mockStatic(Process.class)
+                        .mockStatic(StrictMode.class)
+                        .startMocking();
+        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandbox());
+        ExtendedMockito.doNothing().when(() -> StrictMode.setVmPolicy(Mockito.any()));
+
+        Context context = Mockito.spy(InstrumentationRegistry.getContext());
+        ApplicationInfo info =
+                context.getPackageManager()
+                        .getApplicationInfo(
+                                RESOURCES_PACKAGE,
+                                PackageManager.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES);
+
+        Context baseContext = context;
+        ClassLoader loader = getClass().getClassLoader();
+        if (sCustomizedSdkContextEnabled) {
+            info.dataDir = SDK_CE_DATA_DIR;
+            info.credentialProtectedDataDir = SDK_CE_DATA_DIR;
+            info.deviceProtectedDataDir = SDK_DE_DATA_DIR;
+
+            baseContext = context.createContextForSdkInSandbox(info, 0);
+            loader = baseContext.getClassLoader();
+        }
+
         mSandboxedSdkContext =
                 new SandboxedSdkContext(
                         baseContext,
-                        baseContext.getClassLoader(),
+                        loader,
                         CLIENT_PACKAGE_NAME,
                         info,
                         SDK_NAME,
                         SDK_CE_DATA_DIR,
-                        SDK_DE_DATA_DIR);
+                        SDK_DE_DATA_DIR,
+                        sCustomizedSdkContextEnabled);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        mStaticMockSession.finishMocking();
     }
 
     @Test
@@ -122,16 +179,7 @@ public class SandboxedSdkContextUnitTest {
     }
 
     @Test
-    public void testClassLoader() {
-        assertThat(mSandboxedSdkContext.getClassLoader())
-                .isEqualTo(mSandboxedSdkContext.getBaseContext().getClassLoader());
-    }
-
-    @Test
     public void testGetDataDir_CredentialEncrypted() throws Exception {
-        Context baseContext = mSandboxedSdkContext.getBaseContext();
-        assertThat(baseContext.getDataDir().toString()).isEqualTo(SDK_CE_DATA_DIR);
-
         assertThat(mSandboxedSdkContext.getDataDir().toString()).isEqualTo(SDK_CE_DATA_DIR);
 
         Context ceContext = mSandboxedSdkContext.createCredentialProtectedStorageContext();
@@ -167,6 +215,7 @@ public class SandboxedSdkContextUnitTest {
                         SDK_NAME,
                         SDK_CE_DATA_DIR,
                         SDK_DE_DATA_DIR,
+                        sCustomizedSdkContextEnabled,
                         registry);
         assertThat(sandboxedSdkContext.getSystemService("ignored")).isSameInstanceAs(testService);
     }
@@ -194,6 +243,7 @@ public class SandboxedSdkContextUnitTest {
                         SDK_NAME,
                         SDK_CE_DATA_DIR,
                         SDK_DE_DATA_DIR,
+                        sCustomizedSdkContextEnabled,
                         registry);
         TestService service = (TestService) sandboxedSdkContext.getSystemService("service");
         assertThat(service.mInitialized).isTrue();
@@ -219,7 +269,8 @@ public class SandboxedSdkContextUnitTest {
                         info,
                         SDK_NAME,
                         SDK_CE_DATA_DIR,
-                        SDK_DE_DATA_DIR);
+                        SDK_DE_DATA_DIR,
+                        sCustomizedSdkContextEnabled);
         SandboxedSdkContext ctx2 =
                 new SandboxedSdkContext(
                         InstrumentationRegistry.getContext()
@@ -229,7 +280,8 @@ public class SandboxedSdkContextUnitTest {
                         info,
                         SDK_NAME,
                         SDK_CE_DATA_DIR,
-                        SDK_DE_DATA_DIR);
+                        SDK_DE_DATA_DIR,
+                        sCustomizedSdkContextEnabled);
 
         ActivityManager am1 = ctx1.getSystemService(ActivityManager.class);
         ActivityManager am2 = ctx2.getSystemService(ActivityManager.class);
