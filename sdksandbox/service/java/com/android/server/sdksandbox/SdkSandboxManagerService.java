@@ -406,7 +406,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     @Override
     public void loadSdk(
             String callingPackageName,
-            IBinder callingApplicationThreadBinder,
+            IBinder callingAppProcessToken,
             String sdkName,
             long timeAppCalledSystemServer,
             Bundle params,
@@ -418,7 +418,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             final int callingUid = Binder.getCallingUid();
             final CallingInfo callingInfo =
                     CallingInfo.fromBinderWithApplicationThread(
-                            mContext, callingPackageName, callingApplicationThreadBinder);
+                            mContext, callingPackageName, callingAppProcessToken);
             enforceCallerHasNetworkAccess(callingPackageName);
             enforceCallerRunsInForeground(callingInfo);
             synchronized (mLock) {
@@ -528,8 +528,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             synchronized (mLock) {
                 if (!mCallingInfosWithDeathRecipients.containsKey(callingInfo)) {
                     Log.d(TAG, "Registering " + callingInfo + " for death notification");
-                    final IBinder callingApplicationThreadBinder =
-                            callingInfo.getApplicationThreadBinder();
                     callback.asBinder().linkToDeath(() -> onAppDeath(callingInfo), 0);
                     // Note that we keep a reference to the IBinder that we called linkToDeath() on,
                     // to make sure that it isn't unlinked if we were to drop this reference.
@@ -1194,8 +1192,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         // TODO(b/261442377): Only the processes that loaded some SDK should be killed. For now,
         // kill the process that loaded the first SDK.
-        mActivityManagerLocal.killSdkSandboxClientAppProcess(
-                callingInfo.getApplicationThreadBinder());
+        mActivityManagerLocal.killSdkSandboxClientAppProcess(callingInfo.getAppProcessToken());
     }
 
     @GuardedBy("mLock")
