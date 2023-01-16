@@ -207,9 +207,6 @@
       "name": "CtsPackageInstallAppOpDefaultTestCases"
     },
     {
-      "name": "CtsPackageUninstallTestCases"
-    },
-    {
       "name": "CtsPermission2TestCases"
     },
     {
