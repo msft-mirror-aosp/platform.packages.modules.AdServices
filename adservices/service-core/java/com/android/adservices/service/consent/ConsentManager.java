@@ -16,12 +16,6 @@
 
 package com.android.adservices.service.consent;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_IN_SELECTED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_OUT_SELECTED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
-
 import android.annotation.NonNull;
 import android.app.adservices.AdServicesManager;
 import android.app.adservices.consent.ConsentParcel;
@@ -41,8 +35,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.BackgroundJobsManager;
 import com.android.adservices.service.measurement.MeasurementImpl;
-import com.android.adservices.service.stats.AdServicesLoggerImpl;
-import com.android.adservices.service.stats.UIStats;
+import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.service.topics.TopicsWorker;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -72,56 +65,15 @@ import java.util.stream.Collectors;
  */
 // TODO(b/259791134): Add a CTS/UI test to test the Consent Migration
 public class ConsentManager {
-    private static final String ERROR_MESSAGE_WHILE_GET_CONTENT =
-            "getConsent method failed. Revoked consent is returned as fallback.";
-
-    @VisibleForTesting
-    static final String NOTIFICATION_DISPLAYED_ONCE = "NOTIFICATION-DISPLAYED-ONCE";
-
-    @VisibleForTesting
-    static final String GA_UX_NOTIFICATION_DISPLAYED_ONCE = "GA-UX-NOTIFICATION-DISPLAYED-ONCE";
-
-    @VisibleForTesting
-    static final String TOPICS_CONSENT_PAGE_DISPLAYED = "TOPICS-CONSENT-PAGE-DISPLAYED";
-
-    @VisibleForTesting
-    static final String FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED =
-            "FLEDGE-AND-MSMT-CONSENT-PAGE-DISPLAYED";
-
-    @VisibleForTesting static final String CONSENT_KEY = "CONSENT";
-    private static final String ERROR_MESSAGE_WHILE_SET_CONTENT = "setConsent method failed.";
-    private static final String ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH =
-            "Invalid type of consent source of truth.";
-    // Internal datastore version
-    @VisibleForTesting static final int STORAGE_VERSION = 1;
-    // Internal datastore filename. The name should be unique to avoid multiple threads or processes
-    // to update the same file.
-    @VisibleForTesting
-    static final String STORAGE_XML_IDENTIFIER = "ConsentManagerStorageIdentifier.xml";
-
-    // The name of shared preferences file to store status of one-time migrations.
-    // Once a migration has happened, it marks corresponding shared preferences to prevent it
-    // happens again.
-    @VisibleForTesting static final String SHARED_PREFS_CONSENT = "PPAPI_Consent";
-
-    // Shared preferences to mark whether PPAPI consent has been migrated to system server
-    @VisibleForTesting
-    static final String SHARED_PREFS_KEY_HAS_MIGRATED = "CONSENT_HAS_MIGRATED_TO_SYSTEM_SERVER";
-
-    // Shared preferences to mark whether PPAPI consent has been cleared.
-    @VisibleForTesting
-    static final String SHARED_PREFS_KEY_PPAPI_HAS_CLEARED = "CONSENT_HAS_CLEARED_IN_PPAPI";
-
     private static volatile ConsentManager sConsentManager;
 
+    private final Context mContext;
     private final Flags mFlags;
     private final TopicsWorker mTopicsWorker;
     private final BooleanFileDatastore mDatastore;
     private final AppConsentDao mAppConsentDao;
     private final EnrollmentDao mEnrollmentDao;
     private final MeasurementImpl mMeasurementImpl;
-    private final AdServicesLoggerImpl mAdServicesLoggerImpl;
-    private final int mDeviceLoggingRegion;
     private final CustomAudienceDao mCustomAudienceDao;
     private final ExecutorService mExecutor;
     private final AdServicesManager mAdServicesManager;
@@ -133,7 +85,6 @@ public class ConsentManager {
             @NonNull AppConsentDao appConsentDao,
             @NonNull EnrollmentDao enrollmentDao,
             @NonNull MeasurementImpl measurementImpl,
-            @NonNull AdServicesLoggerImpl adServicesLoggerImpl,
             @NonNull CustomAudienceDao customAudienceDao,
             @NonNull AdServicesManager adServicesManager,
             @NonNull BooleanFileDatastore booleanFileDatastore,
@@ -143,22 +94,20 @@ public class ConsentManager {
         Objects.requireNonNull(topicsWorker);
         Objects.requireNonNull(appConsentDao);
         Objects.requireNonNull(measurementImpl);
-        Objects.requireNonNull(adServicesLoggerImpl);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(adServicesManager);
         Objects.requireNonNull(booleanFileDatastore);
 
+        mContext = context;
         mAdServicesManager = adServicesManager;
         mTopicsWorker = topicsWorker;
         mDatastore = booleanFileDatastore;
         mAppConsentDao = appConsentDao;
         mEnrollmentDao = enrollmentDao;
         mMeasurementImpl = measurementImpl;
-        mAdServicesLoggerImpl = adServicesLoggerImpl;
         mCustomAudienceDao = customAudienceDao;
         mExecutor = Executors.newSingleThreadExecutor();
         mFlags = flags;
-        mDeviceLoggingRegion = initializeLoggingValues(context);
         mConsentSourceOfTruth = consentSourceOfTruth;
     }
 
@@ -189,7 +138,6 @@ public class ConsentManager {
                                     AppConsentDao.getInstance(context),
                                     EnrollmentDao.getInstance(context),
                                     MeasurementImpl.getInstance(context),
-                                    AdServicesLoggerImpl.getInstance(),
                                     CustomAudienceDatabase.getInstance(context).customAudienceDao(),
                                     adServicesManager,
                                     datastore,
@@ -211,13 +159,7 @@ public class ConsentManager {
     public void enable(@NonNull Context context) {
         Objects.requireNonNull(context);
 
-        mAdServicesLoggerImpl.logUIStats(
-                new UIStats.Builder()
-                        .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
-                        .setRegion(mDeviceLoggingRegion)
-                        .setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_IN_SELECTED)
-                        .build());
-
+        UiStatsLogger.logOptInSelected(context);
         BackgroundJobsManager.scheduleAllBackgroundJobs(context);
 
         try {
@@ -226,7 +168,7 @@ public class ConsentManager {
             resetAppsAndBlockedApps();
             resetMeasurement();
         } catch (IOException e) {
-            throw new RuntimeException(ERROR_MESSAGE_WHILE_SET_CONTENT, e);
+            throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_WHILE_SET_CONTENT, e);
         }
 
         setConsentToSourceOfTruth(/* isGiven */ true);
@@ -241,13 +183,7 @@ public class ConsentManager {
     public void disable(@NonNull Context context) {
         Objects.requireNonNull(context);
 
-        mAdServicesLoggerImpl.logUIStats(
-                new UIStats.Builder()
-                        .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
-                        .setRegion(mDeviceLoggingRegion)
-                        .setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_OUT_SELECTED)
-                        .build());
-
+        UiStatsLogger.logOptOutSelected(context);
         // Disable all the APIs
         try {
             // reset all data
@@ -259,7 +195,7 @@ public class ConsentManager {
             BackgroundJobsManager.unscheduleAllBackgroundJobs(
                     context.getSystemService(JobScheduler.class));
         } catch (IOException e) {
-            throw new RuntimeException(ERROR_MESSAGE_WHILE_SET_CONTENT, e);
+            throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_WHILE_SET_CONTENT, e);
         }
 
         setConsentToSourceOfTruth(/* isGiven */ false);
@@ -278,7 +214,7 @@ public class ConsentManager {
     public void enable(@NonNull Context context, AdServicesApiType apiType) {
         Objects.requireNonNull(context);
 
-        // TODO(b/258185102): add missing logging once they are added
+        UiStatsLogger.logPerApiOptInSelected(context, apiType);
 
         BackgroundJobsManager.scheduleJobsPerApi(context, apiType);
 
@@ -286,7 +222,7 @@ public class ConsentManager {
             // reset all state data which should be removed
             resetByApi(apiType);
         } catch (IOException e) {
-            throw new RuntimeException(ERROR_MESSAGE_WHILE_SET_CONTENT, e);
+            throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_WHILE_SET_CONTENT, e);
         }
 
         setPerApiConsentToSourceOfTruth(/* isGiven */ true, apiType);
@@ -302,14 +238,14 @@ public class ConsentManager {
     public void disable(@NonNull Context context, AdServicesApiType apiType) {
         Objects.requireNonNull(context);
 
-        // TODO(b/258185102): add missing logging once they are added
+        UiStatsLogger.logPerApiOptOutSelected(context, apiType);
 
         try {
             resetByApi(apiType);
             BackgroundJobsManager.unscheduleJobsPerApi(
                     context.getSystemService(JobScheduler.class), apiType);
         } catch (IOException e) {
-            throw new RuntimeException(ERROR_MESSAGE_WHILE_SET_CONTENT, e);
+            throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_WHILE_SET_CONTENT, e);
         }
 
         setPerApiConsentToSourceOfTruth(/* isGiven */ false, apiType);
@@ -346,7 +282,8 @@ public class ConsentManager {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
-                        return AdServicesApiConsent.getConsent(mDatastore.get(CONSENT_KEY));
+                        return AdServicesApiConsent.getConsent(
+                                mDatastore.get(ConsentConstants.CONSENT_KEY));
                     case Flags.SYSTEM_SERVER_ONLY:
                         // Intentional fallthrough
                     case Flags.PPAPI_AND_SYSTEM_SERVER:
@@ -354,11 +291,11 @@ public class ConsentManager {
                                 mAdServicesManager.getConsent(ConsentParcel.ALL_API);
                         return AdServicesApiConsent.getConsent(consentParcel.isIsGiven());
                     default:
-                        LogUtil.e(ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                        LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
                         return AdServicesApiConsent.REVOKED;
                 }
             } catch (RuntimeException e) {
-                LogUtil.e(e, ERROR_MESSAGE_WHILE_GET_CONTENT);
+                LogUtil.e(e, ConsentConstants.ERROR_MESSAGE_WHILE_GET_CONTENT);
             }
 
             return AdServicesApiConsent.REVOKED;
@@ -394,11 +331,11 @@ public class ConsentManager {
                                 mAdServicesManager.getConsent(apiType.toConsentApiType());
                         return AdServicesApiConsent.getConsent(consentParcel.isIsGiven());
                     default:
-                        LogUtil.e(ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                        LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
                         return AdServicesApiConsent.REVOKED;
                 }
             } catch (RuntimeException e) {
-                LogUtil.e(e, ERROR_MESSAGE_WHILE_GET_CONTENT);
+                LogUtil.e(e, ConsentConstants.ERROR_MESSAGE_WHILE_GET_CONTENT);
             }
 
             return AdServicesApiConsent.REVOKED;
@@ -491,7 +428,7 @@ public class ConsentManager {
                                         .map(App::create)
                                         .collect(Collectors.toList()));
                     default:
-                        LogUtil.e(ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                        LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
                         return ImmutableList.of();
                 }
             } catch (RuntimeException e) {
@@ -531,7 +468,7 @@ public class ConsentManager {
                                         .map(App::create)
                                         .collect(Collectors.toList()));
                     default:
-                        LogUtil.e(ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                        LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
                         return ImmutableList.of();
                 }
             } catch (RuntimeException e) {
@@ -570,7 +507,7 @@ public class ConsentManager {
                                 true);
                         break;
                     default:
-                        LogUtil.e(ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                        LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
                 }
             } catch (RuntimeException e) {
                 LogUtil.e(e, "Error revoke consent for app %s", app.getPackageName());
@@ -607,7 +544,7 @@ public class ConsentManager {
                                 false);
                         break;
                     default:
-                        LogUtil.e(ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                        LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
                 }
             } catch (RuntimeException e) {
                 LogUtil.e(e, "Error restore consent for app %s", app.getPackageName());
@@ -637,7 +574,7 @@ public class ConsentManager {
                         mAdServicesManager.clearAllAppConsentData();
                         break;
                     default:
-                        LogUtil.e(ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                        LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
                 }
             } catch (RuntimeException e) {
                 LogUtil.e(e, "Error reset apps and blocked apps.");
@@ -668,7 +605,7 @@ public class ConsentManager {
                         mAdServicesManager.clearKnownAppsWithConsent();
                         break;
                     default:
-                        LogUtil.e(ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                        LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
                 }
             } catch (RuntimeException e) {
                 LogUtil.e(e, "Error reset apps.");
@@ -720,7 +657,7 @@ public class ConsentManager {
                     return mAdServicesManager.isConsentRevokedForApp(
                             packageName, mAppConsentDao.getUidForInstalledPackageName(packageName));
                 default:
-                    LogUtil.e(ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                    LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
                     return true;
             }
         }
@@ -782,7 +719,7 @@ public class ConsentManager {
                             mAppConsentDao.getUidForInstalledPackageName(packageName),
                             false);
                 default:
-                    LogUtil.e(ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                    LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
                     return true;
             }
         }
@@ -827,7 +764,7 @@ public class ConsentManager {
                         mAdServicesManager.clearConsentForUninstalledApp(packageName, packageUid);
                         break;
                     default:
-                        LogUtil.e(ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                        LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
                 }
             } catch (RuntimeException e) {
                 LogUtil.e(
@@ -841,6 +778,7 @@ public class ConsentManager {
 
     /** Wipes out all the data gathered by Measurement API. */
     public void resetMeasurement() {
+        UiStatsLogger.logResetMeasurement(mContext);
         mMeasurementImpl.deleteAllMeasurementData(List.of());
     }
 
@@ -862,17 +800,18 @@ public class ConsentManager {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
-                        mDatastore.put(NOTIFICATION_DISPLAYED_ONCE, true);
+                        mDatastore.put(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE, true);
                         break;
                     case Flags.SYSTEM_SERVER_ONLY:
                         mAdServicesManager.recordNotificationDisplayed();
                         break;
                     case Flags.PPAPI_AND_SYSTEM_SERVER:
-                        mDatastore.put(NOTIFICATION_DISPLAYED_ONCE, true);
+                        mDatastore.put(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE, true);
                         mAdServicesManager.recordNotificationDisplayed();
                         break;
                     default:
-                        throw new RuntimeException(ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                        throw new RuntimeException(
+                                ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
                 }
             } catch (IOException | RuntimeException e) {
                 throw new RuntimeException("Record Notification Displayed failed", e);
@@ -893,13 +832,13 @@ public class ConsentManager {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
-                        return mDatastore.get(NOTIFICATION_DISPLAYED_ONCE);
+                        return mDatastore.get(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE);
                     case Flags.SYSTEM_SERVER_ONLY:
                         // Intentional fallthrough
                     case Flags.PPAPI_AND_SYSTEM_SERVER:
                         return mAdServicesManager.wasNotificationDisplayed();
                     default:
-                        LogUtil.e(ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                        LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
                         return false;
                 }
             } catch (RuntimeException e) {
@@ -922,17 +861,18 @@ public class ConsentManager {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
-                        mDatastore.put(GA_UX_NOTIFICATION_DISPLAYED_ONCE, true);
+                        mDatastore.put(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE, true);
                         break;
                     case Flags.SYSTEM_SERVER_ONLY:
                         mAdServicesManager.recordGaUxNotificationDisplayed();
                         break;
                     case Flags.PPAPI_AND_SYSTEM_SERVER:
-                        mDatastore.put(GA_UX_NOTIFICATION_DISPLAYED_ONCE, true);
+                        mDatastore.put(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE, true);
                         mAdServicesManager.recordGaUxNotificationDisplayed();
                         break;
                     default:
-                        throw new RuntimeException(ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                        throw new RuntimeException(
+                                ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
                 }
             } catch (IOException | RuntimeException e) {
                 throw new RuntimeException("Record GA UX Notification Displayed failed", e);
@@ -953,19 +893,18 @@ public class ConsentManager {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
-                        return mDatastore.get(GA_UX_NOTIFICATION_DISPLAYED_ONCE);
+                        return mDatastore.get(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE);
                     case Flags.SYSTEM_SERVER_ONLY:
                         // Intentional fallthrough
                     case Flags.PPAPI_AND_SYSTEM_SERVER:
                         return mAdServicesManager.wasGaUxNotificationDisplayed();
                     default:
-                        LogUtil.e(ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                        LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
                         return false;
                 }
             } catch (RuntimeException e) {
                 LogUtil.e(e, "Get GA UX notification failed.");
             }
-
             return false;
         }
     }
@@ -982,17 +921,18 @@ public class ConsentManager {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
-                        mDatastore.put(TOPICS_CONSENT_PAGE_DISPLAYED, true);
+                        mDatastore.put(ConsentConstants.TOPICS_CONSENT_PAGE_DISPLAYED, true);
                         break;
                     case Flags.SYSTEM_SERVER_ONLY:
                         mAdServicesManager.recordTopicsConsentPageDisplayed();
                         break;
                     case Flags.PPAPI_AND_SYSTEM_SERVER:
-                        mDatastore.put(TOPICS_CONSENT_PAGE_DISPLAYED, true);
+                        mDatastore.put(ConsentConstants.TOPICS_CONSENT_PAGE_DISPLAYED, true);
                         mAdServicesManager.recordTopicsConsentPageDisplayed();
                         break;
                     default:
-                        throw new RuntimeException(ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                        throw new RuntimeException(
+                                ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
                 }
             } catch (IOException | RuntimeException e) {
                 throw new RuntimeException("Record Topics Consent Page Displayed failed", e);
@@ -1013,13 +953,13 @@ public class ConsentManager {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
-                        return mDatastore.get(TOPICS_CONSENT_PAGE_DISPLAYED);
+                        return mDatastore.get(ConsentConstants.TOPICS_CONSENT_PAGE_DISPLAYED);
                     case Flags.SYSTEM_SERVER_ONLY:
                         // Intentional fallthrough
                     case Flags.PPAPI_AND_SYSTEM_SERVER:
                         return mAdServicesManager.wasTopicsConsentPageDisplayed();
                     default:
-                        LogUtil.e(ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                        LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
                         return false;
                 }
             } catch (RuntimeException e) {
@@ -1042,17 +982,20 @@ public class ConsentManager {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
-                        mDatastore.put(FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED, true);
+                        mDatastore.put(
+                                ConsentConstants.FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED, true);
                         break;
                     case Flags.SYSTEM_SERVER_ONLY:
                         mAdServicesManager.recordFledgeAndMsmtConsentPageDisplayed();
                         break;
                     case Flags.PPAPI_AND_SYSTEM_SERVER:
-                        mDatastore.put(FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED, true);
+                        mDatastore.put(
+                                ConsentConstants.FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED, true);
                         mAdServicesManager.recordFledgeAndMsmtConsentPageDisplayed();
                         break;
                     default:
-                        throw new RuntimeException(ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                        throw new RuntimeException(
+                                ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
                 }
             } catch (IOException | RuntimeException e) {
                 throw new RuntimeException(
@@ -1074,13 +1017,14 @@ public class ConsentManager {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
-                        return mDatastore.get(FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED);
+                        return mDatastore.get(
+                                ConsentConstants.FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED);
                     case Flags.SYSTEM_SERVER_ONLY:
                         // Intentional fallthrough
                     case Flags.PPAPI_AND_SYSTEM_SERVER:
                         return mAdServicesManager.wasFledgeAndMsmtConsentPageDisplayed();
                     default:
-                        LogUtil.e(ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                        LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
                         return false;
                 }
             } catch (RuntimeException e) {
@@ -1094,24 +1038,30 @@ public class ConsentManager {
     @VisibleForTesting
     static BooleanFileDatastore createAndInitializeDataStore(@NonNull Context context) {
         BooleanFileDatastore booleanFileDatastore =
-                new BooleanFileDatastore(context, STORAGE_XML_IDENTIFIER, STORAGE_VERSION);
+                new BooleanFileDatastore(
+                        context,
+                        ConsentConstants.STORAGE_XML_IDENTIFIER,
+                        ConsentConstants.STORAGE_VERSION);
 
         try {
             booleanFileDatastore.initialize();
             // TODO(b/259607624): implement a method in the datastore which would support
             // this exact scenario - if the value is null, return default value provided
             // in the parameter (similar to SP apply etc.)
-            if (booleanFileDatastore.get(NOTIFICATION_DISPLAYED_ONCE) == null) {
-                booleanFileDatastore.put(NOTIFICATION_DISPLAYED_ONCE, false);
+            if (booleanFileDatastore.get(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE) == null) {
+                booleanFileDatastore.put(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE, false);
             }
-            if (booleanFileDatastore.get(GA_UX_NOTIFICATION_DISPLAYED_ONCE) == null) {
-                booleanFileDatastore.put(GA_UX_NOTIFICATION_DISPLAYED_ONCE, false);
+            if (booleanFileDatastore.get(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE)
+                    == null) {
+                booleanFileDatastore.put(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE, false);
             }
-            if (booleanFileDatastore.get(TOPICS_CONSENT_PAGE_DISPLAYED) == null) {
-                booleanFileDatastore.put(TOPICS_CONSENT_PAGE_DISPLAYED, false);
+            if (booleanFileDatastore.get(ConsentConstants.TOPICS_CONSENT_PAGE_DISPLAYED) == null) {
+                booleanFileDatastore.put(ConsentConstants.TOPICS_CONSENT_PAGE_DISPLAYED, false);
             }
-            if (booleanFileDatastore.get(FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED) == null) {
-                booleanFileDatastore.put(FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED, false);
+            if (booleanFileDatastore.get(ConsentConstants.FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED)
+                    == null) {
+                booleanFileDatastore.put(
+                        ConsentConstants.FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED, false);
             }
         } catch (IOException | IllegalArgumentException | NullPointerException e) {
             throw new RuntimeException("Failed to initialize the File Datastore!", e);
@@ -1137,7 +1087,7 @@ public class ConsentManager {
 
         switch (consentSourceOfTruth) {
             case Flags.PPAPI_ONLY:
-                resetSharedPreference(context, SHARED_PREFS_KEY_HAS_MIGRATED);
+                resetSharedPreference(context, ConsentConstants.SHARED_PREFS_KEY_HAS_MIGRATED);
                 break;
             case Flags.PPAPI_AND_SYSTEM_SERVER:
                 migratePpApiConsentToSystemService(context, datastore, adServicesManager);
@@ -1153,7 +1103,7 @@ public class ConsentManager {
 
     @VisibleForTesting
     void setConsentToPpApi(boolean isGiven) throws IOException {
-        mDatastore.put(CONSENT_KEY, isGiven);
+        mDatastore.put(ConsentConstants.CONSENT_KEY, isGiven);
     }
 
     @VisibleForTesting
@@ -1236,8 +1186,10 @@ public class ConsentManager {
 
         // Exit if migration has happened.
         SharedPreferences sharedPreferences =
-                context.getSharedPreferences(SHARED_PREFS_CONSENT, Context.MODE_PRIVATE);
-        if (sharedPreferences.getBoolean(SHARED_PREFS_KEY_HAS_MIGRATED, /* defValue */ false)) {
+                context.getSharedPreferences(
+                        ConsentConstants.SHARED_PREFS_CONSENT, Context.MODE_PRIVATE);
+        if (sharedPreferences.getBoolean(
+                ConsentConstants.SHARED_PREFS_KEY_HAS_MIGRATED, /* defValue */ false)) {
             LogUtil.v(
                     "Consent migration has happened to user %d, skip...",
                     context.getUser().getIdentifier());
@@ -1248,17 +1200,18 @@ public class ConsentManager {
         // Migrate Consent and Notification Displayed to System Service.
         // Set consent enabled only when value is TRUE. FALSE and null are regarded as disabled.
         setConsentToSystemServer(
-                adServicesManager, Boolean.TRUE.equals(datastore.get(CONSENT_KEY)));
+                adServicesManager,
+                Boolean.TRUE.equals(datastore.get(ConsentConstants.CONSENT_KEY)));
 
         // Set notification displayed only when value is TRUE. FALSE and null are regarded as
         // not displayed.
-        if (Boolean.TRUE.equals(datastore.get(NOTIFICATION_DISPLAYED_ONCE))) {
+        if (Boolean.TRUE.equals(datastore.get(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE))) {
             adServicesManager.recordNotificationDisplayed();
         }
 
         // Save migration has happened into shared preferences.
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putBoolean(SHARED_PREFS_KEY_HAS_MIGRATED, true);
+        editor.putBoolean(ConsentConstants.SHARED_PREFS_KEY_HAS_MIGRATED, true);
 
         if (editor.commit()) {
             LogUtil.d("Finish migrating Consent from PPAPI to System Service");
@@ -1276,9 +1229,10 @@ public class ConsentManager {
             @NonNull Context context, @NonNull BooleanFileDatastore datastore) {
         // Exit if PPAPI consent has cleared.
         SharedPreferences sharedPreferences =
-                context.getSharedPreferences(SHARED_PREFS_CONSENT, Context.MODE_PRIVATE);
+                context.getSharedPreferences(
+                        ConsentConstants.SHARED_PREFS_CONSENT, Context.MODE_PRIVATE);
         if (sharedPreferences.getBoolean(
-                SHARED_PREFS_KEY_PPAPI_HAS_CLEARED, /* defValue */ false)) {
+                ConsentConstants.SHARED_PREFS_KEY_PPAPI_HAS_CLEARED, /* defValue */ false)) {
             return;
         }
 
@@ -1292,7 +1246,7 @@ public class ConsentManager {
 
         // Save that PPAPI consent has cleared into shared preferences.
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putBoolean(SHARED_PREFS_KEY_PPAPI_HAS_CLEARED, true);
+        editor.putBoolean(ConsentConstants.SHARED_PREFS_KEY_PPAPI_HAS_CLEARED, true);
 
         if (editor.commit()) {
             LogUtil.d("Finish clearing Consent in PPAPI.");
@@ -1309,7 +1263,8 @@ public class ConsentManager {
         Objects.requireNonNull(sharedPreferenceKey);
 
         SharedPreferences sharedPreferences =
-                context.getSharedPreferences(SHARED_PREFS_CONSENT, Context.MODE_PRIVATE);
+                context.getSharedPreferences(
+                        ConsentConstants.SHARED_PREFS_CONSENT, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putBoolean(sharedPreferenceKey, false);
 
@@ -1340,10 +1295,11 @@ public class ConsentManager {
                         }
                         break;
                     default:
-                        throw new RuntimeException(ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                        throw new RuntimeException(
+                                ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
                 }
             } catch (IOException | RuntimeException e) {
-                throw new RuntimeException(ERROR_MESSAGE_WHILE_SET_CONTENT, e);
+                throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_WHILE_SET_CONTENT, e);
             }
         }
     }
@@ -1368,19 +1324,12 @@ public class ConsentManager {
                         setAggregatedConsentToPpApi();
                         break;
                     default:
-                        throw new RuntimeException(ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                        throw new RuntimeException(
+                                ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
                 }
             } catch (IOException | RuntimeException e) {
-                throw new RuntimeException(ERROR_MESSAGE_WHILE_SET_CONTENT, e);
+                throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_WHILE_SET_CONTENT, e);
             }
-        }
-    }
-
-    private int initializeLoggingValues(Context context) {
-        if (DeviceRegionProvider.isEuDevice(context)) {
-            return AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU;
-        } else {
-            return AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
         }
     }
 
