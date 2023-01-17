@@ -115,8 +115,6 @@ public class TopicContributorsTableEnableDisableTest {
         // At beginning, Sdk1 receives no topic.
         GetTopicsResponse sdk1Result = advertisingTopicsClient1.getTopics().get();
         assertThat(sdk1Result.getTopics()).isEmpty();
-        // Allow getTopics request to complete before epoch computation
-        Thread.sleep(EXECUTION_WAITING_TIME);
 
         // Now force the Epoch Computation Job. This should be done in the same epoch for
         // callersCanLearnMap to have the entry for processing.
