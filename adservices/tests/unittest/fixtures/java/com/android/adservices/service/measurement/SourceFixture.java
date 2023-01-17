@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public final class SourceFixture {
     private SourceFixture() { }
@@ -49,6 +50,7 @@ public final class SourceFixture {
     // {@link ValidSourceParams}
     public static Source getValidSource() {
         return new Source.Builder()
+                .setId(UUID.randomUUID().toString())
                 .setEventId(ValidSourceParams.SOURCE_EVENT_ID)
                 .setPublisher(ValidSourceParams.PUBLISHER)
                 .setAppDestination(ValidSourceParams.ATTRIBUTION_DESTINATION)

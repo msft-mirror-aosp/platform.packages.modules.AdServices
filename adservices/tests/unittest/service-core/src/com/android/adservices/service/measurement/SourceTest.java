@@ -41,11 +41,9 @@ import org.junit.Test;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
@@ -86,6 +84,7 @@ public class SourceTest {
         filterMap.put("product", Arrays.asList("1234", "2345"));
 
         String sharedAggregateKeys = "[\"campaignCounts\"]";
+        String parentId = "parent-id";
         assertEquals(
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
@@ -118,11 +117,10 @@ public class SourceTest {
                         .setAggregateSource(aggregateSource.toString())
                         .setAggregateContributions(50001)
                         .setDebugKey(DEBUG_KEY_1)
-                        .setAggregatableAttributionSource(
-                                SourceFixture.getValidSource().getAggregatableAttributionSource())
                         .setRegistrationId("R1")
                         .setSharedAggregationKeys(sharedAggregateKeys)
                         .setInstallTime(100L)
+                        .setParentId(parentId)
                         .build(),
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
@@ -155,19 +153,15 @@ public class SourceTest {
                         .setAggregateSource(aggregateSource.toString())
                         .setAggregateContributions(50001)
                         .setDebugKey(DEBUG_KEY_1)
-                        .setAggregatableAttributionSource(
-                                SourceFixture.getValidSource().getAggregatableAttributionSource())
                         .setRegistrationId("R1")
                         .setSharedAggregationKeys(sharedAggregateKeys)
                         .setInstallTime(100L)
+                        .setParentId(parentId)
                         .build());
     }
 
     @Test
     public void testEqualsFail() throws JSONException {
-        assertNotEquals(
-                SourceFixture.getValidSourceBuilder().setId("1").build(),
-                SourceFixture.getValidSourceBuilder().setId("2").build());
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder().setEventId(new UnsignedLong(1L)).build(),
                 SourceFixture.getValidSourceBuilder().setEventId(new UnsignedLong(2L)).build());
@@ -197,6 +191,9 @@ public class SourceTest {
                         .setPublisher(Uri.parse("https://1.test")).build(),
                 SourceFixture.getValidSourceBuilder()
                         .setPublisher(Uri.parse("https://2.test")).build());
+        assertNotEquals(
+                SourceFixture.getValidSourceBuilder().setParentId("parent-id-1").build(),
+                SourceFixture.getValidSourceBuilder().setParentId("parent-id-2").build());
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder()
                         .setPublisherType(EventSurfaceType.APP).build(),
@@ -289,10 +286,8 @@ public class SourceTest {
                         .setAggregateSource(aggregateSource2.toString()).build());
 
         assertNotEquals(
-                SourceFixture.getValidSourceBuilder()
-                        .setAggregateContributions(4000).build(),
-                SourceFixture.getValidSourceBuilder()
-                        .setAggregateContributions(4055).build());
+                SourceFixture.getValidSourceBuilder().setAggregateContributions(4000).build(),
+                SourceFixture.getValidSourceBuilder().setAggregateContributions(4055).build());
 
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder().setDebugKey(DEBUG_KEY_1).build(),
@@ -710,15 +705,17 @@ public class SourceTest {
                         .setAggregatableAttributionSource(attributionSource)
                         .build();
 
-        assertNotNull(source.getAggregatableAttributionSource());
-        assertNotNull(source.getAggregatableAttributionSource().getAggregatableSource());
-        assertNotNull(source.getAggregatableAttributionSource().getFilterMap());
+        assertNotNull(source.getAggregatableAttributionSource().orElse(null));
+        assertNotNull(
+                source.getAggregatableAttributionSource().orElse(null).getAggregatableSource());
+        assertNotNull(source.getAggregatableAttributionSource().orElse(null).getFilterMap());
         assertEquals(
                 aggregatableSource,
-                source.getAggregatableAttributionSource().getAggregatableSource());
+                source.getAggregatableAttributionSource().orElse(null).getAggregatableSource());
         assertEquals(
                 filterMap,
                 source.getAggregatableAttributionSource()
+                        .orElse(null)
                         .getFilterMap()
                         .getAttributionFilterMap());
     }
@@ -1374,7 +1371,7 @@ public class SourceTest {
                 .setSourceType(Source.SourceType.NAVIGATION)
                 .setFilterData(filterMapJson.toString())
                 .build();
-        FilterMap filterMap = source.parseFilterData();
+        FilterMap filterMap = source.getFilterData();
         assertEquals(filterMap.getAttributionFilterMap().size(), 3);
         assertEquals(Collections.singletonList("electronics"),
                 filterMap.getAttributionFilterMap().get("conversion"));
@@ -1389,7 +1386,7 @@ public class SourceTest {
         Source source = SourceFixture.getValidSourceBuilder()
                 .setSourceType(Source.SourceType.EVENT)
                 .build();
-        FilterMap filterMap = source.parseFilterData();
+        FilterMap filterMap = source.getFilterData();
         assertEquals(filterMap.getAttributionFilterMap().size(), 1);
         assertEquals(Collections.singletonList("event"),
                 filterMap.getAttributionFilterMap().get("source_type"));
@@ -1401,7 +1398,7 @@ public class SourceTest {
                 .setSourceType(Source.SourceType.EVENT)
                 .setFilterData("")
                 .build();
-        FilterMap filterMap = source.parseFilterData();
+        FilterMap filterMap = source.getFilterData();
         assertEquals(filterMap.getAttributionFilterMap().size(), 1);
         assertEquals(Collections.singletonList("event"),
                 filterMap.getAttributionFilterMap().get("source_type"));
@@ -1423,7 +1420,7 @@ public class SourceTest {
                 .setAggregateSource(aggregatableSource.toString())
                 .setFilterData(filterMap.toString()).build();
         Optional<AggregatableAttributionSource> aggregatableAttributionSource =
-                source.parseAggregateSource();
+                source.getAggregatableAttributionSource();
         assertTrue(aggregatableAttributionSource.isPresent());
         AggregatableAttributionSource aggregateSource = aggregatableAttributionSource.get();
         assertEquals(aggregateSource.getAggregatableSource().size(), 2);
@@ -1434,15 +1431,12 @@ public class SourceTest {
     }
 
     @Test
-    public void parseSharedAggregationKeys_nonEmpty_parseSuccess() throws JSONException {
-        Source source =
-                SourceFixture.getValidSourceBuilder()
-                        .setSourceType(Source.SourceType.EVENT)
-                        .setSharedAggregationKeys("[\"campaignCounts\",\"geoValue\"]")
-                        .build();
-        Set<String> sharedKeys = source.parseSharedAggregationKeys();
-        assertEquals(sharedKeys.size(), 2);
-        assertEquals(new HashSet(Arrays.asList("campaignCounts", "geoValue")), sharedKeys);
+    public void fromBuilder_equalsComparison_success() {
+        // Setup
+        Source fromSource = SourceFixture.getValidSource();
+
+        // Assertion
+        assertEquals(fromSource, Source.Builder.from(fromSource).build());
     }
 
     private void verifyAlgorithmicFakeReportGeneration(Source source, int expectedCardinality) {
