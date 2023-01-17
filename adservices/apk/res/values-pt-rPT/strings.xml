@@ -556,4 +556,13 @@
     <string name="topic10444" msgid="2075863187654728611">"Planeadores de trajetos e trânsito"</string>
     <string name="topic10445" msgid="3460421948068980869">"Agências e serviços de viagens"</string>
     <string name="topic10446" msgid="5333138740720504195">"Guias e livros de viagens"</string>
+    <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Ativado/<xliff:g id="TOPICS_COUNT">%1$d</xliff:g> tópicos"</string>
+    <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Ativado/<xliff:g id="APPS_COUNT">%1$d</xliff:g> apps"</string>
+    <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"Ativado"</string>
+    <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Desativado"</string>
+    <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"Permitir tópicos de anúncios"</string>
+    <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"Permitir medição de anúncios"</string>
+    <string name="settingsUI_apps_switch_title" msgid="1308209012769248890">"Permitir anúncios sugeridos por apps"</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"Repor todos os tópicos?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"Repor anúncios sugeridos por apps?"</string>
 </resources>
