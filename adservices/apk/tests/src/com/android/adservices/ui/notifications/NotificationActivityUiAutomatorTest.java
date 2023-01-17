@@ -217,7 +217,7 @@ public class NotificationActivityUiAutomatorTest {
 
         rightControlButton.click();
 
-        UiObject acceptedTitle = getElement(R.string.notificationUI_confirmation_ga_title_eu);
+        UiObject acceptedTitle = getElement(R.string.notificationUI_fledge_measurement_title);
         assertThat(acceptedTitle.exists()).isTrue();
     }
 
@@ -238,7 +238,7 @@ public class NotificationActivityUiAutomatorTest {
 
         rightControlButton.click();
 
-        UiObject acceptedTitle = getElement(R.string.notificationUI_confirmation_ga_title_eu);
+        UiObject acceptedTitle = getElement(R.string.notificationUI_fledge_measurement_title);
         assertThat(acceptedTitle.exists()).isTrue();
     }
 
