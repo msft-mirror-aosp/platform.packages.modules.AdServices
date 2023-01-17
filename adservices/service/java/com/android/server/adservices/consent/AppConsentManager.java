@@ -77,9 +77,7 @@ public class AppConsentManager {
         return new AppConsentManager(datastore);
     }
 
-    /**
-     * @return a set of all known apps in the database that have not had user consent revoked
-     */
+    /** @return a set of all known apps in the database that have not had user consent revoked */
     @NonNull
     public List<String> getKnownAppsWithConsent(@NonNull List<String> installedPackages) {
         Objects.requireNonNull(installedPackages);
