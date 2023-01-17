@@ -38,6 +38,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.UIStats;
@@ -112,10 +113,9 @@ public class ConsentNotificationGaFragment extends Fragment {
         leftControlButton.setOnClickListener(
                 view -> {
                     if (mIsEUDevice) {
-                        // TODO(b/254350760): For EU: Topics Off; FLEDGE and Measurement On.
-                        //  For Row: all three on. will need to change ConsentNotificationTrigger
                         // opt-out confirmation activity
-                        ConsentManager.getInstance(requireContext()).disable(requireContext());
+                        ConsentManager.getInstance(requireContext())
+                                .disable(requireContext(), AdServicesApiType.TOPICS);
                         Bundle args = new Bundle();
                         args.putBoolean(IS_CONSENT_GIVEN_ARGUMENT_KEY, false);
                         startConfirmationFragment(args);
@@ -235,7 +235,8 @@ public class ConsentNotificationGaFragment extends Fragment {
             if (mHasScrolledToBottom) {
                 if (mIsEUDevice) {
                     // opt-in confirmation activity
-                    ConsentManager.getInstance(requireContext()).enable(requireContext());
+                    ConsentManager.getInstance(requireContext())
+                            .enable(requireContext(), AdServicesApiType.TOPICS);
                     Bundle args = new Bundle();
                     args.putBoolean(IS_CONSENT_GIVEN_ARGUMENT_KEY, true);
                     startConfirmationFragment(args);
