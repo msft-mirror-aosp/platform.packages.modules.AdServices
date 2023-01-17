@@ -315,6 +315,7 @@ public class ConsentNotificationTriggerTest {
                     .isEqualTo(expectedContent);
             assertThat(Notification.FLAG_ONGOING_EVENT & notification.flags).isEqualTo(0);
             assertThat(Notification.FLAG_NO_CLEAR & notification.flags).isEqualTo(0);
+            assertThat(notification.actions).isNull();
         } finally {
             mStaticMockSession.finishMocking();
         }
