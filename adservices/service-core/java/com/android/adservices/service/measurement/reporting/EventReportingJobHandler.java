@@ -111,15 +111,18 @@ public class EventReportingJobHandler {
                 mDatastoreManager.runInTransactionWithResult((dao)
                         -> dao.getEventReport(eventReportId));
         if (!eventReportOpt.isPresent()) {
+            LogUtil.d("Event report not found");
             return AdServicesStatusUtils.STATUS_IO_ERROR;
         }
         EventReport eventReport = eventReportOpt.get();
 
         if (mIsDebugInstance
                 && eventReport.getDebugReportStatus() != EventReport.DebugReportStatus.PENDING) {
+            LogUtil.d("debugging status is not pending");
             return AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
         }
         if (!mIsDebugInstance && eventReport.getStatus() != EventReport.Status.PENDING) {
+            LogUtil.d("event report status is not pending");
             return AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
         }
         try {
@@ -128,6 +131,7 @@ public class EventReportingJobHandler {
             if (!reportingOrigin.isPresent()) {
                 // We do not know here what the cause is of the failure to retrieve the reporting
                 // origin. INTERNAL_ERROR seems the closest to a "catch-all" error code.
+                LogUtil.d("Report origin not present");
                 return AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
             }
             JSONObject eventReportJsonPayload = createReportJsonPayload(eventReport);
