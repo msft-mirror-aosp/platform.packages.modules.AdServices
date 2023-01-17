@@ -17,6 +17,7 @@
 package com.android.adservices.tests.cts.topics;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.topics.GetTopicsResponse;
@@ -85,6 +86,13 @@ public class TopicsManagerTest {
     private static final String TOPICS_SERVICE_NAME = "android.adservices.TOPICS_SERVICE";
     private static final String ADSERVICES_PACKAGE_NAME = getAdServicesPackageName();
 
+    // Assert message statements.
+    private static final String INCORRECT_MODEL_VERSION_MESSAGE =
+            "Incorrect model version detected. Please repo sync, build and install the new apex.";
+    private static final String INCORRECT_TAXONOMY_VERSION_MESSAGE =
+            "Incorrect taxonomy version detected. Please repo sync, build and install the new"
+                    + " apex.";
+
     @Before
     public void setup() throws Exception {
         // We need to skip 3 epochs so that if there is any usage from other test runs, it will
@@ -140,12 +148,12 @@ public class TopicsManagerTest {
 
         // Expected asset versions to be bundled in the build.
         // If old assets are being picked up, repo sync, build and install the new apex again.
-        if (topic.getModelVersion() != EXPECTED_ASSET_VERSION
-                || topic.getTaxonomyVersion() != EXPECTED_ASSET_VERSION) {
-            throw new IllegalStateException(
-                    "Incorrect asset versions detected. Please repo sync, build and install the "
-                            + "new apex.");
-        }
+        assertWithMessage(INCORRECT_MODEL_VERSION_MESSAGE)
+                .that(topic.getModelVersion())
+                .isEqualTo(EXPECTED_ASSET_VERSION);
+        assertWithMessage(INCORRECT_TAXONOMY_VERSION_MESSAGE)
+                .that(topic.getTaxonomyVersion())
+                .isEqualTo(EXPECTED_ASSET_VERSION);
 
         // topic is one of the 5 classification topics of the Test App.
         assertThat(topic.getTopicId()).isIn(Arrays.asList(10147, 10253, 10175, 10254, 10333));
@@ -204,12 +212,12 @@ public class TopicsManagerTest {
 
         // Expected asset versions to be bundled in the build.
         // If old assets are being picked up, repo sync, build and install the new apex again.
-        if (topic.getModelVersion() != EXPECTED_ASSET_VERSION
-                || topic.getTaxonomyVersion() != EXPECTED_ASSET_VERSION) {
-            throw new IllegalStateException(
-                    "Incorrect asset versions detected. Please repo sync, build and install the "
-                            + "new apex.");
-        }
+        assertWithMessage(INCORRECT_MODEL_VERSION_MESSAGE)
+                .that(topic.getModelVersion())
+                .isEqualTo(EXPECTED_ASSET_VERSION);
+        assertWithMessage(INCORRECT_TAXONOMY_VERSION_MESSAGE)
+                .that(topic.getTaxonomyVersion())
+                .isEqualTo(EXPECTED_ASSET_VERSION);
 
         // Top 5 classifications for empty string with v3 model are [10230, 10228, 10253, 10232,
         // 10140]. This is computed by running the model on the device for empty string.
