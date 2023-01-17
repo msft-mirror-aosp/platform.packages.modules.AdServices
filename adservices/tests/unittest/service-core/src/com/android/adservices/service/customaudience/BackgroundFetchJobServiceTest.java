@@ -46,6 +46,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -78,7 +79,8 @@ public class BackgroundFetchJobServiceTest {
 
     private MockitoSession mStaticMockSession = null;
 
-    private final Flags mFlagsWithEnabledBgF = new FlagsWithEnabledBgF();
+    private final Flags mFlagsWithEnabledBgFGaUxDisabled = new FlagsWithEnabledBgFGaUxDisabled();
+    private final Flags mFlagsWithEnabledBgFGaUxEnabled = new FlagsWithEnabledBgFGaUxEnabled();
     private final Flags mFlagsWithDisabledBgF = new FlagsWithDisabledBgF();
     private final Flags mFlagsWithCustomAudienceServiceKillSwitchOn = new FlagsWithKillSwitchOn();
     private final Flags mFlagsWithCustomAudienceServiceKillSwitchOff = new FlagsWithKillSwitchOff();
@@ -135,11 +137,40 @@ public class BackgroundFetchJobServiceTest {
     }
 
     @Test
-    public void testOnStartJobConsentRevoked()
+    public void testOnStartJobConsentRevokedGaUxDisabled()
             throws ExecutionException, InterruptedException, TimeoutException {
-        doReturn(mFlagsWithEnabledBgF).when(FlagsFactory::getFlags);
+        doReturn(mFlagsWithEnabledBgFGaUxDisabled).when(FlagsFactory::getFlags);
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
         doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent();
+        doReturn(JOB_SCHEDULER).when(mBgFJobServiceSpy).getSystemService(JobScheduler.class);
+        doNothing().when(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
+
+        // Schedule the job to assert after starting that the scheduled job has been cancelled
+        JobInfo existingJobInfo =
+                new JobInfo.Builder(
+                                FLEDGE_BACKGROUND_FETCH_JOB_ID,
+                                new ComponentName(CONTEXT, BackgroundFetchJobService.class))
+                        .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
+                        .build();
+        JOB_SCHEDULER.schedule(existingJobInfo);
+        assertNotNull(JOB_SCHEDULER.getPendingJob(FLEDGE_BACKGROUND_FETCH_JOB_ID));
+
+        assertFalse(mBgFJobServiceSpy.onStartJob(mJobParametersMock));
+
+        assertNull(JOB_SCHEDULER.getPendingJob(FLEDGE_BACKGROUND_FETCH_JOB_ID));
+        verify(mBgFWorkerMock, never()).runBackgroundFetch(any());
+        verify(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
+        verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
+    }
+
+    @Test
+    public void testOnStartJobConsentRevokedGaUxEnabled()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        doReturn(mFlagsWithEnabledBgFGaUxEnabled).when(FlagsFactory::getFlags);
+        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
+        doReturn(AdServicesApiConsent.REVOKED)
+                .when(mConsentManagerMock)
+                .getConsent(AdServicesApiType.FLEDGE);
         doReturn(JOB_SCHEDULER).when(mBgFJobServiceSpy).getSystemService(JobScheduler.class);
         doNothing().when(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
 
@@ -218,7 +249,7 @@ public class BackgroundFetchJobServiceTest {
             throws InterruptedException, ExecutionException, TimeoutException {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
-        doReturn(mFlagsWithEnabledBgF).when(FlagsFactory::getFlags);
+        doReturn(mFlagsWithEnabledBgFGaUxDisabled).when(FlagsFactory::getFlags);
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         doReturn(mBgFWorkerMock).when(() -> BackgroundFetchWorker.getInstance(any()));
@@ -245,7 +276,7 @@ public class BackgroundFetchJobServiceTest {
             throws InterruptedException, ExecutionException, TimeoutException {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
-        doReturn(mFlagsWithEnabledBgF).when(FlagsFactory::getFlags);
+        doReturn(mFlagsWithEnabledBgFGaUxDisabled).when(FlagsFactory::getFlags);
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         doReturn(mBgFWorkerMock).when(() -> BackgroundFetchWorker.getInstance(any()));
@@ -272,7 +303,7 @@ public class BackgroundFetchJobServiceTest {
             throws InterruptedException, ExecutionException, TimeoutException {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
-        doReturn(mFlagsWithEnabledBgF).when(FlagsFactory::getFlags);
+        doReturn(mFlagsWithEnabledBgFGaUxDisabled).when(FlagsFactory::getFlags);
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         doReturn(mBgFWorkerMock).when(() -> BackgroundFetchWorker.getInstance(any()));
@@ -299,7 +330,7 @@ public class BackgroundFetchJobServiceTest {
             throws InterruptedException, ExecutionException, TimeoutException {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
-        doReturn(mFlagsWithEnabledBgF).when(FlagsFactory::getFlags);
+        doReturn(mFlagsWithEnabledBgFGaUxDisabled).when(FlagsFactory::getFlags);
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         doReturn(mBgFWorkerMock).when(() -> BackgroundFetchWorker.getInstance(any()));
@@ -349,7 +380,8 @@ public class BackgroundFetchJobServiceTest {
                 .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)));
         doNothing().when(() -> BackgroundFetchJobService.schedule(any(), any()));
 
-        BackgroundFetchJobService.scheduleIfNeeded(CONTEXT, mFlagsWithEnabledBgF, false);
+        BackgroundFetchJobService.scheduleIfNeeded(
+                CONTEXT, mFlagsWithEnabledBgFGaUxDisabled, false);
 
         verify(() -> BackgroundFetchJobService.schedule(any(), any()));
         verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
@@ -369,7 +401,8 @@ public class BackgroundFetchJobServiceTest {
         doCallRealMethod()
                 .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)));
 
-        BackgroundFetchJobService.scheduleIfNeeded(CONTEXT, mFlagsWithEnabledBgF, false);
+        BackgroundFetchJobService.scheduleIfNeeded(
+                CONTEXT, mFlagsWithEnabledBgFGaUxDisabled, false);
 
         verify(() -> BackgroundFetchJobService.schedule(any(), any()), never());
         verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
@@ -390,7 +423,7 @@ public class BackgroundFetchJobServiceTest {
                 .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(true)));
         doNothing().when(() -> BackgroundFetchJobService.schedule(any(), any()));
 
-        BackgroundFetchJobService.scheduleIfNeeded(CONTEXT, mFlagsWithEnabledBgF, true);
+        BackgroundFetchJobService.scheduleIfNeeded(CONTEXT, mFlagsWithEnabledBgFGaUxDisabled, true);
 
         verify(() -> BackgroundFetchJobService.schedule(any(), any()));
         verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
@@ -403,9 +436,31 @@ public class BackgroundFetchJobServiceTest {
         verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
     }
 
-    private static class FlagsWithEnabledBgF implements Flags {
+    private static class FlagsWithEnabledBgFGaUxDisabled implements Flags {
         @Override
         public boolean getFledgeBackgroundFetchEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean getGaUxFeatureEnabled() {
+            return false;
+        }
+
+        @Override
+        public boolean getGlobalKillSwitch() {
+            return false;
+        }
+    }
+
+    private static class FlagsWithEnabledBgFGaUxEnabled implements Flags {
+        @Override
+        public boolean getFledgeBackgroundFetchEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean getGaUxFeatureEnabled() {
             return true;
         }
 

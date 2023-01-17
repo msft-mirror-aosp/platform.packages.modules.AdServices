@@ -558,7 +558,14 @@ public class ConsentManager {
     public boolean isFledgeConsentRevokedForApp(@NonNull String packageName)
             throws IllegalArgumentException {
         // TODO(b/238464639): Implement API-specific consent for FLEDGE
-        if (!getConsent().isGiven()) {
+        AdServicesApiConsent consent;
+        if (!mFlags.getGaUxFeatureEnabled()) {
+            consent = getConsent();
+        } else {
+            consent = getConsent(AdServicesApiType.FLEDGE);
+        }
+
+        if (!consent.isGiven()) {
             return true;
         }
 
@@ -589,7 +596,14 @@ public class ConsentManager {
     public boolean isFledgeConsentRevokedForAppAfterSettingFledgeUse(@NonNull String packageName)
             throws IllegalArgumentException {
         // TODO(b/238464639): Implement API-specific consent for FLEDGE
-        if (!getConsent().isGiven()) {
+        AdServicesApiConsent consent;
+        if (!mFlags.getGaUxFeatureEnabled()) {
+            consent = getConsent();
+        } else {
+            consent = getConsent(AdServicesApiType.FLEDGE);
+        }
+
+        if (!consent.isGiven()) {
             return true;
         }
 
