@@ -41,7 +41,7 @@ public class ConsentNotificationConfirmationGaFragment extends Fragment {
     public View onCreateView(
             @NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(
-                R.layout.consent_notification_confirmation_ga_fragment, container, false);
+                R.layout.consent_notification_fledge_measurement_fragment_eu, container, false);
     }
 
     @Override
