@@ -209,6 +209,106 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         }
     }
 
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void recordGaUxNotificationDisplayed() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifier();
+        LogUtil.v("recordGaUxNotificationDisplayed() for User Identifier %d", userIdentifier);
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .recordGaUxNotificationDisplayed();
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to Record GA UX Notification Displayed.");
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public boolean wasGaUxNotificationDisplayed() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifier();
+        LogUtil.v("wasGaUxNotificationDisplayed() for User Identifier %d", userIdentifier);
+        try {
+            return mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .wasGaUxNotificationDisplayed();
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to get the wasGaUxNotificationDisplayed.");
+            return false;
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void recordTopicsConsentPageDisplayed() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifier();
+        LogUtil.v("recordTopicsConsentPageDisplayed() for User Identifier %d", userIdentifier);
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .recordTopicsConsentPageDisplayed();
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to Record Topics Consent Page Displayed.");
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public boolean wasTopicsConsentPageDisplayed() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifier();
+        LogUtil.v("wasTopicsConsentPageDisplayed() for User Identifier %d", userIdentifier);
+        try {
+            return mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .wasTopicsConsentPageDisplayed();
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to get the wasTopicsConsentPageDisplayed.");
+            return false;
+        }
+    }
+
+    /** method to Record Fledge and Msmt consent page displayed or not */
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void recordFledgeAndMsmtConsentPageDisplayed() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifier();
+        LogUtil.v(
+                "recordFledgeAndMsmtConsentPageDisplayed() for User Identifier %d", userIdentifier);
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .recordFledgeAndMsmtConsentPageDisplayed();
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to Record Fledge and Msmt Consent Page Displayed.");
+        }
+    }
+
+    /** method to get Fledge and Msmt consent page displayed or not */
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public boolean wasFledgeAndMsmtConsentPageDisplayed() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifier();
+        LogUtil.v("wasFledgeAndMsmtConsentPageDisplayed() for User Identifier %d", userIdentifier);
+        try {
+            return mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .wasFledgeAndMsmtConsentPageDisplayed();
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to get the wasFledgeAndMsmtConsentPageDisplayed.");
+            return false;
+        }
+    }
+
     /**
      * Registers a receiver for any broadcasts regarding changes to any packages for all users on
      * the device at boot up. After receiving the broadcast, send an explicit broadcast to the
