@@ -337,7 +337,8 @@ public class ImpressionReporter {
         try {
             sellerValidator.validate(reportingUris.sellerReportingUri);
             // Perform reporting if no exception was thrown
-            sellerFuture = mAdServicesHttpsClient.reportUri(reportingUris.sellerReportingUri);
+            sellerFuture =
+                    mAdServicesHttpsClient.getAndReadNothing(reportingUris.sellerReportingUri);
         } catch (IllegalArgumentException e) {
             LogUtil.v("Seller reporting URI validation failed!");
             sellerFuture = Futures.immediateFuture(null);
@@ -359,7 +360,8 @@ public class ImpressionReporter {
             try {
                 buyerValidator.validate(reportingUris.buyerReportingUri);
                 // Perform reporting if no exception was thrown
-                buyerFuture = mAdServicesHttpsClient.reportUri(reportingUris.buyerReportingUri);
+                buyerFuture =
+                        mAdServicesHttpsClient.getAndReadNothing(reportingUris.buyerReportingUri);
             } catch (IllegalArgumentException e) {
                 LogUtil.v("Buyer reporting URI validation failed!");
                 buyerFuture = Futures.immediateFuture(null);

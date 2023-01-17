@@ -111,7 +111,7 @@ public class ConsentNotificationTrigger {
                                         : context.getString(
                                                 R.string.notificationUI_notification_content));
         return new NotificationCompat.Builder(context, CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_android_icon_small)
+                .setSmallIcon(R.drawable.ic_info_icon)
                 .setContentTitle(
                         context.getString(
                                 isEuDevice
@@ -159,7 +159,7 @@ public class ConsentNotificationTrigger {
                                         : context.getString(
                                                 R.string.notificationUI_notification_content));
         return new NotificationCompat.Builder(context, CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_android_icon_small)
+                .setSmallIcon(R.drawable.ic_info_icon)
                 .setContentTitle(
                         context.getString(
                                 isEuDevice
