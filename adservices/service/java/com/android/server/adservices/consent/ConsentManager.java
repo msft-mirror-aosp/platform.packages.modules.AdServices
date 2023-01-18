@@ -44,6 +44,13 @@ public final class ConsentManager {
     @VisibleForTesting
     static final String NOTIFICATION_DISPLAYED_ONCE = "NOTIFICATION-DISPLAYED-ONCE";
 
+    static final String GA_UX_NOTIFICATION_DISPLAYED_ONCE = "GA-UX-NOTIFICATION-DISPLAYED-ONCE";
+
+    static final String TOPICS_CONSENT_PAGE_DISPLAYED = "TOPICS-CONSENT-PAGE-DISPLAYED";
+
+    static final String FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED =
+            "FLDEGE-AND-MSMT-CONDENT-PAGE-DISPLAYED";
+
     private static final String CONSENT_KEY = "CONSENT";
     private static final String CONSENT_API_TYPE_PREFIX = "CONSENT_API_TYPE_";
 
@@ -90,6 +97,15 @@ public final class ConsentManager {
         // in the parameter (similar to SP apply etc.)
         if (datastore.get(NOTIFICATION_DISPLAYED_ONCE) == null) {
             datastore.put(NOTIFICATION_DISPLAYED_ONCE, false);
+        }
+        if (datastore.get(GA_UX_NOTIFICATION_DISPLAYED_ONCE) == null) {
+            datastore.put(GA_UX_NOTIFICATION_DISPLAYED_ONCE, false);
+        }
+        if (datastore.get(TOPICS_CONSENT_PAGE_DISPLAYED) == null) {
+            datastore.put(TOPICS_CONSENT_PAGE_DISPLAYED, false);
+        }
+        if (datastore.get(FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED) == null) {
+            datastore.put(FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED, false);
         }
         return datastore;
     }
@@ -173,6 +189,93 @@ public final class ConsentManager {
     public boolean wasNotificationDisplayed() {
         synchronized (this) {
             return mDatastore.get(NOTIFICATION_DISPLAYED_ONCE);
+        }
+    }
+
+    /**
+     * Saves information to the storage that GA UX notification was displayed for the first time to
+     * the user.
+     */
+    public void recordGaUxNotificationDisplayed() throws IOException {
+        synchronized (this) {
+            try {
+                // TODO(b/229725886): add metrics / logging
+                mDatastore.put(GA_UX_NOTIFICATION_DISPLAYED_ONCE, true);
+            } catch (IOException e) {
+                LogUtil.e(e, "Record notification failed due to IOException thrown by Datastore.");
+            }
+        }
+    }
+
+    /**
+     * Returns information whether GA Ux Consent Notification was displayed or not.
+     *
+     * @return true if GA UX Consent Notification was displayed, otherwise false.
+     */
+    public boolean wasGaUxNotificationDisplayed() {
+        synchronized (this) {
+            Boolean displayed = mDatastore.get(GA_UX_NOTIFICATION_DISPLAYED_ONCE);
+            return displayed != null ? displayed : false;
+        }
+    }
+
+    /**
+     * Saves information to the storage that topics consent page was displayed for the first time to
+     * the user.
+     */
+    public void recordTopicsConsentPageDisplayed() throws IOException {
+        synchronized (this) {
+            try {
+                // TODO(b/229725886): add metrics / logging
+                mDatastore.put(TOPICS_CONSENT_PAGE_DISPLAYED, true);
+            } catch (IOException e) {
+                LogUtil.e(
+                        e,
+                        "Record topics consent page failed due to"
+                                + " IOException thrown by Datastore.");
+            }
+        }
+    }
+
+    /**
+     * Returns information whether topics consent page was displayed or not.
+     *
+     * @return true if topics consent page was displayed, otherwise false.
+     */
+    public boolean wasTopicsConsentPageDisplayed() {
+        synchronized (this) {
+            Boolean displayed = mDatastore.get(TOPICS_CONSENT_PAGE_DISPLAYED);
+            return displayed != null ? displayed : false;
+        }
+    }
+
+    /**
+     * Saves information to the storage that Fledge and Msmt consent was displayed for the first
+     * time to the user.
+     */
+    public void recordFledgeAndMsmtConsentPageDisplayed() throws IOException {
+        synchronized (this) {
+            try {
+                // TODO(b/229725886): add metrics / logging
+                mDatastore.put(FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED, true);
+            } catch (IOException e) {
+                LogUtil.e(
+                        e,
+                        "Record fledge and Msmt consent page failed due to "
+                                + "IOException thrown by Datastore.");
+            }
+        }
+    }
+
+    /**
+     * Returns information whether fledge and msmt consent page was displayed or not.
+     *
+     * @return true if fledge and msmt consent page was displayed, otherwise false.
+     */
+    public boolean wasFledgeAndMsmtConsentPageDisplayed() {
+        synchronized (this) {
+            Boolean displayed = mDatastore.get(FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED);
+            return displayed != null ? displayed : false;
         }
     }
 

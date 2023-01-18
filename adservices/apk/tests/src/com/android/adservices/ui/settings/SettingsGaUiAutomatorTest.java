@@ -39,8 +39,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.io.IOException;
-
 @RunWith(AndroidJUnit4.class)
 public class SettingsGaUiAutomatorTest {
     private static final String PRIVACY_SANDBOX_TEST_PACKAGE = "android.adservices.ui.SETTINGS";
@@ -126,7 +124,7 @@ public class SettingsGaUiAutomatorTest {
     }
 
     @Test
-    public void togglesTestWithDialogs() throws UiObjectNotFoundException, InterruptedException {
+    public void togglesTestWithDialogs() throws UiObjectNotFoundException {
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
         ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled true");
 
@@ -212,7 +210,7 @@ public class SettingsGaUiAutomatorTest {
     }
 
     @Test
-    public void togglesTestWithoutDialogs() throws UiObjectNotFoundException, IOException {
+    public void togglesTestWithoutDialogs() throws UiObjectNotFoundException {
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
         ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled false");
         launchApp();
@@ -279,6 +277,60 @@ public class SettingsGaUiAutomatorTest {
         assertThat(appsToggle.isChecked()).isFalse();
     }
 
+    @Test
+    public void topicsSubTitleTest() throws UiObjectNotFoundException {
+        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
+        ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled false");
+        launchApp();
+        checkSubtitleMatchesToggle(
+                ".*:id/topics_preference_subtitle", R.string.settingsUI_topics_title);
+    }
+
+    @Test
+    public void appsSubTitleTest() throws UiObjectNotFoundException {
+        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
+        ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled false");
+        launchApp();
+        checkSubtitleMatchesToggle(
+                ".*:id/apps_preference_subtitle", R.string.settingsUI_apps_title);
+    }
+
+    @Test
+    public void measurementSubTitleTest() throws UiObjectNotFoundException {
+        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
+        ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled false");
+        launchApp();
+        checkSubtitleMatchesToggle(
+                ".*:id/measurement_preference_subtitle",
+                R.string.settingsUI_measurement_view_title);
+    }
+
+    private void checkSubtitleMatchesToggle(String regexResId, int stringIdOfTitle)
+            throws UiObjectNotFoundException {
+        UiScrollable scrollView =
+                new UiScrollable(
+                        new UiSelector().scrollable(true).className("android.widget.ScrollView"));
+        UiObject thisSubtitle = sDevice.findObject(new UiSelector().resourceIdMatches(regexResId));
+        scrollView.scrollIntoView(thisSubtitle);
+        if (thisSubtitle.getText().equals("Off")) {
+            scrollToAndClick(stringIdOfTitle);
+            UiObject thisToggle =
+                    sDevice.findObject(new UiSelector().className("android.widget.Switch"));
+            assertThat(thisToggle.isChecked()).isFalse();
+            thisToggle.click();
+            sDevice.pressBack();
+            assertThat(thisSubtitle.getText().equals("Off")).isFalse();
+        } else {
+            scrollToAndClick(stringIdOfTitle);
+            UiObject thisToggle =
+                    sDevice.findObject(new UiSelector().className("android.widget.Switch"));
+            assertThat(thisToggle.isChecked()).isTrue();
+            thisToggle.click();
+            sDevice.pressBack();
+            assertThat(thisSubtitle.getText().equals("Off")).isTrue();
+        }
+    }
+
     private UiObject getElement(int resId) {
         return sDevice.findObject(new UiSelector().text(getString(resId)));
     }
@@ -294,7 +346,6 @@ public class SettingsGaUiAutomatorTest {
         UiObject element =
                 sDevice.findObject(
                         new UiSelector().childSelector(new UiSelector().text(getString(resId))));
-
         scrollView.scrollIntoView(element);
         element.click();
     }
