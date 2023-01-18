@@ -16,11 +16,13 @@
 
 package com.android.adservices.service.measurement.aggregation;
 
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * POJO for AggregatableAttributionTrigger.
@@ -29,6 +31,7 @@ public class AggregatableAttributionTrigger {
 
     private List<AggregateTriggerData> mTriggerData;
     private Map<String, Integer> mValues;
+    private Optional<List<AggregateDeduplicationKey>> mAggregateDeduplicationKeys;
 
     private AggregatableAttributionTrigger() {
         mTriggerData = new ArrayList<>();
@@ -65,6 +68,11 @@ public class AggregatableAttributionTrigger {
         return mValues;
     }
 
+    /** Returns De-deuplication keys for Aggregate Report Creation. */
+    public Optional<List<AggregateDeduplicationKey>> getAggregateDeduplicationKeys() {
+        return mAggregateDeduplicationKeys;
+    }
+
     /**
      * Builder for {@link AggregatableAttributionTrigger}.
      */
@@ -88,6 +96,12 @@ public class AggregatableAttributionTrigger {
          */
         public Builder setValues(Map<String, Integer> values) {
             mBuilding.mValues = values;
+            return this;
+        }
+
+        /** See {@link AggregatableAttributionTrigger#getAggregateDeduplicationKeys()}. */
+        public Builder setAggregateDeduplicationKeys(List<AggregateDeduplicationKey> keys) {
+            mBuilding.mAggregateDeduplicationKeys = Optional.of(keys);
             return this;
         }
 

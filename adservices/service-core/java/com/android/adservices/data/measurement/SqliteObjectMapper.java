@@ -31,6 +31,7 @@ import com.android.adservices.service.measurement.reporting.DebugReport;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -116,12 +117,16 @@ public class SqliteObjectMapper {
                 builder::setExpiryTime);
         setLongColumn(cursor, MeasurementTables.SourceContract.EVENT_TIME,
                 builder::setEventTime);
-        setTextColumn(cursor, MeasurementTables.SourceContract.DEDUP_KEYS,
-                (concatArray) -> builder.setDedupKeys(Arrays.stream(concatArray.split(","))
-                        .map(String::trim)
-                        .filter(not(String::isEmpty))
-                        .map(UnsignedLong::new)
-                        .collect(Collectors.toList())));
+        setTextColumn(
+                cursor,
+                MeasurementTables.SourceContract.EVENT_REPORT_DEDUP_KEYS,
+                (concatArray) ->
+                        builder.setEventReportDedupKeys(dedupKeysStringToList(concatArray)));
+        setTextColumn(
+                cursor,
+                MeasurementTables.SourceContract.AGGREGATE_REPORT_DEDUP_KEYS,
+                (concatArray) ->
+                        builder.setAggregateReportDedupKeys(dedupKeysStringToList(concatArray)));
         setIntColumn(cursor, MeasurementTables.SourceContract.STATUS,
                 builder::setStatus);
         setUriColumn(cursor, MeasurementTables.SourceContract.REGISTRANT,
@@ -385,5 +390,13 @@ public class SqliteObjectMapper {
         if (index > -1 && !cursor.isNull(index)) {
             setter.apply(getColVal.apply(index));
         }
+    }
+
+    private static List<UnsignedLong> dedupKeysStringToList(String concatArray) {
+        return Arrays.stream(concatArray.split(","))
+                .map(String::trim)
+                .filter(not(String::isEmpty))
+                .map(UnsignedLong::new)
+                .collect(Collectors.toList());
     }
 }
