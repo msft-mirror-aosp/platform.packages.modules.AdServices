@@ -601,5 +601,14 @@ public class SdkSandboxStorageManagerUnitTest {
                 @NonNull IntentFilter intentFilter, int flags, boolean onlyProtectedBroadcasts) {
             return true;
         }
+
+        @Override
+        public boolean canDeclareBroadcastReceiverFromManifest(
+                @NonNull IntentFilter intentFilter,
+                boolean unexportedBroadcast,
+                boolean onlyProtectedBroadcasts,
+                int minTargetSdkVersion) {
+            return true;
+        }
     }
 }
