@@ -111,12 +111,7 @@ public class AppConsentDao {
         initializeDatastoreIfNeeded();
         Set<String> apps = new HashSet<>();
         Set<String> datastoreKeys = mDatastore.keySetFalse();
-        Set<String> installedPackages =
-                mPackageManager
-                        .getInstalledApplications(PackageManager.ApplicationInfoFlags.of(0))
-                        .stream()
-                        .map(applicationInfo -> applicationInfo.packageName)
-                        .collect(Collectors.toSet());
+        Set<String> installedPackages = getInstalledPackages();
         for (String key : datastoreKeys) {
             String packageName = datastoreKeyToPackageName(key);
             if (installedPackages.contains(packageName)) {
@@ -135,12 +130,7 @@ public class AppConsentDao {
         initializeDatastoreIfNeeded();
         Set<String> apps = new HashSet<>();
         Set<String> datastoreKeys = mDatastore.keySetTrue();
-        Set<String> installedPackages =
-                mPackageManager
-                        .getInstalledApplications(PackageManager.ApplicationInfoFlags.of(0))
-                        .stream()
-                        .map(applicationInfo -> applicationInfo.packageName)
-                        .collect(Collectors.toSet());
+        Set<String> installedPackages = getInstalledPackages();
         for (String key : datastoreKeys) {
             String packageName = datastoreKeyToPackageName(key);
             if (installedPackages.contains(packageName)) {
@@ -263,13 +253,7 @@ public class AppConsentDao {
     String toDatastoreKey(@NonNull String packageName) throws IllegalArgumentException {
         Objects.requireNonNull(packageName);
 
-        int packageUid;
-        try {
-            packageUid = getUidForInstalledPackageName(mPackageManager, packageName);
-        } catch (PackageManager.NameNotFoundException exception) {
-            LogUtil.e(exception, "Package name not found");
-            throw new IllegalArgumentException(exception);
-        }
+        int packageUid = getUidForInstalledPackageName(packageName);
 
         return toDatastoreKey(packageName, packageUid);
     }
@@ -297,14 +281,26 @@ public class AppConsentDao {
      * UID if so.
      *
      * @return the UID for the installed application, if found
-     * @throws PackageManager.NameNotFoundException if the package name could not be found
      */
-    @VisibleForTesting
-    static int getUidForInstalledPackageName(
-            @NonNull PackageManager packageManager, @NonNull String packageName)
-            throws PackageManager.NameNotFoundException {
-        Objects.requireNonNull(packageManager);
+    public int getUidForInstalledPackageName(@NonNull String packageName) {
         Objects.requireNonNull(packageName);
-        return packageManager.getPackageUid(packageName, PackageManager.PackageInfoFlags.of(0L));
+
+        try {
+            return mPackageManager.getPackageUid(
+                    packageName, PackageManager.PackageInfoFlags.of(0L));
+        } catch (PackageManager.NameNotFoundException exception) {
+            LogUtil.e(exception, "Package name not found");
+            throw new IllegalArgumentException(exception);
+        }
+    }
+
+    /** Returns the list of packages installed on the device of the user. */
+    @NonNull
+    public Set<String> getInstalledPackages() {
+        return mPackageManager
+                .getInstalledApplications(PackageManager.ApplicationInfoFlags.of(0L))
+                .stream()
+                .map(applicationInfo -> applicationInfo.packageName)
+                .collect(Collectors.toSet());
     }
 }

@@ -466,13 +466,37 @@ public class ConsentManager {
      *     consent revoked
      */
     public ImmutableList<App> getKnownAppsWithConsent() {
-        try {
-            return ImmutableList.copyOf(
-                    mAppConsentDao.getKnownAppsWithConsent().stream()
-                            .map(App::create)
-                            .collect(Collectors.toList()));
-        } catch (IOException e) {
-            LogUtil.e(e, "getKnownAppsWithConsent failed due to IOException.");
+        synchronized (ConsentManager.class) {
+            try {
+                switch (mConsentSourceOfTruth) {
+                    case Flags.PPAPI_ONLY:
+                        try {
+                            return ImmutableList.copyOf(
+                                    mAppConsentDao.getKnownAppsWithConsent().stream()
+                                            .map(App::create)
+                                            .collect(Collectors.toList()));
+                        } catch (IOException e) {
+                            LogUtil.e(e, "getKnownAppsWithConsent failed due to IOException.");
+                        }
+                        return ImmutableList.of();
+                    case Flags.SYSTEM_SERVER_ONLY:
+                        // Intentional fallthrough
+                    case Flags.PPAPI_AND_SYSTEM_SERVER:
+                        return ImmutableList.copyOf(
+                                mAdServicesManager
+                                        .getKnownAppsWithConsent(
+                                                new ArrayList<>(
+                                                        mAppConsentDao.getInstalledPackages()))
+                                        .stream()
+                                        .map(App::create)
+                                        .collect(Collectors.toList()));
+                    default:
+                        LogUtil.e(ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                        return ImmutableList.of();
+                }
+            } catch (RuntimeException e) {
+                LogUtil.e(e, "Error get known apps with consent.");
+            }
             return ImmutableList.of();
         }
     }
@@ -482,13 +506,37 @@ public class ConsentManager {
      *     revoked
      */
     public ImmutableList<App> getAppsWithRevokedConsent() {
-        try {
-            return ImmutableList.copyOf(
-                    mAppConsentDao.getAppsWithRevokedConsent().stream()
-                            .map(App::create)
-                            .collect(Collectors.toList()));
-        } catch (IOException e) {
-            LogUtil.e(e, "getAppsWithRevokedConsent failed due to IOException.");
+        synchronized (ConsentManager.class) {
+            try {
+                switch (mConsentSourceOfTruth) {
+                    case Flags.PPAPI_ONLY:
+                        try {
+                            return ImmutableList.copyOf(
+                                    mAppConsentDao.getAppsWithRevokedConsent().stream()
+                                            .map(App::create)
+                                            .collect(Collectors.toList()));
+                        } catch (IOException e) {
+                            LogUtil.e(e, "getAppsWithRevokedConsent() failed due to IOException.");
+                        }
+                        return ImmutableList.of();
+                    case Flags.SYSTEM_SERVER_ONLY:
+                        // Intentional fallthrough
+                    case Flags.PPAPI_AND_SYSTEM_SERVER:
+                        return ImmutableList.copyOf(
+                                mAdServicesManager
+                                        .getAppsWithRevokedConsent(
+                                                new ArrayList<>(
+                                                        mAppConsentDao.getInstalledPackages()))
+                                        .stream()
+                                        .map(App::create)
+                                        .collect(Collectors.toList()));
+                    default:
+                        LogUtil.e(ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                        return ImmutableList.of();
+                }
+            } catch (RuntimeException e) {
+                LogUtil.e(e, "Error get apps with revoked consent.");
+            }
             return ImmutableList.of();
         }
     }
@@ -502,7 +550,32 @@ public class ConsentManager {
      * @throws IOException if the operation fails
      */
     public void revokeConsentForApp(@NonNull App app) throws IOException {
-        mAppConsentDao.setConsentForApp(app.getPackageName(), true);
+        synchronized (ConsentManager.class) {
+            try {
+                switch (mConsentSourceOfTruth) {
+                    case Flags.PPAPI_ONLY:
+                        mAppConsentDao.setConsentForApp(app.getPackageName(), true);
+                        break;
+                    case Flags.SYSTEM_SERVER_ONLY:
+                        mAdServicesManager.setConsentForApp(
+                                app.getPackageName(),
+                                mAppConsentDao.getUidForInstalledPackageName(app.getPackageName()),
+                                true);
+                        break;
+                    case Flags.PPAPI_AND_SYSTEM_SERVER:
+                        mAppConsentDao.setConsentForApp(app.getPackageName(), true);
+                        mAdServicesManager.setConsentForApp(
+                                app.getPackageName(),
+                                mAppConsentDao.getUidForInstalledPackageName(app.getPackageName()),
+                                true);
+                        break;
+                    default:
+                        LogUtil.e(ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                }
+            } catch (RuntimeException e) {
+                LogUtil.e(e, "Error revoke consent for app %s", app.getPackageName());
+            }
+        }
         asyncExecute(
                 () -> mCustomAudienceDao.deleteCustomAudienceDataByOwner(app.getPackageName()));
     }
@@ -514,7 +587,32 @@ public class ConsentManager {
      * @throws IOException if the operation fails
      */
     public void restoreConsentForApp(@NonNull App app) throws IOException {
-        mAppConsentDao.setConsentForApp(app.getPackageName(), false);
+        synchronized (ConsentManager.class) {
+            try {
+                switch (mConsentSourceOfTruth) {
+                    case Flags.PPAPI_ONLY:
+                        mAppConsentDao.setConsentForApp(app.getPackageName(), false);
+                        break;
+                    case Flags.SYSTEM_SERVER_ONLY:
+                        mAdServicesManager.setConsentForApp(
+                                app.getPackageName(),
+                                mAppConsentDao.getUidForInstalledPackageName(app.getPackageName()),
+                                false);
+                        break;
+                    case Flags.PPAPI_AND_SYSTEM_SERVER:
+                        mAppConsentDao.setConsentForApp(app.getPackageName(), false);
+                        mAdServicesManager.setConsentForApp(
+                                app.getPackageName(),
+                                mAppConsentDao.getUidForInstalledPackageName(app.getPackageName()),
+                                false);
+                        break;
+                    default:
+                        LogUtil.e(ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                }
+            } catch (RuntimeException e) {
+                LogUtil.e(e, "Error restore consent for app %s", app.getPackageName());
+            }
+        }
     }
 
     /**
@@ -525,7 +623,26 @@ public class ConsentManager {
      * @throws IOException if the operation fails
      */
     public void resetAppsAndBlockedApps() throws IOException {
-        mAppConsentDao.clearAllConsentData();
+        synchronized (ConsentManager.class) {
+            try {
+                switch (mConsentSourceOfTruth) {
+                    case Flags.PPAPI_ONLY:
+                        mAppConsentDao.clearAllConsentData();
+                        break;
+                    case Flags.SYSTEM_SERVER_ONLY:
+                        mAdServicesManager.clearAllAppConsentData();
+                        break;
+                    case Flags.PPAPI_AND_SYSTEM_SERVER:
+                        mAppConsentDao.clearAllConsentData();
+                        mAdServicesManager.clearAllAppConsentData();
+                        break;
+                    default:
+                        LogUtil.e(ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                }
+            } catch (RuntimeException e) {
+                LogUtil.e(e, "Error reset apps and blocked apps.");
+            }
+        }
         asyncExecute(mCustomAudienceDao::deleteAllCustomAudienceData);
     }
 
@@ -537,7 +654,26 @@ public class ConsentManager {
      * @throws IOException if the operation fails
      */
     public void resetApps() throws IOException {
-        mAppConsentDao.clearKnownAppsWithConsent();
+        synchronized (ConsentManager.class) {
+            try {
+                switch (mConsentSourceOfTruth) {
+                    case Flags.PPAPI_ONLY:
+                        mAppConsentDao.clearKnownAppsWithConsent();
+                        break;
+                    case Flags.SYSTEM_SERVER_ONLY:
+                        mAdServicesManager.clearKnownAppsWithConsent();
+                        break;
+                    case Flags.PPAPI_AND_SYSTEM_SERVER:
+                        mAppConsentDao.clearKnownAppsWithConsent();
+                        mAdServicesManager.clearKnownAppsWithConsent();
+                        break;
+                    default:
+                        LogUtil.e(ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                }
+            } catch (RuntimeException e) {
+                LogUtil.e(e, "Error reset apps.");
+            }
+        }
         asyncExecute(mCustomAudienceDao::deleteAllCustomAudienceData);
     }
 
@@ -569,11 +705,24 @@ public class ConsentManager {
             return true;
         }
 
-        try {
-            return mAppConsentDao.isConsentRevokedForApp(packageName);
-        } catch (IOException exception) {
-            LogUtil.e(exception, "FLEDGE consent check failed due to IOException");
-            return true;
+        synchronized (ConsentManager.class) {
+            switch (mConsentSourceOfTruth) {
+                case Flags.PPAPI_ONLY:
+                    try {
+                        return mAppConsentDao.isConsentRevokedForApp(packageName);
+                    } catch (IOException exception) {
+                        LogUtil.e(exception, "FLEDGE consent check failed due to IOException");
+                    }
+                    return true;
+                case Flags.SYSTEM_SERVER_ONLY:
+                    // Intentional fallthrough
+                case Flags.PPAPI_AND_SYSTEM_SERVER:
+                    return mAdServicesManager.isConsentRevokedForApp(
+                            packageName, mAppConsentDao.getUidForInstalledPackageName(packageName));
+                default:
+                    LogUtil.e(ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                    return true;
+            }
         }
     }
 
@@ -607,11 +756,86 @@ public class ConsentManager {
             return true;
         }
 
-        try {
-            return mAppConsentDao.setConsentForAppIfNew(packageName, false);
-        } catch (IOException exception) {
-            LogUtil.e(exception, "FLEDGE consent check failed due to IOException");
-            return true;
+        synchronized (ConsentManager.class) {
+            switch (mConsentSourceOfTruth) {
+                case Flags.PPAPI_ONLY:
+                    try {
+                        return mAppConsentDao.setConsentForAppIfNew(packageName, false);
+                    } catch (IOException exception) {
+                        LogUtil.e(exception, "FLEDGE consent check failed due to IOException");
+                        return true;
+                    }
+                case Flags.SYSTEM_SERVER_ONLY:
+                    return mAdServicesManager.setConsentForAppIfNew(
+                            packageName,
+                            mAppConsentDao.getUidForInstalledPackageName(packageName),
+                            false);
+                case Flags.PPAPI_AND_SYSTEM_SERVER:
+                    try {
+                        mAppConsentDao.setConsentForAppIfNew(packageName, false);
+                    } catch (IOException exception) {
+                        LogUtil.e(exception, "FLEDGE consent check failed due to IOException");
+                        return true;
+                    }
+                    return mAdServicesManager.setConsentForAppIfNew(
+                            packageName,
+                            mAppConsentDao.getUidForInstalledPackageName(packageName),
+                            false);
+                default:
+                    LogUtil.e(ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                    return true;
+            }
+        }
+    }
+
+    /**
+     * Clear consent data after an app was uninstalled.
+     *
+     * @param packageName the package name that had been uninstalled.
+     * @param packageUid the package uid that had been uninstalled.
+     */
+    public void clearConsentForUninstalledApp(String packageName, int packageUid) {
+        synchronized (ConsentManager.class) {
+            try {
+                switch (mConsentSourceOfTruth) {
+                    case Flags.PPAPI_ONLY:
+                        try {
+                            mAppConsentDao.clearConsentForUninstalledApp(packageName, packageUid);
+                        } catch (IOException exception) {
+                            LogUtil.e(
+                                    exception,
+                                    "Clear consent for uninstalled app %s and uid %d failed due to"
+                                            + " IOException",
+                                    packageName,
+                                    packageUid);
+                        }
+                        break;
+                    case Flags.SYSTEM_SERVER_ONLY:
+                        mAdServicesManager.clearConsentForUninstalledApp(packageName, packageUid);
+                        break;
+                    case Flags.PPAPI_AND_SYSTEM_SERVER:
+                        try {
+                            mAppConsentDao.clearConsentForUninstalledApp(packageName, packageUid);
+                        } catch (IOException exception) {
+                            LogUtil.e(
+                                    exception,
+                                    "Clear consent for uninstalled app %s and uid %d failed due to"
+                                            + " IOException",
+                                    packageName,
+                                    packageUid);
+                        }
+                        mAdServicesManager.clearConsentForUninstalledApp(packageName, packageUid);
+                        break;
+                    default:
+                        LogUtil.e(ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                }
+            } catch (RuntimeException e) {
+                LogUtil.e(
+                        e,
+                        "Error clear consent for uninstalled app %s and uid %d.",
+                        packageName,
+                        packageUid);
+            }
         }
     }
 

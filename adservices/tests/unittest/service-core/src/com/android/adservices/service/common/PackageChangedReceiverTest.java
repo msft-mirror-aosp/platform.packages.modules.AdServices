@@ -40,11 +40,11 @@ import android.net.Uri;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
-import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.topics.AppUpdateManager;
 import com.android.adservices.service.topics.BlockedTopicsManager;
@@ -81,7 +81,7 @@ public class PackageChangedReceiverTest {
     @Mock AppUpdateManager mMockAppUpdateManager;
     @Mock CustomAudienceDatabase mCustomAudienceDatabaseMock;
     @Mock CustomAudienceDao mCustomAudienceDaoMock;
-    @Mock AppConsentDao mAppConsentDaoMock;
+    @Mock ConsentManager mConsentManager;
     @Mock Flags mMockFlags;
 
     private TopicsWorker mSpyTopicsWorker;
@@ -408,13 +408,13 @@ public class PackageChangedReceiverTest {
         // Lenient added to allow easy disabling of other APIs' methods
         MockitoSession session =
                 ExtendedMockito.mockitoSession()
-                        .mockStatic(AppConsentDao.class)
+                        .mockStatic(ConsentManager.class)
                         .strictness(Strictness.LENIENT)
                         .initMocks(this)
                         .startMocking();
         try {
             // Mock static method AppConsentDao.getInstance() executed on a separate thread
-            doReturn(mAppConsentDaoMock).when(() -> AppConsentDao.getInstance(any()));
+            doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any()));
 
             CountDownLatch completionLatch = new CountDownLatch(1);
             doAnswer(
@@ -422,7 +422,7 @@ public class PackageChangedReceiverTest {
                                 completionLatch.countDown();
                                 return null;
                             })
-                    .when(mAppConsentDaoMock)
+                    .when(mConsentManager)
                     .clearConsentForUninstalledApp(any(), anyInt());
 
             // Initialize package receiver meant for Consent
@@ -433,7 +433,7 @@ public class PackageChangedReceiverTest {
 
             // Verify method inside background thread executes
             assertThat(completionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
-            verify(mAppConsentDaoMock).clearConsentForUninstalledApp(any(), anyInt());
+            verify(mConsentManager).clearConsentForUninstalledApp(any(), anyInt());
         } finally {
             session.finishMocking();
         }
@@ -471,13 +471,13 @@ public class PackageChangedReceiverTest {
         // Lenient added to allow easy disabling of other APIs' methods
         MockitoSession session =
                 ExtendedMockito.mockitoSession()
-                        .mockStatic(AppConsentDao.class)
+                        .mockStatic(ConsentManager.class)
                         .strictness(Strictness.LENIENT)
                         .initMocks(this)
                         .startMocking();
         try {
             // Mock static method AppConsentDao.getInstance() executed on a separate thread
-            doReturn(mAppConsentDaoMock).when(() -> AppConsentDao.getInstance(any()));
+            doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any()));
 
             CountDownLatch completionLatch = new CountDownLatch(1);
             doAnswer(
@@ -485,8 +485,8 @@ public class PackageChangedReceiverTest {
                                 completionLatch.countDown();
                                 return null;
                             })
-                    .when(mAppConsentDaoMock)
-                    .clearAllConsentData();
+                    .when(mConsentManager)
+                    .resetAppsAndBlockedApps();
 
             // Initialize package receiver meant for Consent
             PackageChangedReceiver spyReceiver = createSpyPackageReceiverForConsent();
@@ -497,7 +497,7 @@ public class PackageChangedReceiverTest {
 
             // Verify method inside background thread executes
             assertThat(completionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
-            verify(mAppConsentDaoMock).clearAllConsentData();
+            verify(mConsentManager).resetAppsAndBlockedApps();
         } finally {
             session.finishMocking();
         }
