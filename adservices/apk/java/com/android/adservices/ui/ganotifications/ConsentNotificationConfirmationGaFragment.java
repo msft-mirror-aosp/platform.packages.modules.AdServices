@@ -28,6 +28,8 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.consent.AdServicesApiType;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
 
 /**
@@ -35,11 +37,14 @@ import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActiv
  * Beta.
  */
 public class ConsentNotificationConfirmationGaFragment extends Fragment {
-    public static final String IS_CONSENT_GIVEN_ARGUMENT_KEY = "isConsentGiven";
 
     @Override
     public View onCreateView(
             @NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        ConsentManager.getInstance(requireContext())
+                .enable(requireContext(), AdServicesApiType.FLEDGE);
+        ConsentManager.getInstance(requireContext())
+                .enable(requireContext(), AdServicesApiType.MEASUREMENTS);
         return inflater.inflate(
                 R.layout.consent_notification_fledge_measurement_fragment_eu, container, false);
     }
