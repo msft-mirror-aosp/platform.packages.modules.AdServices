@@ -20,6 +20,7 @@ import android.annotation.NonNull;
 import android.annotation.SdkConstant;
 import android.annotation.SystemApi;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.os.IBinder;
 
@@ -81,6 +82,19 @@ public interface SdkSandboxManagerLocal {
      */
     void enforceAllowedToHostSandboxedActivity(
             @NonNull Intent intent, int clientAppUid, @NonNull String clientAppPackageName);
+
+    /**
+     * Whether the sdk sandbox process is allowed to register a broadcast receiver with a given
+     * intentFilter.
+     *
+     * @param intentFilter the intentFilter to check.
+     * @param flags flags that the ActivityManagerService.registerReceiver method was called with.
+     * @param onlyProtectedBroadcasts true if all actions in {@code intentFilter} are protected
+     *     broadcasts
+     * @return true if sandbox is allowed to register a broadcastReceiver, otherwise false.
+     */
+    boolean canRegisterBroadcastReceiver(
+            @NonNull IntentFilter intentFilter, int flags, boolean onlyProtectedBroadcasts);
 
     /**
      * Returns name of the sdk sandbox process that corresponds to the given client app.
