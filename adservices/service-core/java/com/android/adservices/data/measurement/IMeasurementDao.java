@@ -150,6 +150,8 @@ public interface IMeasurementDao {
 
     /**
      * Add an entry to the Source datastore.
+     *
+     * @param source Source data to be inserted.
      */
     void insertSource(Source source) throws DatastoreException;
 
@@ -174,7 +176,14 @@ public interface IMeasurementDao {
      *
      * @param source the {@link Source} object.
      */
-    void updateSourceDedupKeys(@NonNull Source source) throws DatastoreException;
+    void updateSourceEventReportDedupKeys(@NonNull Source source) throws DatastoreException;
+
+    /**
+     * Update the set of Aggregate dedup keys contained in the provided {@link Source}
+     *
+     * @param source the {@link Source} object.
+     */
+    void updateSourceAggregateReportDedupKeys(@NonNull Source source) throws DatastoreException;
 
     /**
      * Updates the value of aggregate contributions for the corresponding {@link Source}

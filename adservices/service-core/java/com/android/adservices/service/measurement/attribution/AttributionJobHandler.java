@@ -296,7 +296,7 @@ class AttributionJobHandler {
         EventTrigger eventTrigger = matchingEventTrigger.get();
         // Check if deduplication key clashes with existing reports.
         if (eventTrigger.getDedupKey() != null
-                && source.getDedupKeys().contains(eventTrigger.getDedupKey())) {
+                && source.getEventReportDedupKeys().contains(eventTrigger.getDedupKey())) {
             return false;
         }
 
@@ -343,7 +343,7 @@ class AttributionJobHandler {
         }
 
         if (lowestPriorityEventReport.getTriggerDedupKey() != null) {
-            source.getDedupKeys().remove(lowestPriorityEventReport.getTriggerDedupKey());
+            source.getEventReportDedupKeys().remove(lowestPriorityEventReport.getTriggerDedupKey());
         }
         measurementDao.deleteEventReport(lowestPriorityEventReport);
         return true;
@@ -356,9 +356,9 @@ class AttributionJobHandler {
             IMeasurementDao measurementDao)
             throws DatastoreException {
         if (eventTrigger.getDedupKey() != null) {
-            source.getDedupKeys().add(eventTrigger.getDedupKey());
+            source.getEventReportDedupKeys().add(eventTrigger.getDedupKey());
         }
-        measurementDao.updateSourceDedupKeys(source);
+        measurementDao.updateSourceEventReportDedupKeys(source);
 
         measurementDao.insertEventReport(eventReport);
     }

@@ -3539,13 +3539,13 @@ public class MeasurementDaoTest {
         long expiryTime = eventTime + TimeUnit.SECONDS.toMillis(
                 MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
         return getSourcesWithDifferentEnrollments(
-            numSources,
-            appDestination,
-            webDestination,
-            eventTime,
-            expiryTime,
-            publisher,
-            sourceStatus);
+                numSources,
+                appDestination,
+                webDestination,
+                eventTime,
+                expiryTime,
+                publisher,
+                sourceStatus);
     }
 
     private static List<Source> getSourcesWithDifferentEnrollments(
@@ -4169,11 +4169,13 @@ public class MeasurementDaoTest {
                             actualSources =
                                     dao.fetchMatchingSources(
                                             Uri.parse("android-app://com.registrant1"),
-                                                    Instant.ofEpochMilli(0),
+                                            Instant.ofEpochMilli(0),
                                             Instant.ofEpochMilli(50000),
-                                                    List.of(WebUtil.validUri(
+                                            List.of(
+                                                    WebUtil.validUri(
                                                             "https://subdomain1.site1.test")),
-                                            List.of(), DeletionRequest.MATCH_BEHAVIOR_DELETE);
+                                            List.of(),
+                                            DeletionRequest.MATCH_BEHAVIOR_DELETE);
                             assertEquals(2, actualSources.size());
 
                             // Only 2 matches registrant1 and "https://subdomain1.site1.test"
@@ -4182,11 +4184,13 @@ public class MeasurementDaoTest {
                             actualSources =
                                     dao.fetchMatchingSources(
                                             Uri.parse("android-app://com.registrant1"),
-                                                    Instant.ofEpochMilli(8000),
+                                            Instant.ofEpochMilli(8000),
                                             Instant.ofEpochMilli(50000),
-                                                    List.of(WebUtil.validUri(
+                                            List.of(
+                                                    WebUtil.validUri(
                                                             "https://subdomain1.site1.test")),
-                                            List.of(), DeletionRequest.MATCH_BEHAVIOR_DELETE);
+                                            List.of(),
+                                            DeletionRequest.MATCH_BEHAVIOR_DELETE);
                             assertEquals(1, actualSources.size());
 
                             // 1,2 & 3 matches registrant1 and "https://site1.test" publisher origin
@@ -4206,8 +4210,9 @@ public class MeasurementDaoTest {
                                             Uri.parse("android-app://com.registrant1"),
                                             Instant.ofEpochMilli(10000),
                                             Instant.ofEpochMilli(20000),
-                                            List.of(WebUtil.validUri(
-                                                    "https://subdomain2.site1.test")),
+                                            List.of(
+                                                    WebUtil.validUri(
+                                                            "https://subdomain2.site1.test")),
                                             List.of(WebUtil.validUri("https://site2.test")),
                                             DeletionRequest.MATCH_BEHAVIOR_DELETE);
                             assertEquals(2, actualSources.size());
@@ -4230,11 +4235,13 @@ public class MeasurementDaoTest {
                             actualSources =
                                     dao.fetchMatchingSources(
                                             Uri.parse("android-app://com.registrant1"),
-                                                    Instant.ofEpochMilli(0),
+                                            Instant.ofEpochMilli(0),
                                             Instant.ofEpochMilli(50000),
-                                                    List.of(WebUtil.validUri(
+                                            List.of(
+                                                    WebUtil.validUri(
                                                             "https://subdomain1.site1.test")),
-                                            List.of(), DeletionRequest.MATCH_BEHAVIOR_PRESERVE);
+                                            List.of(),
+                                            DeletionRequest.MATCH_BEHAVIOR_PRESERVE);
                             assertEquals(2, actualSources.size());
 
                             // 3 & 4 match registrant1, in range and don't match
@@ -4242,11 +4249,13 @@ public class MeasurementDaoTest {
                             actualSources =
                                     dao.fetchMatchingSources(
                                             Uri.parse("android-app://com.registrant1"),
-                                                    Instant.ofEpochMilli(8000),
+                                            Instant.ofEpochMilli(8000),
                                             Instant.ofEpochMilli(50000),
-                                                    List.of(WebUtil.validUri(
+                                            List.of(
+                                                    WebUtil.validUri(
                                                             "https://subdomain1.site1.test")),
-                                            List.of(), DeletionRequest.MATCH_BEHAVIOR_PRESERVE);
+                                            List.of(),
+                                            DeletionRequest.MATCH_BEHAVIOR_PRESERVE);
                             assertEquals(2, actualSources.size());
 
                             // Only 4 matches registrant1, in range and don't match
@@ -4268,8 +4277,9 @@ public class MeasurementDaoTest {
                                             Uri.parse("android-app://com.registrant1"),
                                             Instant.ofEpochMilli(10000),
                                             Instant.ofEpochMilli(20000),
-                                            List.of(WebUtil.validUri(
-                                                    "https://subdomain2.site1.test")),
+                                            List.of(
+                                                    WebUtil.validUri(
+                                                            "https://subdomain2.site1.test")),
                                             List.of(WebUtil.validUri("https://site2.test")),
                                             DeletionRequest.MATCH_BEHAVIOR_PRESERVE);
                             assertEquals(1, actualSources.size());
@@ -4357,11 +4367,13 @@ public class MeasurementDaoTest {
                             actualSources =
                                     dao.fetchMatchingTriggers(
                                             Uri.parse("android-app://com.registrant1"),
-                                                    Instant.ofEpochMilli(0),
+                                            Instant.ofEpochMilli(0),
                                             Instant.ofEpochMilli(50000),
-                                                    List.of(WebUtil.validUri(
+                                            List.of(
+                                                    WebUtil.validUri(
                                                             "https://subdomain1.site1.test")),
-                                            List.of(), DeletionRequest.MATCH_BEHAVIOR_DELETE);
+                                            List.of(),
+                                            DeletionRequest.MATCH_BEHAVIOR_DELETE);
                             assertEquals(2, actualSources.size());
 
                             // Only 2 matches registrant1 and "https://subdomain1.site1.test"
@@ -4370,11 +4382,13 @@ public class MeasurementDaoTest {
                             actualSources =
                                     dao.fetchMatchingTriggers(
                                             Uri.parse("android-app://com.registrant1"),
-                                                    Instant.ofEpochMilli(8000),
+                                            Instant.ofEpochMilli(8000),
                                             Instant.ofEpochMilli(50000),
-                                                    List.of(WebUtil.validUri(
+                                            List.of(
+                                                    WebUtil.validUri(
                                                             "https://subdomain1.site1.test")),
-                                            List.of(), DeletionRequest.MATCH_BEHAVIOR_DELETE);
+                                            List.of(),
+                                            DeletionRequest.MATCH_BEHAVIOR_DELETE);
                             assertEquals(1, actualSources.size());
 
                             // 1,2 & 3 matches registrant1 and "https://site1.test" publisher origin
@@ -4394,8 +4408,9 @@ public class MeasurementDaoTest {
                                             Uri.parse("android-app://com.registrant1"),
                                             Instant.ofEpochMilli(10000),
                                             Instant.ofEpochMilli(20000),
-                                            List.of(WebUtil.validUri(
-                                                    "https://subdomain2.site1.test")),
+                                            List.of(
+                                                    WebUtil.validUri(
+                                                            "https://subdomain2.site1.test")),
                                             List.of(WebUtil.validUri("https://site2.test")),
                                             DeletionRequest.MATCH_BEHAVIOR_DELETE);
                             assertEquals(2, actualSources.size());
@@ -4418,11 +4433,13 @@ public class MeasurementDaoTest {
                             actualSources =
                                     dao.fetchMatchingTriggers(
                                             Uri.parse("android-app://com.registrant1"),
-                                                    Instant.ofEpochMilli(0),
+                                            Instant.ofEpochMilli(0),
                                             Instant.ofEpochMilli(50000),
-                                                    List.of(WebUtil.validUri(
+                                            List.of(
+                                                    WebUtil.validUri(
                                                             "https://subdomain1.site1.test")),
-                                            List.of(), DeletionRequest.MATCH_BEHAVIOR_PRESERVE);
+                                            List.of(),
+                                            DeletionRequest.MATCH_BEHAVIOR_PRESERVE);
                             assertEquals(2, actualSources.size());
 
                             // 3 & 4 match registrant1, in range and don't match
@@ -4430,11 +4447,13 @@ public class MeasurementDaoTest {
                             actualSources =
                                     dao.fetchMatchingTriggers(
                                             Uri.parse("android-app://com.registrant1"),
-                                                    Instant.ofEpochMilli(8000),
+                                            Instant.ofEpochMilli(8000),
                                             Instant.ofEpochMilli(50000),
-                                                    List.of(WebUtil.validUri(
+                                            List.of(
+                                                    WebUtil.validUri(
                                                             "https://subdomain1.site1.test")),
-                                            List.of(), DeletionRequest.MATCH_BEHAVIOR_PRESERVE);
+                                            List.of(),
+                                            DeletionRequest.MATCH_BEHAVIOR_PRESERVE);
                             assertEquals(2, actualSources.size());
 
                             // Only 4 matches registrant1, in range and don't match
@@ -4456,12 +4475,63 @@ public class MeasurementDaoTest {
                                             Uri.parse("android-app://com.registrant1"),
                                             Instant.ofEpochMilli(10000),
                                             Instant.ofEpochMilli(20000),
-                                            List.of(WebUtil.validUri(
-                                                    "https://subdomain2.site1.test")),
+                                            List.of(
+                                                    WebUtil.validUri(
+                                                            "https://subdomain2.site1.test")),
                                             List.of(WebUtil.validUri("https://site2.test")),
                                             DeletionRequest.MATCH_BEHAVIOR_PRESERVE);
                             assertEquals(1, actualSources.size());
                         });
+    }
+
+    @Test
+    public void testUpdateSourceAggregateReportDedupKeys_updatesKeysInList() {
+        Source validSource = SourceFixture.getValidSource();
+        assertTrue(validSource.getAggregateReportDedupKeys().equals(new ArrayList<UnsignedLong>()));
+        Optional<String> optionalSourceId;
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction((dao) -> dao.insertSource(validSource));
+
+        try (Cursor cursor =
+                DbHelper.getInstance(sContext)
+                        .getReadableDatabase()
+                        .query(
+                                MeasurementTables.SourceContract.TABLE,
+                                /*column=*/ null,
+                                /*selection=*/ null,
+                                /*selectionArgs=*/ null,
+                                /*groupBy=*/ null,
+                                /*having=*/ null,
+                                /*orderBy=*/ null,
+                                /*limit=*/ null)) {
+            assertTrue(cursor.moveToNext());
+            Source source = SqliteObjectMapper.constructSourceFromCursor(cursor);
+            optionalSourceId = Optional.of(source.getId());
+            source.getAggregateReportDedupKeys().add(new UnsignedLong(10L));
+            DatastoreManagerFactory.getDatastoreManager(sContext)
+                    .runInTransaction((dao) -> dao.updateSourceAggregateReportDedupKeys(source));
+        }
+
+        assertTrue(optionalSourceId.isPresent());
+
+        String sourceId = optionalSourceId.get();
+        try (Cursor cursor =
+                DbHelper.getInstance(sContext)
+                        .getReadableDatabase()
+                        .query(
+                                MeasurementTables.SourceContract.TABLE,
+                                null,
+                                SourceContract.ID + " = ? ",
+                                new String[] {sourceId},
+                                /*groupBy=*/ null,
+                                /*having=*/ null,
+                                /*orderBy=*/ null,
+                                /*limit=*/ null)) {
+            assertTrue(cursor.moveToNext());
+            Source source = SqliteObjectMapper.constructSourceFromCursor(cursor);
+            assertTrue(source.getAggregateReportDedupKeys().size() == 1);
+            assertTrue(source.getAggregateReportDedupKeys().get(0).getValue() == 10L);
+        }
     }
 
     private AggregateReport createAggregateReportForSourceAndTrigger(
