@@ -67,6 +67,10 @@ public class AdServicesSettingsMainFragment extends Fragment {
         MainActionDelegate actionDelegate =
                 ((AdServicesSettingsMainActivity) requireActivity()).getActionDelegate();
         actionDelegate.initMainFragment(this);
+        // configure the subtitles if GA UX is on
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            actionDelegate.configureSubtitles(this);
+        }
     }
 
     private void setupViewModel() {

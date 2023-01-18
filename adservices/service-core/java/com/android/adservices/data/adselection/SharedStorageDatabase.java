@@ -25,7 +25,6 @@ import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 
 import com.android.adservices.data.common.FledgeRoomConverters;
-import com.android.internal.annotations.GuardedBy;
 
 import java.util.Objects;
 
@@ -42,14 +41,18 @@ public abstract class SharedStorageDatabase extends RoomDatabase {
     public static final int DATABASE_VERSION = 1;
     public static final String DATABASE_NAME = "sharedstorage.db";
 
-    @GuardedBy("SINGLETON_LOCK")
-    private static SharedStorageDatabase sSingleton = null;
+    private static volatile SharedStorageDatabase sSingleton = null;
 
     /** Returns or creates the instance of SharedStorageDatabase given a context. */
     public static SharedStorageDatabase getInstance(@NonNull Context context) {
-        Objects.requireNonNull(context);
+        Objects.requireNonNull(context, "Context must be provided.");
+        // Initialization pattern recommended on page 334 of "Effective Java" 3rd edition
+        SharedStorageDatabase singleReadResult = sSingleton;
+        if (singleReadResult != null) {
+            return singleReadResult;
+        }
         synchronized (SINGLETON_LOCK) {
-            if (Objects.isNull(sSingleton)) {
+            if (sSingleton == null) {
                 sSingleton =
                         Room.databaseBuilder(context, SharedStorageDatabase.class, DATABASE_NAME)
                                 .fallbackToDestructiveMigration()

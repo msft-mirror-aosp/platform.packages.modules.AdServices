@@ -25,6 +25,7 @@ import android.annotation.NonNull;
 import android.net.Uri;
 import android.view.InputEvent;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
@@ -62,6 +63,7 @@ public class EnqueueAsyncRegistration {
                             Enrollment.maybeGetEnrollmentId(
                                     registrationRequest.getRegistrationUri(), enrollmentDao);
                     if (enrollmentData == null || enrollmentData.isEmpty()) {
+                        LogUtil.d("no enrollment data");
                         return;
                     }
                     String enrollmentId = enrollmentData.get();
@@ -114,6 +116,7 @@ public class EnqueueAsyncRegistration {
                                 Enrollment.maybeGetEnrollmentId(
                                         webSourceParams.getRegistrationUri(), enrollmentDao);
                         if (enrollmentData == null || enrollmentData.isEmpty()) {
+                            LogUtil.d("no enrollment data");
                             return;
                         }
                         String enrollmentId = enrollmentData.get();
@@ -161,6 +164,7 @@ public class EnqueueAsyncRegistration {
                                 Enrollment.maybeGetEnrollmentId(
                                         webTriggerParams.getRegistrationUri(), enrollmentDao);
                         if (enrollmentData == null || enrollmentData.isEmpty()) {
+                            LogUtil.d("no enrollment data");
                             return;
                         }
                         String enrollmentId = enrollmentData.get();
