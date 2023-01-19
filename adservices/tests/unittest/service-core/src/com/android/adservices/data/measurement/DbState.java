@@ -264,6 +264,8 @@ public class DbState {
                 .setEnrollmentId(sJSON.getString("enrollmentId"))
                 .setEventTime(sJSON.getLong("eventTime"))
                 .setExpiryTime(sJSON.getLong("expiryTime"))
+                .setEventReportWindow(sJSON.getLong("eventReportWindow"))
+                .setAggregatableReportWindow(sJSON.optLong("aggregatableReportWindow"))
                 .setPriority(sJSON.getLong("priority"))
                 .setStatus(sJSON.getInt("status"))
                 .setRegistrant(Uri.parse(sJSON.getString("registrant")))
