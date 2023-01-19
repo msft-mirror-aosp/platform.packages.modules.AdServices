@@ -18,14 +18,9 @@ package com.android.tests.sandbox.appsetid;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
-import android.annotation.NonNull;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
-import android.content.pm.ServiceInfo;
 import android.os.Bundle;
 
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -39,7 +34,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.time.Duration;
-import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
@@ -51,8 +45,6 @@ import java.util.concurrent.TimeoutException;
 public class SandboxedAppSetIdManagerTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final String SDK_NAME = "com.android.tests.providers.appsetidsdk";
-    // Used to get the package name. Copied over from com.android.adservices.AdServicesCommon
-    private static final String APPSETID_SERVICE_NAME = "android.adservices.APPSETID_SERVICE";
 
     private static final Context sContext =
             InstrumentationRegistry.getInstrumentation().getContext();
@@ -126,34 +118,5 @@ public class SandboxedAppSetIdManagerTest {
         String overrideString = shouldOverride ? "false" : "null";
         ShellUtils.runShellCommand(
                 "setprop debug.adservices.appsetid_kill_switch " + overrideString);
-    }
-
-    // Used to get the package name. Copied over from com.android.adservices.AndroidServiceBinder
-    @NonNull
-    private static String getAdServicesPackageName() {
-        final Intent intent = new Intent(APPSETID_SERVICE_NAME);
-        final List<ResolveInfo> resolveInfos =
-                sContext.getPackageManager()
-                        .queryIntentServices(intent, PackageManager.MATCH_SYSTEM_ONLY);
-
-        if (resolveInfos == null || resolveInfos.isEmpty()) {
-            String errorMsg =
-                    "Failed to find resolveInfo for adServices service. Intent action: "
-                            + APPSETID_SERVICE_NAME;
-            throw new IllegalStateException(errorMsg);
-        }
-
-        if (resolveInfos.size() > 1) {
-            String errorMsg = "Found multiple services for the same intent action. ";
-            throw new IllegalStateException(errorMsg);
-        }
-
-        final ServiceInfo serviceInfo = resolveInfos.get(0).serviceInfo;
-        if (serviceInfo == null) {
-            String errorMsg = "Failed to find serviceInfo for adServices service. ";
-            throw new IllegalStateException(errorMsg);
-        }
-
-        return serviceInfo.packageName;
     }
 }
