@@ -23,7 +23,6 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 
 import android.annotation.NonNull;
 
-import com.android.adservices.LogUtil;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.EpochComputationClassifierStats;
@@ -31,6 +30,7 @@ import com.android.adservices.service.topics.CacheManager;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.primitives.Ints;
 
 import java.util.HashMap;
 import java.util.List;
@@ -186,15 +186,7 @@ public class PrecomputedClassifier implements Classifier {
         mLabelsVersion =
                 Long.parseLong(
                         classifierAssetsMetadata.get(LABELS_ASSET_FIELD).get(ASSET_VERSION_FIELD));
-        try {
-            mBuildId =
-                    Integer.parseInt(
-                            classifierAssetsMetadata.get(VERSION_INFO_FIELD).get(BUILD_ID_FIELD));
-        } catch (NumberFormatException e) {
-            // No build id is available.
-            LogUtil.d(e, "Build id is not available");
-            mBuildId = -1;
-        }
+        mBuildId = Ints.saturatedCast(mModelManager.getBuildId());
         mLoaded = true;
     }
 
