@@ -97,7 +97,7 @@ class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
                                     intent,
                                     serviceConnection,
                                     callingInfo.getUid(),
-                                    callingInfo.getApplicationThreadBinder(),
+                                    callingInfo.getAppProcessToken(),
                                     callingPackageName,
                                     sandboxProcessName,
                                     Context.BIND_AUTO_CREATE);
