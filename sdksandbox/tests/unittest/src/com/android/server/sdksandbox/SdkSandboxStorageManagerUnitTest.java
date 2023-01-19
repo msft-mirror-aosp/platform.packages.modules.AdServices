@@ -23,6 +23,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ProviderInfo;
 import android.os.FileUtils;
 import android.os.IBinder;
 import android.os.UserHandle;
@@ -563,6 +564,11 @@ public class SdkSandboxStorageManagerUnitTest {
 
         @Override
         public void enforceAllowedToStartOrBindService(@NonNull Intent intent) {}
+
+        @Override
+        public boolean canAccessContentProviderFromSdkSandbox(@NonNull ProviderInfo providerInfo) {
+            return true;
+        }
 
         @Override
         public void enforceAllowedToHostSandboxedActivity(
