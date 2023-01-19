@@ -38,6 +38,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.UIStats;
@@ -46,7 +47,7 @@ import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActiv
 /** Fragment for the topics view of the AdServices Settings App. */
 public class ConsentNotificationGaFragment extends Fragment {
     public static final String IS_EU_DEVICE_ARGUMENT_KEY = "isEUDevice";
-    public static final String IS_INFO_VIEW_EXPANDED_KEY = "is_info_view_expanded";
+    public static final String IS_TOPICS_INFO_VIEW_EXPANDED_KEY = "is_topics_info_view_expanded";
     private boolean mIsEUDevice;
     private boolean mIsInfoViewExpanded = false;
     private @Nullable ScrollToBottomController mScrollToBottomController;
@@ -69,7 +70,7 @@ public class ConsentNotificationGaFragment extends Fragment {
         if (mScrollToBottomController != null) {
             mScrollToBottomController.saveInstanceState(savedInstanceState);
         }
-        savedInstanceState.putBoolean(IS_INFO_VIEW_EXPANDED_KEY, mIsInfoViewExpanded);
+        savedInstanceState.putBoolean(IS_TOPICS_INFO_VIEW_EXPANDED_KEY, mIsInfoViewExpanded);
     }
 
     private void logLandingPageDisplayed() {
@@ -104,7 +105,8 @@ public class ConsentNotificationGaFragment extends Fragment {
     private void setupListeners(Bundle savedInstanceState) {
         TextView howItWorksExpander = requireActivity().findViewById(R.id.how_it_works_expander);
         if (savedInstanceState != null) {
-            setInfoViewState(savedInstanceState.getBoolean(IS_INFO_VIEW_EXPANDED_KEY, false));
+            setInfoViewState(
+                    savedInstanceState.getBoolean(IS_TOPICS_INFO_VIEW_EXPANDED_KEY, false));
         }
         howItWorksExpander.setOnClickListener(view -> setInfoViewState(!mIsInfoViewExpanded));
 
@@ -112,10 +114,9 @@ public class ConsentNotificationGaFragment extends Fragment {
         leftControlButton.setOnClickListener(
                 view -> {
                     if (mIsEUDevice) {
-                        // TODO(b/254350760): For EU: Topics Off; FLEDGE and Measurement On.
-                        //  For Row: all three on. will need to change ConsentNotificationTrigger
                         // opt-out confirmation activity
-                        ConsentManager.getInstance(requireContext()).disable(requireContext());
+                        ConsentManager.getInstance(requireContext())
+                                .disable(requireContext(), AdServicesApiType.TOPICS);
                         Bundle args = new Bundle();
                         args.putBoolean(IS_CONSENT_GIVEN_ARGUMENT_KEY, false);
                         startConfirmationFragment(args);
@@ -235,7 +236,8 @@ public class ConsentNotificationGaFragment extends Fragment {
             if (mHasScrolledToBottom) {
                 if (mIsEUDevice) {
                     // opt-in confirmation activity
-                    ConsentManager.getInstance(requireContext()).enable(requireContext());
+                    ConsentManager.getInstance(requireContext())
+                            .enable(requireContext(), AdServicesApiType.TOPICS);
                     Bundle args = new Bundle();
                     args.putBoolean(IS_CONSENT_GIVEN_ARGUMENT_KEY, true);
                     startConfirmationFragment(args);

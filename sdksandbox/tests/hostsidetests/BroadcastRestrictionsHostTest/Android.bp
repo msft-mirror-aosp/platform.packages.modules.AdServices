@@ -37,7 +37,6 @@ android_test_helper_app {
     manifest: "app/BroadcastRestrictionsTestAppManifest.xml",
     srcs: [
             "app/src/**/BroadcastRestrictionsTestApp.java",
-            "app/src/**/SdkSandboxEmptyActivity.java",
             ":framework-sdksandbox-sources",
             ":sdksandbox_aidl",
             ":sdksandbox-sources",

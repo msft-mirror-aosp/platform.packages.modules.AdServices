@@ -61,8 +61,9 @@ public class SdkSandboxRestrictionsTestApp {
         mSdkSandboxManager = context.getSystemService(
                 SdkSandboxManager.class);
         assertThat(mSdkSandboxManager).isNotNull();
-        InstrumentationRegistry.getInstrumentation().getUiAutomation().adoptShellPermissionIdentity(
-                Manifest.permission.WRITE_DEVICE_CONFIG);
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
     }
 
     // Run a phase of the test inside the SDK loaded for this app
@@ -83,11 +84,15 @@ public class SdkSandboxRestrictionsTestApp {
      * property.
      */
     @Test
+    // TODO(b/265677182): Remove this test
     public void testSdkSandboxBroadcastRestrictions() throws Exception {
         mRule.getScenario();
 
-        DeviceConfig.setProperty(DeviceConfig.NAMESPACE_SDK_SANDBOX,
-                ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS, "true", false);
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS,
+                "true",
+                false);
         // Allow time for DeviceConfig change to propagate.
         Thread.sleep(1000);
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
@@ -99,8 +104,11 @@ public class SdkSandboxRestrictionsTestApp {
         runPhaseInsideSdk("testSdkSandboxBroadcastRestrictions", surfacePackageCallback1);
         assertThat(surfacePackageCallback1.isRequestSurfacePackageSuccessful()).isFalse();
 
-        DeviceConfig.setProperty(DeviceConfig.NAMESPACE_SDK_SANDBOX,
-                ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS, "false", false);
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS,
+                "false",
+                false);
         // Allow time for DeviceConfig change to propagate.
         Thread.sleep(1000);
         FakeRequestSurfacePackageCallback surfacePackageCallback2 =

@@ -20,6 +20,7 @@ import android.annotation.NonNull;
 import android.annotation.SdkConstant;
 import android.annotation.SystemApi;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.os.IBinder;
 
@@ -81,6 +82,40 @@ public interface SdkSandboxManagerLocal {
      */
     void enforceAllowedToHostSandboxedActivity(
             @NonNull Intent intent, int clientAppUid, @NonNull String clientAppPackageName);
+
+    /**
+     * Whether the sdk sandbox process is allowed to register a broadcast receiver with a given
+     * intentFilter.
+     *
+     * @param intentFilter the intentFilter to check.
+     * @param flags flags that the ActivityManagerService.registerReceiver method was called with.
+     * @param onlyProtectedBroadcasts true if all actions in {@code intentFilter} are protected
+     *     broadcasts
+     * @return true if sandbox is allowed to register a broadcastReceiver, otherwise false.
+     */
+    boolean canRegisterBroadcastReceiver(
+            @NonNull IntentFilter intentFilter, int flags, boolean onlyProtectedBroadcasts);
+
+    /**
+     * At the time of app installation, all the SDKs mentioned in the app's manifest file gets
+     * installed. The SDK may declare to broadcast receivers through the SDK's manifest file. This
+     * API will be used to check whether the sdk is allowed to register a broadcast receiver from
+     * manifest with a given intentFilter. In case the SDK is not allowed, the SDK will not be
+     * installed.
+     *
+     * @param intentFilter the intentFilter to check
+     * @param unexportedBroadcast is the broadcast receiver unexported
+     * @param onlyProtectedBroadcasts whether all broadcasts receivable by the broadcast receiver
+     *     are protected
+     * @param minTargetSdkVersion the minimum sdkVersion that can be loaded in the sandbox. This
+     *     will be used to decide on the set of restrictions.
+     * @return true if SDK allowed to register a broadcastReceiver, otherwise false.
+     */
+    boolean canDeclareBroadcastReceiverFromManifest(
+            @NonNull IntentFilter intentFilter,
+            boolean unexportedBroadcast,
+            boolean onlyProtectedBroadcasts,
+            int minTargetSdkVersion);
 
     /**
      * Returns name of the sdk sandbox process that corresponds to the given client app.

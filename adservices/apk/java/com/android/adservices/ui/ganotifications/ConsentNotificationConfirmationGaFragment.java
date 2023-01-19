@@ -23,11 +23,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.consent.AdServicesApiType;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
 
 /**
@@ -35,21 +38,36 @@ import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActiv
  * Beta.
  */
 public class ConsentNotificationConfirmationGaFragment extends Fragment {
-    public static final String IS_CONSENT_GIVEN_ARGUMENT_KEY = "isConsentGiven";
+    public static final String IS_FlEDGE_MEASUREMENT_INFO_VIEW_EXPANDED_KEY =
+            "is_fledge_measurement_info_view_expanded";
+    private boolean mIsInfoViewExpanded = false;
 
     @Override
     public View onCreateView(
             @NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        ConsentManager.getInstance(requireContext())
+                .enable(requireContext(), AdServicesApiType.FLEDGE);
+        ConsentManager.getInstance(requireContext())
+                .enable(requireContext(), AdServicesApiType.MEASUREMENTS);
         return inflater.inflate(
                 R.layout.consent_notification_fledge_measurement_fragment_eu, container, false);
     }
 
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
-        setupListeners();
+        setupListeners(savedInstanceState);
     }
 
-    private void setupListeners() {
+    private void setupListeners(Bundle savedInstanceState) {
+        TextView howItWorksExpander =
+                requireActivity().findViewById(R.id.how_it_works_fledge_measurement_expander);
+        if (savedInstanceState != null) {
+            setInfoViewState(
+                    savedInstanceState.getBoolean(
+                            IS_FlEDGE_MEASUREMENT_INFO_VIEW_EXPANDED_KEY, false));
+        }
+        howItWorksExpander.setOnClickListener(view -> setInfoViewState(!mIsInfoViewExpanded));
+
         Button leftControlButton =
                 requireActivity().findViewById(R.id.leftControlButtonConfirmation);
         leftControlButton.setOnClickListener(
@@ -69,5 +87,22 @@ public class ConsentNotificationConfirmationGaFragment extends Fragment {
                     // acknowledge and dismiss
                     requireActivity().finish();
                 });
+    }
+
+    private void setInfoViewState(boolean expanded) {
+        View text =
+                requireActivity().findViewById(R.id.how_it_works_fledge_measurement_expanded_text);
+        TextView expander =
+                requireActivity().findViewById(R.id.how_it_works_fledge_measurement_expander);
+        if (expanded) {
+            mIsInfoViewExpanded = true;
+            text.setVisibility(View.VISIBLE);
+            expander.setCompoundDrawablesRelativeWithIntrinsicBounds(
+                    0, 0, R.drawable.ic_minimize, 0);
+        } else {
+            mIsInfoViewExpanded = false;
+            text.setVisibility(View.GONE);
+            expander.setCompoundDrawablesRelativeWithIntrinsicBounds(0, 0, R.drawable.ic_expand, 0);
+        }
     }
 }

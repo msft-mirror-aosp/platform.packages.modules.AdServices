@@ -96,7 +96,6 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-
 /**
  * Implementation of {@link SdkSandboxManager}.
  *
@@ -181,6 +180,15 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             "sdksandbox_customized_sdk_context_enabled";
     private static final boolean DEFAULT_VALUE_DISABLE_SDK_SANDBOX = true;
     private static final boolean DEFAULT_VALUE_CUSTOMIZED_SDK_CONTEXT_ENABLED = false;
+
+    /**
+     * Property to enforce broadcast receiver restrictions for SDK sandbox processes. If the value
+     * of this property is {@code true}, the restrictions will be enforced.
+     */
+    private static final String PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS =
+            "enforce_broadcast_receiver_restrictions";
+
+    private static final boolean DEFAULT_VALUE_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS = false;
 
     static class Injector {
         private final Context mContext;
@@ -1896,6 +1904,56 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                                 + getSandboxedActivitySdkNameKey()
                                 + "with value is the name of SDK registered "
                                 + "SandboxedActivityHandler");
+            }
+        }
+
+        @Override
+        // TODO(b/265647873): Add enforcement around onlyProtectedBroadcasts parameter
+        public boolean canRegisterBroadcastReceiver(
+                @NonNull IntentFilter intentFilter, int flags, boolean onlyProtectedBroadcasts) {
+            if (!Process.isSdkSandboxUid(Binder.getCallingUid())) {
+                return true;
+            }
+
+            /**
+             * By clearing the calling identity, system server identity is set which allows us to
+             * call {@DeviceConfig.getBoolean}
+             */
+            final long token = Binder.clearCallingIdentity();
+
+            try {
+                return (!DeviceConfig.getBoolean(
+                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS,
+                                DEFAULT_VALUE_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS)
+                        || ((flags & Context.RECEIVER_NOT_EXPORTED) != 0));
+            } finally {
+                Binder.restoreCallingIdentity(token);
+            }
+        }
+
+        @Override
+        // TODO(b/265777283): Use minTargetSdkVersion and intentFilter parameter when using an
+        // allowlist
+        public boolean canDeclareBroadcastReceiverFromManifest(
+                @NonNull IntentFilter intentFilter,
+                boolean unexportedBroadcast,
+                boolean onlyProtectedBroadcasts,
+                int minTargetSdkVersion) {
+            /**
+             * By clearing the calling identity, system server identity is set which allows us to
+             * call {@DeviceConfig.getBoolean}
+             */
+            final long token = Binder.clearCallingIdentity();
+            try {
+                return unexportedBroadcast
+                        || onlyProtectedBroadcasts
+                        || (!DeviceConfig.getBoolean(
+                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS,
+                                DEFAULT_VALUE_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS));
+            } finally {
+                Binder.restoreCallingIdentity(token);
             }
         }
     }

@@ -62,13 +62,16 @@ public class ConsentManagerTest {
         // The Data store is in folder with the following format.
         // /data/system/adservices/user_id/consent/
         assertThat(
-                        ConsentManager.getConsentDataStoreDir(
+                        ConsentDatastoreLocationHelper.getConsentDataStoreDir(
                                 /* baseDir */ "/data/system/adservices", /* userIdentifier */ 0))
                 .isEqualTo("/data/system/adservices/0/consent");
         assertThat(
-                        ConsentManager.getConsentDataStoreDir(
+                        ConsentDatastoreLocationHelper.getConsentDataStoreDir(
                                 /* baseDir */ "/data/system/adservices", /* userIdentifier */ 1))
                 .isEqualTo("/data/system/adservices/1/consent");
+        assertThrows(
+                NullPointerException.class,
+                () -> ConsentDatastoreLocationHelper.getConsentDataStoreDir(null, 0));
     }
 
     @Test
