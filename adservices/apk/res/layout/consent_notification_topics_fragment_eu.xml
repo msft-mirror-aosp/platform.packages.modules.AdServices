@@ -49,7 +49,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="72dp"
                     android:layout_marginStart="0dp"
-                    android:src="@drawable/ic_android_shield_icon"
+                    android:src="@drawable/ic_android_icon"
                     tools:ignore="ContentDescription" />
                 <TextView
                     android:text="@string/notificationUI_header_ga_title_eu"
