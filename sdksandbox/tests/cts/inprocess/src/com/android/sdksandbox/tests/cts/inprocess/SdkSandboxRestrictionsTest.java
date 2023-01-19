@@ -126,10 +126,21 @@ public class SdkSandboxRestrictionsTest {
 
     /** Tests that the sandbox cannot send broadcasts. */
     @Test
-    public void testNoBroadcasts() {
+    public void testSendBroadcastsRestrictions_withAction() {
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
         Intent intent = new Intent(Intent.ACTION_VIEW);
+        SecurityException thrown =
+                assertThrows(SecurityException.class, () -> context.sendBroadcast(intent));
+        assertThat(thrown).hasMessageThat().contains("may not be broadcast from an SDK sandbox");
+    }
+
+    /** Tests that the sandbox cannot send broadcasts. */
+    @Test
+    public void testSendBroadcastRestrictions_withoutAction() {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        Intent intent = new Intent();
+
         SecurityException thrown =
                 assertThrows(SecurityException.class, () -> context.sendBroadcast(intent));
         assertThat(thrown).hasMessageThat().contains("may not be broadcast from an SDK sandbox");
