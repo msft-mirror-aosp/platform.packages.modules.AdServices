@@ -41,15 +41,13 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
                 android:orientation="vertical">
                 <ImageView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="72dp"
                     android:layout_marginStart="0dp"
-                    android:src="@drawable/ic_android_shield_icon"
+                    android:src="@drawable/ic_android_icon"
                     tools:ignore="ContentDescription" />
                 <TextView
                     android:text="@string/notificationUI_header_ga_title"
@@ -62,7 +60,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:padding="24dp"
+
 
                 android:orientation="vertical"
                 android:animateLayoutChanges="true">
@@ -147,8 +145,7 @@
                 android:id="@+id/container3"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="1dp"
-                android:padding="24dp"
+                android:layout_marginTop="24dp"
                 android:orientation="vertical">
                 <TextView
                     android:layout_width="match_parent"
