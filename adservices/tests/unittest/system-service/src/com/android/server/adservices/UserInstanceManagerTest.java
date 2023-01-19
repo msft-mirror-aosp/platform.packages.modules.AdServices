@@ -86,4 +86,26 @@ public class UserInstanceManagerTest {
         assertThat(mUserInstanceManager.getOrCreateUserAppConsentManagerInstance(1))
                 .isSameInstanceAs(appConsentManager1);
     }
+
+    @Test
+    public void testDeleteConsentManagerInstance() throws Exception {
+        int userIdentifier = 0;
+        mUserInstanceManager.getOrCreateUserConsentManagerInstance(userIdentifier);
+        assertThat(mUserInstanceManager.getUserConsentManagerInstance(userIdentifier)).isNotNull();
+        mUserInstanceManager.deleteUserInstance(userIdentifier);
+
+        assertThat(mUserInstanceManager.getUserConsentManagerInstance(userIdentifier)).isNull();
+    }
+
+    @Test
+    public void testDeleteConsentManagerInstance_userIdentifierNotPresent() throws Exception {
+        int userIdentifier = 0;
+        mUserInstanceManager.getOrCreateUserConsentManagerInstance(userIdentifier);
+        assertThat(mUserInstanceManager.getUserConsentManagerInstance(userIdentifier)).isNotNull();
+        int userIdentifierNotPresent = 3;
+
+        mUserInstanceManager.deleteUserInstance(userIdentifierNotPresent);
+
+        assertThat(mUserInstanceManager.getUserConsentManagerInstance(userIdentifier)).isNotNull();
+    }
 }
