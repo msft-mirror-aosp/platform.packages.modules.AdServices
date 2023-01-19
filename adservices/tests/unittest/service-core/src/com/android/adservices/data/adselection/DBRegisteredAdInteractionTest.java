@@ -23,30 +23,30 @@ import android.net.Uri;
 
 import org.junit.Test;
 
-public class DBRegisteredAdEventTest {
+public class DBRegisteredAdInteractionTest {
     public static final int AD_SELECTION_ID = 1;
-    public static final String EVENT_TYPE_CLICK = "CLICK";
+    public static final String INTERACTION_KEY_CLICK = "CLICK";
 
-    @DBRegisteredAdEvent.Destination
-    public static final int DESTINATION_SELLER = DBRegisteredAdEvent.DESTINATION_SELLER;
+    @DBRegisteredAdInteraction.Destination
+    public static final int DESTINATION_SELLER = DBRegisteredAdInteraction.DESTINATION_SELLER;
 
     private static final String BASE_URI = "https://www.seller.com/";
-    public static final Uri EVENT_REPORTING_URI = Uri.parse(BASE_URI + EVENT_TYPE_CLICK);
+    public static final Uri EVENT_REPORTING_URI = Uri.parse(BASE_URI + INTERACTION_KEY_CLICK);
 
     @Test
-    public void testBuildDBRegisteredEvent() {
-        DBRegisteredAdEvent dbRegisteredAdEvent =
-                DBRegisteredAdEvent.builder()
+    public void testBuildDBRegisteredAdInteraction() {
+        DBRegisteredAdInteraction dbRegisteredAdInteraction =
+                DBRegisteredAdInteraction.builder()
                         .setAdSelectionId(AD_SELECTION_ID)
-                        .setEventType(EVENT_TYPE_CLICK)
+                        .setInteractionKey(INTERACTION_KEY_CLICK)
                         .setDestination(DESTINATION_SELLER)
-                        .setEventUri(EVENT_REPORTING_URI)
+                        .setInteractionReportingUri(EVENT_REPORTING_URI)
                         .build();
 
-        assertEquals(AD_SELECTION_ID, dbRegisteredAdEvent.getAdSelectionId());
-        assertEquals(EVENT_TYPE_CLICK, dbRegisteredAdEvent.getEventType());
-        assertEquals(DESTINATION_SELLER, dbRegisteredAdEvent.getDestination());
-        assertEquals(EVENT_REPORTING_URI, dbRegisteredAdEvent.getEventUri());
+        assertEquals(AD_SELECTION_ID, dbRegisteredAdInteraction.getAdSelectionId());
+        assertEquals(INTERACTION_KEY_CLICK, dbRegisteredAdInteraction.getInteractionKey());
+        assertEquals(DESTINATION_SELLER, dbRegisteredAdInteraction.getDestination());
+        assertEquals(EVENT_REPORTING_URI, dbRegisteredAdInteraction.getInteractionReportingUri());
     }
 
     @Test
@@ -54,23 +54,23 @@ public class DBRegisteredAdEventTest {
         assertThrows(
                 IllegalStateException.class,
                 () -> {
-                    DBRegisteredAdEvent.builder()
-                            .setEventType(EVENT_TYPE_CLICK)
+                    DBRegisteredAdInteraction.builder()
+                            .setInteractionKey(INTERACTION_KEY_CLICK)
                             .setDestination(DESTINATION_SELLER)
-                            .setEventUri(EVENT_REPORTING_URI)
+                            .setInteractionReportingUri(EVENT_REPORTING_URI)
                             .build();
                 });
     }
 
     @Test
-    public void testThrowsExceptionWithNoEventType() {
+    public void testThrowsExceptionWithNoInteractionKey() {
         assertThrows(
                 IllegalStateException.class,
                 () -> {
-                    DBRegisteredAdEvent.builder()
+                    DBRegisteredAdInteraction.builder()
                             .setAdSelectionId(AD_SELECTION_ID)
                             .setDestination(DESTINATION_SELLER)
-                            .setEventUri(EVENT_REPORTING_URI)
+                            .setInteractionReportingUri(EVENT_REPORTING_URI)
                             .build();
                 });
     }
@@ -80,22 +80,22 @@ public class DBRegisteredAdEventTest {
         assertThrows(
                 IllegalStateException.class,
                 () -> {
-                    DBRegisteredAdEvent.builder()
+                    DBRegisteredAdInteraction.builder()
                             .setAdSelectionId(AD_SELECTION_ID)
-                            .setEventType(EVENT_TYPE_CLICK)
-                            .setEventUri(EVENT_REPORTING_URI)
+                            .setInteractionKey(INTERACTION_KEY_CLICK)
+                            .setInteractionReportingUri(EVENT_REPORTING_URI)
                             .build();
                 });
     }
 
     @Test
-    public void testThrowsExceptionWithNoEventUri() {
+    public void testThrowsExceptionWithNoInteractionReportingUri() {
         assertThrows(
                 IllegalStateException.class,
                 () -> {
-                    DBRegisteredAdEvent.builder()
+                    DBRegisteredAdInteraction.builder()
                             .setAdSelectionId(AD_SELECTION_ID)
-                            .setEventType(EVENT_TYPE_CLICK)
+                            .setInteractionKey(INTERACTION_KEY_CLICK)
                             .setDestination(DESTINATION_SELLER)
                             .build();
                 });
