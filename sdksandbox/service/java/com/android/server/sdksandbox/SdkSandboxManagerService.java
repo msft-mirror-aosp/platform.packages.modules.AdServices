@@ -1743,6 +1743,20 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         return null;
     }
 
+    private ApplicationInfo getSdkSandboxApplicationInfo(ApplicationInfo clientAppInfo, int userId)
+            throws PackageManager.NameNotFoundException {
+        PackageManager pm = mContext.getPackageManager();
+        ApplicationInfo sdkSandboxInfo =
+                pm.getApplicationInfoAsUser(
+                        pm.getSdkSandboxPackageName(),
+                        /* flags= */ 0,
+                        UserHandle.getUserHandleForUid(userId));
+        sdkSandboxInfo.uid = Process.toSdkSandboxUid(clientAppInfo.uid);
+        sdkSandboxInfo.processName =
+                getLocalManager().getSdkSandboxProcessNameForInstrumentation(clientAppInfo);
+        return sdkSandboxInfo;
+    }
+
     @VisibleForTesting
     String getAdServicesPackageName() {
         return mAdServicesPackageName;
@@ -1962,6 +1976,15 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         public String getSdkSandboxProcessNameForInstrumentation(
                 @NonNull ApplicationInfo clientAppInfo) {
             return clientAppInfo.processName + "_sdk_sandbox_instr";
+        }
+
+        @NonNull
+        @Override
+        public ApplicationInfo getSdkSandboxApplicationInfoForInstrumentation(
+                @NonNull ApplicationInfo clientAppInfo, int userId)
+                throws PackageManager.NameNotFoundException {
+            return SdkSandboxManagerService.this.getSdkSandboxApplicationInfo(
+                    clientAppInfo, userId);
         }
 
         @Override

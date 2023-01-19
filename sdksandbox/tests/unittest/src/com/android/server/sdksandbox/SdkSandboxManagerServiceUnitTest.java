@@ -1023,6 +1023,20 @@ public class SdkSandboxManagerServiceUnitTest {
         assertThat(processName).isEqualTo(TEST_PACKAGE + "_sdk_sandbox_instr");
     }
 
+    @Test
+    public void test_getSdkInstrumentationInfo() throws Exception {
+        final PackageManager pm =
+                InstrumentationRegistry.getInstrumentation().getContext().getPackageManager();
+        ApplicationInfo clientAppInfo = pm.getApplicationInfo(TEST_PACKAGE, 0);
+
+        ApplicationInfo sdkSandboxInfo =
+                sSdkSandboxManagerLocal.getSdkSandboxApplicationInfoForInstrumentation(
+                        clientAppInfo, /* userId= */ 0);
+
+        assertThat(sdkSandboxInfo.processName).isEqualTo(TEST_PACKAGE + "_sdk_sandbox_instr");
+        assertThat(sdkSandboxInfo.packageName).isEqualTo(pm.getSdkSandboxPackageName());
+    }
+
     /** Tests expected behavior when broadcast receiver restrictions are not available. */
     @Test
     public void testCanRegisterBroadcastReceiver_deviceConfigUnset() {

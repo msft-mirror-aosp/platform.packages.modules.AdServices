@@ -51,6 +51,14 @@ public class FakeSdkSandboxManagerLocal implements SdkSandboxManagerLocal {
         return clientAppInfo.processName + "_sdk_sandbox_instr";
     }
 
+    @NonNull
+    @Override
+    public ApplicationInfo getSdkSandboxApplicationInfoForInstrumentation(
+            @NonNull ApplicationInfo clientAppInfo, int userId) {
+        clientAppInfo.processName = getSdkSandboxProcessNameForInstrumentation(clientAppInfo);
+        return clientAppInfo;
+    }
+
     @Override
     public void notifyInstrumentationStarted(
             @NonNull String clientAppPackageName, int clientAppUid) {
@@ -86,5 +94,4 @@ public class FakeSdkSandboxManagerLocal implements SdkSandboxManagerLocal {
     @Override
     public void enforceAllowedToHostSandboxedActivity(
             @NonNull Intent intent, int clientAppUid, @NonNull String clientAppPackageName) {}
-
 }
