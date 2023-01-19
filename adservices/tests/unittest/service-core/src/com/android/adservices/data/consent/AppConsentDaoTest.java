@@ -89,20 +89,22 @@ public class AppConsentDaoTest {
     @Test
     public void testGetUidForInstalledPackageNameWithRealTestNameSuccess()
             throws PackageManager.NameNotFoundException {
+        mAppConsentDao = new AppConsentDao(mDatastoreSpy, mContext.getPackageManager());
         int expectedUid = mContext.getApplicationInfo().uid;
-        int testUid =
-                AppConsentDao.getUidForInstalledPackageName(
-                        mPackageManager, mContext.getPackageName());
+        int testUid = mAppConsentDao.getUidForInstalledPackageName(mContext.getPackageName());
         assertEquals(expectedUid, testUid);
     }
 
     @Test
     public void testGetUidForInstalledPackageNameWithFakePackageNameThrows() {
-        assertThrows(
-                PackageManager.NameNotFoundException.class,
-                () ->
-                        AppConsentDao.getUidForInstalledPackageName(
-                                mPackageManager, AppConsentDaoFixture.APP_NOT_FOUND_PACKAGE_NAME));
+        mAppConsentDao = new AppConsentDao(mDatastoreSpy, mContext.getPackageManager());
+        Exception exception =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () ->
+                                mAppConsentDao.getUidForInstalledPackageName(
+                                        AppConsentDaoFixture.APP_NOT_FOUND_PACKAGE_NAME));
+        assertTrue(exception.getCause() instanceof PackageManager.NameNotFoundException);
     }
 
     @Test
