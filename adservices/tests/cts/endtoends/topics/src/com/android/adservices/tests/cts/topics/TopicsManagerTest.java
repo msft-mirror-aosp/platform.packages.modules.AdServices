@@ -23,14 +23,10 @@ import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.topics.GetTopicsResponse;
 import android.adservices.topics.Topic;
 import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
-import android.content.pm.ServiceInfo;
-import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdservicesCtsHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
@@ -82,9 +78,8 @@ public class TopicsManagerTest {
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
-    // Used to get the package name. Copied over from com.android.adservices.AdServicesCommon
-    private static final String TOPICS_SERVICE_NAME = "android.adservices.TOPICS_SERVICE";
-    private static final String ADSERVICES_PACKAGE_NAME = getAdServicesPackageName();
+    private static final String ADSERVICES_PACKAGE_NAME =
+            AdservicesCtsHelper.getAdServicesPackageName(sContext, TAG);
 
     // Assert message statements.
     private static final String INCORRECT_MODEL_VERSION_MESSAGE =
@@ -267,38 +262,5 @@ public class TopicsManagerTest {
     private void forceEpochComputationJob() {
         ShellUtils.runShellCommand(
                 "cmd jobscheduler run -f" + " " + ADSERVICES_PACKAGE_NAME + " " + EPOCH_JOB_ID);
-    }
-
-    // Used to get the package name. Copied over from com.android.adservices.AndroidServiceBinder
-    private static String getAdServicesPackageName() {
-        final Intent intent = new Intent(TOPICS_SERVICE_NAME);
-        final List<ResolveInfo> resolveInfos =
-                sContext.getPackageManager()
-                        .queryIntentServices(intent, PackageManager.MATCH_SYSTEM_ONLY);
-
-        if (resolveInfos == null || resolveInfos.isEmpty()) {
-            Log.e(
-                    TAG,
-                    "Failed to find resolveInfo for adServices service. Intent action: "
-                            + TOPICS_SERVICE_NAME);
-            return null;
-        }
-
-        if (resolveInfos.size() > 1) {
-            Log.e(
-                    TAG,
-                    String.format(
-                            "Found multiple services (%1$s) for the same intent action (%2$s)",
-                            TOPICS_SERVICE_NAME, resolveInfos));
-            return null;
-        }
-
-        final ServiceInfo serviceInfo = resolveInfos.get(0).serviceInfo;
-        if (serviceInfo == null) {
-            Log.e(TAG, "Failed to find serviceInfo for adServices service");
-            return null;
-        }
-
-        return serviceInfo.packageName;
     }
 }
