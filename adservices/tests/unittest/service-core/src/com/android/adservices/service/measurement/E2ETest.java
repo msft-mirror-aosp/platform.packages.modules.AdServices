@@ -804,6 +804,8 @@ public abstract class E2ETest {
             long jobTime = sourceTime + 1000 * validExpiry + 3600000L;
 
             reportingJobsActions.add(new EventReportingJob(jobTime));
+            // Add a job two days earlier for interop tests
+            reportingJobsActions.add(new EventReportingJob(jobTime - TimeUnit.DAYS.toMillis(2)));
         }
 
         return reportingJobsActions;

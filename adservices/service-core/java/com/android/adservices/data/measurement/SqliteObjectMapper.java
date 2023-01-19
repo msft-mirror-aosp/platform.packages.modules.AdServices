@@ -115,6 +115,10 @@ public class SqliteObjectMapper {
                 (enumValue) -> builder.setSourceType(Source.SourceType.valueOf(enumValue)));
         setLongColumn(cursor, MeasurementTables.SourceContract.EXPIRY_TIME,
                 builder::setExpiryTime);
+        setLongColumn(cursor, MeasurementTables.SourceContract.EVENT_REPORT_WINDOW,
+                builder::setEventReportWindow);
+        setLongColumn(cursor, MeasurementTables.SourceContract.AGGREGATABLE_REPORT_WINDOW,
+                builder::setAggregatableReportWindow);
         setLongColumn(cursor, MeasurementTables.SourceContract.EVENT_TIME,
                 builder::setEventTime);
         setTextColumn(

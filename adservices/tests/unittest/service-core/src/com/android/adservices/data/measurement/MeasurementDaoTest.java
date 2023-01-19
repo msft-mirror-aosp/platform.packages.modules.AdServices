@@ -175,6 +175,9 @@ public class MeasurementDaoTest {
             assertEquals(validSource.getRegistrant(), source.getRegistrant());
             assertEquals(validSource.getEventTime(), source.getEventTime());
             assertEquals(validSource.getExpiryTime(), source.getExpiryTime());
+            assertEquals(validSource.getEventReportWindow(), source.getEventReportWindow());
+            assertEquals(validSource.getAggregatableReportWindow(),
+                    source.getAggregatableReportWindow());
             assertEquals(validSource.getPriority(), source.getPriority());
             assertEquals(validSource.getSourceType(), source.getSourceType());
             assertEquals(validSource.getInstallAttributionWindow(),
