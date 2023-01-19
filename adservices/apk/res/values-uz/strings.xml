@@ -556,4 +556,13 @@
     <string name="topic10444" msgid="2075863187654728611">"Tirbandlik va yoʻnalishni rejalashtirish"</string>
     <string name="topic10445" msgid="3460421948068980869">"Sayohat agentliklari va xizmatlari"</string>
     <string name="topic10446" msgid="5333138740720504195">"Sayohat qoʻllanmalari va sayohatnomalar"</string>
+    <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Yoniq / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> ta mavzu"</string>
+    <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Yoniq / <xliff:g id="APPS_COUNT">%1$d</xliff:g> ta ilova"</string>
+    <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"Yoniq"</string>
+    <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Oʻchiq"</string>
+    <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"Reklamadagi mavzularga ruxsat berish"</string>
+    <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"Reklama oʻlchanishiga ruxsat berish"</string>
+    <string name="settingsUI_apps_switch_title" msgid="1308209012769248890">"Ilovalar taklif qiladigan reklamaga ruxsat berish"</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"Barcha mavzular tiklansinmi?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"Ilovalar taklif qiladigan reklama axboroti tiklansinmi?"</string>
 </resources>

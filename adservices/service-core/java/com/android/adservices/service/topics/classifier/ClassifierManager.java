@@ -27,6 +27,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.Flags.ClassifierType;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.topics.CacheManager;
 import com.android.adservices.service.topics.PackageManagerUtil;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -73,11 +74,13 @@ public class ClassifierManager implements Classifier {
                                                         new PackageManagerUtil(context),
                                                         new Random(),
                                                         ModelManager.getInstance(context),
+                                                        CacheManager.getInstance(context),
                                                         AdServicesLoggerImpl.getInstance())),
                                 Suppliers.memoize(
                                         () ->
                                                 new PrecomputedClassifier(
                                                         ModelManager.getInstance(context),
+                                                        CacheManager.getInstance(context),
                                                         AdServicesLoggerImpl.getInstance())));
             }
         }

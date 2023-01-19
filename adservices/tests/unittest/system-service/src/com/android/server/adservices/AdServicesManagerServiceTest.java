@@ -20,7 +20,9 @@ import static com.android.server.adservices.PhFlags.KEY_ADSERVICES_SYSTEM_SERVIC
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -44,6 +46,7 @@ import android.provider.DeviceConfig;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.modules.utils.testing.TestableDeviceConfig;
+import com.android.server.adservices.consent.AppConsentManagerFixture;
 
 import org.junit.After;
 import org.junit.Before;
@@ -56,6 +59,7 @@ import org.mockito.MockitoAnnotations;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 /** Tests for {@link AdServicesManagerService} */
 public class AdServicesManagerServiceTest {
@@ -425,6 +429,158 @@ public class AdServicesManagerServiceTest {
         assertThat(service.wasFledgeAndMsmtConsentPageDisplayed()).isFalse();
         service.recordFledgeAndMsmtConsentPageDisplayed();
         assertThat(service.wasFledgeAndMsmtConsentPageDisplayed()).isTrue();
+    }
+
+    @Test
+    public void testSetAppConsent() {
+        mService = spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+        disableEnforceAdServicesManagerPermission(mService);
+
+        mService.setConsentForApp(
+                AppConsentManagerFixture.APP10_PACKAGE_NAME,
+                AppConsentManagerFixture.APP10_UID,
+                false);
+        assertFalse(
+                mService.isConsentRevokedForApp(
+                        AppConsentManagerFixture.APP10_PACKAGE_NAME,
+                        AppConsentManagerFixture.APP10_UID));
+
+        mService.setConsentForAppIfNew(
+                AppConsentManagerFixture.APP20_PACKAGE_NAME,
+                AppConsentManagerFixture.APP20_UID,
+                false);
+        assertFalse(
+                mService.isConsentRevokedForApp(
+                        AppConsentManagerFixture.APP20_PACKAGE_NAME,
+                        AppConsentManagerFixture.APP20_UID));
+
+        mService.setConsentForApp(
+                AppConsentManagerFixture.APP20_PACKAGE_NAME,
+                AppConsentManagerFixture.APP20_UID,
+                true);
+        assertTrue(
+                mService.isConsentRevokedForApp(
+                        AppConsentManagerFixture.APP20_PACKAGE_NAME,
+                        AppConsentManagerFixture.APP20_UID));
+        assertTrue(
+                mService.setConsentForAppIfNew(
+                        AppConsentManagerFixture.APP20_PACKAGE_NAME,
+                        AppConsentManagerFixture.APP20_UID,
+                        false));
+
+        assertFalse(
+                mService.setConsentForAppIfNew(
+                        AppConsentManagerFixture.APP30_PACKAGE_NAME,
+                        AppConsentManagerFixture.APP30_UID,
+                        false));
+
+        assertThat(
+                        mService.getKnownAppsWithConsent(
+                                List.of(
+                                        AppConsentManagerFixture.APP10_PACKAGE_NAME,
+                                        AppConsentManagerFixture.APP20_PACKAGE_NAME,
+                                        AppConsentManagerFixture.APP30_PACKAGE_NAME)))
+                .hasSize(2);
+        assertThat(
+                        mService.getAppsWithRevokedConsent(
+                                List.of(
+                                        AppConsentManagerFixture.APP10_PACKAGE_NAME,
+                                        AppConsentManagerFixture.APP20_PACKAGE_NAME,
+                                        AppConsentManagerFixture.APP30_PACKAGE_NAME)))
+                .hasSize(1);
+    }
+
+    @Test
+    public void testClearAppConsent() {
+        mService = spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+        disableEnforceAdServicesManagerPermission(mService);
+
+        mService.setConsentForApp(
+                AppConsentManagerFixture.APP10_PACKAGE_NAME,
+                AppConsentManagerFixture.APP10_UID,
+                false);
+        mService.setConsentForApp(
+                AppConsentManagerFixture.APP20_PACKAGE_NAME,
+                AppConsentManagerFixture.APP20_UID,
+                false);
+        mService.setConsentForApp(
+                AppConsentManagerFixture.APP30_PACKAGE_NAME,
+                AppConsentManagerFixture.APP30_UID,
+                true);
+        assertThat(
+                        mService.getKnownAppsWithConsent(
+                                List.of(
+                                        AppConsentManagerFixture.APP10_PACKAGE_NAME,
+                                        AppConsentManagerFixture.APP20_PACKAGE_NAME,
+                                        AppConsentManagerFixture.APP30_PACKAGE_NAME)))
+                .hasSize(2);
+        assertThat(
+                        mService.getAppsWithRevokedConsent(
+                                List.of(
+                                        AppConsentManagerFixture.APP10_PACKAGE_NAME,
+                                        AppConsentManagerFixture.APP20_PACKAGE_NAME,
+                                        AppConsentManagerFixture.APP30_PACKAGE_NAME)))
+                .hasSize(1);
+
+        mService.clearConsentForUninstalledApp(
+                AppConsentManagerFixture.APP10_PACKAGE_NAME, AppConsentManagerFixture.APP10_UID);
+        assertThat(
+                        mService.getKnownAppsWithConsent(
+                                List.of(
+                                        AppConsentManagerFixture.APP20_PACKAGE_NAME,
+                                        AppConsentManagerFixture.APP30_PACKAGE_NAME)))
+                .hasSize(1);
+        assertThat(
+                        mService.getAppsWithRevokedConsent(
+                                List.of(
+                                        AppConsentManagerFixture.APP20_PACKAGE_NAME,
+                                        AppConsentManagerFixture.APP30_PACKAGE_NAME)))
+                .hasSize(1);
+
+        mService.clearKnownAppsWithConsent();
+        assertThat(
+                        mService.getKnownAppsWithConsent(
+                                List.of(
+                                        AppConsentManagerFixture.APP20_PACKAGE_NAME,
+                                        AppConsentManagerFixture.APP30_PACKAGE_NAME)))
+                .hasSize(0);
+        assertThat(
+                        mService.getAppsWithRevokedConsent(
+                                List.of(
+                                        AppConsentManagerFixture.APP20_PACKAGE_NAME,
+                                        AppConsentManagerFixture.APP30_PACKAGE_NAME)))
+                .hasSize(1);
+
+        mService.setConsentForApp(
+                AppConsentManagerFixture.APP20_PACKAGE_NAME,
+                AppConsentManagerFixture.APP20_UID,
+                false);
+        assertThat(
+                        mService.getKnownAppsWithConsent(
+                                List.of(
+                                        AppConsentManagerFixture.APP20_PACKAGE_NAME,
+                                        AppConsentManagerFixture.APP30_PACKAGE_NAME)))
+                .hasSize(1);
+        assertThat(
+                        mService.getAppsWithRevokedConsent(
+                                List.of(
+                                        AppConsentManagerFixture.APP20_PACKAGE_NAME,
+                                        AppConsentManagerFixture.APP30_PACKAGE_NAME)))
+                .hasSize(1);
+
+        mService.clearAllAppConsentData();
+        assertThat(
+                        mService.getKnownAppsWithConsent(
+                                List.of(
+                                        AppConsentManagerFixture.APP20_PACKAGE_NAME,
+                                        AppConsentManagerFixture.APP30_PACKAGE_NAME)))
+                .hasSize(0);
+        assertThat(
+                        mService.getAppsWithRevokedConsent(
+                                List.of(
+                                        AppConsentManagerFixture.APP20_PACKAGE_NAME,
+                                        AppConsentManagerFixture.APP30_PACKAGE_NAME)))
+                .hasSize(0);
     }
 
     // Since unit test cannot execute an IPC call, disable the permission check.

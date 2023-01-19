@@ -57,7 +57,8 @@ public class SourceTest {
     @Test
     public void testDefaults() {
         Source source = SourceFixture.getValidSourceBuilder().build();
-        assertEquals(0, source.getDedupKeys().size());
+        assertEquals(0, source.getEventReportDedupKeys().size());
+        assertEquals(0, source.getAggregateReportDedupKeys().size());
         assertEquals(Source.Status.ACTIVE, source.getStatus());
         assertEquals(Source.SourceType.EVENT, source.getSourceType());
         assertEquals(Source.AttributionMode.UNASSIGNED, source.getAttributionMode());
@@ -94,7 +95,12 @@ public class SourceTest {
                         .setEventTime(5L)
                         .setExpiryTime(5L)
                         .setIsDebugReporting(true)
-                        .setDedupKeys(
+                        .setEventReportDedupKeys(
+                                LongStream.range(0, 2)
+                                        .boxed()
+                                        .map(UnsignedLong::new)
+                                        .collect(Collectors.toList()))
+                        .setAggregateReportDedupKeys(
                                 LongStream.range(0, 2)
                                         .boxed()
                                         .map(UnsignedLong::new)
@@ -121,7 +127,12 @@ public class SourceTest {
                         .setEventTime(5L)
                         .setExpiryTime(5L)
                         .setIsDebugReporting(true)
-                        .setDedupKeys(
+                        .setEventReportDedupKeys(
+                                LongStream.range(0, 2)
+                                        .boxed()
+                                        .map(UnsignedLong::new)
+                                        .collect(Collectors.toList()))
+                        .setAggregateReportDedupKeys(
                                 LongStream.range(0, 2)
                                         .boxed()
                                         .map(UnsignedLong::new)
@@ -198,12 +209,33 @@ public class SourceTest {
                         .setStatus(Source.Status.IGNORED).build());
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder()
-                        .setDedupKeys(LongStream.range(0, 2).boxed().map(UnsignedLong::new)
-                                .collect(Collectors.toList()))
+                        .setEventReportDedupKeys(
+                                LongStream.range(0, 2)
+                                        .boxed()
+                                        .map(UnsignedLong::new)
+                                        .collect(Collectors.toList()))
                         .build(),
                 SourceFixture.getValidSourceBuilder()
-                        .setDedupKeys(LongStream.range(1, 3).boxed().map(UnsignedLong::new)
-                                .collect(Collectors.toList()))
+                        .setEventReportDedupKeys(
+                                LongStream.range(1, 3)
+                                        .boxed()
+                                        .map(UnsignedLong::new)
+                                        .collect(Collectors.toList()))
+                        .build());
+        assertNotEquals(
+                SourceFixture.getValidSourceBuilder()
+                        .setAggregateReportDedupKeys(
+                                LongStream.range(0, 2)
+                                        .boxed()
+                                        .map(UnsignedLong::new)
+                                        .collect(Collectors.toList()))
+                        .build(),
+                SourceFixture.getValidSourceBuilder()
+                        .setAggregateReportDedupKeys(
+                                LongStream.range(1, 3)
+                                        .boxed()
+                                        .map(UnsignedLong::new)
+                                        .collect(Collectors.toList()))
                         .build());
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder()
