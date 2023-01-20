@@ -1356,6 +1356,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS,
                         DEFAULT_VALUE_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS);
 
+        @GuardedBy("mLock")
+        private boolean mEnforceContentProviderRestrictions =
+                DeviceConfig.getBoolean(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        PROPERTY_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS,
+                        DEFAULT_VALUE_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS);
+
         SdkSandboxSettingsListener(Context context) {
             mContext = context;
         }
@@ -1402,6 +1409,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
         }
 
+        boolean areContentProviderRestrictionsEnforced() {
+            synchronized (mLock) {
+                return mEnforceContentProviderRestrictions;
+            }
+        }
+
         @Override
         public void onPropertiesChanged(@NonNull DeviceConfig.Properties properties) {
             synchronized (mLock) {
@@ -1438,6 +1451,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                                     properties.getBoolean(
                                             PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS,
                                             DEFAULT_VALUE_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS);
+                            break;
+                        case PROPERTY_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS:
+                            mEnforceContentProviderRestrictions =
+                                    properties.getBoolean(
+                                            PROPERTY_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS,
+                                            DEFAULT_VALUE_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS);
                             break;
                         default:
                     }
@@ -1922,13 +1941,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             final long token = Binder.clearCallingIdentity();
 
             try {
-                if (DeviceConfig.getBoolean(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        PROPERTY_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS,
-                        DEFAULT_VALUE_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS)) {
-                    return false;
-                }
-                return true;
+                return !mSdkSandboxSettingsListener.areContentProviderRestrictionsEnforced();
             } finally {
                 Binder.restoreCallingIdentity(token);
             }
