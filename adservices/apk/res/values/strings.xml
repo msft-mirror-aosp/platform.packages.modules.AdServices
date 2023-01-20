@@ -267,7 +267,7 @@
     <!-- Text for explanation inside the expander of the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text5">&#8226;&#160;&#160;How you can manage your data</string>
     <!-- Text for explanation inside the expander of the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6">Android auto-deletes ad-suggested data regularly. An app you use again might reappear on the list. </string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6">Android auto-deletes app-suggested data regularly. An app you use again might reappear on the list. </string>
     <!-- Text for explanation inside the expander of the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7">You can also block an app from suggesting ads for you, reset all ad-suggestion data, or turn app-suggested ads off at any time in privacy settings.</string>
     <!-- Text for explanation inside the expander of the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
@@ -318,7 +318,7 @@
     <!-- Text for the button to open blocked topics view and the title of the blocked topics view. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_blocked_topics_title">Interests you’ve blocked</string>
     <!-- Text for the title of the blocked topics view. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_blocked_topics_ga_view_title">Ad topics you’ve blocked</string>
+    <string name="settingsUI_blocked_topics_ga_view_title">Ad topics you blocked</string>
     <!-- Text for the button to reset all topics. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_reset_topics_title">Reset all interests</string>
     <!-- Text to show if there are no topics. [CHAR LIMIT=NONE] -->
@@ -351,7 +351,7 @@
     <!-- Text for the button to unblock an app. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_unblock_app_title" translatable="false">@string/settingsUI_unblock_topic_title</string>
     <!-- Text for the button to open blocked apps fragment and the title of the blocked apps view. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_blocked_apps_title">Apps you’ve blocked</string>
+    <string name="settingsUI_blocked_apps_title">Apps you blocked</string>
     <!-- Text for the button to open blocked apps fragment in ga ux. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_view_blocked_apps_title">View blocked apps</string>
     <!-- Text for the button to reset all apps. [CHAR LIMIT=NONE] -->
@@ -504,7 +504,7 @@
     <!-- Text for the button to open blocked apps fragment  [CHAR LIMIT=NONE] -->
     <string name="settingsUI_blocked_apps_ga_title">Apps you blocked</string>
     <!-- Text for the button to reset all apps. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_reset_apps_ga_title">Reset app-suggested ads data</string>
+    <string name="settingsUI_reset_apps_ga_title">Reset app-suggested data</string>
     <!-- Text for the info of app-suggested ads. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_apps_view_footer">It’s common for apps you use to remember things you’re interested in to personalize your experience. Apps can also store information with Android about your topics.\n\nFor example, if you use an app about marathon training, the app might decide that you’re interested in running shoes. Later, if you use a different app, that app can show you an ad for running shoes suggested by the first app.\n\nAndroid auto-deletes app-suggested data regularly. An app you use again might reappear on the list. Or you can block an app from suggesting ads for you.\n\nIn your apps, an ad you see may be personalized, depending on this setting, the ad topics setting, your advertising ID settings, and whether the app you’re using personalizes ads.</string>
 
