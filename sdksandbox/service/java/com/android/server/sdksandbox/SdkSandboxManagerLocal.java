@@ -22,6 +22,7 @@ import android.annotation.SystemApi;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.ProviderInfo;
 import android.os.IBinder;
 
 /**
@@ -69,6 +70,14 @@ public interface SdkSandboxManagerLocal {
      * @throws SecurityException if the service is not allowed to be started or bound to.
      */
     void enforceAllowedToStartOrBindService(@NonNull Intent intent);
+
+    /**
+     * Whether the sdk sandbox process is allowed to access a given ContentProvider.
+     *
+     * @param providerInfo info about the Content Provider being accessed.
+     * @return true if the sandbox uid is allowed to access the ContentProvider, false otherwise.
+     */
+    boolean canAccessContentProviderFromSdkSandbox(@NonNull ProviderInfo providerInfo);
 
     /**
      * Enforces that the caller app is allowed to start a {@code SandboxedActivity} inside its

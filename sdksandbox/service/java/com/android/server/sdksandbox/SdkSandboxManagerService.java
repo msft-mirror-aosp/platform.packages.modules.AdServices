@@ -55,6 +55,7 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ProviderInfo;
 import android.content.pm.ResolveInfo;
 import android.os.Binder;
 import android.os.Bundle;
@@ -189,6 +190,15 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             "enforce_broadcast_receiver_restrictions";
 
     private static final boolean DEFAULT_VALUE_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS = false;
+
+    /**
+     * Property to enforce content provider restrictions for SDK sandbox processes. If the value of
+     * this property is {@code true}, the restrictions will be enforced.
+     */
+    private static final String PROPERTY_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS =
+            "enforce_content_provider_restrictions";
+
+    private static final boolean DEFAULT_VALUE_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS = false;
 
     static class Injector {
         private final Context mContext;
@@ -414,7 +424,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     @Override
     public void loadSdk(
             String callingPackageName,
-            IBinder callingApplicationThreadBinder,
+            IBinder callingAppProcessToken,
             String sdkName,
             long timeAppCalledSystemServer,
             Bundle params,
@@ -426,7 +436,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             final int callingUid = Binder.getCallingUid();
             final CallingInfo callingInfo =
                     CallingInfo.fromBinderWithApplicationThread(
-                            mContext, callingPackageName, callingApplicationThreadBinder);
+                            mContext, callingPackageName, callingAppProcessToken);
             enforceCallerHasNetworkAccess(callingPackageName);
             enforceCallerRunsInForeground(callingInfo);
             synchronized (mLock) {
@@ -536,8 +546,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             synchronized (mLock) {
                 if (!mCallingInfosWithDeathRecipients.containsKey(callingInfo)) {
                     Log.d(TAG, "Registering " + callingInfo + " for death notification");
-                    final IBinder callingApplicationThreadBinder =
-                            callingInfo.getApplicationThreadBinder();
                     callback.asBinder().linkToDeath(() -> onAppDeath(callingInfo), 0);
                     // Note that we keep a reference to the IBinder that we called linkToDeath() on,
                     // to make sure that it isn't unlinked if we were to drop this reference.
@@ -1202,8 +1210,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         // TODO(b/261442377): Only the processes that loaded some SDK should be killed. For now,
         // kill the process that loaded the first SDK.
-        mActivityManagerLocal.killSdkSandboxClientAppProcess(
-                callingInfo.getApplicationThreadBinder());
+        mActivityManagerLocal.killSdkSandboxClientAppProcess(callingInfo.getAppProcessToken());
     }
 
     @GuardedBy("mLock")
@@ -1874,6 +1881,32 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         @Override
         public void enforceAllowedToStartOrBindService(@NonNull Intent intent) {
             SdkSandboxManagerService.this.enforceAllowedToStartOrBindService(intent);
+        }
+
+        @Override
+        public boolean canAccessContentProviderFromSdkSandbox(@NonNull ProviderInfo providerInfo) {
+            // TODO(b/229200204): Implement a starter set of restrictions
+            if (!Process.isSdkSandboxUid(Binder.getCallingUid())) {
+                return true;
+            }
+
+            /**
+             * By clearing the calling identity, system server identity is set which allows us to
+             * call {@DeviceConfig.getBoolean}
+             */
+            final long token = Binder.clearCallingIdentity();
+
+            try {
+                if (DeviceConfig.getBoolean(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        PROPERTY_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS,
+                        DEFAULT_VALUE_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS)) {
+                    return false;
+                }
+                return true;
+            } finally {
+                Binder.restoreCallingIdentity(token);
+            }
         }
 
         @Override

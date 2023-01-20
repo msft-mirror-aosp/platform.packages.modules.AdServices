@@ -26,7 +26,7 @@
       "name": "SdkSandboxShellHostTest[com.google.android.adservices.apex]"
     },
     {
-      "name": "SdkSandboxRestrictionsHostTest[com.google.android.adservices.apex]"
+      "name": "BroadcastRestrictionsHostTest[com.google.android.adservices.apex]"
     },
     {
       "name": "SdkSandboxStorageHostTest[com.google.android.adservices.apex]",
@@ -82,9 +82,6 @@
     },
     {
       "name": "SdkSandboxShellHostTest"
-    },
-    {
-      "name": "SdkSandboxRestrictionsHostTest"
     },
     {
       "name": "BroadcastRestrictionsHostTest"
