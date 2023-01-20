@@ -23,7 +23,11 @@ package com.android.adservices.data.common;
  *
  * @hide
  */
+//TODO (b/266152092): remove unnecessary hide annotations
 public class AdservicesEntryPointConstant {
+    // timestamp of when AdServices entry point was first called.
+    public static final String FIRST_ENTRY_REQUEST_TIMESTAMP = "firstEntryRequestTimestamp";
+
     public static final String KEY_ADSERVICES_ENTRY_POINT_STATUS = "adservicesEntryPointStatus";
 
     public static final int ADSERVICES_ENTRY_POINT_STATUS_ENABLE = 0;
