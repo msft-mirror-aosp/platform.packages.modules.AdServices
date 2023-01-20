@@ -20,11 +20,9 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.topics.GetTopicsResponse;
-import android.app.Instrumentation;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
 
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -73,8 +71,8 @@ public class SandboxedTopicsManagerTest {
 
     @Before
     public void setup() throws TimeoutException, InterruptedException {
-        // Skip the test if it runs on Automotive, or Wear.
-        Assume.assumeTrue(isHardwareSupported());
+        // Skip the test if it runs on unsupported platforms.
+        Assume.assumeTrue(AdservicesCtsHelper.isDeviceSupported());
 
         // We need to skip 3 epochs so that if there is any usage from other test runs, it will
         // not be used for epoch retrieval.
@@ -160,13 +158,5 @@ public class SandboxedTopicsManagerTest {
     private void forceEpochComputationJob() {
         ShellUtils.runShellCommand(
                 "cmd jobscheduler run -f" + " " + ADSERVICES_PACKAGE_NAME + " " + EPOCH_JOB_ID);
-    }
-
-    // Adservices doesn't support non-phone device. Return false if the target is not supported.
-    private static boolean isHardwareSupported() {
-        final Instrumentation inst = InstrumentationRegistry.getInstrumentation();
-        PackageManager pm = inst.getContext().getPackageManager();
-        return !pm.hasSystemFeature(PackageManager.FEATURE_WATCH)
-                && !pm.hasSystemFeature(PackageManager.FEATURE_AUTOMOTIVE);
     }
 }

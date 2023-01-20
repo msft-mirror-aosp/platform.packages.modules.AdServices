@@ -38,6 +38,7 @@ java_library {
         "framework-annotations-lib",
     ],
     static_libs: [
+        "androidx.test.runner",
     ],
     apex_available: ["com.android.adservices"],
 }

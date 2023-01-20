@@ -29,6 +29,7 @@ import com.android.adservices.common.AdservicesCtsHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -94,6 +95,9 @@ public class TopicsManagerMddTest {
 
     @Before
     public void setup() throws Exception {
+        // Skip the test if it runs on unsupported platforms.
+        Assume.assumeTrue(AdservicesCtsHelper.isDeviceSupported());
+
         // We need to skip 3 epochs so that if there is any usage from other test runs, it will
         // not be used for epoch retrieval.
         Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
