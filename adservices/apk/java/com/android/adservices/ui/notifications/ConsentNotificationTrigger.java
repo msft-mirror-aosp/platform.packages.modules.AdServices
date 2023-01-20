@@ -157,35 +157,35 @@ public class ConsentNotificationTrigger {
                         .bigText(
                                 isEuDevice
                                         ? context.getString(
-                                                R.string.notificationUI_notification_content_eu)
+                                                R.string.notificationUI_notification_ga_content_eu)
                                         : context.getString(
-                                                R.string.notificationUI_notification_content));
-        return new NotificationCompat.Builder(context, CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_info_icon)
-                .setContentTitle(
-                        context.getString(
-                                isEuDevice
-                                        ? R.string.notificationUI_notification_ga_title_eu
-                                        : R.string.notificationUI_notification_ga_title))
-                .setContentText(
-                        context.getString(
-                                isEuDevice
-                                        ? R.string.notificationUI_notification_ga_content_eu
-                                        : R.string.notificationUI_notification_ga_content))
-                .setStyle(textStyle)
-                .setPriority(NOTIFICATION_PRIORITY)
-                .setAutoCancel(true)
-                .setContentIntent(pendingIntent)
-                .addAction(
-                        isEuDevice
-                                ? R.string.notificationUI_notification_cta_eu
-                                : R.string.notificationUI_notification_cta,
-                        context.getString(
-                                isEuDevice
-                                        ? R.string.notificationUI_notification_cta_eu
-                                        : R.string.notificationUI_notification_cta),
-                        pendingIntent)
-                .build();
+                                                R.string.notificationUI_notification_ga_content));
+        NotificationCompat.Builder notification =
+                new NotificationCompat.Builder(context, CHANNEL_ID)
+                        .setSmallIcon(R.drawable.ic_info_icon)
+                        .setContentTitle(
+                                context.getString(
+                                        isEuDevice
+                                                ? R.string.notificationUI_notification_ga_title_eu
+                                                : R.string.notificationUI_notification_ga_title))
+                        .setContentText(
+                                context.getString(
+                                        isEuDevice
+                                                ? R.string.notificationUI_notification_ga_content_eu
+                                                : R.string.notificationUI_notification_ga_content))
+                        .setStyle(textStyle)
+                        .setPriority(NOTIFICATION_PRIORITY)
+                        .setAutoCancel(true)
+                        .setContentIntent(pendingIntent);
+        // EU needs a "View Details" CTA
+        return isEuDevice
+                ? notification
+                        .addAction(
+                                R.string.notificationUI_notification_ga_cta_eu,
+                                context.getString(R.string.notificationUI_notification_ga_cta_eu),
+                                pendingIntent)
+                        .build()
+                : notification.build();
     }
 
     /**
