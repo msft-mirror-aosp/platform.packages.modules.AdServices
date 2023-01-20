@@ -2,6 +2,9 @@
 package com.android.server.sdksandbox {
 
   public interface SdkSandboxManagerLocal {
+    method public boolean canAccessContentProviderFromSdkSandbox(@NonNull android.content.pm.ProviderInfo);
+    method public boolean canDeclareBroadcastReceiverFromManifest(@NonNull android.content.IntentFilter, boolean, boolean, int);
+    method public boolean canRegisterBroadcastReceiver(@NonNull android.content.IntentFilter, int, boolean);
     method public void enforceAllowedToHostSandboxedActivity(@NonNull android.content.Intent, int, @NonNull String);
     method public void enforceAllowedToSendBroadcast(@NonNull android.content.Intent);
     method public void enforceAllowedToStartActivity(@NonNull android.content.Intent);

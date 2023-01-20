@@ -28,9 +28,9 @@ import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.topics.TopicsWorker;
 import com.android.internal.annotations.VisibleForTesting;
@@ -203,9 +203,9 @@ public class PackageChangedReceiver extends BroadcastReceiver {
         sBackgroundExecutor.execute(
                 () -> {
                     try {
-                        AppConsentDao instance = AppConsentDao.getInstance(context);
+                        ConsentManager instance = ConsentManager.getInstance(context);
                         if (packageUid == DEFAULT_PACKAGE_UID) {
-                            instance.clearAllConsentData();
+                            instance.resetAppsAndBlockedApps();
                             LogUtil.d("Deleted consent data for all apps");
                         } else {
                             instance.clearConsentForUninstalledApp(

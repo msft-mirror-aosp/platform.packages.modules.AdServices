@@ -21,6 +21,7 @@ import android.util.ArrayMap;
 
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.server.adservices.consent.AppConsentManager;
 import com.android.server.adservices.consent.ConsentManager;
 
 import java.io.IOException;
@@ -36,6 +37,9 @@ public class UserInstanceManager {
     // We have 1 ConsentManager per user/user profile. This is to isolate user's data.
     @GuardedBy("UserInstanceManager.class")
     private final Map<Integer, ConsentManager> mConsentManagerMapLocked = new ArrayMap<>();
+
+    @GuardedBy("UserInstanceManager.class")
+    private final Map<Integer, AppConsentManager> mAppConsentManagerMapLocked = new ArrayMap<>();
 
     private final String mAdServicesBaseDir;
 
@@ -55,11 +59,29 @@ public class UserInstanceManager {
         }
     }
 
+    @NonNull
+    AppConsentManager getOrCreateUserAppConsentManagerInstance(int userIdentifier)
+            throws IOException {
+        synchronized (UserInstanceManager.class) {
+            AppConsentManager instance = mAppConsentManagerMapLocked.get(userIdentifier);
+            if (instance == null) {
+                instance =
+                        AppConsentManager.createAppConsentManager(
+                                mAdServicesBaseDir, userIdentifier);
+                mAppConsentManagerMapLocked.put(userIdentifier, instance);
+            }
+            return instance;
+        }
+    }
+
     @VisibleForTesting
     void tearDownForTesting() {
         synchronized (UserInstanceManager.class) {
             for (ConsentManager consentManager : mConsentManagerMapLocked.values()) {
                 consentManager.tearDownForTesting();
+            }
+            for (AppConsentManager appConsentManager : mAppConsentManagerMapLocked.values()) {
+                appConsentManager.tearDownForTesting();
             }
         }
     }

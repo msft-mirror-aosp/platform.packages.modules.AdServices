@@ -34,6 +34,7 @@ import androidx.core.app.NotificationManagerCompat;
 
 import com.android.adservices.api.R;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.UIStats;
@@ -51,6 +52,7 @@ public class ConsentNotificationTrigger {
      * @param context Context which is used to display {@link NotificationCompat}
      */
     public static void showConsentNotification(@NonNull Context context, boolean isEuDevice) {
+        boolean gaUxFeatureEnabled = FlagsFactory.getFlags().getGaUxFeatureEnabled();
         UIStats uiStats =
                 new UIStats.Builder()
                         .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
@@ -64,30 +66,57 @@ public class ConsentNotificationTrigger {
         AdServicesLoggerImpl.getInstance().logUIStats(uiStats);
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
 
+        ConsentManager consentManager = ConsentManager.getInstance(context);
+
         if (!notificationManager.areNotificationsEnabled()) {
-            ConsentManager.getInstance(context).recordNotificationDisplayed();
+            if (gaUxFeatureEnabled) {
+                consentManager.recordGaUxNotificationDisplayed();
+            } else {
+                consentManager.recordNotificationDisplayed();
+            }
             // TODO(b/242001860): add logging
             return;
         }
 
-        // For the ROW devices, set the consent to GIVEN (enabled).
-        // For the EU devices, set the consent to REVOKED (disabled)
-        if (!isEuDevice) {
-            ConsentManager.getInstance(context).enable(context);
+        // Keep the feature flag at the upper level to make it easier to cleanup the code once
+        // the beta functionality is fully deprecated and abandoned.
+        if (gaUxFeatureEnabled) {
+            // EU: all APIs are by default disabled
+            // ROW: all APIs are by default enabled
+            // TODO(b/260266623): change consent state to UNDEFINED
+            if (isEuDevice) {
+                consentManager.disable(context, AdServicesApiType.TOPICS);
+                consentManager.disable(context, AdServicesApiType.FLEDGE);
+                consentManager.disable(context, AdServicesApiType.MEASUREMENTS);
+            } else {
+                consentManager.enable(context, AdServicesApiType.TOPICS);
+                consentManager.enable(context, AdServicesApiType.FLEDGE);
+                consentManager.enable(context, AdServicesApiType.MEASUREMENTS);
+            }
         } else {
-            ConsentManager.getInstance(context).disable(context);
+            // For the ROW devices, set the consent to GIVEN (enabled).
+            // For the EU devices, set the consent to REVOKED (disabled)
+            if (!isEuDevice) {
+                consentManager.enable(context);
+            } else {
+                consentManager.disable(context);
+            }
         }
 
         createNotificationChannel(context);
 
         // check the Ga UX flag to get the title and text for notification
         NotificationCompat.Builder consentNotificationBuilder =
-                FlagsFactory.getFlags().getGaUxFeatureEnabled()
+                gaUxFeatureEnabled
                         ? getGaConsentNotificationBuilder(context, isEuDevice)
                         : getConsentNotificationBuilder(context, isEuDevice);
 
         notificationManager.notify(NOTIFICATION_ID, consentNotificationBuilder.build());
-        ConsentManager.getInstance(context).recordNotificationDisplayed();
+        if (gaUxFeatureEnabled) {
+            consentManager.recordGaUxNotificationDisplayed();
+        } else {
+            consentManager.recordNotificationDisplayed();
+        }
     }
 
     /**

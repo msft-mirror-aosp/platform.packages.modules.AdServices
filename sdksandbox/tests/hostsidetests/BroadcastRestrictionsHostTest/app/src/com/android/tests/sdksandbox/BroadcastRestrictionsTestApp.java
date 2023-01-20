@@ -23,6 +23,7 @@ import static org.junit.Assert.assertThrows;
 import android.Manifest;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
+import android.app.sdksandbox.testutils.EmptyActivity;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.content.Context;
 import android.os.Bundle;
@@ -51,13 +52,10 @@ public class BroadcastRestrictionsTestApp {
     private static final String SDK_PACKAGE =
             "com.android.tests.sdkprovider.restrictions.broadcasts";
 
-    private boolean mEnforceBroadcastRestrictionsPropertyAvailable = false;
-    private boolean mEnforceBroadcastRestrictions = false;
+    private Boolean mEnforceBroadcastRestrictions = null;
 
     /** This rule is defined to start an activity in the foreground to call the sandbox APIs */
-    @Rule
-    public final ActivityScenarioRule mRule =
-            new ActivityScenarioRule<>(SdkSandboxEmptyActivity.class);
+    @Rule public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(EmptyActivity.class);
 
     @Before
     public void setup() {
@@ -77,7 +75,6 @@ public class BroadcastRestrictionsTestApp {
             mEnforceBroadcastRestrictions =
                     properties.getBoolean(
                             ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS, /*defaultValue=*/ false);
-            mEnforceBroadcastRestrictionsPropertyAvailable = true;
         }
         mRule.getScenario();
     }
@@ -88,11 +85,11 @@ public class BroadcastRestrictionsTestApp {
          * We check if the properties contain enforce_broadcast_receiver_restrictions key, and
          * update the property to the pre-test value
          */
-        if (mEnforceBroadcastRestrictionsPropertyAvailable) {
+        if (mEnforceBroadcastRestrictions != null) {
             DeviceConfig.setProperty(
                     DeviceConfig.NAMESPACE_SDK_SANDBOX,
                     ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS,
-                    mEnforceBroadcastRestrictions ? "true" : "false",
+                    String.valueOf(mEnforceBroadcastRestrictions),
                     /*makeDefault=*/ false);
         }
         InstrumentationRegistry.getInstrumentation()
@@ -109,7 +106,7 @@ public class BroadcastRestrictionsTestApp {
             throws Exception {
         /** Ensuring that the property is not present in DeviceConfig */
         DeviceConfig.deleteProperty(
-                DeviceConfig.NAMESPACE_SDK_SANDBOX, ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS);
+                DeviceConfig.NAMESPACE_ADSERVICES, ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS);
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
@@ -128,7 +125,7 @@ public class BroadcastRestrictionsTestApp {
     @Test
     public void testRegisterBroadcastReceiver_restrictionsApplied() throws Exception {
         DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_SDK_SANDBOX,
+                DeviceConfig.NAMESPACE_ADSERVICES,
                 ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS,
                 "true",
                 false);
@@ -151,7 +148,7 @@ public class BroadcastRestrictionsTestApp {
     @Test(expected = Test.None.class /* no exception expected */)
     public void testRegisterBroadcastReceiver_restrictionsNotApplied() throws Exception {
         DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_SDK_SANDBOX,
+                DeviceConfig.NAMESPACE_ADSERVICES,
                 ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS,
                 "false",
                 false);

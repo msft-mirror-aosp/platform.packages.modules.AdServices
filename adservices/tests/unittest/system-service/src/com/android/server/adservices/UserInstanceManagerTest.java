@@ -22,6 +22,7 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.server.adservices.consent.AppConsentManager;
 import com.android.server.adservices.consent.ConsentManager;
 
 import org.junit.After;
@@ -57,11 +58,19 @@ public class UserInstanceManagerTest {
         ConsentManager consentManager1 =
                 mUserInstanceManager.getOrCreateUserConsentManagerInstance(/* userIdentifier */ 1);
 
+        AppConsentManager appConsentManager0 =
+                mUserInstanceManager.getOrCreateUserAppConsentManagerInstance(0);
+
+        AppConsentManager appConsentManager1 =
+                mUserInstanceManager.getOrCreateUserAppConsentManagerInstance(1);
+
         // One instance per user.
         assertThat(
                         mUserInstanceManager.getOrCreateUserConsentManagerInstance(
                                 /* userIdentifier */ 0))
                 .isNotSameInstanceAs(consentManager1);
+        assertThat(mUserInstanceManager.getOrCreateUserAppConsentManagerInstance(0))
+                .isNotSameInstanceAs(appConsentManager1);
 
         // Creating instance once per user.
         assertThat(
@@ -72,5 +81,9 @@ public class UserInstanceManagerTest {
                         mUserInstanceManager.getOrCreateUserConsentManagerInstance(
                                 /* userIdentifier */ 1))
                 .isSameInstanceAs(consentManager1);
+        assertThat(mUserInstanceManager.getOrCreateUserAppConsentManagerInstance(0))
+                .isSameInstanceAs(appConsentManager0);
+        assertThat(mUserInstanceManager.getOrCreateUserAppConsentManagerInstance(1))
+                .isSameInstanceAs(appConsentManager1);
     }
 }

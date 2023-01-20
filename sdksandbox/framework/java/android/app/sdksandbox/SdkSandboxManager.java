@@ -398,17 +398,17 @@ public final class SdkSandboxManager {
         final LoadSdkReceiverProxy callbackProxy =
                 new LoadSdkReceiverProxy(executor, receiver, mService);
 
-        IBinder appProcessBinderObject;
-        // Context.getIApplicationThreadBinder() only exists on U+.
+        IBinder appProcessToken;
+        // Context.getProcessToken() only exists on U+.
         if (SdkLevel.isAtLeastU()) {
-            appProcessBinderObject = mContext.getIApplicationThreadBinder();
+            appProcessToken = mContext.getProcessToken();
         } else {
-            appProcessBinderObject = null;
+            appProcessToken = null;
         }
         try {
             mService.loadSdk(
                     mContext.getPackageName(),
-                    appProcessBinderObject,
+                    appProcessToken,
                     sdkName,
                     /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
                     params,

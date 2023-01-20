@@ -77,7 +77,8 @@ public class Source {
     @Status private int mStatus;
     private long mEventTime;
     private long mExpiryTime;
-    private List<UnsignedLong> mDedupKeys;
+    private List<UnsignedLong> mAggregateReportDedupKeys;
+    private List<UnsignedLong> mEventReportDedupKeys;
     @AttributionMode private int mAttributionMode;
     private long mInstallAttributionWindow;
     private long mInstallCooldownWindow;
@@ -129,7 +130,8 @@ public class Source {
     }
 
     private Source() {
-        mDedupKeys = new ArrayList<>();
+        mEventReportDedupKeys = new ArrayList<>();
+        mAggregateReportDedupKeys = new ArrayList<>();
         mStatus = Status.ACTIVE;
         mSourceType = SourceType.EVENT;
         // Making this default explicit since it anyway would occur on an uninitialised int field.
@@ -322,7 +324,8 @@ public class Source {
                 && Objects.equals(mEventId, source.mEventId)
                 && Objects.equals(mDebugKey, source.mDebugKey)
                 && mSourceType == source.mSourceType
-                && Objects.equals(mDedupKeys, source.mDedupKeys)
+                && Objects.equals(mEventReportDedupKeys, source.mEventReportDedupKeys)
+                && Objects.equals(mAggregateReportDedupKeys, source.mAggregateReportDedupKeys)
                 && Objects.equals(mRegistrant, source.mRegistrant)
                 && mAttributionMode == source.mAttributionMode
                 && mIsDebugReporting == source.mIsDebugReporting
@@ -348,7 +351,8 @@ public class Source {
                 mEventTime,
                 mEventId,
                 mSourceType,
-                mDedupKeys,
+                mEventReportDedupKeys,
+                mAggregateReportDedupKeys,
                 mFilterData,
                 mAggregateSource,
                 mAggregateContributions,
@@ -510,11 +514,14 @@ public class Source {
         return mArDebugPermission;
     }
 
-    /**
-     * List of dedup keys for the attributed {@link Trigger}.
-     */
-    public List<UnsignedLong> getDedupKeys() {
-        return mDedupKeys;
+    /** List of dedup keys for the attributed {@link Trigger}. */
+    public List<UnsignedLong> getEventReportDedupKeys() {
+        return mEventReportDedupKeys;
+    }
+
+    /** List of dedup keys used for generating Aggregate Reports. */
+    public List<UnsignedLong> getAggregateReportDedupKeys() {
+        return mAggregateReportDedupKeys;
     }
 
     /** Current status of the {@link Source}. */
@@ -833,10 +840,18 @@ public class Source {
             return this;
         }
 
-        /** See {@link Source#getDedupKeys()}. */
+        /** See {@link Source#getEventReportDedupKeys()}. */
         @NonNull
-        public Builder setDedupKeys(@Nullable List<UnsignedLong> dedupKeys) {
-            mBuilding.mDedupKeys = dedupKeys;
+        public Builder setEventReportDedupKeys(@Nullable List<UnsignedLong> mEventReportDedupKeys) {
+            mBuilding.mEventReportDedupKeys = mEventReportDedupKeys;
+            return this;
+        }
+
+        /** See {@link Source#getAggregateReportDedupKeys()}. */
+        @NonNull
+        public Builder setAggregateReportDedupKeys(
+                @Nullable List<UnsignedLong> mAggregateReportDedupKeys) {
+            mBuilding.mAggregateReportDedupKeys = mAggregateReportDedupKeys;
             return this;
         }
 

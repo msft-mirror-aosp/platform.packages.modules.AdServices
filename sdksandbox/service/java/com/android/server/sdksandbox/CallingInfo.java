@@ -33,7 +33,7 @@ public final class CallingInfo {
 
     private final int mUid;
     private final String mPackageName;
-    private final @Nullable IBinder mApplicationThread;
+    private final @Nullable IBinder mAppProcessToken;
 
     private static void enforceCallingPackageBelongsToUid(
             Context context, int uid, String packageName) {
@@ -51,10 +51,10 @@ public final class CallingInfo {
         }
     }
 
-    public CallingInfo(int uid, String packageName, @Nullable IBinder applicationThread) {
+    public CallingInfo(int uid, String packageName, @Nullable IBinder processTokenBinder) {
         mUid = uid;
         mPackageName = Objects.requireNonNull(packageName);
-        mApplicationThread = applicationThread;
+        mAppProcessToken = processTokenBinder;
     }
 
     public CallingInfo(int uid, String packageName) {
@@ -84,8 +84,8 @@ public final class CallingInfo {
         return mUid;
     }
 
-    public @Nullable IBinder getApplicationThreadBinder() {
-        return mApplicationThread;
+    public @Nullable IBinder getAppProcessToken() {
+        return mAppProcessToken;
     }
 
     public String getPackageName() {
@@ -99,8 +99,8 @@ public final class CallingInfo {
                 + mUid
                 + ", mPackageName='"
                 + mPackageName
-                + ", mApplicationThread='"
-                + mApplicationThread
+                + ", mAppProcessToken='"
+                + mAppProcessToken
                 + "'}";
     }
 
