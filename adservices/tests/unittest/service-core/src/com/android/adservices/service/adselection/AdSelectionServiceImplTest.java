@@ -100,6 +100,7 @@ import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
@@ -223,11 +224,16 @@ public class AdSelectionServiceImplTest {
                     new EnrollmentDao(CONTEXT, DbTestUtil.getDbHelperForTest()),
                     mAdServicesLoggerMock);
 
-    private Flags mFlags = new FlagsWithEnrollmentCheckEnabledSwitch(false);
+    private Flags mFlagsGaUxDisabled = new FlagsWithEnrollmentCheckEnabledSwitch(false, false);
+    private Flags mFlagsGaUxEnabled = new FlagsWithEnrollmentCheckEnabledSwitch(false, true);
 
     @Spy
     FledgeAllowListsFilter mFledgeAllowListsFilterSpy =
-            new FledgeAllowListsFilter(mFlags, mAdServicesLoggerMock);
+            new FledgeAllowListsFilter(mFlagsGaUxDisabled, mAdServicesLoggerMock);
+
+    @Spy
+    FledgeAllowListsFilter mFledgeAllowListsFilterGaUxEnabledSpy =
+            new FledgeAllowListsFilter(mFlagsGaUxEnabled, mAdServicesLoggerMock);
 
     private MockitoSession mStaticMockSession = null;
     @Mock private ConsentManager mConsentManagerMock;
@@ -299,9 +305,20 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
-    public void testReportImpressionSuccess() throws Exception {
+    public void testReportImpressionSuccessGaUxDisabled() throws Exception {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+        reportImpressionSuccess(mFlagsGaUxDisabled);
+    }
 
+    @Test
+    public void testReportImpressionSuccessGaUxEnabled() throws Exception {
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(mConsentManagerMock)
+                .getConsent(AdServicesApiType.FLEDGE);
+        reportImpressionSuccess(mFlagsGaUxEnabled);
+    }
+
+    private void reportImpressionSuccess(Flags flags) throws Exception {
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -370,10 +387,12 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        flags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeAllowListsFilterSpy);
+                        flags.getGaUxFeatureEnabled()
+                                ? mFledgeAllowListsFilterGaUxEnabledSpy
+                                : mFledgeAllowListsFilterSpy);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -488,7 +507,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -647,7 +666,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -797,7 +816,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -944,7 +963,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -1083,7 +1102,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -1204,7 +1223,7 @@ public class AdSelectionServiceImplTest {
         // Create new flag with overridden value so that only one pairing per ad-tech can be
         // registered
         Flags flagsWithSmallerMaxEventUris =
-                new FlagsWithEnrollmentCheckEnabledSwitch(false) {
+                new FlagsWithEnrollmentCheckEnabledSwitch(false, false) {
                     @Override
                     public long getReportImpressionMaxEventUriEntriesCount() {
                         return 1;
@@ -1281,9 +1300,20 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
-    public void testReportImpressionWithRevokedUserConsentSuccess() throws Exception {
+    public void testReportImpressionWithRevokedUserConsentSuccessGaUxDisabled() throws Exception {
         doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent();
+        reportImpressionWithRevokedUserConsentSuccess(mFlagsGaUxDisabled);
+    }
 
+    @Test
+    public void testReportImpressionWithRevokedUserConsentSuccessGaUxEnabled() throws Exception {
+        doReturn(AdServicesApiConsent.REVOKED)
+                .when(mConsentManagerMock)
+                .getConsent(AdServicesApiType.FLEDGE);
+        reportImpressionWithRevokedUserConsentSuccess(mFlagsGaUxEnabled);
+    }
+
+    private void reportImpressionWithRevokedUserConsentSuccess(Flags flags) throws Exception {
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
         String buyerDecisionLogicJs =
@@ -1343,10 +1373,12 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        flags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeAllowListsFilterSpy);
+                        flags.getGaUxFeatureEnabled()
+                                ? mFledgeAllowListsFilterGaUxEnabledSpy
+                                : mFledgeAllowListsFilterSpy);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1374,7 +1406,7 @@ public class AdSelectionServiceImplTest {
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
         String jsWaitMoreThanAllowed =
-                insertJsWait(2 * mFlags.getReportImpressionOverallTimeoutMs());
+                insertJsWait(2 * mFlagsGaUxDisabled.getReportImpressionOverallTimeoutMs());
 
         String sellerDecisionLogicJs =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
@@ -1439,7 +1471,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -1471,7 +1503,7 @@ public class AdSelectionServiceImplTest {
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
         String jsWaitMoreThanAllowed =
-                insertJsWait(2 * mFlags.getReportImpressionOverallTimeoutMs());
+                insertJsWait(2 * mFlagsGaUxDisabled.getReportImpressionOverallTimeoutMs());
 
         String sellerDecisionLogicJs =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
@@ -1536,7 +1568,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -1568,7 +1600,8 @@ public class AdSelectionServiceImplTest {
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
         String jsWaitMoreThanAllowed =
-                insertJsWait((long) (.25 * mFlags.getReportImpressionOverallTimeoutMs()));
+                insertJsWait(
+                        (long) (.25 * mFlagsGaUxDisabled.getReportImpressionOverallTimeoutMs()));
 
         String sellerDecisionLogicJs =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
@@ -1595,7 +1628,10 @@ public class AdSelectionServiceImplTest {
                                 .setBody(sellerDecisionLogicJs)
                                 .throttleBody(
                                         mBytesPerPeriod,
-                                        (long) (.5 * mFlags.getReportImpressionOverallTimeoutMs()),
+                                        (long)
+                                                (.5
+                                                        * mFlagsGaUxDisabled
+                                                                .getReportImpressionOverallTimeoutMs()),
                                         TimeUnit.MILLISECONDS),
                         new MockResponse(),
                         new MockResponse()));
@@ -1639,7 +1675,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -1693,7 +1729,7 @@ public class AdSelectionServiceImplTest {
                                 .setBody(sellerDecisionLogicJs)
                                 .throttleBody(
                                         mBytesPerPeriod,
-                                        mFlags.getReportImpressionOverallTimeoutMs(),
+                                        mFlagsGaUxDisabled.getReportImpressionOverallTimeoutMs(),
                                         TimeUnit.MILLISECONDS),
                         new MockResponse(),
                         new MockResponse()));
@@ -1737,7 +1773,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -1830,7 +1866,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -1922,7 +1958,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -2015,7 +2051,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -2128,7 +2164,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -2260,7 +2296,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -2343,7 +2379,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -2393,7 +2429,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -2438,7 +2474,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -2488,7 +2524,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -2550,7 +2586,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -2608,7 +2644,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -2670,7 +2706,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -2733,7 +2769,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -2837,7 +2873,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -2943,7 +2979,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -3045,7 +3081,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -3144,7 +3180,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -3180,7 +3216,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -3290,7 +3326,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -3395,7 +3431,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -3489,7 +3525,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -3618,7 +3654,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -3714,7 +3750,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -3746,7 +3782,7 @@ public class AdSelectionServiceImplTest {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         // Reset flags to perform enrollment check
-        mFlags = new FlagsWithEnrollmentCheckEnabledSwitch(true);
+        mFlagsGaUxDisabled = new FlagsWithEnrollmentCheckEnabledSwitch(true, false);
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -3814,7 +3850,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -3846,7 +3882,7 @@ public class AdSelectionServiceImplTest {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         // Reset flags to perform enrollment check
-        mFlags = new FlagsWithEnrollmentCheckEnabledSwitch(true);
+        mFlagsGaUxDisabled = new FlagsWithEnrollmentCheckEnabledSwitch(true, false);
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -3922,7 +3958,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -4016,7 +4052,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -4263,7 +4299,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -4365,7 +4401,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -4469,7 +4505,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -4520,7 +4556,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -4574,7 +4610,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -4622,7 +4658,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -4676,7 +4712,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -4742,7 +4778,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -4802,7 +4838,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -4866,7 +4902,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -4929,7 +4965,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -5041,7 +5077,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -5147,7 +5183,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -5258,7 +5294,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -5386,7 +5422,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -5724,9 +5760,12 @@ public class AdSelectionServiceImplTest {
 
     private static class FlagsWithEnrollmentCheckEnabledSwitch implements Flags {
         private final boolean mEnrollmentCheckEnabled;
+        private final boolean mIsGaUxEnabled;
 
-        FlagsWithEnrollmentCheckEnabledSwitch(boolean enrollmentCheckEnabled) {
+        FlagsWithEnrollmentCheckEnabledSwitch(
+                boolean enrollmentCheckEnabled, boolean isGaUxEnabled) {
             mEnrollmentCheckEnabled = enrollmentCheckEnabled;
+            mIsGaUxEnabled = isGaUxEnabled;
         }
 
         @Override
@@ -5757,6 +5796,11 @@ public class AdSelectionServiceImplTest {
         @Override
         public boolean getEnforceIsolateMaxHeapSize() {
             return false;
+        }
+
+        @Override
+        public boolean getGaUxFeatureEnabled() {
+            return mIsGaUxEnabled;
         }
 
         @Override

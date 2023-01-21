@@ -21,10 +21,8 @@ import android.app.adservices.consent.ConsentParcel;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.adservices.LogUtil;
 
+import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Objects;
 
 /**
@@ -33,11 +31,6 @@ import java.util.Objects;
  * @hide
  */
 public final class ConsentManager {
-    // The Data Schema Version of this binary.
-    static final String DATA_SCHEMA_VERSION = "1";
-
-    private static final String CONSENT_DIR = "consent";
-
     public static final String ERROR_MESSAGE_DATASTORE_EXCEPTION_WHILE_GET_CONTENT =
             "getConsent method failed. Revoked consent is returned as fallback.";
 
@@ -51,7 +44,6 @@ public final class ConsentManager {
     static final String FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED =
             "FLDEGE-AND-MSMT-CONDENT-PAGE-DISPLAYED";
 
-    private static final String CONSENT_KEY = "CONSENT";
     private static final String CONSENT_API_TYPE_PREFIX = "CONSENT_API_TYPE_";
 
     // Deprecate this since we store each version in its own folder.
@@ -67,16 +59,17 @@ public final class ConsentManager {
     }
 
     /** Create a ConsentManager with base directory and for userIdentifier */
-    public static ConsentManager createConsentManager(String baseDir, int userIdentifier)
+    @NonNull
+    public static ConsentManager createConsentManager(@NonNull String baseDir, int userIdentifier)
             throws IOException {
+        Objects.requireNonNull(baseDir, "Base dir must be provided.");
+
         // The Data store is in folder with the following format.
         // /data/system/adservices/user_id/consent/data_schema_version/
         // Create the consent directory if needed.
-        String consentDataStoreDir = getConsentDataStoreDir(baseDir, userIdentifier);
-        final Path packageDir = Paths.get(consentDataStoreDir);
-        if (!Files.exists(packageDir)) {
-            Files.createDirectories(packageDir);
-        }
+        String consentDataStoreDir =
+                ConsentDatastoreLocationHelper.getConsentDataStoreDirAndCreateDir(
+                        baseDir, userIdentifier);
 
         BooleanFileDatastore datastore = createAndInitBooleanFileDatastore(consentDataStoreDir);
 
@@ -108,12 +101,6 @@ public final class ConsentManager {
             datastore.put(FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED, false);
         }
         return datastore;
-    }
-
-    @VisibleForTesting
-    @NonNull
-    static String getConsentDataStoreDir(String baseDir, int userIdentifier) {
-        return baseDir + "/" + userIdentifier + "/" + CONSENT_DIR;
     }
 
     /** Retrieves the consent for all PP API services. */
@@ -276,6 +263,26 @@ public final class ConsentManager {
         synchronized (this) {
             Boolean displayed = mDatastore.get(FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED);
             return displayed != null ? displayed : false;
+        }
+    }
+    /**
+     * Deletes the user directory which contains consent information present at
+     * /data/system/adservices/user_id
+     */
+    public boolean deleteUserDirectory(File dir) throws IOException {
+        synchronized (this) {
+            boolean success = true;
+            File[] files = dir.listFiles();
+            // files will be null if dir is not a directory
+            if (files != null) {
+                for (File file : files) {
+                    if (!deleteUserDirectory(file)) {
+                        LogUtil.d("Failed to delete " + file);
+                        success = false;
+                    }
+                }
+            }
+            return success && dir.delete();
         }
     }
 

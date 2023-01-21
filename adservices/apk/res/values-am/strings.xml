@@ -556,4 +556,22 @@
     <string name="topic10444" msgid="2075863187654728611">"የትራፊክ እና የአቅጣጫ ዕቅድ አውጪዎች"</string>
     <string name="topic10445" msgid="3460421948068980869">"የጉዞ ወኪሎች እና አገልግሎቶች"</string>
     <string name="topic10446" msgid="5333138740720504195">"የጉዞ መመሪያዎች እና የጉዞ ጽሑፎች"</string>
+    <!-- no translation found for settingsUI_topics_subtitle (6545976434367750110) -->
+    <skip />
+    <!-- no translation found for settingsUI_apps_subtitle (387595280958995973) -->
+    <skip />
+    <!-- no translation found for settingsUI_subtitle_consent_on (7522464537194619022) -->
+    <skip />
+    <!-- no translation found for settingsUI_subtitle_consent_off (1604274030685784887) -->
+    <skip />
+    <!-- no translation found for settingsUI_topics_switch_title (5856255848598189791) -->
+    <skip />
+    <!-- no translation found for settingsUI_measurement_switch_title (6623116680555954932) -->
+    <skip />
+    <!-- no translation found for settingsUI_apps_switch_title (1308209012769248890) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_topics_opt_out_title (7100008407947225099) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_apps_opt_out_title (632296780673559302) -->
+    <skip />
 </resources>

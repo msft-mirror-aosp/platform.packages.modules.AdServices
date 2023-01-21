@@ -40,11 +40,11 @@ import android.net.Uri;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
-import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.topics.AppUpdateManager;
 import com.android.adservices.service.topics.BlockedTopicsManager;
@@ -81,7 +81,7 @@ public class PackageChangedReceiverTest {
     @Mock AppUpdateManager mMockAppUpdateManager;
     @Mock CustomAudienceDatabase mCustomAudienceDatabaseMock;
     @Mock CustomAudienceDao mCustomAudienceDaoMock;
-    @Mock AppConsentDao mAppConsentDaoMock;
+    @Mock ConsentManager mConsentManager;
     @Mock Flags mMockFlags;
 
     private TopicsWorker mSpyTopicsWorker;
@@ -408,13 +408,13 @@ public class PackageChangedReceiverTest {
         // Lenient added to allow easy disabling of other APIs' methods
         MockitoSession session =
                 ExtendedMockito.mockitoSession()
-                        .mockStatic(AppConsentDao.class)
+                        .mockStatic(ConsentManager.class)
                         .strictness(Strictness.LENIENT)
                         .initMocks(this)
                         .startMocking();
         try {
             // Mock static method AppConsentDao.getInstance() executed on a separate thread
-            doReturn(mAppConsentDaoMock).when(() -> AppConsentDao.getInstance(any()));
+            doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any()));
 
             CountDownLatch completionLatch = new CountDownLatch(1);
             doAnswer(
@@ -422,7 +422,7 @@ public class PackageChangedReceiverTest {
                                 completionLatch.countDown();
                                 return null;
                             })
-                    .when(mAppConsentDaoMock)
+                    .when(mConsentManager)
                     .clearConsentForUninstalledApp(any(), anyInt());
 
             // Initialize package receiver meant for Consent
@@ -433,71 +433,7 @@ public class PackageChangedReceiverTest {
 
             // Verify method inside background thread executes
             assertThat(completionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
-            verify(mAppConsentDaoMock).clearConsentForUninstalledApp(any(), anyInt());
-        } finally {
-            session.finishMocking();
-        }
-    }
-
-    /**
-     * Tests that when no packageUid is present via the Intent Extra, consent data for all apps
-     * needs to be cleared.
-     */
-    @Test
-    public void testReceivePackageFullyRemoved_consent_noPackageUid()
-            throws InterruptedException, IOException {
-        Intent intent = createDefaultIntentWithAction(PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
-        intent.removeExtra(Intent.EXTRA_UID);
-
-        validateConsentClearedWhenPackageUidAbsent(intent);
-    }
-
-    /**
-     * Tests that wen packageUid is explicitly set to the default value via the Intent Extra,
-     * consent data for all apps needs to be cleared.
-     */
-    @Test
-    public void testReceivePackageFullyRemoved_consent_packageUidIsExplicitlyDefault()
-            throws InterruptedException, IOException {
-        Intent intent = createDefaultIntentWithAction(PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
-        intent.putExtra(Intent.EXTRA_UID, DEFAULT_PACKAGE_UID);
-
-        validateConsentClearedWhenPackageUidAbsent(intent);
-    }
-
-    private void validateConsentClearedWhenPackageUidAbsent(Intent intent)
-            throws IOException, InterruptedException {
-        // Start a mockitoSession to mock static method
-        // Lenient added to allow easy disabling of other APIs' methods
-        MockitoSession session =
-                ExtendedMockito.mockitoSession()
-                        .mockStatic(AppConsentDao.class)
-                        .strictness(Strictness.LENIENT)
-                        .initMocks(this)
-                        .startMocking();
-        try {
-            // Mock static method AppConsentDao.getInstance() executed on a separate thread
-            doReturn(mAppConsentDaoMock).when(() -> AppConsentDao.getInstance(any()));
-
-            CountDownLatch completionLatch = new CountDownLatch(1);
-            doAnswer(
-                            unusedInvocation -> {
-                                completionLatch.countDown();
-                                return null;
-                            })
-                    .when(mAppConsentDaoMock)
-                    .clearAllConsentData();
-
-            // Initialize package receiver meant for Consent
-            PackageChangedReceiver spyReceiver = createSpyPackageReceiverForConsent();
-            spyReceiver.onReceive(sContext, intent);
-
-            // Package UID is expected to be -1 if there is no EXTRA_UID in the Intent's Extra.
-            verify(spyReceiver).consentOnPackageFullyRemoved(any(), any(), eq(DEFAULT_PACKAGE_UID));
-
-            // Verify method inside background thread executes
-            assertThat(completionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
-            verify(mAppConsentDaoMock).clearAllConsentData();
+            verify(mConsentManager).clearConsentForUninstalledApp(any(), anyInt());
         } finally {
             session.finishMocking();
         }

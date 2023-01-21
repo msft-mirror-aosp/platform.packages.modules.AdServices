@@ -84,6 +84,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdSelectionServiceImpl;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.customaudience.BackgroundFetchJobService;
 import com.android.adservices.service.customaudience.CustomAudienceImpl;
@@ -173,16 +174,23 @@ public class FledgeE2ETest {
     private ExecutorService mBackgroundExecutorService;
     private ScheduledThreadPoolExecutor mScheduledExecutor;
     private CustomAudienceServiceImpl mCustomAudienceService;
+    private CustomAudienceServiceImpl mCustomAudienceServiceGaUxEnabled;
     private AdSelectionServiceImpl mAdSelectionService;
+    private AdSelectionServiceImpl mAdSelectionServiceGaUxEnabled;
 
-    private final Flags mFlags = new FledgeE2ETestFlags();
+    private final Flags mFlagsGaUxDisabled = new FledgeE2ETestFlags(false);
+    private final Flags mFlagsGaUxEnabled = new FledgeE2ETestFlags(true);
     private MockWebServerRule.RequestMatcher<String> mRequestMatcherPrefixMatch;
     private Uri mLocalhostBuyerDomain;
     private Supplier<Throttler> mThrottlerSupplier = () -> mMockThrottler;
 
     @Spy
-    FledgeAllowListsFilter mFledgeAllowListsFilterSpy =
-            new FledgeAllowListsFilter(mFlags, mAdServicesLogger);
+    FledgeAllowListsFilter mFledgeAllowListsFilterGaUxDisabledSpy =
+            new FledgeAllowListsFilter(mFlagsGaUxDisabled, mAdServicesLogger);
+
+    @Spy
+    FledgeAllowListsFilter mFledgeAllowListsFilterGaUxEnabledSpy =
+            new FledgeAllowListsFilter(mFlagsGaUxEnabled, mAdServicesLogger);
 
     @Mock private File mMockDBAdSelectionFile;
 
@@ -197,7 +205,7 @@ public class FledgeE2ETest {
                         .strictness(Strictness.LENIENT)
                         .initMocks(this)
                         .startMocking();
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(mFlagsGaUxDisabled).when(FlagsFactory::getFlags);
 
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
@@ -218,29 +226,73 @@ public class FledgeE2ETest {
                         AdServicesExecutors.getBlockingExecutor(),
                         CacheProviderFactory.createNoOpCache());
 
-        mCustomAudienceService =
+        mCustomAudienceServiceGaUxEnabled =
                 new CustomAudienceServiceImpl(
                         CONTEXT,
                         new CustomAudienceImpl(
                                 mCustomAudienceDao,
-                                new CustomAudienceQuantityChecker(mCustomAudienceDao, mFlags),
+                                new CustomAudienceQuantityChecker(
+                                        mCustomAudienceDao, mFlagsGaUxEnabled),
                                 new CustomAudienceValidator(
-                                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI, mFlags),
+                                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
+                                        mFlagsGaUxEnabled),
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                                mFlags),
+                                mFlagsGaUxEnabled),
                         FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLogger),
-                        mFledgeAllowListsFilterSpy,
+                        mFledgeAllowListsFilterGaUxEnabledSpy,
                         mConsentManagerMock,
                         mDevContextFilter,
                         MoreExecutors.newDirectExecutorService(),
                         mAdServicesLogger,
                         mAppImportanceFilter,
-                        mFlags,
+                        mFlagsGaUxEnabled,
+                        mThrottlerSupplier,
+                        CallingAppUidSupplierProcessImpl.create());
+
+        mCustomAudienceService =
+                new CustomAudienceServiceImpl(
+                        CONTEXT,
+                        new CustomAudienceImpl(
+                                mCustomAudienceDao,
+                                new CustomAudienceQuantityChecker(
+                                        mCustomAudienceDao, mFlagsGaUxDisabled),
+                                new CustomAudienceValidator(
+                                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
+                                        mFlagsGaUxDisabled),
+                                CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
+                                mFlagsGaUxDisabled),
+                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLogger),
+                        mFledgeAllowListsFilterGaUxDisabledSpy,
+                        mConsentManagerMock,
+                        mDevContextFilter,
+                        MoreExecutors.newDirectExecutorService(),
+                        mAdServicesLogger,
+                        mAppImportanceFilter,
+                        mFlagsGaUxDisabled,
                         mThrottlerSupplier,
                         CallingAppUidSupplierProcessImpl.create());
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
+
+        // Create an instance of AdSelection Service with real dependencies for GA UX
+        mAdSelectionServiceGaUxEnabled =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mAdServicesHttpsClient,
+                        mDevContextFilter,
+                        mAppImportanceFilter,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        CONTEXT,
+                        mConsentManagerMock,
+                        mAdServicesLogger,
+                        mFlagsGaUxEnabled,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLogger),
+                        mFledgeAllowListsFilterGaUxEnabledSpy);
 
         // Create an instance of AdSelection Service with real dependencies
         mAdSelectionService =
@@ -256,10 +308,10 @@ public class FledgeE2ETest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLogger,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLogger),
-                        mFledgeAllowListsFilterSpy);
+                        mFledgeAllowListsFilterGaUxDisabledSpy);
 
         mRequestMatcherPrefixMatch = (a, b) -> !b.isEmpty() && a.startsWith(b);
 
@@ -284,8 +336,26 @@ public class FledgeE2ETest {
     }
 
     @Test
-    public void testFledgeFlowSuccessWithDevOverrides() throws Exception {
+    public void testFledgeFlowSuccessWithDevOverridesGaUxDisabled() throws Exception {
+        doReturn(mFlagsGaUxDisabled).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+        fledgeFlowSuccessWithDevOverrides(mCustomAudienceService, mAdSelectionService);
+    }
+
+    @Test
+    public void testFledgeFlowSuccessWithDevOverridesGaUxEnabled() throws Exception {
+        doReturn(mFlagsGaUxEnabled).when(FlagsFactory::getFlags);
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(mConsentManagerMock)
+                .getConsent(eq(AdServicesApiType.FLEDGE));
+        fledgeFlowSuccessWithDevOverrides(
+                mCustomAudienceServiceGaUxEnabled, mAdSelectionServiceGaUxEnabled);
+    }
+
+    private void fledgeFlowSuccessWithDevOverrides(
+            CustomAudienceServiceImpl customAudienceService,
+            AdSelectionServiceImpl adSelectionService)
+            throws Exception {
         doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
         doReturn(false)
                 .when(mConsentManagerMock)
@@ -366,13 +436,13 @@ public class FledgeE2ETest {
 
         // Join first custom audience
         ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(
+        customAudienceService.joinCustomAudience(
                 customAudience1, CommonFixture.TEST_PACKAGE_NAME, joinCallback1);
         assertTrue(joinCallback1.isSuccess());
 
         // Join second custom audience
         ResultCapturingCallback joinCallback2 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(
+        customAudienceService.joinCustomAudience(
                 customAudience2, CommonFixture.TEST_PACKAGE_NAME, joinCallback2);
         assertTrue(joinCallback2.isSuccess());
 
@@ -381,7 +451,7 @@ public class FledgeE2ETest {
         // Add AdSelection Override
         AdSelectionOverrideTestCallback adSelectionOverrideTestCallback =
                 callAddAdSelectionOverride(
-                        mAdSelectionService,
+                        adSelectionService,
                         mAdSelectionConfig,
                         decisionLogicJs,
                         TRUSTED_SCORING_SIGNALS);
@@ -396,7 +466,7 @@ public class FledgeE2ETest {
                         customAudience1.getName(),
                         biddingLogicJs,
                         TRUSTED_BIDDING_SIGNALS,
-                        mCustomAudienceService);
+                        customAudienceService);
 
         assertTrue(customAudienceOverrideTestCallback1.mIsSuccess);
 
@@ -407,14 +477,14 @@ public class FledgeE2ETest {
                         customAudience2.getName(),
                         biddingLogicJs,
                         TRUSTED_BIDDING_SIGNALS,
-                        mCustomAudienceService);
+                        customAudienceService);
 
         assertTrue(customAudienceOverrideTestCallback2.mIsSuccess);
 
         // Run Ad Selection
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(
-                        mAdSelectionService, mAdSelectionConfig, CommonFixture.TEST_PACKAGE_NAME);
+                        adSelectionService, mAdSelectionConfig, CommonFixture.TEST_PACKAGE_NAME);
 
         assertTrue(resultsCallback.mIsSuccess);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
@@ -434,7 +504,7 @@ public class FledgeE2ETest {
                         .build();
 
         ReportImpressionTestCallback reportImpressionTestCallback =
-                callReportImpression(mAdSelectionService, input);
+                callReportImpression(adSelectionService, input);
 
         assertTrue(reportImpressionTestCallback.mIsSuccess);
         mMockWebServerRule.verifyMockServerRequests(
@@ -442,9 +512,29 @@ public class FledgeE2ETest {
     }
 
     @Test
-    public void testFledgeFlowSuccessWithDevOverridesWithRevokedUserConsentForApp()
+    public void testFledgeFlowSuccessWithDevOverridesWithRevokedUserConsentForAppGaUxDisabled()
             throws Exception {
+        doReturn(mFlagsGaUxDisabled).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+        fledgeFlowSuccessWithDevOverridesWithRevokedUserConsentForApp(
+                mCustomAudienceService, mAdSelectionService);
+    }
+
+    @Test
+    public void testFledgeFlowSuccessWithDevOverridesWithRevokedUserConsentForAppGaUxEnabled()
+            throws Exception {
+        doReturn(mFlagsGaUxEnabled).when(FlagsFactory::getFlags);
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(mConsentManagerMock)
+                .getConsent(eq(AdServicesApiType.FLEDGE));
+        fledgeFlowSuccessWithDevOverridesWithRevokedUserConsentForApp(
+                mCustomAudienceServiceGaUxEnabled, mAdSelectionServiceGaUxEnabled);
+    }
+
+    private void fledgeFlowSuccessWithDevOverridesWithRevokedUserConsentForApp(
+            CustomAudienceServiceImpl customAudienceService,
+            AdSelectionServiceImpl adSelectionService)
+            throws Exception {
         // Allow the first calls to succeed so that we can verify the rest of the flow works
         when(mConsentManagerMock.isFledgeConsentRevokedForApp(any()))
                 .thenReturn(false)
@@ -525,20 +615,20 @@ public class FledgeE2ETest {
 
         // Join first custom audience
         ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(
+        customAudienceService.joinCustomAudience(
                 customAudience1, CommonFixture.TEST_PACKAGE_NAME, joinCallback1);
         assertTrue(joinCallback1.isSuccess());
 
         // Join second custom audience
         ResultCapturingCallback joinCallback2 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(
+        customAudienceService.joinCustomAudience(
                 customAudience2, CommonFixture.TEST_PACKAGE_NAME, joinCallback2);
         assertTrue(joinCallback2.isSuccess());
 
         // Add AdSelection Override
         AdSelectionOverrideTestCallback adSelectionOverrideTestCallback =
                 callAddAdSelectionOverride(
-                        mAdSelectionService,
+                        adSelectionService,
                         mAdSelectionConfig,
                         decisionLogicJs,
                         TRUSTED_SCORING_SIGNALS);
@@ -553,7 +643,7 @@ public class FledgeE2ETest {
                         customAudience1.getName(),
                         biddingLogicJs,
                         TRUSTED_BIDDING_SIGNALS,
-                        mCustomAudienceService);
+                        customAudienceService);
 
         assertTrue(customAudienceOverrideTestCallback1.mIsSuccess);
 
@@ -564,14 +654,14 @@ public class FledgeE2ETest {
                         customAudience2.getName(),
                         biddingLogicJs,
                         TRUSTED_BIDDING_SIGNALS,
-                        mCustomAudienceService);
+                        customAudienceService);
 
         assertTrue(customAudienceOverrideTestCallback2.mIsSuccess);
 
         // Run Ad Selection
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(
-                        mAdSelectionService, mAdSelectionConfig, CommonFixture.TEST_PACKAGE_NAME);
+                        adSelectionService, mAdSelectionConfig, CommonFixture.TEST_PACKAGE_NAME);
 
         // Verify that CA1/ad2 won because CA2 was not joined due to user consent
         assertTrue(resultsCallback.mIsSuccess);
@@ -592,7 +682,7 @@ public class FledgeE2ETest {
                         .build();
 
         ReportImpressionTestCallback reportImpressionTestCallback =
-                callReportImpression(mAdSelectionService, input);
+                callReportImpression(adSelectionService, input);
 
         assertTrue(reportImpressionTestCallback.mIsSuccess);
         mMockWebServerRule.verifyMockServerRequests(
@@ -631,14 +721,14 @@ public class FledgeE2ETest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLogger,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLogger),
-                        mFledgeAllowListsFilterSpy);
+                        mFledgeAllowListsFilterGaUxDisabledSpy);
 
         // Stubbing this check so it fails at matching validation
         doNothing()
-                .when(mFledgeAllowListsFilterSpy)
+                .when(mFledgeAllowListsFilterGaUxDisabledSpy)
                 .assertAppCanUsePpapi(
                         otherPackageName, AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION);
 
@@ -2018,6 +2108,12 @@ public class FledgeE2ETest {
     }
 
     private static class FledgeE2ETestFlags implements Flags {
+        private final boolean mIsGaUxEnabled;
+
+        FledgeE2ETestFlags(boolean isGaUxEnabled) {
+            mIsGaUxEnabled = isGaUxEnabled;
+        }
+
         @Override
         public long getAdSelectionBiddingTimeoutPerCaMs() {
             return 10000;
@@ -2036,6 +2132,11 @@ public class FledgeE2ETest {
         @Override
         public boolean getEnforceIsolateMaxHeapSize() {
             return false;
+        }
+
+        @Override
+        public boolean getGaUxFeatureEnabled() {
+            return mIsGaUxEnabled;
         }
 
         @Override
