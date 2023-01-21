@@ -556,4 +556,13 @@
     <string name="topic10444" msgid="2075863187654728611">"‎‏‎‎‎‎‎‏‎‏‏‏‎‎‎‎‎‎‏‎‎‏‎‎‎‎‏‏‏‏‏‎‏‏‏‏‎‎‏‏‎‎‏‏‏‎‏‏‏‏‎‎‏‎‏‎‎‏‎‎‏‎‎‎‎‏‏‏‏‎‎‏‏‏‏‎‎‎‎‏‎‏‏‎‏‏‏‎‏‎‎‎‏‏‎Traffic &amp; Route Planners‎‏‎‎‏‎"</string>
     <string name="topic10445" msgid="3460421948068980869">"‎‏‎‎‎‎‎‏‎‏‏‏‎‎‎‎‎‎‏‎‎‏‎‎‎‎‏‏‏‏‏‏‎‏‏‎‎‎‎‎‎‎‎‎‏‎‏‏‏‏‎‎‎‏‏‎‏‏‎‏‏‎‏‎‏‏‏‏‎‏‏‏‎‎‏‏‏‎‏‏‏‏‎‏‎‎‎‏‎‎‎‎‏‎‏‎Travel Agencies &amp; Services‎‏‎‎‏‎"</string>
     <string name="topic10446" msgid="5333138740720504195">"‎‏‎‎‎‎‎‏‎‏‏‏‎‎‎‎‎‎‏‎‎‏‎‎‎‎‏‏‏‏‏‏‏‏‎‎‏‎‏‎‎‎‎‎‎‎‏‏‎‎‎‏‏‏‎‏‎‏‏‎‏‏‎‏‏‎‏‏‎‎‏‎‏‎‎‎‎‏‎‏‎‎‎‎‏‏‎‏‏‎‎‎‎‎‏‏‎Travel Guides &amp; Travelogues‎‏‎‎‏‎"</string>
+    <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"‎‏‎‎‎‎‎‏‎‏‏‏‎‎‎‎‎‎‏‎‎‏‎‎‎‎‏‏‏‏‏‏‏‏‎‏‏‎‏‎‏‏‎‏‎‏‏‏‏‏‏‏‏‎‏‎‏‏‏‎‎‎‏‎‏‎‎‎‏‏‏‎‏‎‎‏‎‎‎‏‎‏‎‏‏‏‏‏‏‏‎‏‏‏‏‎‎On / ‎‏‎‎‏‏‎<xliff:g id="TOPICS_COUNT">%1$d</xliff:g>‎‏‎‎‏‏‏‎ topics‎‏‎‎‏‎"</string>
+    <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"‎‏‎‎‎‎‎‏‎‏‏‏‎‎‎‎‎‎‏‎‎‏‎‎‎‎‏‏‏‏‎‏‏‏‎‏‎‏‏‎‎‎‎‏‎‎‎‎‎‎‏‏‏‏‎‏‏‎‏‎‏‎‏‏‏‏‏‎‎‎‏‎‏‏‎‏‏‎‏‏‏‏‏‎‎‎‎‎‎‏‎‏‎On / ‎‏‎‎‏‏‎<xliff:g id="APPS_COUNT">%1$d</xliff:g>‎‏‎‎‏‏‏‎ apps‎‏‎‎‏‎"</string>
+    <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"‎‏‎‎‎‎‎‏‎‏‏‏‎‎‎‎‎‎‏‎‎‏‎‎‎‎‏‏‏‏‏‏‏‏‏‎‏‎‎‎‎‏‏‎‎‏‎‏‎‎‏‎‏‎‎‏‏‎‏‎‎‏‎‎‎‎‎‎‏‏‏‎‏‏‏‏‎‏‎‏‎‏‏‎‎‎‎‎‏‎‎‎‏‏‏‎‎On‎‏‎‎‏‎"</string>
+    <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"‎‏‎‎‎‎‎‏‎‏‏‏‎‎‎‎‎‎‏‎‎‏‎‎‎‎‏‏‏‏‏‎‏‏‎‏‏‎‎‏‎‎‎‎‏‏‏‎‎‎‎‏‏‎‏‎‏‏‏‎‏‏‎‎‏‎‏‎‎‏‎‏‏‎‏‎‎‏‎‎‎‎‏‎‏‏‎‎‏‏‎‏‏‏‎Off‎‏‎‎‏‎"</string>
+    <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"‎‏‎‎‎‎‎‏‎‏‏‏‎‎‎‎‎‎‏‎‎‏‎‎‎‎‏‏‏‏‏‏‏‏‎‏‎‎‎‏‎‏‎‎‎‏‎‏‏‎‎‏‏‎‎‏‏‎‏‎‏‎‏‎‏‎‏‎‎‎‎‏‎‏‏‏‏‏‏‏‏‎‏‏‎‏‏‎‏‏‎‏‏‏‏‏‎Allow ad topics‎‏‎‎‏‎"</string>
+    <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"‎‏‎‎‎‎‎‏‎‏‏‏‎‎‎‎‎‎‏‎‎‏‎‎‎‎‏‏‏‏‏‏‏‏‎‏‏‎‏‏‏‏‏‎‏‎‏‎‎‎‎‎‏‎‎‏‏‎‎‎‎‏‏‏‏‎‏‏‏‎‏‎‏‎‎‎‎‎‎‎‏‎‎‎‎‎‏‎‏‏‏‏‎‏‎‎‎Allow ad measurement‎‏‎‎‏‎"</string>
+    <string name="settingsUI_apps_switch_title" msgid="1308209012769248890">"‎‏‎‎‎‎‎‏‎‏‏‏‎‎‎‎‎‎‏‎‎‏‎‎‎‎‏‏‏‏‏‎‏‏‎‎‏‎‎‎‏‎‎‏‏‏‏‎‏‏‎‎‎‏‎‎‏‎‏‎‏‎‎‏‏‏‏‎‏‎‎‎‎‏‎‎‏‏‎‏‎‏‎‏‏‎‎‏‏‏‏‎‏‎‎Allow app-suggested ads‎‏‎‎‏‎"</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"‎‏‎‎‎‎‎‏‎‏‏‏‎‎‎‎‎‎‏‎‎‏‎‎‎‎‏‏‏‏‏‏‏‏‏‎‎‎‏‎‏‎‎‎‏‎‎‎‎‏‎‎‏‏‎‎‎‎‎‎‎‏‏‏‏‎‎‏‎‎‎‏‏‏‏‏‏‎‏‏‎‎‏‎‏‎‎‎‎‎‎‎‏‎‏‏‎Reset all topics?‎‏‎‎‏‎"</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"‎‏‎‎‎‎‎‏‎‏‏‏‎‎‎‎‎‎‏‎‎‏‎‎‎‎‏‏‏‏‏‎‎‏‎‎‎‏‏‎‎‎‏‏‎‎‏‎‏‏‏‏‎‏‎‎‏‎‎‏‎‎‏‏‎‏‏‎‎‏‎‏‎‏‎‏‏‏‎‏‎‏‎‏‏‎‎‎‎‎‏‏‎‎Reset ads suggested by apps?‎‏‎‎‏‎"</string>
 </resources>

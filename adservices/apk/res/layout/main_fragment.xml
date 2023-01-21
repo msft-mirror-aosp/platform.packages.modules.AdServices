@@ -40,11 +40,20 @@
                     android:text="@string/settingsUI_main_view_subtitle"
                     style="@style/MainStyle.Body2" />
                 <ImageView
+                    android:id="@+id/main_view_pic"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:src="@drawable/ic_main_view_image"
                     tools:ignore="ContentDescription" />
+                <ImageView
+                    android:id="@+id/main_view_ga_pic"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:src="@drawable/ic_main_view_ga_image"
+                    tools:ignore="ContentDescription"
+                    android:visibility="gone"/>
             </LinearLayout>
 
             <com.android.settingslib.widget.MainSwitchBar

@@ -77,7 +77,10 @@ public class Source {
     @Status private int mStatus;
     private long mEventTime;
     private long mExpiryTime;
-    private List<UnsignedLong> mDedupKeys;
+    private long mEventReportWindow;
+    private long mAggregatableReportWindow;
+    private List<UnsignedLong> mAggregateReportDedupKeys;
+    private List<UnsignedLong> mEventReportDedupKeys;
     @AttributionMode private int mAttributionMode;
     private long mInstallAttributionWindow;
     private long mInstallCooldownWindow;
@@ -129,7 +132,8 @@ public class Source {
     }
 
     private Source() {
-        mDedupKeys = new ArrayList<>();
+        mEventReportDedupKeys = new ArrayList<>();
+        mAggregateReportDedupKeys = new ArrayList<>();
         mStatus = Status.ACTIVE;
         mSourceType = SourceType.EVENT;
         // Making this default explicit since it anyway would occur on an uninitialised int field.
@@ -208,7 +212,7 @@ public class Source {
 
         for (long windowDelta : earlyWindows) {
             long window = mEventTime + windowDelta;
-            if (mExpiryTime <= window) {
+            if (mEventReportWindow <= window) {
                 continue;
             }
             windowList.add(window);
@@ -226,7 +230,7 @@ public class Source {
         List<Long> windowList = getEarlyReportingWindows(isInstallDetectionEnabled());
         return windowIndex < windowList.size()
                 ? windowList.get(windowIndex) + ONE_HOUR_IN_MILLIS :
-                mExpiryTime + ONE_HOUR_IN_MILLIS;
+                mEventReportWindow + ONE_HOUR_IN_MILLIS;
     }
 
     @VisibleForTesting
@@ -316,13 +320,16 @@ public class Source {
                 && mPriority == source.mPriority
                 && mStatus == source.mStatus
                 && mExpiryTime == source.mExpiryTime
+                && mEventReportWindow == source.mEventReportWindow
+                && mAggregatableReportWindow == source.mAggregatableReportWindow
                 && mEventTime == source.mEventTime
                 && mAdIdPermission == source.mAdIdPermission
                 && mArDebugPermission == source.mArDebugPermission
                 && Objects.equals(mEventId, source.mEventId)
                 && Objects.equals(mDebugKey, source.mDebugKey)
                 && mSourceType == source.mSourceType
-                && Objects.equals(mDedupKeys, source.mDedupKeys)
+                && Objects.equals(mEventReportDedupKeys, source.mEventReportDedupKeys)
+                && Objects.equals(mAggregateReportDedupKeys, source.mAggregateReportDedupKeys)
                 && Objects.equals(mRegistrant, source.mRegistrant)
                 && mAttributionMode == source.mAttributionMode
                 && mIsDebugReporting == source.mIsDebugReporting
@@ -345,10 +352,13 @@ public class Source {
                 mPriority,
                 mStatus,
                 mExpiryTime,
+                mEventReportWindow,
+                mAggregatableReportWindow,
                 mEventTime,
                 mEventId,
                 mSourceType,
-                mDedupKeys,
+                mEventReportDedupKeys,
+                mAggregateReportDedupKeys,
                 mFilterData,
                 mAggregateSource,
                 mAggregateContributions,
@@ -379,7 +389,7 @@ public class Source {
                 return window + ONE_HOUR_IN_MILLIS;
             }
         }
-        return mExpiryTime + ONE_HOUR_IN_MILLIS;
+        return mEventReportWindow + ONE_HOUR_IN_MILLIS;
     }
 
     @VisibleForTesting
@@ -483,9 +493,19 @@ public class Source {
         return mSourceType;
     }
 
-    /** Time when {@link Source} will expiry. */
+    /** Time when {@link Source} will expire. */
     public long getExpiryTime() {
         return mExpiryTime;
+    }
+
+    /** Time when {@link Source} event report window will expire. */
+    public long getEventReportWindow() {
+        return mEventReportWindow;
+    }
+
+    /** Time when {@link Source} aggregate report window will expire. */
+    public long getAggregatableReportWindow() {
+        return mAggregatableReportWindow;
     }
 
     /** Debug key of {@link Source}. */
@@ -510,11 +530,14 @@ public class Source {
         return mArDebugPermission;
     }
 
-    /**
-     * List of dedup keys for the attributed {@link Trigger}.
-     */
-    public List<UnsignedLong> getDedupKeys() {
-        return mDedupKeys;
+    /** List of dedup keys for the attributed {@link Trigger}. */
+    public List<UnsignedLong> getEventReportDedupKeys() {
+        return mEventReportDedupKeys;
+    }
+
+    /** List of dedup keys used for generating Aggregate Reports. */
+    public List<UnsignedLong> getAggregateReportDedupKeys() {
+        return mAggregateReportDedupKeys;
     }
 
     /** Current status of the {@link Source}. */
@@ -806,6 +829,22 @@ public class Source {
             return this;
         }
 
+        /**
+         * See {@link Source#getEventReportWindow()}.
+         */
+        public Builder setEventReportWindow(long eventReportWindow) {
+            mBuilding.mEventReportWindow = eventReportWindow;
+            return this;
+        }
+
+        /**
+         * See {@link Source#getAggregatableReportWindow()}.
+         */
+        public Builder setAggregatableReportWindow(long aggregateReportWindow) {
+            mBuilding.mAggregatableReportWindow = aggregateReportWindow;
+            return this;
+        }
+
         /** See {@link Source#getPriority()}. */
         @NonNull
         public Builder setPriority(long priority) {
@@ -833,10 +872,18 @@ public class Source {
             return this;
         }
 
-        /** See {@link Source#getDedupKeys()}. */
+        /** See {@link Source#getEventReportDedupKeys()}. */
         @NonNull
-        public Builder setDedupKeys(@Nullable List<UnsignedLong> dedupKeys) {
-            mBuilding.mDedupKeys = dedupKeys;
+        public Builder setEventReportDedupKeys(@Nullable List<UnsignedLong> mEventReportDedupKeys) {
+            mBuilding.mEventReportDedupKeys = mEventReportDedupKeys;
+            return this;
+        }
+
+        /** See {@link Source#getAggregateReportDedupKeys()}. */
+        @NonNull
+        public Builder setAggregateReportDedupKeys(
+                @Nullable List<UnsignedLong> mAggregateReportDedupKeys) {
+            mBuilding.mAggregateReportDedupKeys = mAggregateReportDedupKeys;
             return this;
         }
 

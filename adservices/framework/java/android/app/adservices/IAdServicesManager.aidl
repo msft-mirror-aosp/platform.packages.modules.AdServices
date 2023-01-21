@@ -85,4 +85,20 @@ interface IAdServicesManager {
      * @return true if fledge and measurement consent page was displayed, otherwise false.
      */
     boolean wasFledgeAndMsmtConsentPageDisplayed();
+
+    List<String> getKnownAppsWithConsent(in List<String> installedPackages);
+
+    List<String> getAppsWithRevokedConsent(in List<String> installedPackages);
+
+    void setConsentForApp(in String packageName,in int packageUid,in boolean isConsentRevoked);
+
+    void clearKnownAppsWithConsent();
+
+    void clearAllAppConsentData();
+
+    boolean isConsentRevokedForApp(in String packageName,in int packageUid);
+
+    boolean setConsentForAppIfNew(in String packageName,in int packageUid,in boolean isConsentRevoked);
+
+    void clearConsentForUninstalledApp(in String packageName,in int packageUid);
 }

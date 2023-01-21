@@ -20,7 +20,9 @@ import static com.android.server.adservices.PhFlags.KEY_ADSERVICES_SYSTEM_SERVIC
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -41,9 +43,11 @@ import android.os.Handler;
 import android.os.UserHandle;
 import android.provider.DeviceConfig;
 
+import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.modules.utils.testing.TestableDeviceConfig;
+import com.android.server.adservices.consent.AppConsentManagerFixture;
 
 import org.junit.After;
 import org.junit.Before;
@@ -55,7 +59,11 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.List;
 
 /** Tests for {@link AdServicesManagerService} */
 public class AdServicesManagerServiceTest {
@@ -76,6 +84,8 @@ public class AdServicesManagerServiceTest {
     private static final String PACKAGE_ADDED = "package_added";
     private static final String PACKAGE_DATA_CLEARED = "package_data_cleared";
     private static final int PACKAGE_UID = 12345;
+    private static final Context PPAPI_CONTEXT = ApplicationProvider.getApplicationContext();
+    private static final String BASE_DIR = PPAPI_CONTEXT.getFilesDir().getAbsolutePath();
 
     @Before
     public void setup() {
@@ -121,28 +131,39 @@ public class AdServicesManagerServiceTest {
         ArgumentCaptor<Handler> argumentHandler = ArgumentCaptor.forClass(Handler.class);
 
         // Calling the second time will not register again.
-        mService.registerPackagedChangedBroadcastReceivers();
+        mService.registerReceivers();
 
+        // We have 2 receivers which are PackageChangeReceiver and UserActionReceiver.
+        int numReceivers = 2;
         // The flag is enabled so we call registerReceiverForAllUsers
-        Mockito.verify(mSpyContext, Mockito.times(1))
+        Mockito.verify(mSpyContext, Mockito.times(numReceivers))
                 .registerReceiverForAllUsers(
                         argumentReceiver.capture(),
                         argumentIntentFilter.capture(),
                         argumentPermission.capture(),
                         argumentHandler.capture());
 
-        BroadcastReceiver receiver = argumentReceiver.getValue();
-        assertThat(receiver).isNotNull();
+        List<BroadcastReceiver> receiverList = argumentReceiver.getAllValues();
+        assertThat(receiverList).hasSize(numReceivers);
 
-        IntentFilter intentFilter = argumentIntentFilter.getValue();
-        assertThat(intentFilter.hasAction(Intent.ACTION_PACKAGE_FULLY_REMOVED)).isTrue();
-        assertThat(intentFilter.hasAction(Intent.ACTION_PACKAGE_DATA_CLEARED)).isTrue();
-        assertThat(intentFilter.hasAction(Intent.ACTION_PACKAGE_ADDED)).isTrue();
-        assertThat(intentFilter.countActions()).isEqualTo(3);
-        assertThat(intentFilter.getDataScheme(0)).isEqualTo("package");
+        // Validate PackageChangeReceiver
+        List<IntentFilter> intentFilterList = argumentIntentFilter.getAllValues();
+        IntentFilter packageIntentFilter = intentFilterList.get(0);
+        assertThat(packageIntentFilter.hasAction(Intent.ACTION_PACKAGE_FULLY_REMOVED)).isTrue();
+        assertThat(packageIntentFilter.hasAction(Intent.ACTION_PACKAGE_DATA_CLEARED)).isTrue();
+        assertThat(packageIntentFilter.hasAction(Intent.ACTION_PACKAGE_ADDED)).isTrue();
+        assertThat(packageIntentFilter.countActions()).isEqualTo(3);
+        assertThat(packageIntentFilter.getDataScheme(0)).isEqualTo("package");
 
-        assertThat(argumentPermission.getValue()).isNull();
-        assertThat(argumentHandler.getValue()).isNotNull();
+        assertThat(argumentPermission.getAllValues().get(0)).isNull();
+        assertThat(argumentHandler.getAllValues().get(0)).isNotNull();
+
+        // Validate UserActionReceiver
+        IntentFilter userActionIntentFilter = intentFilterList.get(1);
+        assertThat(userActionIntentFilter.hasAction(Intent.ACTION_USER_REMOVED)).isTrue();
+        assertThat(userActionIntentFilter.countActions()).isEqualTo(1);
+        assertThat(argumentPermission.getAllValues().get(1)).isNull();
+        assertThat(argumentHandler.getAllValues().get(1)).isNotNull();
 
         // Now disable the flag.
         DeviceConfig.setProperty(
@@ -152,12 +173,13 @@ public class AdServicesManagerServiceTest {
                 /* makeDefault */ false);
 
         // Calling when the flag is disabled will unregister the Receiver!
-        mService.registerPackagedChangedBroadcastReceivers();
-        Mockito.verify(mSpyContext, Mockito.times(1))
+        mService.registerReceivers();
+        Mockito.verify(mSpyContext, Mockito.times(numReceivers))
                 .unregisterReceiver(argumentReceiver.capture());
 
         // The unregistered is called on the same receiver when registered above.
-        assertThat(argumentReceiver.getValue()).isSameInstanceAs(receiver);
+        assertThat(argumentReceiver.getAllValues().get(0)).isSameInstanceAs(receiverList.get(0));
+        assertThat(argumentReceiver.getAllValues().get(1)).isSameInstanceAs(receiverList.get(1));
     }
 
     @Test
@@ -206,6 +228,51 @@ public class AdServicesManagerServiceTest {
         assertThat(argumentIntent.getValue().getIntExtra(Intent.EXTRA_UID, -1))
                 .isEqualTo(PACKAGE_UID);
         assertThat(argumentUser.getValue()).isEqualTo(mSpyContext.getUser());
+    }
+
+    @Test
+    public void testOnUserRemoved() throws IOException {
+        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
+        int userId = 1;
+        String consentDataStoreDir = BASE_DIR + "/" + userId;
+        Path packageDir = Paths.get(consentDataStoreDir);
+        Intent intent = new Intent(Intent.ACTION_USER_REMOVED);
+        intent.putExtra(Intent.EXTRA_USER, UserHandle.of(userId));
+        mUserInstanceManager.getOrCreateUserConsentManagerInstance(userId);
+        assertThat(Files.exists(packageDir)).isTrue();
+        assertThat(mUserInstanceManager.getUserConsentManagerInstance(userId)).isNotNull();
+
+        mService.onUserRemoved(intent);
+
+        assertThat(Files.exists(packageDir)).isFalse();
+        assertThat(mUserInstanceManager.getUserConsentManagerInstance(userId)).isNull();
+    }
+
+    @Test
+    public void testOnUserRemoved_userIdNotPresentInIntent() throws IOException {
+        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
+        Intent intent = new Intent(Intent.ACTION_USER_REMOVED);
+        // userId 1 is not present in the intent.
+        int userId = 1;
+        mUserInstanceManager.getOrCreateUserConsentManagerInstance(userId);
+        assertThat(mUserInstanceManager.getUserConsentManagerInstance(userId)).isNotNull();
+
+        mService.onUserRemoved(intent);
+
+        assertThat(mUserInstanceManager.getUserConsentManagerInstance(userId)).isNotNull();
+    }
+
+    @Test
+    public void testOnUserRemoved_removeNonexistentUserId() throws IOException {
+        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
+        Intent intent = new Intent(Intent.ACTION_USER_REMOVED);
+        // userId 1 does not have consent directory.
+        int userId = 1;
+        intent.putExtra(Intent.EXTRA_USER, UserHandle.of(2));
+
+        mService.onUserRemoved(intent);
+
+        assertThat(mUserInstanceManager.getUserConsentManagerInstance(userId)).isNull();
     }
 
     @Test
@@ -425,6 +492,158 @@ public class AdServicesManagerServiceTest {
         assertThat(service.wasFledgeAndMsmtConsentPageDisplayed()).isFalse();
         service.recordFledgeAndMsmtConsentPageDisplayed();
         assertThat(service.wasFledgeAndMsmtConsentPageDisplayed()).isTrue();
+    }
+
+    @Test
+    public void testSetAppConsent() {
+        mService = spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+        disableEnforceAdServicesManagerPermission(mService);
+
+        mService.setConsentForApp(
+                AppConsentManagerFixture.APP10_PACKAGE_NAME,
+                AppConsentManagerFixture.APP10_UID,
+                false);
+        assertFalse(
+                mService.isConsentRevokedForApp(
+                        AppConsentManagerFixture.APP10_PACKAGE_NAME,
+                        AppConsentManagerFixture.APP10_UID));
+
+        mService.setConsentForAppIfNew(
+                AppConsentManagerFixture.APP20_PACKAGE_NAME,
+                AppConsentManagerFixture.APP20_UID,
+                false);
+        assertFalse(
+                mService.isConsentRevokedForApp(
+                        AppConsentManagerFixture.APP20_PACKAGE_NAME,
+                        AppConsentManagerFixture.APP20_UID));
+
+        mService.setConsentForApp(
+                AppConsentManagerFixture.APP20_PACKAGE_NAME,
+                AppConsentManagerFixture.APP20_UID,
+                true);
+        assertTrue(
+                mService.isConsentRevokedForApp(
+                        AppConsentManagerFixture.APP20_PACKAGE_NAME,
+                        AppConsentManagerFixture.APP20_UID));
+        assertTrue(
+                mService.setConsentForAppIfNew(
+                        AppConsentManagerFixture.APP20_PACKAGE_NAME,
+                        AppConsentManagerFixture.APP20_UID,
+                        false));
+
+        assertFalse(
+                mService.setConsentForAppIfNew(
+                        AppConsentManagerFixture.APP30_PACKAGE_NAME,
+                        AppConsentManagerFixture.APP30_UID,
+                        false));
+
+        assertThat(
+                        mService.getKnownAppsWithConsent(
+                                List.of(
+                                        AppConsentManagerFixture.APP10_PACKAGE_NAME,
+                                        AppConsentManagerFixture.APP20_PACKAGE_NAME,
+                                        AppConsentManagerFixture.APP30_PACKAGE_NAME)))
+                .hasSize(2);
+        assertThat(
+                        mService.getAppsWithRevokedConsent(
+                                List.of(
+                                        AppConsentManagerFixture.APP10_PACKAGE_NAME,
+                                        AppConsentManagerFixture.APP20_PACKAGE_NAME,
+                                        AppConsentManagerFixture.APP30_PACKAGE_NAME)))
+                .hasSize(1);
+    }
+
+    @Test
+    public void testClearAppConsent() {
+        mService = spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+        disableEnforceAdServicesManagerPermission(mService);
+
+        mService.setConsentForApp(
+                AppConsentManagerFixture.APP10_PACKAGE_NAME,
+                AppConsentManagerFixture.APP10_UID,
+                false);
+        mService.setConsentForApp(
+                AppConsentManagerFixture.APP20_PACKAGE_NAME,
+                AppConsentManagerFixture.APP20_UID,
+                false);
+        mService.setConsentForApp(
+                AppConsentManagerFixture.APP30_PACKAGE_NAME,
+                AppConsentManagerFixture.APP30_UID,
+                true);
+        assertThat(
+                        mService.getKnownAppsWithConsent(
+                                List.of(
+                                        AppConsentManagerFixture.APP10_PACKAGE_NAME,
+                                        AppConsentManagerFixture.APP20_PACKAGE_NAME,
+                                        AppConsentManagerFixture.APP30_PACKAGE_NAME)))
+                .hasSize(2);
+        assertThat(
+                        mService.getAppsWithRevokedConsent(
+                                List.of(
+                                        AppConsentManagerFixture.APP10_PACKAGE_NAME,
+                                        AppConsentManagerFixture.APP20_PACKAGE_NAME,
+                                        AppConsentManagerFixture.APP30_PACKAGE_NAME)))
+                .hasSize(1);
+
+        mService.clearConsentForUninstalledApp(
+                AppConsentManagerFixture.APP10_PACKAGE_NAME, AppConsentManagerFixture.APP10_UID);
+        assertThat(
+                        mService.getKnownAppsWithConsent(
+                                List.of(
+                                        AppConsentManagerFixture.APP20_PACKAGE_NAME,
+                                        AppConsentManagerFixture.APP30_PACKAGE_NAME)))
+                .hasSize(1);
+        assertThat(
+                        mService.getAppsWithRevokedConsent(
+                                List.of(
+                                        AppConsentManagerFixture.APP20_PACKAGE_NAME,
+                                        AppConsentManagerFixture.APP30_PACKAGE_NAME)))
+                .hasSize(1);
+
+        mService.clearKnownAppsWithConsent();
+        assertThat(
+                        mService.getKnownAppsWithConsent(
+                                List.of(
+                                        AppConsentManagerFixture.APP20_PACKAGE_NAME,
+                                        AppConsentManagerFixture.APP30_PACKAGE_NAME)))
+                .hasSize(0);
+        assertThat(
+                        mService.getAppsWithRevokedConsent(
+                                List.of(
+                                        AppConsentManagerFixture.APP20_PACKAGE_NAME,
+                                        AppConsentManagerFixture.APP30_PACKAGE_NAME)))
+                .hasSize(1);
+
+        mService.setConsentForApp(
+                AppConsentManagerFixture.APP20_PACKAGE_NAME,
+                AppConsentManagerFixture.APP20_UID,
+                false);
+        assertThat(
+                        mService.getKnownAppsWithConsent(
+                                List.of(
+                                        AppConsentManagerFixture.APP20_PACKAGE_NAME,
+                                        AppConsentManagerFixture.APP30_PACKAGE_NAME)))
+                .hasSize(1);
+        assertThat(
+                        mService.getAppsWithRevokedConsent(
+                                List.of(
+                                        AppConsentManagerFixture.APP20_PACKAGE_NAME,
+                                        AppConsentManagerFixture.APP30_PACKAGE_NAME)))
+                .hasSize(1);
+
+        mService.clearAllAppConsentData();
+        assertThat(
+                        mService.getKnownAppsWithConsent(
+                                List.of(
+                                        AppConsentManagerFixture.APP20_PACKAGE_NAME,
+                                        AppConsentManagerFixture.APP30_PACKAGE_NAME)))
+                .hasSize(0);
+        assertThat(
+                        mService.getAppsWithRevokedConsent(
+                                List.of(
+                                        AppConsentManagerFixture.APP20_PACKAGE_NAME,
+                                        AppConsentManagerFixture.APP30_PACKAGE_NAME)))
+                .hasSize(0);
     }
 
     // Since unit test cannot execute an IPC call, disable the permission check.
