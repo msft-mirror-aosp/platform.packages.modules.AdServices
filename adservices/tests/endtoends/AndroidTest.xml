@@ -25,6 +25,9 @@
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
         <!-- Disable global_kill_switch to ignore the effect of actual PH values. -->
         <option name="run-command" value="device_config put adservices global_kill_switch false" />
+        <!-- Disable measurement_kill_switch to ignore the effect of actual PH values. -->
+        <option name="run-command"
+                value="device_config put adservices measurement_kill_switch false" />
     </target_preparer>
 
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">

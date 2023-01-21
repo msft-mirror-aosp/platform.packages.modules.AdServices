@@ -112,6 +112,7 @@ public class SdkSandboxManagerServiceUnitTest {
     private static SdkSandboxPulledAtoms sSdkSandboxPulledAtoms;
 
     private static SdkSandboxManagerLocal sSdkSandboxManagerLocal;
+    private static SdkSandboxManagerService.SdkSandboxSettingsListener sSdkSandboxSettingsListener;
 
     private static final String CLIENT_PACKAGE_NAME = "com.android.client";
     private static final String SDK_NAME = "com.android.codeprovider";
@@ -195,12 +196,15 @@ public class SdkSandboxManagerServiceUnitTest {
         sSdkSandboxManagerLocal = mService.getLocalManager();
         assertThat(sSdkSandboxManagerLocal).isNotNull();
 
+        sSdkSandboxSettingsListener = mService.getSdkSandboxSettingsListener();
+        assertThat(sSdkSandboxSettingsListener).isNotNull();
+
         mClientAppUid = Process.myUid();
     }
 
     @After
     public void tearDown() {
-        mService.getSdkSandboxSettingsListener().unregisterPropertiesListener();
+        sSdkSandboxSettingsListener.unregisterPropertiesListener();
         mStaticMockSession.finishMocking();
     }
 
@@ -1001,9 +1005,10 @@ public class SdkSandboxManagerServiceUnitTest {
     /** Tests expected behavior when broadcast receiver restrictions are not available. */
     @Test
     public void testCanDeclareBroadcastReceiverFromManifest_deviceConfigUnset() {
-        DeviceConfig.deleteProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS);
+        sSdkSandboxSettingsListener.onPropertiesChanged(
+                new DeviceConfig.Properties(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        Map.of(PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS, "")));
         assertThat(
                         sSdkSandboxManagerLocal.canDeclareBroadcastReceiverFromManifest(
                                 new IntentFilter(),
@@ -1016,11 +1021,10 @@ public class SdkSandboxManagerServiceUnitTest {
     /** Tests expected behavior when broadcast receiver restrictions are not applied. */
     @Test
     public void testCanDeclareBroadcastReceiverFromManifest_restrictionsNotApplied() {
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS,
-                "false",
-                false);
+        sSdkSandboxSettingsListener.onPropertiesChanged(
+                new DeviceConfig.Properties(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        Map.of(PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS, "false")));
         assertThat(
                         sSdkSandboxManagerLocal.canDeclareBroadcastReceiverFromManifest(
                                 new IntentFilter(),
@@ -1033,11 +1037,10 @@ public class SdkSandboxManagerServiceUnitTest {
     /** Tests expected behaviour when broadcast restrictions are applied. */
     @Test
     public void testCanDeclareBroadcastReceiverFromManifest_restrictionsApplied() {
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS,
-                "true",
-                false);
+        sSdkSandboxSettingsListener.onPropertiesChanged(
+                new DeviceConfig.Properties(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        Map.of(PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS, "true")));
         assertThat(
                         sSdkSandboxManagerLocal.canDeclareBroadcastReceiverFromManifest(
                                 new IntentFilter(),
@@ -1050,11 +1053,10 @@ public class SdkSandboxManagerServiceUnitTest {
     /** Tests expected behaviour for an unexported broadcast receivers. */
     @Test
     public void testCanDeclareBroadcastReceiverFromManifest_unexportedBroadcast() {
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS,
-                "true",
-                false);
+        sSdkSandboxSettingsListener.onPropertiesChanged(
+                new DeviceConfig.Properties(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        Map.of(PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS, "true")));
         assertThat(
                         sSdkSandboxManagerLocal.canDeclareBroadcastReceiverFromManifest(
                                 new IntentFilter(),
@@ -1067,11 +1069,10 @@ public class SdkSandboxManagerServiceUnitTest {
     /** Tests expected behavior for protected broadcast receivers. */
     @Test
     public void testCanDeclareBroadcastReceiverFromManifest_protectedBroadcast() {
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS,
-                "true",
-                false);
+        sSdkSandboxSettingsListener.onPropertiesChanged(
+                new DeviceConfig.Properties(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        Map.of(PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS, "true")));
         assertThat(
                         sSdkSandboxManagerLocal.canDeclareBroadcastReceiverFromManifest(
                                 new IntentFilter(),
@@ -2143,56 +2144,50 @@ public class SdkSandboxManagerServiceUnitTest {
     public void testSdkSandboxEnabledForEmulator() {
         // SDK sandbox is enabled for an emulator, even if the killswitch is turned on.
         Mockito.when(mInjector.isEmulator()).thenReturn(true);
-        mService.getSdkSandboxSettingsListener().setKillSwitchState(true);
+        sSdkSandboxSettingsListener.setKillSwitchState(true);
         assertThat(mService.isSdkSandboxDisabled(mSdkSandboxService)).isFalse();
 
         // SDK sandbox is disabled when the killswitch is enabled if the device is not an emulator.
         mService.clearSdkSandboxState();
         Mockito.when(mInjector.isEmulator()).thenReturn(false);
-        mService.getSdkSandboxSettingsListener().setKillSwitchState(true);
+        sSdkSandboxSettingsListener.setKillSwitchState(true);
         assertThat(mService.isSdkSandboxDisabled(mSdkSandboxService)).isTrue();
     }
 
     @Test
     public void testSdkSandboxSettings() {
-        SdkSandboxManagerService.SdkSandboxSettingsListener listener =
-                mService.getSdkSandboxSettingsListener();
-        assertThat(listener.isKillSwitchEnabled()).isFalse();
-        listener.onPropertiesChanged(
+        assertThat(sSdkSandboxSettingsListener.isKillSwitchEnabled()).isFalse();
+        sSdkSandboxSettingsListener.onPropertiesChanged(
                 new DeviceConfig.Properties(
                         DeviceConfig.NAMESPACE_ADSERVICES,
                         Map.of(PROPERTY_DISABLE_SANDBOX, "true")));
-        assertThat(listener.isKillSwitchEnabled()).isTrue();
-        listener.onPropertiesChanged(
+        assertThat(sSdkSandboxSettingsListener.isKillSwitchEnabled()).isTrue();
+        sSdkSandboxSettingsListener.onPropertiesChanged(
                 new DeviceConfig.Properties(
                         DeviceConfig.NAMESPACE_ADSERVICES,
                         Map.of(PROPERTY_DISABLE_SANDBOX, "false")));
-        assertThat(listener.isKillSwitchEnabled()).isFalse();
+        assertThat(sSdkSandboxSettingsListener.isKillSwitchEnabled()).isFalse();
     }
 
     @Test
     public void testOtherPropertyChangeDoesNotAffectKillSwitch() {
-        SdkSandboxManagerService.SdkSandboxSettingsListener listener =
-                mService.getSdkSandboxSettingsListener();
-        assertThat(listener.isKillSwitchEnabled()).isFalse();
-        listener.onPropertiesChanged(
+        assertThat(sSdkSandboxSettingsListener.isKillSwitchEnabled()).isFalse();
+        sSdkSandboxSettingsListener.onPropertiesChanged(
                 new DeviceConfig.Properties(
                         DeviceConfig.NAMESPACE_ADSERVICES, Map.of("other_property", "true")));
-        assertThat(listener.isKillSwitchEnabled()).isFalse();
+        assertThat(sSdkSandboxSettingsListener.isKillSwitchEnabled()).isFalse();
     }
 
     @Test
     public void testKillswitchStopsSandbox() throws Exception {
         disableKillUid();
-        SdkSandboxManagerService.SdkSandboxSettingsListener listener =
-                mService.getSdkSandboxSettingsListener();
-        listener.onPropertiesChanged(
+        sSdkSandboxSettingsListener.onPropertiesChanged(
                 new DeviceConfig.Properties(
                         DeviceConfig.NAMESPACE_ADSERVICES,
                         Map.of(PROPERTY_DISABLE_SANDBOX, "false")));
-        mService.getSdkSandboxSettingsListener().setKillSwitchState(false);
+        sSdkSandboxSettingsListener.setKillSwitchState(false);
         loadSdk(SDK_NAME);
-        listener.onPropertiesChanged(
+        sSdkSandboxSettingsListener.onPropertiesChanged(
                 new DeviceConfig.Properties(
                         DeviceConfig.NAMESPACE_ADSERVICES,
                         Map.of(PROPERTY_DISABLE_SANDBOX, "true")));
@@ -2205,10 +2200,9 @@ public class SdkSandboxManagerServiceUnitTest {
     public void testLoadSdkFailsWhenSandboxDisabled() {
         disableNetworkPermissionChecks();
         disableForegroundCheck();
-        SdkSandboxManagerService.SdkSandboxSettingsListener listener =
-                mService.getSdkSandboxSettingsListener();
-        listener.setKillSwitchState(true);
-        listener.onPropertiesChanged(
+
+        sSdkSandboxSettingsListener.setKillSwitchState(true);
+        sSdkSandboxSettingsListener.onPropertiesChanged(
                 new DeviceConfig.Properties(
                         DeviceConfig.NAMESPACE_ADSERVICES,
                         Map.of(PROPERTY_DISABLE_SANDBOX, "true")));
@@ -2224,6 +2218,21 @@ public class SdkSandboxManagerServiceUnitTest {
         assertThat(callback.getLoadSdkErrorCode())
                 .isEqualTo(SdkSandboxManager.LOAD_SDK_SDK_SANDBOX_DISABLED);
         assertThat(callback.getLoadSdkErrorMsg()).isEqualTo("SDK sandbox is disabled");
+    }
+
+    @Test
+    public void testSdkSandboxSettings_enforceBroadcastReceiverRestrictions() {
+        assertThat(sSdkSandboxSettingsListener.isBroadcastReceiverRestrictionsEnforced()).isFalse();
+        sSdkSandboxSettingsListener.onPropertiesChanged(
+                new DeviceConfig.Properties(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        Map.of(PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS, "true")));
+        assertThat(sSdkSandboxSettingsListener.isBroadcastReceiverRestrictionsEnforced()).isTrue();
+        sSdkSandboxSettingsListener.onPropertiesChanged(
+                new DeviceConfig.Properties(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        Map.of(PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS, "false")));
+        assertThat(sSdkSandboxSettingsListener.isBroadcastReceiverRestrictionsEnforced()).isFalse();
     }
 
     @Test

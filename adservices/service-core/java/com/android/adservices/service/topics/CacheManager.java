@@ -46,7 +46,14 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
-/** A class to manage Topics Cache. */
+import javax.annotation.concurrent.ThreadSafe;
+
+/**
+ * A class to manage Topics Cache.
+ *
+ * <p>This class is thread safe.
+ */
+@ThreadSafe
 public class CacheManager implements Dumpable {
     // The verbose level for dumpsys usage
     private static final int VERBOSE = 1;
@@ -113,8 +120,8 @@ public class CacheManager implements Dumpable {
                         + cacheFromDb.size()
                         + ", CachedBlockedTopics mapping size is "
                         + blockedTopicsCacheFromDb.size());
+        mReadWriteLock.writeLock().lock();
         try {
-            mReadWriteLock.writeLock().lock();
             mCachedTopics = cacheFromDb;
             mCachedBlockedTopics = blockedTopicsCacheFromDb;
             mCachedBlockedTopicIds = blockedTopicIdsFromDb;
@@ -147,8 +154,8 @@ public class CacheManager implements Dumpable {
         // To deduplicate returned topics
         Set<Integer> topicsSet = new HashSet<>();
 
-        mReadWriteLock.readLock().lock();
         int duplicateTopicCount = 0, blockedTopicCount = 0;
+        mReadWriteLock.readLock().lock();
         try {
             for (int numEpoch = 0; numEpoch < numberOfLookBackEpochs; numEpoch++) {
                 if (mCachedTopics.containsKey(epochId - numEpoch)) {

@@ -35,7 +35,6 @@ import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.topics.TopicsWorker;
 import com.android.internal.annotations.VisibleForTesting;
 
-import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
@@ -197,26 +196,15 @@ public class PackageChangedReceiver extends BroadcastReceiver {
         Objects.requireNonNull(context);
         Objects.requireNonNull(packageUri);
 
-        LogUtil.d(
-                "Deleting consent data for package %s with UID %d",
-                packageUri.toString(), packageUid);
+        String packageName = packageUri.toString();
+        LogUtil.d("Deleting consent data for package %s with UID %d", packageName, packageUid);
         sBackgroundExecutor.execute(
                 () -> {
-                    try {
-                        ConsentManager instance = ConsentManager.getInstance(context);
-                        if (packageUid == DEFAULT_PACKAGE_UID) {
-                            instance.resetAppsAndBlockedApps();
-                            LogUtil.d("Deleted consent data for all apps");
-                        } else {
-                            instance.clearConsentForUninstalledApp(
-                                    packageUri.toString(), packageUid);
-                            LogUtil.d(
-                                    "Deleted consent data for package %s with UID %d",
-                                    packageUri.toString(), packageUid);
-                        }
-                    } catch (IOException e) {
-                        LogUtil.e("Failed to initialize or write to the app consent datastore");
-                    }
+                    ConsentManager instance = ConsentManager.getInstance(context);
+                    instance.clearConsentForUninstalledApp(packageName, packageUid);
+                    LogUtil.d(
+                            "Deleted consent data for package %s with UID %d",
+                            packageName, packageUid);
                 });
     }
 

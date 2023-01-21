@@ -55,5 +55,6 @@ android_test {
     ],
     required: ["privapp_allowlist_com.android.adservices.api.xml"],
     test_mainline_modules: ["com.google.android.adservices.apex"],
+    data: [":com.example.adservices.samples.ui.consenttestapp"],
     instrumentation_for: "AdServicesApk",
 }

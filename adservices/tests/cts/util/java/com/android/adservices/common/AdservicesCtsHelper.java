@@ -17,12 +17,15 @@
 package com.android.adservices.common;
 
 import android.annotation.NonNull;
+import android.app.Instrumentation;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
 import android.util.Log;
+
+import androidx.test.platform.app.InstrumentationRegistry;
 
 import java.util.List;
 
@@ -69,5 +72,17 @@ public class AdservicesCtsHelper {
         }
 
         return serviceInfo.packageName;
+    }
+
+    /**
+     * Check whether the device is supported. Adservices doesn't support non-phone device.
+     *
+     * @return if the device is supported.
+     */
+    public static boolean isDeviceSupported() {
+        final Instrumentation inst = InstrumentationRegistry.getInstrumentation();
+        PackageManager pm = inst.getContext().getPackageManager();
+        return !pm.hasSystemFeature(PackageManager.FEATURE_WATCH)
+                && !pm.hasSystemFeature(PackageManager.FEATURE_AUTOMOTIVE);
     }
 }

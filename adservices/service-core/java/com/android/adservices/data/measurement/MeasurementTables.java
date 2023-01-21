@@ -82,6 +82,8 @@ public final class MeasurementTables {
         String AGGREGATE_REPORT_DEDUP_KEYS = "aggregate_report_dedup_keys";
         String EVENT_TIME = "event_time";
         String EXPIRY_TIME = "expiry_time";
+        String EVENT_REPORT_WINDOW = "event_report_window";
+        String AGGREGATABLE_REPORT_WINDOW = "aggregatable_report_window";
         String PRIORITY = "priority";
         String STATUS = "status";
         String SOURCE_TYPE = "source_type";
@@ -392,6 +394,10 @@ public final class MeasurementTables {
                     + SourceContract.EVENT_TIME
                     + " INTEGER, "
                     + SourceContract.EXPIRY_TIME
+                    + " INTEGER, "
+                    + SourceContract.EVENT_REPORT_WINDOW
+                    + " INTEGER, "
+                    + SourceContract.AGGREGATABLE_REPORT_WINDOW
                     + " INTEGER, "
                     + SourceContract.PRIORITY
                     + " INTEGER, "
