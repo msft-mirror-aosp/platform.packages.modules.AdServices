@@ -39,6 +39,7 @@ import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.UIStats;
+import com.android.adservices.ui.OTAResourcesManager;
 
 /** Provides methods which can be used to display Privacy Sandbox consent notification. */
 public class ConsentNotificationTrigger {
@@ -65,6 +66,10 @@ public class ConsentNotificationTrigger {
                                 AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__REQUESTED_NOTIFICATION)
                         .build();
         AdServicesLoggerImpl.getInstance().logUIStats(uiStats);
+        // Set OTA resources if it exists.
+        if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()) {
+            OTAResourcesManager.applyOTAResources(context.getApplicationContext(), true);
+        }
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
 
         ConsentManager consentManager = ConsentManager.getInstance(context);
