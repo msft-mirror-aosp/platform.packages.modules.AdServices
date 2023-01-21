@@ -1352,6 +1352,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         PROPERTY_CUSTOMIZED_SDK_CONTEXT_ENABLED,
                         DEFAULT_VALUE_CUSTOMIZED_SDK_CONTEXT_ENABLED);
 
+        @GuardedBy("mLock")
+        private boolean mEnforceBroadcastReceiverRestrictions =
+                DeviceConfig.getBoolean(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS,
+                        DEFAULT_VALUE_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS);
+
         SdkSandboxSettingsListener(Context context) {
             mContext = context;
         }
@@ -1392,6 +1399,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
         }
 
+        @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+        boolean isBroadcastReceiverRestrictionsEnforced() {
+            synchronized (mLock) {
+                return mEnforceBroadcastReceiverRestrictions;
+            }
+        }
+
         @Override
         public void onPropertiesChanged(@NonNull DeviceConfig.Properties properties) {
             synchronized (mLock) {
@@ -1403,23 +1417,33 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         continue;
                     }
 
-                    if (name.equals(PROPERTY_DISABLE_SDK_SANDBOX)) {
-                        boolean killSwitchPreviouslyEnabled = mKillSwitchEnabled;
-                        mKillSwitchEnabled =
-                                properties.getBoolean(
-                                        PROPERTY_DISABLE_SDK_SANDBOX,
-                                        DEFAULT_VALUE_DISABLE_SDK_SANDBOX);
-                        if (mKillSwitchEnabled && !killSwitchPreviouslyEnabled) {
-                            Log.i(TAG, "SDK sandbox killswitch has become enabled");
-                            synchronized (SdkSandboxManagerService.this.mLock) {
-                                stopAllSandboxesLocked();
+                    switch (name) {
+                        case PROPERTY_DISABLE_SDK_SANDBOX:
+                            boolean killSwitchPreviouslyEnabled = mKillSwitchEnabled;
+                            mKillSwitchEnabled =
+                                    properties.getBoolean(
+                                            PROPERTY_DISABLE_SDK_SANDBOX,
+                                            DEFAULT_VALUE_DISABLE_SDK_SANDBOX);
+                            if (mKillSwitchEnabled && !killSwitchPreviouslyEnabled) {
+                                Log.i(TAG, "SDK sandbox killswitch has become enabled");
+                                synchronized (SdkSandboxManagerService.this.mLock) {
+                                    stopAllSandboxesLocked();
+                                }
                             }
-                        }
-                    } else if (name.equals(PROPERTY_CUSTOMIZED_SDK_CONTEXT_ENABLED)) {
-                        mCustomizedSdkContextEnabled =
-                                properties.getBoolean(
-                                        PROPERTY_CUSTOMIZED_SDK_CONTEXT_ENABLED,
-                                        DEFAULT_VALUE_CUSTOMIZED_SDK_CONTEXT_ENABLED);
+                            break;
+                        case PROPERTY_CUSTOMIZED_SDK_CONTEXT_ENABLED:
+                            mCustomizedSdkContextEnabled =
+                                    properties.getBoolean(
+                                            PROPERTY_CUSTOMIZED_SDK_CONTEXT_ENABLED,
+                                            DEFAULT_VALUE_CUSTOMIZED_SDK_CONTEXT_ENABLED);
+                            break;
+                        case PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS:
+                            mEnforceBroadcastReceiverRestrictions =
+                                    properties.getBoolean(
+                                            PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS,
+                                            DEFAULT_VALUE_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS);
+                            break;
+                        default:
                     }
                 }
             }
@@ -1955,11 +1979,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             final long token = Binder.clearCallingIdentity();
 
             try {
-                return (!DeviceConfig.getBoolean(
-                                DeviceConfig.NAMESPACE_ADSERVICES,
-                                PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS,
-                                DEFAULT_VALUE_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS)
-                        || ((flags & Context.RECEIVER_NOT_EXPORTED) != 0));
+                final boolean enforceRestrictions =
+                        mSdkSandboxSettingsListener.isBroadcastReceiverRestrictionsEnforced();
+                final boolean exported = (flags & Context.RECEIVER_NOT_EXPORTED) == 0;
+                return !enforceRestrictions || !exported;
             } finally {
                 Binder.restoreCallingIdentity(token);
             }
@@ -1979,12 +2002,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
              */
             final long token = Binder.clearCallingIdentity();
             try {
-                return unexportedBroadcast
-                        || onlyProtectedBroadcasts
-                        || (!DeviceConfig.getBoolean(
-                                DeviceConfig.NAMESPACE_ADSERVICES,
-                                PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS,
-                                DEFAULT_VALUE_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS));
+                final boolean enforceRestrictions =
+                        mSdkSandboxSettingsListener.isBroadcastReceiverRestrictionsEnforced();
+                return !enforceRestrictions || unexportedBroadcast || onlyProtectedBroadcasts;
             } finally {
                 Binder.restoreCallingIdentity(token);
             }

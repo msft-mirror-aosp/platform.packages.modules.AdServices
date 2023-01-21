@@ -202,6 +202,155 @@ public class AttributionJobHandlerTest {
     }
 
     @Test
+    public void shouldNotCreateEventReportAfterEventReportWindow()
+            throws DatastoreException {
+        long eventTime = System.currentTimeMillis();
+        long triggerTime = eventTime + TimeUnit.DAYS.toMillis(5);
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId1")
+                        .setStatus(Trigger.Status.PENDING)
+                        .setEventTriggers(
+                                "[{\"trigger_data\":\"1\","
+                                + "\"filters\":[{\"source_type\": [\"event\"]}]"
+                                + "}]")
+                        .setTriggerTime(triggerTime)
+                        .build();
+        Source source = SourceFixture.getValidSourceBuilder()
+                .setId("source1")
+                .setEventId(new UnsignedLong(1L))
+                .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                .setEventTime(eventTime)
+                .setEventReportWindow(triggerTime - 1)
+                .build();
+        List<Source> matchingSourceList = new ArrayList<>();
+        matchingSourceList.add(source);
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
+        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
+        attributionService.performPendingAttributions();
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())), eq(Trigger.Status.IGNORED));
+        verify(mMeasurementDao, never()).insertEventReport(any());
+        verify(mTransaction, times(2)).begin();
+        verify(mTransaction, times(2)).end();
+    }
+
+    @Test
+    public void shouldNotCreateEventReportAfterEventReportWindow_secondTrigger()
+            throws DatastoreException, JSONException {
+        long eventTime = System.currentTimeMillis();
+        long triggerTime = eventTime + TimeUnit.DAYS.toMillis(5);
+        Trigger trigger1 =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId1")
+                        .setStatus(Trigger.Status.PENDING)
+                        .setEventTriggers("[{\"trigger_data\":\"1\"}]")
+                        .setTriggerTime(triggerTime)
+                        .build();
+        Trigger trigger2 =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId2")
+                        .setStatus(Trigger.Status.PENDING)
+                        .setEventTriggers("[{\"trigger_data\":\"0\"}]")
+                        .setTriggerTime(triggerTime + 1)
+                        .build();
+        List<Trigger> triggers = new ArrayList<>();
+        triggers.add(trigger1);
+        triggers.add(trigger2);
+        List<Source> matchingSourceList = new ArrayList<>();
+        matchingSourceList.add(SourceFixture.getValidSourceBuilder()
+                .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                .setEventTime(eventTime)
+                .setEventReportWindow(triggerTime)
+                .build());
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Arrays.asList(trigger1.getId(), trigger2.getId()));
+        when(mMeasurementDao.getTrigger(trigger1.getId())).thenReturn(trigger1);
+        when(mMeasurementDao.getTrigger(trigger2.getId())).thenReturn(trigger2);
+        when(mMeasurementDao.getMatchingActiveSources(trigger1)).thenReturn(matchingSourceList);
+        when(mMeasurementDao.getMatchingActiveSources(trigger2)).thenReturn(matchingSourceList);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
+        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
+        assertTrue(attributionService.performPendingAttributions());
+        // Verify trigger status updates.
+        verify(mMeasurementDao).updateTriggerStatus(
+                eq(Collections.singletonList(trigger1.getId())), eq(Trigger.Status.ATTRIBUTED));
+        verify(mMeasurementDao).updateTriggerStatus(
+                eq(Collections.singletonList(trigger2.getId())), eq(Trigger.Status.IGNORED));
+        // Verify new event report insertion.
+        ArgumentCaptor<EventReport> reportArg = ArgumentCaptor.forClass(EventReport.class);
+        verify(mMeasurementDao, times(1))
+                .insertEventReport(reportArg.capture());
+        List<EventReport> newReportArgs = reportArg.getAllValues();
+        assertEquals(1, newReportArgs.size());
+        assertEquals(
+                newReportArgs.get(0).getTriggerData(),
+                triggers.get(0).parseEventTriggers().get(0).getTriggerData());
+    }
+
+    @Test
+    public void shouldNotCreateEventReportAfterEventReportWindow_prioritisedSource()
+            throws DatastoreException {
+        String eventTriggers =
+                "[{\"trigger_data\": \"5\","
+                + "\"priority\": \"123\","
+                + "\"filters\":[{\"key_1\":[\"value_1\"]}]"
+                + "}]";
+        long eventTime = System.currentTimeMillis();
+        long triggerTime = eventTime + TimeUnit.DAYS.toMillis(5);
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId1")
+                        .setStatus(Trigger.Status.PENDING)
+                        .setEventTriggers(eventTriggers)
+                        .setTriggerTime(triggerTime)
+                        .build();
+        Source source1 =
+                SourceFixture.getValidSourceBuilder()
+                        .setId("source1")
+                        .setPriority(100L)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setEventTime(eventTime)
+                        .setEventReportWindow(triggerTime)
+                        .build();
+        // Second source has higher priority but the event report window ends before trigger time
+        Source source2 =
+                SourceFixture.getValidSourceBuilder()
+                        .setId("source2")
+                        .setPriority(200L)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setEventTime(eventTime + 1000)
+                        .setEventReportWindow(triggerTime - 1)
+                        .build();
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        List<Source> matchingSourceList = new ArrayList<>();
+        matchingSourceList.add(source1);
+        matchingSourceList.add(source2);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
+        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
+        attributionService.performPendingAttributions();
+        trigger.setStatus(Trigger.Status.ATTRIBUTED);
+        verify(mMeasurementDao)
+                .updateSourceStatus(eq(List.of(source1.getId())), eq(Source.Status.IGNORED));
+        assertEquals(1, matchingSourceList.size());
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())),
+                        eq(Trigger.Status.IGNORED));
+        verify(mMeasurementDao, never()).insertEventReport(any());
+        verify(mTransaction, times(2)).begin();
+        verify(mTransaction, times(2)).end();
+    }
+
+    @Test
     public void shouldNotAddIfRateLimitExceeded() throws DatastoreException {
         Trigger trigger = createAPendingTrigger();
         Source source = SourceFixture.getValidSourceBuilder()
@@ -606,11 +755,12 @@ public class AttributionJobHandlerTest {
     @Test
     public void shouldAttributedToInstallAttributedSource() throws DatastoreException {
         long eventTime = System.currentTimeMillis();
+        long triggerTime = eventTime + TimeUnit.DAYS.toMillis(5);
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
                         .setId("trigger1")
                         .setStatus(Trigger.Status.PENDING)
-                        .setTriggerTime(eventTime + TimeUnit.DAYS.toMillis(5))
+                        .setTriggerTime(triggerTime)
                         .setEventTriggers(
                                 "[\n"
                                         + "{\n"
@@ -630,6 +780,8 @@ public class AttributionJobHandlerTest {
                         .setInstallAttributed(true)
                         .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(10))
                         .setEventTime(eventTime - TimeUnit.DAYS.toMillis(2))
+                        .setEventReportWindow(triggerTime)
+                        .setAggregatableReportWindow(triggerTime)
                         .build();
         Source source2 =
                 SourceFixture.getValidSourceBuilder()
@@ -671,11 +823,12 @@ public class AttributionJobHandlerTest {
     public void shouldNotAttributeToOldInstallAttributedSource() throws DatastoreException {
         // Setup
         long eventTime = System.currentTimeMillis();
+        long triggerTime = eventTime + TimeUnit.DAYS.toMillis(10);
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
                         .setId("trigger1")
                         .setStatus(Trigger.Status.PENDING)
-                        .setTriggerTime(eventTime + TimeUnit.DAYS.toMillis(10))
+                        .setTriggerTime(triggerTime)
                         .setEventTriggers(
                                 "[\n"
                                         + "{\n"
@@ -695,6 +848,8 @@ public class AttributionJobHandlerTest {
                         .setInstallAttributed(true)
                         .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(3))
                         .setEventTime(eventTime - TimeUnit.DAYS.toMillis(2))
+                        .setEventReportWindow(triggerTime)
+                        .setAggregatableReportWindow(triggerTime)
                         .build();
         Source source2 =
                 SourceFixture.getValidSourceBuilder()
@@ -703,6 +858,7 @@ public class AttributionJobHandlerTest {
                         .setPriority(200L)
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setEventTime(eventTime)
+                        .setEventReportWindow(triggerTime)
                         .build();
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
@@ -1669,6 +1825,8 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
                         .setId("sourceId")
+                        .setEventReportWindow(234324L)
+                        .setAggregatableReportWindow(234324L)
                         .build();
         EventReport expectedEventReport =
                 new EventReport.Builder()
@@ -1750,6 +1908,8 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
                         .setId("sourceId")
+                        .setEventReportWindow(234324L)
+                        .setAggregatableReportWindow(234324L)
                         .build();
         EventReport expectedEventReport =
                 new EventReport.Builder()
@@ -1833,6 +1993,8 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
                         .setId("sourceId")
+                        .setEventReportWindow(234324L)
+                        .setAggregatableReportWindow(234324L)
                         .build();
         EventReport expectedEventReport =
                 new EventReport.Builder()
@@ -1914,6 +2076,8 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
                         .setId("sourceId")
+                        .setEventReportWindow(234324L)
+                        .setAggregatableReportWindow(234324L)
                         .build();
         EventReport expectedEventReport =
                 new EventReport.Builder()
@@ -1998,6 +2162,8 @@ public class AttributionJobHandlerTest {
                                         + "}\n")
                         .setId("sourceId")
                         .setSourceType(Source.SourceType.NAVIGATION)
+                        .setEventReportWindow(234324L)
+                        .setAggregatableReportWindow(234324L)
                         .build();
         EventReport expectedEventReport =
                 new EventReport.Builder()
@@ -2083,6 +2249,8 @@ public class AttributionJobHandlerTest {
                                 "{\"product\":[\"1234\", \"2345\"],"
                                 + "\"key_1\": [\"value_1_y\", \"value_2_y\"]}")
                         .setId("sourceId")
+                        .setEventReportWindow(234324L)
+                        .setAggregatableReportWindow(234324L)
                         .build();
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
@@ -2148,6 +2316,8 @@ public class AttributionJobHandlerTest {
                                 "{\"product\":[\"1234\",\"2345\"], \"key_1\": "
                                         + "[\"value_1_y\", \"value_2_y\"]}")
                         .setId("sourceId")
+                        .setEventReportWindow(234324L)
+                        .setAggregatableReportWindow(234324L)
                         .build();
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
@@ -2208,6 +2378,8 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
+                        .setEventReportWindow(234324L)
+                        .setAggregatableReportWindow(234324L)
                         .build();
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
@@ -2276,6 +2448,8 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
+                        .setEventReportWindow(234324L)
+                        .setAggregatableReportWindow(234324L)
                         .build();
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
@@ -2344,6 +2518,8 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
+                        .setEventReportWindow(234324L)
+                        .setAggregatableReportWindow(234324L)
                         .build();
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
@@ -2411,6 +2587,8 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
+                        .setEventReportWindow(234324L)
+                        .setAggregatableReportWindow(234324L)
                         .build();
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));

@@ -126,6 +126,8 @@ public class ConsentNotificationTriggerTest {
                     .isEqualTo(expectedTitle);
             assertThat(notification.extras.getCharSequence(Notification.EXTRA_TEXT))
                     .isEqualTo(expectedContent);
+            assertThat(Notification.FLAG_ONGOING_EVENT & notification.flags).isEqualTo(0);
+            assertThat(Notification.FLAG_NO_CLEAR & notification.flags).isEqualTo(0);
 
             sDevice.openNotification();
             sDevice.wait(Until.hasObject(By.pkg("com.android.systemui")), LAUNCH_TIMEOUT);
@@ -191,6 +193,10 @@ public class ConsentNotificationTriggerTest {
                     .isEqualTo(expectedTitle);
             assertThat(notification.extras.getCharSequence(Notification.EXTRA_TEXT))
                     .isEqualTo(expectedContent);
+            assertThat(Notification.FLAG_ONGOING_EVENT & notification.flags)
+                    .isEqualTo(Notification.FLAG_ONGOING_EVENT);
+            assertThat(Notification.FLAG_NO_CLEAR & notification.flags)
+                    .isEqualTo(Notification.FLAG_NO_CLEAR);
         } finally {
             mStaticMockSession.finishMocking();
         }
@@ -239,6 +245,8 @@ public class ConsentNotificationTriggerTest {
                     .isEqualTo(expectedTitle);
             assertThat(notification.extras.getCharSequence(Notification.EXTRA_TEXT))
                     .isEqualTo(expectedContent);
+            assertThat(Notification.FLAG_ONGOING_EVENT & notification.flags).isEqualTo(0);
+            assertThat(Notification.FLAG_NO_CLEAR & notification.flags).isEqualTo(0);
 
             sDevice.openNotification();
             sDevice.wait(Until.hasObject(By.pkg("com.android.systemui")), LAUNCH_TIMEOUT);
@@ -305,6 +313,9 @@ public class ConsentNotificationTriggerTest {
                     .isEqualTo(expectedTitle);
             assertThat(notification.extras.getCharSequence(Notification.EXTRA_TEXT))
                     .isEqualTo(expectedContent);
+            assertThat(Notification.FLAG_ONGOING_EVENT & notification.flags).isEqualTo(0);
+            assertThat(Notification.FLAG_NO_CLEAR & notification.flags).isEqualTo(0);
+            assertThat(notification.actions).isNull();
         } finally {
             mStaticMockSession.finishMocking();
         }

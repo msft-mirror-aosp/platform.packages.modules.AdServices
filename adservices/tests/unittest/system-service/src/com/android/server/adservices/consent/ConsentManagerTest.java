@@ -34,7 +34,11 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /** Tests for {@link ConsentManager} */
 public class ConsentManagerTest {
@@ -296,5 +300,41 @@ public class ConsentManagerTest {
         consentManager.recordFledgeAndMsmtConsentPageDisplayed();
 
         assertThat(consentManager.wasFledgeAndMsmtConsentPageDisplayed()).isTrue();
+    }
+
+    @Test
+    public void testDeleteConsentDataStoreDir() throws IOException {
+        int userIdentifier = 0;
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, userIdentifier);
+        String consentDataStoreDir =
+                ConsentDatastoreLocationHelper.getConsentDataStoreDirAndCreateDir(
+                        BASE_DIR, userIdentifier);
+        Path packageDir = Paths.get(consentDataStoreDir);
+        assertThat(Files.exists(packageDir)).isTrue();
+        String userDirectoryPath = BASE_DIR + "/" + userIdentifier;
+        assertThat(consentManager.deleteUserDirectory(new File(userDirectoryPath))).isTrue();
+
+        assertThat(Files.exists(packageDir)).isFalse();
+    }
+
+    @Test
+    public void testDeleteConsentDataStoreDirUserIdentifierNotPresent() throws IOException {
+        int userIdentifier = 0;
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, userIdentifier);
+        String consentDataStoreDir =
+                ConsentDatastoreLocationHelper.getConsentDataStoreDirAndCreateDir(
+                        BASE_DIR, userIdentifier);
+        Path packageDir = Paths.get(consentDataStoreDir);
+
+        int userIdentifierNotPresent = 3;
+        // Try deleting with non-existent user id. Nothing should happen and ensure userIdentifier
+        // is present.
+        assertThat(
+                        consentManager.deleteUserDirectory(
+                                new File(BASE_DIR + userIdentifierNotPresent)))
+                .isFalse();
+        assertThat(Files.exists(packageDir)).isTrue();
     }
 }
