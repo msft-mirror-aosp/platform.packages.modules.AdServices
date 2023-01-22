@@ -22,6 +22,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
 import static com.android.adservices.ui.notifications.ConsentNotificationFragment.IS_EU_DEVICE_ARGUMENT_KEY;
 
+import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -38,6 +39,7 @@ import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.UIStats;
+import com.android.adservices.ui.OTAResourcesManager;
 
 /** Provides methods which can be used to display Privacy Sandbox consent notification. */
 public class ConsentNotificationTrigger {
@@ -64,20 +66,59 @@ public class ConsentNotificationTrigger {
                                 AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__REQUESTED_NOTIFICATION)
                         .build();
         AdServicesLoggerImpl.getInstance().logUIStats(uiStats);
+        // Set OTA resources if it exists.
+        if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()) {
+            OTAResourcesManager.applyOTAResources(context.getApplicationContext(), true);
+        }
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
 
         ConsentManager consentManager = ConsentManager.getInstance(context);
 
         if (!notificationManager.areNotificationsEnabled()) {
-            if (gaUxFeatureEnabled) {
-                consentManager.recordGaUxNotificationDisplayed();
-            } else {
-                consentManager.recordNotificationDisplayed();
-            }
+            recordNotificationDisplayed(gaUxFeatureEnabled, consentManager);
             // TODO(b/242001860): add logging
             return;
         }
 
+        setupConsents(context, isEuDevice, gaUxFeatureEnabled, consentManager);
+
+        createNotificationChannel(context);
+        Notification notification = getNotification(context, isEuDevice, gaUxFeatureEnabled);
+        notificationManager.notify(NOTIFICATION_ID, notification);
+
+        recordNotificationDisplayed(gaUxFeatureEnabled, consentManager);
+    }
+
+    private static void recordNotificationDisplayed(
+            boolean gaUxFeatureEnabled, ConsentManager consentManager) {
+        if (gaUxFeatureEnabled) {
+            consentManager.recordGaUxNotificationDisplayed();
+        } else {
+            consentManager.recordNotificationDisplayed();
+        }
+    }
+
+    @NonNull
+    private static Notification getNotification(
+            @NonNull Context context, boolean isEuDevice, boolean gaUxFeatureEnabled) {
+        Notification notification =
+                gaUxFeatureEnabled
+                        ? getGaConsentNotification(context, isEuDevice)
+                        : getConsentNotification(context, isEuDevice);
+        // make notification sticky (non-dismissible) for EuDevices when the GA UX feature is on
+        if (gaUxFeatureEnabled && isEuDevice) {
+            notification.flags |= Notification.FLAG_ONGOING_EVENT | Notification.FLAG_NO_CLEAR;
+        }
+        return notification;
+    }
+
+    // setup default consents based on information whether the device is EU or non-EU device and
+    // GA UX feature flag is enabled.
+    private static void setupConsents(
+            @NonNull Context context,
+            boolean isEuDevice,
+            boolean gaUxFeatureEnabled,
+            ConsentManager consentManager) {
         // Keep the feature flag at the upper level to make it easier to cleanup the code once
         // the beta functionality is fully deprecated and abandoned.
         if (gaUxFeatureEnabled) {
@@ -102,21 +143,6 @@ public class ConsentNotificationTrigger {
                 consentManager.disable(context);
             }
         }
-
-        createNotificationChannel(context);
-
-        // check the Ga UX flag to get the title and text for notification
-        NotificationCompat.Builder consentNotificationBuilder =
-                gaUxFeatureEnabled
-                        ? getGaConsentNotificationBuilder(context, isEuDevice)
-                        : getConsentNotificationBuilder(context, isEuDevice);
-
-        notificationManager.notify(NOTIFICATION_ID, consentNotificationBuilder.build());
-        if (gaUxFeatureEnabled) {
-            consentManager.recordGaUxNotificationDisplayed();
-        } else {
-            consentManager.recordNotificationDisplayed();
-        }
     }
 
     /**
@@ -125,7 +151,7 @@ public class ConsentNotificationTrigger {
      *
      * @param context {@link Context} which is used to prepare a {@link NotificationCompat}.
      */
-    private static NotificationCompat.Builder getGaConsentNotificationBuilder(
+    private static Notification getGaConsentNotification(
             @NonNull Context context, boolean isEuDevice) {
         Intent intent = new Intent(context, ConsentNotificationActivity.class);
         intent.putExtra(IS_EU_DEVICE_ARGUMENT_KEY, isEuDevice);
@@ -136,34 +162,35 @@ public class ConsentNotificationTrigger {
                         .bigText(
                                 isEuDevice
                                         ? context.getString(
-                                                R.string.notificationUI_notification_content_eu)
+                                                R.string.notificationUI_notification_ga_content_eu)
                                         : context.getString(
-                                                R.string.notificationUI_notification_content));
-        return new NotificationCompat.Builder(context, CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_info_icon)
-                .setContentTitle(
-                        context.getString(
-                                isEuDevice
-                                        ? R.string.notificationUI_notification_ga_title_eu
-                                        : R.string.notificationUI_notification_ga_title))
-                .setContentText(
-                        context.getString(
-                                isEuDevice
-                                        ? R.string.notificationUI_notification_ga_content_eu
-                                        : R.string.notificationUI_notification_ga_content))
-                .setStyle(textStyle)
-                .setPriority(NOTIFICATION_PRIORITY)
-                .setAutoCancel(true)
-                .setContentIntent(pendingIntent)
-                .addAction(
-                        isEuDevice
-                                ? R.string.notificationUI_notification_cta_eu
-                                : R.string.notificationUI_notification_cta,
-                        context.getString(
-                                isEuDevice
-                                        ? R.string.notificationUI_notification_cta_eu
-                                        : R.string.notificationUI_notification_cta),
-                        pendingIntent);
+                                                R.string.notificationUI_notification_ga_content));
+        NotificationCompat.Builder notification =
+                new NotificationCompat.Builder(context, CHANNEL_ID)
+                        .setSmallIcon(R.drawable.ic_info_icon)
+                        .setContentTitle(
+                                context.getString(
+                                        isEuDevice
+                                                ? R.string.notificationUI_notification_ga_title_eu
+                                                : R.string.notificationUI_notification_ga_title))
+                        .setContentText(
+                                context.getString(
+                                        isEuDevice
+                                                ? R.string.notificationUI_notification_ga_content_eu
+                                                : R.string.notificationUI_notification_ga_content))
+                        .setStyle(textStyle)
+                        .setPriority(NOTIFICATION_PRIORITY)
+                        .setAutoCancel(true)
+                        .setContentIntent(pendingIntent);
+        // EU needs a "View Details" CTA
+        return isEuDevice
+                ? notification
+                        .addAction(
+                                R.string.notificationUI_notification_ga_cta_eu,
+                                context.getString(R.string.notificationUI_notification_ga_cta_eu),
+                                pendingIntent)
+                        .build()
+                : notification.build();
     }
 
     /**
@@ -172,7 +199,7 @@ public class ConsentNotificationTrigger {
      *
      * @param context {@link Context} which is used to prepare a {@link NotificationCompat}.
      */
-    private static NotificationCompat.Builder getConsentNotificationBuilder(
+    private static Notification getConsentNotification(
             @NonNull Context context, boolean isEuDevice) {
         Intent intent = new Intent(context, ConsentNotificationActivity.class);
         intent.putExtra(IS_EU_DEVICE_ARGUMENT_KEY, isEuDevice);
@@ -211,7 +238,8 @@ public class ConsentNotificationTrigger {
                                 isEuDevice
                                         ? R.string.notificationUI_notification_cta_eu
                                         : R.string.notificationUI_notification_cta),
-                        pendingIntent);
+                        pendingIntent)
+                .build();
     }
 
     private static void createNotificationChannel(@NonNull Context context) {

@@ -77,6 +77,8 @@ public class Source {
     @Status private int mStatus;
     private long mEventTime;
     private long mExpiryTime;
+    private long mEventReportWindow;
+    private long mAggregatableReportWindow;
     private List<UnsignedLong> mAggregateReportDedupKeys;
     private List<UnsignedLong> mEventReportDedupKeys;
     @AttributionMode private int mAttributionMode;
@@ -210,7 +212,7 @@ public class Source {
 
         for (long windowDelta : earlyWindows) {
             long window = mEventTime + windowDelta;
-            if (mExpiryTime <= window) {
+            if (mEventReportWindow <= window) {
                 continue;
             }
             windowList.add(window);
@@ -228,7 +230,7 @@ public class Source {
         List<Long> windowList = getEarlyReportingWindows(isInstallDetectionEnabled());
         return windowIndex < windowList.size()
                 ? windowList.get(windowIndex) + ONE_HOUR_IN_MILLIS :
-                mExpiryTime + ONE_HOUR_IN_MILLIS;
+                mEventReportWindow + ONE_HOUR_IN_MILLIS;
     }
 
     @VisibleForTesting
@@ -318,6 +320,8 @@ public class Source {
                 && mPriority == source.mPriority
                 && mStatus == source.mStatus
                 && mExpiryTime == source.mExpiryTime
+                && mEventReportWindow == source.mEventReportWindow
+                && mAggregatableReportWindow == source.mAggregatableReportWindow
                 && mEventTime == source.mEventTime
                 && mAdIdPermission == source.mAdIdPermission
                 && mArDebugPermission == source.mArDebugPermission
@@ -348,6 +352,8 @@ public class Source {
                 mPriority,
                 mStatus,
                 mExpiryTime,
+                mEventReportWindow,
+                mAggregatableReportWindow,
                 mEventTime,
                 mEventId,
                 mSourceType,
@@ -383,7 +389,7 @@ public class Source {
                 return window + ONE_HOUR_IN_MILLIS;
             }
         }
-        return mExpiryTime + ONE_HOUR_IN_MILLIS;
+        return mEventReportWindow + ONE_HOUR_IN_MILLIS;
     }
 
     @VisibleForTesting
@@ -487,9 +493,19 @@ public class Source {
         return mSourceType;
     }
 
-    /** Time when {@link Source} will expiry. */
+    /** Time when {@link Source} will expire. */
     public long getExpiryTime() {
         return mExpiryTime;
+    }
+
+    /** Time when {@link Source} event report window will expire. */
+    public long getEventReportWindow() {
+        return mEventReportWindow;
+    }
+
+    /** Time when {@link Source} aggregate report window will expire. */
+    public long getAggregatableReportWindow() {
+        return mAggregatableReportWindow;
     }
 
     /** Debug key of {@link Source}. */
@@ -810,6 +826,22 @@ public class Source {
          */
         public Builder setExpiryTime(long expiryTime) {
             mBuilding.mExpiryTime = expiryTime;
+            return this;
+        }
+
+        /**
+         * See {@link Source#getEventReportWindow()}.
+         */
+        public Builder setEventReportWindow(long eventReportWindow) {
+            mBuilding.mEventReportWindow = eventReportWindow;
+            return this;
+        }
+
+        /**
+         * See {@link Source#getAggregatableReportWindow()}.
+         */
+        public Builder setAggregatableReportWindow(long aggregateReportWindow) {
+            mBuilding.mAggregatableReportWindow = aggregateReportWindow;
             return this;
         }
 

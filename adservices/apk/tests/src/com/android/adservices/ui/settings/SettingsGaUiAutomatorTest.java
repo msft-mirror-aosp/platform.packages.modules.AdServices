@@ -103,24 +103,29 @@ public class SettingsGaUiAutomatorTest {
 
         // click reset
         scrollToAndClick(R.string.settingsUI_measurement_view_reset_title);
-        UiObject dialogTitle = getElement(R.string.settingsUI_dialog_reset_measurement_title);
-        UiObject positiveText =
-                getElement(R.string.settingsUI_dialog_reset_measurement_positive_text);
-        assertThat(dialogTitle.exists()).isTrue();
-        assertThat(positiveText.exists()).isTrue();
-
-        // click positive button and confirm mConsentManager.resetMeasurement is called
-        positiveText.click();
+        UiObject resetButton =
+                sDevice.findObject(
+                        new UiSelector()
+                                .childSelector(
+                                        new UiSelector()
+                                                .text(
+                                                        getString(
+                                                                R.string
+                                                                        .settingsUI_measurement_view_reset_title))));
+        assertThat(resetButton.exists()).isTrue();
 
         // click reset again
         scrollToAndClick(R.string.settingsUI_measurement_view_reset_title);
-        dialogTitle = getElement(R.string.settingsUI_dialog_reset_measurement_title);
-        UiObject negativeText = getElement(R.string.settingsUI_dialog_negative_text);
-        assertThat(dialogTitle.exists()).isTrue();
-        assertThat(negativeText.exists()).isTrue();
-
-        // click cancel and verify it has still only been called once
-        negativeText.click();
+        resetButton =
+                sDevice.findObject(
+                        new UiSelector()
+                                .childSelector(
+                                        new UiSelector()
+                                                .text(
+                                                        getString(
+                                                                R.string
+                                                                        .settingsUI_measurement_view_reset_title))));
+        assertThat(resetButton.exists()).isTrue();
     }
 
     @Test

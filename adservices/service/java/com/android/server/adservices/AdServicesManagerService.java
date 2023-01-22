@@ -72,6 +72,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     private final Context mContext;
 
     private BroadcastReceiver mSystemServicePackageChangedReceiver;
+    private BroadcastReceiver mSystemServiceUserActionReceiver;
 
     private HandlerThread mHandlerThread;
     private Handler mHandler;
@@ -82,7 +83,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
                 if (!properties.getNamespace().equals(DeviceConfig.NAMESPACE_ADSERVICES)) {
                     return;
                 }
-                registerPackagedChangedBroadcastReceivers();
+                registerReceivers();
             };
 
     private final UserInstanceManager mUserInstanceManager;
@@ -97,7 +98,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
                 mContext.getMainExecutor(),
                 mOnFlagsChangedListener);
 
-        registerPackagedChangedBroadcastReceivers();
+        registerReceivers();
     }
 
     /** @hide */
@@ -141,7 +142,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     public ConsentParcel getConsent(@ConsentParcel.ConsentApiType int consentApiType) {
         enforceAdServicesManagerPermission();
 
-        final int userIdentifier = getUserIdentifier();
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
 
         LogUtil.v("getConsent() for User Identifier %d", userIdentifier);
         try {
@@ -155,7 +156,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     }
 
     // Return the User Identifier from the CallingUid.
-    private int getUserIdentifier() {
+    private int getUserIdentifierFromBinderCallingUid() {
         return UserHandle.getUserHandleForUid(Binder.getCallingUid()).getIdentifier();
     }
 
@@ -166,7 +167,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
 
         Objects.requireNonNull(consentParcel);
 
-        final int userIdentifier = getUserIdentifier();
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
         LogUtil.v("setConsent() for User Identifier %d", userIdentifier);
         try {
             mUserInstanceManager
@@ -182,7 +183,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     public void recordNotificationDisplayed() {
         enforceAdServicesManagerPermission();
 
-        final int userIdentifier = getUserIdentifier();
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
         LogUtil.v("recordNotificationDisplayed() for User Identifier %d", userIdentifier);
         try {
             mUserInstanceManager
@@ -198,7 +199,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     public boolean wasNotificationDisplayed() {
         enforceAdServicesManagerPermission();
 
-        final int userIdentifier = getUserIdentifier();
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
         LogUtil.v("wasNotificationDisplayed() for User Identifier %d", userIdentifier);
         try {
             return mUserInstanceManager
@@ -215,7 +216,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     public void recordGaUxNotificationDisplayed() {
         enforceAdServicesManagerPermission();
 
-        final int userIdentifier = getUserIdentifier();
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
         LogUtil.v("recordGaUxNotificationDisplayed() for User Identifier %d", userIdentifier);
         try {
             mUserInstanceManager
@@ -231,7 +232,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     public boolean wasGaUxNotificationDisplayed() {
         enforceAdServicesManagerPermission();
 
-        final int userIdentifier = getUserIdentifier();
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
         LogUtil.v("wasGaUxNotificationDisplayed() for User Identifier %d", userIdentifier);
         try {
             return mUserInstanceManager
@@ -249,7 +250,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     public void recordTopicsConsentPageDisplayed() {
         enforceAdServicesManagerPermission();
 
-        final int userIdentifier = getUserIdentifier();
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
         LogUtil.v("recordTopicsConsentPageDisplayed() for User Identifier %d", userIdentifier);
         try {
             mUserInstanceManager
@@ -265,7 +266,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     public boolean wasTopicsConsentPageDisplayed() {
         enforceAdServicesManagerPermission();
 
-        final int userIdentifier = getUserIdentifier();
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
         LogUtil.v("wasTopicsConsentPageDisplayed() for User Identifier %d", userIdentifier);
         try {
             return mUserInstanceManager
@@ -283,7 +284,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     public void recordFledgeAndMsmtConsentPageDisplayed() {
         enforceAdServicesManagerPermission();
 
-        final int userIdentifier = getUserIdentifier();
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
         LogUtil.v(
                 "recordFledgeAndMsmtConsentPageDisplayed() for User Identifier %d", userIdentifier);
         try {
@@ -301,7 +302,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     public boolean wasFledgeAndMsmtConsentPageDisplayed() {
         enforceAdServicesManagerPermission();
 
-        final int userIdentifier = getUserIdentifier();
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
         LogUtil.v("wasFledgeAndMsmtConsentPageDisplayed() for User Identifier %d", userIdentifier);
         try {
             return mUserInstanceManager
@@ -318,7 +319,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     public List<String> getKnownAppsWithConsent(@NonNull List<String> installedPackages) {
         enforceAdServicesManagerPermission();
 
-        final int userIdentifier = getUserIdentifier();
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
         LogUtil.v("getKnownAppsWithConsent() for User Identifier %d", userIdentifier);
         try {
             return mUserInstanceManager
@@ -338,7 +339,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     public List<String> getAppsWithRevokedConsent(@NonNull List<String> installedPackages) {
         enforceAdServicesManagerPermission();
 
-        final int userIdentifier = getUserIdentifier();
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
         LogUtil.v("getAppsWithRevokedConsent() for User Identifier %d", userIdentifier);
         try {
             return mUserInstanceManager
@@ -359,7 +360,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
             @NonNull String packageName, int packageUid, boolean isConsentRevoked) {
         enforceAdServicesManagerPermission();
 
-        final int userIdentifier = getUserIdentifier();
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
 
         LogUtil.v(
                 "setConsentForApp() for User Identifier %d, package name %s, and package uid %d to"
@@ -386,7 +387,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     public void clearKnownAppsWithConsent() {
         enforceAdServicesManagerPermission();
 
-        final int userIdentifier = getUserIdentifier();
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
         LogUtil.v("clearKnownAppsWithConsent() for user identifier %d.", userIdentifier);
         try {
             mUserInstanceManager
@@ -405,7 +406,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     public void clearAllAppConsentData() {
         enforceAdServicesManagerPermission();
 
-        final int userIdentifier = getUserIdentifier();
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
         LogUtil.v("clearAllAppConsentData() for user identifier %d.", userIdentifier);
 
         try {
@@ -424,7 +425,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
             throws IllegalArgumentException {
         enforceAdServicesManagerPermission();
 
-        final int userIdentifier = getUserIdentifier();
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
         LogUtil.v(
                 "isConsentRevokedForApp() for user identifier %d, package name %s, and package uid"
                         + " %d.",
@@ -452,7 +453,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
             throws IllegalArgumentException {
         enforceAdServicesManagerPermission();
 
-        final int userIdentifier = getUserIdentifier();
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
         LogUtil.v(
                 "setConsentForAppIfNew() for user identifier %d, package name"
                         + " %s, and package uid %d to %s.",
@@ -479,7 +480,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     public void clearConsentForUninstalledApp(@NonNull String packageName, int packageUid) {
         enforceAdServicesManagerPermission();
 
-        final int userIdentifier = getUserIdentifier();
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
         LogUtil.v(
                 "clearConsentForUninstalledApp() for user identifier %d, package name"
                         + " %s, and package uid %d.",
@@ -499,67 +500,122 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         }
     }
 
-    /**
-     * Registers a receiver for any broadcasts regarding changes to any packages for all users on
-     * the device at boot up. After receiving the broadcast, send an explicit broadcast to the
-     * AdServices module as that user.
-     */
     @VisibleForTesting
-    void registerPackagedChangedBroadcastReceivers() {
-        // There could be race condition between registerPackagedChangedBroadcastReceivers call
+    void registerReceivers() {
+        // There could be race condition between registerReceivers call
         // in the AdServicesManagerService constructor and the mOnFlagsChangedListener.
         synchronized (AdServicesManagerService.class) {
-            if (FlagsFactory.getFlags().getAdServicesSystemServiceEnabled()) {
-                if (mSystemServicePackageChangedReceiver != null) {
-                    // We already register the receiver.
-                    LogUtil.d("SystemServicePackageChangedReceiver is already registered.");
-                    return;
-                }
-
-                // mSystemServicePackageChangedReceiver == null
-                // We haven't registered the receiver.
-                // Start the handler thread.
-                mHandlerThread = new HandlerThread("AdServicesManagerServiceHandler");
-                mHandlerThread.start();
-                mHandler = new Handler(mHandlerThread.getLooper());
-
-                final IntentFilter packageChangedIntentFilter = new IntentFilter();
-
-                packageChangedIntentFilter.addAction(Intent.ACTION_PACKAGE_FULLY_REMOVED);
-                packageChangedIntentFilter.addAction(Intent.ACTION_PACKAGE_DATA_CLEARED);
-                packageChangedIntentFilter.addAction(Intent.ACTION_PACKAGE_ADDED);
-                packageChangedIntentFilter.addDataScheme("package");
-
-                mSystemServicePackageChangedReceiver =
-                        new BroadcastReceiver() {
-                            @Override
-                            public void onReceive(Context context, Intent intent) {
-                                UserHandle user = getSendingUser();
-                                mHandler.post(() -> onPackageChange(intent, user));
-                            }
-                        };
-                mContext.registerReceiverForAllUsers(
-                        mSystemServicePackageChangedReceiver,
-                        packageChangedIntentFilter,
-                        /* broadcastPermission */ null,
-                        mHandler);
-                LogUtil.d("Package changed broadcast receivers registered.");
-            } else {
-                // FlagsFactory.getFlags().getAdServicesSystemServiceEnabled() == false
+            if (!FlagsFactory.getFlags().getAdServicesSystemServiceEnabled()) {
                 LogUtil.d("AdServicesSystemServiceEnabled is FALSE.");
-
                 // If there is a SystemServicePackageChangeReceiver, unregister it.
                 if (mSystemServicePackageChangedReceiver != null) {
                     LogUtil.d("Unregistering the existing SystemServicePackageChangeReceiver");
                     mContext.unregisterReceiver(mSystemServicePackageChangedReceiver);
                     mSystemServicePackageChangedReceiver = null;
+                }
+
+                // If there is a SystemServiceUserActionReceiver, unregister it.
+                if (mSystemServiceUserActionReceiver != null) {
+                    LogUtil.d("Unregistering the existing SystemServiceUserActionReceiver");
+                    mContext.unregisterReceiver(mSystemServiceUserActionReceiver);
+                    mSystemServiceUserActionReceiver = null;
+                }
+
+                if (mHandler != null) {
                     mHandlerThread.quitSafely();
                     mHandler = null;
                 }
-
                 return;
             }
+
+            // Start the handler thread.
+            if (mHandler == null) {
+                mHandlerThread = new HandlerThread("AdServicesManagerServiceHandler");
+                mHandlerThread.start();
+                mHandler = new Handler(mHandlerThread.getLooper());
+            }
+            registerPackagedChangedBroadcastReceiversLocked();
+            registerUserActionBroadcastReceiverLocked();
         }
+    }
+
+    /**
+     * Registers a receiver for any broadcasts related to user profile removal for all users on the
+     * device at boot up. After receiving the broadcast, we delete consent manager instance and
+     * remove the user related data.
+     */
+    private void registerUserActionBroadcastReceiverLocked() {
+        if (mSystemServiceUserActionReceiver != null) {
+            // We already register the receiver.
+            LogUtil.d("SystemServiceUserActionReceiver is already registered.");
+            return;
+        }
+        mSystemServiceUserActionReceiver =
+                new BroadcastReceiver() {
+                    @Override
+                    public void onReceive(Context context, Intent intent) {
+                        mHandler.post(() -> onUserRemoved(intent));
+                    }
+                };
+        mContext.registerReceiverForAllUsers(
+                mSystemServiceUserActionReceiver,
+                new IntentFilter(Intent.ACTION_USER_REMOVED),
+                /*broadcastPermission=*/ null,
+                mHandler);
+        LogUtil.d("SystemServiceUserActionReceiver registered.");
+    }
+
+    /** Deletes the user instance and remove the user consent related data. */
+    @VisibleForTesting
+    void onUserRemoved(@NonNull Intent intent) {
+        Objects.requireNonNull(intent);
+        if (Intent.ACTION_USER_REMOVED.equals(intent.getAction())) {
+            UserHandle userHandle = intent.getParcelableExtra(Intent.EXTRA_USER, UserHandle.class);
+            if (userHandle == null) {
+                LogUtil.e("Extra " + Intent.EXTRA_USER + " is missing in the intent: " + intent);
+                return;
+            }
+            LogUtil.d("Deleting user instance with user id: " + userHandle.getIdentifier());
+            try {
+                mUserInstanceManager.deleteUserInstance(userHandle.getIdentifier());
+            } catch (Exception e) {
+                LogUtil.e(e, "Failed to delete the consent manager directory");
+            }
+        }
+    }
+
+    /**
+     * Registers a receiver for any broadcasts regarding changes to any packages for all users on
+     * the device at boot up. After receiving the broadcast, send an explicit broadcast to the
+     * AdServices module as that user.
+     */
+    private void registerPackagedChangedBroadcastReceiversLocked() {
+        if (mSystemServicePackageChangedReceiver != null) {
+            // We already register the receiver.
+            LogUtil.d("SystemServicePackageChangedReceiver is already registered.");
+            return;
+        }
+
+        final IntentFilter packageChangedIntentFilter = new IntentFilter();
+        packageChangedIntentFilter.addAction(Intent.ACTION_PACKAGE_FULLY_REMOVED);
+        packageChangedIntentFilter.addAction(Intent.ACTION_PACKAGE_DATA_CLEARED);
+        packageChangedIntentFilter.addAction(Intent.ACTION_PACKAGE_ADDED);
+        packageChangedIntentFilter.addDataScheme("package");
+
+        mSystemServicePackageChangedReceiver =
+                new BroadcastReceiver() {
+                    @Override
+                    public void onReceive(Context context, Intent intent) {
+                        UserHandle user = getSendingUser();
+                        mHandler.post(() -> onPackageChange(intent, user));
+                    }
+                };
+        mContext.registerReceiverForAllUsers(
+                mSystemServicePackageChangedReceiver,
+                packageChangedIntentFilter,
+                /* broadcastPermission */ null,
+                mHandler);
+        LogUtil.d("Package changed broadcast receivers registered.");
     }
 
     /** Sends an explicit broadcast to the AdServices module when a package change occurs. */

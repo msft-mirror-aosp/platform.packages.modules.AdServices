@@ -21,6 +21,7 @@ import android.app.adservices.consent.ConsentParcel;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.adservices.LogUtil;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
 
@@ -262,6 +263,26 @@ public final class ConsentManager {
         synchronized (this) {
             Boolean displayed = mDatastore.get(FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED);
             return displayed != null ? displayed : false;
+        }
+    }
+    /**
+     * Deletes the user directory which contains consent information present at
+     * /data/system/adservices/user_id
+     */
+    public boolean deleteUserDirectory(File dir) throws IOException {
+        synchronized (this) {
+            boolean success = true;
+            File[] files = dir.listFiles();
+            // files will be null if dir is not a directory
+            if (files != null) {
+                for (File file : files) {
+                    if (!deleteUserDirectory(file)) {
+                        LogUtil.d("Failed to delete " + file);
+                        success = false;
+                    }
+                }
+            }
+            return success && dir.delete();
         }
     }
 
