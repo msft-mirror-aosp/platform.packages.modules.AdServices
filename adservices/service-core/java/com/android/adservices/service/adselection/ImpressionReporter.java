@@ -16,8 +16,8 @@
 
 package com.android.adservices.service.adselection;
 
-import static com.android.adservices.data.adselection.DBRegisteredAdEvent.DESTINATION_BUYER;
-import static com.android.adservices.data.adselection.DBRegisteredAdEvent.DESTINATION_SELLER;
+import static com.android.adservices.data.adselection.DBRegisteredAdInteraction.DESTINATION_BUYER;
+import static com.android.adservices.data.adselection.DBRegisteredAdInteraction.DESTINATION_SELLER;
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
 
@@ -39,7 +39,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelectionEntry;
-import com.android.adservices.data.adselection.DBRegisteredAdEvent;
+import com.android.adservices.data.adselection.DBRegisteredAdInteraction;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.common.AdTechUriValidator;
@@ -535,7 +535,7 @@ public class ImpressionReporter {
                 mBackgroundExecutorService.submit(
                         () -> {
                             commitRegisteredAdEventsToDatabase(
-                                    sellerReportingResult.getEventUris(),
+                                    sellerReportingResult.getInteractionReportingUris(),
                                     sellerValidator,
                                     ctx.mDBAdSelectionEntry.getAdSelectionId(),
                                     DESTINATION_SELLER);
@@ -570,7 +570,8 @@ public class ImpressionReporter {
                 mBackgroundExecutorService.submit(
                         () -> {
                             commitRegisteredAdEventsToDatabase(
-                                    reportingResults.mBuyerReportingResult.getEventUris(),
+                                    reportingResults.mBuyerReportingResult
+                                            .getInteractionReportingUris(),
                                     buyerValidator,
                                     ctx.mDBAdSelectionEntry.getAdSelectionId(),
                                     DESTINATION_BUYER);
@@ -585,39 +586,39 @@ public class ImpressionReporter {
     }
 
     /**
-     * Iterates through each {@link EventUriRegistrationInfo}, validates each {@link
-     * EventUriRegistrationInfo#getEventUri()}, and commits it to the {@code registered_events}
-     * table if it's valid. Note: For system health purposes, we will only commit a maximum of
-     * {@code mMaxRegisteredAdEventsPerAdTech} entries to the database.
+     * Iterates through each {@link InteractionUriRegistrationInfo}, validates each {@link
+     * InteractionUriRegistrationInfo#getInteractionReportingUri()}, and commits it to the {@code
+     * registered_ad_interactions} table if it's valid. Note: For system health purposes, we will
+     * only commit a maximum of {@code mMaxRegisteredAdEventsPerAdTech} entries to the database.
      */
     private void commitRegisteredAdEventsToDatabase(
-            @NonNull List<EventUriRegistrationInfo> eventUriRegistrationInfos,
+            @NonNull List<InteractionUriRegistrationInfo> interactionUriRegistrationInfos,
             @NonNull AdTechUriValidator validator,
             long adSelectionId,
-            @DBRegisteredAdEvent.Destination int destination) {
+            @DBRegisteredAdInteraction.Destination int destination) {
         long numSellerEventUriEntries = 0;
         long maxRegisteredAdEventsPerAdTech = mFlags.getReportImpressionMaxEventUriEntriesCount();
 
-        List<DBRegisteredAdEvent> adEventsToRegister = new ArrayList<>();
+        List<DBRegisteredAdInteraction> adEventsToRegister = new ArrayList<>();
 
-        for (EventUriRegistrationInfo uriRegistrationInfo : eventUriRegistrationInfos) {
+        for (InteractionUriRegistrationInfo uriRegistrationInfo : interactionUriRegistrationInfos) {
             if (numSellerEventUriEntries >= maxRegisteredAdEventsPerAdTech) {
                 LogUtil.v(
                         "Registered maximum number of registeredAEvents for this ad-tech! The rest"
                                 + " in this list will be skipped.");
                 break;
             }
-            Uri uriToValidate = uriRegistrationInfo.getEventUri();
+            Uri uriToValidate = uriRegistrationInfo.getInteractionReportingUri();
             try {
                 validator.validate(uriToValidate);
-                DBRegisteredAdEvent dbRegisteredAdEvent =
-                        DBRegisteredAdEvent.builder()
+                DBRegisteredAdInteraction dbRegisteredAdInteraction =
+                        DBRegisteredAdInteraction.builder()
                                 .setAdSelectionId(adSelectionId)
-                                .setEventType(uriRegistrationInfo.getEventType())
-                                .setEventUri(uriToValidate)
+                                .setInteractionKey(uriRegistrationInfo.getInteractionKey())
+                                .setInteractionReportingUri(uriToValidate)
                                 .setDestination(destination)
                                 .build();
-                adEventsToRegister.add(dbRegisteredAdEvent);
+                adEventsToRegister.add(dbRegisteredAdInteraction);
                 numSellerEventUriEntries++;
             } catch (IllegalArgumentException e) {
                 LogUtil.v(
@@ -627,7 +628,7 @@ public class ImpressionReporter {
                                 uriToValidate));
             }
         }
-        mAdSelectionEntryDao.persistDBRegisteredAdEvents(adEventsToRegister);
+        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(adEventsToRegister);
     }
 
     /**
