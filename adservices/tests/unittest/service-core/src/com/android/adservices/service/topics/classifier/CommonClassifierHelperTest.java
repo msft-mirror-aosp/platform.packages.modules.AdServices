@@ -546,6 +546,12 @@ public class CommonClassifierHelperTest {
                                 .get("checksum"));
     }
 
+    @Test
+    public void testGetBundledModelBuildId() {
+        // Verify bundled model build_id. This should be changed along with model update.
+        assertThat(CommonClassifierHelper.getBundledModelBuildId(sContext)).isEqualTo(1388);
+    }
+
     private Topic getTestTopic(int topicId) {
         return Topic.create(topicId, mTestTaxonomyVersion, mTestModelVersion);
     }
