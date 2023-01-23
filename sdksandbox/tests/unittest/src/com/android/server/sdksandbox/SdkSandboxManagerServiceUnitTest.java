@@ -932,8 +932,6 @@ public class SdkSandboxManagerServiceUnitTest {
         loadSdk(SDK_NAME);
 
         Intent intent = new Intent();
-        Bundle params = new Bundle();
-        params.putString(mService.getSandboxedActivitySdkNameKey(), SDK_NAME);
         intent.putExtras(new Bundle());
         sSdkSandboxManagerLocal.enforceAllowedToHostSandboxedActivity(
                 intent, Process.myUid(), TEST_PACKAGE);
@@ -947,34 +945,6 @@ public class SdkSandboxManagerServiceUnitTest {
         Intent intent = new Intent();
         Bundle params = new Bundle();
         params.putString(mService.getSandboxedActivityHandlerKey(), "");
-        params.putString(mService.getSandboxedActivitySdkNameKey(), SDK_NAME);
-        intent.putExtras(params);
-        sSdkSandboxManagerLocal.enforceAllowedToHostSandboxedActivity(
-                intent, Process.myUid(), TEST_PACKAGE);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testEnforceAllowedToHostSandboxedActivityFailIfIntentHasNoSdkNameExtra()
-            throws RemoteException {
-        loadSdk(SDK_NAME);
-
-        Intent intent = new Intent();
-        Bundle params = new Bundle();
-        params.putBinder(mService.getSandboxedActivityHandlerKey(), new Binder());
-        intent.putExtras(params);
-        sSdkSandboxManagerLocal.enforceAllowedToHostSandboxedActivity(
-                intent, Process.myUid(), TEST_PACKAGE);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testEnforceAllowedToHostSandboxedActivityFailIfIntentHasWrongTypeOfSdkNameExtra()
-            throws RemoteException {
-        loadSdk(SDK_NAME);
-
-        Intent intent = new Intent();
-        Bundle params = new Bundle();
-        params.putBinder(mService.getSandboxedActivityHandlerKey(), new Binder());
-        params.putInt(mService.getSandboxedActivitySdkNameKey(), 0);
         intent.putExtras(params);
         sSdkSandboxManagerLocal.enforceAllowedToHostSandboxedActivity(
                 intent, Process.myUid(), TEST_PACKAGE);
@@ -987,7 +957,6 @@ public class SdkSandboxManagerServiceUnitTest {
         Intent intent = new Intent();
         Bundle params = new Bundle();
         params.putBinder(mService.getSandboxedActivityHandlerKey(), new Binder());
-        params.putString(mService.getSandboxedActivitySdkNameKey(), SDK_NAME);
         intent.putExtras(params);
         sSdkSandboxManagerLocal.enforceAllowedToHostSandboxedActivity(
                 intent, Process.myUid(), TEST_PACKAGE);
