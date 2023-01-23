@@ -20,6 +20,8 @@ import android.os.Bundle;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.ui.OTAResourcesManager;
 import com.android.adservices.ui.settings.delegates.MainActionDelegate;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragment;
 import com.android.adservices.ui.settings.viewmodels.MainViewModel;
@@ -48,6 +50,11 @@ public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Only for main view, we want to use the most up to date OTA strings on the device to
+        // create the ResourcesLoader.
+        if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()) {
+            OTAResourcesManager.applyOTAResources(getApplicationContext(), true);
+        }
         super.onCreate(savedInstanceState);
         setContentView(R.layout.adservices_settings_main_activity);
         getSupportFragmentManager()
