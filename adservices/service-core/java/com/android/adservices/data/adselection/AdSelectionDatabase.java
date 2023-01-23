@@ -36,7 +36,7 @@ import java.util.Objects;
             DBBuyerDecisionLogic.class,
             DBAdSelectionOverride.class,
             DBAdSelectionFromOutcomesOverride.class,
-            DBRegisteredAdEvent.class
+            DBRegisteredAdInteraction.class
         },
         version = AdSelectionDatabase.DATABASE_VERSION,
         autoMigrations = {@AutoMigration(from = 1, to = 2), @AutoMigration(from = 2, to = 3)})

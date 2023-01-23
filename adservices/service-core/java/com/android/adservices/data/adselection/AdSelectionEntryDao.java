@@ -63,13 +63,14 @@ public interface AdSelectionEntryDao {
     void persistAdSelectionOverride(DBAdSelectionOverride adSelectionOverride);
 
     /**
-     * Adds a list of registered events to the table registered_ad_events
+     * Adds a list of registered ad interactions to the table registered_ad_interactions
      *
-     * @param registeredAdEvents is the list of {@link DBRegisteredAdEvent} objects to write to the
-     *     table registered_ad_events.
+     * @param registeredAdInteractions is the list of {@link DBRegisteredAdInteraction} objects to
+     *     write to the table registered_ad_interactions.
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void persistDBRegisteredAdEvents(List<DBRegisteredAdEvent> registeredAdEvents);
+    void persistDBRegisteredAdInteractions(
+            List<DBRegisteredAdInteraction> registeredAdInteractions);
 
     /**
      * Checks if there is a row in the ad selection data with the unique key ad_selection_id
@@ -109,20 +110,22 @@ public interface AdSelectionEntryDao {
             String adSelectionConfigId, String appPackageName);
 
     /**
-     * Checks if there is a row in the registered_ad_events table that matches the primary key
-     * combination of adSelectionId, eventType, and destination
+     * Checks if there is a row in the registered_ad_interactions table that matches the primary key
+     * combination of adSelectionId, interactionKey, and destination
      *
      * @param adSelectionId serves as the primary key denoting the ad selection process this entry
      *     id associated with
-     * @param eventType the event type
+     * @param interactionKey the interaction key
      * @param destination denotes buyer, seller, etc.
      */
     @Query(
-            "SELECT EXISTS(SELECT 1 FROM registered_ad_events WHERE ad_selection_id ="
-                    + " :adSelectionId AND event_type = :eventType AND destination = :destination"
-                    + " LIMIT 1)")
-    boolean doesRegisteredAdEventExist(
-            long adSelectionId, String eventType, @DBRegisteredAdEvent.Destination int destination);
+            "SELECT EXISTS(SELECT 1 FROM registered_ad_interactions WHERE ad_selection_id ="
+                    + " :adSelectionId AND interaction_key = :interactionKey AND destination ="
+                    + " :destination LIMIT 1)")
+    boolean doesRegisteredAdInteractionExist(
+            long adSelectionId,
+            String interactionKey,
+            @DBRegisteredAdInteraction.Destination int destination);
 
     /**
      * Get the ad selection entry by its unique key ad_selection_id.
@@ -231,17 +234,20 @@ public interface AdSelectionEntryDao {
     String getTrustedScoringSignalsOverride(String adSelectionConfigId, String appPackageName);
 
     /**
-     * Gets the event uri that was registered with the primary key combination of {@code
-     * adSelectionId}, {@code eventType}, and {@code destination}.
+     * Gets the interaction reporting uri that was registered with the primary key combination of
+     * {@code adSelectionId}, {@code interactionKey}, and {@code destination}.
      *
-     * @return event uri if exists.
+     * @return interaction reporting uri if exists.
      */
     @Query(
-            "SELECT event_uri FROM registered_ad_events WHERE ad_selection_id = :adSelectionId"
-                    + " AND event_type = :eventType AND destination = :destination")
+            "SELECT interaction_reporting_uri FROM registered_ad_interactions WHERE"
+                    + " ad_selection_id = :adSelectionId AND interaction_key = :interactionKey AND"
+                    + " destination = :destination")
     @Nullable
-    Uri getRegisteredAdEventUri(
-            long adSelectionId, String eventType, @DBRegisteredAdEvent.Destination int destination);
+    Uri getRegisteredAdInteractionUri(
+            long adSelectionId,
+            String interactionKey,
+            @DBRegisteredAdInteraction.Destination int destination);
 
     /**
      * Clean up expired adSelection entries if it is older than the given timestamp. If
@@ -382,13 +388,13 @@ public interface AdSelectionEntryDao {
     void removeAllAdSelectionFromOutcomesOverrides(String appPackageName);
 
     /**
-     * Clean up registered_event entries in batch if the {@code adSelectionId} no longer exists in
-     * the table ad_selection.
+     * Clean up registered_ad_interaction entries in batch if the {@code adSelectionId} no longer
+     * exists in the table ad_selection.
      */
     @Query(
-            "DELETE FROM registered_ad_events WHERE ad_selection_id NOT IN "
+            "DELETE FROM registered_ad_interactions WHERE ad_selection_id NOT IN "
                     + "( SELECT DISTINCT ad_selection_id "
                     + "FROM ad_selection "
                     + "WHERE ad_selection_id is NOT NULL)")
-    void removeExpiredRegisteredAdEvents();
+    void removeExpiredRegisteredAdInteractions();
 }
