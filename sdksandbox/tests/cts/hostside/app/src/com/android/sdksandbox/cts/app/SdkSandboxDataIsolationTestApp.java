@@ -114,7 +114,7 @@ public class SdkSandboxDataIsolationTestApp {
     private void loadSdk() {
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        callback.assertLoadSdkIsSuccessful();
 
         // Store the returned SDK interface so that we can interact with it later.
         mSdk = IDataIsolationTestSdkApi.Stub.asInterface(callback.getSandboxedSdk().getInterface());
