@@ -57,7 +57,10 @@ android_app {
         "SettingsLibMainSwitchPreference",
     ],
     jarjar_rules: "jarjar_rules.txt",
-    resource_dirs: ["res"],
+    resource_dirs: [
+        "res",
+        "publicres",
+    ],
     aaptflags: [
         // Don't compress *.tflite files. Compressed models cannot be loaded on device.
         "-0 .tflite",
