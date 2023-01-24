@@ -109,7 +109,7 @@ public class BroadcastRestrictionsTestApp {
                 DeviceConfig.NAMESPACE_ADSERVICES, ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS);
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        callback.assertLoadSdkIsSuccessful();
         SandboxedSdk sandboxedSdk = callback.getSandboxedSdk();
 
         IBinder binder = sandboxedSdk.getInterface();
@@ -132,7 +132,7 @@ public class BroadcastRestrictionsTestApp {
 
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        callback.assertLoadSdkIsSuccessful();
         SandboxedSdk sandboxedSdk = callback.getSandboxedSdk();
 
         IBinder binder = sandboxedSdk.getInterface();
@@ -155,7 +155,7 @@ public class BroadcastRestrictionsTestApp {
 
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        callback.assertLoadSdkIsSuccessful();
         SandboxedSdk sandboxedSdk = callback.getSandboxedSdk();
 
         IBinder binder = sandboxedSdk.getInterface();
