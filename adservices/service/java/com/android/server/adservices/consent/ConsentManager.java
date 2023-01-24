@@ -55,6 +55,17 @@ public final class ConsentManager {
 
     private final BooleanFileDatastore mDatastore;
 
+    @VisibleForTesting static final String DEFAULT_CONSENT = "DEFAULT_CONSENT";
+
+    @VisibleForTesting static final String TOPICS_DEFAULT_CONSENT = "TOPICS_DEFAULT_CONSENT";
+
+    @VisibleForTesting static final String FLEDGE_DEFAULT_CONSENT = "FLEDGE_DEFAULT_CONSENT";
+
+    @VisibleForTesting
+    static final String MEASUREMENT_DEFAULT_CONSENT = "MEASUREMENT_DEFAULT_CONSENT";
+
+    @VisibleForTesting static final String DEFAULT_AD_ID_STATE = "DEFAULT_AD_ID_STATE";
+
     private ConsentManager(@NonNull BooleanFileDatastore datastore) {
         Objects.requireNonNull(datastore);
 
@@ -239,6 +250,139 @@ public final class ConsentManager {
         }
     }
 
+    /** Saves the default consent of a user. */
+    public void recordDefaultConsent(boolean defaultConsent) throws IOException {
+        synchronized (this) {
+            try {
+                mDatastore.put(DEFAULT_CONSENT, defaultConsent);
+            } catch (IOException e) {
+                LogUtil.e(
+                        e,
+                        "Record default consent failed due to IOException thrown by Datastore: "
+                                + e.getMessage());
+            }
+        }
+    }
+
+    /** Saves the default topics consent of a user. */
+    public void recordTopicsDefaultConsent(boolean defaultConsent) throws IOException {
+        synchronized (this) {
+            try {
+                mDatastore.put(TOPICS_DEFAULT_CONSENT, defaultConsent);
+            } catch (IOException e) {
+                LogUtil.e(
+                        e,
+                        "Record topics default consent failed due to IOException thrown by"
+                                + " Datastore: "
+                                + e.getMessage());
+            }
+        }
+    }
+
+    /** Saves the default FLEDGE consent of a user. */
+    public void recordFledgeDefaultConsent(boolean defaultConsent) throws IOException {
+        synchronized (this) {
+            try {
+                mDatastore.put(FLEDGE_DEFAULT_CONSENT, defaultConsent);
+            } catch (IOException e) {
+                LogUtil.e(
+                        e,
+                        "Record fledge default consent failed due to IOException thrown by"
+                                + " Datastore: "
+                                + e.getMessage());
+            }
+        }
+    }
+
+    /** Saves the default measurement consent of a user. */
+    public void recordMeasurementDefaultConsent(boolean defaultConsent) throws IOException {
+        synchronized (this) {
+            try {
+                mDatastore.put(MEASUREMENT_DEFAULT_CONSENT, defaultConsent);
+            } catch (IOException e) {
+                LogUtil.e(
+                        e,
+                        "Record measurement default consent failed due to IOException thrown by"
+                                + " Datastore: "
+                                + e.getMessage());
+            }
+        }
+    }
+
+    /** Saves the default AdId state of a user. */
+    public void recordDefaultAdIdState(boolean defaultAdIdState) throws IOException {
+        synchronized (this) {
+            try {
+                mDatastore.put(DEFAULT_AD_ID_STATE, defaultAdIdState);
+            } catch (IOException e) {
+                LogUtil.e(
+                        e,
+                        "Record default AdId failed due to IOException thrown by Datastore: "
+                                + e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Returns the default consent state.
+     *
+     * @return true if default consent is given, otherwise false.
+     */
+    public boolean getDefaultConsent() {
+        synchronized (this) {
+            Boolean defaultConsent = mDatastore.get(DEFAULT_CONSENT);
+            return defaultConsent != null ? defaultConsent : false;
+        }
+    }
+
+    /**
+     * Returns the topics default consent state.
+     *
+     * @return true if topics default consent is given, otherwise false.
+     */
+    public boolean getTopicsDefaultConsent() {
+        synchronized (this) {
+            Boolean topicsDefaultConsent = mDatastore.get(TOPICS_DEFAULT_CONSENT);
+            return topicsDefaultConsent != null ? topicsDefaultConsent : false;
+        }
+    }
+
+    /**
+     * Returns the FLEDGE default consent state.
+     *
+     * @return true if default consent is given, otherwise false.
+     */
+    public boolean getFledgeDefaultConsent() {
+        synchronized (this) {
+            Boolean fledgeDefaultConsent = mDatastore.get(DEFAULT_CONSENT);
+            return fledgeDefaultConsent != null ? fledgeDefaultConsent : false;
+        }
+    }
+
+    /**
+     * Returns the measurement default consent state.
+     *
+     * @return true if default consent is given, otherwise false.
+     */
+    public boolean getMeasurementDefaultConsent() {
+        synchronized (this) {
+            Boolean measurementDefaultConsent = mDatastore.get(DEFAULT_CONSENT);
+            return measurementDefaultConsent != null ? measurementDefaultConsent : false;
+        }
+    }
+
+    /**
+     * Returns the default AdId state when consent notification was sent.
+     *
+     * @return true if AdId is enabled by default, otherwise false.
+     */
+    public boolean getDefaultAdIdState() {
+        synchronized (this) {
+            Boolean defaultAdIdState = mDatastore.get(DEFAULT_AD_ID_STATE);
+            return defaultAdIdState != null ? defaultAdIdState : false;
+        }
+    }
+
     /**
      * Saves information to the storage that Fledge and Msmt consent was displayed for the first
      * time to the user.
@@ -268,6 +412,7 @@ public final class ConsentManager {
             return displayed != null ? displayed : false;
         }
     }
+
     /**
      * Deletes the user directory which contains consent information present at
      * /data/system/adservices/user_id
