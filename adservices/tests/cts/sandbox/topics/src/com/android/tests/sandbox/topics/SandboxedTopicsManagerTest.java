@@ -138,7 +138,7 @@ public class SandboxedTopicsManagerTest {
 
         // This verifies that the Sdk1 in the Sandbox gets back the correct topic.
         // If the Sdk1 did not get correct topic, it will trigger the callback.onLoadSdkError
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        callback.assertLoadSdkIsSuccessful();
     }
 
     // Override the Epoch Period to shorten the Epoch Length in the test.
