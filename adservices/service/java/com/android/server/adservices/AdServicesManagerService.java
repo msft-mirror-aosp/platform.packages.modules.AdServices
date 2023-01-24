@@ -318,6 +318,154 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
 
     @Override
     @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void recordDefaultConsent(boolean defaultConsent) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("recordDefaultConsent() for User Identifier %d", userIdentifier);
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .recordDefaultConsent(defaultConsent);
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to record default consent: " + e.getMessage());
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void recordTopicsDefaultConsent(boolean defaultConsent) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("recordTopicsDefaultConsent() for User Identifier %d", userIdentifier);
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .recordTopicsDefaultConsent(defaultConsent);
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to record topics default consent: " + e.getMessage());
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void recordFledgeDefaultConsent(boolean defaultConsent) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("recordFledgeDefaultConsent() for User Identifier %d", userIdentifier);
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .recordFledgeDefaultConsent(defaultConsent);
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to record fledge default consent: " + e.getMessage());
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void recordMeasurementDefaultConsent(boolean defaultConsent) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("recordMeasurementDefaultConsent() for User Identifier %d", userIdentifier);
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .recordMeasurementDefaultConsent(defaultConsent);
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to record measurement default consent: " + e.getMessage());
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void recordDefaultAdIdState(boolean defaultAdIdState) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("recordDefaultAdIdState() for User Identifier %d", userIdentifier);
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .recordDefaultAdIdState(defaultAdIdState);
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to record default AdId state: " + e.getMessage());
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public boolean getTopicsDefaultConsent() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("getTopicsDefaultConsent() for User Identifier %d", userIdentifier);
+        try {
+            return mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .getTopicsDefaultConsent();
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to get topics default consent.");
+            return false;
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public boolean getFledgeDefaultConsent() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("getFledgeDefaultConsent() for User Identifier %d", userIdentifier);
+        try {
+            return mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .getFledgeDefaultConsent();
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to get FLEDGE default consent.");
+            return false;
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public boolean getMeasurementDefaultConsent() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("getMeasurementDefaultConsent() for User Identifier %d", userIdentifier);
+        try {
+            return mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .getMeasurementDefaultConsent();
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to get measurement default consent.");
+            return false;
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public boolean getDefaultAdIdState() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("getDefaultAdIdState() for User Identifier %d", userIdentifier);
+        try {
+            return mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .getDefaultAdIdState();
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to get default AdId state.");
+            return false;
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
     public boolean wasGaUxNotificationDisplayed() {
         enforceAdServicesManagerPermission();
 
@@ -398,6 +546,23 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
                     .wasFledgeAndMsmtConsentPageDisplayed();
         } catch (IOException e) {
             LogUtil.e(e, "Fail to get the wasFledgeAndMsmtConsentPageDisplayed.");
+            return false;
+        }
+    }
+
+    /** retrieves the default consent of a user. */
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public boolean getDefaultConsent() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("getDefaultConsent() for User Identifier %d", userIdentifier);
+        try {
+            return mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .getDefaultConsent();
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to get the default consent: " + e.getMessage());
             return false;
         }
     }
