@@ -16,6 +16,7 @@
 
 package com.android.ctssdkprovider;
 
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
@@ -137,6 +138,14 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
                 throw new IllegalStateException("File dir for DE is wrong: " + fileDir);
             }
         }
+    }
+
+    @Override
+    public int getProcessImportance() {
+        ActivityManager.RunningAppProcessInfo processInfo =
+                new ActivityManager.RunningAppProcessInfo();
+        ActivityManager.getMyMemoryState(processInfo);
+        return processInfo.importance;
     }
 
     /* Sends an error if the expected resource/asset does not match the read value. */
