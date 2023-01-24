@@ -35,7 +35,7 @@ import static com.android.adservices.service.Flags.DISABLE_TOPICS_ENROLLMENT_CHE
 import static com.android.adservices.service.Flags.DOWNLOADER_CONNECTION_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DOWNLOADER_MAX_DOWNLOAD_THREADS;
 import static com.android.adservices.service.Flags.DOWNLOADER_READ_TIMEOUT_MS;
-import static com.android.adservices.service.Flags.ENABLE_DATABASE_SCHEMA_VERSION_5;
+import static com.android.adservices.service.Flags.ENABLE_DATABASE_SCHEMA_VERSION_7;
 import static com.android.adservices.service.Flags.ENABLE_TOPIC_CONTRIBUTORS_CHECK;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDES;
@@ -165,7 +165,7 @@ import static com.android.adservices.service.PhFlags.KEY_DISABLE_TOPICS_ENROLLME
 import static com.android.adservices.service.PhFlags.KEY_DOWNLOADER_CONNECTION_TIMEOUT_MS;
 import static com.android.adservices.service.PhFlags.KEY_DOWNLOADER_MAX_DOWNLOAD_THREADS;
 import static com.android.adservices.service.PhFlags.KEY_DOWNLOADER_READ_TIMEOUT_MS;
-import static com.android.adservices.service.PhFlags.KEY_ENABLE_DATABASE_SCHEMA_VERSION_5;
+import static com.android.adservices.service.PhFlags.KEY_ENABLE_DATABASE_SCHEMA_VERSION_7;
 import static com.android.adservices.service.PhFlags.KEY_ENABLE_TOPIC_CONTRIBUTORS_CHECK;
 import static com.android.adservices.service.PhFlags.KEY_ENFORCE_FOREGROUND_STATUS_TOPICS;
 import static com.android.adservices.service.PhFlags.KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE;
@@ -3651,14 +3651,14 @@ public class PhFlagsTest {
     }
 
     @Test
-    public void testGetEnableDatabaseSchemaVersion5() {
+    public void testGetEnableDatabaseSchemaVersion7() {
         assertThat(FlagsFactory.getFlags().getEnableDatabaseSchemaVersion5())
-                .isEqualTo(ENABLE_DATABASE_SCHEMA_VERSION_5);
+                .isEqualTo(ENABLE_DATABASE_SCHEMA_VERSION_7);
 
         final boolean phOverridingValue = true;
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_ENABLE_DATABASE_SCHEMA_VERSION_5,
+                KEY_ENABLE_DATABASE_SCHEMA_VERSION_7,
                 Boolean.toString(phOverridingValue),
                 /* makeDefault */ false);
 

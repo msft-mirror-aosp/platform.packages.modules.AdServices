@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public final class SourceFixture {
     private SourceFixture() { }
@@ -49,6 +50,7 @@ public final class SourceFixture {
     // {@link ValidSourceParams}
     public static Source getValidSource() {
         return new Source.Builder()
+                .setId(UUID.randomUUID().toString())
                 .setEventId(ValidSourceParams.SOURCE_EVENT_ID)
                 .setPublisher(ValidSourceParams.PUBLISHER)
                 .setAppDestination(ValidSourceParams.ATTRIBUTION_DESTINATION)
@@ -67,6 +69,9 @@ public final class SourceFixture {
                 .setAggregateSource(ValidSourceParams.buildAggregateSource())
                 .setFilterData(ValidSourceParams.buildFilterData())
                 .setIsDebugReporting(true)
+                .setRegistrationId(ValidSourceParams.REGISTRATION_ID)
+                .setSharedAggregationKeys(ValidSourceParams.SHARED_AGGREGATE_KEYS)
+                .setInstallTime(ValidSourceParams.INSTALL_TIME)
                 .build();
     }
 
@@ -88,6 +93,9 @@ public final class SourceFixture {
         public static final @Source.AttributionMode int ATTRIBUTION_MODE =
                 Source.AttributionMode.TRUTHFULLY;
         public static final int AGGREGATE_CONTRIBUTIONS = 0;
+        public static final String REGISTRATION_ID = "R1";
+        public static final String SHARED_AGGREGATE_KEYS = "[\"key1\"]";
+        public static final Long INSTALL_TIME = 100L;
 
         public static final String buildAggregateSource() {
             try {
