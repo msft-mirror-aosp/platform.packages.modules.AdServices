@@ -26,7 +26,9 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assume.assumeTrue;
 
+import android.app.ActivityManager;
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
@@ -47,6 +49,7 @@ import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.ctssdkprovider.ICtsSdkProviderApi;
+import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.truth.Expect;
 
@@ -516,6 +519,60 @@ public class SdkSandboxManagerTest {
     public void testSandboxedSdkDescribeContents() throws Exception {
         final SandboxedSdk sandboxedSdk = new SandboxedSdk(new Binder());
         assertThat(sandboxedSdk.describeContents()).isEqualTo(0);
+    }
+
+    @Test
+    public void testSdkAndAppProcessImportanceIsAligned_AppIsBackgrounded() throws Exception {
+        // Sandbox and app priority is aligned only in U+.
+        assumeTrue(SdkLevel.isAtLeastU());
+
+        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(SDK_NAME_1, new Bundle(), Runnable::run, callback);
+        callback.assertLoadSdkIsSuccessful();
+
+        SandboxedSdk sandboxedSdk = callback.getSandboxedSdk();
+        assertNotNull(sandboxedSdk);
+        ICtsSdkProviderApi sdk =
+                ICtsSdkProviderApi.Stub.asInterface(callback.getSandboxedSdk().getInterface());
+
+        assertThat(sdk.getProcessImportance()).isEqualTo(getAppProcessImportance());
+
+        // Move the app to the background.
+        mScenario.moveToState(Lifecycle.State.DESTROYED);
+        Thread.sleep(1000);
+
+        assertThat(sdk.getProcessImportance()).isEqualTo(getAppProcessImportance());
+    }
+
+    @Test
+    public void testSdkAndAppProcessImportanceIsAligned_AppIsBackgroundedAndForegrounded()
+            throws Exception {
+        // Sandbox and app priority is aligned only in U+.
+        assumeTrue(SdkLevel.isAtLeastU());
+
+        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(SDK_NAME_1, new Bundle(), Runnable::run, callback);
+        callback.assertLoadSdkIsSuccessful();
+
+        SandboxedSdk sandboxedSdk = callback.getSandboxedSdk();
+        assertNotNull(sandboxedSdk);
+        ICtsSdkProviderApi sdk =
+                ICtsSdkProviderApi.Stub.asInterface(callback.getSandboxedSdk().getInterface());
+
+        assertThat(sdk.getProcessImportance()).isEqualTo(getAppProcessImportance());
+
+        // Move the app to the background and bring it back to the foreground again.
+        mScenario.recreate();
+
+        // The sandbox should have foreground importance again.
+        assertThat(sdk.getProcessImportance()).isEqualTo(getAppProcessImportance());
+    }
+
+    private int getAppProcessImportance() {
+        ActivityManager.RunningAppProcessInfo processInfo =
+                new ActivityManager.RunningAppProcessInfo();
+        ActivityManager.getMyMemoryState(processInfo);
+        return processInfo.importance;
     }
 
     private Bundle getRequestSurfacePackageParams() {
