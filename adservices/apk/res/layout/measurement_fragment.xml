@@ -75,7 +75,7 @@
 
                 <TextView
                     android:text="@string/settingsUI_measurement_view_footer_text"
-                    style="@style/MainStyle.Body1" />
+                    style="@style/MainStyle.Body2" />
             </LinearLayout>
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
