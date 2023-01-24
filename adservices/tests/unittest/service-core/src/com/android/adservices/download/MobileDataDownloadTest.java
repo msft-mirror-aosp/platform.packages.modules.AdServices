@@ -17,6 +17,7 @@
 package com.android.adservices.download;
 
 import static com.android.adservices.download.EnrollmentDataDownloadManager.DownloadStatus.SUCCESS;
+import static com.android.adservices.service.topics.classifier.ModelManager.BUNDLED_CLASSIFIER_ASSETS_METADATA_PATH;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -260,7 +261,10 @@ public class MobileDataDownloadTest {
         // Set the bundled build_id to 1 so the server side build_id will be bigger. This will
         // trigger MDD download.
         ExtendedMockito.doReturn(1L)
-                .when(() -> CommonClassifierHelper.getBundledModelBuildId(mContext));
+                .when(
+                        () ->
+                                CommonClassifierHelper.getBundledModelBuildId(
+                                        mContext, BUNDLED_CLASSIFIER_ASSETS_METADATA_PATH));
 
         createMddForTopics(TEST_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL);
 

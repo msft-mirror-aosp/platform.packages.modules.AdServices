@@ -48,8 +48,6 @@ public class CommonClassifierHelper {
     private static final String ASSET_ELEMENT_NAME = "asset_name";
     // The algorithm name of checksum
     private static final String SHA256_DIGEST_ALGORITHM_NAME = "SHA-256";
-    private static final String BUNDLED_CLASSIFIER_ASSETS_METADATA_PATH =
-            "classifier/classifier_assets_metadata.json";
     private static final String BUILD_ID_FIELD = "build_id";
 
     /**
@@ -58,15 +56,12 @@ public class CommonClassifierHelper {
      * @return A string of classifier asset's SHA256 checksum.
      */
     static String computeClassifierAssetChecksum(
-            @NonNull AssetManager assetManager,
-            @NonNull String classifierAssetsMetadataPath) {
+            @NonNull AssetManager assetManager, @NonNull String classifierAssetsMetadataPath) {
         StringBuilder assetSha256CheckSum = new StringBuilder();
         try {
-            MessageDigest sha256Digest =
-                    MessageDigest.getInstance(SHA256_DIGEST_ALGORITHM_NAME);
+            MessageDigest sha256Digest = MessageDigest.getInstance(SHA256_DIGEST_ALGORITHM_NAME);
 
-            try (InputStream inputStream =
-                         assetManager.open(classifierAssetsMetadataPath)) {
+            try (InputStream inputStream = assetManager.open(classifierAssetsMetadataPath)) {
 
                 // Create byte array to read data in chunks
                 byte[] byteArray = new byte[8192];
@@ -225,10 +220,11 @@ public class CommonClassifierHelper {
      *
      * @return bundled model build_id
      */
-    public static long getBundledModelBuildId(Context context) {
+    public static long getBundledModelBuildId(
+            @NonNull Context context, @NonNull String classifierAssetsMetadataPath) {
         InputStream inputStream = InputStream.nullInputStream();
         try {
-            inputStream = context.getAssets().open(BUNDLED_CLASSIFIER_ASSETS_METADATA_PATH);
+            inputStream = context.getAssets().open(classifierAssetsMetadataPath);
         } catch (IOException e) {
             throw new RuntimeException("Failed to read bundled metadata file", e);
         }
