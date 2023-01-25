@@ -24,6 +24,7 @@ import static com.android.adservices.data.measurement.MeasurementTables.SourceCo
 import static com.android.adservices.data.measurement.MeasurementTables.TriggerContract;
 import static com.android.adservices.data.measurement.MeasurementTables.XnaIgnoredSourcesContract;
 import static com.android.adservices.service.measurement.PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+import static com.android.adservices.service.measurement.SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -42,6 +43,7 @@ import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.util.Pair;
 
 import androidx.test.core.app.ApplicationProvider;
 
@@ -186,10 +188,13 @@ public class MeasurementDaoTest {
             assertEquals(validSource.getInstallCooldownWindow(), source.getInstallCooldownWindow());
             assertEquals(validSource.getAttributionMode(), source.getAttributionMode());
             assertEquals(validSource.getAggregateSource(), source.getAggregateSource());
-            assertEquals(validSource.getFilterData(), source.getFilterData());
-            assertEquals(validSource.getAggregateContributions(),
-                    source.getAggregateContributions());
+            assertEquals(validSource.getFilterDataString(), source.getFilterDataString());
+            assertEquals(
+                    validSource.getAggregateContributions(), source.getAggregateContributions());
             assertEquals(validSource.isDebugReporting(), source.isDebugReporting());
+            assertEquals(validSource.getSharedAggregationKeys(), source.getSharedAggregationKeys());
+            assertEquals(validSource.getRegistrationId(), source.getRegistrationId());
+            assertEquals(validSource.getInstallTime(), source.getInstallTime());
         }
     }
 
@@ -259,6 +264,8 @@ public class MeasurementDaoTest {
             assertEquals(validTrigger.getRegistrant(), trigger.getRegistrant());
             assertEquals(validTrigger.getTriggerTime(), trigger.getTriggerTime());
             assertEquals(validTrigger.getEventTriggers(), trigger.getEventTriggers());
+            assertEquals(validTrigger.getAttributionConfig(), trigger.getAttributionConfig());
+            assertEquals(validTrigger.getAdtechBitMapping(), trigger.getAdtechBitMapping());
         }
     }
 
@@ -3746,7 +3753,7 @@ public class MeasurementDaoTest {
         values.put(SourceContract.INSTALL_COOLDOWN_WINDOW, source.getInstallCooldownWindow());
         values.put(SourceContract.ATTRIBUTION_MODE, source.getAttributionMode());
         values.put(SourceContract.AGGREGATE_SOURCE, source.getAggregateSource());
-        values.put(SourceContract.FILTER_DATA, source.getFilterData());
+        values.put(SourceContract.FILTER_DATA, source.getFilterDataString());
         values.put(SourceContract.AGGREGATE_CONTRIBUTIONS, 0);
         long row = db.insert("msmt_source", null, values);
         assertNotEquals("Source insertion failed", -1, row);
@@ -4614,6 +4621,245 @@ public class MeasurementDaoTest {
             assertTrue(source.getAggregateReportDedupKeys().size() == 1);
             assertTrue(source.getAggregateReportDedupKeys().get(0).getValue() == 10L);
         }
+    }
+
+    @Test
+    public void fetchTriggerMatchingSourcesForXna_filtersSourcesCorrectly() {
+        // Setup
+        Uri matchingDestination = APP_ONE_DESTINATION;
+        Uri nonMatchingDestination = APP_TWO_DESTINATION;
+        String mmpMatchingEnrollmentId = "mmp1";
+        String mmpNonMatchingEnrollmentId = "mmpx";
+        String san1MatchingEnrollmentId = "san1EnrollmentId";
+        String san2MatchingEnrollmentId = "san2EnrollmentId";
+        String san3MatchingEnrollmentId = "san3EnrollmentId";
+        String san4NonMatchingEnrollmentId = "sanXEnrollmentId";
+
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAttributionDestination(matchingDestination)
+                        .setEnrollmentId(mmpMatchingEnrollmentId)
+                        .setRegistrant(TriggerFixture.ValidTriggerParams.REGISTRANT)
+                        .setTriggerTime(TriggerFixture.ValidTriggerParams.TRIGGER_TIME)
+                        .setEventTriggers(TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS)
+                        .setAggregateTriggerData(
+                                TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA)
+                        .setAggregateValues(TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES)
+                        .setFilters(TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING)
+                        .setNotFilters(
+                                TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING)
+                        .build();
+        Source s1MmpMatching =
+                createSourceBuilder()
+                        .setId("s1")
+                        .setEnrollmentId(mmpMatchingEnrollmentId)
+                        .setAppDestination(matchingDestination)
+                        .build();
+        Source s2MmpDiffDestination =
+                createSourceBuilder()
+                        .setId("s2")
+                        .setEnrollmentId(mmpMatchingEnrollmentId)
+                        .setAppDestination(nonMatchingDestination)
+                        .build();
+        Source s3MmpExpired =
+                createSourceBuilder()
+                        .setId("s3")
+                        .setEnrollmentId(mmpMatchingEnrollmentId)
+                        .setAppDestination(nonMatchingDestination)
+                        // expired before trigger time
+                        .setExpiryTime(trigger.getTriggerTime() - TimeUnit.DAYS.toMillis(1))
+                        .build();
+        Source s4NonMatchingMmp =
+                createSourceBuilder()
+                        .setId("s4")
+                        .setEnrollmentId(mmpNonMatchingEnrollmentId)
+                        .setAppDestination(matchingDestination)
+                        .build();
+        Source s5MmpMatching =
+                createSourceBuilder()
+                        .setId("s5")
+                        .setEnrollmentId(mmpMatchingEnrollmentId)
+                        .setAppDestination(matchingDestination)
+                        .build();
+        Source s6San1Matching =
+                createSourceBuilder()
+                        .setId("s6")
+                        .setEnrollmentId(san1MatchingEnrollmentId)
+                        .setAppDestination(matchingDestination)
+                        .setSharedAggregationKeys(SHARED_AGGREGATE_KEYS)
+                        .build();
+        Source s7San1DiffDestination =
+                createSourceBuilder()
+                        .setId("s7")
+                        .setEnrollmentId(san1MatchingEnrollmentId)
+                        .setAppDestination(nonMatchingDestination)
+                        .setSharedAggregationKeys(SHARED_AGGREGATE_KEYS)
+                        .build();
+        Source s8San2Matching =
+                createSourceBuilder()
+                        .setId("s8")
+                        .setEnrollmentId(san2MatchingEnrollmentId)
+                        .setAppDestination(matchingDestination)
+                        .setSharedAggregationKeys(SHARED_AGGREGATE_KEYS)
+                        .build();
+        Source s9San3XnaIgnored =
+                createSourceBuilder()
+                        .setId("s9")
+                        .setEnrollmentId(san3MatchingEnrollmentId)
+                        .setAppDestination(matchingDestination)
+                        .setSharedAggregationKeys(SHARED_AGGREGATE_KEYS)
+                        .build();
+        Source s10San3Matching =
+                createSourceBuilder()
+                        .setId("s10")
+                        .setEnrollmentId(san3MatchingEnrollmentId)
+                        .setAppDestination(matchingDestination)
+                        .setSharedAggregationKeys(SHARED_AGGREGATE_KEYS)
+                        .build();
+        Source s11San4EnrollmentNonMatching =
+                createSourceBuilder()
+                        .setId("s11")
+                        .setEnrollmentId(san4NonMatchingEnrollmentId)
+                        .setAppDestination(matchingDestination)
+                        .setSharedAggregationKeys(SHARED_AGGREGATE_KEYS)
+                        .build();
+        Source s12San1NullSharedAggregationKeys =
+                createSourceBuilder()
+                        .setId("s12")
+                        .setEnrollmentId(san1MatchingEnrollmentId)
+                        .setAppDestination(matchingDestination)
+                        .setSharedAggregationKeys(null)
+                        .build();
+        Source s13San1Expired =
+                createSourceBuilder()
+                        .setId("s13")
+                        .setEnrollmentId(san1MatchingEnrollmentId)
+                        .setAppDestination(matchingDestination)
+                        // expired before trigger time
+                        .setExpiryTime(trigger.getTriggerTime() - TimeUnit.DAYS.toMillis(1))
+                        .build();
+        List<Source> sources =
+                Arrays.asList(
+                        s1MmpMatching,
+                        s2MmpDiffDestination,
+                        s3MmpExpired,
+                        s4NonMatchingMmp,
+                        s5MmpMatching,
+                        s6San1Matching,
+                        s7San1DiffDestination,
+                        s8San2Matching,
+                        s9San3XnaIgnored,
+                        s10San3Matching,
+                        s11San4EnrollmentNonMatching,
+                        s12San1NullSharedAggregationKeys,
+                        s13San1Expired);
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+        // Insert all sources to the DB
+        sources.forEach(source -> AbstractDbIntegrationTest.insertToDb(source, db));
+
+        // Insert XNA ignored sources
+        ContentValues values = new ContentValues();
+        values.put(XnaIgnoredSourcesContract.SOURCE_ID, s9San3XnaIgnored.getId());
+        values.put(XnaIgnoredSourcesContract.ENROLLMENT_ID, san3MatchingEnrollmentId);
+        long row = db.insert(XnaIgnoredSourcesContract.TABLE, null, values);
+        assertEquals(1, row);
+
+        List<Source> expectedMatchingSources =
+                Arrays.asList(
+                        s1MmpMatching,
+                        s5MmpMatching,
+                        s6San1Matching,
+                        s8San2Matching,
+                        s10San3Matching);
+        Comparator<Source> sortingComparator = Comparator.comparing(Source::getId);
+        expectedMatchingSources.sort(sortingComparator);
+
+        // Execution
+        DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
+        dm.runInTransaction(
+                dao -> {
+                    List<String> matchingSanEnrollmentIds =
+                            Arrays.asList(
+                                    san1MatchingEnrollmentId,
+                                    san2MatchingEnrollmentId,
+                                    san3MatchingEnrollmentId);
+                    List<Source> actualMatchingSources =
+                            dao.fetchTriggerMatchingSourcesForXna(
+                                    trigger, matchingSanEnrollmentIds);
+                    actualMatchingSources.sort(sortingComparator);
+
+                    // Assertion
+                    assertEquals(expectedMatchingSources, actualMatchingSources);
+                });
+    }
+
+    @Test
+    public void insertIgnoredSourceForEnrollment_success() {
+        // Setup
+        DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        // Need to insert sources before, to honor the foreign key constraint
+        AbstractDbIntegrationTest.insertToDb(createSourceBuilder().setId("s1").build(), db);
+        AbstractDbIntegrationTest.insertToDb(createSourceBuilder().setId("s2").build(), db);
+
+        Pair<String, String> entry11 = new Pair<>("s1", "e1");
+        Pair<String, String> entry21 = new Pair<>("s2", "e1");
+        Pair<String, String> entry22 = new Pair<>("s2", "e2");
+
+        dm.runInTransaction(
+                dao -> {
+                    // Execution
+                    dao.insertIgnoredSourceForEnrollment(entry11.first, entry11.second);
+                    dao.insertIgnoredSourceForEnrollment(entry21.first, entry21.second);
+                    dao.insertIgnoredSourceForEnrollment(entry22.first, entry22.second);
+
+                    // Assertion
+                    queryAndAssertSourceEntries(db, "e1", Arrays.asList("s1", "s2"));
+                    queryAndAssertSourceEntries(db, "e2", Collections.singletonList("s2"));
+                });
+    }
+
+    private void queryAndAssertSourceEntries(
+            SQLiteDatabase db, String enrollmentId, List<String> expectedSourceIds) {
+        try (Cursor cursor =
+                db.query(
+                        XnaIgnoredSourcesContract.TABLE,
+                        new String[] {XnaIgnoredSourcesContract.SOURCE_ID},
+                        XnaIgnoredSourcesContract.ENROLLMENT_ID + " = ?",
+                        new String[] {enrollmentId},
+                        null,
+                        null,
+                        null)) {
+            assertEquals(expectedSourceIds.size(), cursor.getCount());
+            for (int i = 0; i < expectedSourceIds.size() && cursor.moveToNext(); i++) {
+                assertEquals(expectedSourceIds.get(i), cursor.getString(0));
+            }
+        }
+    }
+
+    private Source.Builder createSourceBuilder() {
+        return new Source.Builder()
+                .setEventId(SourceFixture.ValidSourceParams.SOURCE_EVENT_ID)
+                .setPublisher(SourceFixture.ValidSourceParams.PUBLISHER)
+                .setAppDestination(SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
+                .setWebDestination(SourceFixture.ValidSourceParams.WEB_DESTINATION)
+                .setEnrollmentId(SourceFixture.ValidSourceParams.ENROLLMENT_ID)
+                .setRegistrant(SourceFixture.ValidSourceParams.REGISTRANT)
+                .setEventTime(SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME)
+                .setExpiryTime(SourceFixture.ValidSourceParams.EXPIRY_TIME)
+                .setPriority(SourceFixture.ValidSourceParams.PRIORITY)
+                .setSourceType(SourceFixture.ValidSourceParams.SOURCE_TYPE)
+                .setInstallAttributionWindow(
+                        SourceFixture.ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW)
+                .setInstallCooldownWindow(SourceFixture.ValidSourceParams.INSTALL_COOLDOWN_WINDOW)
+                .setAttributionMode(SourceFixture.ValidSourceParams.ATTRIBUTION_MODE)
+                .setAggregateSource(SourceFixture.ValidSourceParams.buildAggregateSource())
+                .setFilterData(SourceFixture.ValidSourceParams.buildFilterData())
+                .setIsDebugReporting(true)
+                .setRegistrationId(SourceFixture.ValidSourceParams.REGISTRATION_ID)
+                .setSharedAggregationKeys(SHARED_AGGREGATE_KEYS)
+                .setInstallTime(SourceFixture.ValidSourceParams.INSTALL_TIME);
     }
 
     private AggregateReport createAggregateReportForSourceAndTrigger(

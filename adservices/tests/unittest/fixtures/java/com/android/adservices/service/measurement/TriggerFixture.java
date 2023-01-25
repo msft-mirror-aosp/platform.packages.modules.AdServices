@@ -52,6 +52,8 @@ public final class TriggerFixture {
                 .setAggregateValues(ValidTriggerParams.AGGREGATE_VALUES)
                 .setFilters(ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING)
                 .setNotFilters(ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING)
+                .setAttributionConfig(ValidTriggerParams.ATTRIBUTION_CONFIG)
+                .setAdtechBitMapping(ValidTriggerParams.ADTECH_BIT_MAPPING)
                 .build();
     }
 
@@ -105,6 +107,30 @@ public final class TriggerFixture {
                 + "}";
 
         public static final UnsignedLong DEBUG_KEY = new UnsignedLong(27836L);
+
+        public static final String ATTRIBUTION_CONFIG =
+                "[{\n"
+                        + "     \"source_adtech\": \"AdTech1-Ads\",\n"
+                        + "     \"source_priority_range\": {\n"
+                        + "       “start”: 100,\n"
+                        + "       “end”: 1000\n"
+                        + "      },   \n"
+                        + "     \"source_filters\": {\n"
+                        + "          \"campaign_type\": [\"install\"],\n"
+                        + "         \"source_type\": [\"navigation\"],\n"
+                        + "     },\n"
+                        + "     \"priority\": \"99\",\n"
+                        + "     \"expiry\": \"604800\",\n"
+                        + "     \"filter_data\":{ \n"
+                        + "          \"campaign_type\": [\"install\"],\n"
+                        + "     }\n"
+                        + "}]\n";
+
+        public static final String ADTECH_BIT_MAPPING =
+                "{"
+                        + "\"AdTechA-enrollment_id\": \"0x1\","
+                        + "\"AdTechB-enrollment_id\": \"0x2\""
+                        + "}";
 
         public static final AggregatableAttributionTrigger buildAggregatableAttributionTrigger() {
             final FilterMap filter =
