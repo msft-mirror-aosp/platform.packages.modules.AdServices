@@ -131,7 +131,6 @@ public class XnaSourceCreatorTest {
                         .setInstallCooldownWindow(
                                 attributionConfig1.getPostInstallExclusivityWindow())
                         .setParentId(source1Matches.getId())
-                        .setEnrollmentId(trigger.getEnrollmentId())
                         .setSharedAggregationKeys(
                                 new JSONArray(Arrays.asList("key2", "key3")).toString())
                         .setAggregateSource(derivedAggregatableSource1.toString())
@@ -161,7 +160,6 @@ public class XnaSourceCreatorTest {
                         .setInstallCooldownWindow(
                                 attributionConfig1.getPostInstallExclusivityWindow())
                         .setParentId(source2Matches.getId())
-                        .setEnrollmentId(trigger.getEnrollmentId())
                         .setAggregateSource(derivedAggregatableSource2.toString())
                         .setSharedAggregationKeys(
                                 new JSONArray(Collections.singletonList("key1")).toString())
@@ -198,7 +196,6 @@ public class XnaSourceCreatorTest {
                         .setExpiryTime(source5Matches.getExpiryTime())
                         .setInstallCooldownWindow(0L)
                         .setParentId(source5Matches.getId())
-                        .setEnrollmentId(trigger.getEnrollmentId())
                         .setAggregateSource(new JSONObject().toString())
                         .build();
         Source source6NoFiltersIssue =

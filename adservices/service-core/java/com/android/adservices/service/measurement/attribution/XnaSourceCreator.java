@@ -181,7 +181,6 @@ public class XnaSourceCreator {
                         .map(installTime -> installTime < trigger.getTriggerTime())
                         .orElse(false);
         builder.setInstallAttributed(isInstallAttributed);
-        builder.setEnrollmentId(trigger.getEnrollmentId());
         return builder.build();
     }
 

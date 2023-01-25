@@ -37,8 +37,6 @@ import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SystemHealthParams;
 import com.android.adservices.service.measurement.Trigger;
-import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
-import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateAttributionData;
 import com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution;
 import com.android.adservices.service.measurement.aggregation.AggregatePayloadGenerator;
@@ -48,7 +46,6 @@ import com.android.adservices.service.measurement.util.DebugKey;
 import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Web;
-
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -65,6 +62,7 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 class AttributionJobHandler {
@@ -173,76 +171,71 @@ class AttributionJobHandler {
         }
 
         try {
-            Optional<AggregatableAttributionSource> aggregateAttributionSource =
-                    source.getAggregatableAttributionSource();
-            Optional<AggregatableAttributionTrigger> aggregateAttributionTrigger =
-                    trigger.parseAggregateTrigger();
-            if (aggregateAttributionSource.isPresent() && aggregateAttributionTrigger.isPresent()) {
-                Optional<List<AggregateHistogramContribution>> contributions =
-                        AggregatePayloadGenerator.generateAttributionReport(
-                                aggregateAttributionSource.get(),
-                                aggregateAttributionTrigger.get());
-                if (contributions.isPresent()) {
-                    OptionalInt newAggregateContributions =
-                            validateAndGetUpdatedAggregateContributions(
-                                    contributions.get(), source);
-                    if (newAggregateContributions.isPresent()) {
-                        source.setAggregateContributions(newAggregateContributions.getAsInt());
-                    } else {
-                        LogUtil.d("Aggregate contributions exceeded bound. Source ID: %s ; "
-                                + "Trigger ID: %s ", source.getId(), trigger.getId());
-                        return false;
-                    }
-
-                    long randomTime = (long) ((Math.random()
-                            * (AGGREGATE_MAX_REPORT_DELAY - AGGREGATE_MIN_REPORT_DELAY))
-                            + AGGREGATE_MIN_REPORT_DELAY);
-                    Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                            DebugKey.getDebugKeys(source, trigger);
-                    UnsignedLong sourceDebugKey = debugKeyPair.first;
-                    UnsignedLong triggerDebugKey = debugKeyPair.second;
-
-                    int debugReportStatus = AggregateReport.DebugReportStatus.NONE;
-                    if (sourceDebugKey != null || triggerDebugKey != null) {
-                        debugReportStatus = AggregateReport.DebugReportStatus.PENDING;
-                    }
-                    AggregateReport aggregateReport =
-                            new AggregateReport.Builder()
-                                    // TODO: b/254855494 unused field, incorrect value; cleanup
-                                    .setPublisher(source.getRegistrant())
-                                    .setAttributionDestination(
-                                            trigger.getAttributionDestinationBaseUri())
-                                    .setSourceRegistrationTime(
-                                            roundDownToDay(source.getEventTime()))
-                                    .setScheduledReportTime(trigger.getTriggerTime() + randomTime)
-                                    .setEnrollmentId(source.getEnrollmentId())
-                                    .setDebugCleartextPayload(
-                                            AggregateReport.generateDebugPayload(
-                                                    contributions.get()))
-                                    .setAggregateAttributionData(
-                                            new AggregateAttributionData.Builder()
-                                                    .setContributions(contributions.get())
-                                                    .build())
-                                    .setStatus(AggregateReport.Status.PENDING)
-                                    .setDebugReportStatus(debugReportStatus)
-                                    .setApiVersion(API_VERSION)
-                                    .setSourceDebugKey(sourceDebugKey)
-                                    .setTriggerDebugKey(triggerDebugKey)
-                                    .setSourceId(source.getId())
-                                    .setTriggerId(trigger.getId())
-                                    .build();
-
-                    measurementDao.updateSourceAggregateContributions(source);
-                    measurementDao.insertAggregateReport(aggregateReport);
-                    // TODO (b/230618328): read from DB and upload unencrypted aggregate report.
-                    return true;
-                }
+            Optional<List<AggregateHistogramContribution>> contributions =
+                    AggregatePayloadGenerator.generateAttributionReport(source, trigger);
+            if (!contributions.isPresent()) {
+                return false;
             }
+            OptionalInt newAggregateContributions =
+                    validateAndGetUpdatedAggregateContributions(contributions.get(), source);
+            if (!newAggregateContributions.isPresent()) {
+                LogUtil.d(
+                        "Aggregate contributions exceeded bound. Source ID: %s ; "
+                                + "Trigger ID: %s ",
+                        source.getId(), trigger.getId());
+                return false;
+            }
+
+            source.setAggregateContributions(newAggregateContributions.getAsInt());
+            long randomTime =
+                    (long)
+                            ((Math.random()
+                                            * (AGGREGATE_MAX_REPORT_DELAY
+                                                    - AGGREGATE_MIN_REPORT_DELAY))
+                                    + AGGREGATE_MIN_REPORT_DELAY);
+            Pair<UnsignedLong, UnsignedLong> debugKeyPair = DebugKey.getDebugKeys(source, trigger);
+            UnsignedLong sourceDebugKey = debugKeyPair.first;
+            UnsignedLong triggerDebugKey = debugKeyPair.second;
+
+            int debugReportStatus = AggregateReport.DebugReportStatus.NONE;
+            if (sourceDebugKey != null || triggerDebugKey != null) {
+                debugReportStatus = AggregateReport.DebugReportStatus.PENDING;
+            }
+            AggregateReport aggregateReport =
+                    new AggregateReport.Builder()
+                            // TODO: b/254855494 unused field, incorrect value; cleanup
+                            .setPublisher(source.getRegistrant())
+                            .setAttributionDestination(trigger.getAttributionDestinationBaseUri())
+                            .setSourceRegistrationTime(roundDownToDay(source.getEventTime()))
+                            .setScheduledReportTime(trigger.getTriggerTime() + randomTime)
+                            .setEnrollmentId(source.getEnrollmentId())
+                            .setDebugCleartextPayload(
+                                    AggregateReport.generateDebugPayload(contributions.get()))
+                            .setAggregateAttributionData(
+                                    new AggregateAttributionData.Builder()
+                                            .setContributions(contributions.get())
+                                            .build())
+                            .setStatus(AggregateReport.Status.PENDING)
+                            .setDebugReportStatus(debugReportStatus)
+                            .setApiVersion(API_VERSION)
+                            .setSourceDebugKey(sourceDebugKey)
+                            .setTriggerDebugKey(triggerDebugKey)
+                            .setSourceId(source.getId())
+                            .setTriggerId(trigger.getId())
+                            .build();
+
+            if (source.getParentId() == null) {
+                // Only update aggregate contributions for an original source, not for a derived
+                // source
+                measurementDao.updateSourceAggregateContributions(source);
+            }
+            measurementDao.insertAggregateReport(aggregateReport);
+            // TODO (b/230618328): read from DB and upload unencrypted aggregate report.
+            return true;
         } catch (JSONException e) {
             LogUtil.e(e, "JSONException when parse aggregate fields in AttributionJobHandler.");
             return false;
         }
-        return false;
     }
 
     private Optional<Source> selectSourceToAttribute(
@@ -253,25 +246,17 @@ class AttributionJobHandler {
         } else {
             // XNA attribution is possible
             Set<String> enrollmentIds = extractEnrollmentIds(trigger.getAttributionConfig());
-
             List<Source> allSources =
                     measurementDao.fetchTriggerMatchingSourcesForXna(trigger, enrollmentIds);
-            List<Source> triggerEnrollmentMatchingSources =
-                    allSources.stream()
-                            .filter(
-                                    source ->
-                                            Objects.equals(
-                                                    source.getEnrollmentId(),
-                                                    trigger.getEnrollmentId()))
-                            .collect(Collectors.toList());
-            List<Source> otherEnrollmentBasedSources =
-                    allSources.stream()
-                            .filter(
-                                    source ->
-                                            !Objects.equals(
-                                                    source.getEnrollmentId(),
-                                                    trigger.getEnrollmentId()))
-                            .collect(Collectors.toList());
+            List<Source> triggerEnrollmentMatchingSources = new ArrayList<>();
+            List<Source> otherEnrollmentBasedSources = new ArrayList<>();
+            for (Source source : allSources) {
+                if (Objects.equals(source.getEnrollmentId(), trigger.getEnrollmentId())) {
+                    triggerEnrollmentMatchingSources.add(source);
+                } else {
+                    otherEnrollmentBasedSources.add(source);
+                }
+            }
             List<Source> derivedSources =
                     new XnaSourceCreator()
                             .generateDerivedSources(trigger, otherEnrollmentBasedSources);
@@ -285,21 +270,20 @@ class AttributionJobHandler {
         }
 
         // Sort based on isInstallAttributed, Priority and Event Time.
+        // Is a valid install-attributed source.
+        Function<Source, Boolean> installAttributionComparator =
+                (Source source) ->
+                        source.isInstallAttributed()
+                                && isWithinInstallCooldownWindow(source, trigger);
         matchingSources.sort(
-                Comparator.comparing(
-                        (Source source) ->
-                            // Is a valid install-attributed source.
-                            source.isInstallAttributed()
-                                    && isWithinInstallCooldownWindow(source,
-                                    trigger),
-                            Comparator.reverseOrder())
+                Comparator.comparing(installAttributionComparator, Comparator.reverseOrder())
                         .thenComparing(Source::getPriority, Comparator.reverseOrder())
                         .thenComparing(Source::getEventTime, Comparator.reverseOrder()));
 
         Source selectedSource = matchingSources.remove(0);
 
         // Ignore all sources not selected for attribution
-        ignoreRemainingSources(measurementDao, matchingSources);
+        ignoreRemainingSources(measurementDao, matchingSources, trigger.getEnrollmentId());
         return Optional.of(selectedSource);
     }
 
@@ -321,7 +305,9 @@ class AttributionJobHandler {
     }
 
     private void ignoreRemainingSources(
-            IMeasurementDao measurementDao, List<Source> remainingSources)
+            IMeasurementDao measurementDao,
+            List<Source> remainingSources,
+            String triggerEnrollmentId)
             throws DatastoreException {
         if (!remainingSources.isEmpty()) {
             List<String> ignoredOriginalSourceIds = new ArrayList<>();
@@ -334,7 +320,7 @@ class AttributionJobHandler {
                 } else {
                     // Derived source (XNA)
                     measurementDao.insertIgnoredSourceForEnrollment(
-                            source.getParentId(), source.getEnrollmentId());
+                            source.getParentId(), triggerEnrollmentId);
                 }
             }
 
@@ -360,7 +346,8 @@ class AttributionJobHandler {
 
         if (numReports >= SystemHealthParams.MAX_EVENT_REPORTS_PER_DESTINATION) {
             LogUtil.d(
-                    String.format(Locale.ENGLISH,
+                    String.format(
+                            Locale.ENGLISH,
                             "Event reports for destination %1$s exceeds system health limit of"
                                     + " %2$d.",
                             trigger.getAttributionDestination(),
@@ -409,12 +396,16 @@ class AttributionJobHandler {
             return true;
         }
 
-        List<EventReport> relevantEventReports = sourceEventReports.stream()
-                .filter((r) -> r.getStatus() == EventReport.Status.PENDING)
-                .filter((r) -> r.getReportTime() == newEventReport.getReportTime())
-                .sorted(Comparator.comparingLong(EventReport::getTriggerPriority)
-                        .thenComparing(EventReport::getTriggerTime, Comparator.reverseOrder()))
-                .collect(Collectors.toList());
+        List<EventReport> relevantEventReports =
+                sourceEventReports.stream()
+                        .filter((r) -> r.getStatus() == EventReport.Status.PENDING)
+                        .filter((r) -> r.getReportTime() == newEventReport.getReportTime())
+                        .sorted(
+                                Comparator.comparingLong(EventReport::getTriggerPriority)
+                                        .thenComparing(
+                                                EventReport::getTriggerTime,
+                                                Comparator.reverseOrder()))
+                        .collect(Collectors.toList());
 
         if (relevantEventReports.isEmpty()) {
             return false;

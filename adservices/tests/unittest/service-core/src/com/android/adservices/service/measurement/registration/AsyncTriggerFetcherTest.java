@@ -2234,7 +2234,7 @@ public final class AsyncTriggerFetcherTest {
                         + "[{\"conversion_subdomain\":[\"electronics.megastore\"]}],"
                         + "\"not_filters\":[{\"product\":[\"1\"]}]},"
                         + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"],"
-                        + "\"serving_adtech_network\":{\"offset\":\"20\"}}]";
+                        + "\"x_network_data\":{\"key_offset\":\"20\"}}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
@@ -2274,7 +2274,7 @@ public final class AsyncTriggerFetcherTest {
                         + "[{\"conversion_subdomain\":[\"electronics.megastore\"]}],"
                         + "\"not_filters\":[{\"product\":[\"1\"]}]},"
                         + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"],"
-                        + "\"serving_adtech_network\":{\"offset\":\"INVALID_VALUE\"}}]";
+                        + "\"x_network_data\":{\"key_offset\":\"INVALID_VALUE\"}}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
@@ -2308,7 +2308,7 @@ public final class AsyncTriggerFetcherTest {
                         + "[{\"conversion_subdomain\":[\"electronics.megastore\"]}],"
                         + "\"not_filters\":[{\"product\":[\"1\"]}]},"
                         + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"],"
-                        + "\"serving_adtech_network\":{}}]";
+                        + "\"x_network_data\":{}}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
@@ -3668,7 +3668,7 @@ public final class AsyncTriggerFetcherTest {
                                         "{"
                                                 + "\"event_trigger_data\":"
                                                 + EVENT_TRIGGERS_1
-                                                + ", \"adtech_bit_mapping\":"
+                                                + ", \"x_network_key_mapping\":"
                                                 + validAdTechBitMapping
                                                 + "}")));
         doReturn(5000L).when(mFlags).getMaxResponseBasedRegistrationPayloadSizeBytes();
@@ -3685,7 +3685,7 @@ public final class AsyncTriggerFetcherTest {
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
-        assertEquals(validAdTechBitMapping, result.getAdtechBitMapping());
+        assertEquals(validAdTechBitMapping, result.getAdtechKeyMapping());
     }
 
     @Test
@@ -3708,7 +3708,7 @@ public final class AsyncTriggerFetcherTest {
                                         "{"
                                                 + "\"event_trigger_data\":"
                                                 + EVENT_TRIGGERS_1
-                                                + ", \"adtech_bit_mapping\":"
+                                                + ", \"x_network_key_mapping\":"
                                                 + invalidAdTechBitMapping
                                                 + "}")));
         doReturn(5000L).when(mFlags).getMaxResponseBasedRegistrationPayloadSizeBytes();
@@ -3725,7 +3725,7 @@ public final class AsyncTriggerFetcherTest {
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
-        assertNull(result.getAdtechBitMapping());
+        assertNull(result.getAdtechKeyMapping());
     }
 
     private RegistrationRequest buildRequest(String triggerUri) {

@@ -118,8 +118,8 @@ class MeasurementDao implements IMeasurementDao {
                 MeasurementTables.TriggerContract.ATTRIBUTION_CONFIG,
                 trigger.getAttributionConfig());
         values.put(
-                MeasurementTables.TriggerContract.ADTECH_BIT_MAPPING,
-                trigger.getAdtechBitMapping());
+                MeasurementTables.TriggerContract.X_NETWORK_KEY_MAPPING,
+                trigger.getAdtechKeyMapping());
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.TriggerContract.TABLE,
                         /*nullColumnHack=*/null, values);

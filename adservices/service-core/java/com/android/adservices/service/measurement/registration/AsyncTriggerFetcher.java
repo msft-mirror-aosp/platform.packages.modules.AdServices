@@ -34,8 +34,8 @@ import com.android.adservices.service.measurement.AsyncRegistration;
 import com.android.adservices.service.measurement.AttributionConfig;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.MeasurementHttpClient;
-import com.android.adservices.service.measurement.ServingAdtechNetwork;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.XNetworkData;
 import com.android.adservices.service.measurement.util.AsyncFetchStatus;
 import com.android.adservices.service.measurement.util.AsyncRedirect;
 import com.android.adservices.service.measurement.util.Enrollment;
@@ -188,13 +188,13 @@ public class AsyncTriggerFetcher {
                     LogUtil.e(e, "Parsing trigger debug key failed");
                 }
             }
-            if (!json.isNull(TriggerHeaderContract.ADTECH_BIT_MAPPING)) {
+            if (!json.isNull(TriggerHeaderContract.X_NETWORK_KEY_MAPPING)) {
                 if (!isValidAdtechBitMapping(
-                        json.getJSONObject(TriggerHeaderContract.ADTECH_BIT_MAPPING))) {
+                        json.getJSONObject(TriggerHeaderContract.X_NETWORK_KEY_MAPPING))) {
                     LogUtil.d("parseTrigger: adtech bit mapping is invalid.");
                 } else {
                     result.setAdtechBitMapping(
-                            json.getString(TriggerHeaderContract.ADTECH_BIT_MAPPING));
+                            json.getString(TriggerHeaderContract.X_NETWORK_KEY_MAPPING));
                 }
             }
             if (!json.isNull(TriggerHeaderContract.ATTRIBUTION_CONFIG)) {
@@ -452,11 +452,10 @@ public class AsyncTriggerFetcher {
                 }
                 aggregateTriggerData.put("not_filters", notFilters);
             }
-            if (!aggregateTriggerData.isNull("serving_adtech_network")) {
-                JSONObject servingAdtechNetworkJson =
-                        aggregateTriggerData.getJSONObject("serving_adtech_network");
+            if (!aggregateTriggerData.isNull("x_network_data")) {
+                JSONObject xNetworkDataJson = aggregateTriggerData.getJSONObject("x_network_data");
                 // This is in order to validate the JSON parsing does not throw exception
-                new ServingAdtechNetwork.Builder(servingAdtechNetworkJson);
+                new XNetworkData.Builder(xNetworkDataJson);
             }
             validAggregateTriggerData.put(aggregateTriggerData);
         }
@@ -550,6 +549,6 @@ public class AsyncTriggerFetcher {
         String AGGREGATABLE_DEDUPLICATION_KEYS = "aggregatable_deduplication_keys";
         String DEBUG_KEY = "debug_key";
         String DEBUG_REPORTING = "debug_reporting";
-        String ADTECH_BIT_MAPPING = "adtech_bit_mapping";
+        String X_NETWORK_KEY_MAPPING = "x_network_key_mapping";
     }
 }

@@ -364,8 +364,8 @@ public abstract class AbstractDbIntegrationTest {
                 MeasurementTables.TriggerContract.ATTRIBUTION_CONFIG,
                 trigger.getAttributionConfig());
         values.put(
-                MeasurementTables.TriggerContract.ADTECH_BIT_MAPPING,
-                trigger.getAdtechBitMapping());
+                MeasurementTables.TriggerContract.X_NETWORK_KEY_MAPPING,
+                trigger.getAdtechKeyMapping());
         long row = db.insert(MeasurementTables.TriggerContract.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("Trigger insertion failed");

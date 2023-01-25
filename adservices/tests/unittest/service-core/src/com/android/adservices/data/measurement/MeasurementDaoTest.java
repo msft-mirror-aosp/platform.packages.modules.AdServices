@@ -265,7 +265,7 @@ public class MeasurementDaoTest {
             assertEquals(validTrigger.getTriggerTime(), trigger.getTriggerTime());
             assertEquals(validTrigger.getEventTriggers(), trigger.getEventTriggers());
             assertEquals(validTrigger.getAttributionConfig(), trigger.getAttributionConfig());
-            assertEquals(validTrigger.getAdtechBitMapping(), trigger.getAdtechBitMapping());
+            assertEquals(validTrigger.getAdtechKeyMapping(), trigger.getAdtechKeyMapping());
         }
     }
 

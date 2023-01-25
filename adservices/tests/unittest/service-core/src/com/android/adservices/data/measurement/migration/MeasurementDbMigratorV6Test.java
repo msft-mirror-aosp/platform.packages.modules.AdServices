@@ -64,7 +64,7 @@ public class MeasurementDbMigratorV6Test extends AbstractMeasurementDbMigratorTe
     };
 
     private static final String[][] MIGRATED_TRIGGER = {
-        // id, attribution_destination, attribution_config, adtech_bit_mapping
+        // id, attribution_destination, attribution_config, x_network_key_mapping
         {"1", "android-app://com.android.app", null, null}
     };
 
@@ -261,7 +261,7 @@ public class MeasurementDbMigratorV6Test extends AbstractMeasurementDbMigratorTe
                             MeasurementTables.TriggerContract.ID,
                             MeasurementTables.TriggerContract.ATTRIBUTION_DESTINATION,
                             MeasurementTables.TriggerContract.ATTRIBUTION_CONFIG,
-                            MeasurementTables.TriggerContract.ADTECH_BIT_MAPPING
+                            MeasurementTables.TriggerContract.X_NETWORK_KEY_MAPPING
                         },
                         null,
                         null,
@@ -343,6 +343,6 @@ public class MeasurementDbMigratorV6Test extends AbstractMeasurementDbMigratorTe
                 MIGRATED_TRIGGER[i][3],
                 cursor.getString(
                         cursor.getColumnIndex(
-                                MeasurementTables.TriggerContract.ADTECH_BIT_MAPPING)));
+                                MeasurementTables.TriggerContract.X_NETWORK_KEY_MAPPING)));
     }
 }

@@ -2823,7 +2823,7 @@ public class AttributionJobHandlerTest {
                 .setFilters(TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING)
                 .setNotFilters(TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING)
                 .setAttributionConfig(TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIGS_STRING)
-                .setAdtechBitMapping(TriggerFixture.ValidTriggerParams.ADTECH_BIT_MAPPING);
+                .setAdtechBitMapping(TriggerFixture.ValidTriggerParams.X_NETWORK_KEY_MAPPING);
     }
 
     private Source.Builder createXnaSourceBuilder() {

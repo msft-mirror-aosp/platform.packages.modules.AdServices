@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.measurement;
 
-import static com.android.adservices.service.measurement.ServingAdtechNetwork.ServingAdtechNetworkContract.OFFSET;
+import static com.android.adservices.service.measurement.XNetworkData.XNetworkDataContract.KEY_OFFSET;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
@@ -28,34 +28,34 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Objects;
+import java.util.Optional;
 
-/** POJO for ServingAdtechNetwork. */
-public class ServingAdtechNetwork {
+/** POJO for XNetworkData. */
+public class XNetworkData {
 
-    @Nullable private final UnsignedLong mOffset;
+    private final Optional<UnsignedLong> mKeyOffset;
 
-    private ServingAdtechNetwork(@NonNull ServingAdtechNetwork.Builder builder) {
-        mOffset = builder.mOffset;
+    private XNetworkData(@NonNull XNetworkData.Builder builder) {
+        mKeyOffset = builder.mKeyOffset;
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof ServingAdtechNetwork)) {
+        if (!(obj instanceof XNetworkData)) {
             return false;
         }
-        ServingAdtechNetwork servingAdtechNetwork = (ServingAdtechNetwork) obj;
-        return Objects.equals(mOffset, servingAdtechNetwork.mOffset);
+        XNetworkData xNetworkData = (XNetworkData) obj;
+        return Objects.equals(mKeyOffset, xNetworkData.mKeyOffset);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mOffset);
+        return Objects.hash(mKeyOffset);
     }
 
-    /** Returns the value of offset as Long */
-    @Nullable
-    public UnsignedLong getOffset() {
-        return mOffset;
+    /** Returns the value of keyOffset as Long */
+    public Optional<UnsignedLong> getKeyOffset() {
+        return mKeyOffset;
     }
 
     /**
@@ -65,32 +65,34 @@ public class ServingAdtechNetwork {
      */
     @Nullable
     public JSONObject serializeAsJson() {
-        JSONObject servingAdtechNetworkJson = new JSONObject();
+        JSONObject xNetworkDataJson = new JSONObject();
         try {
-            if (mOffset != null) {
-                servingAdtechNetworkJson.put(OFFSET, mOffset.getValue());
+            if (mKeyOffset.isPresent()) {
+                xNetworkDataJson.put(KEY_OFFSET, mKeyOffset.get().getValue());
             }
         } catch (JSONException e) {
-            LogUtil.d(e, "Serialization of ServingAdtechNetwork failed.");
+            LogUtil.d(e, "Serialization of XNetworkData failed.");
             return null;
         }
-        return servingAdtechNetworkJson;
+        return xNetworkDataJson;
     }
 
-    /** Builder for {@link ServingAdtechNetwork}. */
+    /** Builder for {@link XNetworkData}. */
     public static final class Builder {
-        private UnsignedLong mOffset;
+        private Optional<UnsignedLong> mKeyOffset;
 
-        public Builder() {}
+        public Builder() {
+            mKeyOffset = Optional.empty();
+        }
 
         public Builder(@NonNull JSONObject jsonObject) throws JSONException {
-            if (!jsonObject.isNull(OFFSET)) {
-                String offset = jsonObject.getString(OFFSET);
+            if (!jsonObject.isNull(KEY_OFFSET)) {
+                String keyOffset = jsonObject.getString(KEY_OFFSET);
                 // Unassigned in order to validate the long value
                 try {
-                    mOffset = new UnsignedLong(offset);
+                    mKeyOffset = Optional.of(new UnsignedLong(keyOffset));
                 } catch (NumberFormatException e) {
-                    LogUtil.d(e, "ServingAdtechNetwork.Builder: Failed to parse offset.");
+                    LogUtil.d(e, "XNetworkData.Builder: Failed to parse keyOffset.");
                     // Wrapped into JSONException so that it does not crash and becomes a checked
                     // Exception that is caught by the caller.
                     throw new JSONException(e);
@@ -98,22 +100,22 @@ public class ServingAdtechNetwork {
             }
         }
 
-        /** See {@link ServingAdtechNetwork#getOffset()}. */
+        /** See {@link XNetworkData#getKeyOffset()}. */
         @NonNull
-        public Builder setOffset(@Nullable UnsignedLong offset) {
-            mOffset = offset;
+        public Builder setKeyOffset(@Nullable UnsignedLong keyOffset) {
+            mKeyOffset = Optional.ofNullable(keyOffset);
             return this;
         }
 
-        /** Build the {@link ServingAdtechNetwork}. */
+        /** Build the {@link XNetworkData}. */
         @NonNull
-        public ServingAdtechNetwork build() {
-            return new ServingAdtechNetwork(this);
+        public XNetworkData build() {
+            return new XNetworkData(this);
         }
     }
 
-    /** Constants related to ServingAdTechNetwork. */
-    public interface ServingAdtechNetworkContract {
-        String OFFSET = "offset";
+    /** Constants related to XNetworkData. */
+    public interface XNetworkDataContract {
+        String KEY_OFFSET = "key_offset";
     }
 }

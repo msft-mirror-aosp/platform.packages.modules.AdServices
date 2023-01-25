@@ -94,7 +94,7 @@ public class MeasurementDbMigratorV6 extends AbstractMeasurementDbMigrator {
         String.format(
                 "ALTER TABLE %1$s ADD %2$s TEXT",
                 MeasurementTables.TriggerContract.TABLE,
-                MeasurementTables.TriggerContract.ADTECH_BIT_MAPPING)
+                MeasurementTables.TriggerContract.X_NETWORK_KEY_MAPPING)
     };
 
     private static final String[] UPDATE_XNA_IGNORED_SOURCES_TABLE_STATEMENT = {
@@ -191,7 +191,7 @@ public class MeasurementDbMigratorV6 extends AbstractMeasurementDbMigrator {
                 && !MigrationHelpers.isColumnPresent(
                         db,
                         MeasurementTables.TriggerContract.TABLE,
-                        MeasurementTables.TriggerContract.ADTECH_BIT_MAPPING)) {
+                        MeasurementTables.TriggerContract.X_NETWORK_KEY_MAPPING)) {
             for (String sql : ALTER_STATEMENTS_XNA_TRIGGER) {
                 db.execSQL(sql);
             }

@@ -57,7 +57,7 @@ public final class TriggerFixture {
                 .setFilters(ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING)
                 .setNotFilters(ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING)
                 .setAttributionConfig(ValidTriggerParams.ATTRIBUTION_CONFIGS_STRING)
-                .setAdtechBitMapping(ValidTriggerParams.ADTECH_BIT_MAPPING)
+                .setAdtechBitMapping(ValidTriggerParams.X_NETWORK_KEY_MAPPING)
                 .build();
     }
 
@@ -143,7 +143,7 @@ public final class TriggerFixture {
                 new JSONArray(Collections.singletonList(ATTRIBUTION_CONFIG.serializeAsJson()))
                         .toString();
 
-        public static final String ADTECH_BIT_MAPPING =
+        public static final String X_NETWORK_KEY_MAPPING =
                 "{"
                         + "\"AdTechA-enrollment_id\": \"0x1\","
                         + "\"AdTechB-enrollment_id\": \"0x2\""

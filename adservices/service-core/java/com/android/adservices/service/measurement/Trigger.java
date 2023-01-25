@@ -61,14 +61,14 @@ public class Trigger {
     private String mAggregateValues;
     private String mAggregateDeduplicationKeys;
     private boolean mIsDebugReporting;
-    private AggregatableAttributionTrigger mAggregatableAttributionTrigger;
+    private Optional<AggregatableAttributionTrigger> mAggregatableAttributionTrigger;
     private String mFilters;
     private String mNotFilters;
     @Nullable private UnsignedLong mDebugKey;
     private boolean mAdIdPermission;
     private boolean mArDebugPermission;
     @Nullable private String mAttributionConfig;
-    @Nullable private String mAdtechBitMapping;
+    @Nullable private String mAdtechKeyMapping;
 
     @IntDef(value = {Status.PENDING, Status.IGNORED, Status.ATTRIBUTED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -111,7 +111,7 @@ public class Trigger {
                 && Objects.equals(mFilters, trigger.mFilters)
                 && Objects.equals(mNotFilters, trigger.mNotFilters)
                 && Objects.equals(mAttributionConfig, trigger.mAttributionConfig)
-                && Objects.equals(mAdtechBitMapping, trigger.mAdtechBitMapping);
+                && Objects.equals(mAdtechKeyMapping, trigger.mAdtechKeyMapping);
     }
 
     @Override
@@ -133,7 +133,7 @@ public class Trigger {
                 mAdIdPermission,
                 mArDebugPermission,
                 mAttributionConfig,
-                mAdtechBitMapping);
+                mAdtechKeyMapping);
     }
 
     /** Unique identifier for the {@link Trigger}. */
@@ -197,27 +197,14 @@ public class Trigger {
 
     /**
      * Returns aggregate trigger data string used for aggregation. aggregate trigger data json is a
-     * JSONArray.
-     * example:
-     * [
-     * // Each dict independently adds pieces to multiple source keys.
-     * {
-     *   // Conversion type purchase = 2 at a 9 bit offset, i.e. 2 << 9.
-     *   // A 9 bit offset is needed because there are 511 possible campaigns, which
-     *   // will take up 9 bits in the resulting key.
-     *   "key_piece": "0x400",
-     *   // Apply this key piece to:
-     *   "source_keys": ["campaignCounts"]
-     * },
-     * {
-     *   // Purchase category shirts = 21 at a 7 bit offset, i.e. 21 << 7.
-     *   // A 7 bit offset is needed because there are ~100 regions for the geo key,
-     *   // which will take up 7 bits of space in the resulting key.
-     *   "key_piece": "0xA80",
-     *   // Apply this key piece to:
-     *   "source_keys": ["geoValue", "nonMatchingKeyIdsAreIgnored"]
-     * }
-     * ]
+     * JSONArray. example: [ // Each dict independently adds pieces to multiple source keys. { //
+     * Conversion type purchase = 2 at a 9 bit key_offset, i.e. 2 << 9. // A 9 bit key_offset is
+     * needed because there are 511 possible campaigns, which // will take up 9 bits in the
+     * resulting key. "key_piece": "0x400", // Apply this key piece to: "source_keys":
+     * ["campaignCounts"] }, { // Purchase category shirts = 21 at a 7 bit key_offset, i.e. 21 << 7.
+     * // A 7 bit key_offset is needed because there are ~100 regions for the geo key, // which will
+     * take up 7 bits of space in the resulting key. "key_piece": "0xA80", // Apply this key piece
+     * to: "source_keys": ["geoValue", "nonMatchingKeyIdsAreIgnored"] } ]
      */
     public String getAggregateTriggerData() {
         return mAggregateTriggerData;
@@ -248,7 +235,13 @@ public class Trigger {
      * Returns the AggregatableAttributionTrigger object, which is constructed using the aggregate
      * trigger data string and aggregate values string in Trigger.
      */
-    public AggregatableAttributionTrigger getAggregatableAttributionTrigger() {
+    public Optional<AggregatableAttributionTrigger> getAggregatableAttributionTrigger()
+            throws JSONException {
+        if (mAggregatableAttributionTrigger != null) {
+            return mAggregatableAttributionTrigger;
+        }
+
+        mAggregatableAttributionTrigger = parseAggregateTrigger();
         return mAggregatableAttributionTrigger;
     }
 
@@ -303,19 +296,19 @@ public class Trigger {
     }
 
     /**
-     * Returns adtech bit mapping JSONObject as String. example: "adtech_bit_mapping": {
+     * Returns adtech bit mapping JSONObject as String. example: "x_network_key_mapping": {
      * "AdTechA-enrollment_id": "0x1", "AdTechB-enrollment_id": "0x2", }
      */
     @Nullable
-    public String getAdtechBitMapping() {
-        return mAdtechBitMapping;
+    public String getAdtechKeyMapping() {
+        return mAdtechKeyMapping;
     }
 
     /**
      * Generates AggregatableAttributionTrigger from aggregate trigger data string and aggregate
      * values string in Trigger.
      */
-    public Optional<AggregatableAttributionTrigger> parseAggregateTrigger()
+    private Optional<AggregatableAttributionTrigger> parseAggregateTrigger()
             throws JSONException, NumberFormatException {
         if (this.mAggregateTriggerData == null || this.mAggregateValues == null) {
             return Optional.empty();
@@ -347,12 +340,10 @@ public class Trigger {
                         Filter.deserializeFilterSet(jsonObject.getJSONArray("not_filters"));
                 builder.setNotFilterSet(notFilterSet);
             }
-            if (!jsonObject.isNull("serving_adtech_network")) {
-                JSONObject servingAdtechNetworkJson =
-                        jsonObject.getJSONObject("serving_adtech_network");
-                ServingAdtechNetwork servingAdtechNetwork =
-                        new ServingAdtechNetwork.Builder(servingAdtechNetworkJson).build();
-                builder.setServingAdtechNetwork(servingAdtechNetwork);
+            if (!jsonObject.isNull("x_network_data")) {
+                JSONObject xNetworkDataJson = jsonObject.getJSONObject("x_network_data");
+                XNetworkData xNetworkData = new XNetworkData.Builder(xNetworkDataJson).build();
+                builder.setXNetworkData(xNetworkData);
             }
             triggerDataList.add(builder.build());
         }
@@ -440,7 +431,7 @@ public class Trigger {
     }
 
     /**
-     * Parses the json object under {@link #mAdtechBitMapping} to create a mapping of adtechs to
+     * Parses the json object under {@link #mAdtechKeyMapping} to create a mapping of adtechs to
      * their bits.
      *
      * @return mapping of String to BigInteger
@@ -448,13 +439,13 @@ public class Trigger {
      * @throws NumberFormatException if BigInteger parsing fails
      */
     @Nullable
-    public Map<String, BigInteger> parseAdtechBitMapping()
+    public Map<String, BigInteger> parseAdtechKeyMapping()
             throws JSONException, NumberFormatException {
-        if (mAdtechBitMapping == null) {
+        if (mAdtechKeyMapping == null) {
             return null;
         }
         Map<String, BigInteger> adtechBitMapping = new HashMap<>();
-        JSONObject jsonObject = new JSONObject(mAdtechBitMapping);
+        JSONObject jsonObject = new JSONObject(mAdtechKeyMapping);
         for (String key : jsonObject.keySet()) {
             // Remove "0x" prefix.
             String hexString = jsonObject.getString(key).substring(2);
@@ -469,7 +460,8 @@ public class Trigger {
      * (2) the Android package name in case of an app destination. Returns null if extracting the
      * public suffix + 1 fails.
      */
-    public @Nullable Uri getAttributionDestinationBaseUri() {
+    @Nullable
+    public Uri getAttributionDestinationBaseUri() {
         if (mDestinationType == EventSurfaceType.APP) {
             return BaseUriExtractor.getBaseUri(mAttributionDestination);
         } else {
@@ -611,9 +603,9 @@ public class Trigger {
             return this;
         }
 
-        /** See {@link Trigger#getAdtechBitMapping()} ()} */
+        /** See {@link Trigger#getAdtechKeyMapping()} ()} */
         public Builder setAdtechBitMapping(@Nullable String adtechBitMapping) {
-            mBuilding.mAdtechBitMapping = adtechBitMapping;
+            mBuilding.mAdtechKeyMapping = adtechBitMapping;
             return this;
         }
 
@@ -621,7 +613,8 @@ public class Trigger {
         @NonNull
         public Builder setAggregatableAttributionTrigger(
                 @Nullable AggregatableAttributionTrigger aggregatableAttributionTrigger) {
-            mBuilding.mAggregatableAttributionTrigger = aggregatableAttributionTrigger;
+            mBuilding.mAggregatableAttributionTrigger =
+                    Optional.ofNullable(aggregatableAttributionTrigger);
             return this;
         }
 

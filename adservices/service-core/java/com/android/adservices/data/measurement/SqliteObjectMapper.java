@@ -224,7 +224,7 @@ public class SqliteObjectMapper {
                 builder::setAttributionConfig);
         setTextColumn(
                 cursor,
-                MeasurementTables.TriggerContract.ADTECH_BIT_MAPPING,
+                MeasurementTables.TriggerContract.X_NETWORK_KEY_MAPPING,
                 builder::setAdtechBitMapping);
         return builder.build();
     }
