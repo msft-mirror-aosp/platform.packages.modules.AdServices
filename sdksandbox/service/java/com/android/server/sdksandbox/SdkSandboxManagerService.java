@@ -1992,27 +1992,5 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 Binder.restoreCallingIdentity(token);
             }
         }
-
-        @Override
-        // TODO(b/265777283): Use minTargetSdkVersion and intentFilter parameter when using an
-        // allowlist
-        public boolean canDeclareBroadcastReceiverFromManifest(
-                @NonNull IntentFilter intentFilter,
-                boolean unexportedBroadcast,
-                boolean onlyProtectedBroadcasts,
-                int minTargetSdkVersion) {
-            /**
-             * By clearing the calling identity, system server identity is set which allows us to
-             * call {@DeviceConfig.getBoolean}
-             */
-            final long token = Binder.clearCallingIdentity();
-            try {
-                final boolean enforceRestrictions =
-                        mSdkSandboxSettingsListener.isBroadcastReceiverRestrictionsEnforced();
-                return !enforceRestrictions || unexportedBroadcast || onlyProtectedBroadcasts;
-            } finally {
-                Binder.restoreCallingIdentity(token);
-            }
-        }
     }
 }
