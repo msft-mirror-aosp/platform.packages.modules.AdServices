@@ -24,10 +24,10 @@ import com.android.adservices.data.topics.TopicsTables;
 import com.android.internal.annotations.VisibleForTesting;
 
 /**
- * Migrator to perform DB schema change to version 5 in Topics API. Version 5 is to add
+ * Migrator to perform DB schema change to version 7 in Topics API. Version 7 is to add
  * TopicContributors Table.
  */
-public class TopicDbMigratorV5 extends AbstractTopicsDbMigrator {
+public class TopicDbMigratorV7 extends AbstractTopicsDbMigrator {
     // Following go/gmscore-flagging-best-practices, we should clean dated table when upgrading and
     // do nothing when downgrading.
     private static final String[] QUERIES_TO_PERFORM = {
@@ -35,7 +35,7 @@ public class TopicDbMigratorV5 extends AbstractTopicsDbMigrator {
         TopicsTables.CREATE_TABLE_TOPIC_CONTRIBUTORS
     };
 
-    public TopicDbMigratorV5() {
+    public TopicDbMigratorV7() {
         super(DATABASE_VERSION_V7);
     }
 

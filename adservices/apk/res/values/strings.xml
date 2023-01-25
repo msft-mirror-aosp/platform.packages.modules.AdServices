@@ -318,7 +318,7 @@
     <!-- Text for the button to open blocked topics view and the title of the blocked topics view. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_blocked_topics_title">Interests you’ve blocked</string>
     <!-- Text for the title of the blocked topics view. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_blocked_topics_ga_view_title">Ad topics you blocked</string>
+    <string name="settingsUI_blocked_topics_ga_view_title" translatable="false">@string/settingsUI_blocked_topics_ga_title</string>
     <!-- Text for the button to reset all topics. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_reset_topics_title">Reset all interests</string>
     <!-- Text to show if there are no topics. [CHAR LIMIT=NONE] -->
@@ -332,9 +332,9 @@
     <!-- Text to show if there are no topics. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_topics_view_no_blocked_topics_text">You have no blocked interests</string>
     <!-- Text to show if there are no topics. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_topics_view_no_blocked_topics_ga_text">No blocked topics</string>
+    <string name="settingsUI_no_blocked_topics_ga_text">No blocked topics</string>
     <!-- Text to show blocked topics. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_topics_view_view_blocked_topics">View blocked topics</string>
+    <string name="settingsUI_view_blocked_topics_title">View blocked topics</string>
 
     <!-- Info text for toast displayed after topics are reset. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_topics_are_reset">Interests are reset</string>
@@ -368,7 +368,7 @@
     <!-- Text to show if there are no apps. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_apps_view_no_blocked_apps_text">You have no blocked apps</string>
     <!-- Text to show if there are no apps. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_apps_view_no_blocked_apps_ga_text">No blocked apps</string>
+    <string name="settingsUI_no_blocked_apps_ga_text">No blocked apps</string>
     <!-- Settings App UI Measurement View strings *******************************************************-->
     <!-- Text for the toggle in the measurement page.[CHAR LIMIT=NONE] -->
     <string name="settingsUI_measurement_switch_title">Allow ad measurement</string>
@@ -396,50 +396,38 @@
     <!-- Title for the dialog to block a topic. This dialog is confirming that the user wants to block the specified topic. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_dialog_block_topic_title">Block <xliff:g id="topic" example="Fashion">%1$s</xliff:g>?</string>
     <!-- Body text for the dialog to block a topic. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_dialog_block_topic_message">This interest will be blocked and won’t be added to your list again, unless you add it back. You may still see some related ads.</string>
-    <!-- Body text for the dialog to block a topic. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_dialog_block_topic_ga_message">This topic will be blocked and won’t be added to your list again, unless you add it back. You may still see some related ads.</string>
+    <string name="settingsUI_dialog_block_topic_message">This topic will be blocked and won’t be added to your list again, unless you add it back. You may still see some related ads.</string>
     <!-- Text for button in a dialog to block a topic. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_dialog_block_topic_positive_text">Block</string>
     <!-- Title for the dialog to unblock a topic. This dialog is notifying that the user has unblocked the specified topic. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_dialog_unblock_topic_title"><xliff:g id="topic" example="Fashion">%1$s</xliff:g> is unblocked</string>
     <!-- Body text for the dialog to unblock a topic. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_dialog_unblock_topic_message">Android may add this interest to your list again, but it might not appear immediately</string>
-    <!-- Body text for the dialog to unblock a topic in Ga. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_dialog_unblock_topic_ga_message">Android may add this topic to your list again, but it might not appear immediately</string>
+    <string name="settingsUI_dialog_unblock_topic_message">Android may add this topic to your list again, but it might not appear immediately</string>
 
     <!-- Text for button in a dialog to unblock a topic. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_dialog_unblock_topic_positive_text">OK</string>
     <!-- Title for the dialog to reset all topics. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_dialog_reset_topic_title">Reset all of your interests?</string>
+    <string name="settingsUI_dialog_reset_topic_title">Reset all ad topics?</string>
     <!-- Body text for the dialog to reset all topics. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_dialog_reset_topic_message">Your list will be cleared and new interests will be estimated going forward. You may still see some ads related to cleared interests.</string>
-    <!-- Body text for the dialog to reset all topics. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_dialog_reset_topic_ga_message">Your list will be cleared and new topics will be added going forward. You may still see some ads related to topics you’ve reset.</string>
+    <string name="settingsUI_dialog_reset_topic_message">Your list will be cleared and new topics will be added going forward. You may still see some ads related to topics you’ve reset.</string>
     <!-- Text for the button in a dialog to reset all topics. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_dialog_reset_topic_positive_text">Reset</string>
     <!-- Title for the dialog to block a an app. This dialog is confirming that the user wants to block the specified app from estimating interests. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_dialog_block_app_title">Block <xliff:g id="app" example="AirBnB">%1$s</xliff:g>?</string>
     <!-- Body text for the dialog to block an app. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_dialog_block_app_message">This app won’t estimate interests for the Privacy Sandbox and won’t be added to your list again, unless you unblock it.\n\nInterests already estimated by this app will be deleted, but you might still see some related ads.</string>
-    <!-- Body text for the dialog to block an app. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_dialog_block_app_ga_message">This app won’t suggest ads and won’t be added to your list again, unless you unblock it. You might still see some related ads.</string>
+    <string name="settingsUI_dialog_block_app_message">This app won’t suggest ads and won’t be added to your list again, unless you unblock it. You might still see some related ads.</string>
     <!-- Text for button in a dialog to block an app. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_dialog_block_app_positive_text" translatable="false">@string/settingsUI_dialog_block_topic_positive_text</string>
     <!-- Title for the dialog to unblock an app. This dialog is notifying that the user has unblocked the specified app. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_dialog_unblock_app_title"><xliff:g id="app" example="AirBnB">%1$s</xliff:g> is unblocked</string>
     <!-- Body text for the dialog to unblock an app. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_dialog_unblock_app_message">This app can estimate interests for you again, but it might not appear on your list immediately. It might take a while for you to see related ads.</string>
-    <!-- Body text for the dialog to unblock an app. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_dialog_unblock_app_ga_message">This app can suggest ads for you again, but it might not appear on your list immediately. It might take a while for you to see related ads.</string>
+    <string name="settingsUI_dialog_unblock_app_message">This app can suggest ads for you again, but it might not appear on your list immediately. It might take a while for you to see related ads.</string>
     <!-- Text for button in a dialog to unblock an app. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_dialog_unblock_app_positive_text" translatable="false">@string/settingsUI_dialog_unblock_topic_positive_text</string>
     <!-- Title for the dialog to reset all apps. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_dialog_reset_app_title">Reset interests generated by apps?</string>
+    <string name="settingsUI_dialog_reset_app_title">Reset ads suggested by apps?</string>
     <!-- Body text for the dialog to reset all apps. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_dialog_reset_app_message">Interests estimated by the apps on your list will be deleted from the Privacy Sandbox, and the apps will estimate new interests going forward. You may still see some related ads.</string>
-    <!-- Body text for the dialog to reset all apps. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_dialog_reset_app_ga_message">Ad-suggestion data from the apps on your list will be deleted and the apps will suggest new ads going forward. You may still see some related ads.</string>
+    <string name="settingsUI_dialog_reset_app_message">Ad-suggestion data from the apps on your list will be deleted and the apps will suggest new ads going forward. You may still see some related ads.</string>
     <!-- Text for the button in a dialog to reset all apps. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_dialog_reset_app_positive_text" translatable="false">@string/settingsUI_dialog_reset_topic_positive_text</string>
     <!-- Info text for toast displayed after apps are reset. [CHAR LIMIT=NONE] -->
@@ -488,9 +476,9 @@
     <!-- Text for the toggle in the topics page.[CHAR LIMIT=NONE] -->
     <string name="settingsUI_topics_switch_title">Allow ad topics</string>
     <!-- Text for the button to open blocked topics view. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_blocked_topics_ga_title">Topics you blocked</string>
+    <string name="settingsUI_blocked_topics_ga_title">Ad topics you blocked</string>
     <!-- Text for the button to reset all topics. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_reset_topics_ga_title">Reset all topics</string>
+    <string name="settingsUI_reset_topics_ga_title">Reset all ad topics</string>
     <!-- Text for the info of ad topics. [CHAR LIMIT=NONE] -->
     <string name="settingsU_topics_view_footer">Android notes topics of interest based on the apps you’ve used in the last few weeks.\n\nLater, an app you use can ask Android for your topics to personalize the ads you see. Android shares up to 3 topics while protecting your identity and information about your app usage.\n\nAndroid auto-deletes topics regularly. As you continue using apps, a topic might reappear on the list. Or you can block topics you don’t want Android to share with apps.\n\nIn your apps, an ad you see may be personalized, depending on this setting, the app-suggested ads setting, your advertising ID settings, and whether the app you’re using personalizes ads.</string>
 

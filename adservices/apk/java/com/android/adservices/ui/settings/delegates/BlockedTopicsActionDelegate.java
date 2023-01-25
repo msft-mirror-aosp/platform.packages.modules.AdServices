@@ -22,6 +22,7 @@ import androidx.lifecycle.Observer;
 
 import com.android.adservices.api.R;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.PhFlags;
 import com.android.adservices.ui.settings.DialogManager;
 import com.android.adservices.ui.settings.activities.BlockedTopicsActivity;
@@ -78,6 +79,10 @@ public class BlockedTopicsActionDelegate extends BaseActionDelegate {
      * AdServicesSettingsBlockedTopicsFragment} to handle user actions.
      */
     public void initBlockedTopicsFragment() {
-        mBlockedTopicsActivity.setTitle(R.string.settingsUI_blocked_topics_title);
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            mBlockedTopicsActivity.setTitle(R.string.settingsUI_blocked_topics_ga_title);
+        } else {
+            mBlockedTopicsActivity.setTitle(R.string.settingsUI_blocked_topics_title);
+        }
     }
 }

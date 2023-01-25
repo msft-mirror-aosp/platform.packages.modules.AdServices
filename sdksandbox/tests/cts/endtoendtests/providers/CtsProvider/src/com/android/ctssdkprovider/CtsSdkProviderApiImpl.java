@@ -16,10 +16,12 @@
 
 package com.android.ctssdkprovider;
 
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
+import android.os.Process;
 
 import com.android.sdksandbox.SdkSandboxServiceImpl;
 
@@ -31,11 +33,8 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
     private Context mContext;
     private static final String CLIENT_PACKAGE_NAME = "com.android.tests.sdksandbox.endtoend";
     private static final String SDK_NAME = "com.android.ctssdkprovider";
-
-    private static final String SDK_CE_DATA_DIR =
-            "/data/misc_ce/0/sdksandbox/" + CLIENT_PACKAGE_NAME;
-    private static final String SDK_DE_DATA_DIR =
-            "/data/misc_de/0/sdksandbox/" + CLIENT_PACKAGE_NAME;
+    private static final String CURRENT_USER_ID =
+            String.valueOf(Process.myUserHandle().getUserId(Process.myUid()));
 
     private static final String STRING_RESOURCE = "Test String";
     private static final int INTEGER_RESOURCE = 1234;
@@ -111,7 +110,7 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
     public void testStoragePaths() {
         // Verify CE data directories
         {
-            final String sdkPathPrefix = SDK_CE_DATA_DIR + "/" + SDK_NAME;
+            final String sdkPathPrefix = getSdkPathPrefix(/*dataDirectoryType*/ "ce");
             final String dataDir = mContext.getDataDir().getPath();
             if (!dataDir.startsWith(sdkPathPrefix)) {
                 throw new IllegalStateException("Data dir for CE is wrong: " + dataDir);
@@ -126,7 +125,7 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
         // Verify DE data directories
         {
             final Context cut = mContext.createDeviceProtectedStorageContext();
-            final String sdkPathPrefix = SDK_DE_DATA_DIR + "/" + SDK_NAME;
+            final String sdkPathPrefix = getSdkPathPrefix(/*dataDirectoryType*/ "de");
             final String dataDir = cut.getDataDir().getPath();
             if (!dataDir.startsWith(sdkPathPrefix)) {
                 throw new IllegalStateException("Data dir for DE is wrong: " + dataDir);
@@ -139,8 +138,27 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
         }
     }
 
+    @Override
+    public int getProcessImportance() {
+        ActivityManager.RunningAppProcessInfo processInfo =
+                new ActivityManager.RunningAppProcessInfo();
+        ActivityManager.getMyMemoryState(processInfo);
+        return processInfo.importance;
+    }
+
     /* Sends an error if the expected resource/asset does not match the read value. */
     private String createErrorMessage(String expected, String actual) {
         return new String("Expected " + expected + ", actual " + actual);
+    }
+
+    private String getSdkPathPrefix(String dataDirectoryType) {
+        final String storageDirectory = "/data/misc_" + dataDirectoryType + "/";
+        return new String(
+                storageDirectory
+                        + CURRENT_USER_ID
+                        + "/sdksandbox/"
+                        + CLIENT_PACKAGE_NAME
+                        + "/"
+                        + SDK_NAME);
     }
 }

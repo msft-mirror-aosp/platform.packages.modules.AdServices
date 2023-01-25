@@ -36,6 +36,7 @@ import com.google.android.libraries.mobiledatadownload.file.SynchronousFileStora
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.mobiledatadownload.ClientConfigProto.ClientFile;
+import com.google.mobiledatadownload.ClientConfigProto.ClientFileGroup;
 
 import org.junit.After;
 import org.junit.Before;
@@ -58,6 +59,8 @@ import java.util.Map;
 public class ModelManagerTest {
 
     private static final Context sContext = ApplicationProvider.getApplicationContext();
+    // Change this to a higher number when classifier_test_assets_metadata build_id changed.
+    private static final int CLIENT_FILE_GROUP_BUILD_ID = 9;
     private ImmutableList<Integer> mProductionLabels;
     private ImmutableMap<String, ImmutableMap<String, String>> mProductionClassifierAssetsMetadata;
     private ImmutableMap<String, ImmutableMap<String, String>> mTestClassifierAssetsMetadata;
@@ -86,6 +89,7 @@ public class ModelManagerTest {
         mMockitoSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(FlagsFactory.class)
+                        .spyStatic(ModelManager.class)
                         .initMocks(this)
                         .strictness(Strictness.WARN)
                         .startMocking();
@@ -125,6 +129,7 @@ public class ModelManagerTest {
         ByteBuffer byteBuffer = mProductionModelManager.retrieveModel();
         // Check byteBuffer capacity greater than 0 when retrieveModel() finds bundled TFLite model
         // and loads file as a ByteBuffer.
+        assertThat(mProductionModelManager.useDownloadedFiles()).isFalse();
         assertThat(byteBuffer.capacity()).isGreaterThan(0);
     }
 
@@ -150,6 +155,7 @@ public class ModelManagerTest {
                         downloadedFiles);
 
         ByteBuffer byteBuffer = mProductionModelManager.retrieveModel();
+        assertThat(mProductionModelManager.useDownloadedFiles()).isFalse();
         // Check byteBuffer capacity greater than 0 when retrieveModel() finds bundled TFLite model
         // and loads file as a ByteBuffer.
         assertThat(byteBuffer.capacity()).isGreaterThan(0);
@@ -181,6 +187,14 @@ public class ModelManagerTest {
         // Mock File Storage to return null when gets invoked.
         doReturn(null).when(mMockFileStorage).open(any(), any());
 
+        // Mocks a ClientFileGroup with build id = 9 as downloaded model, which is bigger than test
+        // bundled model build id = 8. ModelManager will choose the downloaded model for
+        // classification because downloaded model build id is bigger.
+        ClientFileGroup clientFileGroup =
+                ClientFileGroup.newBuilder().setBuildId(CLIENT_FILE_GROUP_BUILD_ID).build();
+        ExtendedMockito.doReturn(clientFileGroup)
+                .when(() -> ModelManager.getClientFileGroup(any(Context.class)));
+
         mProductionModelManager =
                 new ModelManager(
                         sContext,
@@ -195,19 +209,22 @@ public class ModelManagerTest {
         assertThat(mProductionModelManager.retrieveModel()).isNull();
 
         verify(mMockFileStorage).open(any(), any());
+
+        assertThat(mProductionModelManager.useDownloadedFiles()).isTrue();
+        assertThat(mProductionModelManager.getBuildId()).isEqualTo(CLIENT_FILE_GROUP_BUILD_ID);
     }
 
     @Test
     public void testRetrieveLabels_bundled_successfulRead() {
-        // Test the labels list in production assets
+        // Test the labels list in test assets with build id = 8.
         // Check size of list.
         // The labels_topics.txt contains 446 topics.
         mProductionModelManager =
                 new ModelManager(
                         sContext,
-                        PRODUCTION_LABELS_FILE_PATH,
-                        PRODUCTION_APPS_FILE_PATH,
-                        PRODUCTION_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
+                        TEST_LABELS_FILE_PATH,
+                        TEST_APPS_FILE_PATH,
+                        TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
                         MODEL_FILE_PATH,
                         mMockFileStorage,
                         mMockDownloadedFiles);
@@ -217,6 +234,10 @@ public class ModelManagerTest {
 
         // Check some labels.
         assertThat(mProductionLabels).containsAtLeast(10010, 10200, 10270, 10432);
+        // Verify ModelManager chooses bundled model because mMockDownloadedFiles is empty.
+        assertThat(mProductionModelManager.useDownloadedFiles()).isFalse();
+        // Verify ModelManager returns test bundled model build id = 8.
+        assertThat(mProductionModelManager.getBuildId()).isEqualTo(8);
     }
 
     @Test
@@ -409,8 +430,8 @@ public class ModelManagerTest {
         // "asset_version", "path", "checksum", "updated_date".
         // Check if "labels_topics" asset has the correct format.
         assertThat(mTestClassifierAssetsMetadata.get("labels_topics")).hasSize(4);
-        assertThat(mTestClassifierAssetsMetadata.get("labels_topics").keySet()).containsExactly(
-                "asset_version", "path", "checksum", "updated_date");
+        assertThat(mTestClassifierAssetsMetadata.get("labels_topics").keySet())
+                .containsExactly("asset_version", "path", "checksum", "updated_date");
 
         // The asset "labels_topics" should have attribution "asset_version" and its value should be
         // "34"

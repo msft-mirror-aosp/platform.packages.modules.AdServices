@@ -25,8 +25,8 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZE
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
-import static com.android.adservices.data.adselection.DBRegisteredAdEvent.DESTINATION_BUYER;
-import static com.android.adservices.data.adselection.DBRegisteredAdEvent.DESTINATION_SELLER;
+import static com.android.adservices.data.adselection.DBRegisteredAdInteraction.DESTINATION_BUYER;
+import static com.android.adservices.data.adselection.DBRegisteredAdInteraction.DESTINATION_SELLER;
 import static com.android.adservices.service.adselection.ImpressionReporter.REPORT_IMPRESSION_THROTTLED;
 import static com.android.adservices.service.adselection.ImpressionReporter.UNABLE_TO_FIND_AD_SELECTION_WITH_GIVEN_ID;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
@@ -524,36 +524,36 @@ public class AdSelectionServiceImplTest {
 
         // Check that database has correct seller registered events
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
         assertEquals(
                 clickUriSeller,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
 
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
         assertEquals(
                 hoverUriSeller,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
 
         // Check that database has correct buyer registered events
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
         assertEquals(
                 clickUriBuyer,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
 
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_BUYER, DESTINATION_BUYER));
         assertEquals(
                 hoverUriBuyer,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, HOVER_EVENT_BUYER, DESTINATION_BUYER));
 
         RecordedRequest fetchRequest = server.takeRequest();
@@ -683,30 +683,30 @@ public class AdSelectionServiceImplTest {
 
         // Check that seller click uri was not registered
         assertFalse(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
 
         // Check that seller hover uri was registered
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
         assertEquals(
                 hoverUriSeller,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
 
         // Check that buyer click uri was registered
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
         assertEquals(
                 clickUriBuyer,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
 
         // Check that buyer hover uri was not registered
         assertFalse(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_BUYER, DESTINATION_BUYER));
 
         RecordedRequest fetchRequest = server.takeRequest();
@@ -833,30 +833,30 @@ public class AdSelectionServiceImplTest {
 
         // Check that seller click uri was not registered
         assertFalse(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
 
         // Check that seller hover uri was registered
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
         assertEquals(
                 hoverUriSeller,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
 
         // Check that buyer click uri was registered
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
         assertEquals(
                 clickUriBuyer,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
 
         // Check that buyer hover uri was not registered
         assertFalse(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_BUYER, DESTINATION_BUYER));
 
         RecordedRequest fetchRequest = server.takeRequest();
@@ -980,28 +980,28 @@ public class AdSelectionServiceImplTest {
 
         // Check that database has correct seller registered events
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
         assertEquals(
                 clickUriSeller,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
 
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
         assertEquals(
                 hoverUriSeller,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
 
         // Check that buyer events were not registered
         assertFalse(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
 
         assertFalse(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_BUYER, DESTINATION_BUYER));
 
         assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_INTERNAL_ERROR);
@@ -1119,19 +1119,19 @@ public class AdSelectionServiceImplTest {
 
         // Check that no events were registered
         assertFalse(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
 
         assertFalse(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
 
         assertFalse(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
 
         assertFalse(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_BUYER, DESTINATION_BUYER));
 
         assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_INTERNAL_ERROR);
@@ -1260,28 +1260,28 @@ public class AdSelectionServiceImplTest {
 
         // Check that only the first seller event uri pairing was registered
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
         assertEquals(
                 clickUriSeller,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
 
         assertFalse(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
 
         // Check that only the first buyer event uri pairing was registered
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
         assertEquals(
                 clickUriBuyer,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
 
         assertFalse(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_BUYER, DESTINATION_BUYER));
 
         RecordedRequest fetchRequest = server.takeRequest();
@@ -2312,36 +2312,36 @@ public class AdSelectionServiceImplTest {
 
         // Check that database has correct seller registered events
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
         assertEquals(
                 clickUriSeller,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
 
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
         assertEquals(
                 hoverUriSeller,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
 
         // Check that database has correct buyer registered events
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
         assertEquals(
                 clickUriBuyer,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
 
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_BUYER, DESTINATION_BUYER));
         assertEquals(
                 hoverUriBuyer,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, HOVER_EVENT_BUYER, DESTINATION_BUYER));
 
         List<String> notifications =
