@@ -24,6 +24,7 @@ import android.util.Dumpable;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.data.adselection.DBRegisteredAdInteraction;
 import com.android.adservices.service.adselection.AdOutcomeSelectorImpl;
 import com.android.adservices.service.common.cache.FledgeHttpCache;
 
@@ -583,9 +584,8 @@ public interface Flags extends Dumpable {
     }
 
     /**
-     * Returns the maximum number of {@link
-     * com.android.adservices.data.adselection.DBRegisteredAdEvent} that an ad-tech can register in
-     * one call to {@code reportImpression}.
+     * Returns the maximum number of {@link DBRegisteredAdInteraction} that an ad-tech can register
+     * in one call to {@code reportImpression}.
      */
     default long getReportImpressionMaxEventUriEntriesCount() {
         return FLEDGE_REPORT_IMPRESSION_MAX_EVENT_URI_ENTRIES_COUNT;
@@ -1576,12 +1576,12 @@ public interface Flags extends Dumpable {
         return ENABLE_TOPIC_CONTRIBUTORS_CHECK;
     }
 
-    /** Whether to enable database schema version 5 */
-    boolean ENABLE_DATABASE_SCHEMA_VERSION_5 = false;
+    /** Whether to enable database schema version 7 */
+    boolean ENABLE_DATABASE_SCHEMA_VERSION_7 = false;
 
-    /** @return if to enable database schema version 5. */
+    /** @return if to enable database schema version 7 TODO (b/265160386): rename to ...Version7. */
     default boolean getEnableDatabaseSchemaVersion5() {
-        return ENABLE_DATABASE_SCHEMA_VERSION_5;
+        return ENABLE_DATABASE_SCHEMA_VERSION_7;
     }
 
     /** Returns true if the given enrollmentId is blocked from using PP-API. */
