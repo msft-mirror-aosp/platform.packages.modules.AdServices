@@ -22,6 +22,7 @@ import android.annotation.Nullable;
 import android.net.Uri;
 
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
+import com.android.adservices.service.measurement.aggregation.AggregateDeduplicationKey;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.Filter;
@@ -58,6 +59,7 @@ public class Trigger {
     private Uri mRegistrant;
     private String mAggregateTriggerData;
     private String mAggregateValues;
+    private String mAggregateDeduplicationKeys;
     private boolean mIsDebugReporting;
     private AggregatableAttributionTrigger mAggregatableAttributionTrigger;
     private String mFilters;
@@ -234,6 +236,15 @@ public class Trigger {
     }
 
     /**
+     * Returns a list of aggregate deduplication keys. aggregate deduplication key is a JSONObject.
+     * example: { "deduplication_key": "32768", "filters": [ {type: [filter_1, filter_2]} ],
+     * "not_filters": [ {type: [not_filter_1, not_filter_2]} ] }
+     */
+    public String getAggregateDeduplicationKeys() {
+        return mAggregateDeduplicationKeys;
+    }
+
+    /**
      * Returns the AggregatableAttributionTrigger object, which is constructed using the aggregate
      * trigger data string and aggregate values string in Trigger.
      */
@@ -350,10 +361,33 @@ public class Trigger {
         for (String key : values.keySet()) {
             valueMap.put(key, values.getInt(key));
         }
+        List<AggregateDeduplicationKey> dedupKeyList = new ArrayList<>();
+        if (this.mAggregateDeduplicationKeys != null) {
+            JSONArray dedupKeyObjects = new JSONArray(this.mAggregateDeduplicationKeys);
+            for (int i = 0; i < dedupKeyObjects.length(); i++) {
+                JSONObject dedupKeyObject = dedupKeyObjects.getJSONObject(i);
+                UnsignedLong dedupKey =
+                        new UnsignedLong(dedupKeyObject.getLong("deduplication_key"));
+                AggregateDeduplicationKey.Builder builder =
+                        new AggregateDeduplicationKey.Builder(dedupKey);
+                if (dedupKeyObject.has("filters") && !dedupKeyObject.isNull("filters")) {
+                    List<FilterMap> filterSet =
+                            Filter.deserializeFilterSet(dedupKeyObject.getJSONArray("filters"));
+                    builder.setFilterSet(filterSet);
+                }
+                if (dedupKeyObject.has("not_filters") && !dedupKeyObject.isNull("not_filters")) {
+                    List<FilterMap> notFilterSet =
+                            Filter.deserializeFilterSet(dedupKeyObject.getJSONArray("not_filters"));
+                    builder.setNotFilterSet(notFilterSet);
+                }
+                dedupKeyList.add(builder.build());
+            }
+        }
         return Optional.of(
                 new AggregatableAttributionTrigger.Builder()
                         .setTriggerData(triggerDataList)
                         .setValues(valueMap)
+                        .setAggregateDeduplicationKeys(dedupKeyList)
                         .build());
     }
 
@@ -523,6 +557,13 @@ public class Trigger {
         @NonNull
         public Builder setAggregateValues(@Nullable String aggregateValues) {
             mBuilding.mAggregateValues = aggregateValues;
+            return this;
+        }
+
+        /** See {@link Trigger#getAggregateDeduplicationKeys()} */
+        @NonNull
+        public Builder setAggregateDeduplicationKeys(@Nullable String aggregateDeduplicationKeys) {
+            mBuilding.mAggregateDeduplicationKeys = aggregateDeduplicationKeys;
             return this;
         }
 

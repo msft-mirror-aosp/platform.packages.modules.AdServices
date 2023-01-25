@@ -16,6 +16,7 @@
 package com.android.adservices.service.measurement.registration;
 
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATABLE_TRIGGER_DATA;
+import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATE_KEYS_PER_REGISTRATION;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_ATTRIBUTION_EVENT_TRIGGER_DATA;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_ATTRIBUTION_FILTERS;
@@ -129,6 +130,19 @@ public final class AsyncTriggerFetcherTest {
                     + "   }]\n"
                     + "}"
                     + "]\n";
+    private static final String AGGREGATE_DEDUPLICATION_KEYS_1 =
+            "[{\"deduplication_key\": \""
+                    + DEDUP_KEY
+                    + "\",\n"
+                    + "\"filters\": {\n"
+                    + "  \"category_1\": [\"filter\"],\n"
+                    + "  \"category_2\": [\"filter\"] \n"
+                    + " },"
+                    + "\"not_filters\": {\n"
+                    + "  \"category_1\": [\"filter\"],\n"
+                    + "  \"category_2\": [\"filter\"] \n"
+                    + "}}"
+                    + "]";
     private static final String LIST_TYPE_REDIRECT_URI = WebUtil.validUrl("https://bar.test");
     private static final String LOCATION_TYPE_REDIRECT_URI =
             WebUtil.validUrl("https://example.test");
@@ -205,6 +219,54 @@ public final class AsyncTriggerFetcherTest {
                 result.getAttributionDestination().toString());
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
         assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.getEventTriggers());
+        verify(mUrlConnection).setRequestMethod("POST");
+        verify(mLogger).logMeasurementRegistrationsResponseSize(eq(expectedStats));
+    }
+
+    @Test
+    public void testBasicTriggerRequest_withAggregateDeduplicationKey() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        MeasurementRegistrationResponseStats expectedStats =
+                new MeasurementRegistrationResponseStats.Builder(
+                                AD_SERVICES_MEASUREMENT_REGISTRATIONS,
+                                AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__TRIGGER,
+                                436)
+                        .setAdTechDomain(null)
+                        .build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"event_trigger_data\":"
+                                                + EVENT_TRIGGERS_1
+                                                + ","
+                                                + "\"aggregatable_deduplication_keys\":"
+                                                + AGGREGATE_DEDUPLICATION_KEYS_1
+                                                + "}")));
+        doReturn(5000L).when(mFlags).getMaxResponseBasedRegistrationPayloadSizeBytes();
+
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
+        assertTrue(fetch.isPresent());
+        Trigger result = fetch.get();
+        assertEquals(
+                asyncRegistration.getTopOrigin().toString(),
+                result.getAttributionDestination().toString());
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.getEventTriggers());
+        assertEquals(
+                new JSONArray(AGGREGATE_DEDUPLICATION_KEYS_1).toString(),
+                result.getAggregateDeduplicationKeys());
         verify(mUrlConnection).setRequestMethod("POST");
         verify(mLogger).logMeasurementRegistrationsResponseSize(eq(expectedStats));
     }
@@ -1282,6 +1344,246 @@ public final class AsyncTriggerFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{" + "\"filters\":" + filters + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_AggregateDeduplicationKeys_tooManyEntries() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        StringBuilder tooManyEntries = new StringBuilder("[");
+        tooManyEntries.append(
+                IntStream.range(0, MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION + 1)
+                        .mapToObj(i -> "{\"deduplication_key\": \"" + i + "\"}")
+                        .collect(Collectors.joining(",")));
+        tooManyEntries.append("]");
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{\"event_trigger_data\":"
+                                                + EVENT_TRIGGERS_1
+                                                + ","
+                                                + "\"aggregatable_deduplication_keys\":"
+                                                + tooManyEntries
+                                                + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_AggregateDeduplicationKeys_missingDeduplicationKey()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        StringBuilder deduplicationKeys = new StringBuilder("[");
+        deduplicationKeys.append(
+                IntStream.range(0, MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION)
+                        .mapToObj(i -> "{\"deduplication_key\":}")
+                        .collect(Collectors.joining(",")));
+        deduplicationKeys.append("]");
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{\"event_trigger_data\":"
+                                                + EVENT_TRIGGERS_1
+                                                + ","
+                                                + "\"aggregatable_deduplication_keys\":"
+                                                + deduplicationKeys
+                                                + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_AggregateDeduplicationKeys_tooManyFilters() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        StringBuilder filters = new StringBuilder("{");
+        filters.append(
+                IntStream.range(0, MAX_ATTRIBUTION_FILTERS + 1)
+                        .mapToObj(i -> "\"filter-string-" + i + "\": [\"filter-value\"]")
+                        .collect(Collectors.joining(",")));
+        filters.append("}");
+        StringBuilder notFilters = new StringBuilder("{");
+        notFilters.append(
+                IntStream.range(0, MAX_ATTRIBUTION_FILTERS)
+                        .mapToObj(i -> "\"not-filter-string-" + i + "\": [\"not-filter-value\"]")
+                        .collect(Collectors.joining(",")));
+        notFilters.append("}");
+        StringBuilder deduplicationKeys = new StringBuilder("[");
+        deduplicationKeys.append(
+                IntStream.range(0, MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION)
+                        .mapToObj(
+                                i ->
+                                        "{\"deduplication_key\":"
+                                                + "\""
+                                                + i
+                                                + "\""
+                                                + ",\"filters\" :"
+                                                + filters
+                                                + ","
+                                                + "\"not_filters\" :\""
+                                                + notFilters
+                                                + "}")
+                        .collect(Collectors.joining(",")));
+        deduplicationKeys.append("]");
+
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{\"event_trigger_data\":"
+                                                + EVENT_TRIGGERS_1
+                                                + ",\"aggregatable_deduplication_keys\":"
+                                                + deduplicationKeys
+                                                + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_AggregateDeduplicationKeys_tooManyNotFilters() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        StringBuilder filters = new StringBuilder("{");
+        filters.append(
+                IntStream.range(0, MAX_ATTRIBUTION_FILTERS)
+                        .mapToObj(i -> "\"filter-string-" + i + "\": [\"filter-value\"]")
+                        .collect(Collectors.joining(",")));
+        filters.append("}");
+        StringBuilder notFilters = new StringBuilder("{");
+        notFilters.append(
+                IntStream.range(0, MAX_ATTRIBUTION_FILTERS + 1)
+                        .mapToObj(i -> "\"not-filter-string-" + i + "\": [\"not-filter-value\"]")
+                        .collect(Collectors.joining(",")));
+        notFilters.append("}");
+        StringBuilder deduplicationKeys = new StringBuilder("[");
+        deduplicationKeys.append(
+                IntStream.range(0, MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION)
+                        .mapToObj(
+                                i ->
+                                        "{\"deduplication_key\":"
+                                                + "\""
+                                                + i
+                                                + "\""
+                                                + ",\"filters\" :"
+                                                + filters
+                                                + ","
+                                                + "\"not_filters\" :\""
+                                                + notFilters
+                                                + "}")
+                        .collect(Collectors.joining(",")));
+        deduplicationKeys.append("]");
+
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{\"event_trigger_data\":"
+                                                + EVENT_TRIGGERS_1
+                                                + ","
+                                                + "\"aggregatable_deduplication_keys\":"
+                                                + deduplicationKeys
+                                                + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_AggregateDeduplicationKeys_deduplicationKeyIsEmpty()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{\"event_trigger_data\":"
+                                                + EVENT_TRIGGERS_1
+                                                + ","
+                                                + "\"aggregatable_deduplication_keys\":{}"
+                                                + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_AggregateDeduplicationKeys_deduplicationKeysNotPresent()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{\"event_trigger_data\":"
+                                                + EVENT_TRIGGERS_1
+                                                + ","
+                                                + "\"aggregatable_deduplication_keys\":"
+                                                + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
