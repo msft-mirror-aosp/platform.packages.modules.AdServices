@@ -33,6 +33,7 @@ import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.reporting.DebugReport;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -523,7 +524,7 @@ public interface IMeasurementDao {
      * @throws DatastoreException when SQLite issue occurs
      */
     List<Source> fetchTriggerMatchingSourcesForXna(
-            @NonNull Trigger trigger, @NonNull List<String> xnaEnrollmentIds)
+            @NonNull Trigger trigger, @NonNull Collection<String> xnaEnrollmentIds)
             throws DatastoreException;
 
     /**
