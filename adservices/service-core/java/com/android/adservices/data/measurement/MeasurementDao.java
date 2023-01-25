@@ -49,6 +49,7 @@ import com.google.common.collect.ImmutableList;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -1730,7 +1731,7 @@ class MeasurementDao implements IMeasurementDao {
 
     @Override
     public List<Source> fetchTriggerMatchingSourcesForXna(
-            @NonNull Trigger trigger, @NonNull List<String> xnaEnrollmentIds)
+            @NonNull Trigger trigger, @NonNull Collection<String> xnaEnrollmentIds)
             throws DatastoreException {
         List<Source> sources = new ArrayList<>();
         Optional<Pair<String, String>> destinationColumnAndValue =
@@ -1748,6 +1749,7 @@ class MeasurementDao implements IMeasurementDao {
                 xnaEnrollmentIds.stream()
                         .map(DatabaseUtils::sqlEscapeString)
                         .collect(Collectors.joining(","));
+        String triggerEnrollmentId = trigger.getEnrollmentId();
         String eligibleXnaEnrollmentRegisteredSourcesWhereClause =
                 mergeConditions(
                         " AND ",
@@ -1769,9 +1771,22 @@ class MeasurementDao implements IMeasurementDao {
                                 + delimitedXnaEnrollmentIds
                                 + ")"
                                 + ")",
+                        MeasurementTables.SourceContract.REGISTRATION_ID
+                                + " NOT IN "
+                                // Avoid the sources (XNA parent) whose registration chain had a
+                                // source registered by trigger's AdTech (by matching enrollmentId)
+                                + "("
+                                + "select "
+                                + MeasurementTables.SourceContract.REGISTRATION_ID
+                                + " from "
+                                + MeasurementTables.SourceContract.TABLE
+                                + " where "
+                                + MeasurementTables.SourceContract.ENROLLMENT_ID
+                                + " = "
+                                + DatabaseUtils.sqlEscapeString(triggerEnrollmentId)
+                                + ")",
                         MeasurementTables.SourceContract.SHARED_AGGREGATION_KEYS + " IS NOT NULL");
 
-        String triggerEnrollmentId = trigger.getEnrollmentId();
         String eligibleTriggerNetworkRegisteredSourcesWhereClause =
                 String.format(
                         MeasurementTables.SourceContract.ENROLLMENT_ID + " = %s",
@@ -1780,15 +1795,17 @@ class MeasurementDao implements IMeasurementDao {
         //  - AND
         //     - destination == trigger's destination
         //     - expiryTime > triggerTime
+        //     - eventTime < triggerTime
         //     - OR
         //      - AND
-        //       - enrollmentId == trigger's enrollmentId
+        //       - sourceEnrollmentId == trigger's enrollmentId
         //      - AND
-        //       - enrollmentId IN XNA enrollment IDs
+        //       - sourceEnrollmentId IN XNA enrollment IDs
         //       - sourceId NOT IN (sources associated to XNA that have lost
         //         attribution in the past -- lose once lose always)
+        //       - triggerEnrollmentId NOT IN (enrollmentIds of the sources registered under this
+        // registration ID)
         //       - sharedAggregationKeys NOT NULL
-        //     - eventTime < triggerTime
         try (Cursor cursor =
                 mSQLTransaction
                         .getDatabase()

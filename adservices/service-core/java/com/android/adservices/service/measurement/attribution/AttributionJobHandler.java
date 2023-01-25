@@ -28,6 +28,7 @@ import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.service.measurement.Attribution;
+import com.android.adservices.service.measurement.AttributionConfig;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.EventTrigger;
@@ -48,16 +49,21 @@ import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Web;
 
+
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -112,7 +118,7 @@ class AttributionJobHandler {
                     if (trigger.getStatus() != Trigger.Status.PENDING) {
                         return;
                     }
-                    Optional<Source> sourceOpt = getMatchingSource(trigger, measurementDao);
+                    Optional<Source> sourceOpt = selectSourceToAttribute(trigger, measurementDao);
                     if (sourceOpt.isEmpty()) {
                         ignoreTrigger(trigger, measurementDao);
                         return;
@@ -157,7 +163,8 @@ class AttributionJobHandler {
 
         if (numReports >= SystemHealthParams.MAX_AGGREGATE_REPORTS_PER_DESTINATION) {
             LogUtil.d(
-                    String.format(Locale.ENGLISH,
+                    String.format(
+                            Locale.ENGLISH,
                             "Aggregate reports for destination %1$s exceeds system health limit of"
                                     + " %2$d.",
                             trigger.getAttributionDestination(),
@@ -232,15 +239,46 @@ class AttributionJobHandler {
                 }
             }
         } catch (JSONException e) {
-            LogUtil.e("JSONException when parse aggregate fields in AttributionJobHandler.");
+            LogUtil.e(e, "JSONException when parse aggregate fields in AttributionJobHandler.");
             return false;
         }
         return false;
     }
 
-    private Optional<Source> getMatchingSource(Trigger trigger, IMeasurementDao measurementDao)
-            throws DatastoreException {
-        List<Source> matchingSources = measurementDao.getMatchingActiveSources(trigger);
+    private Optional<Source> selectSourceToAttribute(
+            Trigger trigger, IMeasurementDao measurementDao) throws DatastoreException {
+        List<Source> matchingSources;
+        if (trigger.getAttributionConfig() == null) {
+            matchingSources = measurementDao.getMatchingActiveSources(trigger);
+        } else {
+            // XNA attribution is possible
+            Set<String> enrollmentIds = extractEnrollmentIds(trigger.getAttributionConfig());
+
+            List<Source> allSources =
+                    measurementDao.fetchTriggerMatchingSourcesForXna(trigger, enrollmentIds);
+            List<Source> triggerEnrollmentMatchingSources =
+                    allSources.stream()
+                            .filter(
+                                    source ->
+                                            Objects.equals(
+                                                    source.getEnrollmentId(),
+                                                    trigger.getEnrollmentId()))
+                            .collect(Collectors.toList());
+            List<Source> otherEnrollmentBasedSources =
+                    allSources.stream()
+                            .filter(
+                                    source ->
+                                            !Objects.equals(
+                                                    source.getEnrollmentId(),
+                                                    trigger.getEnrollmentId()))
+                            .collect(Collectors.toList());
+            List<Source> derivedSources =
+                    new XnaSourceCreator()
+                            .generateDerivedSources(trigger, otherEnrollmentBasedSources);
+            matchingSources = new ArrayList<>();
+            matchingSources.addAll(triggerEnrollmentMatchingSources);
+            matchingSources.addAll(derivedSources);
+        }
 
         if (matchingSources.isEmpty()) {
             return Optional.empty();
@@ -258,20 +296,60 @@ class AttributionJobHandler {
                         .thenComparing(Source::getPriority, Comparator.reverseOrder())
                         .thenComparing(Source::getEventTime, Comparator.reverseOrder()));
 
-        Source selectedSource = matchingSources.get(0);
-        matchingSources.remove(0);
-        if (!matchingSources.isEmpty()) {
-            matchingSources.forEach((s) -> s.setStatus(Source.Status.IGNORED));
-            List<String> sourceIds =
-                    matchingSources.stream().map(Source::getId).collect(Collectors.toList());
-            measurementDao.updateSourceStatus(sourceIds, Source.Status.IGNORED);
-        }
+        Source selectedSource = matchingSources.remove(0);
+
+        // Ignore all sources not selected for attribution
+        ignoreRemainingSources(measurementDao, matchingSources);
         return Optional.of(selectedSource);
+    }
+
+    private Set<String> extractEnrollmentIds(String attributionConfigsString) {
+        Set<String> enrollmentIds = new HashSet<>();
+        try {
+            JSONArray attributionConfigsJsonArray = new JSONArray(attributionConfigsString);
+            for (int i = 0; i < attributionConfigsJsonArray.length(); i++) {
+                JSONObject attributionConfigJson = attributionConfigsJsonArray.getJSONObject(i);
+                // It can't be null, has already been validated at fetcher
+                enrollmentIds.add(
+                        attributionConfigJson.getString(
+                                AttributionConfig.AttributionConfigContract.SOURCE_ADTECH));
+            }
+        } catch (JSONException e) {
+            LogUtil.d(e, "Failed to parse attribution configs.");
+        }
+        return enrollmentIds;
+    }
+
+    private void ignoreRemainingSources(
+            IMeasurementDao measurementDao, List<Source> remainingSources)
+            throws DatastoreException {
+        if (!remainingSources.isEmpty()) {
+            List<String> ignoredOriginalSourceIds = new ArrayList<>();
+            for (Source source : remainingSources) {
+                source.setStatus(Source.Status.IGNORED);
+
+                if (source.getParentId() == null) {
+                    // Original source
+                    ignoredOriginalSourceIds.add(source.getId());
+                } else {
+                    // Derived source (XNA)
+                    measurementDao.insertIgnoredSourceForEnrollment(
+                            source.getParentId(), source.getEnrollmentId());
+                }
+            }
+
+            measurementDao.updateSourceStatus(ignoredOriginalSourceIds, Source.Status.IGNORED);
+        }
     }
 
     private boolean maybeGenerateEventReport(
             Source source, Trigger trigger, IMeasurementDao measurementDao)
             throws DatastoreException {
+        if (source.getParentId() != null) {
+            LogUtil.d("Event report generation skipped because it's a derived source.");
+            return false;
+        }
+
         if (trigger.getTriggerTime() > source.getEventReportWindow()) {
             return false;
         }
@@ -327,10 +405,7 @@ class AttributionJobHandler {
             throws DatastoreException {
         List<EventReport> sourceEventReports = measurementDao.getSourceEventReports(source);
 
-        if (isWithinReportLimit(
-                source,
-                sourceEventReports.size(),
-                trigger.getDestinationType())) {
+        if (isWithinReportLimit(source, sourceEventReports.size(), trigger.getDestinationType())) {
             return true;
         }
 
