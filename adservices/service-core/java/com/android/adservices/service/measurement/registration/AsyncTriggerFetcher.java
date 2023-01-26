@@ -30,6 +30,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.measurement.AsyncRegistration;
 import com.android.adservices.service.measurement.AttributionConfig;
 import com.android.adservices.service.measurement.EventSurfaceType;
@@ -197,7 +198,9 @@ public class AsyncTriggerFetcher {
                             json.getString(TriggerHeaderContract.X_NETWORK_KEY_MAPPING));
                 }
             }
-            if (!json.isNull(TriggerHeaderContract.ATTRIBUTION_CONFIG)) {
+
+            if (isXnaAllowedForTriggerRegistrant(registrant, registrationType)
+                    && !json.isNull(TriggerHeaderContract.ATTRIBUTION_CONFIG)) {
                 String attributionConfigsString =
                         extractValidAttributionConfigs(
                                 json.getJSONArray(TriggerHeaderContract.ATTRIBUTION_CONFIG));
@@ -216,6 +219,15 @@ public class AsyncTriggerFetcher {
     @NonNull
     public URLConnection openUrl(@NonNull URL url) throws IOException {
         return mNetworkConnection.setup(url);
+    }
+
+    private boolean isXnaAllowedForTriggerRegistrant(
+            Uri registrant, AsyncRegistration.RegistrationType registrationType) {
+        // If the trigger is registered from web context, only allow-listed apps should be able to
+        // parse attribution config.
+        return !AsyncRegistration.RegistrationType.WEB_TRIGGER.equals(registrationType)
+                || AllowLists.isPackageAllowListed(
+                        mFlags.getWebContextClientAppAllowList(), registrant.getAuthority());
     }
 
     private void fetchTrigger(
