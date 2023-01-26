@@ -19,6 +19,7 @@ package com.android.adservices.tests.cts.topics;
 import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.clients.topics.AdvertisingTopicsClient;
+import android.adservices.topics.GetTopicsRequest;
 import android.adservices.topics.GetTopicsResponse;
 import android.adservices.topics.Topic;
 import android.content.Context;
@@ -36,6 +37,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -140,6 +142,27 @@ public class PreviewApiTest {
         // observation in previous epoch.
         sdk2Result = advertisingTopicsClient2.getTopics().get();
         assertThat(sdk2Result.getTopics()).isEmpty();
+    }
+
+    // This test is to add test/line coverage for Topics API. There is no specific logic to test.
+    @Test
+    public void testForTopicsAPITestCoverage() {
+        String sdkName = "sdk1";
+        boolean shouldRecordObservation = false; // default value is true
+        GetTopicsRequest.Builder builder = new GetTopicsRequest.Builder();
+        builder.setAdsSdkName(sdkName);
+        builder.setShouldRecordObservation(shouldRecordObservation);
+
+        GetTopicsRequest request = builder.build();
+        assertThat(request.getAdsSdkName()).isEqualTo(sdkName);
+        assertThat(request.shouldRecordObservation()).isEqualTo(shouldRecordObservation);
+
+        // Below are for test coverage purpose. There is no assertion against them.
+        Topic mockedTopic =
+                new Topic(/* taxonomyVersion */ 1L, /* modelVersion*/ 1L, /* topicId */ 1);
+        GetTopicsResponse.Builder mockedBuilder =
+                new GetTopicsResponse.Builder(List.of(mockedTopic));
+        mockedBuilder.build();
     }
 
     // Override the Epoch Period to shorten the Epoch Length in the test.
