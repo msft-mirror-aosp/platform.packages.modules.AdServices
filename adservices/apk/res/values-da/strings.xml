@@ -113,8 +113,7 @@
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text3" msgid="5347980571056638783">"•  Sådan bruger apps disse data"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text4" msgid="4738335469671465639">"Apps kan gemme oplysninger om de ting, du kan lide, i Android. Hvis du bruger en app til maratontræning, kan appen f.eks. skønne, at du er interesseret i løbesko. Hvis du derefter bruger en anden app, kan den pågældende app vise dig en annonce om løbesko, som er foreslået af den første app."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text5" msgid="8737925570089314631">"• Sådan kan du administrere dine data"</string>
-    <!-- no translation found for notificationUI_how_it_works_fledge_measurement_expanded_text6 (495908587748380196) -->
-    <skip />
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android foretager regelmæssigt en automatisk sletning af foreslåede appdata. Når du bruger en app igen, kan den dukke op på listen igen."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"I privatlivsindstillingerne kan du også til enhver tid blokere en app, så den ikke kan foreslå dig annoncer, nulstille alle data for foreslåede annoncer eller deaktivere foreslåede annoncer fra apps."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"Apps, du bruger, kan bede Android om oplysninger, som hjælper den pågældende app med at måle effektiviteten af annoncer i appen. Android beskytter dine personlige oplysninger ved at begrænse de oplysninger, som apps kan dele med hinanden."</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Privacy Sandbox"</string>
@@ -128,21 +127,20 @@
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"Bloker"</string>
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Fjern blokering"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Interesser, du har blokeret"</string>
-    <!-- no translation found for settingsUI_blocked_topics_ga_view_title (3139405409436543147) -->
-    <skip />
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Nulstil alle interesser"</string>
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Der er ingen interesser at vise lige nu"</string>
     <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"Der er ingen emner at vise lige nu"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Androids beskyttelse af personlige oplysninger i forbindelse med annoncer (betaversion) giver nye funktioner, som apps kan bruge til at vise dig annoncer, der muligvis er relevante for dig. Disse teknologier anvender ikke enheds-id\'er.\n\nAndroid kan anslå, hvilke typer annoncer du muligvis er interesseret i, og gemme disse oplysninger midlertidigt på din enhed. Dette giver apps mulighed for at vise dig relevante annoncer, uden at spore din aktivitet på websites og i apps fra andre udviklere."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Du har ingen blokerede interesser"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_ga_text" msgid="4484435371306742210">"Der er ingen blokerede emner"</string>
-    <string name="settingsUI_topics_view_view_blocked_topics" msgid="2337437967442005365">"Se blokerede emner"</string>
+    <!-- no translation found for settingsUI_no_blocked_topics_ga_text (377459829879121256) -->
+    <skip />
+    <!-- no translation found for settingsUI_view_blocked_topics_title (3705333677440361392) -->
+    <skip />
     <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Interesser er nulstillet"</string>
     <string name="settingsUI_topics_are_reset_ga" msgid="5250296990870048195">"Emnerne blev nulstillet"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Apps kan anslå, hvilke interesser du muligvis har, og ved hjælp af Android gemme disse oplysninger. En anden app kan senere vise dig en annonce baseret på disse oplysninger.\n\nHvis du blokerer en app, anslår den ikke længere, hvilke interesser du muligvis har. Den føjes ikke til listen over apps igen, medmindre du fjerner blokeringen af den. Interesser, der allerede er anslået af appen, slettes, men du får muligvis stadig vist nogle relaterede annoncer."</string>
-    <!-- no translation found for settingsUI_blocked_apps_title (1260257485713408637) -->
-    <skip />
+    <string name="settingsUI_blocked_apps_title" msgid="1260257485713408637">"Apps, du har blokeret"</string>
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"Se blokerede apps"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Nulstil interesser, der er anslået af apps"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"Der er ingen apps, der anslår interesser for dig lige nu"</string>
@@ -150,7 +148,8 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Androids beskyttelse af personlige oplysninger i forbindelse med annoncer (betaversion) giver nye funktioner, som apps kan bruge til at vise dig annoncer, der muligvis er relevante for dig. Disse teknologier anvender ikke enheds-id\'er.\n\nApps kan anslå, hvilke typer annoncer du muligvis er interesseret i, og gemme disse oplysninger midlertidigt på din enhed. Dette giver apps mulighed for at vise dig relevante annoncer, uden at spore din aktivitet på websites og i apps fra andre udviklere."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Du har ingen blokerede apps"</string>
-    <string name="settingsUI_apps_view_no_blocked_apps_ga_text" msgid="3588711487944931608">"Der er ingen blokerede apps"</string>
+    <!-- no translation found for settingsUI_no_blocked_apps_ga_text (7488680173653861943) -->
+    <skip />
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"Tillad annoncemåling"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"Apps og annoncører kan anmode Android om oplysninger med henblik på at måle effektiviteten af deres annoncer.\n\nData for annoncemåling slettes jævnligt fra din enhed."</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"Nulstil måledata"</string>
@@ -161,26 +160,28 @@
     <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Hvis du ombestemmer dig eller gerne vil have flere oplysninger om Androids betaversion af beskyttelse af personlige oplysninger i forbindelse med annoncering, skal du gå til dine privatlivsindstillinger."</string>
     <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Deaktiver"</string>
     <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Vil du blokere <xliff:g id="TOPIC">%1$s</xliff:g>?"</string>
-    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"Denne interesse blokeres og føjes ikke til din liste igen, medmindre du tilføjer den igen. Der vises muligvis stadig nogle relaterede annoncer."</string>
-    <string name="settingsUI_dialog_block_topic_ga_message" msgid="7397705817955848275">"Dette emne blokeres og føjes ikke til din liste igen, medmindre du tilføjer det igen. Der vises muligvis stadig nogle relaterede annoncer."</string>
+    <!-- no translation found for settingsUI_dialog_block_topic_message (2581824495438333677) -->
+    <skip />
     <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Bloker"</string>
     <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"Blokeringen af <xliff:g id="TOPIC">%1$s</xliff:g> er fjernet"</string>
-    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android kan føje denne interesse til din liste igen, men den vises muligvis ikke med det samme"</string>
-    <string name="settingsUI_dialog_unblock_topic_ga_message" msgid="3582004316141072103">"Android kan føje dette emne til din liste igen, men det vises muligvis ikke med det samme"</string>
+    <!-- no translation found for settingsUI_dialog_unblock_topic_message (1090743551997420666) -->
+    <skip />
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
-    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Vil du nulstille alle dine interesser?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"Din liste ryddes, og der vil blive anslået nye interesser fremadrettet. Der vises muligvis stadig annoncer, der er relateret til dine ryddede interesser."</string>
-    <string name="settingsUI_dialog_reset_topic_ga_message" msgid="5826866496652403990">"Din liste ryddes, og nye emner tilføjes løbende. Du får muligvis stadig vist nogle annoncer, som er relateret til de emner, du har ryddet."</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_title (8025836207966712435) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (4243744527757134000) -->
+    <skip />
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Nulstil"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Vil du blokere <xliff:g id="APP">%1$s</xliff:g>?"</string>
-    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Denne app estimerer ikke interesser for Privacy Sandbox, og den føjes ikke til din liste igen, medmindre du fjerner blokeringen af den.\n\nInteresser, som allerede er blevet estimeret af denne app, slettes, men du får muligvis stadig vist nogle relaterede annoncer."</string>
-    <string name="settingsUI_dialog_block_app_ga_message" msgid="5843160418232238694">"Denne app vil ikke foreslå annoncer og føjes ikke til din liste igen, medmindre du fjerner blokeringen af den. Du får muligvis stadig vist nogle relaterede annoncer."</string>
+    <!-- no translation found for settingsUI_dialog_block_app_message (758788973278770119) -->
+    <skip />
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Blokeringen af <xliff:g id="APP">%1$s</xliff:g> er fjernet"</string>
-    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Denne app kan estimere interesser for dig igen, men de vises muligvis ikke på din liste med det samme. Der kan gå noget tid, før du får vist relaterede annoncer."</string>
-    <string name="settingsUI_dialog_unblock_app_ga_message" msgid="215670726484505390">"Denne app kan foreslå dig annoncer igen, men den vises muligvis ikke på listen med det samme. Der kan gå noget tid, før du får vist relaterede annoncer."</string>
-    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Vil du nulstille interesser, der er genereret af apps?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"De interesser, der er anslået af apps på din liste, vil blive slettet fra Privacy Sandbox, og dine apps vil anslå nye interesser fremadrettet Der vises muligvis stadig nogle relaterede annoncer."</string>
-    <string name="settingsUI_dialog_reset_app_ga_message" msgid="8436063980923088005">"Data for foreslåede annoncer fra de apps, der er angivet på din liste, slettes, og de pågældende apps vil foreslå nye annoncer i fremtiden. Der vises muligvis stadig nogle relaterede annoncer."</string>
+    <!-- no translation found for settingsUI_dialog_unblock_app_message (5758218424845642060) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_title (5177572712117150557) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_message (7845329616145691006) -->
+    <skip />
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Appdata er nulstillet"</string>
     <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"Nulstil alle emner?"</string>
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"Vil du nulstille annoncer foreslået af apps?"</string>
@@ -198,14 +199,14 @@
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Fra"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"De emner, du kan være interesseret i, er baseret på de apps, du har brugt for nylig, og anvendes af apps til at vise dig tilpassede annoncer.\n\nDu kan blokere de emner, der ikke skal deles med apps. Android sletter også automatisk emner med jævne mellemrum."</string>
     <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"Tillad annonceemner"</string>
-    <string name="settingsUI_blocked_topics_ga_title" msgid="1778578928932167070">"Emner, du har blokeret"</string>
-    <string name="settingsUI_reset_topics_ga_title" msgid="8223331046430417414">"Nulstil alle emner"</string>
+    <string name="settingsUI_blocked_topics_ga_title" msgid="7163366621282449273">"Annonceemner, du har blokeret"</string>
+    <!-- no translation found for settingsUI_reset_topics_ga_title (5365554894399951300) -->
+    <skip />
     <string name="settingsU_topics_view_footer" msgid="4769146330248953561">"Android registrerer emner, du kan være interesseret i, baseret på de apps, du har brugt inden for de seneste par uger.\n\nNår du derefter bruger en app, kan den anmode Android om dine emner for at tilpasse de annoncer, du får vist. Android deler op til 3 emner, samtidig med at din identitet og oplysninger om din appbrug beskyttes.\n\nAndroid sletter automatisk emner med jævne mellemrum. Når du fortsætter med at bruge apps, kan et emne dukke op på listen igen. Du kan også blokere de emner, som Android ikke skal dele med apps.\n\nNår du får vist en annonce i dine apps, kan annoncen være tilpasset i henhold til denne indstilling, indstillingen for foreslåede annoncer fra apps, dine indstillinger for annoncerings-id, og om den app, du bruger, tilpasser annoncer."</string>
     <string name="settingsUI_apps_switch_title" msgid="1308209012769248890">"Tillad annoncer foreslået af apps"</string>
     <string name="settingsUI_apps_view_ga_subtitle" msgid="1911743837387384160">"De apps, du bruger, kan fastslå, hvad du kan lide, og derefter foreslå annoncer i andre apps.\n\nDu kan blokere apps, så de ikke kan give dig forslag. Android sletter også automatisk data for foreslåede annoncer fra apps med jævne mellemrum."</string>
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Apps, du har blokeret"</string>
-    <!-- no translation found for settingsUI_reset_apps_ga_title (371969808353100852) -->
-    <skip />
+    <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Nulstil data om foreslåede annoncer fra apps"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Det er helt normalt, at de apps, du bruger, husker de ting, du er interesseret i, for at tilpasse din brugeroplevelse. Apps kan også gemme oplysninger om dine emner i Android.\n\nHvis du bruger en app til maratontræning, kan appen f.eks. skønne, at du er interesseret i løbesko. Hvis du derefter bruger en anden app, kan den pågældende app vise dig en annonce om løbesko, som er foreslået af den første app.\n\nAndroid sletter automatisk data for foreslåede annoncer fra apps med jævne mellemrum. Når du bruger en app igen, kan den dukke op på listen igen. Du kan også blokere en app, så den ikke kan foreslå annoncer til dig.\n\nI dine apps kan en annonce, du får vist, være tilpasset i henhold til denne indstilling, indstillingen for annonceemner, dine indstillinger for annoncerings-id, og om den app, du bruger, tilpasser annoncer."</string>
     <string name="topic10001" msgid="1636806320891333775">"Kunst og underholdning"</string>
     <string name="topic10002" msgid="1226367977754287428">"Skuespil og teater"</string>

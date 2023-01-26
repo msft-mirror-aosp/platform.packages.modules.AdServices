@@ -113,8 +113,7 @@
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text3" msgid="5347980571056638783">"•  Notkun forrita á þessum gögnum"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text4" msgid="4738335469671465639">"Forrit geta vistað upplýsingar um það sem höfðar til þín hjá Android. Ef þú notar til dæmis forrit um maraþonþjálfun gæti forritið áætlað að þú hafir áhuga á hlaupaskóm. Ef þú notar annað forrit seinna getur viðkomandi forrit sýnt þér auglýsingu fyrir hlaupaskó í samræmi við tillögu frá fyrsta forritinu."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text5" msgid="8737925570089314631">"•  Hvernig þú getur stjórnað gögnunum þínum"</string>
-    <!-- no translation found for notificationUI_how_it_works_fledge_measurement_expanded_text6 (495908587748380196) -->
-    <skip />
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android eyðir gögnum um tillögur forrita reglulega sjálfkrafa. Forrit sem þú notar aftur gæti birst aftur á listanum."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"Þú getur einnig lokað á að forrit stingi upp á auglýsingum fyrir þig, endurstillt öll gögn auglýsingatillagna eða slökkt á auglýsingatillögum forrita hvenær sem er í persónuverndarstillingunum."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"Forrit sem þú notar geta beðið Android um upplýsingar til að hjálpa þeim að mæla árangur auglýsinga sinna. Android gætir að persónuvernd þinni með því að takmarka upplýsingarnar sem forrit geta deilt sín á milli."</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Privacy Sandbox"</string>
@@ -128,21 +127,20 @@
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"Setja á bannlista"</string>
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Taka af bannlista"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Áhugasvið sem þú hefur lokað á"</string>
-    <!-- no translation found for settingsUI_blocked_topics_ga_view_title (3139405409436543147) -->
-    <skip />
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Endurstilla öll áhugasvið"</string>
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Engin áhugasvið til að sýna sem stendur"</string>
     <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"Engin umfjöllunarefni til að birta eins og er"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Betaútgáfa persónuverndar Android-auglýsinga býður upp á nýja eiginleika sem forrit geta notað til að birta þér auglýsingar sem gætu höfðað til þín. Þessi tækni notar ekki auðkenni tækja.\n\nAndroid getur áætlað hvernig auglýsingar gætu höfðað til þín og vistað áhugasviðin tímabundið í tækinu þínu. Þetta gerir forritum kleift að birta þér viðeigandi auglýsingar án þess að rekja virkni þína á vefsvæðum eða í forritum annarra þróunaraðila."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Þú hefur ekki sett nein áhugasvið á bannlista"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_ga_text" msgid="4484435371306742210">"Engin umfjöllunarefni á bannlista"</string>
-    <string name="settingsUI_topics_view_view_blocked_topics" msgid="2337437967442005365">"Skoða umfjöllunarefni á bannlista"</string>
+    <!-- no translation found for settingsUI_no_blocked_topics_ga_text (377459829879121256) -->
+    <skip />
+    <!-- no translation found for settingsUI_view_blocked_topics_title (3705333677440361392) -->
+    <skip />
     <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Áhugasvið voru endurstillt"</string>
     <string name="settingsUI_topics_are_reset_ga" msgid="5250296990870048195">"Umfjöllunarefni voru endurstillt"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Forrit geta áætlað áhugasviðin þín og vistað þau tímabundið með Android. Síðar gæti annað forrit birt þér auglýsingu í samræmi við þessi áhugasvið.\n\nEf þú lokar á forrit getur það ekki áætlað áhugasviðin þín lengur. Því verður ekki bætt við forritalistann aftur nema þú takir það af bannlista. Áhugasviðunum sem forrit hefur nú þegar áætlað verður eytt en þú gætir áfram fengið einhverjar tengdar auglýsingar."</string>
-    <!-- no translation found for settingsUI_blocked_apps_title (1260257485713408637) -->
-    <skip />
+    <string name="settingsUI_blocked_apps_title" msgid="1260257485713408637">"Forrit sem þú hefur sett á bannlista"</string>
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"Skoða forrit á bannlista"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Endurstilla áhugasvið sem forrit hafa áætlað"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"Engin forrit áætla áhugasviðin þín eins og er"</string>
@@ -150,7 +148,8 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Betaútgáfa persónuverndar Android-auglýsinga býður upp á nýja eiginleika sem forrit geta notað til að birta þér auglýsingar sem gætu höfðað til þín. Þessi tækni notar ekki auðkenni tækja.\n\nForrit geta áætlað hvernig auglýsingar gætu höfðað til þín og vistað áhugasviðin tímabundið í tækinu þínu. Þetta gerir forritum kleift að birta þér viðeigandi auglýsingar án þess að rekja virkni þína á vefsvæðum eða í forritum annarra þróunaraðila."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Þú hefur ekki sett nein forrit á bannlista"</string>
-    <string name="settingsUI_apps_view_no_blocked_apps_ga_text" msgid="3588711487944931608">"Engin forrit á bannlista"</string>
+    <!-- no translation found for settingsUI_no_blocked_apps_ga_text (7488680173653861943) -->
+    <skip />
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"Leyfa auglýsingamælingar"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"Forrit og auglýsendur geta óskað eftir upplýsingum frá Android sem hjálpa þeim að mæla árangur auglýsinga sinna.\n\nGögnum um auglýsingamælingar er eytt reglulega úr tækinu."</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"Endurstilla mæligögn"</string>
@@ -161,26 +160,28 @@
     <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Ef þú skiptir um skoðun eða vilt kynna þér betaútgáfu persónuverndar Android-auglýsinga nánar skaltu fara í persónuverndarstillingarnar þínar"</string>
     <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Slökkva"</string>
     <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Viltu setja <xliff:g id="TOPIC">%1$s</xliff:g> á bannlista?"</string>
-    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"Þetta áhugasvið verður sett á bannlista og verður ekki bætt við listann þinn aftur nema þú bætir því aftur við. Þú gætir áfram séð tengdar auglýsingar."</string>
-    <string name="settingsUI_dialog_block_topic_ga_message" msgid="7397705817955848275">"Þetta umfjöllunarefni verður sett á bannlista og verður ekki bætt við listann þinn aftur nema þú bætir því aftur við. Þú gætir áfram séð tengdar auglýsingar."</string>
+    <!-- no translation found for settingsUI_dialog_block_topic_message (2581824495438333677) -->
+    <skip />
     <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Setja á bannlista"</string>
     <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"<xliff:g id="TOPIC">%1$s</xliff:g> er ekki lengur á bannlista"</string>
-    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android gæti bætt þessu áhugasviði aftur við listann en það birtist hugsanlega ekki strax"</string>
-    <string name="settingsUI_dialog_unblock_topic_ga_message" msgid="3582004316141072103">"Android gæti bætt þessu umfjöllunarefni aftur við listann en það birtist hugsanlega ekki strax"</string>
+    <!-- no translation found for settingsUI_dialog_unblock_topic_message (1090743551997420666) -->
+    <skip />
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"Í lagi"</string>
-    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Endurstilla öll áhugasvið?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"Listinn verður hreinsaður og ný áhugasvið verða áætluð í framhaldinu. Þú gætir áfram séð einhverjar auglýsingar sem tengjast áhugasviðunum sem voru hreinsuð."</string>
-    <string name="settingsUI_dialog_reset_topic_ga_message" msgid="5826866496652403990">"Listinn verður hreinsaður og nýjum umfjöllunarefnum verður bætt við í framhaldinu. Þú gætir áfram séð einhverjar auglýsingar sem tengjast umfjöllunarefnum sem voru endurstillt."</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_title (8025836207966712435) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (4243744527757134000) -->
+    <skip />
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Endurstilla"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Viltu setja <xliff:g id="APP">%1$s</xliff:g> á bannlista?"</string>
-    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Þetta forrit mun ekki áætla áhugasviðin þín fyrir Privacy Sandbox og verður ekki bætt við listann þinn aftur nema þú takir það af bannlista.\n\nÁhugasviðum sem þetta forrit hefur áætlað verður eytt en þú gætir áfram séð tengdar auglýsingar."</string>
-    <string name="settingsUI_dialog_block_app_ga_message" msgid="5843160418232238694">"Þetta forrit mun ekki stinga upp á auglýsingum og því verður ekki bætt aftur við listann nema þú takir það af bannlista. Þú gætir áfram séð einhverjar tengdar auglýsingar."</string>
+    <!-- no translation found for settingsUI_dialog_block_app_message (758788973278770119) -->
+    <skip />
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> er ekki lengur á bannlista"</string>
-    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Þetta forrit getur áætlað áhugasviðin þín aftur en þau birtast hugsanlega ekki á listanum strax. Nokkur tími getur liðið þar til þú sérð tengdar auglýsingar."</string>
-    <string name="settingsUI_dialog_unblock_app_ga_message" msgid="215670726484505390">"Þetta forrit getur stungið upp á auglýsingum fyrir þig aftur en það birtast hugsanlega ekki á listanum strax. Nokkur tími getur liðið þar til þú sérð tengdar auglýsingar."</string>
-    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Endurstilla áhugasvið sem forrit hafa áætlað?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"Áhugasviðunum sem forritin á listanum áætla verður eytt úr Privacy Sandbox og forritin munu áætla ný áhugasvið í framhaldinu. Þú gætir áfram séð tengdar auglýsingar."</string>
-    <string name="settingsUI_dialog_reset_app_ga_message" msgid="8436063980923088005">"Gögnum auglýsingatillagna frá forritum á listanum þínum verður eytt og forritin munu stinga upp á nýjum auglýsingum í framhaldinu. Þú gætir áfram séð tengdar auglýsingar."</string>
+    <!-- no translation found for settingsUI_dialog_unblock_app_message (5758218424845642060) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_title (5177572712117150557) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_message (7845329616145691006) -->
+    <skip />
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Forritsgögn voru endurstillt"</string>
     <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"Endurstilla öll umfjöllunarefni?"</string>
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"Endurstilla auglýsingatillögur frá forritum?"</string>
@@ -198,14 +199,14 @@
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Slökkt"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Áhugasvið umfjöllunarefna byggjast á forritunum sem þú hefur notað nýlega og forrit nota þau til að birta þér sérsniðnar auglýsingar.\n\nÞú getur sett umfjöllunarefni sem þú vilt ekki deila með forritum á bannlista. Android eyðir einnig umfjöllunarefnum reglulega sjálfkrafa."</string>
     <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"Leyfa umfjöllunarefni auglýsinga"</string>
-    <string name="settingsUI_blocked_topics_ga_title" msgid="1778578928932167070">"Umfjöllunarefni sem þú hefur sett á bannlista"</string>
-    <string name="settingsUI_reset_topics_ga_title" msgid="8223331046430417414">"Endurstilla öll umfjöllunarefni"</string>
+    <string name="settingsUI_blocked_topics_ga_title" msgid="7163366621282449273">"Umfjöllunarefni auglýsinga sem þú hefur sett á bannlista"</string>
+    <!-- no translation found for settingsUI_reset_topics_ga_title (5365554894399951300) -->
+    <skip />
     <string name="settingsU_topics_view_footer" msgid="4769146330248953561">"Android skráir áhugasvið umfjöllunarefna í samræmi við forritin sem þú hefur notað undanfarnar vikur.\n\nSeinna getur forrit sem þú notar óskað eftir umfjöllunarefnunum þínum frá Android til að sérsníða auglýsingarnar sem birtast þér. Android deilir allt að 3 umfjöllunarefnum en verndar einnig auðkenni þitt og upplýsingar um notkun forrita.\n\nAndroid eyðir umfjöllunarefnum reglulega sjálfkrafa. Þegar þú heldur áfram að nota forrit getur umfjöllunarefni birst aftur á listanum. Þú getur einnig sett umfjöllunarefni sem þú vilt ekki að Android deili með forritum á bannlista.\n\nAuglýsing sem birtist í forriti kann að vera sérsniðin en það fer eftir þessari stillingu, stillingu fyrir auglýsingatillögur forrita, stillingum auglýsingakennis og því hvort forritið sem þú ert að nota sérsníði auglýsingar."</string>
     <string name="settingsUI_apps_switch_title" msgid="1308209012769248890">"Leyfa auglýsingatillögur forrita"</string>
     <string name="settingsUI_apps_view_ga_subtitle" msgid="1911743837387384160">"Forrit sem þú notar geta áætlað hvað höfðar til þín og komið svo með auglýsingartillögur í öðrum forritum.\n\nÞú getur lokað á að forrit komi með tillögur. Android eyðir einnig gögnum um tillögur forrita reglulega sjálfkrafa."</string>
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Forrit sem þú hefur sett á bannlista"</string>
-    <!-- no translation found for settingsUI_reset_apps_ga_title (371969808353100852) -->
-    <skip />
+    <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Endurstilla gögn um tillögur frá forritum"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Algengt er að forritin sem nú notar muni áhugasvið þín til að sérsníða upplifun þína. Forrit geta einnig vistað upplýsingar um umfjöllunarefnin þín hjá Android.\n\nEf þú notar til dæmis forrit um maraþonþjálfun gæti forritið áætlað að þú hafir áhuga á hlaupaskóm. Ef þú notar annað forrit seinna getur viðkomandi forrit sýnt þér auglýsingu fyrir hlaupaskó í samræmi við tillögu frá fyrsta forritinu.\n\nAndroid eyðir forritstillögugögnum reglulega sjálfkrafa. Forrit sem þú notar aftur gæti birst aftur á listanum Þú getur einnig lokað á að forrit stingi upp á auglýsingum fyrir þig.\n\nSérsniðnar auglýsingar kunna að birtast í forritum en það fer eftir þessari stillingu, stillingu fyrir umfjöllunarefni auglýsinga, stillingum auglýsingakennis og því hvort forritið sem þú ert að nota sérsníði auglýsingar."</string>
     <string name="topic10001" msgid="1636806320891333775">"Listir og afþreying"</string>
     <string name="topic10002" msgid="1226367977754287428">"Leiklist og leikhús"</string>
