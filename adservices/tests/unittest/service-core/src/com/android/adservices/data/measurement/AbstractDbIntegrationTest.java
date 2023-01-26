@@ -325,7 +325,7 @@ public abstract class AbstractDbIntegrationTest {
         values.put(
                 MeasurementTables.SourceContract.AGGREGATE_CONTRIBUTIONS,
                 source.getAggregateContributions());
-        values.put(MeasurementTables.SourceContract.FILTER_DATA, source.getFilterDataString());
+        values.put(MeasurementTables.SourceContract.FILTER_DATA, source.getFilterData());
         values.put(MeasurementTables.SourceContract.DEBUG_REPORTING, source.isDebugReporting());
         values.put(MeasurementTables.SourceContract.INSTALL_TIME, source.getInstallTime());
         values.put(MeasurementTables.SourceContract.REGISTRATION_ID, source.getRegistrationId());

@@ -30,6 +30,7 @@ import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -40,11 +41,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -87,17 +90,15 @@ public class Source {
     @Nullable private UnsignedLong mDebugKey;
     private boolean mIsInstallAttributed;
     private boolean mIsDebugReporting;
-    private String mFilterDataString;
-    private FilterMap mFilterData;
+    private String mFilterData;
     private String mAggregateSource;
     private int mAggregateContributions;
-    private Optional<AggregatableAttributionSource> mAggregatableAttributionSource;
+    private AggregatableAttributionSource mAggregatableAttributionSource;
     private boolean mAdIdPermission;
     private boolean mArDebugPermission;
     @Nullable private String mRegistrationId;
     @Nullable private String mSharedAggregationKeys;
     @Nullable private Long mInstallTime;
-    @Nullable private String mParentId;
 
     @IntDef(value = {Status.ACTIVE, Status.IGNORED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -316,7 +317,8 @@ public class Source {
             return false;
         }
         Source source = (Source) obj;
-        return Objects.equals(mPublisher, source.mPublisher)
+        return Objects.equals(mId, source.mId)
+                && Objects.equals(mPublisher, source.mPublisher)
                 && mPublisherType == source.mPublisherType
                 && Objects.equals(mAppDestination, source.mAppDestination)
                 && Objects.equals(mWebDestination, source.mWebDestination)
@@ -337,14 +339,13 @@ public class Source {
                 && Objects.equals(mRegistrant, source.mRegistrant)
                 && mAttributionMode == source.mAttributionMode
                 && mIsDebugReporting == source.mIsDebugReporting
-                && Objects.equals(mFilterDataString, source.mFilterDataString)
+                && Objects.equals(mFilterData, source.mFilterData)
                 && Objects.equals(mAggregateSource, source.mAggregateSource)
                 && mAggregateContributions == source.mAggregateContributions
                 && Objects.equals(
                         mAggregatableAttributionSource, source.mAggregatableAttributionSource)
                 && Objects.equals(mRegistrationId, source.mRegistrationId)
                 && Objects.equals(mSharedAggregationKeys, source.mSharedAggregationKeys)
-                && Objects.equals(mParentId, source.mParentId)
                 && Objects.equals(mInstallTime, source.mInstallTime);
     }
 
@@ -367,7 +368,7 @@ public class Source {
                 mSourceType,
                 mEventReportDedupKeys,
                 mAggregateReportDedupKeys,
-                mFilterDataString,
+                mFilterData,
                 mAggregateSource,
                 mAggregateContributions,
                 mAggregatableAttributionSource,
@@ -598,13 +599,20 @@ public class Source {
 
     /**
      * Returns aggregate filter data string used for aggregation. aggregate filter data json is a
-     * JSONObject in Attribution-Reporting-Register-Source header. Example:
-     * Attribution-Reporting-Register-Source: { // some other fields. "filter_data" : {
-     * "conversion_subdomain": ["electronics.megastore"], "product": ["1234", "2345"], "ctid":
-     * ["id"], ...... } }
+     * JSONObject in Attribution-Reporting-Register-Source header.
+     * Example:
+     * Attribution-Reporting-Register-Source: {
+     *   // some other fields.
+     *   "filter_data" : {
+     *    "conversion_subdomain": ["electronics.megastore"],
+     *    "product": ["1234", "2345"],
+     *    "ctid": ["id"],
+     *    ......
+     * }
+     * }
      */
-    public String getFilterDataString() {
-        return mFilterDataString;
+    public String getFilterData() {
+        return mFilterData;
     }
 
     /**
@@ -638,29 +646,7 @@ public class Source {
      * Returns the AggregatableAttributionSource object, which is constructed using the aggregate
      * source string and aggregate filter data string in Source.
      */
-    public Optional<AggregatableAttributionSource> getAggregatableAttributionSource()
-            throws JSONException {
-        if (mAggregatableAttributionSource == null) {
-            if (mAggregateSource == null) {
-                mAggregatableAttributionSource = Optional.empty();
-                return mAggregatableAttributionSource;
-            }
-            JSONObject jsonObject = new JSONObject(mAggregateSource);
-            Map<String, BigInteger> aggregateSourceMap = new HashMap<>();
-            for (String key : jsonObject.keySet()) {
-                // Remove "0x" prefix.
-                String hexString = jsonObject.getString(key).substring(2);
-                BigInteger bigInteger = new BigInteger(hexString, 16);
-                aggregateSourceMap.put(key, bigInteger);
-            }
-            AggregatableAttributionSource aggregatableAttributionSource =
-                    new AggregatableAttributionSource.Builder()
-                            .setAggregatableSource(aggregateSourceMap)
-                            .setFilterMap(getFilterData())
-                            .build();
-            mAggregatableAttributionSource = Optional.of(aggregatableAttributionSource);
-        }
-
+    public AggregatableAttributionSource getAggregatableAttributionSource() {
         return mAggregatableAttributionSource;
     }
 
@@ -691,15 +677,6 @@ public class Source {
     }
 
     /**
-     * @return if it's a derived source, returns the ID of the source it was created from. If it is
-     *     null, it is an original source.
-     */
-    @Nullable
-    public String getParentId() {
-        return mParentId;
-    }
-
-    /**
      * Set the status.
      */
     public void setStatus(@Status int status) {
@@ -717,23 +694,57 @@ public class Source {
      * Generates AggregatableFilterData from aggregate filter string in Source, including an entry
      * for source type.
      */
-    public FilterMap getFilterData() throws JSONException {
-        if (mFilterData != null) {
-            return mFilterData;
-        }
-
-        if (mFilterDataString == null || mFilterDataString.isEmpty()) {
-            mFilterData = new FilterMap.Builder().build();
+    public FilterMap parseFilterData() throws JSONException {
+        FilterMap filterMap;
+        if (mFilterData == null || mFilterData.isEmpty()) {
+            filterMap = new FilterMap.Builder().build();
         } else {
-            mFilterData =
+            filterMap =
                     new FilterMap.Builder()
-                            .buildFilterData(new JSONObject(mFilterDataString))
+                            .buildFilterData(new JSONObject(mFilterData))
                             .build();
         }
-        mFilterData
-                .getAttributionFilterMap()
-                .put("source_type", Collections.singletonList(mSourceType.getValue()));
-        return mFilterData;
+        filterMap.getAttributionFilterMap().put("source_type",
+                Collections.singletonList(mSourceType.getValue()));
+        return filterMap;
+    }
+
+    /**
+     * Generates AggregatableAttributionSource from aggregate source string and aggregate filter
+     * data string in Source.
+     */
+    public Optional<AggregatableAttributionSource> parseAggregateSource()
+            throws JSONException, NumberFormatException {
+        if (mAggregateSource == null) {
+            return Optional.empty();
+        }
+        JSONObject jsonObject = new JSONObject(mAggregateSource);
+        Map<String, BigInteger> aggregateSourceMap = new HashMap<>();
+        for (String key : jsonObject.keySet()) {
+            // Remove "0x" prefix.
+            String hexString = jsonObject.getString(key).substring(2);
+            BigInteger bigInteger = new BigInteger(hexString, 16);
+            aggregateSourceMap.put(key, bigInteger);
+        }
+        AggregatableAttributionSource.Builder aggregatableAttributionSourceBuilder =
+                new AggregatableAttributionSource.Builder()
+                        .setAggregatableSource(aggregateSourceMap);
+        aggregatableAttributionSourceBuilder.setFilterMap(parseFilterData());
+        return Optional.of(aggregatableAttributionSourceBuilder.build());
+    }
+
+    /** Generates SharedAggregationKeys object from the shared aggregation keys string in Source. */
+    @Nullable
+    public Set<String> parseSharedAggregationKeys() throws JSONException {
+        if (mSharedAggregationKeys == null) {
+            return null;
+        }
+        Set<String> sharedAggregationKeys = new HashSet<>();
+        JSONArray jsonArray = new JSONArray(mSharedAggregationKeys);
+        for (int i = 0; i < jsonArray.length(); i++) {
+            sharedAggregationKeys.add(jsonArray.getString(i));
+        }
+        return sharedAggregationKeys;
     }
 
     private List<FakeReport> generateVtcDualDestinationPostInstallFakeReports() {
@@ -784,48 +795,6 @@ public class Source {
         private final Source mBuilding;
         public Builder() {
             mBuilding = new Source();
-        }
-
-        /**
-         * Copy builder.
-         *
-         * @param copyFrom copy from source
-         * @return copied source
-         */
-        public static Builder from(Source copyFrom) {
-            Builder builder = new Builder();
-            builder.setId(copyFrom.mId);
-            builder.setRegistrationId(copyFrom.mRegistrationId);
-            builder.setAggregateSource(copyFrom.mAggregateSource);
-            builder.setExpiryTime(copyFrom.mExpiryTime);
-            builder.setAppDestination(copyFrom.mAppDestination);
-            builder.setWebDestination(copyFrom.mWebDestination);
-            builder.setSharedAggregationKeys(copyFrom.mSharedAggregationKeys);
-            builder.setEventId(copyFrom.mEventId);
-            builder.setRegistrant(copyFrom.mRegistrant);
-            builder.setEventTime(copyFrom.mEventTime);
-            builder.setPublisher(copyFrom.mPublisher);
-            builder.setPublisherType(copyFrom.mPublisherType);
-            builder.setInstallCooldownWindow(copyFrom.mInstallCooldownWindow);
-            builder.setInstallAttributed(copyFrom.mIsInstallAttributed);
-            builder.setInstallAttributionWindow(copyFrom.mInstallAttributionWindow);
-            builder.setSourceType(copyFrom.mSourceType);
-            builder.setAdIdPermission(copyFrom.mAdIdPermission);
-            builder.setAggregateContributions(copyFrom.mAggregateContributions);
-            builder.setArDebugPermission(copyFrom.mArDebugPermission);
-            builder.setAttributionMode(copyFrom.mAttributionMode);
-            builder.setDebugKey(copyFrom.mDebugKey);
-            builder.setEventReportDedupKeys(copyFrom.mEventReportDedupKeys);
-            builder.setAggregateReportDedupKeys(copyFrom.mAggregateReportDedupKeys);
-            builder.setEventReportWindow(copyFrom.mEventReportWindow);
-            builder.setAggregatableReportWindow(copyFrom.mAggregatableReportWindow);
-            builder.setEnrollmentId(copyFrom.mEnrollmentId);
-            builder.setFilterData(copyFrom.mFilterDataString);
-            builder.setInstallTime(copyFrom.mInstallTime);
-            builder.setIsDebugReporting(copyFrom.mIsDebugReporting);
-            builder.setPriority(copyFrom.mPriority);
-            builder.setStatus(copyFrom.mStatus);
-            return builder;
         }
 
         /** See {@link Source#getId()}. */
@@ -1008,9 +977,9 @@ public class Source {
             return this;
         }
 
-        /** See {@link Source#getFilterDataString()}. */
+        /** See {@link Source#getFilterData()}. */
         public Builder setFilterData(@Nullable String filterMap) {
-            mBuilding.mFilterDataString = filterMap;
+            mBuilding.mFilterData = filterMap;
             return this;
         }
 
@@ -1045,18 +1014,11 @@ public class Source {
             return this;
         }
 
-        /** See {@link Source#getParentId()} */
-        public Builder setParentId(@Nullable String parentId) {
-            mBuilding.mParentId = parentId;
-            return this;
-        }
-
         /** See {@link Source#getAggregatableAttributionSource()} */
         @NonNull
         public Builder setAggregatableAttributionSource(
                 @Nullable AggregatableAttributionSource aggregatableAttributionSource) {
-            mBuilding.mAggregatableAttributionSource =
-                    Optional.ofNullable(aggregatableAttributionSource);
+            mBuilding.mAggregatableAttributionSource = aggregatableAttributionSource;
             return this;
         }
 

@@ -148,9 +148,7 @@ public class AttributionConfig {
         return mPriority;
     }
 
-    /**
-     * Returns the derived source expiry in {@link java.util.concurrent.TimeUnit#SECONDS} as long.
-     */
+    /** Returns the derived source expiry as long. */
     @Nullable
     public Long getExpiry() {
         return mExpiry;
