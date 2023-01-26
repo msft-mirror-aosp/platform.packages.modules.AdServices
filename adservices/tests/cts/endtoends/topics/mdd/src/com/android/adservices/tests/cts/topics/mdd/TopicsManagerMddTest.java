@@ -59,6 +59,8 @@ public class TopicsManagerMddTest {
     private static final long TEST_EPOCH_JOB_PERIOD_MS = 3000;
     // Waiting time for assets to be downloaded after triggering MDD job.
     private static final long TEST_MDD_DOWNLOAD_WAIT_TIME_MS = 45000;
+    // Waiting time for the AdvertisingTopicsClient to unbind.
+    private static final long TEST_UNBIND_WAIT_TIME = 3000;
 
     // Default Epoch Period.
     private static final long TOPICS_EPOCH_JOB_PERIOD_MS = 7 * 86_400_000; // 7 days.
@@ -129,6 +131,9 @@ public class TopicsManagerMddTest {
 
         // Kill AdServices API to unbind TOPICS_SERVICE.
         killAd();
+
+        // Wait for AdvertisingTopicsClient to unbind.
+        Thread.sleep(TEST_UNBIND_WAIT_TIME);
 
         // Create a new AdvertisingTopicsClient to bind TOPICS_SERVICE again.
         advertisingTopicsClient1 =

@@ -163,6 +163,16 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.SourceContract.AR_DEBUG_PERMISSION,
                 builder::setArDebugPermission);
+        setTextColumn(
+                cursor,
+                MeasurementTables.SourceContract.SHARED_AGGREGATION_KEYS,
+                builder::setSharedAggregationKeys);
+        setTextColumn(
+                cursor,
+                MeasurementTables.SourceContract.REGISTRATION_ID,
+                builder::setRegistrationId);
+        setLongColumn(
+                cursor, MeasurementTables.SourceContract.INSTALL_TIME, builder::setInstallTime);
         return builder.build();
     }
 
@@ -208,6 +218,14 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.TriggerContract.AR_DEBUG_PERMISSION,
                 builder::setArDebugPermission);
+        setTextColumn(
+                cursor,
+                MeasurementTables.TriggerContract.ATTRIBUTION_CONFIG,
+                builder::setAttributionConfig);
+        setTextColumn(
+                cursor,
+                MeasurementTables.TriggerContract.ADTECH_BIT_MAPPING,
+                builder::setAdtechBitMapping);
         return builder.build();
     }
 
@@ -348,6 +366,10 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.AsyncRegistrationContract.AD_ID_PERMISSION,
                 builder::setAdIdPermission);
+        setTextColumn(
+                cursor,
+                MeasurementTables.AsyncRegistrationContract.REGISTRATION_ID,
+                builder::setRegistrationId);
         return builder.build();
     }
 

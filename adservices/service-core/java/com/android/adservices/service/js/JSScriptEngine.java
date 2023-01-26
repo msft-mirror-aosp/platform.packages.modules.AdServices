@@ -34,6 +34,7 @@ import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.profiling.JSScriptEngineLogConstants;
 import com.android.adservices.service.profiling.Profiler;
 import com.android.adservices.service.profiling.StopWatch;
+import com.android.adservices.service.profiling.Tracing;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -180,7 +181,9 @@ public class JSScriptEngine {
         }
     }
 
-    /** @return JSScriptEngine instance */
+    /**
+     * @return JSScriptEngine instance
+     */
     public static JSScriptEngine getInstance(@NonNull Context context) {
         synchronized (JSScriptEngine.class) {
             if (sSingleton == null) {
@@ -396,11 +399,14 @@ public class JSScriptEngine {
 
         StopWatch jsExecutionStopWatch =
                 mProfiler.start(JSScriptEngineLogConstants.JAVA_EXECUTION_TIME);
+        int traceCookie = Tracing.beginAsyncSection(Tracing.JSSCRIPTENGINE_EVALUATE_ON_SANDBOX);
         return ClosingFuture.from(jsIsolate.evaluateJavaScriptAsync(fullScript))
                 .transform(
                         (ignoredCloser, result) -> {
                             jsExecutionStopWatch.stop();
                             LogUtil.v("WebView result is " + result);
+                            Tracing.endAsyncSection(
+                                    Tracing.JSSCRIPTENGINE_EVALUATE_ON_SANDBOX, traceCookie);
                             return result;
                         },
                         mExecutorService)
@@ -408,6 +414,8 @@ public class JSScriptEngine {
                         Exception.class,
                         (ignoredCloser, exception) -> {
                             jsExecutionStopWatch.stop();
+                            Tracing.endAsyncSection(
+                                    Tracing.JSSCRIPTENGINE_EVALUATE_ON_SANDBOX, traceCookie);
                             throw new JSExecutionException(
                                     "Failure running JS in WebView: " + exception.getMessage(),
                                     exception);
@@ -466,6 +474,7 @@ public class JSScriptEngine {
      */
     private JavaScriptIsolate createIsolate(
             JavaScriptSandbox jsSandbox, IsolateSettings isolateSettings) {
+        int traceCookie = Tracing.beginAsyncSection(Tracing.JSSCRIPTENGINE_CREATE_ISOLATE);
         StopWatch isolateStopWatch =
                 mProfiler.start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME);
         try {
@@ -509,6 +518,7 @@ public class JSScriptEngine {
                     JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_MSG, jsSandboxIsDisconnected);
         } finally {
             isolateStopWatch.stop();
+            Tracing.endAsyncSection(Tracing.JSSCRIPTENGINE_CREATE_ISOLATE, traceCookie);
         }
     }
 
@@ -609,6 +619,7 @@ public class JSScriptEngine {
 
         @Override
         public void close() {
+            int traceCookie = Tracing.beginAsyncSection(Tracing.JSSCRIPTENGINE_CLOSE_ISOLATE);
             LogUtil.d("Closing WebView isolate");
             // Closing the isolate will also cause the thread in WebView to be terminated if
             // still running.
@@ -616,6 +627,7 @@ public class JSScriptEngine {
             // because there is no new API but just new capability on the WebView side for
             // existing API.
             mIsolate.close();
+            Tracing.endAsyncSection(Tracing.JSSCRIPTENGINE_CLOSE_ISOLATE, traceCookie);
         }
     }
 }
