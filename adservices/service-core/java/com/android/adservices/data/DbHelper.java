@@ -32,7 +32,7 @@ import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV3
 import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV6;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.data.topics.migration.ITopicsDbMigrator;
-import com.android.adservices.data.topics.migration.TopicDbMigratorV7;
+import com.android.adservices.data.topics.migration.TopicDbMigratorV5;
 import com.android.adservices.service.FlagsFactory;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -46,7 +46,7 @@ import java.util.List;
  * get the same reference.
  */
 public class DbHelper extends SQLiteOpenHelper {
-    // Version 7: Add TopicContributors Table for Topics API, guarded by feature flag.
+    // Version 5: Add TopicContributors Table for Topics API, guarded by feature flag.
     public static final int DATABASE_VERSION_V7 = 7;
 
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
@@ -159,7 +159,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
     /**
      * Check whether TopContributors Table is supported in current database. TopContributors is
-     * introduced in Version 6.
+     * introduced in Version 3.
      */
     public boolean supportsTopicContributorsTable() {
         return mDbVersion >= DATABASE_VERSION_V7;
@@ -177,7 +177,7 @@ public class DbHelper extends SQLiteOpenHelper {
     /** Get Migrators in order for Topics. */
     @VisibleForTesting
     public List<ITopicsDbMigrator> topicsGetOrderedDbMigrators() {
-        return ImmutableList.of(new TopicDbMigratorV7());
+        return ImmutableList.of(new TopicDbMigratorV5());
     }
 
     // Get the database version to create. It may be different as CURRENT_DATABASE_VERSION,

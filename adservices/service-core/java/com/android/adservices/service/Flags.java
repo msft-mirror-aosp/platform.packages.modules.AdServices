@@ -1576,12 +1576,12 @@ public interface Flags extends Dumpable {
         return ENABLE_TOPIC_CONTRIBUTORS_CHECK;
     }
 
-    /** Whether to enable database schema version 7 */
-    boolean ENABLE_DATABASE_SCHEMA_VERSION_7 = false;
+    /** Whether to enable database schema version 5 */
+    boolean ENABLE_DATABASE_SCHEMA_VERSION_5 = false;
 
-    /** @return if to enable database schema version 7 TODO (b/265160386): rename to ...Version7. */
+    /** @return if to enable database schema version 5. */
     default boolean getEnableDatabaseSchemaVersion5() {
-        return ENABLE_DATABASE_SCHEMA_VERSION_7;
+        return ENABLE_DATABASE_SCHEMA_VERSION_5;
     }
 
     /** Returns true if the given enrollmentId is blocked from using PP-API. */
