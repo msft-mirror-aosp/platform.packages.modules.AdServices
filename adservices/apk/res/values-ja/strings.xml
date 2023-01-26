@@ -113,8 +113,7 @@
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text3" msgid="5347980571056638783">"•  アプリがこのデータを使用する仕組み"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text4" msgid="4738335469671465639">"アプリはユーザーの興味 / 関心に関する情報を Android で保存できます。たとえば、マラソンのトレーニングについてアプリを使用した場合、そのアプリは、ユーザーはランニング シューズに関心がある、と判断することがあります。その後に使用した別のアプリには、最初のアプリから提案されたランニング シューズの広告が表示される可能性があります。"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text5" msgid="8737925570089314631">"•  データを管理する方法"</string>
-    <!-- no translation found for notificationUI_how_it_works_fledge_measurement_expanded_text6 (495908587748380196) -->
-    <skip />
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android は、アプリから提案されたデータを定期的に自動削除します。再び使用したアプリはリストに再表示される可能性があります。"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"プライバシー設定で、特定のアプリの広告提案をブロックする、広告の候補のデータをリセットする、アプリによる広告の提案を無効にするといった制限を適用できます。"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"ユーザーが使用するアプリが、広告のパフォーマンスを測定するための情報を Android に求めることがあります。Android は、アプリ間で共有される情報を限定することで、ユーザーのプライバシーを保護します。"</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"プライバシー サンドボックス"</string>
@@ -128,21 +127,20 @@
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"ブロック"</string>
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"ブロックを解除"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"ブロックした興味 / 関心"</string>
-    <!-- no translation found for settingsUI_blocked_topics_ga_view_title (3139405409436543147) -->
-    <skip />
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"すべての興味 / 関心をリセット"</string>
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"現在、興味 / 関心はありません"</string>
     <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"現在、表示できるトピックはありません"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"プライバシー サンドボックス"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android の広告のプライバシー（ベータ版）は、アプリがユーザーにおすすめの広告を表示する場合に役立つ新しい機能を提供しています。これらの技術でデバイス識別子が使用されることはありません。\n\nAndroid により、ユーザーが興味や関心を持ちそうな広告の種類が推定され、その興味 / 関心がデバイスに一時的に保存されます。これにより、アプリは、他のデベロッパーのウェブサイトやアプリでユーザーのアクティビティを追跡することなく、関連性の高い広告を表示できます。"</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"ブロック中の興味 / 関心はありません"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_ga_text" msgid="4484435371306742210">"ブロック中のトピックはありません"</string>
-    <string name="settingsUI_topics_view_view_blocked_topics" msgid="2337437967442005365">"ブロックされたトピックを表示"</string>
+    <!-- no translation found for settingsUI_no_blocked_topics_ga_text (377459829879121256) -->
+    <skip />
+    <!-- no translation found for settingsUI_view_blocked_topics_title (3705333677440361392) -->
+    <skip />
     <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"興味 / 関心をリセットしました"</string>
     <string name="settingsUI_topics_are_reset_ga" msgid="5250296990870048195">"トピックがリセットされました"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"アプリはユーザーの興味 / 関心を推定し、Android で一時的に保存することができます。後で、別のアプリがこれらの興味 / 関心に基づいて広告を表示することができます。\n\nブロックしたアプリは、今後、興味 / 関心を推定しなくなります。ブロックを解除しない限り、そのアプリがこのアプリのリストに再び追加されることはありません。ブロックしたアプリですでに推定された興味 / 関心は削除されますが、一部の関連する広告は引き続き表示されることがあります。"</string>
-    <!-- no translation found for settingsUI_blocked_apps_title (1260257485713408637) -->
-    <skip />
+    <string name="settingsUI_blocked_apps_title" msgid="1260257485713408637">"ブロックしたアプリ"</string>
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"ブロックされたアプリを表示"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"アプリが推定した興味 / 関心をリセット"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"現時点であなたの興味 / 関心を推定するアプリはありません"</string>
@@ -150,7 +148,8 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"プライバシー サンドボックス"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android の広告のプライバシー（ベータ版）は、アプリがユーザーにおすすめの広告を表示する場合に役立つ新しい機能を提供しています。これらの技術でデバイス識別子が使用されることはありません。\n\nアプリにより、ユーザーが興味や関心を持ちそうな広告の種類が推定され、その興味 / 関心がデバイスに一時的に保存されます。これにより、アプリは、他のデベロッパーのウェブサイトやアプリでユーザーのアクティビティを追跡することなく、関連性の高い広告を表示できます。"</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"ブロック中のアプリはありません"</string>
-    <string name="settingsUI_apps_view_no_blocked_apps_ga_text" msgid="3588711487944931608">"ブロック中のアプリはありません"</string>
+    <!-- no translation found for settingsUI_no_blocked_apps_ga_text (7488680173653861943) -->
+    <skip />
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"広告の測定を許可"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"アプリと広告主は、広告のパフォーマンスの測定に役立つ情報を Android からリクエストする場合があります。\n\n広告の測定データはデバイスから定期的に削除されます。"</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"測定データをリセット"</string>
@@ -161,26 +160,28 @@
     <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"改めて参加される場合や、Android の広告のプライバシーのベータ版について詳細をご覧になりたい場合は、プライバシー設定にアクセスしてください。"</string>
     <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"OFF にする"</string>
     <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"「<xliff:g id="TOPIC">%1$s</xliff:g>」をブロックしますか？"</string>
-    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"この興味 / 関心はブロックされ、ご自身で再び追加しない限り、リストに再び追加されることはありません。なお、一部の関連する広告は引き続き表示されることがあります。"</string>
-    <string name="settingsUI_dialog_block_topic_ga_message" msgid="7397705817955848275">"このトピックはブロックされ、ご自身で再び追加しない限り、リストに再び追加されることはありません。なお、一部の関連する広告は引き続き表示されることがあります。"</string>
+    <!-- no translation found for settingsUI_dialog_block_topic_message (2581824495438333677) -->
+    <skip />
     <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"ブロック"</string>
     <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"「<xliff:g id="TOPIC">%1$s</xliff:g>」のブロックを解除しました"</string>
-    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"この興味 / 関心は Android によって再びリストに追加されることがありますが、すぐには反映されない可能性があります"</string>
-    <string name="settingsUI_dialog_unblock_topic_ga_message" msgid="3582004316141072103">"このトピックは Android によって再びリストに追加されることがありますが、すぐには反映されない可能性があります"</string>
+    <!-- no translation found for settingsUI_dialog_unblock_topic_message (1090743551997420666) -->
+    <skip />
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
-    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"興味 / 関心をすべてリセットしますか？"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"現在のリストは削除され、今後は新しい興味 / 関心が推定されるようになります。なお、削除された興味 / 関心に関連する広告が引き続き表示されることもあります。"</string>
-    <string name="settingsUI_dialog_reset_topic_ga_message" msgid="5826866496652403990">"現在のリストは削除され、今後は新しいトピックが追加されます。なお、リセットしたトピックに関連する広告が引き続き表示されることもあります。"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_title (8025836207966712435) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (4243744527757134000) -->
+    <skip />
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"リセット"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g> をブロックしますか？"</string>
-    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"このアプリは、ブロックを解除しない限り、プライバシー サンドボックスで興味 / 関心を推定することはありません。また、リストに再び追加されることもありません。\n\nこのアプリですでに推定された興味 / 関心は削除されますが、一部の関連する広告は引き続き表示されることがあります。"</string>
-    <string name="settingsUI_dialog_block_app_ga_message" msgid="5843160418232238694">"ブロックを解除しない限り、このアプリは広告を提案せず、リストに再び追加されません。なお、一部の関連する広告は引き続き表示されることがあります。"</string>
+    <!-- no translation found for settingsUI_dialog_block_app_message (758788973278770119) -->
+    <skip />
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> のブロックを解除しました"</string>
-    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"このアプリはあなたの興味 / 関心を再び推定できるようになりますが、すぐにはリストに反映されない可能性があります。関連する広告が表示されるまで時間がかかることがあります。"</string>
-    <string name="settingsUI_dialog_unblock_app_ga_message" msgid="215670726484505390">"このアプリは広告を再び提案できるようになりますが、すぐにはリストに反映されない可能性があります。関連する広告が表示されるまで時間がかかることがあります。"</string>
-    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"アプリで生成された興味 / 関心をリセットしますか？"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"リスト上でアプリが推定した興味 / 関心はプライバシー サンドボックスから削除され、今後は新しい興味 / 関心をアプリが推定するようになります。なお、関連する広告が引き続き表示されることもあります。"</string>
-    <string name="settingsUI_dialog_reset_app_ga_message" msgid="8436063980923088005">"アプリから取得された広告の候補データは削除され、今後はアプリが新しい広告を提案するようになります。なお、関連する広告が引き続き表示されることもあります。"</string>
+    <!-- no translation found for settingsUI_dialog_unblock_app_message (5758218424845642060) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_title (5177572712117150557) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_message (7845329616145691006) -->
+    <skip />
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"アプリデータがリセットされました"</string>
     <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"すべてのトピックをリセットしますか？"</string>
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"アプリによるおすすめの広告をリセットしますか？"</string>
@@ -198,14 +199,14 @@
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"OFF"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"広告のトピックは、最近使用されたアプリに基づいており、パーソナライズド広告を表示するためにアプリが使用します。\n\nアプリで共有されたくないトピックをブロックできます。また Android では、トピックを定期的に自動で削除しています。"</string>
     <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"広告トピックを許可"</string>
-    <string name="settingsUI_blocked_topics_ga_title" msgid="1778578928932167070">"ブロックしたトピック"</string>
-    <string name="settingsUI_reset_topics_ga_title" msgid="8223331046430417414">"すべてのトピックをリセット"</string>
+    <string name="settingsUI_blocked_topics_ga_title" msgid="7163366621282449273">"ブロックした広告トピック"</string>
+    <!-- no translation found for settingsUI_reset_topics_ga_title (5365554894399951300) -->
+    <skip />
     <string name="settingsU_topics_view_footer" msgid="4769146330248953561">"Android は、過去数週間にユーザーが使用したアプリに基づいて興味 / 関心のあるトピックを記録します。\n\nパーソナライズド広告のため、使用するアプリから後で Android に対してトピックが求められることがあります。Android は個人情報とアプリの使用に関する情報を保護する形で最大 3 件のトピックを共有します。\n\nAndroid は定期的にトピックを自動削除します。アプリを引き続き使用すると、トピックはリストに再表示される可能性があります。また、Android にアプリと共有されたくないトピックをブロックすることもできます。\n\nアプリにパーソナライズド広告が表示されるかどうかは、この設定のほか、アプリから提案される広告の設定、広告 ID の設定、使用しているアプリが広告をパーソナライズするかどうかによって決まります。"</string>
     <string name="settingsUI_apps_switch_title" msgid="1308209012769248890">"アプリによるおすすめの広告を許可"</string>
     <string name="settingsUI_apps_view_ga_subtitle" msgid="1911743837387384160">"ユーザーが使用するアプリがユーザーの好みを特定して、別のアプリで広告を提案する場合があります。\n\n広告の提案を行わないようアプリをブロックできます。また Android では、アプリによるおすすめのデータを定期的に自動で削除しています。"</string>
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"ブロックしたアプリ"</string>
-    <!-- no translation found for settingsUI_reset_apps_ga_title (371969808353100852) -->
-    <skip />
+    <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"アプリから提案されたデータをリセット"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"一般に、ご利用のアプリはユーザーの利便性をパーソナライズするためにユーザーが関心 / 興味を持っている内容を記録します。また、アプリはユーザーのトピックに関する情報も Android で保存できます。\n\nたとえば、マラソンのトレーニングについてアプリを使用した場合、そのアプリは、ユーザーはランニング シューズに関心がある、と判断することがあります。その後に使用した別のアプリには、最初のアプリから提案されたランニング シューズの広告が表示される可能性があります。\n\nAndroid は、アプリから提案されたデータを定期的に自動削除します。再び使用したアプリはリストに再表示される可能性があります。また、アプリがユーザーに適した広告を提案しないようブロックすることもできます。\n\nアプリにパーソナライズド広告が表示されるかどうかは、この設定のほか、広告トピックの設定、広告 ID の設定、使用しているアプリが広告をパーソナライズするかどうかによって決まります。"</string>
     <string name="topic10001" msgid="1636806320891333775">"アート、エンターテインメント"</string>
     <string name="topic10002" msgid="1226367977754287428">"劇場、映画館"</string>

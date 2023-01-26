@@ -113,8 +113,7 @@
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text3" msgid="5347980571056638783">"•  ଏହି ଡାଟାକୁ ଆପ୍ସ କିପରି ବ୍ୟବହାର କରେ"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text4" msgid="4738335469671465639">"ଆପ୍ସ ଆପଣ ପସନ୍ଦ କରୁଥିବା ଜିନିଷଗୁଡ଼ିକ ବିଷୟରେ ସୂଚନା Androidରେ ଷ୍ଟୋର କରିପାରିବ। ଉଦାହରଣ ସ୍ୱରୂପ, ଯଦି ଆପଣ ମାରାଥନ ଟ୍ରେନିଂ ବିଷୟରେ କୌଣସି ଆପ ବ୍ୟବହାର କରନ୍ତି, ତେବେ ଦୌଡ଼ିବା ପାଇଁ ଜୋତାରେ ଆପଣଙ୍କର ରୁଚି ଅଛି ବୋଲି ଆପଟି ସ୍ଥିର କରିପାରେ। ପରେ, ଯଦି ଆପଣ ଏକ ଭିନ୍ନ ଆପ ବ୍ୟବହାର କରନ୍ତି, ତେବେ ସେହି ଆପ ଆପଣଙ୍କୁ ପ୍ରଥମ ଆପ ଦ୍ୱାରା ପରାମର୍ଶ ଦିଆଯାଇଥିବା ଦୌଡ଼ିବା ପାଇଁ ଜୋତାର ବିଜ୍ଞାପନ ଦେଖାଇପାରିବ।"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text5" msgid="8737925570089314631">"•  ଆପଣ ଆପଣଙ୍କ ଡାଟାକୁ କିପରି ପରିଚାଳନା କରିପାରିବେ"</string>
-    <!-- no translation found for notificationUI_how_it_works_fledge_measurement_expanded_text6 (495908587748380196) -->
-    <skip />
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android ଆପ ଦ୍ୱାରା-ପରାମର୍ଶ ଦିଆଯାଇଥିବା ଡାଟାକୁ ନିୟମିତ ଭାବେ ସ୍ୱତଃ-ଡିଲିଟ କରେ। ଆପଣ ପୁଣି ବ୍ୟବହାର କରୁଥିବା ଏକ ଆପ, ତାଲିକାରେ ପୁଣି ଦେଖାଯାଇପାରେ।"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"ଆପଣ ମଧ୍ୟ ଯେ କୌଣସି ସମୟରେ ଗୋପନୀୟତା ସେଟିଂସରେ, କୌଣସି ଆପକୁ ଆପଣଙ୍କ ପାଇଁ ବିଜ୍ଞାପନର ପରାମର୍ଶ ଦେବାରୁ ବ୍ଲକ କରିପାରିବେ, ସମସ୍ତ ବିଜ୍ଞାପନ-ପରାମର୍ଶ ଡାଟାକୁ ରିସେଟ କରିପାରିବେ କିମ୍ବା ଆପ ଦ୍ୱାରା-ପରାମର୍ଶ ଦିଆଯାଇଥିବା ବିଜ୍ଞାପନଗୁଡ଼ିକୁ ବନ୍ଦ କରିପାରିବେ।"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"ଆପଣ ବ୍ୟବହାର କରୁଥିବା ଆପ୍ସ, ସେଗୁଡ଼ିକର ବିଜ୍ଞାପନଗୁଡ଼ିକର ପରଫରମାନ୍ସ ମାପିବାରେ ସେଗୁଡ଼ିକୁ ସାହାଯ୍ୟ କରୁଥିବା ସୂଚନା Androidକୁ ମାଗିପାରେ। ଆପ୍ସ ପରସ୍ପର ସହିତ ସେୟାର କରିପାରୁଥିବା ସୂଚନାକୁ ସୀମିତ କରି Android ଆପଣଙ୍କ ଗୋପନୀୟତାକୁ ସୁରକ୍ଷିତ କରେ।"</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"ପ୍ରାଇଭେସି ସେଣ୍ଡବକ୍ସ"</string>
@@ -128,21 +127,20 @@
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"ବ୍ଲକ କରନ୍ତୁ"</string>
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"ଅନବ୍ଲକ କରନ୍ତୁ"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"ଆପଣ ବ୍ଲକ କରିଥିବା ଆଗ୍ରହଗୁଡ଼ିକ"</string>
-    <!-- no translation found for settingsUI_blocked_topics_ga_view_title (3139405409436543147) -->
-    <skip />
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"ସମସ୍ତ ରୁଚିକୁ ରିସେଟ କରନ୍ତୁ"</string>
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"ବର୍ତ୍ତମାନ ଦେଖାଇବା ପାଇଁ କୌଣସି ଆଗ୍ରହ ନାହିଁ"</string>
     <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"ବର୍ତ୍ତମାନ ଦେଖାଇବା ପାଇଁ କୌଣସି ବିଷୟ ନାହିଁ"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"ପ୍ରାଇଭେସି ସେଣ୍ଡବକ୍ସ"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"ଆପଣ ପସନ୍ଦ କରୁଥିବା ବିଜ୍ଞାପନଗୁଡ଼ିକ ଆପଣଙ୍କୁ ଦେଖାଇବା ପାଇଁ ଆପ୍ସ ବ୍ୟବହାର କରିପାରୁଥିବା ନୂଆ ଫିଚରଗୁଡ଼ିକ Androidର ଗୋପନୀୟତା ବିଟା ପ୍ରଦାନ କରେ। ଏହି ଟେକ୍ନୋଲୋଜିଗୁଡ଼ିକ ଡିଭାଇସ ଚିହ୍ନଟକାରୀଗୁଡ଼ିକ ବ୍ୟବହାର କରେ ନାହିଁ।\n\nଆପଣ କେଉଁ ପ୍ରକାରର ବିଜ୍ଞାପନଗୁଡ଼ିକ ପାଇଁ ଆଗ୍ରହୀ ହୋଇପାରନ୍ତି ତାହା Android ଆକଳନ କରିପାରେ ଏବଂ ସେହି ଆଗ୍ରହଗୁଡ଼ିକୁ ଆପଣଙ୍କ ଡିଭାଇସରେ ସାମୟିକ ଭାବରେ ସେଭ କରିପାରେ। ସମସ୍ତ ୱେବସାଇଟ ଏବଂ ଅନ୍ୟ ଡେଭେଲପରଙ୍କ ଆପ୍ସରେ ଆପଣଙ୍କ କାର୍ଯ୍ୟକଳାପକୁ ଟ୍ରାକ ନକରି, ଏହା ପ୍ରାସଙ୍ଗିକ ବିଜ୍ଞାପନଗୁଡ଼ିକ ଆପଣଙ୍କୁ ଦେଖାଇବା ପାଇଁ ଅନୁମତି ଦିଏ।"</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"ଆପଣଙ୍କର କୌଣସି ବ୍ଲକ କରାଯାଇଥିବା ଆଗ୍ରହ ନାହିଁ"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_ga_text" msgid="4484435371306742210">"କୌଣସି ବ୍ଲକ କରାଯାଇଥିବା ବିଷୟ ନାହିଁ"</string>
-    <string name="settingsUI_topics_view_view_blocked_topics" msgid="2337437967442005365">"ବ୍ଲକ କରାଯାଇଥିବା ବିଷୟଗୁଡ଼ିକୁ ଦେଖନ୍ତୁ"</string>
+    <!-- no translation found for settingsUI_no_blocked_topics_ga_text (377459829879121256) -->
+    <skip />
+    <!-- no translation found for settingsUI_view_blocked_topics_title (3705333677440361392) -->
+    <skip />
     <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"ପସନ୍ଦଗୁଡ଼ିକୁ ରିସେଟ କରାଯାଇଛି"</string>
     <string name="settingsUI_topics_are_reset_ga" msgid="5250296990870048195">"ବିଷୟଗୁଡ଼ିକ ରିସେଟ କରାଯାଇଛି"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"ଆପ୍ସ ଆପଣଙ୍କ ଆଗ୍ରହଗୁଡ଼ିକୁ ଆକଳନ କରିପାରେ ଏବଂ Android ମାଧ୍ୟମରେ ସେଗୁଡ଼ିକୁ ସାମୟିକ ଭାବେ ସେଭ କରିପାରେ। ପରେ, ଏକ ଭିନ୍ନ ଆପ ଆପଣଙ୍କୁ ଏହି ଆଗ୍ରହଗୁଡ଼ିକ ଆଧାରରେ ଏକ ବିଜ୍ଞାପନ ଦେଖାଇପାରେ।\n\nଯଦି ଆପଣ ଏକ ଆପକୁ ବ୍ଲକ କରନ୍ତି, ଏହା ଆଉ କୌଣସି ଆଗ୍ରହର ଆକଳନ କରିବ ନାହିଁ। ଆପଣ ଏହାକୁ ଅନବ୍ଲକ ନକରିବା ପର୍ଯ୍ୟନ୍ତ ଏହି ଆପ୍ସର ତାଲିକାରେ ଏହାକୁ ପୁଣି ଯୋଗ କରିହେବ ନାହିଁ। ଆପ ଦ୍ୱାରା ପୂର୍ବରୁ ଆକଳନ କରାଯାଇଥିବା ଆଗ୍ରହଗୁଡ଼ିକ ଡିଲିଟ ହୋଇଯିବ, କିନ୍ତୁ ଆପଣ ଏବେ ବି କିଛି ସମ୍ବନ୍ଧିତ ବିଜ୍ଞାପନ ଦେଖିପାରନ୍ତି।"</string>
-    <!-- no translation found for settingsUI_blocked_apps_title (1260257485713408637) -->
-    <skip />
+    <string name="settingsUI_blocked_apps_title" msgid="1260257485713408637">"ଆପଣ ବ୍ଲକ କରିଥିବା ଆପ୍ସ"</string>
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"ବ୍ଲକ କରାଯାଇଥିବା ଆପ୍ସକୁ ଦେଖନ୍ତୁ"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"ଆପ୍ସ ଦ୍ୱାରା ଆକଳନ କରାଯାଇଥିବା ଆଗ୍ରହଗୁଡ଼ିକୁ ରିସେଟ କରନ୍ତୁ"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"ବର୍ତ୍ତମାନ କୌଣସି ଆପ୍ସ ଆପଣଙ୍କ ପାଇଁ ଆଗ୍ରହ ସୃଷ୍ଟି କରୁନାହିଁ"</string>
@@ -150,7 +148,8 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"ପ୍ରାଇଭେସି ସେଣ୍ଡବକ୍ସ"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"ଆପଣ ପସନ୍ଦ କରୁଥିବା ବିଜ୍ଞାପନଗୁଡ଼ିକ ଆପଣଙ୍କୁ ଦେଖାଇବା ପାଇଁ ଆପ୍ସ ବ୍ୟବହାର କରିପାରୁଥିବା ନୂଆ ଫିଚରଗୁଡ଼ିକ Androidର ଗୋପନୀୟତା ବିଟା ପ୍ରଦାନ କରେ। ଏହି ଟେକ୍ନୋଲୋଜିଗୁଡ଼ିକ ଡିଭାଇସ ଚିହ୍ନଟକାରୀଗୁଡ଼ିକ ବ୍ୟବହାର କରେ ନାହିଁ।\n\nଆପଣ କେଉଁ ପ୍ରକାରର ବିଜ୍ଞାପନଗୁଡ଼ିକ ପାଇଁ ଆଗ୍ରହୀ ହୋଇପାରନ୍ତି ତାହା ଆପ୍ସ ଆକଳନ କରିପାରେ ଏବଂ ସେହି ଆଗ୍ରହଗୁଡ଼ିକୁ ଆପଣଙ୍କ ଡିଭାଇସରେ ସାମୟିକ ଭାବରେ ସେଭ କରିପାରେ। ସମସ୍ତ ୱେବସାଇଟ ଏବଂ ଅନ୍ୟ ଡେଭେଲପରଙ୍କ ଆପ୍ସରେ ଆପଣଙ୍କ କାର୍ଯ୍ୟକଳାପକୁ ଟ୍ରାକ ନକରି, ଏହା ପ୍ରାସଙ୍ଗିକ ବିଜ୍ଞାପନଗୁଡ଼ିକ ଆପଣଙ୍କୁ ଦେଖାଇବା ପାଇଁ ଅନୁମତି ଦିଏ।"</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"ବ୍ଲକ କରାଯାଇଥିବା କୌଣସି ଆପ୍ସ ଆପଣଙ୍କର ନାହିଁ"</string>
-    <string name="settingsUI_apps_view_no_blocked_apps_ga_text" msgid="3588711487944931608">"କୌଣସି ବ୍ଲକ କରାଯାଇଥିବା ଆପ୍ସ ନାହିଁ"</string>
+    <!-- no translation found for settingsUI_no_blocked_apps_ga_text (7488680173653861943) -->
+    <skip />
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"ବିଜ୍ଞାପନ ପରିମାପକୁ ଅନୁମତି ଦିଅନ୍ତୁ"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"ଆପ୍ସ ଏବଂ ବିଜ୍ଞାପନଦାତାମାନେ Androidଠାରୁ ସୂଚନା ପାଇଁ ଅନୁରୋଧ କରିପାରିବେ ଯାହା ସେମାନଙ୍କ ବିଜ୍ଞାପନଗୁଡ଼ିକର ପରଫରମାନ୍ସକୁ ମାପିବାରେ ସେମାନଙ୍କୁ ସାହାଯ୍ୟ କରେ।\n\nଆପଣଙ୍କ ଡିଭାଇସରୁ ବିଜ୍ଞାପନ ପରିମାପ ଡାଟାକୁ ନିୟମିତ ଭାବେ ଡିଲିଟ କରାଯାଏ।"</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"ପରିମାପ ଡାଟାକୁ ରିସେଟ କରନ୍ତୁ"</string>
@@ -161,26 +160,28 @@
     <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"ଯଦି ଆପଣ ଆପଣଙ୍କ ମନ ପରିବର୍ତ୍ତନ କରନ୍ତି କିମ୍ବା Androidର ବିଜ୍ଞାପନ ଗୋପନୀୟତା ବିଟା ବିଷୟରେ ଅଧିକ ଜାଣିବାକୁ ଚାହାଁନ୍ତି, ତେବେ ଆପଣଙ୍କ ଗୋପନୀୟତା ସେଟିଂସକୁ ଯାଆନ୍ତୁ"</string>
     <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"ବନ୍ଦ କରନ୍ତୁ"</string>
     <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"<xliff:g id="TOPIC">%1$s</xliff:g>କୁ ବ୍ଲକ କରିବେ?"</string>
-    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"ଏହି ଆଗ୍ରହକୁ ବ୍ଲକ କରିଦିଆଯିବ ଏବଂ ଆପଣ ଏହାକୁ ପୁଣି ଯୋଗ ନକରିବା ପର୍ଯ୍ୟନ୍ତ ଆପଣଙ୍କ ତାଲିକାରେ ଏହାକୁ ପୁନର୍ବାର ଯୋଗ କରିହେବ ନାହିଁ। ଆପଣ ଏବେ ବି କିଛି ସମ୍ବନ୍ଧିତ ବିଜ୍ଞାପନ ଦେଖିପାରନ୍ତି।"</string>
-    <string name="settingsUI_dialog_block_topic_ga_message" msgid="7397705817955848275">"ଏହି ବିଷୟକୁ ବ୍ଲକ କରିଦିଆଯିବ ଏବଂ ଆପଣ ଏହାକୁ ପୁଣି ଯୋଗ ନକରିବା ପର୍ଯ୍ୟନ୍ତ ଆପଣଙ୍କ ତାଲିକାରେ ଏହାକୁ ପୁଣି ଯୋଗ କରାଯିବ ନାହିଁ। ଆପଣ ଏବେ ବି କିଛି ସମ୍ବନ୍ଧିତ ବିଜ୍ଞାପନ ଦେଖିପାରନ୍ତି।"</string>
+    <!-- no translation found for settingsUI_dialog_block_topic_message (2581824495438333677) -->
+    <skip />
     <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"ବ୍ଲକ କରନ୍ତୁ"</string>
     <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"<xliff:g id="TOPIC">%1$s</xliff:g>କୁ ଅନବ୍ଲକ କରାଯାଇଛି"</string>
-    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android ଆପଣଙ୍କ ତାଲିକାରେ ଏହି ଆଗ୍ରହକୁ ପୁଣି ଯୋଗ କରିପାରେ, କିନ୍ତୁ ଏହା ତୁରନ୍ତ ଦେଖାଯାଇନପାରେ"</string>
-    <string name="settingsUI_dialog_unblock_topic_ga_message" msgid="3582004316141072103">"Android ଆପଣଙ୍କ ତାଲିକାରେ ଏହି ବିଷୟକୁ ପୁଣି ଯୋଗ କରିପାରେ, କିନ୍ତୁ ଏହା ତୁରନ୍ତ ଦେଖାଯାଇନପାରେ"</string>
+    <!-- no translation found for settingsUI_dialog_unblock_topic_message (1090743551997420666) -->
+    <skip />
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"ଠିକ୍ ଅଛି"</string>
-    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"ଆପଣଙ୍କର ସମସ୍ତ ଆଗ୍ରହକୁ ରିସେଟ କରିବେ?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"ଆପଣଙ୍କ ତାଲିକା ଖାଲି ହୋଇଯିବ ଏବଂ ଭବିଷ୍ୟତରେ ନୂଆ ଆଗ୍ରହଗୁଡ଼ିକୁ ଆକଳନ କରାଯିବ। ଆପଣ ଏବେ ବି ଖାଲି କରାଯାଇଥିବା ଆଗ୍ରହ ସମ୍ବନ୍ଧିତ କିଛି ବିଜ୍ଞାପନ ଦେଖିପାରନ୍ତି।"</string>
-    <string name="settingsUI_dialog_reset_topic_ga_message" msgid="5826866496652403990">"ଆପଣଙ୍କ ତାଲିକା ଖାଲି ହୋଇଯିବ ଏବଂ ଭବିଷ୍ୟତରେ ନୂଆ ବିଷୟଗୁଡ଼ିକୁ ଯୋଗ କରାଯିବ। ଆପଣ ରିସେଟ କରିଥିବା ବିଷୟଗୁଡ଼ିକ ସହ ସମ୍ବନ୍ଧିତ କିଛି ବିଜ୍ଞାପନ ଆପଣ ଏବେ ବି ଦେଖିପାରନ୍ତି।"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_title (8025836207966712435) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (4243744527757134000) -->
+    <skip />
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"ରିସେଟ କରନ୍ତୁ"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g>କୁ ବ୍ଲକ କରିବେ?"</string>
-    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"ଏହି ଆପ ପ୍ରାଇଭେସି ସେଣ୍ଡବକ୍ସ ପାଇଁ ଆଗ୍ରହଗୁଡ଼ିକୁ ଆକଳନ କରିବ ନାହିଁ ଏବଂ ଆପଣ ଏହାକୁ ଅନବ୍ଲକ ନକରିବା ପର୍ଯ୍ୟନ୍ତ ଆପଣଙ୍କ ତାଲିକାରେ ଏହାକୁ ପୁଣି ଯୋଗ କରିହେବ ନାହିଁ।\n\nଏହି ଆପ ଦ୍ୱାରା ପୂର୍ବରୁ ଆକଳନ କରାଯାଇଥିବା ଆଗ୍ରହଗୁଡ଼ିକ ଡିଲିଟ ହୋଇଯିବ, କିନ୍ତୁ ଆପଣ ଏବେ ବି କିଛି ସମ୍ବନ୍ଧିତ ବିଜ୍ଞାପନ ଦେଖିପାରନ୍ତି।"</string>
-    <string name="settingsUI_dialog_block_app_ga_message" msgid="5843160418232238694">"ଏହି ଆପ ବିଜ୍ଞାପନଗୁଡ଼ିକର ପରାମର୍ଶ ଦେବ ନାହିଁ ଏବଂ ଆପଣ ଏହାକୁ ଅନବ୍ଲକ ନକରିବା ପର୍ଯ୍ୟନ୍ତ ଆପଣଙ୍କ ତାଲିକାରେ ଏହାକୁ ପୁଣି ଯୋଗ କରାଯିବ ନାହିଁ। ଆପଣ ଏବେ ବି କିଛି ସମ୍ବନ୍ଧିତ ବିଜ୍ଞାପନ ଦେଖିପାରନ୍ତି।"</string>
+    <!-- no translation found for settingsUI_dialog_block_app_message (758788973278770119) -->
+    <skip />
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g>କୁ ଅନବ୍ଲକ କରାଯାଇଛି"</string>
-    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"ଏହି ଆପ ଆପଣଙ୍କ ପାଇଁ ଆଗ୍ରହଗୁଡ଼ିକୁ ପୁଣି ଆକଳନ କରିପାରିବ, କିନ୍ତୁ ସେଗୁଡ଼ିକ ତୁରନ୍ତ ଆପଣଙ୍କ ତାଲିକାରେ ଦେଖାଯାଇନପାରେ। ସମ୍ବନ୍ଧିତ ବିଜ୍ଞାପନଗୁଡ଼ିକୁ ଆପଣ ଦେଖିବା ପାଇଁ କିଛି ସମୟ ଲାଗିପାରେ।"</string>
-    <string name="settingsUI_dialog_unblock_app_ga_message" msgid="215670726484505390">"ଏହି ଆପ ଆପଣଙ୍କ ପାଇଁ ବିଜ୍ଞାପନଗୁଡ଼ିକର ପୁଣି ପରାମର୍ଶ ଦେଇପାରିବ, କିନ୍ତୁ ସେଗୁଡ଼ିକ ତୁରନ୍ତ ଆପଣଙ୍କ ତାଲିକାରେ ଦେଖାଯାଇନପାରେ। ସମ୍ବନ୍ଧିତ ବିଜ୍ଞାପନଗୁଡ଼ିକ ଆପଣଙ୍କୁ ଦେଖାଯିବା ପାଇଁ କିଛି ସମୟ ଲାଗିପାରେ।"</string>
-    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"ଆପ୍ସ ଦ୍ୱାରା ସୃଷ୍ଟି ହୋଇଥିବା ଆଗ୍ରହଗୁଡ଼ିକୁ ରିସେଟ କରିବେ?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"ଆପଣଙ୍କ ତାଲିକାରେ ଥିବା ଆପ୍ସ ଦ୍ୱାରା ଅନୁମାନ କରାଯାଇଥିବା ଆଗ୍ରହଗୁଡ଼ିକୁ ପ୍ରାଇଭେସି ସେଣ୍ଡବକ୍ସରୁ ଡିଲିଟ କରାଯିବ ଏବଂ ଭବିଷ୍ୟତରେ ଆପ୍ସ ନୂଆ ଆଗ୍ରହଗୁଡ଼ିକୁ ଆକଳନ କରିବ। ଆପଣ ଏବେ ବି କିଛି ସମ୍ବନ୍ଧିତ ବିଜ୍ଞାପନ ଦେଖିପାରନ୍ତି।"</string>
-    <string name="settingsUI_dialog_reset_app_ga_message" msgid="8436063980923088005">"ଆପଣଙ୍କ ତାଲିକାରେ ଥିବା ଆପ୍ସରୁ ବିଜ୍ଞାପନ-ପରାମର୍ଶ ଡାଟା ଡିଲିଟ ହୋଇଯିବ ଏବଂ ଭବିଷ୍ୟତରେ ଆପ୍ସ ନୂଆ ବିଜ୍ଞାପନଗୁଡ଼ିକର ପରାମର୍ଶ ଦେବ। ଆପଣ ଏବେ ବି କିଛି ସମ୍ବନ୍ଧିତ ବିଜ୍ଞାପନ ଦେଖିପାରନ୍ତି।"</string>
+    <!-- no translation found for settingsUI_dialog_unblock_app_message (5758218424845642060) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_title (5177572712117150557) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_message (7845329616145691006) -->
+    <skip />
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"ଆପ ଡାଟା ରିସେଟ କରାଯାଇଛି"</string>
     <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"ସମସ୍ତ ବିଷୟକୁ ରିସେଟ କରିବେ?"</string>
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"ଆପ୍ସ ଦ୍ୱାରା ପରାମର୍ଶ ଦିଆଯାଇଥିବା ବିଜ୍ଞାପନଗୁଡ଼ିକୁ ରିସେଟ କରିବେ?"</string>
@@ -198,14 +199,14 @@
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"ବନ୍ଦ ଅଛି"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"ରୁଚି ଥିବା ବିଷୟଗୁଡ଼ିକ ଆପଣ ବର୍ତ୍ତମାନ ବ୍ୟବହାର କରିଥିବା ଆପ୍ସ ଉପରେ ଆଧାରିତ ଅଟେ ଏବଂ ଆପଣଙ୍କୁ ପର୍ସନାଲାଇଜ କରାଯାଇଥିବା ବିଜ୍ଞାପନଗୁଡ଼ିକୁ ଦେଖାଇବା ପାଇଁ ଆପ୍ସ ଦ୍ୱାରା ସେଗୁଡ଼ିକୁ ବ୍ୟବହାର କରାଯାଏ।\n\nଆପଣ ଆପ୍ସ ସହ ସେୟାର କରିବାକୁ ଚାହୁଁନଥିବା ବିଷୟଗୁଡ଼ିକୁ ବ୍ଲକ କରିପାରିବେ। Android ମଧ୍ୟ ବିଷୟଗୁଡ଼ିକୁ ନିୟମିତ ଭାବେ ସ୍ୱତଃ-ଡିଲିଟ କରେ।"</string>
     <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"ବିଜ୍ଞାପନ ବିଷୟଗୁଡ଼ିକୁ ଅନୁମତି ଦିଅନ୍ତୁ"</string>
-    <string name="settingsUI_blocked_topics_ga_title" msgid="1778578928932167070">"ଆପଣ ବ୍ଲକ କରିଥିବା ବିଷୟଗୁଡ଼ିକ"</string>
-    <string name="settingsUI_reset_topics_ga_title" msgid="8223331046430417414">"ସମସ୍ତ ବିଷୟକୁ ରିସେଟ କରନ୍ତୁ"</string>
+    <string name="settingsUI_blocked_topics_ga_title" msgid="7163366621282449273">"ଆପଣ ବ୍ଲକ କରିଥିବା ବିଜ୍ଞାପନ ବିଷୟଗୁଡ଼ିକ"</string>
+    <!-- no translation found for settingsUI_reset_topics_ga_title (5365554894399951300) -->
+    <skip />
     <string name="settingsU_topics_view_footer" msgid="4769146330248953561">"ଆପଣ ଗତ କିଛି ସପ୍ତାହରେ ବ୍ୟବହାର କରିଥିବା ଆପ୍ସ ଆଧାରରେ Android ଆପଣଙ୍କର ରୁଚି ଥିବା ବିଷୟଗୁଡ଼ିକୁ ନୋଟ କରେ।\n\nପରେ, ଆପଣ ବ୍ୟବହାର କରୁଥିବା ଏକ ଆପ ଆପଣ ଦେଖୁଥିବା ବିଜ୍ଞାପନଗୁଡ଼ିକୁ ପର୍ସନାଲାଇଜ କରିବା ପାଇଁ Androidକୁ ଆପଣଙ୍କ ବିଷୟଗୁଡ଼ିକ ସମ୍ପର୍କରେ ପଚାରିପାରେ। ଆପଣଙ୍କ ପରିଚୟ ଏବଂ ଆପଣଙ୍କର ଆପ ବ୍ୟବହାର ବିଷୟରେ ସୂଚନାକୁ ସୁରକ୍ଷିତ କରିବା ସମୟରେ Android 3ଟି ପର୍ଯ୍ୟନ୍ତ ବିଷୟ ସେୟାର କରେ।\n\nAndroid ବିଷୟଗୁଡ଼ିକୁ ନିୟମିତ ଭାବେ ସ୍ୱତଃ-ଡିଲିଟ କରେ। ଆପଣ ଆପ୍ସ ବ୍ୟବହାର କରିବା ଜାରି ରଖିବା ସମୟରେ, ତାଲିକାରେ କୌଣସି ବିଷୟ ପୁଣି ଦେଖାଯାଇପାରେ। କିମ୍ବା Android ଯେଉଁ ବିଷୟଗୁଡ଼ିକୁ ଆପ୍ସ ସହ ସେୟାର କରୁ ବୋଲି ଆପଣ ଚାହୁଁନାହାଁନ୍ତି, ଆପଣ ସେଗୁଡ଼ିକୁ ବ୍ଲକ କରିପାରିବେ।\n\nଆପଣଙ୍କ ଆପ୍ସରେ, ଏହି ସେଟିଂ, ଆପ ଦ୍ୱାରା-ପରାମର୍ଶ ଦିଆଯାଇଥିବା ବିଜ୍ଞାପନ ସେଟିଂ, ଆପଣଙ୍କ ବିଜ୍ଞାପନ ID ସେଟିଂସ ଏବଂ ଆପଣ ବ୍ୟବହାର କରୁଥିବା ଆପ ବିଜ୍ଞାପନଗୁଡ଼ିକୁ ପର୍ସନାଲାଇଜ କରେ ନା ନାହିଁ, ତାହା ଉପରେ ନିର୍ଭର କରି ଆପଣ ଦେଖୁଥିବା କୌଣସି ବିଜ୍ଞାପନକୁ ପର୍ସନାଲାଇଜ କରାଯାଇପାରେ।"</string>
     <string name="settingsUI_apps_switch_title" msgid="1308209012769248890">"ଆପ ଦ୍ୱାରା-ପରାମର୍ଶ ଦିଆଯାଇଥିବା ବିଜ୍ଞାପନଗୁଡ଼ିକୁ ଅନୁମତି ଦିଅନ୍ତୁ"</string>
     <string name="settingsUI_apps_view_ga_subtitle" msgid="1911743837387384160">"ଆପଣ ବ୍ୟବହାର କରୁଥିବା ଆପ୍ସ ଆପଣ କଣ ପସନ୍ଦ କରନ୍ତି ତାହା ନିର୍ଦ୍ଧାରଣ କରିପାରିବ ଏବଂ ତା\'ପରେ ଅନ୍ୟ ଆପ୍ସରେ ବିଜ୍ଞାପନଗୁଡ଼ିକର ପରାମର୍ଶ ଦେଇପାରିବ।\n\nଆପଣ ଆପ୍ସକୁ ପରାମର୍ଶ ଦେବାରୁ ବ୍ଲକ କରିପାରିବେ। Android ମଧ୍ୟ ଆପ ଦ୍ୱାରା-ପରାମର୍ଶ ଦିଆଯାଇଥିବା ଡାଟାକୁ ନିୟମିତ ଭାବେ ସ୍ୱତଃ-ଡିଲିଟ କରେ।"</string>
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"ଆପଣ ବ୍ଲକ କରିଥିବା ଆପ୍ସ"</string>
-    <!-- no translation found for settingsUI_reset_apps_ga_title (371969808353100852) -->
-    <skip />
+    <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"ଆପ-ଦ୍ୱାରା ପରାମର୍ଶ ଦିଆଯାଇଥିବା ଡାଟାକୁ ରିସେଟ କରନ୍ତୁ"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"ଆପଣଙ୍କ ଅନୁଭୂତିକୁ ପର୍ସନାଲାଇଜ କରିବା ପାଇଁ, ଆପଣ ବ୍ୟବହାର କରୁଥିବା ଆପ୍ସ ସାଧାରଣତଃ ଆପଣଙ୍କର ରୁଚି ଥିବା ଜିନିଷଗୁଡ଼ିକୁ ମନେ ରଖେ। ଆପ୍ସ ମଧ୍ୟ Androidରେ ଆପଣଙ୍କ ବିଷୟଗୁଡ଼ିକ ସମ୍ପର୍କରେ ସୂଚନା ଷ୍ଟୋର କରିପାରିବ।\n\nଉଦାହରଣ ସ୍ୱରୂପ, ଯଦି ଆପଣ ମାରାଥନ ଟ୍ରେନିଂ ବିଷୟରେ କୌଣସି ଆପ ବ୍ୟବହାର କରନ୍ତି, ତେବେ ଦୌଡ଼ିବା ପାଇଁ ଜୋତାରେ ଆପଣଙ୍କର ରୁଚି ଅଛି ବୋଲି ଆପଟି ସ୍ଥିର କରିପାରେ। ପରେ, ଯଦି ଆପଣ ଏକ ଭିନ୍ନ ଆପ ବ୍ୟବହାର କରନ୍ତି, ତେବେ ସେହି ଆପ ଆପଣଙ୍କୁ ପ୍ରଥମ ଆପ ଦ୍ୱାରା ପରାମର୍ଶ ଦିଆଯାଇଥିବା ଦୌଡ଼ିବା ପାଇଁ ଜୋତାର ବିଜ୍ଞାପନ ଦେଖାଇପାରିବ।\n\nAndroid ଆପ ଦ୍ୱାରା-ପରାମର୍ଶ ଦିଆଯାଇଥିବା ଡାଟାକୁ ନିୟମିତ ଭାବେ ସ୍ୱତଃ-ଡିଲିଟ କରେ। ଆପଣ ପୁଣି ବ୍ୟବହାର କରୁଥିବା ଏକ ଆପ ତାଲିକାରେ ପୁଣି ଦେଖାଯାଇପାରେ। କିମ୍ବା ଆପଣ ଏକ ଆପକୁ ଆପଣଙ୍କ ପାଇଁ ବିଜ୍ଞାପନର ପରାମର୍ଶ ଦେବାରୁ ବ୍ଲକ କରିପାରିବେ।\n\nଆପଣଙ୍କ ଆପ୍ସରେ, ଏହି ସେଟିଂ, ବିଜ୍ଞାପନ ବିଷୟ ସେଟିଂ, ଆପଣଙ୍କ ବିଜ୍ଞାପନ ID ସେଟିଂସ ଏବଂ ଆପଣ ବ୍ୟବହାର କରୁଥିବା ଆପ ବିଜ୍ଞାପନଗୁଡ଼ିକୁ ପର୍ସନାଲାଇଜ କରେ ନା ନାହିଁ, ତାହା ଉପରେ ନିର୍ଭର କରି ଆପଣ ଦେଖୁଥିବା କୌଣସି ବିଜ୍ଞାପନକୁ ପର୍ସନାଲାଇଜ କରାଯାଇପାରେ।"</string>
     <string name="topic10001" msgid="1636806320891333775">"କଳା ଏବଂ ମନୋରଞ୍ଜନ"</string>
     <string name="topic10002" msgid="1226367977754287428">"ଅଭିନୟ ଏବଂ ଥିଏଟର"</string>

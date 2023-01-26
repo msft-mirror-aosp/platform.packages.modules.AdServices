@@ -110,12 +110,10 @@
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text0" msgid="2456923104551938349">"Von Apps vorgeschlagene Werbung"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text1" msgid="5606895535548790900">"• Welche Daten verwendet werden"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text2" msgid="6309052819494439288">"Deine Aktivitäten in einer App, die du auf diesem Gerät nutzt."</string>
-    <!-- no translation found for notificationUI_how_it_works_fledge_measurement_expanded_text3 (5347980571056638783) -->
-    <skip />
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text3" msgid="5347980571056638783">"• So werden diese Daten von Apps verwendet"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text4" msgid="4738335469671465639">"Apps können in Android Informationen zu Themen speichern, die dich interessieren. Wenn du zum Beispiel eine App zum Marathontraining nutzt, könnte daraus geschlossen werden, dass du dich für Laufschuhe interessierst. Wenn du dann später eine andere App verwendest, zeigt dir diese App möglicherweise aufgrund von Vorschlägen der ersten App Werbung für Laufschuhe."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text5" msgid="8737925570089314631">"• Deine Optionen für die Datenverwaltung"</string>
-    <!-- no translation found for notificationUI_how_it_works_fledge_measurement_expanded_text6 (495908587748380196) -->
-    <skip />
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Daten zu App-Vorschlägen werden von Android regelmäßig automatisch gelöscht. Apps, die du wiederholt verwendest, können aber wieder in die Liste aufgenommen werden."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"Du kannst Werbevorschläge in Apps auch jederzeit in den Datenschutzeinstellungen blockieren, entweder nur in einzelnen Apps oder grundsätzlich in allen Apps. Außerdem kannst du alle Daten zu vorgeschlagener Werbung zurücksetzen."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"Apps, die du verwendest, können von Android Informationen abfragen, um die Leistung ihrer Werbung besser messen zu können. Android schützt deine Daten, indem der Austausch von Informationen zwischen den Apps eingeschränkt wird."</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Privacy Sandbox"</string>
@@ -129,21 +127,20 @@
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"Blockieren"</string>
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Blockierung aufheben"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Interessen, die ich blockiert habe"</string>
-    <!-- no translation found for settingsUI_blocked_topics_ga_view_title (3139405409436543147) -->
-    <skip />
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Alle Interessen zurücksetzen"</string>
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Momentan sind keine Interessen vorhanden"</string>
     <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"Momentan sind keine Themen vorhanden"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Das Betaprogramm für Android-Datenschutz bei Werbung bietet neue Funktionen, mit denen Apps dir Werbung präsentieren können, die für dich möglicherweise interessant ist. Diese Technologien nutzen keine Geräte-IDs.\n\nAndroid kann schätzen, welche Art von Werbung dich möglicherweise interessiert, und diese Interessen vorübergehend auf deinem Gerät speichern. So können Apps dir relevante Werbung präsentieren, ohne dabei deine Aktivitäten auf Websites und in Apps anderer Entwickler zu erfassen."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Du hast keine blockierten Interessen"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_ga_text" msgid="4484435371306742210">"Keine blockierten Themen"</string>
-    <string name="settingsUI_topics_view_view_blocked_topics" msgid="2337437967442005365">"Blockierte Themen ansehen"</string>
+    <!-- no translation found for settingsUI_no_blocked_topics_ga_text (377459829879121256) -->
+    <skip />
+    <!-- no translation found for settingsUI_view_blocked_topics_title (3705333677440361392) -->
+    <skip />
     <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Interessen wurden zurückgesetzt"</string>
     <string name="settingsUI_topics_are_reset_ga" msgid="5250296990870048195">"Themen wurden zurückgesetzt"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Apps können deine Interessen schätzen und sie vorübergehend unter Android speichern. Danach kann dir eine andere App auf Grundlage dieser Interessen eine Werbeanzeige präsentieren.\n\nWenn du eine App blockierst, schätzt sie keine Interessen mehr. Sie wird der Liste der Apps erst wieder hinzugefügt, wenn du die Blockierung aufhebst. Bereits von der App geschätzte Interessen werden gelöscht. Es kann aber sein, dass du weiterhin entsprechende Werbung siehst."</string>
-    <!-- no translation found for settingsUI_blocked_apps_title (1260257485713408637) -->
-    <skip />
+    <string name="settingsUI_blocked_apps_title" msgid="1260257485713408637">"Apps, die keine Vorschläge machen dürfen"</string>
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"Blockierte Apps ansehen"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Von Apps geschätzte Interessen zurücksetzen"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"Derzeit schätzen keine Apps Interessen für dich"</string>
@@ -151,7 +148,8 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Das Betaprogramm für Android-Datenschutz bei Werbung bietet neue Funktionen, mit denen Apps dir Werbung präsentieren können, die für dich möglicherweise interessant ist. Diese Technologien nutzen keine Geräte-IDs.\n\nApps können schätzen, welche Art von Werbung dich möglicherweise interessiert, und diese Interessen vorübergehend auf deinem Gerät speichern. So können Apps dir relevante Werbung präsentieren, ohne dabei deine Aktivitäten auf Websites und in Apps anderer Entwickler zu erfassen."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Du hast keine blockierten Apps"</string>
-    <string name="settingsUI_apps_view_no_blocked_apps_ga_text" msgid="3588711487944931608">"Keine blockierten Apps"</string>
+    <!-- no translation found for settingsUI_no_blocked_apps_ga_text (7488680173653861943) -->
+    <skip />
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"Analyse von Werbung erlauben"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"Apps und Werbetreibende können Informationen von Android anfordern, die ihnen helfen, die Leistung ihrer Werbung zu messen.\n\nDaten zur Analyse von Werbung werden regelmäßig von deinem Gerät gelöscht."</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"Messdaten zurücksetzen"</string>
@@ -162,26 +160,28 @@
     <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Falls du es dir anders überlegst oder mehr über das Betaprogramm für Android-Datenschutz bei Werbung erfahren möchtest, rufe deine Datenschutzeinstellungen auf"</string>
     <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Deaktivieren"</string>
     <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"<xliff:g id="TOPIC">%1$s</xliff:g> blockieren?"</string>
-    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"Dieses Interesse wird blockiert und nicht noch einmal zu deiner Liste hinzugefügt – es sei denn, du hebst die Blockierung auf. Unter Umständen siehst du einige zugehörige Werbeanzeigen jedoch weiterhin."</string>
-    <string name="settingsUI_dialog_block_topic_ga_message" msgid="7397705817955848275">"Dieses Thema wird blockiert und nicht noch einmal zu deiner Liste hinzugefügt – es sei denn, du hebst die Blockierung auf. Es kann aber sein, dass du weiterhin entsprechende Werbung siehst."</string>
+    <!-- no translation found for settingsUI_dialog_block_topic_message (2581824495438333677) -->
+    <skip />
     <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Blockieren"</string>
     <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"<xliff:g id="TOPIC">%1$s</xliff:g> ist nicht mehr blockiert"</string>
-    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android kann dieses Interesse wieder zu deiner Liste hinzufügen, unter Umständen erscheint es aber nicht sofort auf deiner Liste"</string>
-    <string name="settingsUI_dialog_unblock_topic_ga_message" msgid="3582004316141072103">"Android kann dieses Thema wieder zu deiner Liste hinzufügen, es kann aber etwas dauern, bis es dort erscheint"</string>
+    <!-- no translation found for settingsUI_dialog_unblock_topic_message (1090743551997420666) -->
+    <skip />
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
-    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Alle Interessen zurücksetzen?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"Deine Liste wird gelöscht und in Zukunft werden neue Interessen geschätzt. Unter Umständen siehst du einige zu gelöschten Interessen gehörige Werbeanzeigen jedoch weiterhin."</string>
-    <string name="settingsUI_dialog_reset_topic_ga_message" msgid="5826866496652403990">"Die Themen in deiner Liste werden gelöscht und ab jetzt werden neue Themen hinzugefügt. Es kann aber sein, dass Werbung zu Themen, die aus der Liste gelöscht wurden, weiterhin angezeigt wird."</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_title (8025836207966712435) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (4243744527757134000) -->
+    <skip />
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Zurücksetzen"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g> blockieren?"</string>
-    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Diese App schätzt keine Interessen für die Privacy Sandbox mehr und sie wird nicht noch einmal zu deiner Liste hinzugefügt – es sei denn, du hebst die Blockierung auf.\n\nBereits von der App geschätzte Interessen werden gelöscht. Es kann aber sein, dass du weiterhin entsprechende Werbung siehst."</string>
-    <string name="settingsUI_dialog_block_app_ga_message" msgid="5843160418232238694">"Diese App schlägt keine Werbung vor und wird nicht wieder in deine Liste aufgenommen – es sei denn, du hebst die Blockierung auf. Es kann aber sein, dass du weiterhin entsprechende Werbung siehst."</string>
+    <!-- no translation found for settingsUI_dialog_block_app_message (758788973278770119) -->
+    <skip />
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> ist nicht mehr blockiert"</string>
-    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Diese App kann wieder deine Interessen schätzen. Unter Umständen erscheinen sie aber nicht sofort auf deiner Liste. Es kann eine Weile dauern, bis du entsprechende Werbung siehst."</string>
-    <string name="settingsUI_dialog_unblock_app_ga_message" msgid="215670726484505390">"Diese App kann wieder Werbung vorschlagen. Unter Umständen erscheint sie aber nicht sofort auf deiner Liste. Es kann auch eine Weile dauern, bis du entsprechende Werbung siehst."</string>
-    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Von Apps generierte Interessen zurücksetzen?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"Die von den Apps auf deiner Liste geschätzten Interessen werden aus der Privacy Sandbox gelöscht. In Zukunft schätzen die Apps neue Interessen. Unter Umständen siehst du einige zugehörige Werbeanzeigen jedoch weiterhin."</string>
-    <string name="settingsUI_dialog_reset_app_ga_message" msgid="8436063980923088005">"Alle Daten zu vorgeschlagener Werbung aus den Apps in deiner Liste werden gelöscht. Die Apps schlagen zukünftig neue Werbung vor. Es kann aber passieren, dass du vereinzelt noch Werbung siehst, die der alten Werbung ähnelt."</string>
+    <!-- no translation found for settingsUI_dialog_unblock_app_message (5758218424845642060) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_title (5177572712117150557) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_message (7845329616145691006) -->
+    <skip />
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"App-Daten wurden zurückgesetzt"</string>
     <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"Alle Themen zurücksetzen?"</string>
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"Daten zu von Apps vorgeschlagener Werbung zurücksetzen?"</string>
@@ -199,14 +199,14 @@
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Aus"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Themen, die dich interessieren könnten, basieren auf Apps, die du in letzter Zeit auf diesem Gerät verwendet hast. Sie werden von Apps verwendet, um dir personalisierte Werbung anzuzeigen.\n\nDu kannst Themen blockieren, die nicht mit Apps geteilt werden sollen. Android löscht außerdem Themen in regelmäßigen Abständen automatisch."</string>
     <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"Anzeigenthemen erlauben"</string>
-    <string name="settingsUI_blocked_topics_ga_title" msgid="1778578928932167070">"Blockierte Themen"</string>
-    <string name="settingsUI_reset_topics_ga_title" msgid="8223331046430417414">"Alle Themen zurücksetzen"</string>
+    <string name="settingsUI_blocked_topics_ga_title" msgid="7163366621282449273">"Anzeigenthemen, die du blockiert hast"</string>
+    <!-- no translation found for settingsUI_reset_topics_ga_title (5365554894399951300) -->
+    <skip />
     <string name="settingsU_topics_view_footer" msgid="4769146330248953561">"Android schließt auf der Grundlage der Apps, die du in den letzten Wochen verwendet hast, auf Themen, die dich interessieren könnten.\n\nApps, die du verwendest, können dann diese Themen bei Android anfordern, um die dir angezeigte Werbung zu personalisieren. Android teilt bis zu drei Themen, schützt dabei aber deine Identität und die Daten zu deiner App-Nutzung.\n\nDie Themen werden in Android regelmäßig automatisch gelöscht. Wenn du Apps weiter verwendest, kann ein Thema auch wieder auf der Liste erscheinen. Du kannst aber auch Themen blockieren, die Android nicht mit Apps teilen soll.\n\nOb in deinen Apps personalisierte Werbung angezeigt wird, hängt von dieser Einstellung, der Einstellung zu von Apps vorgeschlagener Werbung, den Einstellungen zu deiner Werbe-ID und davon ab, ob die jeweilige App personalisierte Werbung nutzt."</string>
     <string name="settingsUI_apps_switch_title" msgid="1308209012769248890">"Von Apps vorgeschlagene Werbung erlauben"</string>
     <string name="settingsUI_apps_view_ga_subtitle" msgid="1911743837387384160">"Von dir verwendete Apps können ermitteln, was dir gefällt, und dann Werbung in anderen Apps vorschlagen.\n\nDu kannst Apps aber daran hindern, dir Vorschläge zu machen. Auch werden Daten zu App-Vorschlägen von Android regelmäßig automatisch gelöscht."</string>
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Apps, die keine Vorschläge machen dürfen"</string>
-    <!-- no translation found for settingsUI_reset_apps_ga_title (371969808353100852) -->
-    <skip />
+    <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Daten zu App-Vorschlägen zurücksetzen"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Es ist üblich, dass in Apps, die du verwendest, Themen gespeichert werden, die dich interessieren, um deine Nutzung zu personalisieren. Apps können auch in Android Informationen über deine Themen speichern.\n\nWenn du zum Beispiel eine App zum Marathontraining nutzt, könnte daraus geschlossen werden, dass du dich für Laufschuhe interessierst. Wenn du dann später eine andere App verwendest, zeigt dir diese App möglicherweise aufgrund von Vorschlägen der ersten App Werbung für Laufschuhe.\n\nIn Android werden Daten zu App-Vorschlägen regelmäßig automatisch gelöscht. Apps, die du wiederholt verwendest, können aber wieder in die Liste aufgenommen werden. Du kannst auch verhindern, dass eine App dir Werbung vorschlägt.\n\nOb in deinen Apps personalisierte Werbung angezeigt wird, hängt von dieser Einstellung, der Einstellung zu Anzeigenthemen, den Einstellungen zu deiner Werbe-ID und davon ab, ob die jeweilige App personalisierte Werbung nutzt."</string>
     <string name="topic10001" msgid="1636806320891333775">"Kunst und Unterhaltung"</string>
     <string name="topic10002" msgid="1226367977754287428">"Schauspielkunst und Theater"</string>

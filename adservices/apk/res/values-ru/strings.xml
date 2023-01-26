@@ -113,8 +113,7 @@
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text3" msgid="5347980571056638783">"•  Как приложения используют эти данные"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text4" msgid="4738335469671465639">"Приложения могут хранить в Android информацию о ваших интересах. Например, если вы используете приложение для бега, оно может определить, что вам интересна спортивная обувь. Затем в другом приложении может быть показана реклама такой обуви, предложенная первым приложением."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text5" msgid="8737925570089314631">"• Как можно управлять своими данными"</string>
-    <!-- no translation found for notificationUI_how_it_works_fledge_measurement_expanded_text6 (495908587748380196) -->
-    <skip />
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android регулярно удаляет данные, предлагаемые приложениями. Если вы продолжите пользоваться приложением, оно снова может попасть в список."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"В настройках конфиденциальности вы в любой момент можете сбросить все данные таких объявлений, а также запретить отдельным или всем приложениям предлагать вам рекламу."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"Приложения, которые вы используете, могут запрашивать у Android сведения для оценки эффективности рекламы. Android обеспечивает вашу конфиденциальность, ограничивая информацию, которой могут обмениваться приложения."</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Privacy Sandbox"</string>
@@ -128,21 +127,20 @@
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"Заблокировать"</string>
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Разблокировать"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Заблокированные интересы"</string>
-    <!-- no translation found for settingsUI_blocked_topics_ga_view_title (3139405409436543147) -->
-    <skip />
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Сбросить все интересы"</string>
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Пока интересов нет."</string>
     <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"Пока тем нет"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"В бета-версии функции конфиденциального просмотра рекламы в Android приложениям предоставлены новые возможности для демонстрации объявлений. При этом не требуется применять идентификаторы устройств.\n\nAndroid сможет определять, реклама на какие темы может вас заинтересовать, и временно хранить эти сведения на вашем устройстве. Так приложения будут показывать релевантные объявления без отслеживания ваших действий на сайтах и в продуктах других разработчиков."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Нет заблокированных интересов"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_ga_text" msgid="4484435371306742210">"Нет заблокированных тем"</string>
-    <string name="settingsUI_topics_view_view_blocked_topics" msgid="2337437967442005365">"Посмотреть заблокированные темы"</string>
+    <!-- no translation found for settingsUI_no_blocked_topics_ga_text (377459829879121256) -->
+    <skip />
+    <!-- no translation found for settingsUI_view_blocked_topics_title (3705333677440361392) -->
+    <skip />
     <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Интересы сброшены"</string>
     <string name="settingsUI_topics_are_reset_ga" msgid="5250296990870048195">"Темы были сброшены"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Приложения могут собирать информацию о ваших интересах и временно хранить ее в Android. Другое приложение может воспользоваться этими данными и показать вам подходящую рекламу.\n\nЕсли вы не хотите, чтобы приложение анализировало ваши интересы, заблокируйте его. Оно не появится в списке, пока вы не снимете блокировку. Собранная информация об интересах будет удалена, но объявления, подобранные на ее основе, иногда могут появляться."</string>
-    <!-- no translation found for settingsUI_blocked_apps_title (1260257485713408637) -->
-    <skip />
+    <string name="settingsUI_blocked_apps_title" msgid="1260257485713408637">"Приложения, которые вы заблокировали"</string>
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"Показать заблокированные приложения"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Сбросить интересы по данным приложений"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"Нет приложений, определяющих ваши интересы"</string>
@@ -150,7 +148,8 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"В бета-версии функции конфиденциального просмотра рекламы в Android приложениям предоставлены новые возможности для демонстрации объявлений. При этом не требуется применять идентификаторы устройств.\n\nПриложения смогут определять, реклама на какие темы может вас заинтересовать, и временно хранить эти сведения на вашем устройстве. Так приложения будут показывать релевантные объявления без отслеживания ваших действий на сайтах и в продуктах других разработчиков."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Нет заблокированных приложений"</string>
-    <string name="settingsUI_apps_view_no_blocked_apps_ga_text" msgid="3588711487944931608">"Нет заблокированных приложений"</string>
+    <!-- no translation found for settingsUI_no_blocked_apps_ga_text (7488680173653861943) -->
+    <skip />
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"Разрешить оценку эффективности рекламы"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"Приложения и рекламодатели могут запрашивать у Android информацию, которая помогает им определять эффективность своей рекламы.\n\nДанные для оценки эффективности регулярно удаляются с вашего устройства."</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"Сбросить данные оценки эффективности рекламы"</string>
@@ -161,26 +160,28 @@
     <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Если вы захотите включить их снова или узнать больше о бета-тестировании программы \"Конфиденциальность при просмотре рекламы в Android\", перейдите в настройки конфиденциальности."</string>
     <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Отключить"</string>
     <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Заблокировать тему \"<xliff:g id="TOPIC">%1$s</xliff:g>\"?"</string>
-    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"Эта тема будет заблокирована и не появится в списке, пока вы не добавите ее снова. Иногда вы ещё сможете видеть связанную с ней рекламу."</string>
-    <string name="settingsUI_dialog_block_topic_ga_message" msgid="7397705817955848275">"Эта тема будет заблокирована и не появится в списке, пока вы не добавите ее снова. Реклама на эту тему может иногда появляться."</string>
+    <!-- no translation found for settingsUI_dialog_block_topic_message (2581824495438333677) -->
+    <skip />
     <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Заблокировать"</string>
     <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"Тема \"<xliff:g id="TOPIC">%1$s</xliff:g>\" разблокирована"</string>
-    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android сможет снова добавить эту тему в список. Вероятно, она появится не сразу."</string>
-    <string name="settingsUI_dialog_unblock_topic_ga_message" msgid="3582004316141072103">"Android сможет снова добавить эту тему в список. Вероятно, она появится не сразу."</string>
+    <!-- no translation found for settingsUI_dialog_unblock_topic_message (1090743551997420666) -->
+    <skip />
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"ОК"</string>
-    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Сбросить все интересы?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"Из списка будут удалены все интересы, а со временем в нем появятся новые. Иногда вы всё ещё будете видеть связанную со старыми интересами рекламу."</string>
-    <string name="settingsUI_dialog_reset_topic_ga_message" msgid="5826866496652403990">"Из списка будут удалены все темы, и со временем в нем появятся новые. Реклама, связанная со старыми темами, может все равно иногда появляться."</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_title (8025836207966712435) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (4243744527757134000) -->
+    <skip />
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Сбросить"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Заблокировать приложение \"<xliff:g id="APP">%1$s</xliff:g>\"?"</string>
-    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Это приложение не будет определять ваши интересы для технологий Privacy Sandbox и появляться в вашем списке, пока вы не разблокируете его.\n\nОпределенные ранее интересы будут удалены, но вы ещё сможете видеть рекламу, подобранную на их основе."</string>
-    <string name="settingsUI_dialog_block_app_ga_message" msgid="5843160418232238694">"Это приложение не будет предлагать рекламу и не появится в списке, пока вы не разблокируете его. Реклама, связанная с этой темой, может все равно иногда появляться."</string>
+    <!-- no translation found for settingsUI_dialog_block_app_message (758788973278770119) -->
+    <skip />
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Приложение \"<xliff:g id="APP">%1$s</xliff:g>\" разблокировано"</string>
-    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Это приложение снова сможет определять ваши интересы. Вероятно, вы увидите их в списке не сразу. Реклама, подобранная на их основе, начнет появляться через некоторое время."</string>
-    <string name="settingsUI_dialog_unblock_app_ga_message" msgid="215670726484505390">"Это приложение снова может предлагать объявления для вас. Вероятно, вы увидите его в списке не сразу. Реклама, предлагаемая им, начнет появляться через некоторое время."</string>
-    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Сбросить интересы, сгенерированные приложениями?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"Выявленные ранее интересы будут удалены из Privacy Sandbox, а приложения начнут определять их заново. Иногда вы всё ещё будете видеть связанную со старыми интересами рекламу."</string>
-    <string name="settingsUI_dialog_reset_app_ga_message" msgid="8436063980923088005">"Данные рекламы, которая предлагается приложениями из вашего списка, будут удалены, но похожие объявления иногда могут появляться. Впоследствии приложения будут предлагать новую рекламу."</string>
+    <!-- no translation found for settingsUI_dialog_unblock_app_message (5758218424845642060) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_title (5177572712117150557) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_message (7845329616145691006) -->
+    <skip />
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Данные приложений были сброшены."</string>
     <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"Сбросить все темы?"</string>
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"Сбросить настройки рекламы, предлагаемой приложениями?"</string>
@@ -198,14 +199,14 @@
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Выключено"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Интересные вам темы определяются на основе информации о приложениях, которые вы недавно открывали, и используются приложениями для показа персонализированных объявлений.\n\nВы можете заблокировать определенные темы, и сведения о них не будут передаваться приложениям. Кроме того, Android автоматически удаляет данные о темах на регулярной основе."</string>
     <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"Разрешить темы рекламы"</string>
-    <string name="settingsUI_blocked_topics_ga_title" msgid="1778578928932167070">"Заблокированные темы"</string>
-    <string name="settingsUI_reset_topics_ga_title" msgid="8223331046430417414">"Сбросить все темы"</string>
+    <string name="settingsUI_blocked_topics_ga_title" msgid="7163366621282449273">"Темы рекламы, которые вы заблокировали"</string>
+    <!-- no translation found for settingsUI_reset_topics_ga_title (5365554894399951300) -->
+    <skip />
     <string name="settingsU_topics_view_footer" msgid="4769146330248953561">"Android определяет, какие темы вам интересны, на основе того, какими приложениями вы пользовались в последние несколько недель.\n\nПриложения, которые вы открываете, могут запрашивать у Android данные об этих темах, чтобы персонализировать для вас рекламу. Android сообщает до трех рекламных тем, не раскрывая ваши личные данные и информацию об использовании приложений.\n\nAndroid регулярно удаляет данные о темах рекламы. Однако темы могут снова появляться в списке, если вы продолжаете пользоваться приложениями. Вы также можете заблокировать нежелательные темы, и Android не будет сообщать о них приложениям.\n\nРеклама в приложениях может быть персонализированной в зависимости от разных настроек – этого параметра, настроек рекламы, предлагаемой приложениями, настроек рекламного идентификатора – и возможностей персонализации в самом приложении."</string>
     <string name="settingsUI_apps_switch_title" msgid="1308209012769248890">"Разрешить приложениям предлагать рекламу"</string>
     <string name="settingsUI_apps_view_ga_subtitle" msgid="1911743837387384160">"Приложения, которые вы используете, могут определять ваши интересы и предлагать рекламу в других приложениях.\n\nВы можете запретить приложениям предлагать объявления. Android также регулярно удаляет данные о предлагаемой рекламе."</string>
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Приложения, которые вы заблокировали"</string>
-    <!-- no translation found for settingsUI_reset_apps_ga_title (371969808353100852) -->
-    <skip />
+    <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Удалить данные, предложенные приложениями"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Обычно приложения, которые вы используете, запоминают интересные вам темы, чтобы предлагать персонализированный контент. Они также могут хранить информацию о ваших интересах в Android.\n\nНапример, если вы пользовались приложением с тренировками к марафону, оно может определить, что вам интересны беговые кроссовки. Если затем вы откроете другое приложение, в нем может быть показана реклама беговых кроссовок, предложенная первым приложением.\n\nAndroid регулярно удаляет данные, предлагаемые приложениями. Если вы продолжите пользоваться приложением, его данные снова могут попасть в список. Вы также можете запретить приложению предлагать вам объявления.\n\nРеклама, которую вы видите в приложениях, может быть персонализированной. Она показывается с учетом этого параметра, а также настроек тем объявлений, рекламного идентификатора и используемого приложения."</string>
     <string name="topic10001" msgid="1636806320891333775">"Искусство и развлечения"</string>
     <string name="topic10002" msgid="1226367977754287428">"Актерское искусство и театр"</string>
