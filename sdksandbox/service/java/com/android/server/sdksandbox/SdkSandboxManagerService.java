@@ -1396,7 +1396,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
         }
 
-        @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
         boolean isBroadcastReceiverRestrictionsEnforced() {
             synchronized (mLock) {
                 return mEnforceBroadcastReceiverRestrictions;
