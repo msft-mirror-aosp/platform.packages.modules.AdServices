@@ -525,15 +525,4 @@ public interface IMeasurementDao {
     List<Source> fetchTriggerMatchingSourcesForXna(
             @NonNull Trigger trigger, @NonNull List<String> xnaEnrollmentIds)
             throws DatastoreException;
-
-    /**
-     * Insert an entry of source ID with enrollment ID into the {@link
-     * MeasurementTables.XnaIgnoredSourcesContract#TABLE}. It means that the provided source should
-     * be ignored to be picked up for doing XNA based attribution on the provided enrollment.
-     *
-     * @param sourceId source ID
-     * @param enrollmentId enrollment ID
-     */
-    void insertIgnoredSourceForEnrollment(@NonNull String sourceId, @NonNull String enrollmentId)
-            throws DatastoreException;
 }
