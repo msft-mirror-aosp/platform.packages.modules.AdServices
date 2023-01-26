@@ -49,6 +49,7 @@ import com.google.common.collect.ImmutableList;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -113,6 +114,12 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.TriggerContract.AR_DEBUG_PERMISSION,
                 trigger.hasArDebugPermission());
+        values.put(
+                MeasurementTables.TriggerContract.ATTRIBUTION_CONFIG,
+                trigger.getAttributionConfig());
+        values.put(
+                MeasurementTables.TriggerContract.ADTECH_BIT_MAPPING,
+                trigger.getAdtechBitMapping());
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.TriggerContract.TABLE,
                         /*nullColumnHack=*/null, values);
@@ -298,7 +305,7 @@ class MeasurementDao implements IMeasurementDao {
                 source.getInstallCooldownWindow());
         values.put(MeasurementTables.SourceContract.ATTRIBUTION_MODE, source.getAttributionMode());
         values.put(MeasurementTables.SourceContract.AGGREGATE_SOURCE, source.getAggregateSource());
-        values.put(MeasurementTables.SourceContract.FILTER_DATA, source.getFilterData());
+        values.put(MeasurementTables.SourceContract.FILTER_DATA, source.getFilterDataString());
         values.put(MeasurementTables.SourceContract.AGGREGATE_CONTRIBUTIONS, 0);
         values.put(MeasurementTables.SourceContract.DEBUG_KEY,
                 getNullableUnsignedLong(source.getDebugKey()));
@@ -307,6 +314,11 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.SourceContract.AR_DEBUG_PERMISSION,
                 source.hasArDebugPermission());
+        values.put(
+                MeasurementTables.SourceContract.SHARED_AGGREGATION_KEYS,
+                source.getSharedAggregationKeys());
+        values.put(MeasurementTables.SourceContract.REGISTRATION_ID, source.getRegistrationId());
+        values.put(MeasurementTables.SourceContract.INSTALL_TIME, source.getInstallTime());
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.SourceContract.TABLE,
                         /*nullColumnHack=*/null, values);
@@ -1717,6 +1729,132 @@ class MeasurementDao implements IMeasurementDao {
         }
     }
 
+    @Override
+    public List<Source> fetchTriggerMatchingSourcesForXna(
+            @NonNull Trigger trigger, @NonNull Collection<String> xnaEnrollmentIds)
+            throws DatastoreException {
+        List<Source> sources = new ArrayList<>();
+        Optional<Pair<String, String>> destinationColumnAndValue =
+                getDestinationColumnAndValue(trigger);
+        if (!destinationColumnAndValue.isPresent()) {
+            LogUtil.d(
+                    "getTriggerMatchingSourcesForXna: "
+                            + "unable to obtain destination column and value: %s",
+                    trigger.getAttributionDestination().toString());
+            return sources;
+        }
+        String sourceDestinationColumn = destinationColumnAndValue.get().first;
+        String triggerDestinationValue = destinationColumnAndValue.get().second;
+        String delimitedXnaEnrollmentIds =
+                xnaEnrollmentIds.stream()
+                        .map(DatabaseUtils::sqlEscapeString)
+                        .collect(Collectors.joining(","));
+        String triggerEnrollmentId = trigger.getEnrollmentId();
+        String eligibleXnaEnrollmentRegisteredSourcesWhereClause =
+                mergeConditions(
+                        " AND ",
+                        MeasurementTables.SourceContract.ENROLLMENT_ID
+                                + " IN ("
+                                + delimitedXnaEnrollmentIds
+                                + ")",
+                        MeasurementTables.SourceContract.ID
+                                + " NOT IN "
+                                // Avoid the sources which have lost XNA attribution before
+                                + "("
+                                + "select "
+                                + MeasurementTables.XnaIgnoredSourcesContract.SOURCE_ID
+                                + " from "
+                                + MeasurementTables.XnaIgnoredSourcesContract.TABLE
+                                + " where "
+                                + MeasurementTables.XnaIgnoredSourcesContract.ENROLLMENT_ID
+                                + " IN ("
+                                + delimitedXnaEnrollmentIds
+                                + ")"
+                                + ")",
+                        MeasurementTables.SourceContract.REGISTRATION_ID
+                                + " NOT IN "
+                                // Avoid the sources (XNA parent) whose registration chain had a
+                                // source registered by trigger's AdTech (by matching enrollmentId)
+                                + "("
+                                + "select "
+                                + MeasurementTables.SourceContract.REGISTRATION_ID
+                                + " from "
+                                + MeasurementTables.SourceContract.TABLE
+                                + " where "
+                                + MeasurementTables.SourceContract.ENROLLMENT_ID
+                                + " = "
+                                + DatabaseUtils.sqlEscapeString(triggerEnrollmentId)
+                                + ")",
+                        MeasurementTables.SourceContract.SHARED_AGGREGATION_KEYS + " IS NOT NULL");
+
+        String eligibleTriggerNetworkRegisteredSourcesWhereClause =
+                String.format(
+                        MeasurementTables.SourceContract.ENROLLMENT_ID + " = %s",
+                        DatabaseUtils.sqlEscapeString(triggerEnrollmentId));
+        // The following filtering logic is applied -
+        //  - AND
+        //     - destination == trigger's destination
+        //     - expiryTime > triggerTime
+        //     - eventTime < triggerTime
+        //     - OR
+        //      - AND
+        //       - sourceEnrollmentId == trigger's enrollmentId
+        //      - AND
+        //       - sourceEnrollmentId IN XNA enrollment IDs
+        //       - sourceId NOT IN (sources associated to XNA that have lost
+        //         attribution in the past -- lose once lose always)
+        //       - triggerEnrollmentId NOT IN (enrollmentIds of the sources registered under this
+        // registration ID)
+        //       - sharedAggregationKeys NOT NULL
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                MeasurementTables.SourceContract.TABLE,
+                                /*columns=*/ null,
+                                mergeConditions(
+                                        " AND ",
+                                        sourceDestinationColumn + " = ?",
+                                        MeasurementTables.SourceContract.EXPIRY_TIME + " > ?",
+                                        mergeConditions(
+                                                " OR ",
+                                                eligibleTriggerNetworkRegisteredSourcesWhereClause,
+                                                eligibleXnaEnrollmentRegisteredSourcesWhereClause),
+                                        MeasurementTables.SourceContract.EVENT_TIME + " <= ? "),
+                                new String[] {
+                                    triggerDestinationValue,
+                                    String.valueOf(trigger.getTriggerTime()),
+                                    String.valueOf(trigger.getTriggerTime())
+                                },
+                                /*groupBy=*/ null,
+                                /*having=*/ null,
+                                /*orderBy=*/ null,
+                                /*limit=*/ null)) {
+            while (cursor.moveToNext()) {
+                sources.add(SqliteObjectMapper.constructSourceFromCursor(cursor));
+            }
+            return sources;
+        }
+    }
+
+    @Override
+    public void insertIgnoredSourceForEnrollment(
+            @NonNull String sourceId, @NonNull String enrollmentId) throws DatastoreException {
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.XnaIgnoredSourcesContract.SOURCE_ID, sourceId);
+        values.put(MeasurementTables.XnaIgnoredSourcesContract.ENROLLMENT_ID, enrollmentId);
+        long rowId =
+                mSQLTransaction
+                        .getDatabase()
+                        .insert(
+                                MeasurementTables.XnaIgnoredSourcesContract.TABLE,
+                                /*nullColumnHack=*/ null,
+                                values);
+        if (rowId == -1) {
+            throw new DatastoreException("Xna ignored source insertion failed.");
+        }
+    }
+
     private static Optional<Pair<String, String>> getDestinationColumnAndValue(Trigger trigger) {
         if (trigger.getDestinationType() == EventSurfaceType.APP) {
             return Optional.of(
@@ -1871,6 +2009,9 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.AsyncRegistrationContract.AD_ID_PERMISSION,
                 asyncRegistration.hasAdIdPermission());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.REGISTRATION_ID,
+                asyncRegistration.getRegistrationId());
         long rowId =
                 mSQLTransaction
                         .getDatabase()

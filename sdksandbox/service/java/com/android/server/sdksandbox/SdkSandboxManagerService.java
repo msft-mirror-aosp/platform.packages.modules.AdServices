@@ -1879,12 +1879,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         @Override
         public void enforceAllowedToSendBroadcast(@NonNull Intent intent) {
-            if (intent.getAction() != null) {
-                throw new SecurityException(
-                        "Intent "
-                                + intent.getAction()
-                                + " may not be broadcast from an SDK sandbox uid");
-            }
+            throw new SecurityException(
+                    "Intent "
+                            + intent.getAction()
+                            + " may not be broadcast from an SDK sandbox uid");
         }
 
         @Override
