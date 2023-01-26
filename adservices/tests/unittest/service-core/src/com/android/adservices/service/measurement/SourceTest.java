@@ -289,10 +289,8 @@ public class SourceTest {
                         .setAggregateSource(aggregateSource2.toString()).build());
 
         assertNotEquals(
-                SourceFixture.getValidSourceBuilder()
-                        .setAggregateContributions(4000).build(),
-                SourceFixture.getValidSourceBuilder()
-                        .setAggregateContributions(4055).build());
+                SourceFixture.getValidSourceBuilder().setAggregateContributions(4000).build(),
+                SourceFixture.getValidSourceBuilder().setAggregateContributions(4055).build());
 
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder().setDebugKey(DEBUG_KEY_1).build(),
@@ -718,9 +716,7 @@ public class SourceTest {
                 source.getAggregatableAttributionSource().getAggregatableSource());
         assertEquals(
                 filterMap,
-                source.getAggregatableAttributionSource()
-                        .getFilterMap()
-                        .getAttributionFilterMap());
+                source.getAggregatableAttributionSource().getFilterMap().getAttributionFilterMap());
     }
 
     @Test
@@ -1376,7 +1372,8 @@ public class SourceTest {
                 .build();
         FilterMap filterMap = source.parseFilterData();
         assertEquals(filterMap.getAttributionFilterMap().size(), 3);
-        assertEquals(Collections.singletonList("electronics"),
+        assertEquals(
+                Collections.singletonList("electronics"),
                 filterMap.getAttributionFilterMap().get("conversion"));
         assertEquals(Arrays.asList("1234", "2345"),
                 filterMap.getAttributionFilterMap().get("product"));
@@ -1391,7 +1388,8 @@ public class SourceTest {
                 .build();
         FilterMap filterMap = source.parseFilterData();
         assertEquals(filterMap.getAttributionFilterMap().size(), 1);
-        assertEquals(Collections.singletonList("event"),
+        assertEquals(
+                Collections.singletonList("event"),
                 filterMap.getAttributionFilterMap().get("source_type"));
     }
 
@@ -1403,7 +1401,8 @@ public class SourceTest {
                 .build();
         FilterMap filterMap = source.parseFilterData();
         assertEquals(filterMap.getAttributionFilterMap().size(), 1);
-        assertEquals(Collections.singletonList("event"),
+        assertEquals(
+                Collections.singletonList("event"),
                 filterMap.getAttributionFilterMap().get("source_type"));
     }
 

@@ -512,17 +512,4 @@ public interface IMeasurementDao {
             @NonNull List<Uri> domains,
             @DeletionRequest.MatchBehavior int matchBehavior)
             throws DatastoreException;
-
-    /**
-     * Fetches the XNA relevant sources. It includes sources associated to the trigger's enrollment
-     * ID as well as the sources associated to the provided SAN enrollment IDs.
-     *
-     * @param trigger trigger to match
-     * @param xnaEnrollmentIds SAN enrollment IDs to match
-     * @return XNA relevant sources
-     * @throws DatastoreException when SQLite issue occurs
-     */
-    List<Source> fetchTriggerMatchingSourcesForXna(
-            @NonNull Trigger trigger, @NonNull List<String> xnaEnrollmentIds)
-            throws DatastoreException;
 }
