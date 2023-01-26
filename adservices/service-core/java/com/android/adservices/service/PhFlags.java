@@ -338,7 +338,7 @@ public final class PhFlags implements Flags {
     static final String KEY_ENABLE_TOPIC_CONTRIBUTORS_CHECK = "enable_topic_contributors_check";
 
     // Database Schema Version Flags
-    static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_7 = "enable_database_schema_version_7";
+    static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_5 = "enable_database_schema_version_5";
 
     // Enrollment flags.
     static final String KEY_ENROLLMENT_BLOCKLIST_IDS = "enrollment_blocklist_ids";
@@ -1822,8 +1822,8 @@ public final class PhFlags implements Flags {
     public boolean getEnableDatabaseSchemaVersion5() {
         return DeviceConfig.getBoolean(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_ENABLE_DATABASE_SCHEMA_VERSION_7,
-                /* defaultValue */ ENABLE_DATABASE_SCHEMA_VERSION_7);
+                /* flagName */ KEY_ENABLE_DATABASE_SCHEMA_VERSION_5,
+                /* defaultValue */ ENABLE_DATABASE_SCHEMA_VERSION_5);
     }
 
     @Override
