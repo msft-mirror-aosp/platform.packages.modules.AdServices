@@ -16,6 +16,7 @@
 
 package android.adservices.adselection;
 
+import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_APP_INSTALL;
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE;
 
 import android.adservices.common.AdServicesStatusUtils;
@@ -302,6 +303,73 @@ public class AdSelectionManager {
                             .setCallerPackageName(getCallerPackageName())
                             .build(),
                     new ReportImpressionCallback.Stub() {
+                        @Override
+                        public void onSuccess() {
+                            executor.execute(() -> receiver.onResult(new Object()));
+                        }
+
+                        @Override
+                        public void onFailure(FledgeErrorResponse failureParcel) {
+                            executor.execute(
+                                    () -> {
+                                        receiver.onError(
+                                                AdServicesStatusUtils.asException(failureParcel));
+                                    });
+                        }
+                    });
+        } catch (NullPointerException e) {
+            LogUtil.e(e, "Unable to find the AdSelection service.");
+            receiver.onError(
+                    new IllegalStateException("Unable to find the AdSelection service.", e));
+        } catch (RemoteException e) {
+            LogUtil.e(e, "Exception");
+            receiver.onError(new IllegalStateException("Failure of AdSelection service.", e));
+        }
+    }
+    /**
+     * Gives the provided list of adtechs the ability to do app install filtering on the calling
+     * app.
+     *
+     * <p>The input {@code request} is provided by the Ads SDK and the {@code request} object is
+     * transferred via a Binder call. For this reason, the total size of these objects is bound to
+     * the Android IPC limitations. Failures to transfer the {@code advertisers} will throws an
+     * {@link TransactionTooLargeException}.
+     *
+     * <p>The output is passed by the receiver, which either returns an empty {@link Object} for a
+     * successful run, or an {@link Exception} includes the type of the exception thrown and the
+     * corresponding error message.
+     *
+     * <p>If the {@link IllegalArgumentException} is thrown, it is caused by invalid input argument
+     * the API received.
+     *
+     * <p>If the {@link IllegalStateException} is thrown with error message "Failure of AdSelection
+     * services.", it is caused by an internal failure of the ad selection service.
+     *
+     * <p>If the {@link LimitExceededException} is thrown, it is caused when the calling package
+     * exceeds the allowed rate limits and is throttled.
+     *
+     * <p>If the {@link SecurityException} is thrown, it is caused when the caller is not authorized
+     * or permission is not requested.
+     *
+     * @hide
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_APP_INSTALL)
+    public void setAppInstallAdvertisers(
+            @NonNull SetAppInstallAdvertisersRequest request,
+            @NonNull Executor executor,
+            @NonNull OutcomeReceiver<Object, Exception> receiver) {
+        Objects.requireNonNull(request);
+        Objects.requireNonNull(executor);
+        Objects.requireNonNull(receiver);
+
+        try {
+            final AdSelectionService service = getService();
+            service.setAppInstallAdvertisers(
+                    new SetAppInstallAdvertisersInput.Builder()
+                            .setAdvertisers(request.getAdvertisers())
+                            .setCallerPackageName(getCallerPackageName())
+                            .build(),
+                    new SetAppInstallAdvertisersCallback.Stub() {
                         @Override
                         public void onSuccess() {
                             executor.execute(() -> receiver.onResult(new Object()));
