@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package android.adservices.test.scenario.adservices.fledge;
+package android.adservices.test.scenario.adservices.utils;
 
 import android.Manifest;
 
@@ -30,20 +30,26 @@ public class SelectAdsFlagRule implements TestRule {
 
     @Override
     public Statement apply(Statement base, Description description) {
-        setupCommon();
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
+                setupFlags();
                 base.evaluate();
             }
         };
     }
 
-    private void setupCommon() {
+    private void setupFlags() {
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+        enableAdservicesApi();
+        disableApiThrottling();
+        disablePhenotypeFlagUpdates();
+        extendAuctionTimeouts();
+    }
 
+    private static void extendAuctionTimeouts() {
         ShellUtils.runShellCommand(
                 "device_config put adservices fledge_ad_selection_bidding_timeout_per_ca_ms "
                         + "120000");
@@ -54,11 +60,20 @@ public class SelectAdsFlagRule implements TestRule {
         ShellUtils.runShellCommand(
                 "device_config put adservices fledge_ad_selection_bidding_timeout_per_buyer_ms "
                         + "120000");
-        ShellUtils.runShellCommand("su 0 killall -9 com.google.android.adservices.api");
+    }
 
-        // TODO(b/260704277) : Remove/modify the temporary adb commands added to
-        //  SelectAdsTestServerLatency
+    private static void disableApiThrottling() {
+        ShellUtils.runShellCommand(
+                "device_config put adservices sdk_request_permits_per_second 1000");
+    }
+
+    private static void disablePhenotypeFlagUpdates() {
+        ShellUtils.runShellCommand("device_config set_sync_disabled_for_tests persistent");
+    }
+
+    private static void enableAdservicesApi() {
         ShellUtils.runShellCommand("setprop debug.adservices.disable_fledge_enrollment_check true");
+        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
         ShellUtils.runShellCommand("device_config put adservices global_kill_switch false");
         ShellUtils.runShellCommand(
                 "device_config put adservices adservice_system_service_enabled true");
