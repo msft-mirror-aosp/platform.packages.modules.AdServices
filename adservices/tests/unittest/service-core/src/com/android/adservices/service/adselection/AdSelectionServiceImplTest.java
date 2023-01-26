@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.adselection.ReportInteractionInput.DESTINATION_BUYER;
+import static android.adservices.adselection.ReportInteractionInput.DESTINATION_SELLER;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
@@ -25,8 +27,6 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZE
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
-import static com.android.adservices.data.adselection.DBRegisteredAdInteraction.DESTINATION_BUYER;
-import static com.android.adservices.data.adselection.DBRegisteredAdInteraction.DESTINATION_SELLER;
 import static com.android.adservices.service.adselection.ImpressionReporter.REPORT_IMPRESSION_THROTTLED;
 import static com.android.adservices.service.adselection.ImpressionReporter.UNABLE_TO_FIND_AD_SELECTION_WITH_GIVEN_ID;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
