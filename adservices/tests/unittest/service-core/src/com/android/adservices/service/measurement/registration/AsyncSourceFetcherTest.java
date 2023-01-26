@@ -132,8 +132,6 @@ public final class AsyncSourceFetcherTest {
             new WebSourceParams.Builder(REGISTRATION_URI_2).setDebugKeyAllowed(false).build();
     private static final Context sContext =
             InstrumentationRegistry.getInstrumentation().getContext();
-    private static final String SHARED_AGGREGATION_KEYS =
-            "[\"GoogleCampaignCounts\",\"GoogleGeo\"]";
 
     AsyncSourceFetcher mFetcher;
 
@@ -190,9 +188,7 @@ public final class AsyncSourceFetcherTest {
                                                 + "\",\n"
                                                 + "  \"debug_key\": \""
                                                 + DEBUG_KEY
-                                                + "\","
-                                                + "\"shared_aggregation_keys\": "
-                                                + SHARED_AGGREGATION_KEYS
+                                                + "\"\n"
                                                 + "}\n")));
 
         AsyncRedirect asyncRedirect = new AsyncRedirect();
@@ -213,14 +209,13 @@ public final class AsyncSourceFetcherTest {
                 result.getExpiryTime());
         assertEquals(DEFAULT_EVENT_ID, result.getEventId());
         assertEquals(DEBUG_KEY, result.getDebugKey());
-        assertEquals(SHARED_AGGREGATION_KEYS, result.getSharedAggregationKeys());
         verify(mLogger)
                 .logMeasurementRegistrationsResponseSize(
                         eq(
                                 new MeasurementRegistrationResponseStats.Builder(
                                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS,
                                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__SOURCE,
-                                                253)
+                                                190)
                                         .setAdTechDomain(null)
                                         .build()));
         verify(mUrlConnection).setRequestMethod("POST");

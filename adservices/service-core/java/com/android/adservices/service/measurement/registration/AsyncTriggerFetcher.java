@@ -31,15 +31,12 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.AsyncRegistration;
-import com.android.adservices.service.measurement.AttributionConfig;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.MeasurementHttpClient;
-import com.android.adservices.service.measurement.ServingAdtechNetwork;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.util.AsyncFetchStatus;
 import com.android.adservices.service.measurement.util.AsyncRedirect;
 import com.android.adservices.service.measurement.util.Enrollment;
-import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -112,14 +109,11 @@ public class AsyncTriggerFetcher {
                         ? EventSurfaceType.WEB
                         : EventSurfaceType.APP);
         result.setTriggerTime(triggerTime);
-        List<String> field =
-                headers.get(TriggerHeaderContract.HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER);
+        List<String> field = headers.get("Attribution-Reporting-Register-Trigger");
         if (field == null || field.size() != 1) {
             LogUtil.d(
-                    "AsyncTriggerFetcher: "
-                            + "Invalid "
-                            + TriggerHeaderContract.HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER
-                            + " header.");
+                    "AsyncSourceFetcher: "
+                            + "Invalid Attribution-Reporting-Register-Source header.");
             return false;
         }
         try {
@@ -161,7 +155,7 @@ public class AsyncTriggerFetcher {
                         json.getString(TriggerHeaderContract.AGGREGATABLE_DEDUPLICATION_KEYS));
             }
             if (!json.isNull(TriggerHeaderContract.FILTERS)) {
-                JSONArray filters = Filter.maybeWrapFilters(json, TriggerHeaderContract.FILTERS);
+                JSONArray filters = maybeWrapFilters(json, TriggerHeaderContract.FILTERS);
                 if (!FetcherUtil.areValidAttributionFilters(filters)) {
                     LogUtil.d("parseTrigger: filters are invalid.");
                     return false;
@@ -169,8 +163,7 @@ public class AsyncTriggerFetcher {
                 result.setFilters(filters.toString());
             }
             if (!json.isNull(TriggerHeaderContract.NOT_FILTERS)) {
-                JSONArray notFilters =
-                        Filter.maybeWrapFilters(json, TriggerHeaderContract.NOT_FILTERS);
+                JSONArray notFilters = maybeWrapFilters(json, TriggerHeaderContract.NOT_FILTERS);
                 if (!FetcherUtil.areValidAttributionFilters(notFilters)) {
                     LogUtil.d("parseTrigger: not-filters are invalid.");
                     return false;
@@ -188,26 +181,10 @@ public class AsyncTriggerFetcher {
                     LogUtil.e(e, "Parsing trigger debug key failed");
                 }
             }
-            if (!json.isNull(TriggerHeaderContract.ADTECH_BIT_MAPPING)) {
-                if (!isValidAdtechBitMapping(
-                        json.getJSONObject(TriggerHeaderContract.ADTECH_BIT_MAPPING))) {
-                    LogUtil.d("parseTrigger: adtech bit mapping is invalid.");
-                } else {
-                    result.setAdtechBitMapping(
-                            json.getString(TriggerHeaderContract.ADTECH_BIT_MAPPING));
-                }
-            }
-            if (!json.isNull(TriggerHeaderContract.ATTRIBUTION_CONFIG)) {
-                String attributionConfigsString =
-                        extractValidAttributionConfigs(
-                                json.getJSONArray(TriggerHeaderContract.ATTRIBUTION_CONFIG));
-                result.setAttributionConfig(attributionConfigsString);
-            }
-
             triggers.add(result.build());
             return true;
         } catch (JSONException e) {
-            LogUtil.e(e, "Trigger Parsing failed");
+            LogUtil.e("Trigger Parsing failed", e);
             return false;
         }
     }
@@ -382,7 +359,7 @@ public class AsyncTriggerFetcher {
                     }
                 }
                 if (!eventTriggerDatum.isNull("filters")) {
-                    JSONArray filters = Filter.maybeWrapFilters(eventTriggerDatum, "filters");
+                    JSONArray filters = maybeWrapFilters(eventTriggerDatum, "filters");
                     if (!FetcherUtil.areValidAttributionFilters(filters)) {
                         LogUtil.d("getValidEventTriggerData: filters are invalid.");
                         return Optional.empty();
@@ -390,8 +367,7 @@ public class AsyncTriggerFetcher {
                     validEventTriggerDatum.put("filters", filters);
                 }
                 if (!eventTriggerDatum.isNull("not_filters")) {
-                    JSONArray notFilters =
-                            Filter.maybeWrapFilters(eventTriggerDatum, "not_filters");
+                    JSONArray notFilters = maybeWrapFilters(eventTriggerDatum, "not_filters");
                     if (!FetcherUtil.areValidAttributionFilters(notFilters)) {
                         LogUtil.d("getValidEventTriggerData: not-filters are invalid.");
                         return Optional.empty();
@@ -437,7 +413,7 @@ public class AsyncTriggerFetcher {
                 }
             }
             if (!aggregateTriggerData.isNull("filters")) {
-                JSONArray filters = Filter.maybeWrapFilters(aggregateTriggerData, "filters");
+                JSONArray filters = maybeWrapFilters(aggregateTriggerData, "filters");
                 if (!FetcherUtil.areValidAttributionFilters(filters)) {
                     LogUtil.d("Aggregate trigger data filters are invalid.");
                     return Optional.empty();
@@ -445,18 +421,12 @@ public class AsyncTriggerFetcher {
                 aggregateTriggerData.put("filters", filters);
             }
             if (!aggregateTriggerData.isNull("not_filters")) {
-                JSONArray notFilters = Filter.maybeWrapFilters(aggregateTriggerData, "not_filters");
+                JSONArray notFilters = maybeWrapFilters(aggregateTriggerData, "not_filters");
                 if (!FetcherUtil.areValidAttributionFilters(notFilters)) {
                     LogUtil.d("Aggregate trigger data not-filters are invalid.");
                     return Optional.empty();
                 }
                 aggregateTriggerData.put("not_filters", notFilters);
-            }
-            if (!aggregateTriggerData.isNull("serving_adtech_network")) {
-                JSONObject servingAdtechNetworkJson =
-                        aggregateTriggerData.getJSONObject("serving_adtech_network");
-                // This is in order to validate the JSON parsing does not throw exception
-                new ServingAdtechNetwork.Builder(servingAdtechNetworkJson);
             }
             validAggregateTriggerData.put(aggregateTriggerData);
         }
@@ -496,14 +466,14 @@ public class AsyncTriggerFetcher {
                 return false;
             }
             if (!aggregateDedupKey.isNull("filters")) {
-                JSONArray filters = Filter.maybeWrapFilters(aggregateDedupKey, "filters");
+                JSONArray filters = maybeWrapFilters(aggregateDedupKey, "filters");
                 if (!FetcherUtil.areValidAttributionFilters(filters)) {
                     LogUtil.d("Aggregate deduplication key: " + i + " contains invalid filters.");
                     return false;
                 }
             }
             if (!aggregateDedupKey.isNull("not_filters")) {
-                JSONArray notFilters = Filter.maybeWrapFilters(aggregateDedupKey, "not_filters");
+                JSONArray notFilters = maybeWrapFilters(aggregateDedupKey, "not_filters");
                 if (!FetcherUtil.areValidAttributionFilters(notFilters)) {
                     LogUtil.d(
                             "Aggregate deduplication key: " + i + " contains invalid not filters.");
@@ -514,34 +484,18 @@ public class AsyncTriggerFetcher {
         return true;
     }
 
-    private String extractValidAttributionConfigs(JSONArray attributionConfigsArray)
-            throws JSONException {
-        JSONArray validAttributionConfigsArray = new JSONArray();
-        for (int i = 0; i < attributionConfigsArray.length(); i++) {
-            AttributionConfig attributionConfig =
-                    new AttributionConfig.Builder(attributionConfigsArray.getJSONObject(i)).build();
-            validAttributionConfigsArray.put(attributionConfig.serializeAsJson());
+    // Filters can be either a JSON object or a JSON array
+    private static JSONArray maybeWrapFilters(JSONObject json, String key) throws JSONException {
+        JSONObject maybeFilterMap = json.optJSONObject(key);
+        if (maybeFilterMap != null) {
+            JSONArray filterSet = new JSONArray();
+            filterSet.put(maybeFilterMap);
+            return filterSet;
         }
-        return validAttributionConfigsArray.toString();
-    }
-
-    private boolean isValidAdtechBitMapping(JSONObject adTechBitMapping) throws JSONException {
-        // TODO: Might need to add logic for keys' and values' lengths.
-        Iterator<String> keys = adTechBitMapping.keys();
-        while (keys.hasNext()) {
-            String key = keys.next();
-            String value = adTechBitMapping.optString(key);
-            if (value == null || !value.startsWith("0x")) {
-                return false;
-            }
-        }
-        return true;
+        return json.getJSONArray(key);
     }
 
     private interface TriggerHeaderContract {
-        String HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER =
-                "Attribution-Reporting-Register-Trigger";
-        String ATTRIBUTION_CONFIG = "attribution_config";
         String EVENT_TRIGGER_DATA = "event_trigger_data";
         String FILTERS = "filters";
         String NOT_FILTERS = "not_filters";
@@ -550,6 +504,5 @@ public class AsyncTriggerFetcher {
         String AGGREGATABLE_DEDUPLICATION_KEYS = "aggregatable_deduplication_keys";
         String DEBUG_KEY = "debug_key";
         String DEBUG_REPORTING = "debug_reporting";
-        String ADTECH_BIT_MAPPING = "adtech_bit_mapping";
     }
 }

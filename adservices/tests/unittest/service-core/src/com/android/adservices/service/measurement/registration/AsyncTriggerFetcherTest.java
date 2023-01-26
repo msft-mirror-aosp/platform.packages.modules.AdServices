@@ -45,7 +45,6 @@ import android.adservices.measurement.WebTriggerParams;
 import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.content.Context;
 import android.net.Uri;
-import android.util.Pair;
 
 import androidx.test.filters.SmallTest;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -55,8 +54,6 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.measurement.AsyncRegistration;
-import com.android.adservices.service.measurement.AttributionConfig;
-import com.android.adservices.service.measurement.FilterMap;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.WebUtil;
@@ -2233,8 +2230,7 @@ public final class AsyncTriggerFetcherTest {
                         + "\"filters\":"
                         + "[{\"conversion_subdomain\":[\"electronics.megastore\"]}],"
                         + "\"not_filters\":[{\"product\":[\"1\"]}]},"
-                        + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"],"
-                        + "\"serving_adtech_network\":{\"offset\":\"20\"}}]";
+                        + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
@@ -2259,77 +2255,6 @@ public final class AsyncTriggerFetcherTest {
         assertEquals(
                 asyncRegistration.getTopOrigin().toString(),
                 result.getAttributionDestination().toString());
-        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(aggregateTriggerData, result.getAggregateTriggerData());
-        verify(mUrlConnection).setRequestMethod("POST");
-    }
-
-    @Test
-    public void basicTriggerRequest_withInvalidOffsetInAggregateTriggerData_throwsParsingError()
-            throws IOException {
-        RegistrationRequest request = buildRequest(TRIGGER_URI);
-        String aggregateTriggerData =
-                "[{\"key_piece\":\"0x400\",\"source_keys\":[\"campaignCounts\"],"
-                        + "\"filters\":"
-                        + "[{\"conversion_subdomain\":[\"electronics.megastore\"]}],"
-                        + "\"not_filters\":[{\"product\":[\"1\"]}]},"
-                        + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"],"
-                        + "\"serving_adtech_network\":{\"offset\":\"INVALID_VALUE\"}}]";
-        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
-        when(mUrlConnection.getResponseCode()).thenReturn(200);
-        when(mUrlConnection.getHeaderFields())
-                .thenReturn(
-                        Map.of(
-                                "Attribution-Reporting-Register-Trigger",
-                                List.of(
-                                        "{"
-                                                + "\"aggregatable_trigger_data\": "
-                                                + aggregateTriggerData
-                                                + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
-        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
-        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
-        // Execution
-        Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
-        // Assertion
-        assertEquals(AsyncFetchStatus.ResponseStatus.PARSING_ERROR, asyncFetchStatus.getStatus());
-        assertFalse(fetch.isPresent());
-        verify(mUrlConnection).setRequestMethod("POST");
-    }
-
-    @Test
-    public void basicTriggerRequest_withNoOffsetInAggregateTriggerData_consideredValid()
-            throws IOException {
-        RegistrationRequest request = buildRequest(TRIGGER_URI);
-        String aggregateTriggerData =
-                "[{\"key_piece\":\"0x400\",\"source_keys\":[\"campaignCounts\"],"
-                        + "\"filters\":"
-                        + "[{\"conversion_subdomain\":[\"electronics.megastore\"]}],"
-                        + "\"not_filters\":[{\"product\":[\"1\"]}]},"
-                        + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"],"
-                        + "\"serving_adtech_network\":{}}]";
-        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
-        when(mUrlConnection.getResponseCode()).thenReturn(200);
-        when(mUrlConnection.getHeaderFields())
-                .thenReturn(
-                        Map.of(
-                                "Attribution-Reporting-Register-Trigger",
-                                List.of(
-                                        "{"
-                                                + "\"aggregatable_trigger_data\": "
-                                                + aggregateTriggerData
-                                                + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
-        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
-        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
-        // Execution
-        Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
-        // Assertion
-        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
-        assertTrue(fetch.isPresent());
-        Trigger result = fetch.get();
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
         assertEquals(aggregateTriggerData, result.getAggregateTriggerData());
         verify(mUrlConnection).setRequestMethod("POST");
@@ -3521,213 +3446,6 @@ public final class AsyncTriggerFetcherTest {
         verify(mLogger).logMeasurementRegistrationsResponseSize(eq(expectedStats));
     }
 
-    @Test
-    public void triggerRequest_withValidAttributionConfig_parsesCorrectly() throws Exception {
-        // Setup
-        RegistrationRequest request = buildRequest(TRIGGER_URI);
-        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
-        when(mUrlConnection.getResponseCode()).thenReturn(200);
-        String originalAttributionConfigString =
-                "[{\n"
-                        + "\"source_adtech\": \"AdTech1-Ads\",\n"
-                        + "\"source_priority_range\": {\n"
-                        + "\"start\": 100,\n"
-                        + "\"end\": 1000\n"
-                        + "},\n"
-                        + "\"source_filters\": {\n"
-                        + "\"campaign_type\": [\"install\"]"
-                        + "},\n"
-                        + "\"source_not_filters\": {\n"
-                        + "\"product\": [\"prod1\"]"
-                        + "},\n"
-                        + "\"priority\": \"99\",\n"
-                        + "\"expiry\": \"604800\",\n"
-                        + "\"source_expiry_override\": \"680\",\n"
-                        + "\"post_install_exclusivity_window\": \"5000\",\n"
-                        + "\"filter_data\": {\n"
-                        + "\"campaign_type\": [\"install\"]\n"
-                        + "}\n"
-                        + "},"
-                        + "{\n"
-                        + "\"source_adtech\": \"AdTech2-Ads\"}"
-                        + "]";
-        when(mUrlConnection.getHeaderFields())
-                .thenReturn(
-                        Map.of(
-                                "Attribution-Reporting-Register-Trigger",
-                                List.of(
-                                        "{"
-                                                + "\"event_trigger_data\":"
-                                                + EVENT_TRIGGERS_1
-                                                + ", \"attribution_config\":"
-                                                + originalAttributionConfigString
-                                                + "}")));
-        doReturn(5000L).when(mFlags).getMaxResponseBasedRegistrationPayloadSizeBytes();
-        List<FilterMap> sourceFilters =
-                Collections.singletonList(
-                        new FilterMap.Builder()
-                                .setAttributionFilterMap(
-                                        Map.of(
-                                                "campaign_type",
-                                                Collections.singletonList("install")))
-                                .build());
-        List<FilterMap> sourceNotFilters =
-                Collections.singletonList(
-                        new FilterMap.Builder()
-                                .setAttributionFilterMap(
-                                        Map.of("product", Collections.singletonList("prod1")))
-                                .build());
-        List<FilterMap> filterData =
-                Collections.singletonList(
-                        new FilterMap.Builder()
-                                .setAttributionFilterMap(
-                                        Map.of(
-                                                "campaign_type",
-                                                Collections.singletonList("install")))
-                                .build());
-        AttributionConfig attributionConfig1 =
-                new AttributionConfig.Builder()
-                        .setSourceAdtech("AdTech1-Ads")
-                        .setSourcePriorityRange(new Pair<>(100L, 1000L))
-                        .setSourceFilters(sourceFilters)
-                        .setSourceNotFilters(sourceNotFilters)
-                        .setPriority(99L)
-                        .setExpiry(604800L)
-                        .setSourceExpiryOverride(680L)
-                        .setPostInstallExclusivityWindow(5000L)
-                        .setFilterData(filterData)
-                        .build();
-        AttributionConfig attributionConfig2 =
-                new AttributionConfig.Builder().setSourceAdtech("AdTech2-Ads").build();
-
-        JSONArray expectedAttributionConfigJsonArray =
-                new JSONArray(
-                        Arrays.asList(
-                                attributionConfig1.serializeAsJson(),
-                                attributionConfig2.serializeAsJson()));
-
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
-        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
-        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
-
-        // Execution
-        Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
-
-        // Assertion
-        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
-        assertTrue(fetch.isPresent());
-        Trigger result = fetch.get();
-        assertEquals(expectedAttributionConfigJsonArray.toString(), result.getAttributionConfig());
-    }
-
-    @Test
-    public void triggerRequest_attributionConfigThrowingJsonException_dropsTheTriggerCompletely()
-            throws Exception {
-        // Setup
-        RegistrationRequest request = buildRequest(TRIGGER_URI);
-        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
-        when(mUrlConnection.getResponseCode()).thenReturn(200);
-        when(mUrlConnection.getHeaderFields())
-                .thenReturn(
-                        Map.of(
-                                "Attribution-Reporting-Register-Trigger",
-                                List.of(
-                                        "{"
-                                                + "\"event_trigger_data\":"
-                                                + EVENT_TRIGGERS_1
-                                                + ", \"attribution_config\": INVALID_JSON_ARRAY"
-                                                + "}")));
-        doReturn(5000L).when(mFlags).getMaxResponseBasedRegistrationPayloadSizeBytes();
-
-        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
-        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
-
-        // Execution
-        Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, new AsyncRedirect());
-
-        // Assertion
-        assertEquals(AsyncFetchStatus.ResponseStatus.PARSING_ERROR, asyncFetchStatus.getStatus());
-        assertFalse(fetch.isPresent());
-    }
-
-    @Test
-    public void triggerRequest_withValidAdtechBitMapping_storesCorrectly() throws Exception {
-        // Setup
-        String validAdTechBitMapping =
-                "{" + "\"Google-Ads\":\"0x1\"," + "\"Facebook-Ads\":\"0x2\"" + "}";
-        RegistrationRequest request = buildRequest(TRIGGER_URI);
-        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
-        when(mUrlConnection.getResponseCode()).thenReturn(200);
-        when(mUrlConnection.getHeaderFields())
-                .thenReturn(
-                        Map.of(
-                                "Attribution-Reporting-Register-Trigger",
-                                List.of(
-                                        "{"
-                                                + "\"event_trigger_data\":"
-                                                + EVENT_TRIGGERS_1
-                                                + ", \"adtech_bit_mapping\":"
-                                                + validAdTechBitMapping
-                                                + "}")));
-        doReturn(5000L).when(mFlags).getMaxResponseBasedRegistrationPayloadSizeBytes();
-
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
-        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
-        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
-
-        // Execution
-        Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
-
-        // Assertion
-        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
-        assertTrue(fetch.isPresent());
-        Trigger result = fetch.get();
-        assertEquals(validAdTechBitMapping, result.getAdtechBitMapping());
-    }
-
-    @Test
-    public void triggerRequest_withInvalidAdtechBitMapping_dropsBitMapping() throws Exception {
-        // Setup
-        String invalidAdTechBitMapping =
-                "{"
-                        // Values don't start with 0x -- invalid
-                        + "\"Google-Ads\": 1234,"
-                        + "\"Facebook-Ads\": 2"
-                        + "}";
-        RegistrationRequest request = buildRequest(TRIGGER_URI);
-        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
-        when(mUrlConnection.getResponseCode()).thenReturn(200);
-        when(mUrlConnection.getHeaderFields())
-                .thenReturn(
-                        Map.of(
-                                "Attribution-Reporting-Register-Trigger",
-                                List.of(
-                                        "{"
-                                                + "\"event_trigger_data\":"
-                                                + EVENT_TRIGGERS_1
-                                                + ", \"adtech_bit_mapping\":"
-                                                + invalidAdTechBitMapping
-                                                + "}")));
-        doReturn(5000L).when(mFlags).getMaxResponseBasedRegistrationPayloadSizeBytes();
-
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
-        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
-        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
-
-        // Execution
-        Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
-
-        // Assertion
-        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
-        assertTrue(fetch.isPresent());
-        Trigger result = fetch.get();
-        assertNull(result.getAdtechBitMapping());
-    }
-
     private RegistrationRequest buildRequest(String triggerUri) {
         return new RegistrationRequest.Builder(
                         RegistrationRequest.REGISTER_TRIGGER,
@@ -3743,13 +3461,13 @@ public final class AsyncTriggerFetcherTest {
                 .build();
     }
 
-    private static AsyncRegistration appTriggerRegistrationRequest(
+    public static AsyncRegistration appTriggerRegistrationRequest(
             RegistrationRequest registrationRequest) {
         return appTriggerRegistrationRequest(registrationRequest,
                 AsyncRegistration.RedirectType.ANY, 0);
     }
 
-    private static AsyncRegistration appTriggerRegistrationRequest(
+    public static AsyncRegistration appTriggerRegistrationRequest(
             RegistrationRequest registrationRequest,
             @AsyncRegistration.RedirectType int redirectType,
             int redirectCount) {

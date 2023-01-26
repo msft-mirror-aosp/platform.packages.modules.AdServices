@@ -113,12 +113,6 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.TriggerContract.AR_DEBUG_PERMISSION,
                 trigger.hasArDebugPermission());
-        values.put(
-                MeasurementTables.TriggerContract.ATTRIBUTION_CONFIG,
-                trigger.getAttributionConfig());
-        values.put(
-                MeasurementTables.TriggerContract.ADTECH_BIT_MAPPING,
-                trigger.getAdtechBitMapping());
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.TriggerContract.TABLE,
                         /*nullColumnHack=*/null, values);
@@ -313,11 +307,6 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.SourceContract.AR_DEBUG_PERMISSION,
                 source.hasArDebugPermission());
-        values.put(
-                MeasurementTables.SourceContract.SHARED_AGGREGATION_KEYS,
-                source.getSharedAggregationKeys());
-        values.put(MeasurementTables.SourceContract.REGISTRATION_ID, source.getRegistrationId());
-        values.put(MeasurementTables.SourceContract.INSTALL_TIME, source.getInstallTime());
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.SourceContract.TABLE,
                         /*nullColumnHack=*/null, values);
@@ -1882,9 +1871,6 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.AsyncRegistrationContract.AD_ID_PERMISSION,
                 asyncRegistration.hasAdIdPermission());
-        values.put(
-                MeasurementTables.AsyncRegistrationContract.REGISTRATION_ID,
-                asyncRegistration.getRegistrationId());
         long rowId =
                 mSQLTransaction
                         .getDatabase()

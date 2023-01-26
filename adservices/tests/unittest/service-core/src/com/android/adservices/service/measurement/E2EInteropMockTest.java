@@ -38,7 +38,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * End-to-end test from source and trigger registration to attribution reporting, using mocked HTTP
@@ -161,7 +160,6 @@ public class E2EInteropMockTest extends E2EMockTest {
         }
         List<Source> sourceWrapper = new ArrayList<>();
         mAsyncSourceFetcher.parseSource(
-                UUID.randomUUID().toString(),
                 Uri.parse(publisher),
                 enrollmentId,
                 /* appDestination */ null,
