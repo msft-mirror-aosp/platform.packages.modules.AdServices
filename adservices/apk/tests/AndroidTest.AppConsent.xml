@@ -15,12 +15,12 @@
   ~ limitations under the License.
   -->
 <configuration description="Config for Ad Services Settings App test cases">
-    <option name="test-tag" value="AdServicesApkUITests" />
+    <option name="test-tag" value="AdServicesApkUITestsAppConsent" />
     <option name="config-descriptor:metadata" key="parameter" value="not_secondary_user" />
 
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true"/>
-        <option name="test-file-name" value="AdServicesApkUITests.apk"/>
+        <option name="test-file-name" value="AdServicesApkUITestsAppConsent.apk"/>
     </target_preparer>
 
     <!-- Create place to store tests apks that will be installed/uninstalled in the test. -->
