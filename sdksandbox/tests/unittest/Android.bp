@@ -81,6 +81,7 @@ android_test {
     static_libs: [
         "service-sdksandbox.impl",
         "services.core",
+        "modules-utils-build",
     ],
     data: [
       ":SampleCodeProviderApp",

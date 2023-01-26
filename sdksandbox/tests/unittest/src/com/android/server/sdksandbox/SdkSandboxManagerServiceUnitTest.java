@@ -65,6 +65,7 @@ import android.os.ServiceManager;
 import android.provider.DeviceConfig;
 import android.util.ArrayMap;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.test.platform.app.InstrumentationRegistry;
 
@@ -870,7 +871,7 @@ public class SdkSandboxManagerServiceUnitTest {
         ILoadSdkCallback.Stub callback = Mockito.spy(ILoadSdkCallback.Stub.class);
         int callingUid = Binder.getCallingUid();
         final CallingInfo callingInfo = new CallingInfo(callingUid, TEST_PACKAGE);
-        assertThat(sProvider.getBoundServiceForApp(callingInfo)).isNull();
+        assertThat(sProvider.getSdkSandboxServiceForApp(callingInfo)).isNull();
 
         mService.loadSdk(
                 TEST_PACKAGE,
@@ -885,9 +886,9 @@ public class SdkSandboxManagerServiceUnitTest {
         Mockito.verify(callback.asBinder(), Mockito.times(1))
                 .linkToDeath(deathRecipient.capture(), Mockito.eq(0));
 
-        assertThat(sProvider.getBoundServiceForApp(callingInfo)).isNotNull();
+        assertThat(sProvider.getSdkSandboxServiceForApp(callingInfo)).isNotNull();
         deathRecipient.getValue().binderDied();
-        assertThat(sProvider.getBoundServiceForApp(callingInfo)).isNull();
+        assertThat(sProvider.getSdkSandboxServiceForApp(callingInfo)).isNull();
     }
 
     /** Tests that only allowed intents may be sent from the sdk sandbox. */
@@ -1092,14 +1093,14 @@ public class SdkSandboxManagerServiceUnitTest {
         final CallingInfo callingInfo = new CallingInfo(Process.myUid(), TEST_PACKAGE);
 
         // Check that sdk sandbox for TEST_PACKAGE is bound
-        assertThat(sProvider.getBoundServiceForApp(callingInfo)).isNotNull();
+        assertThat(sProvider.getSdkSandboxServiceForApp(callingInfo)).isNotNull();
 
         sSdkSandboxManagerLocal.notifyInstrumentationStarted(TEST_PACKAGE, Process.myUid());
 
         // Verify that sdk sandbox was killed
         Mockito.verify(mAmSpy)
                 .killUid(Mockito.eq(Process.toSdkSandboxUid(Process.myUid())), Mockito.anyString());
-        assertThat(sProvider.getBoundServiceForApp(callingInfo)).isNull();
+        assertThat(sProvider.getSdkSandboxServiceForApp(callingInfo)).isNull();
     }
 
     @Test
@@ -1112,10 +1113,10 @@ public class SdkSandboxManagerServiceUnitTest {
         final CallingInfo callingInfo = new CallingInfo(Process.myUid(), TEST_PACKAGE);
 
         // Check that sdk sandbox for TEST_PACKAGE is bound
-        assertThat(sProvider.getBoundServiceForApp(callingInfo)).isNotNull();
+        assertThat(sProvider.getSdkSandboxServiceForApp(callingInfo)).isNotNull();
 
         sSdkSandboxManagerLocal.notifyInstrumentationStarted(TEST_PACKAGE, Process.myUid());
-        assertThat(sProvider.getBoundServiceForApp(callingInfo)).isNull();
+        assertThat(sProvider.getSdkSandboxServiceForApp(callingInfo)).isNull();
 
         // Try load again, it should throw SecurityException
         FakeLoadSdkCallbackBinder callback2 = new FakeLoadSdkCallbackBinder();
@@ -1144,7 +1145,7 @@ public class SdkSandboxManagerServiceUnitTest {
         sSdkSandboxManagerLocal.notifyInstrumentationStarted(TEST_PACKAGE, Process.myUid());
 
         final CallingInfo callingInfo = new CallingInfo(Process.myUid(), TEST_PACKAGE);
-        assertThat(sProvider.getBoundServiceForApp(callingInfo)).isNull();
+        assertThat(sProvider.getSdkSandboxServiceForApp(callingInfo)).isNull();
 
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
 
@@ -1175,7 +1176,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 callback2);
         mSdkSandboxService.sendLoadCodeSuccessful();
         callback2.assertLoadSdkIsSuccessful();
-        assertThat(sProvider.getBoundServiceForApp(callingInfo)).isNotNull();
+        assertThat(sProvider.getSdkSandboxServiceForApp(callingInfo)).isNotNull();
     }
 
     @Test
@@ -1254,7 +1255,7 @@ public class SdkSandboxManagerServiceUnitTest {
         mService.unloadSdk(TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER);
 
         // One SDK should still be loaded, therefore the sandbox should still be alive.
-        assertThat(sProvider.getBoundServiceForApp(callingInfo)).isNotNull();
+        assertThat(sProvider.getSdkSandboxServiceForApp(callingInfo)).isNotNull();
 
         mService.unloadSdk(
                 TEST_PACKAGE, SDK_PROVIDER_RESOURCES_SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER);
@@ -1262,7 +1263,7 @@ public class SdkSandboxManagerServiceUnitTest {
         // No more SDKs should be loaded at this point. Verify that the sandbox has been killed.
         Mockito.verify(mAmSpy)
                 .killUid(Mockito.eq(Process.toSdkSandboxUid(Process.myUid())), Mockito.anyString());
-        assertThat(sProvider.getBoundServiceForApp(callingInfo)).isNull();
+        assertThat(sProvider.getSdkSandboxServiceForApp(callingInfo)).isNull();
     }
 
     @Test
@@ -1382,7 +1383,7 @@ public class SdkSandboxManagerServiceUnitTest {
         mService.stopSdkSandbox(TEST_PACKAGE);
         int callingUid = Binder.getCallingUid();
         final CallingInfo callingInfo = new CallingInfo(callingUid, TEST_PACKAGE);
-        assertThat(sProvider.getBoundServiceForApp(callingInfo)).isEqualTo(null);
+        assertThat(sProvider.getSdkSandboxServiceForApp(callingInfo)).isEqualTo(null);
     }
 
     @Test(expected = SecurityException.class)
@@ -2193,7 +2194,7 @@ public class SdkSandboxManagerServiceUnitTest {
                         Map.of(PROPERTY_DISABLE_SANDBOX, "true")));
         int callingUid = Binder.getCallingUid();
         final CallingInfo callingInfo = new CallingInfo(callingUid, TEST_PACKAGE);
-        assertThat(sProvider.getBoundServiceForApp(callingInfo)).isEqualTo(null);
+        assertThat(sProvider.getSdkSandboxServiceForApp(callingInfo)).isEqualTo(null);
     }
 
     @Test
@@ -2651,22 +2652,40 @@ public class SdkSandboxManagerServiceUnitTest {
         }
 
         @Override
-        public void unbindService(CallingInfo callingInfo, boolean shouldForgetConnection) {
-            if (shouldForgetConnection) {
-                mService.remove(callingInfo);
-            }
+        public void unbindService(CallingInfo callingInfo) {
+            mService.remove(callingInfo);
         }
 
         @Nullable
         @Override
-        public ISdkSandboxService getBoundServiceForApp(CallingInfo callingInfo) {
+        public ISdkSandboxService getSdkSandboxServiceForApp(CallingInfo callingInfo) {
             return mService.get(callingInfo);
         }
 
         @Override
-        public void setBoundServiceForApp(
-                CallingInfo callingInfo, @Nullable ISdkSandboxService service) {
+        public void onServiceConnected(
+                CallingInfo callingInfo, @NonNull ISdkSandboxService service) {
             mService.put(callingInfo, service);
+        }
+
+        @Override
+        public void onServiceDisconnected(CallingInfo callingInfo) {
+            mService.put(callingInfo, null);
+        }
+
+        @Override
+        public void onAppDeath(CallingInfo callingInfo) {}
+
+        @Override
+        public void onSandboxDeath(CallingInfo callingInfo) {}
+
+        @Override
+        public int getSandboxStatusForApp(CallingInfo callingInfo) {
+            if (mService.containsKey(callingInfo)) {
+                return CREATED;
+            } else {
+                return NON_EXISTENT;
+            }
         }
 
         @Override
