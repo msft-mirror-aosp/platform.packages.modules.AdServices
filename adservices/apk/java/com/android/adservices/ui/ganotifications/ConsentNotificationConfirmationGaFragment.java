@@ -31,6 +31,7 @@ import androidx.fragment.app.Fragment;
 import com.android.adservices.api.R;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
 
 /**
@@ -45,6 +46,7 @@ public class ConsentNotificationConfirmationGaFragment extends Fragment {
     @Override
     public View onCreateView(
             @NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        UiStatsLogger.logGaConfirmationPageDisplayed(getContext());
         ConsentManager.getInstance(requireContext())
                 .enable(requireContext(), AdServicesApiType.FLEDGE);
         ConsentManager.getInstance(requireContext())
