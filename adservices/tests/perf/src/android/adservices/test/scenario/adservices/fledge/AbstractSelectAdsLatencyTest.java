@@ -92,8 +92,8 @@ public class AbstractSelectAdsLatencyTest {
     // Per-test method rules, run in the given order.
     @Rule
     public RuleChain rules =
-            RuleChain.outerRule(new KillAppsRule(PPAPI_PACKAGE))
-                    .around(new CleanPackageRule(PPAPI_PACKAGE))
+            RuleChain.outerRule(new CleanPackageRule(PPAPI_PACKAGE))
+                    .around(new KillAppsRule(PPAPI_PACKAGE))
                     .around(new SelectAdsFlagRule());
 
     @BeforeClass
