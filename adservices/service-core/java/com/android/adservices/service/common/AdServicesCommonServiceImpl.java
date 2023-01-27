@@ -109,8 +109,7 @@ public class AdServicesCommonServiceImpl extends
 
                         SharedPreferences preferences =
                                 mContext.getSharedPreferences(
-                                        ADSERVICES_STATUS_SHARED_PREFERENCE,
-                                        Context.MODE_PRIVATE);
+                                        ADSERVICES_STATUS_SHARED_PREFERENCE, Context.MODE_PRIVATE);
 
                         int adServiceEntryPointStatusInt =
                                 adServicesEntryPointEnabled
@@ -125,11 +124,14 @@ public class AdServicesCommonServiceImpl extends
                                         + adIdEnabled
                                         + ", adservice status is "
                                         + mFlags.getAdServicesEnabled());
+                        LogUtil.d("entry point: " + adServicesEntryPointEnabled);
                         if (mFlags.getAdServicesEnabled() && adServicesEntryPointEnabled) {
                             // Check if it is reconsent for ROW.
                             if (reconsentIfNeededForROW()) {
+                                LogUtil.d("Reconsent for ROW.");
                                 ConsentNotificationJobService.schedule(mContext, adIdEnabled, true);
                             } else if (getFirstConsentStatus()) {
+                                LogUtil.d("First consent.");
                                 // Otherwise we send to schedule when it is first consent.
                                 ConsentNotificationJobService.schedule(
                                         mContext, adIdEnabled, false);
@@ -178,8 +180,9 @@ public class AdServicesCommonServiceImpl extends
     /** Check if user is first time consent */
     public boolean getFirstConsentStatus() {
         ConsentManager consentManager = ConsentManager.getInstance(mContext);
-        return !consentManager.wasGaUxNotificationDisplayed()
-                && !consentManager.wasNotificationDisplayed();
+        return (!consentManager.wasGaUxNotificationDisplayed()
+                        && !consentManager.wasNotificationDisplayed())
+                || mFlags.getConsentNotificationDebugMode();
     }
 
     /** Check ROW device and see if it fit reconset */
