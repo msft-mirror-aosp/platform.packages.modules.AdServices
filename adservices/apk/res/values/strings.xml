@@ -460,8 +460,18 @@
     <string name="settingsU_main_view_measurement_info">Apps you use can ask Android for information to help them measure the performance of their ads. Android lets apps collect limited types of data.</string>
     <!-- Text for the topic subtitle in the settings UI showing On and the count of topics. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_topics_subtitle">On / <xliff:g id="topics_count" example="7">%1$d</xliff:g> topics</string>
+    <!-- Text for the topic subtitle with plural changes in the settings UI showing On and the count of topics. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_topics_subtitle_plural">{count, plural,
+    =1    {On / # topic}
+    other {On / # topics}
+    }</string>
     <!-- Text for the apps subtitle in the settings UI showing On and the count of apps. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_apps_subtitle">On / <xliff:g id="apps_count" example="6">%1$d</xliff:g> apps</string>
+    <!-- Text for the apps subtitle with plural changes in the settings UI showing On and the count of apps. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_apps_subtitle_plural">{count, plural,
+    =1    {On / # app}
+    other {On / # apps}
+    }</string>
     <!-- Text for subtitle in the settings UI showing measurement consent is On.[CHAR LIMIT=NONE] -->
     <string name="settingsUI_subtitle_consent_on">On</string>
     <!-- Text for the any subtitle in the settings UI showing whose consent is Off.[CHAR LIMIT=NONE] -->
