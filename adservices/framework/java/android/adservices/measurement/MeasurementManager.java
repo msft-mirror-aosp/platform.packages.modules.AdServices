@@ -22,6 +22,7 @@ import android.adservices.adid.AdId;
 import android.adservices.adid.AdIdManager;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CallerMetadata;
+import android.adservices.common.SandboxedSdkContextUtils;
 import android.annotation.CallbackExecutor;
 import android.annotation.IntDef;
 import android.annotation.NonNull;
@@ -625,20 +626,18 @@ public class MeasurementManager {
 
     /** Returns the package name of the app from the SDK or app context */
     private String getAppPackageName() {
-        if (mContext instanceof SandboxedSdkContext) {
-            return ((SandboxedSdkContext) mContext).getClientPackageName();
-        } else {
-            return mContext.getPackageName();
-        }
+        SandboxedSdkContext sandboxedSdkContext =
+                SandboxedSdkContextUtils.getAsSandboxedSdkContext(mContext);
+        return sandboxedSdkContext == null
+                ? mContext.getPackageName()
+                : sandboxedSdkContext.getClientPackageName();
     }
 
     /** Returns the package name of the sdk from the SDK or empty if no SDK found */
     private String getSdkPackageName() {
-        if (mContext instanceof SandboxedSdkContext) {
-            return ((SandboxedSdkContext) mContext).getSdkPackageName();
-        } else {
-            return "";
-        }
+        SandboxedSdkContext sandboxedSdkContext =
+                SandboxedSdkContextUtils.getAsSandboxedSdkContext(mContext);
+        return sandboxedSdkContext == null ? "" : sandboxedSdkContext.getSdkPackageName();
     }
 
     private CallerMetadata generateCallerMetadataWithCurrentTime() {

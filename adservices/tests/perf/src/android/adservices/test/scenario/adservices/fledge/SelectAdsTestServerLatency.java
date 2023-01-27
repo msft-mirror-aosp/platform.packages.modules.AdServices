@@ -70,7 +70,7 @@ public class SelectAdsTestServerLatency extends AbstractSelectAdsLatencyTest {
                 "CustomAudiencesOneBuyerOneCAOneAd.json",
                 "AdSelectionConfigOneBuyerOneCAOneAd.json",
                 getClass().getSimpleName(),
-                "selectAds_oneBuyerOneCAOneAdPerCA_hotStart");
+                "selectAds_oneBuyerOneCAOneAdPerCA_hotStart_jsCacheEnabled");
     }
 
     @Test
@@ -93,7 +93,7 @@ public class SelectAdsTestServerLatency extends AbstractSelectAdsLatencyTest {
                 "CustomAudiencesFiveBuyersTwoCAsFiveAdsPerCA.json",
                 "AdSelectionConfigFiveBuyersTwoCAsFiveAdsPerCA.json",
                 getClass().getSimpleName(),
-                "selectAds_fiveBuyerTwoCAsFiveAdsPerCA_hotStart");
+                "selectAds_fiveBuyerTwoCAsFiveAdsPerCA_hotStart_jsCacheEnabled");
     }
 
     @Test
