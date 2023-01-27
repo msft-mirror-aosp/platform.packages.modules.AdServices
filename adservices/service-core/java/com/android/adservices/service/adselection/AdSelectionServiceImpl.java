@@ -17,6 +17,7 @@
 package com.android.adservices.service.adselection;
 
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__FLEDGE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
@@ -33,6 +34,8 @@ import android.adservices.adselection.AdSelectionOverrideCallback;
 import android.adservices.adselection.AdSelectionService;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
+import android.adservices.adselection.SetAppInstallAdvertisersCallback;
+import android.adservices.adselection.SetAppInstallAdvertisersInput;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CallerMetadata;
@@ -385,6 +388,30 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilter);
         reporter.reportImpression(requestParams, callback);
+    }
+
+    @Override
+    public void setAppInstallAdvertisers(
+            @NonNull SetAppInstallAdvertisersInput request,
+            @NonNull SetAppInstallAdvertisersCallback callback)
+            throws RemoteException {
+        int apiName =
+                AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS;
+        // Caller permissions must be checked in the binder thread, before anything else
+        mFledgeAuthorizationFilter.assertAppDeclaredAppInstallPermission(mContext, apiName);
+
+        try {
+            Objects.requireNonNull(request);
+            Objects.requireNonNull(callback);
+        } catch (NullPointerException exception) {
+            mAdServicesLogger.logFledgeApiCallStats(apiName, STATUS_INVALID_ARGUMENT, 0);
+            // Rethrow because we want to fail fast
+            throw exception;
+        }
+
+        // TODO(b/265469079): Add Backend, and move logging/callback to backend
+        mAdServicesLogger.logFledgeApiCallStats(apiName, STATUS_SUCCESS, 0);
+        callback.onSuccess();
     }
 
     @Override
