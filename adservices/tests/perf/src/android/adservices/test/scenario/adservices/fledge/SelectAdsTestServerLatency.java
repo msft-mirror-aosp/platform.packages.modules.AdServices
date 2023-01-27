@@ -86,6 +86,17 @@ public class SelectAdsTestServerLatency extends AbstractSelectAdsLatencyTest {
     }
 
     @Test
+    public void selectAds_oneBuyerOneCAOneAdPerCA_coldStart_noJsCache() throws Exception {
+        // 1 Seller, 1 Buyer, 1 Custom Audience, 1 Ad
+        disableJsCache();
+        runSelectAds(
+                "CustomAudiencesOneBuyerOneCAOneAd.json",
+                "AdSelectionConfigOneBuyerOneCAOneAd.json",
+                getClass().getSimpleName(),
+                "selectAds_oneBuyerOneCAOneAdPerCA_coldStart_noJsCache");
+    }
+
+    @Test
     public void selectAds_fiveBuyersTwoCAsFiveAdsPerCA_hotStart_jsCacheEnabled() throws Exception {
         enableJsCache();
         warmupFiveBuyersProcess();
@@ -107,4 +118,13 @@ public class SelectAdsTestServerLatency extends AbstractSelectAdsLatencyTest {
                 "selectAds_fiveBuyerTwoCAsFiveAdsPerCA_hotStart_noJsCache");
     }
 
+    @Test
+    public void selectAds_fiveBuyersTwoCAsFiveAdsPerCA_coldStart_noJsCache() throws Exception {
+        disableJsCache();
+        runSelectAds(
+                "CustomAudiencesFiveBuyersTwoCAsFiveAdsPerCA.json",
+                "AdSelectionConfigFiveBuyersTwoCAsFiveAdsPerCA.json",
+                getClass().getSimpleName(),
+                "selectAds_fiveBuyerTwoCAsFiveAdsPerCA_coldStart_noJsCache");
+    }
 }
