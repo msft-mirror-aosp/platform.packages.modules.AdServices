@@ -15,10 +15,6 @@
  */
 package com.android.adservices.ui.ganotifications;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__LANDING_PAGE_DISPLAYED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
 import static com.android.adservices.ui.notifications.ConsentNotificationConfirmationFragment.IS_CONSENT_GIVEN_ARGUMENT_KEY;
 import static com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity.FROM_NOTIFICATION_KEY;
 
@@ -40,8 +36,7 @@ import androidx.fragment.app.Fragment;
 import com.android.adservices.api.R;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.stats.AdServicesLoggerImpl;
-import com.android.adservices.service.stats.UIStats;
+import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
 
 /** Fragment for the topics view of the AdServices Settings App. */
@@ -60,7 +55,7 @@ public class ConsentNotificationGaFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
-        logLandingPageDisplayed();
+        UiStatsLogger.logGaLandingPageDisplayed(getContext());
         setupListeners(savedInstanceState);
     }
 
@@ -71,20 +66,6 @@ public class ConsentNotificationGaFragment extends Fragment {
             mScrollToBottomController.saveInstanceState(savedInstanceState);
         }
         savedInstanceState.putBoolean(IS_TOPICS_INFO_VIEW_EXPANDED_KEY, mIsInfoViewExpanded);
-    }
-
-    private void logLandingPageDisplayed() {
-        UIStats uiStats =
-                new UIStats.Builder()
-                        .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
-                        .setRegion(
-                                mIsEUDevice
-                                        ? AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU
-                                        : AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW)
-                        .setAction(
-                                AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__LANDING_PAGE_DISPLAYED)
-                        .build();
-        AdServicesLoggerImpl.getInstance().logUIStats(uiStats);
     }
 
     private View setupActivity(LayoutInflater inflater, ViewGroup container) {
