@@ -16,12 +16,12 @@
 
 package android.adservices.common;
 
-public class AdFiltersFixture {
-    public static final AdFilters VALID_AD_FILTERS = getValidAdFiltersBuilder().build();
+/** Utility class for creating and testing {@link AppInstallFilters} objects. */
+public class AppInstallFiltersFixture {
+    public static final AppInstallFilters VALID_APP_INSTALL_FILTERS =
+            getValidAppInstallFiltersBuilder().build();
 
-    public static AdFilters.Builder getValidAdFiltersBuilder() {
-        return new AdFilters.Builder()
-                .setFrequencyCapFilters(FrequencyCapFiltersFixture.VALID_FREQUENCY_CAP_FILTERS)
-                .setAppInstallFilters(AppInstallFiltersFixture.VALID_APP_INSTALL_FILTERS);
+    public static AppInstallFilters.Builder getValidAppInstallFiltersBuilder() {
+        return new AppInstallFilters.Builder().setPackageNames(CommonFixture.PACKAGE_SET);
     }
 }

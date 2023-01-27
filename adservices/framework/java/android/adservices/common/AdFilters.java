@@ -37,6 +37,7 @@ import java.util.Objects;
 // TODO(b/221876775): Unhide for frequency cap API review
 public final class AdFilters implements Parcelable {
     @Nullable private final FrequencyCapFilters mFrequencyCapFilters;
+    @Nullable private final AppInstallFilters mAppInstallFilters;
 
     @NonNull
     public static final Creator<AdFilters> CREATOR =
@@ -57,6 +58,7 @@ public final class AdFilters implements Parcelable {
         Objects.requireNonNull(builder);
 
         mFrequencyCapFilters = builder.mFrequencyCapFilters;
+        mAppInstallFilters = builder.mAppInstallFilters;
     }
 
     private AdFilters(@NonNull Parcel in) {
@@ -65,6 +67,9 @@ public final class AdFilters implements Parcelable {
         mFrequencyCapFilters =
                 AdServicesParcelableUtil.readNullableFromParcel(
                         in, FrequencyCapFilters.CREATOR::createFromParcel);
+        mAppInstallFilters =
+                AdServicesParcelableUtil.readNullableFromParcel(
+                        in, AppInstallFilters.CREATOR::createFromParcel);
     }
 
     /**
@@ -78,6 +83,17 @@ public final class AdFilters implements Parcelable {
         return mFrequencyCapFilters;
     }
 
+    /**
+     * Gets the {@link AppInstallFilters} instance that represents all app install filters for the
+     * ad.
+     *
+     * <p>If {@code null}, there are no app install filters which apply to the ad.
+     */
+    @Nullable
+    public AppInstallFilters getAppInstallFilters() {
+        return mAppInstallFilters;
+    }
+
     @Override
     public void writeToParcel(@NonNull Parcel dest, int flags) {
         Objects.requireNonNull(dest);
@@ -85,6 +101,10 @@ public final class AdFilters implements Parcelable {
         AdServicesParcelableUtil.writeNullableToParcel(
                 dest,
                 mFrequencyCapFilters,
+                (targetParcel, sourceFilters) -> sourceFilters.writeToParcel(targetParcel, flags));
+        AdServicesParcelableUtil.writeNullableToParcel(
+                dest,
+                mAppInstallFilters,
                 (targetParcel, sourceFilters) -> sourceFilters.writeToParcel(targetParcel, flags));
     }
 
@@ -100,23 +120,30 @@ public final class AdFilters implements Parcelable {
         if (this == o) return true;
         if (!(o instanceof AdFilters)) return false;
         AdFilters adFilters = (AdFilters) o;
-        return Objects.equals(mFrequencyCapFilters, adFilters.mFrequencyCapFilters);
+        return Objects.equals(mFrequencyCapFilters, adFilters.mFrequencyCapFilters)
+                && Objects.equals(mAppInstallFilters, adFilters.mAppInstallFilters);
     }
 
     /** Returns the hash of the {@link AdFilters} object's data. */
     @Override
     public int hashCode() {
-        return Objects.hash(mFrequencyCapFilters);
+        return Objects.hash(mFrequencyCapFilters, mAppInstallFilters);
     }
 
     @Override
     public String toString() {
-        return "AdFilters{" + "mFrequencyCapFilters=" + mFrequencyCapFilters + '}';
+        return "AdFilters{"
+                + "mFrequencyCapFilters="
+                + mFrequencyCapFilters
+                + ", mAppInstallFilters="
+                + mAppInstallFilters
+                + '}';
     }
 
     /** Builder for creating {@link AdFilters} objects. */
     public static final class Builder {
         @Nullable private FrequencyCapFilters mFrequencyCapFilters;
+        @Nullable private AppInstallFilters mAppInstallFilters;
 
         public Builder() {}
 
@@ -129,6 +156,18 @@ public final class AdFilters implements Parcelable {
         @NonNull
         public Builder setFrequencyCapFilters(@Nullable FrequencyCapFilters frequencyCapFilters) {
             mFrequencyCapFilters = frequencyCapFilters;
+            return this;
+        }
+
+        /**
+         * Sets the {@link AppInstallFilters} which will apply to the ad.
+         *
+         * <p>If set to {@code null} or not set, no app install filters will be associated with the
+         * ad.
+         */
+        @NonNull
+        public Builder setAppInstallFilters(@Nullable AppInstallFilters appInstallFilters) {
+            mAppInstallFilters = appInstallFilters;
             return this;
         }
 
