@@ -21,6 +21,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.android.adservices.api.R;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.ui.OTAResourcesManager;
 import com.android.adservices.ui.settings.delegates.MainActionDelegate;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragment;
@@ -56,6 +57,7 @@ public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
             OTAResourcesManager.applyOTAResources(getApplicationContext(), true);
         }
         super.onCreate(savedInstanceState);
+        UiStatsLogger.logSettingsPageDisplayed(getApplication());
         setContentView(R.layout.adservices_settings_main_activity);
         getSupportFragmentManager()
                 .beginTransaction()
