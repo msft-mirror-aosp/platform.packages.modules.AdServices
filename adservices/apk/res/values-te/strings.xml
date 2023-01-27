@@ -113,8 +113,7 @@
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text3" msgid="5347980571056638783">"•  యాప్‌లు ఈ డేటాను ఎలా ఉపయోగిస్తాయి"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text4" msgid="4738335469671465639">"Androidతో యాప్‌లు మీరు ఇష్టపడే అంశాల గురించిన సమాచారాన్ని స్టోర్ చేయగలవు. ఉదాహరణకు, మీరు మారథాన్ శిక్షణకు సంబంధించిన యాప్‌ను ఉపయోగిస్తున్నట్లయితే, మీకు రన్నింగ్ షూలపై ఆసక్తి ఉందని యాప్ నిర్ణయించవచ్చు. తర్వాత, మీరు వేరొక యాప్‌ను ఉపయోగిస్తున్నప్పుడు, ఈ యాప్ మీకు మొదటి యాప్ సూచించిన రన్నింగ్ షూలకు సంబంధించిన యాడ్‌ను చూపవచ్చు."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text5" msgid="8737925570089314631">"•  మీరు మీ డేటాను ఎలా మేనేజ్ చేయగలరు"</string>
-    <!-- no translation found for notificationUI_how_it_works_fledge_measurement_expanded_text6 (495908587748380196) -->
-    <skip />
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android క్రమం తప్పకుండా యాప్‌లు సూచించిన డేటాను ఆటోమేటిక్‌గా తొలగిస్తుంది. మీరు మళ్లీ ఉపయోగించే యాప్, లిస్ట్‌లో తిరిగి కనిపించవచ్చు."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"మీరు మీ కోసం యాడ్‌లను సూచించకుండా యాప్‌ను బ్లాక్ చేయవచ్చు, యాడ్-సూచనల డేటా మొత్తాన్ని రీసెట్ చేయవచ్చు, లేదా గోప్యతా సెట్టింగ్‌లలో ఎప్పుడైనా యాప్‌లు సూచించిన యాడ్‌లు అనే ఫీచర్‌ను ఆఫ్ చేయవచ్చు."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"మీరు ఉపయోగించే యాప్‌లు తమ యాడ్‌ల పనితీరును అంచనా వేయడంలో సహాయపడే సమాచారం కోసం Androidను అడగవచ్చు. యాప్‌లు ఒకదానితో మరొకటి షేర్ చేయగలిగే సమాచారాన్ని పరిమితం చేయడం ద్వారా Android మీ గోప్యతను రక్షిస్తుంది."</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"గోప్యతా పరిరక్షణ టెక్నాలజీల సెట్"</string>
@@ -128,21 +127,18 @@
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"బ్లాక్ చేయండి"</string>
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"అన్‌బ్లాక్ చేయండి"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"మీరు బ్లాక్ చేసిన ఆసక్తులు"</string>
-    <!-- no translation found for settingsUI_blocked_topics_ga_view_title (3139405409436543147) -->
-    <skip />
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"ఆసక్తులన్నింటినీ రీసెట్ చేయండి"</string>
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"ప్రస్తుతం చూపించడానికి ఆసక్తులు ఏవీ లేవు"</string>
     <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"ప్రస్తుతం చూపడానికి టాపిక్‌లు ఏవీ లేవు"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"గోప్యతా పరిరక్షణ టెక్నాలజీల సెట్"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android యాడ్‌ల గోప్యతా బీటా వెర్షన్ మీకు నచ్చే యాడ్‌లను చూపడానికి యాప్‌లు ఉపయోగించగల కొత్త ఫీచర్‌లను అందిస్తుంది. ఈ టెక్నాలజీలు పరికర ఐడెంటిఫైయర్‌లను ఉపయోగించవు.\n\nAndroid పరికరం మీకు ఆసక్తి కలిగించే యాడ్‌ల రకాలను అంచనా వేయగలదు, అలాగే ఈ ఆసక్తులను మీ పరికరంలో తాత్కాలికంగా సేవ్ చేయగలవు. ఇతర డెవలపర్‌ల నుండి వెబ్‌సైట్‌లు, యాప్‌లలో మీ యాక్టివిటీని ట్రాక్ చేయకుండానే, సంబంధిత యాడ్‌లను మీకు చూపడానికి ఇది యాప్‌లను అనుమతిస్తుంది."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"మీకు బ్లాక్ చేయబడిన ఆసక్తులు లేవు"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_ga_text" msgid="4484435371306742210">"బ్లాక్ చేయబడిన టాపిక్‌లు ఏవీ లేవు"</string>
-    <string name="settingsUI_topics_view_view_blocked_topics" msgid="2337437967442005365">"బ్లాక్ చేసిన టాపిక్‌లను చూడండి"</string>
+    <string name="settingsUI_no_blocked_topics_ga_text" msgid="377459829879121256">"బ్లాక్ చేయబడిన టాపిక్‌లు ఏవీ లేవు"</string>
+    <string name="settingsUI_view_blocked_topics_title" msgid="3705333677440361392">"బ్లాక్ చేసిన టాపిక్‌లను చూడండి"</string>
     <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"ఆసక్తులు రీసెట్ చేయబడ్డాయి"</string>
     <string name="settingsUI_topics_are_reset_ga" msgid="5250296990870048195">"టాపిక్‌లు రీసెట్ చేయబడ్డాయి"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"యాప్‌లు మీ ఆసక్తులను అంచనా వేయగలవు, వీటిని Android పరికరంతో తాత్కాలికంగా సేవ్ చేయవచ్చు. తర్వాత, ఈ ఆసక్తుల ఆధారంగా వేరే యాప్ మీకు యాడ్‌ను చూపుతుంది.\n\nమీరు యాప్‌ను బ్లాక్ చేస్తే, అది మరిన్ని ఇతర ఆసక్తులను అంచనా వేయదు. మీరు దీన్ని అన్‌బ్లాక్ చేస్తే తప్ప ఇది మళ్లీ ఈ యాప్‌ల లిస్ట్‌కు జోడించబడదు. యాప్ ద్వారా ఇప్పటికే అంచనా వేసిన ఆసక్తులు తొలగించబడతాయి, కానీ మీరు ఇప్పటికీ కొన్ని సంబంధిత యాడ్‌లను చూడవచ్చు."</string>
-    <!-- no translation found for settingsUI_blocked_apps_title (1260257485713408637) -->
-    <skip />
+    <string name="settingsUI_blocked_apps_title" msgid="1260257485713408637">"మీరు బ్లాక్ చేసిన యాప్‌లు"</string>
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"బ్లాక్ చేయబడిన యాప్‌లను చూడండి"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"యాప్‌ల ద్వారా అంచనా వేయబడిన ఆసక్తులను రీసెట్ చేయండి"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"ప్రస్తుతం ఏ యాప్‌లు మీ కోసం ఆసక్తులను జెనరేట్ చేయడం లేదు"</string>
@@ -150,7 +146,7 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"గోప్యతా పరిరక్షణ టెక్నాలజీల సెట్"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android యాడ్‌ల గోప్యతా బీటా వెర్షన్ మీకు నచ్చే యాడ్‌లను చూపడానికి యాప్‌లు ఉపయోగించగల కొత్త ఫీచర్‌లను అందిస్తుంది. ఈ టెక్నాలజీలు పరికర ఐడెంటిఫైయర్‌లను ఉపయోగించవు.\n\nయాప్‌లు మీకు ఆసక్తి కలిగించే యాడ్‌ల రకాలను అంచనా వేయగలవు, అలాగే ఈ ఆసక్తులను మీ పరికరంలో తాత్కాలికంగా సేవ్ చేయగలవు. ఇతర డెవలపర్‌ల నుండి వెబ్‌సైట్‌లు, యాప్‌లలో మీ యాక్టివిటీని ట్రాక్ చేయకుండానే, సంబంధిత యాడ్‌లను మీకు చూపడానికి ఇది యాప్‌లను అనుమతిస్తుంది."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"మీకు బ్లాక్ చేయబడిన యాప్‌లు ఏవీ లేవు"</string>
-    <string name="settingsUI_apps_view_no_blocked_apps_ga_text" msgid="3588711487944931608">"బ్లాక్ చేయబడిన యాప్‌లు ఏవీ లేవు"</string>
+    <string name="settingsUI_no_blocked_apps_ga_text" msgid="7488680173653861943">"బ్లాక్ చేయబడిన యాప్‌లు ఏవీ లేవు"</string>
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"యాడ్ మెజర్‌మెంట్‌ను అనుమతించండి"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"యాప్‌లు, ఇంకా అడ్వర్టయిజర్‌లు, తమ యాడ్‌ల పనితీరును మెజర్ చేయడంలో సహాయపడే సమాచారాన్ని Android నుండి రిక్వెస్ట్ చేయవచ్చు.\n\nమీ పరికరం నుండి యాడ్ మెజర్‌మెంట్ డేటా క్రమం తప్పకుండా తొలగించబడుతుంది."</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"మెజర్‌మెంట్ డేటాను రీసెట్ చేయండి"</string>
@@ -161,26 +157,20 @@
     <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"మీరు మీ మనసు మార్చుకున్నట్లయితే లేదా Android యాడ్‌ల గోప్యతా బీటా వెర్షన్ గురించి మరింత తెలుసుకోవాలనుకుంటే, మీ గోప్యతా సెట్టింగ్‌లకు వెళ్లండి"</string>
     <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"ఆఫ్ చేయండి"</string>
     <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"<xliff:g id="TOPIC">%1$s</xliff:g>ను బ్లాక్ చేయాలా?"</string>
-    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"ఈ ఆసక్తి బ్లాక్ చేయబడుతుంది ఇంకా మీరు దీన్ని తిరిగి జోడించే వరకు మళ్లీ మీ లిస్ట్‌కు జోడించబడదు. మీరు ఇప్పటికీ కొన్ని సంబంధిత యాడ్‌లను చూడవచ్చు."</string>
-    <string name="settingsUI_dialog_block_topic_ga_message" msgid="7397705817955848275">"ఈ టాపిక్ బ్లాక్ చేయబడుతుంది ఇంకా మీరు దీన్ని తిరిగి జోడించే వరకు మళ్లీ మీ లిస్ట్‌కు జోడించబడదు. మీకు ఇప్పటికీ కొన్ని సంబంధిత యాడ్‌లను కనిపించవచ్చు."</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2581824495438333677">"ఈ టాపిక్ బ్లాక్ చేయబడుతుంది ఇంకా మీరు దీన్ని తిరిగి జోడించే వరకు మళ్లీ మీ లిస్ట్‌కు జోడించబడదు. మీకు ఇప్పటికీ కొన్ని సంబంధిత యాడ్‌లు కనిపించవచ్చు."</string>
     <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"బ్లాక్ చేయండి"</string>
     <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"<xliff:g id="TOPIC">%1$s</xliff:g> అన్‌బ్లాక్ చేయబడింది"</string>
-    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android ఈ ఆసక్తిని మీ లిస్ట్‌కు మళ్లీ జోడించవచ్చు, కానీ అది వెంటనే కనిపించకపోవచ్చు"</string>
-    <string name="settingsUI_dialog_unblock_topic_ga_message" msgid="3582004316141072103">"Android ఈ టాపిక్‌ను మీ లిస్ట్‌కు మళ్లీ జోడించవచ్చు, కానీ అది వెంటనే కనిపించకపోవచ్చు"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="1090743551997420666">"Android ఈ టాపిక్‌ను మీ లిస్ట్‌కు మళ్లీ జోడించవచ్చు, కానీ అది వెంటనే కనిపించకపోవచ్చు"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"సరే"</string>
-    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"మీ ఆసక్తులు అన్నీ రీసెట్ చేయాలా?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"మీ లిస్ట్ క్లియర్ చేయబడుతుంది, ఇంకా ఇకపై కొత్త ఆసక్తులు అంచనా వేయబడతాయి. మీకు ఇప్పటికీ క్లియర్ చేయబడిన ఆసక్తులకు సంబంధించిన కొన్ని యాడ్‌లు కనిపించవచ్చు."</string>
-    <string name="settingsUI_dialog_reset_topic_ga_message" msgid="5826866496652403990">"మీ లిస్ట్ క్లియర్ చేయబడుతుంది, అలాగే ఇకపై కొత్త టాపిక్‌లు జోడించబడతాయి. మీరు రీసెట్ చేసిన టాపిక్‌లకు సంబంధించిన కొన్ని యాడ్‌లు మీకు ఇప్పటికీ కనిపించవచ్చు."</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="8025836207966712435">"అన్ని యాడ్ టాపిక్‌లను రీసెట్ చేయాలా?"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="4243744527757134000">"మీ లిస్ట్ క్లియర్ చేయబడుతుంది, అలాగే ఇకపై కొత్త టాపిక్‌లు జోడించబడతాయి. మీరు రీసెట్ చేసిన టాపిక్‌లకు సంబంధించిన కొన్ని యాడ్‌లు మీకు ఇప్పటికీ కనిపించవచ్చు."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"రీసెట్ చేయండి"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g>ని బ్లాక్ చేయాలా?"</string>
-    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"ఈ యాప్ గోప్యతా పరిరక్షణ టెక్నాలజీల సెట్ కోసం ఆసక్తులను అంచనా వేయదు, అలాగే మీరు దీన్ని అన్‌బ్లాక్ చేస్తే తప్ప మళ్లీ మీ లిస్ట్‌కు జోడించబడదు.\n\nఈ యాప్ ద్వారా ఇప్పటికే అంచనా వేసిన ఆసక్తులు తొలగించబడతాయి, కానీ మీరు ఇప్పటికీ కొన్ని సంబంధిత యాడ్‌లను చూడవచ్చు."</string>
-    <string name="settingsUI_dialog_block_app_ga_message" msgid="5843160418232238694">"మీరు ఈ యాప్‌ను అన్‌బ్లాక్ చేస్తే తప్ప, అది యాడ్‌లను సూచించదు, మళ్లీ మీ లిస్ట్‌కు జోడించబడదు. మీకు ఇప్పటికీ కొన్ని సంబంధిత యాడ్‌లు కనిపించవచ్చు."</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="758788973278770119">"మీరు ఈ యాప్‌ను అన్‌బ్లాక్ చేస్తే తప్ప, అది యాడ్‌లను సూచించదు, మళ్లీ మీ లిస్ట్‌కు జోడించబడదు. మీకు ఇప్పటికీ కొన్ని సంబంధిత యాడ్‌లు కనిపించవచ్చు."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> అన్‌బ్లాక్ చేయబడింది"</string>
-    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"ఈ యాప్ మీ కోసం మళ్లీ ఆసక్తులను అంచనా వేయగలదు, అయితే అది మీ లిస్ట్‌లో వెంటనే కనిపించకపోవచ్చు. మీకు, సంబంధిత యాడ్‌లు కనిపించడానికి కొంత సమయం పట్టవచ్చు."</string>
-    <string name="settingsUI_dialog_unblock_app_ga_message" msgid="215670726484505390">"ఈ యాప్ మీకు మళ్లీ యాడ్‌లను సూచించవచ్చు, కానీ అది మీ లిస్ట్‌లో వెంటనే కనిపించకపోవచ్చు. మీకు, సంబంధిత యాడ్‌లు కనిపించడానికి కొంత సమయం పట్టవచ్చు."</string>
-    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"యాప్‌ల ద్వారా జెనరేట్ చేయబడిన ఆసక్తులను రీసెట్ చేయాలా?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"మీ లిస్ట్‌లోని యాప్‌ల ద్వారా అంచనా వేయబడిన ఆసక్తులు గోప్యతా పరిరక్షణ టెక్నాలజీల సెట్ నుండి తొలగించబడతాయి, అలాగే యాప్‌లు ఇకపై కొత్త ఆసక్తులను అంచనా వేస్తాయి. మీరు ఇప్పటికీ కొన్ని సంబంధిత యాడ్‌లను చూడవచ్చు."</string>
-    <string name="settingsUI_dialog_reset_app_ga_message" msgid="8436063980923088005">"మీ లిస్ట్‌లోని యాప్‌ల నుండి యాడ్-సూచనల డేటా తొలగించబడుతుంది, అలాగే యాప్‌లు ఇకపై కొత్త యాడ్‌లను సూచిస్తాయి. మీకు ఇప్పటికీ కొన్ని సంబంధిత యాడ్‌లను కనిపించవచ్చు."</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="5758218424845642060">"ఈ యాప్ మీకు మళ్లీ యాడ్‌లను సూచించవచ్చు, కానీ అది మీ లిస్ట్‌లో వెంటనే కనిపించకపోవచ్చు. మీకు, సంబంధిత యాడ్‌లు కనిపించడానికి కొంత సమయం పట్టవచ్చు."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"యాప్‌లు సూచించిన యాడ్‌లను రీసెట్ చేయాలా?"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"మీ లిస్ట్‌లోని యాప్‌ల నుండి యాడ్-సూచనల డేటా తొలగించబడుతుంది, అలాగే యాప్‌లు ఇకపై కొత్త యాడ్‌లను సూచిస్తాయి. మీకు ఇప్పటికీ కొన్ని సంబంధిత యాడ్‌లు కనిపించవచ్చు."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"యాప్ డేటా రీసెట్ చేయబడింది"</string>
     <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"అన్ని టాపిక్‌లనూ రీసెట్ చేయాలా?"</string>
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"యాప్‌లు సూచించిన యాడ్‌లను రీసెట్ చేయాలా?"</string>
@@ -198,14 +188,13 @@
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"ఆఫ్‌లో ఉంది"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"ఆసక్తి గల టాపిక్‌లు, మీరు ఇటీవల ఏ యాప్‌లను ఉపయోగించారు అనే దానిపై ఆధారపడి ఉంటాయి, మీకు వ్యక్తిగతీకరించబడిన యాడ్‌లను చూపడానికి వీటిని యాప్‌లు ఉపయోగిస్తాయి.\n\nమీరు యాప్‌లకు ఏవైనా టాపిక్‌లను షేర్ చేయకూడదనుకుంటే, ఆ టాపిక్‌లను మీరు బ్లాక్ చేయవచ్చు. Android క్రమం తప్పకుండా టాపిక్‌లను ఆటోమేటిక్‌గా తొలగిస్తుంది కూడా."</string>
     <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"యాడ్ టాపిక్‌లను అనుమతించండి"</string>
-    <string name="settingsUI_blocked_topics_ga_title" msgid="1778578928932167070">"మీరు బ్లాక్ చేసిన టాపిక్‌లు"</string>
-    <string name="settingsUI_reset_topics_ga_title" msgid="8223331046430417414">"అన్ని టాపిక్‌లను రీసెట్ చేయండి"</string>
+    <string name="settingsUI_blocked_topics_ga_title" msgid="7163366621282449273">"మీరు బ్లాక్ చేసిన యాడ్ టాపిక్‌లు"</string>
+    <string name="settingsUI_reset_topics_ga_title" msgid="5365554894399951300">"అన్ని యాడ్ టాపిక్‌లను రీసెట్ చేయండి"</string>
     <string name="settingsU_topics_view_footer" msgid="4769146330248953561">"మీరు గత కొన్ని వారాల్లో ఉపయోగించిన యాప్‌ల ఆధారంగా, ఆసక్తి ఉన్న టాపిక్‌లను Android నోట్ చేస్తుంది.\n\nతర్వాత, మీరు ఉపయోగించే యాప్ మీరు చూసే యాడ్‌లను వ్యక్తిగతీకరించడానికి మీకు ఆసక్తి ఉన్న టాపిక్‌లకు సంబంధించిన సమాచారం గురించి Androidను అడగవచ్చు. Android మీ గుర్తింపును, మీ యాప్ వినియోగం గురించిన సమాచారాన్ని రక్షిస్తూనే, గరిష్ఠంగా 3 టాపిక్‌లను షేర్ చేస్తుంది.\n\nAndroid క్రమం తప్పకుండా టాపిక్‌లను ఆటోమేటిక్‌గా తొలగిస్తుంది. మీరు యాప్‌లను ఉపయోగించడం కొనసాగిస్తున్నప్పుడు, లిస్ట్‌లో ఏదైనా ఒక టాపిక్ మళ్లీ కనిపించవచ్చు. లేదా Android ఏవైనా టాపిక్‌లను యాప్‌లతో షేర్ చేయకూడదు అని మీరు భావిస్తే, ఆ టాపిక్‌లను మీరు బ్లాక్ చేయవచ్చు.\n\nమీ యాప్‌లలో, మీకు కనబడే యాడ్ మీకు వ్యక్తిగతీకరించబడుతుందా లేదా అనేది ఈ సెట్టింగ్ మీద, యాప్-సూచిత యాడ్‌ల సెట్టింగ్ మీద, మీ అడ్వర్టయిజింగ్ ID సెట్టింగ్‌ల మీద, అలాగే మీరు ఉపయోగిస్తున్న యాప్ యాడ్‌లను వ్యక్తిగతీకరిస్తుందా లేదా అనే దాని మీద ఆధారపడి ఉండవచ్చు.."</string>
     <string name="settingsUI_apps_switch_title" msgid="1308209012769248890">"యాప్ సూచించిన యాడ్‌లను అనుమతించండి"</string>
     <string name="settingsUI_apps_view_ga_subtitle" msgid="1911743837387384160">"మీరు ఉపయోగించే యాప్‌లు మీకు ఏం నచ్చుతాయో నిర్ణయించి, ఇతర యాప్‌లలో యాడ్‌లను సూచించగలవు.\n\nయాప్‌లు సూచనలు చేయకుండా మీరు బ్లాక్ చేయవచ్చు. Android క్రమం తప్పకుండా యాప్ సూచించిన డేటాను ఆటోమేటిక్‌గా తొలగిస్తుంది."</string>
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"మీరు బ్లాక్ చేసిన యాప్‌లు"</string>
-    <!-- no translation found for settingsUI_reset_apps_ga_title (371969808353100852) -->
-    <skip />
+    <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"యాప్‌లు సూచించిన డేటాను రీసెట్ చేయండి"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"మీరు ఉపయోగించే యాప్‌లు, మీ అనుభవాన్ని వ్యక్తిగతీకరించడానికి మీకు ఆసక్తి ఉన్న అంశాలను గుర్తుంచుకోవడం సాధారణం. యాప్‌లు మీ టాపిక్‌ల గురించి Androidతో సమాచారాన్ని కూడా స్టోర్ చేయగలవు.\n\nఉదాహరణకు, మీరు మారథాన్ ట్రైనింగ్‌కు సంబంధించిన యాప్‌ను ఉపయోగిస్తే, మీరు రన్నింగ్ షూల పట్ల ఆసక్తి కలిగి ఉన్నారని యాప్ నిర్ధారించవచ్చు. తర్వాత, మీరు వేరొక యాప్‌ను ఉపయోగిస్తే, మొదటి యాప్ సూచించిన రన్నింగ్ షూలకు సంబంధించిన యాడ్‌ను మీకు చూపవచ్చు.\n\nAndroid క్రమం తప్పకుండా యాప్ సూచించిన డేటాను ఆటోమేటిక్‌గా తొలగిస్తుంది. మీరు మళ్లీ ఉపయోగించే యాప్ లిస్ట్‌లో తిరిగి కనిపించవచ్చు. లేదా, మీ కోసం యాడ్‌లను సూచించకుండా మీరు యాప్‌ను బ్లాక్ చేయవచ్చు.\n\nమీ యాప్‌లలో మీరు చూసే యాడ్, ఈ సెట్టింగ్, యాడ్ టాపిక్‌ల సెట్టింగ్, మీ అడ్వర్టయిజింగ్ ID సెట్టింగ్‌లు ఇంకా మీరు ఉపయోగిస్తున్న యాప్ యాడ్‌లను వ్యక్తిగతీకరిస్తుందా అనే దాని ఆధారంగా అనుకూలీకరించబడవచ్చు."</string>
     <string name="topic10001" msgid="1636806320891333775">"కళలు &amp; వినోదం"</string>
     <string name="topic10002" msgid="1226367977754287428">"నటన &amp; థియేటర్"</string>
