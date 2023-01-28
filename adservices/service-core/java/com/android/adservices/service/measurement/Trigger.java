@@ -20,7 +20,9 @@ import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
+import android.util.Pair;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateDeduplicationKey;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
@@ -337,22 +339,24 @@ public class Trigger {
                             .setKey(bigInteger)
                             .setSourceKeys(sourceKeySet);
             if (jsonObject.has("filters") && !jsonObject.isNull("filters")) {
-                List<FilterMap> filterSet =
-                        Filter.deserializeFilterSet(jsonObject.getJSONArray("filters"));
+                List<FilterMap> filterSet = getFilterSet(jsonObject, "filters");
                 builder.setFilterSet(filterSet);
             }
             if (jsonObject.has("not_filters")
                     && !jsonObject.isNull("not_filters")) {
-                List<FilterMap> notFilterSet =
-                        Filter.deserializeFilterSet(jsonObject.getJSONArray("not_filters"));
+                List<FilterMap> notFilterSet = getFilterSet(jsonObject, "not_filters");
                 builder.setNotFilterSet(notFilterSet);
             }
             if (!jsonObject.isNull("serving_adtech_network")) {
                 JSONObject servingAdtechNetworkJson =
                         jsonObject.getJSONObject("serving_adtech_network");
-                ServingAdtechNetwork servingAdtechNetwork =
-                        new ServingAdtechNetwork.Builder(servingAdtechNetworkJson).build();
-                builder.setServingAdtechNetwork(servingAdtechNetwork);
+                if (!servingAdtechNetworkJson.isNull("offset")) {
+                    ServingAdtechNetwork servingAdtechNetwork =
+                            new ServingAdtechNetwork.Builder()
+                                    .setOffset(servingAdtechNetworkJson.getLong("offset"))
+                                    .build();
+                    builder.setServingAdtechNetwork(servingAdtechNetwork);
+                }
             }
             triggerDataList.add(builder.build());
         }
@@ -422,21 +426,96 @@ public class Trigger {
 
             if (!eventTrigger.isNull(EventTriggerContract.FILTERS)) {
                 List<FilterMap> filterSet =
-                        Filter.deserializeFilterSet(
-                                eventTrigger.getJSONArray(EventTriggerContract.FILTERS));
+                        getFilterSet(eventTrigger, EventTriggerContract.FILTERS);
                 eventTriggerBuilder.setFilterSet(filterSet);
             }
 
             if (!eventTrigger.isNull(EventTriggerContract.NOT_FILTERS)) {
                 List<FilterMap> notFilterSet =
-                        Filter.deserializeFilterSet(
-                                eventTrigger.getJSONArray(EventTriggerContract.NOT_FILTERS));
+                        getFilterSet(eventTrigger, EventTriggerContract.NOT_FILTERS);
                 eventTriggerBuilder.setNotFilterSet(notFilterSet);
             }
             eventTriggers.add(eventTriggerBuilder.build());
         }
 
         return eventTriggers;
+    }
+
+    /**
+     * Parses the json array under {@link #mAttributionConfig} to form a list of {@link
+     * AttributionConfig}s.
+     *
+     * @return list of {@link AttributionConfig}s
+     * @throws JSONException if JSON parsing fails
+     */
+    @Nullable
+    public List<AttributionConfig> parseAttributionConfigs() throws JSONException {
+        if (this.mAttributionConfig == null) {
+            return null;
+        }
+        List<AttributionConfig> attributionConfigs = new ArrayList<>();
+        JSONArray jsonArray = new JSONArray(this.mAttributionConfig);
+        for (int i = 0; i < jsonArray.length(); i++) {
+            AttributionConfig.Builder attributionConfigBuilder = new AttributionConfig.Builder();
+            JSONObject attributionConfigsJson = jsonArray.getJSONObject(i);
+
+            if (attributionConfigsJson.isNull(AttributionConfigContract.SOURCE_ADTECH)) {
+                LogUtil.d("Required field source_adtech is not present.");
+                continue;
+            }
+            attributionConfigBuilder.setSourceAdtech(
+                    attributionConfigsJson.getString(AttributionConfigContract.SOURCE_ADTECH));
+
+            if (!attributionConfigsJson.isNull(AttributionConfigContract.SOURCE_PRIORITY_RANGE)) {
+                JSONObject sourcePriorityRangeJson =
+                        attributionConfigsJson.getJSONObject(
+                                AttributionConfigContract.SOURCE_PRIORITY_RANGE);
+                Pair<Long, Long> sourcePriorityRange =
+                        new Pair<>(
+                                sourcePriorityRangeJson.getLong(AttributionConfigContract.START),
+                                sourcePriorityRangeJson.getLong(AttributionConfigContract.END));
+                attributionConfigBuilder.setSourcePriorityRange(sourcePriorityRange);
+            }
+            if (!attributionConfigsJson.isNull(AttributionConfigContract.SOURCE_FILTERS)) {
+                List<FilterMap> sourceFilters =
+                        getFilterSet(
+                                attributionConfigsJson, AttributionConfigContract.SOURCE_FILTERS);
+                attributionConfigBuilder.setSourceFilters(sourceFilters);
+            }
+            if (!attributionConfigsJson.isNull(AttributionConfigContract.SOURCE_NOT_FILTERS)) {
+                List<FilterMap> sourceNotFilters =
+                        getFilterSet(
+                                attributionConfigsJson,
+                                AttributionConfigContract.SOURCE_NOT_FILTERS);
+                attributionConfigBuilder.setSourceNotFilters(sourceNotFilters);
+            }
+            if (!attributionConfigsJson.isNull(AttributionConfigContract.SOURCE_EXPIRY_OVERRIDE)) {
+                attributionConfigBuilder.setSourceExpiryOverride(
+                        attributionConfigsJson.getLong(
+                                AttributionConfigContract.SOURCE_EXPIRY_OVERRIDE));
+            }
+            if (!attributionConfigsJson.isNull(AttributionConfigContract.PRIORITY)) {
+                attributionConfigBuilder.setPriority(
+                        attributionConfigsJson.getLong(AttributionConfigContract.PRIORITY));
+            }
+            if (!attributionConfigsJson.isNull(AttributionConfigContract.EXPIRY)) {
+                attributionConfigBuilder.setExpiry(
+                        attributionConfigsJson.getLong(AttributionConfigContract.EXPIRY));
+            }
+            if (!attributionConfigsJson.isNull(AttributionConfigContract.FILTER_DATA)) {
+                List<FilterMap> filterData =
+                        getFilterSet(attributionConfigsJson, AttributionConfigContract.FILTER_DATA);
+                attributionConfigBuilder.setFilterData(filterData);
+            }
+            if (!attributionConfigsJson.isNull(
+                    AttributionConfigContract.POST_INSTALL_EXCLUSIVITY_WINDOW)) {
+                attributionConfigBuilder.setPostInstallExclusivityWindow(
+                        attributionConfigsJson.getLong(
+                                AttributionConfigContract.POST_INSTALL_EXCLUSIVITY_WINDOW));
+            }
+            attributionConfigs.add(attributionConfigBuilder.build());
+        }
+        return attributionConfigs;
     }
 
     /**
@@ -644,5 +723,31 @@ public class Trigger {
         String DEDUPLICATION_KEY = "deduplication_key";
         String FILTERS = "filters";
         String NOT_FILTERS = "not_filters";
+    }
+
+    /** Attribution Config field keys. */
+    public interface AttributionConfigContract {
+        String SOURCE_ADTECH = "source_adtech";
+        String SOURCE_PRIORITY_RANGE = "source_priority_range";
+        String SOURCE_FILTERS = "source_filters";
+        String SOURCE_NOT_FILTERS = "source_not_filters";
+        String SOURCE_EXPIRY_OVERRIDE = "source_expiry_override";
+        String PRIORITY = "priority";
+        String EXPIRY = "expiry";
+        String FILTER_DATA = "filter_data";
+        String POST_INSTALL_EXCLUSIVITY_WINDOW = "post_install_exclusivity_window";
+        String START = "start";
+        String END = "end";
+    }
+
+    private static List<FilterMap> getFilterSet(JSONObject obj, String key) throws JSONException {
+        List<FilterMap> filterSet = new ArrayList<>();
+        JSONArray filters = obj.getJSONArray(key);
+        for (int i = 0; i < filters.length(); i++) {
+            FilterMap filterMap =
+                    new FilterMap.Builder().buildFilterData(filters.getJSONObject(i)).build();
+            filterSet.add(filterMap);
+        }
+        return filterSet;
     }
 }
