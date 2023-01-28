@@ -18,6 +18,8 @@ package android.adservices.common;
 
 import com.google.common.collect.ImmutableSet;
 
+import java.time.Duration;
+
 /** Utility class for creating and testing {@link KeyedFrequencyCap} objects. */
 public class KeyedFrequencyCapFixture {
     public static final String KEY1 = "key1";
@@ -25,7 +27,7 @@ public class KeyedFrequencyCapFixture {
     public static final String KEY3 = "key3";
     public static final String KEY4 = "key4";
     public static final int VALID_COUNT = 10;
-    public static final int DAY_IN_SECONDS = 24 * 60 * 60;
+    public static final Duration ONE_DAY_DURATION = Duration.ofDays(1);
 
     public static final ImmutableSet<KeyedFrequencyCap> VALID_KEYED_FREQUENCY_CAP_SET =
             ImmutableSet.of(
@@ -38,6 +40,6 @@ public class KeyedFrequencyCapFixture {
         return new KeyedFrequencyCap.Builder()
                 .setAdCounterKey(key)
                 .setMaxCount(1)
-                .setIntervalSeconds(DAY_IN_SECONDS);
+                .setInterval(ONE_DAY_DURATION);
     }
 }
