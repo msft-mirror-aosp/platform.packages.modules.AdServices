@@ -199,7 +199,7 @@ public class XnaSourceCreatorTest {
                         .setInstallCooldownWindow(0L)
                         .setParentId(source5Matches.getId())
                         .setEnrollmentId(trigger.getEnrollmentId())
-                        .setAggregateSource(new JSONObject().toString())
+                        .setAggregateSource(null)
                         .build();
         Source source6NoFiltersIssue =
                 createValidSourceBuilder()

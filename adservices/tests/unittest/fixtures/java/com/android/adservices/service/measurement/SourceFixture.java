@@ -99,10 +99,12 @@ public final class SourceFixture {
 
         public static final String buildAggregateSource() {
             try {
+                JSONArray aggregatableSource = new JSONArray();
                 JSONObject jsonObject = new JSONObject();
-                jsonObject.put("campaignCounts", "0x456");
-                jsonObject.put("geoValue", "0x159");
-                return jsonObject.toString();
+                jsonObject.put("id", "campaignCounts");
+                jsonObject.put("key_piece", "0x159");
+                aggregatableSource.put(jsonObject);
+                return aggregatableSource.toString();
             } catch (JSONException e) {
                 LogUtil.e("JSONException when building aggregate source.");
             }

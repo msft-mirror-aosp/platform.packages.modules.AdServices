@@ -32,16 +32,13 @@ import static org.mockito.Mockito.when;
 
 import android.content.Context;
 import android.net.Uri;
-import android.util.Pair;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
-import com.android.adservices.service.measurement.AttributionConfig;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.Source;
@@ -68,7 +65,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -2624,246 +2620,6 @@ public class AttributionJobHandlerTest {
         verify(mMeasurementDao).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
-    }
-
-    @Test
-    public void performAttributions_withXnaConfig_originalSourceWinsAndOtherIgnored()
-            throws DatastoreException {
-        // Setup
-        String adtechEnrollment = "AdTech1-Ads";
-        AttributionConfig attributionConfig =
-                new AttributionConfig.Builder()
-                        .setExpiry(604800L)
-                        .setSourceAdtech(adtechEnrollment)
-                        .setSourcePriorityRange(new Pair<>(1L, 1000L))
-                        .setSourceFilters(null)
-                        .setPriority(1L)
-                        .setExpiry(604800L)
-                        .setFilterData(null)
-                        .build();
-        Trigger trigger =
-                getXnaTriggerBuilder()
-                        .setFilters(null)
-                        .setNotFilters(null)
-                        .setAttributionConfig(
-                                new JSONArray(
-                                                Collections.singletonList(
-                                                        attributionConfig.serializeAsJson()))
-                                        .toString())
-                        .build();
-
-        String aggregatableSource = SourceFixture.ValidSourceParams.buildAggregateSource();
-        Source xnaSource =
-                createXnaSourceBuilder()
-                        .setEnrollmentId(adtechEnrollment)
-                        // Priority changes to 1 for derived source
-                        .setPriority(100L)
-                        .setAggregateSource(aggregatableSource)
-                        .setFilterData(null)
-                        .setSharedAggregationKeys(
-                                new JSONArray(Arrays.asList("campaignCounts", "geoValue"))
-                                        .toString())
-                        .build();
-        // winner due to install attribution and higher priority
-        Source triggerEnrollmentSource1 =
-                createXnaSourceBuilder()
-                        .setEnrollmentId(trigger.getEnrollmentId())
-                        .setPriority(2L)
-                        .setFilterData(null)
-                        .setAggregateSource(aggregatableSource)
-                        .build();
-
-        Source triggerEnrollmentSource2 =
-                createXnaSourceBuilder()
-                        .setEnrollmentId(trigger.getEnrollmentId())
-                        .setPriority(2L)
-                        .setFilterData(null)
-                        .setAggregateSource(aggregatableSource)
-                        .setInstallAttributed(false)
-                        .build();
-
-        when(mMeasurementDao.getPendingTriggerIds())
-                .thenReturn(Collections.singletonList(trigger.getId()));
-        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
-        List<Source> matchingSourceList = new ArrayList<>();
-        matchingSourceList.add(xnaSource);
-        matchingSourceList.add(triggerEnrollmentSource1);
-        matchingSourceList.add(triggerEnrollmentSource2);
-        when(mMeasurementDao.fetchTriggerMatchingSourcesForXna(any(), any()))
-                .thenReturn(matchingSourceList);
-        when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
-        when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
-
-        // Execution
-        boolean result = attributionService.performPendingAttributions();
-
-        // Assertion
-        assertTrue(result);
-        verify(mMeasurementDao)
-                .updateTriggerStatus(
-                        eq(Collections.singletonList(trigger.getId())),
-                        eq(Trigger.Status.ATTRIBUTED));
-        verify(mMeasurementDao).insertAggregateReport(any());
-        verify(mMeasurementDao, never()).insertEventReport(any());
-        verify(mMeasurementDao).insertAttribution(any());
-        verify(mMeasurementDao)
-                .insertIgnoredSourceForEnrollment(xnaSource.getId(), trigger.getEnrollmentId());
-        verify(mMeasurementDao)
-                .updateSourceStatus(
-                        eq(Collections.singletonList(triggerEnrollmentSource2.getId())),
-                        eq(Source.Status.IGNORED));
-        verify(mTransaction, times(2)).begin();
-        verify(mTransaction, times(2)).end();
-    }
-
-    @Test
-    public void performAttributions_withXnaConfig_derivedSourceWinsAndOtherIgnored()
-            throws DatastoreException {
-        // Setup
-        String adtechEnrollment = "AdTech1-Ads";
-        AttributionConfig attributionConfig =
-                new AttributionConfig.Builder()
-                        .setExpiry(604800L)
-                        .setSourceAdtech(adtechEnrollment)
-                        .setSourcePriorityRange(new Pair<>(1L, 1000L))
-                        .setSourceFilters(null)
-                        .setPriority(50L)
-                        .setExpiry(604800L)
-                        .setFilterData(null)
-                        .build();
-        Trigger trigger =
-                getXnaTriggerBuilder()
-                        .setFilters(null)
-                        .setNotFilters(null)
-                        .setAttributionConfig(
-                                new JSONArray(
-                                                Collections.singletonList(
-                                                        attributionConfig.serializeAsJson()))
-                                        .toString())
-                        .build();
-
-        String aggregatableSource = SourceFixture.ValidSourceParams.buildAggregateSource();
-        // Its derived source will be winner due to install attribution and higher priority
-        Source xnaSource =
-                createXnaSourceBuilder()
-                        .setEnrollmentId(adtechEnrollment)
-                        // Priority changes to 50 for derived source
-                        .setPriority(1L)
-                        .setAggregateSource(aggregatableSource)
-                        .setFilterData(null)
-                        .setSharedAggregationKeys(
-                                new JSONArray(Arrays.asList("campaignCounts", "geoValue"))
-                                        .toString())
-                        .build();
-        Source triggerEnrollmentSource1 =
-                createXnaSourceBuilder()
-                        .setEnrollmentId(trigger.getEnrollmentId())
-                        .setPriority(2L)
-                        .setFilterData(null)
-                        .setAggregateSource(aggregatableSource)
-                        .build();
-
-        Source triggerEnrollmentSource2 =
-                createXnaSourceBuilder()
-                        .setEnrollmentId(trigger.getEnrollmentId())
-                        .setPriority(2L)
-                        .setFilterData(null)
-                        .setAggregateSource(aggregatableSource)
-                        .setInstallAttributed(false)
-                        .build();
-
-        when(mMeasurementDao.getPendingTriggerIds())
-                .thenReturn(Collections.singletonList(trigger.getId()));
-        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
-        List<Source> matchingSourceList = new ArrayList<>();
-        matchingSourceList.add(xnaSource);
-        matchingSourceList.add(triggerEnrollmentSource1);
-        matchingSourceList.add(triggerEnrollmentSource2);
-        when(mMeasurementDao.fetchTriggerMatchingSourcesForXna(any(), any()))
-                .thenReturn(matchingSourceList);
-        when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
-        when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
-
-        // Execution
-        boolean result = attributionService.performPendingAttributions();
-
-        // Assertion
-        assertTrue(result);
-        verify(mMeasurementDao)
-                .updateTriggerStatus(
-                        eq(Collections.singletonList(trigger.getId())),
-                        eq(Trigger.Status.ATTRIBUTED));
-        verify(mMeasurementDao).insertAggregateReport(any());
-        verify(mMeasurementDao, never()).insertEventReport(any());
-        verify(mMeasurementDao).insertAttribution(any());
-        verify(mMeasurementDao)
-                .updateSourceStatus(
-                        eq(
-                                Arrays.asList(
-                                        triggerEnrollmentSource1.getId(),
-                                        triggerEnrollmentSource2.getId())),
-                        eq(Source.Status.IGNORED));
-        verify(mTransaction, times(2)).begin();
-        verify(mTransaction, times(2)).end();
-    }
-
-    public static Trigger.Builder getXnaTriggerBuilder() {
-        return new Trigger.Builder()
-                .setId(UUID.randomUUID().toString())
-                .setAttributionDestination(
-                        TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION)
-                .setEnrollmentId(TriggerFixture.ValidTriggerParams.ENROLLMENT_ID)
-                .setRegistrant(TriggerFixture.ValidTriggerParams.REGISTRANT)
-                .setTriggerTime(TriggerFixture.ValidTriggerParams.TRIGGER_TIME)
-                .setEventTriggers(TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS)
-                .setAggregateTriggerData(TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA)
-                .setAggregateValues(TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES)
-                .setFilters(TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING)
-                .setNotFilters(TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING)
-                .setAttributionConfig(TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIGS_STRING)
-                .setAdtechBitMapping(TriggerFixture.ValidTriggerParams.ADTECH_BIT_MAPPING);
-    }
-
-    private Source.Builder createXnaSourceBuilder() {
-        return new Source.Builder()
-                .setId(UUID.randomUUID().toString())
-                .setEventId(SourceFixture.ValidSourceParams.SOURCE_EVENT_ID)
-                .setPublisher(SourceFixture.ValidSourceParams.PUBLISHER)
-                .setAppDestination(SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
-                .setWebDestination(SourceFixture.ValidSourceParams.WEB_DESTINATION)
-                .setEnrollmentId(SourceFixture.ValidSourceParams.ENROLLMENT_ID)
-                .setRegistrant(SourceFixture.ValidSourceParams.REGISTRANT)
-                .setEventTime(SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME)
-                .setExpiryTime(SourceFixture.ValidSourceParams.EXPIRY_TIME)
-                .setPriority(SourceFixture.ValidSourceParams.PRIORITY)
-                .setSourceType(SourceFixture.ValidSourceParams.SOURCE_TYPE)
-                .setInstallAttributionWindow(
-                        SourceFixture.ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW)
-                .setInstallCooldownWindow(SourceFixture.ValidSourceParams.INSTALL_COOLDOWN_WINDOW)
-                .setAttributionMode(SourceFixture.ValidSourceParams.ATTRIBUTION_MODE)
-                .setAggregateSource(SourceFixture.ValidSourceParams.buildAggregateSource())
-                .setFilterData(buildMatchingFilterData())
-                .setIsDebugReporting(true)
-                .setRegistrationId(SourceFixture.ValidSourceParams.REGISTRATION_ID)
-                .setSharedAggregationKeys(SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS)
-                .setInstallTime(SourceFixture.ValidSourceParams.INSTALL_TIME)
-                .setAggregatableReportWindow(SourceFixture.ValidSourceParams.EXPIRY_TIME)
-                .setInstallAttributed(true);
-    }
-
-    private String buildMatchingFilterData() {
-        try {
-            JSONObject filterMap = new JSONObject();
-            filterMap.put(
-                    "conversion_subdomain",
-                    new JSONArray(Collections.singletonList("electronics.megastore")));
-            return filterMap.toString();
-        } catch (JSONException e) {
-            LogUtil.e("JSONException when building aggregate filter data.");
-        }
-        return null;
     }
 
     private JSONArray buildAggregateTriggerData() throws JSONException {

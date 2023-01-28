@@ -92,6 +92,9 @@ public class SystemHealthParams {
      */
     public static final int MAX_AGGREGATE_KEYS_PER_REGISTRATION = 50;
 
+    /** Maximum number of aggregate deduplication keys allowed during trigger registration. */
+    public static final int MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION = 50;
+
     /**
      * Maximum number of aggregatable trigger data allowed in a trigger registration.
      */
