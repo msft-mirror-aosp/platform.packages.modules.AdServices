@@ -44,11 +44,11 @@ import org.mockito.quality.Strictness;
 import java.util.Map;
 import java.util.Set;
 
-/** Unit tests for {@link TopicDbMigratorV7} */
-public class TopicDbMigratorV7Test {
+/** Unit tests for {@link TopicDbMigratorV5} */
+public class TopicDbMigratorV5Test {
     private static final Context sContext = ApplicationProvider.getApplicationContext();
-    // The database is created with V6 and will migrate to V7.
-    private final TopicsDbHelperV6 mTopicsDbHelper = TopicsDbHelperV6.getInstance(sContext);
+    // The database is created with V2 and will migrate to V5.
+    private final TopicsDbHelperV2 mTopicsDbHelper = TopicsDbHelperV2.getInstance(sContext);
 
     private MockitoSession mStaticMockSession;
     @Mock private Flags mMockFlags;
@@ -70,11 +70,11 @@ public class TopicDbMigratorV7Test {
     }
 
     @Test
-    public void testDbMigrationFromV6ToV7() {
+    public void testDbMigrationFromV2ToV5() {
         // Enable DB Schema Flag
         SQLiteDatabase db = mTopicsDbHelper.getWritableDatabase();
 
-        // TopicContributors table doesn't exist in V6
+        // TopicContributors table doesn't exist in V2
         assertThat(
                         DbTestUtil.doesTableExistAndColumnCountMatch(
                                 db,
@@ -85,13 +85,13 @@ public class TopicDbMigratorV7Test {
         // Use transaction here so that the changes in the performMigration is committed.
         // In normal DB upgrade, the DB will commit the change automatically.
         db.beginTransaction();
-        // Upgrade the db V7 by using TopicDbMigratorV7
-        new TopicDbMigratorV7().performMigration(db);
+        // Upgrade the db V5 by using TopicDbMigratorV5
+        new TopicDbMigratorV5().performMigration(db);
         // Commit the schema change
         db.setTransactionSuccessful();
         db.endTransaction();
 
-        // TopicContributors table exists in V7
+        // TopicContributors table exists in V5
         db = mTopicsDbHelper.getReadableDatabase();
         assertThat(
                         DbTestUtil.doesTableExistAndColumnCountMatch(
@@ -116,7 +116,7 @@ public class TopicDbMigratorV7Test {
         mTopicsDbHelper.onDowngrade(
                 db, DbHelper.DATABASE_VERSION_V7, DbHelper.CURRENT_DATABASE_VERSION);
         when(mMockFlags.getEnableDatabaseSchemaVersion5()).thenReturn(true);
-        new TopicDbMigratorV7().performMigration(db);
+        new TopicDbMigratorV5().performMigration(db);
         // Commit the schema change
         db.setTransactionSuccessful();
         db.endTransaction();

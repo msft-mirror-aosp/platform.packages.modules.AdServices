@@ -1452,7 +1452,6 @@ class MeasurementDao implements IMeasurementDao {
 
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.SourceContract.IS_INSTALL_ATTRIBUTED, true);
-        values.put(MeasurementTables.SourceContract.INSTALL_TIME, eventTimestamp);
         db.update(
                 MeasurementTables.SourceContract.TABLE,
                 values,
@@ -1465,7 +1464,6 @@ class MeasurementDao implements IMeasurementDao {
         SQLiteDatabase db = mSQLTransaction.getDatabase();
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.SourceContract.IS_INSTALL_ATTRIBUTED, false);
-        values.putNull(MeasurementTables.SourceContract.INSTALL_TIME);
         db.update(
                 MeasurementTables.SourceContract.TABLE,
                 values,

@@ -43,8 +43,7 @@ public final class MeasurementTables {
         MeasurementTables.AggregateEncryptionKey.TABLE,
         MeasurementTables.AttributionContract.TABLE,
         MeasurementTables.AsyncRegistrationContract.TABLE,
-        MeasurementTables.DebugReportContract.TABLE,
-        MeasurementTables.XnaIgnoredSourcesContract.TABLE
+        MeasurementTables.DebugReportContract.TABLE
     };
 
     /** Contract for asynchronous Registration. */
@@ -67,7 +66,6 @@ public final class MeasurementTables {
         String VERIFIED_DESTINATION = "verified_destination";
         String DEBUG_KEY_ALLOWED = "debug_key_allowed";
         String AD_ID_PERMISSION = "ad_id_permission";
-        String REGISTRATION_ID = "registration_id";
     }
 
     /** Contract for Source. */
@@ -102,9 +100,6 @@ public final class MeasurementTables {
         String DEBUG_REPORTING = "debug_reporting";
         String AD_ID_PERMISSION = "ad_id_permission";
         String AR_DEBUG_PERMISSION = "ar_debug_permission";
-        String REGISTRATION_ID = "registration_id";
-        String SHARED_AGGREGATION_KEYS = "shared_aggregation_keys";
-        String INSTALL_TIME = "install_time";
     }
 
     /** Contract for Trigger. */
@@ -126,8 +121,6 @@ public final class MeasurementTables {
         String DEBUG_REPORTING = "debug_reporting";
         String AD_ID_PERMISSION = "ad_id_permission";
         String AR_DEBUG_PERMISSION = "ar_debug_permission";
-        String ATTRIBUTION_CONFIG = "attribution_config";
-        String ADTECH_BIT_MAPPING = "adtech_bit_mapping";
     }
 
     /** Contract for EventReport. */
@@ -204,13 +197,6 @@ public final class MeasurementTables {
         String ENROLLMENT_ID = "enrollment_id";
     }
 
-    /** Contract for xna ignored sources. */
-    public interface XnaIgnoredSourcesContract {
-        String TABLE = MSMT_TABLE_PREFIX + "xna_ignored_sources";
-        String SOURCE_ID = "source_id";
-        String ENROLLMENT_ID = "enrollment_id";
-    }
-
     public static final String CREATE_TABLE_ASYNC_REGISTRATION_V1 =
             "CREATE TABLE "
                     + AsyncRegistrationContract.TABLE
@@ -280,9 +266,7 @@ public final class MeasurementTables {
                     + AsyncRegistrationContract.DEBUG_KEY_ALLOWED
                     + " INTEGER, "
                     + AsyncRegistrationContract.AD_ID_PERMISSION
-                    + " INTEGER, "
-                    + AsyncRegistrationContract.REGISTRATION_ID
-                    + " TEXT "
+                    + " INTEGER "
                     + ")";
 
     public static final String CREATE_TABLE_SOURCE_V1 =
@@ -332,6 +316,62 @@ public final class MeasurementTables {
                     + SourceContract.WEB_DESTINATION
                     + " TEXT, "
                     + SourceContract.DEBUG_KEY
+                    + " INTEGER "
+                    + ")";
+
+    public static final String CREATE_TABLE_SOURCE_V2 =
+            "CREATE TABLE "
+                    + SourceContract.TABLE
+                    + " ("
+                    + SourceContract.ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + SourceContract.EVENT_ID
+                    + " INTEGER, "
+                    + SourceContract.PUBLISHER
+                    + " TEXT, "
+                    + SourceContract.PUBLISHER_TYPE
+                    + " INTEGER, "
+                    + SourceContract.APP_DESTINATION
+                    + " TEXT, "
+                    + SourceContract.ENROLLMENT_ID
+                    + " TEXT, "
+                    + SourceContract.EVENT_TIME
+                    + " INTEGER, "
+                    + SourceContract.EXPIRY_TIME
+                    + " INTEGER, "
+                    + SourceContract.PRIORITY
+                    + " INTEGER, "
+                    + SourceContract.STATUS
+                    + " INTEGER, "
+                    + SourceContract.DEDUP_KEYS
+                    + " TEXT, "
+                    + SourceContract.SOURCE_TYPE
+                    + " TEXT, "
+                    + SourceContract.REGISTRANT
+                    + " TEXT, "
+                    + SourceContract.ATTRIBUTION_MODE
+                    + " INTEGER, "
+                    + SourceContract.INSTALL_ATTRIBUTION_WINDOW
+                    + " INTEGER, "
+                    + SourceContract.INSTALL_COOLDOWN_WINDOW
+                    + " INTEGER, "
+                    + SourceContract.IS_INSTALL_ATTRIBUTED
+                    + " INTEGER, "
+                    + SourceContract.FILTER_DATA
+                    + " TEXT, "
+                    + SourceContract.AGGREGATE_SOURCE
+                    + " TEXT, "
+                    + SourceContract.AGGREGATE_CONTRIBUTIONS
+                    + " INTEGER, "
+                    + SourceContract.WEB_DESTINATION
+                    + " TEXT, "
+                    + SourceContract.DEBUG_KEY
+                    + " INTEGER , "
+                    + SourceContract.DEBUG_REPORTING
+                    + " INTEGER, "
+                    + SourceContract.AD_ID_PERMISSION
+                    + " INTEGER, "
+                    + SourceContract.AR_DEBUG_PERMISSION
                     + " INTEGER "
                     + ")";
 
@@ -394,12 +434,6 @@ public final class MeasurementTables {
                     + SourceContract.AD_ID_PERMISSION
                     + " INTEGER, "
                     + SourceContract.AR_DEBUG_PERMISSION
-                    + " INTEGER, "
-                    + SourceContract.REGISTRATION_ID
-                    + " TEXT, "
-                    + SourceContract.SHARED_AGGREGATION_KEYS
-                    + " TEXT, "
-                    + SourceContract.INSTALL_TIME
                     + " INTEGER "
                     + ")";
 
@@ -468,11 +502,7 @@ public final class MeasurementTables {
                     + TriggerContract.AD_ID_PERMISSION
                     + " INTEGER, "
                     + TriggerContract.AR_DEBUG_PERMISSION
-                    + " INTEGER, "
-                    + TriggerContract.ATTRIBUTION_CONFIG
-                    + " TEXT, "
-                    + TriggerContract.ADTECH_BIT_MAPPING
-                    + " TEXT "
+                    + " INTEGER "
                     + ")";
 
     public static final String CREATE_TABLE_EVENT_REPORT_V1 =
@@ -721,23 +751,6 @@ public final class MeasurementTables {
                     + " TEXT "
                     + ")";
 
-    public static final String CREATE_TABLE_XNA_IGNORED_SOURCES_V1 =
-            "CREATE TABLE "
-                    + XnaIgnoredSourcesContract.TABLE
-                    + " ("
-                    + XnaIgnoredSourcesContract.SOURCE_ID
-                    + " TEXT NOT NULL, "
-                    + XnaIgnoredSourcesContract.ENROLLMENT_ID
-                    + " TEXT NOT NULL, "
-                    + "FOREIGN KEY ("
-                    + XnaIgnoredSourcesContract.SOURCE_ID
-                    + ") REFERENCES "
-                    + SourceContract.TABLE
-                    + "("
-                    + SourceContract.ID
-                    + ") ON DELETE CASCADE"
-                    + ")";
-
     public static final String[] CREATE_INDEXES = {
         "CREATE INDEX "
                 + INDEX_PREFIX
@@ -833,8 +846,7 @@ public final class MeasurementTables {
                             CREATE_TABLE_AGGREGATE_REPORT_LATEST,
                             CREATE_TABLE_AGGREGATE_ENCRYPTION_KEY_V1,
                             CREATE_TABLE_ASYNC_REGISTRATION_LATEST,
-                            CREATE_TABLE_DEBUG_REPORT_LATEST,
-                            CREATE_TABLE_XNA_IGNORED_SOURCES_V1));
+                            CREATE_TABLE_DEBUG_REPORT_LATEST));
 
     // Private constructor to prevent instantiation.
     private MeasurementTables() {
