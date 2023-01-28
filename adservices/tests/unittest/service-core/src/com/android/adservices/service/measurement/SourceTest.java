@@ -39,6 +39,7 @@ import org.json.JSONObject;
 import org.junit.Test;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -88,8 +89,8 @@ public class SourceTest {
         assertEquals(
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
-                        .setAppDestination(Uri.parse("android-app://example.test/aD1"))
-                        .setWebDestination(Uri.parse("https://example.test/aD2"))
+                        .setAppDestinations(List.of(Uri.parse("android-app://example.test/aD1")))
+                        .setWebDestinations(List.of(Uri.parse("https://example.test/aD2")))
                         .setPublisher(Uri.parse("https://example.test/aS"))
                         .setPublisherType(EventSurfaceType.WEB)
                         .setId("1")
@@ -124,8 +125,8 @@ public class SourceTest {
                         .build(),
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
-                        .setAppDestination(Uri.parse("android-app://example.test/aD1"))
-                        .setWebDestination(Uri.parse("https://example.test/aD2"))
+                        .setAppDestinations(List.of(Uri.parse("android-app://example.test/aD1")))
+                        .setWebDestinations(List.of(Uri.parse("https://example.test/aD2")))
                         .setPublisher(Uri.parse("https://example.test/aS"))
                         .setPublisherType(EventSurfaceType.WEB)
                         .setId("1")
@@ -167,17 +168,17 @@ public class SourceTest {
                 SourceFixture.getValidSourceBuilder().setEventId(new UnsignedLong(2L)).build());
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder()
-                        .setAppDestination(Uri.parse("android-app://1.test"))
+                        .setAppDestinations(List.of(Uri.parse("android-app://1.test")))
                         .build(),
                 SourceFixture.getValidSourceBuilder()
-                        .setAppDestination(Uri.parse("android-app://2.test"))
+                        .setAppDestinations(List.of(Uri.parse("android-app://2.test")))
                         .build());
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder()
-                        .setWebDestination(Uri.parse("https://1.test"))
+                        .setWebDestinations(List.of(Uri.parse("https://1.test")))
                         .build(),
                 SourceFixture.getValidSourceBuilder()
-                        .setWebDestination(Uri.parse("https://2.test"))
+                        .setWebDestinations(List.of(Uri.parse("https://2.test")))
                         .build());
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder()
@@ -318,8 +319,8 @@ public class SourceTest {
         assertInvalidSourceArguments(
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
                 null,
-                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION,
-                SourceFixture.ValidSourceParams.WEB_DESTINATION,
+                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS,
+                SourceFixture.ValidSourceParams.WEB_DESTINATIONS,
                 SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                 SourceFixture.ValidSourceParams.REGISTRANT,
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME,
@@ -339,8 +340,8 @@ public class SourceTest {
         assertInvalidSourceArguments(
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
                 Uri.parse("com.source"),
-                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION,
-                SourceFixture.ValidSourceParams.WEB_DESTINATION,
+                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS,
+                SourceFixture.ValidSourceParams.WEB_DESTINATIONS,
                 SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                 SourceFixture.ValidSourceParams.REGISTRANT,
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME,
@@ -381,11 +382,12 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME);
 
+        // Invalid app Uri
         assertInvalidSourceArguments(
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
                 SourceFixture.ValidSourceParams.PUBLISHER,
-                Uri.parse("com.destination"),
-                SourceFixture.ValidSourceParams.WEB_DESTINATION,
+                List.of(Uri.parse("com.destination")),
+                SourceFixture.ValidSourceParams.WEB_DESTINATIONS,
                 SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                 SourceFixture.ValidSourceParams.REGISTRANT,
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME,
@@ -402,11 +404,80 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME);
 
+        // Invalid web Uri
         assertInvalidSourceArguments(
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
                 SourceFixture.ValidSourceParams.PUBLISHER,
-                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION,
-                Uri.parse("com.destination"),
+                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS,
+                List.of(Uri.parse("com.destination")),
+                SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                SourceFixture.ValidSourceParams.REGISTRANT,
+                SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME,
+                SourceFixture.ValidSourceParams.EXPIRY_TIME,
+                SourceFixture.ValidSourceParams.PRIORITY,
+                SourceFixture.ValidSourceParams.SOURCE_TYPE,
+                SourceFixture.ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW,
+                SourceFixture.ValidSourceParams.INSTALL_COOLDOWN_WINDOW,
+                SourceFixture.ValidSourceParams.DEBUG_KEY,
+                SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
+                SourceFixture.ValidSourceParams.buildAggregateSource(),
+                SourceFixture.ValidSourceParams.buildFilterData(),
+                SourceFixture.ValidSourceParams.REGISTRATION_ID,
+                SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.INSTALL_TIME);
+
+        // Empty app destinations list
+        assertInvalidSourceArguments(
+                SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
+                SourceFixture.ValidSourceParams.PUBLISHER,
+                new ArrayList<>(),
+                SourceFixture.ValidSourceParams.WEB_DESTINATIONS,
+                SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                SourceFixture.ValidSourceParams.REGISTRANT,
+                SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME,
+                SourceFixture.ValidSourceParams.EXPIRY_TIME,
+                SourceFixture.ValidSourceParams.PRIORITY,
+                SourceFixture.ValidSourceParams.SOURCE_TYPE,
+                SourceFixture.ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW,
+                SourceFixture.ValidSourceParams.INSTALL_COOLDOWN_WINDOW,
+                SourceFixture.ValidSourceParams.DEBUG_KEY,
+                SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
+                SourceFixture.ValidSourceParams.buildAggregateSource(),
+                SourceFixture.ValidSourceParams.buildFilterData(),
+                SourceFixture.ValidSourceParams.REGISTRATION_ID,
+                SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.INSTALL_TIME);
+
+        // Empty web destinations list
+        assertInvalidSourceArguments(
+                SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
+                SourceFixture.ValidSourceParams.PUBLISHER,
+                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS,
+                new ArrayList<>(),
+                SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                SourceFixture.ValidSourceParams.REGISTRANT,
+                SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME,
+                SourceFixture.ValidSourceParams.EXPIRY_TIME,
+                SourceFixture.ValidSourceParams.PRIORITY,
+                SourceFixture.ValidSourceParams.SOURCE_TYPE,
+                SourceFixture.ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW,
+                SourceFixture.ValidSourceParams.INSTALL_COOLDOWN_WINDOW,
+                SourceFixture.ValidSourceParams.DEBUG_KEY,
+                SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
+                SourceFixture.ValidSourceParams.buildAggregateSource(),
+                SourceFixture.ValidSourceParams.buildFilterData(),
+                SourceFixture.ValidSourceParams.REGISTRATION_ID,
+                SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.INSTALL_TIME);
+
+        // Too many app destinations
+        assertInvalidSourceArguments(
+                SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
+                SourceFixture.ValidSourceParams.PUBLISHER,
+                List.of(
+                        Uri.parse("android-app://com.destination"),
+                        Uri.parse("android-app://com.destination2")),
+                SourceFixture.ValidSourceParams.WEB_DESTINATIONS,
                 SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                 SourceFixture.ValidSourceParams.REGISTRANT,
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME,
@@ -429,8 +500,8 @@ public class SourceTest {
         assertInvalidSourceArguments(
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
                 SourceFixture.ValidSourceParams.PUBLISHER,
-                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION,
-                SourceFixture.ValidSourceParams.WEB_DESTINATION,
+                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS,
+                SourceFixture.ValidSourceParams.WEB_DESTINATIONS,
                 null,
                 SourceFixture.ValidSourceParams.REGISTRANT,
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME,
@@ -453,8 +524,8 @@ public class SourceTest {
         assertInvalidSourceArguments(
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
                 SourceFixture.ValidSourceParams.PUBLISHER,
-                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION,
-                SourceFixture.ValidSourceParams.WEB_DESTINATION,
+                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS,
+                SourceFixture.ValidSourceParams.WEB_DESTINATIONS,
                 SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                 null,
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME,
@@ -474,8 +545,8 @@ public class SourceTest {
         assertInvalidSourceArguments(
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
                 SourceFixture.ValidSourceParams.PUBLISHER,
-                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION,
-                SourceFixture.ValidSourceParams.WEB_DESTINATION,
+                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS,
+                SourceFixture.ValidSourceParams.WEB_DESTINATIONS,
                 SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                 Uri.parse("com.registrant"),
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME,
@@ -498,8 +569,8 @@ public class SourceTest {
         assertInvalidSourceArguments(
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
                 SourceFixture.ValidSourceParams.PUBLISHER,
-                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION,
-                SourceFixture.ValidSourceParams.WEB_DESTINATION,
+                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS,
+                SourceFixture.ValidSourceParams.WEB_DESTINATIONS,
                 SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                 SourceFixture.ValidSourceParams.REGISTRANT,
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME,
@@ -796,7 +867,8 @@ public class SourceTest {
                 PrivacyParams.EVENT_NOISE_PROBABILITY,
                 SourceFixture.getValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
-                        .setAppDestination(SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
+                        .setAppDestinations(
+                                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
                         .build()
                         .getRandomAttributionProbability(),
                 ZERO_DELTA);
@@ -804,7 +876,8 @@ public class SourceTest {
                 PrivacyParams.NAVIGATION_NOISE_PROBABILITY,
                 SourceFixture.getValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
-                        .setAppDestination(SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
+                        .setAppDestinations(
+                                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
                         .build()
                         .getRandomAttributionProbability(),
                 ZERO_DELTA);
@@ -813,7 +886,8 @@ public class SourceTest {
                 PrivacyParams.INSTALL_ATTR_EVENT_NOISE_PROBABILITY,
                 SourceFixture.getValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
-                        .setAppDestination(SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
+                        .setAppDestinations(
+                                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
                         .setInstallCooldownWindow(1)
                         .build()
                         .getRandomAttributionProbability(),
@@ -823,7 +897,8 @@ public class SourceTest {
                 PrivacyParams.INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY,
                 SourceFixture.getValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
-                        .setAppDestination(SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
+                        .setAppDestinations(
+                                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
                         .setInstallCooldownWindow(1)
                         .build()
                         .getRandomAttributionProbability(),
@@ -833,8 +908,9 @@ public class SourceTest {
                 PrivacyParams.INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY,
                 SourceFixture.getValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
-                        .setAppDestination(SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
-                        .setWebDestination(SourceFixture.ValidSourceParams.WEB_DESTINATION)
+                        .setAppDestinations(
+                                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
+                        .setWebDestinations(SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
                         .setInstallCooldownWindow(1)
                         .build()
                         .getRandomAttributionProbability(),
@@ -844,8 +920,9 @@ public class SourceTest {
                 PrivacyParams.INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY,
                 SourceFixture.getValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
-                        .setAppDestination(SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
-                        .setWebDestination(SourceFixture.ValidSourceParams.WEB_DESTINATION)
+                        .setAppDestinations(
+                                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
+                        .setWebDestinations(SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
                         .setInstallCooldownWindow(1)
                         .build()
                         .getRandomAttributionProbability(),
@@ -855,8 +932,9 @@ public class SourceTest {
                 PrivacyParams.DUAL_DESTINATION_EVENT_NOISE_PROBABILITY,
                 SourceFixture.getValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
-                        .setAppDestination(SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
-                        .setWebDestination(SourceFixture.ValidSourceParams.WEB_DESTINATION)
+                        .setAppDestinations(
+                                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
+                        .setWebDestinations(SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
                         .build()
                         .getRandomAttributionProbability(),
                 ZERO_DELTA);
@@ -865,8 +943,9 @@ public class SourceTest {
                 PrivacyParams.DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY,
                 SourceFixture.getValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
-                        .setAppDestination(SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
-                        .setWebDestination(SourceFixture.ValidSourceParams.WEB_DESTINATION)
+                        .setAppDestinations(
+                                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
+                        .setWebDestinations(SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
                         .build()
                         .getRandomAttributionProbability(),
                 ZERO_DELTA);
@@ -880,9 +959,9 @@ public class SourceTest {
                 spy(
                         SourceFixture.getValidSourceBuilder()
                                 .setSourceType(Source.SourceType.EVENT)
-                                .setAppDestination(
-                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
-                                .setWebDestination(null)
+                                .setAppDestinations(
+                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
+                                .setWebDestinations(null)
                                 .setEventReportWindow(expiry)
                                 .build()),
                 PrivacyParams.EVENT_TRIGGER_DATA_CARDINALITY);
@@ -892,9 +971,9 @@ public class SourceTest {
                 spy(
                         SourceFixture.getValidSourceBuilder()
                                 .setSourceType(Source.SourceType.EVENT)
-                                .setAppDestination(
-                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
-                                .setWebDestination(null)
+                                .setAppDestinations(
+                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
+                                .setWebDestinations(null)
                                 .setEventReportWindow(expiry)
                                 .build()),
                 PrivacyParams.getNavigationTriggerDataCardinality());
@@ -905,8 +984,9 @@ public class SourceTest {
                         SourceFixture.getValidSourceBuilder()
                                 .setSourceType(Source.SourceType.EVENT)
                                 .setEventReportWindow(expiry)
-                                .setAppDestination(null)
-                                .setWebDestination(SourceFixture.ValidSourceParams.WEB_DESTINATION)
+                                .setAppDestinations(null)
+                                .setWebDestinations(
+                                        SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
                                 .build()),
                 PrivacyParams.EVENT_TRIGGER_DATA_CARDINALITY);
 
@@ -916,8 +996,9 @@ public class SourceTest {
                         SourceFixture.getValidSourceBuilder()
                                 .setSourceType(Source.SourceType.EVENT)
                                 .setEventReportWindow(expiry)
-                                .setAppDestination(null)
-                                .setWebDestination(SourceFixture.ValidSourceParams.WEB_DESTINATION)
+                                .setAppDestinations(null)
+                                .setWebDestinations(
+                                        SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
                                 .build()),
                 PrivacyParams.getNavigationTriggerDataCardinality());
 
@@ -927,9 +1008,10 @@ public class SourceTest {
                         SourceFixture.getValidSourceBuilder()
                                 .setSourceType(Source.SourceType.EVENT)
                                 .setEventReportWindow(expiry)
-                                .setAppDestination(
-                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
-                                .setWebDestination(SourceFixture.ValidSourceParams.WEB_DESTINATION)
+                                .setAppDestinations(
+                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
+                                .setWebDestinations(
+                                        SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
                                 .build()),
                 PrivacyParams.EVENT_TRIGGER_DATA_CARDINALITY);
 
@@ -939,9 +1021,10 @@ public class SourceTest {
                         SourceFixture.getValidSourceBuilder()
                                 .setSourceType(Source.SourceType.EVENT)
                                 .setEventReportWindow(expiry)
-                                .setAppDestination(
-                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
-                                .setWebDestination(SourceFixture.ValidSourceParams.WEB_DESTINATION)
+                                .setAppDestinations(
+                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
+                                .setWebDestinations(
+                                        SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
                                 .build()),
                 PrivacyParams.getNavigationTriggerDataCardinality());
 
@@ -951,9 +1034,9 @@ public class SourceTest {
                         SourceFixture.getValidSourceBuilder()
                                 .setSourceType(Source.SourceType.EVENT)
                                 .setEventReportWindow(expiry)
-                                .setAppDestination(
-                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
-                                .setWebDestination(null)
+                                .setAppDestinations(
+                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
+                                .setWebDestinations(null)
                                 .setInstallCooldownWindow(
                                         SourceFixture.ValidSourceParams.INSTALL_COOLDOWN_WINDOW)
                                 .build()),
@@ -967,7 +1050,8 @@ public class SourceTest {
                 spy(
                         SourceFixture.getValidSourceBuilder()
                                 .setSourceType(Source.SourceType.EVENT)
-                                .setWebDestination(SourceFixture.ValidSourceParams.WEB_DESTINATION)
+                                .setWebDestinations(
+                                        SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
                                 .setEventReportWindow(expiry)
                                 .setInstallCooldownWindow(
                                         SourceFixture.ValidSourceParams.INSTALL_COOLDOWN_WINDOW)
@@ -996,6 +1080,17 @@ public class SourceTest {
         assertNotEquals(0, falseCount);
         assertNotEquals(0, neverCount);
         assertNotEquals(0, truthCount);
+    }
+
+    @Test
+    public void testGetAttributionDestinations() {
+        Source source = SourceFixture.getValidSource();
+        assertEquals(
+                source.getAttributionDestinations(EventSurfaceType.APP),
+                source.getAppDestinations());
+        assertEquals(
+                source.getAttributionDestinations(EventSurfaceType.WEB),
+                source.getWebDestinations());
     }
 
     @Test
@@ -1175,7 +1270,7 @@ public class SourceTest {
                 navigationSource2dExpiry.getImpressionNoiseParams());
         Source eventSourceWith2Destinations30dExpiry =
                 SourceFixture.getValidSourceBuilder()
-                        .setWebDestination(SourceFixture.ValidSourceParams.WEB_DESTINATION)
+                        .setWebDestinations(SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
                         .setSourceType(Source.SourceType.EVENT)
                         .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(2))
                         .setInstallAttributionWindow(TimeUnit.DAYS.toMillis(10))
@@ -1486,16 +1581,16 @@ public class SourceTest {
                                         new UnsignedLong(Long.valueOf(reportState[0])),
                                         source.getReportingTimeForNoising(reportState[1]),
                                         reportState[2] == 0
-                                                ? source.getAppDestination()
-                                                : source.getWebDestination()))
+                                                ? source.getAppDestinations()
+                                                : source.getWebDestinations()))
                 .collect(Collectors.toList());
     }
 
     private void assertInvalidSourceArguments(
             UnsignedLong sourceEventId,
             Uri publisher,
-            Uri appDestination,
-            Uri webDestination,
+            List<Uri> appDestinations,
+            List<Uri> webDestinations,
             String enrollmentId,
             Uri registrant,
             Long sourceEventTime,
@@ -1517,8 +1612,8 @@ public class SourceTest {
                         new Source.Builder()
                                 .setEventId(sourceEventId)
                                 .setPublisher(publisher)
-                                .setAppDestination(appDestination)
-                                .setWebDestination(webDestination)
+                                .setAppDestinations(appDestinations)
+                                .setWebDestinations(webDestinations)
                                 .setEnrollmentId(enrollmentId)
                                 .setRegistrant(registrant)
                                 .setEventTime(sourceEventTime)
