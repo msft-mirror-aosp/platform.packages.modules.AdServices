@@ -201,11 +201,56 @@ public class PackageChangedReceiver extends BroadcastReceiver {
         sBackgroundExecutor.execute(
                 () -> {
                     ConsentManager instance = ConsentManager.getInstance(context);
-                    instance.clearConsentForUninstalledApp(packageName, packageUid);
-                    LogUtil.d(
-                            "Deleted consent data for package %s with UID %d",
-                            packageName, packageUid);
+                    if (packageUid == DEFAULT_PACKAGE_UID) {
+                        // There can be multiple instances of PackageChangedReceiver, e.g. in
+                        // different user profiles. The system broadcasts a package change
+                        // notification when any package is installed/uninstalled/cleared on any
+                        // profile, to all PackageChangedReceivers. However, if the
+                        // uninstallation is in a different user profile than the one this
+                        // instance of PackageChangedReceiver is in, it should ignore that
+                        // notification.
+                        // Because the Package UID is absent, we need to figure out
+                        // if this package was deleted in the current profile or a different one.
+                        // We can do that by querying the list of installed packages and checking
+                        // if the package name appears there. If it does, then this package was
+                        // uninstalled in a different profile, and so the method should no-op.
+
+                        if (!isPackageStillInstalled(context, packageName)) {
+                            instance.clearConsentForUninstalledApp(packageName);
+                            LogUtil.d("Deleted all consent data for package %s", packageName);
+                        } else {
+                            LogUtil.d(
+                                    "Uninstalled package %s is present in list of installed"
+                                            + " packages; ignoring",
+                                    packageName);
+                        }
+                    } else {
+                        instance.clearConsentForUninstalledApp(packageName, packageUid);
+                        LogUtil.d(
+                                "Deleted consent data for package %s with UID %d",
+                                packageName, packageUid);
+                    }
                 });
+    }
+
+    /**
+     * Checks if the removed package name is still present in the list of installed packages
+     *
+     * @param context the context passed along with the package notification
+     * @param packageName the name of the package that was removed
+     * @return {@code true} if the removed package name still exists in the list of installed
+     *     packages on the system retrieved from {@code PackageManager.getInstalledPackages}; {@code
+     *     false} otherwise.
+     */
+    @VisibleForTesting
+    boolean isPackageStillInstalled(@NonNull Context context, @NonNull String packageName) {
+        Objects.requireNonNull(context);
+        Objects.requireNonNull(packageName);
+        return context
+                .getPackageManager()
+                .getInstalledPackages(PackageManager.PackageInfoFlags.of(0))
+                .stream()
+                .anyMatch(s -> packageName.equals(s.packageName));
     }
 
     /**
