@@ -75,9 +75,9 @@ public class SettingsGaUiAutomatorTest {
         assertThat(mainSwitch.exists()).isFalse();
 
         // make sure we are on the main settings page
-        UiObject appButton = getElement(R.string.settingsUI_apps_title);
+        UiObject appButton = getElement(R.string.settingsUI_apps_ga_title);
         assertThat(appButton.exists()).isTrue();
-        UiObject topicsButton = getElement(R.string.settingsUI_topics_title);
+        UiObject topicsButton = getElement(R.string.settingsUI_topics_ga_title);
         assertThat(topicsButton.exists()).isTrue();
 
         // click measurement page
@@ -135,7 +135,7 @@ public class SettingsGaUiAutomatorTest {
 
         launchApp();
         // 1) revoke Topics if given
-        scrollToAndClick(R.string.settingsUI_topics_title);
+        scrollToAndClick(R.string.settingsUI_topics_ga_title);
 
         UiObject topicsToggle =
                 sDevice.findObject(new UiSelector().className("android.widget.Switch"));
@@ -155,7 +155,7 @@ public class SettingsGaUiAutomatorTest {
         launchApp();
 
         // 2) revoke Fledge if given
-        scrollToAndClick(R.string.settingsUI_apps_title);
+        scrollToAndClick(R.string.settingsUI_apps_ga_title);
 
         UiObject appsToggle =
                 sDevice.findObject(new UiSelector().className("android.widget.Switch"));
@@ -201,7 +201,7 @@ public class SettingsGaUiAutomatorTest {
 
         launchApp();
         // 5) check revoked consent for Topics
-        scrollToAndClick(R.string.settingsUI_topics_title);
+        scrollToAndClick(R.string.settingsUI_topics_ga_title);
         topicsToggle = sDevice.findObject(new UiSelector().className("android.widget.Switch"));
         assertThat(topicsToggle.isChecked()).isFalse();
         sDevice.pressBack();
@@ -209,7 +209,7 @@ public class SettingsGaUiAutomatorTest {
 
         launchApp();
         // 6) check revoked consent for Fledge
-        scrollToAndClick(R.string.settingsUI_apps_title);
+        scrollToAndClick(R.string.settingsUI_apps_ga_title);
         appsToggle = sDevice.findObject(new UiSelector().className("android.widget.Switch"));
         assertThat(appsToggle.isChecked()).isFalse();
     }
@@ -220,7 +220,7 @@ public class SettingsGaUiAutomatorTest {
         ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled false");
         launchApp();
         // 1) revoke Topics if given
-        scrollToAndClick(R.string.settingsUI_topics_title);
+        scrollToAndClick(R.string.settingsUI_topics_ga_title);
         UiObject topicsToggle =
                 sDevice.findObject(new UiSelector().className("android.widget.Switch"));
         if (topicsToggle.isChecked()) {
@@ -233,7 +233,7 @@ public class SettingsGaUiAutomatorTest {
 
         launchApp();
         // 2) revoke Fledge if given
-        scrollToAndClick(R.string.settingsUI_apps_title);
+        scrollToAndClick(R.string.settingsUI_apps_ga_title);
 
         UiObject appsToggle =
                 sDevice.findObject(new UiSelector().className("android.widget.Switch"));
@@ -269,7 +269,7 @@ public class SettingsGaUiAutomatorTest {
 
         launchApp();
         // 5) check revoked consent for Topics
-        scrollToAndClick(R.string.settingsUI_topics_title);
+        scrollToAndClick(R.string.settingsUI_topics_ga_title);
         topicsToggle = sDevice.findObject(new UiSelector().className("android.widget.Switch"));
         assertThat(topicsToggle.isChecked()).isFalse();
         sDevice.pressBack();
@@ -277,7 +277,7 @@ public class SettingsGaUiAutomatorTest {
 
         launchApp();
         // 6) check revoked consent for Fledge
-        scrollToAndClick(R.string.settingsUI_apps_title);
+        scrollToAndClick(R.string.settingsUI_apps_ga_title);
         appsToggle = sDevice.findObject(new UiSelector().className("android.widget.Switch"));
         assertThat(appsToggle.isChecked()).isFalse();
     }
@@ -288,7 +288,7 @@ public class SettingsGaUiAutomatorTest {
         ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled false");
         launchApp();
         checkSubtitleMatchesToggle(
-                ".*:id/topics_preference_subtitle", R.string.settingsUI_topics_title);
+                ".*:id/topics_preference_subtitle", R.string.settingsUI_topics_ga_title);
     }
 
     @Test
@@ -297,7 +297,7 @@ public class SettingsGaUiAutomatorTest {
         ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled false");
         launchApp();
         checkSubtitleMatchesToggle(
-                ".*:id/apps_preference_subtitle", R.string.settingsUI_apps_title);
+                ".*:id/apps_preference_subtitle", R.string.settingsUI_apps_ga_title);
     }
 
     @Test

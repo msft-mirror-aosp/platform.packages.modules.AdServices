@@ -23,7 +23,9 @@ import static org.junit.Assert.fail;
 
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SandboxedSdk;
+import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SdkSandboxLocalSingleton;
+import android.app.sdksandbox.SdkSandboxSystemServiceRegistry;
 import android.app.sdksandbox.SharedPreferencesKey;
 import android.app.sdksandbox.SharedPreferencesUpdate;
 import android.app.sdksandbox.testutils.StubSdkToServiceLink;
@@ -40,6 +42,7 @@ import android.view.SurfaceControlViewHost;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import dalvik.system.PathClassLoader;
 
 import org.junit.After;
 import org.junit.Before;
@@ -70,10 +73,13 @@ public class SdkSandboxTest {
 
     private SdkSandboxServiceImpl mService;
     private ApplicationInfo mApplicationInfo;
+    private ClassLoader mLoader;
     private static final String CLIENT_PACKAGE_NAME = "com.android.client";
     private static final String SDK_NAME = "com.android.testprovider";
     private static final String SDK_PACKAGE = "com.android.testprovider";
     private static final String SDK_PROVIDER_CLASS = "com.android.testprovider.TestProvider";
+    // Key passed to TestProvider to trigger a load error.
+    private static final String THROW_EXCEPTION_KEY = "throw-exception";
     private static final long TIME_SYSTEM_SERVER_CALLED_SANDBOX = 3;
     private static final long TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER = 5;
     private static final long TIME_SANDBOX_CALLED_SDK = 7;
@@ -135,6 +141,7 @@ public class SdkSandboxTest {
         Mockito.doReturn(mSpyPackageManager).when(mContext).getPackageManager();
         mService = new SdkSandboxServiceImpl(mInjector);
         mApplicationInfo = mContext.getPackageManager().getApplicationInfo(SDK_PACKAGE, 0);
+        mLoader = getClassLoader(mApplicationInfo);
     }
 
     @After
@@ -326,7 +333,8 @@ public class SdkSandboxTest {
     }
 
     @Test
-    public void testDump_WithSdk() {
+    public void testDump_WithSdk() throws Exception {
+        LoadSdkCallback callback = new LoadSdkCallback();
         mService.loadSdk(
                 CLIENT_PACKAGE_NAME,
                 mApplicationInfo,
@@ -335,8 +343,9 @@ public class SdkSandboxTest {
                 null,
                 null,
                 new Bundle(),
-                new LoadSdkCallback(),
+                callback,
                 SANDBOX_LATENCY_INFO);
+        callback.assertLoadSdkIsSuccessful();
 
         final StringWriter stringWriter = new StringWriter();
         mService.dump(new FileDescriptor(), new PrintWriter(stringWriter), new String[0]);
@@ -594,6 +603,70 @@ public class SdkSandboxTest {
                 .isEqualTo(TIME_SANDBOX_CALLED_SYSTEM_SERVER);
     }
 
+    @Test
+    public void testSandboxedSdkHolderSuccessCallbacks() throws Exception {
+        SandboxedSdkHolder holder = new SandboxedSdkHolder();
+        LoadSdkCallback mCallback = new LoadSdkCallback();
+        SdkHolderToSdkSandboxServiceCallbackImpl sdkHolderCallback =
+                new SdkHolderToSdkSandboxServiceCallbackImpl();
+        holder.init(
+                new Bundle(),
+                mCallback,
+                SDK_PROVIDER_CLASS,
+                mLoader,
+                new SandboxedSdkContext(
+                        mContext,
+                        mLoader,
+                        CLIENT_PACKAGE_NAME,
+                        mApplicationInfo,
+                        SDK_NAME,
+                        null,
+                        null,
+                        new SdkSandboxSystemServiceRegistry()),
+                new InjectorForTest(mContext),
+                SANDBOX_LATENCY_INFO,
+                sdkHolderCallback);
+        mCallback.assertLoadSdkIsSuccessful();
+        assertThat(sdkHolderCallback.isSuccessful()).isTrue();
+    }
+
+    @Test
+    public void testReloadingSdkThatInitiallyFailed() throws Exception {
+        LoadSdkCallback mCallback = new LoadSdkCallback();
+        Bundle params = new Bundle();
+        params.putString(THROW_EXCEPTION_KEY, "random-value");
+        mService.loadSdk(
+                CLIENT_PACKAGE_NAME,
+                mApplicationInfo,
+                SDK_NAME,
+                SDK_PROVIDER_CLASS,
+                null,
+                null,
+                params,
+                mCallback,
+                SANDBOX_LATENCY_INFO);
+        mCallback.assertLoadSdkIsUnsuccessful();
+
+        mCallback = new LoadSdkCallback();
+        mService.loadSdk(
+                CLIENT_PACKAGE_NAME,
+                mApplicationInfo,
+                SDK_NAME,
+                SDK_PROVIDER_CLASS,
+                null,
+                null,
+                new Bundle(),
+                mCallback,
+                SANDBOX_LATENCY_INFO);
+        mCallback.assertLoadSdkIsSuccessful();
+    }
+
+    private ClassLoader getClassLoader(ApplicationInfo appInfo) {
+        final ClassLoader current = getClass().getClassLoader();
+        final ClassLoader parent = current != null ? current.getParent() : null;
+        return new PathClassLoader(appInfo.sourceDir, parent);
+    }
+
     private static class LoadSdkCallback extends ILoadSdkInSandboxCallback.Stub {
 
         private CountDownLatch mLatch;
@@ -640,6 +713,13 @@ public class SdkSandboxTest {
                                 + mLoadSdkException.getLoadSdkErrorCode()
                                 + ", errorMsg: "
                                 + mLoadSdkException.getMessage());
+            }
+        }
+
+        public void assertLoadSdkIsUnsuccessful() throws Exception {
+            assertThat(mLatch.await(1, TimeUnit.MINUTES)).isTrue();
+            if (mSuccessful) {
+                fail("Load SDK was unexpectedly successful.");
             }
         }
     }
@@ -737,6 +817,27 @@ public class SdkSandboxTest {
 
         public float getSdkStorage() {
             return mSdkStorage;
+        }
+    }
+
+    private static class SdkHolderToSdkSandboxServiceCallbackImpl
+            implements SdkSandboxServiceImpl.SdkHolderToSdkSandboxServiceCallback {
+        private final CountDownLatch mLatch;
+        private boolean mSuccess = false;
+
+        SdkHolderToSdkSandboxServiceCallbackImpl() {
+            mLatch = new CountDownLatch(1);
+        }
+
+        @Override
+        public void onSuccess() {
+            mSuccess = true;
+            mLatch.countDown();
+        }
+
+        boolean isSuccessful() throws Exception {
+            assertThat(mLatch.await(5, TimeUnit.SECONDS)).isTrue();
+            return mSuccess;
         }
     }
 }

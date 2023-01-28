@@ -16,8 +16,14 @@
 
 package com.android.adservices.service.measurement.util;
 
+import android.annotation.NonNull;
+
 import com.android.adservices.service.measurement.FilterMap;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -73,5 +79,24 @@ public final class Filter {
         Set<String> intersection = new HashSet<>(sourceValues);
         intersection.retainAll(triggerValues);
         return isFilter ? !intersection.isEmpty() : intersection.isEmpty();
+    }
+
+    /**
+     * Deserializes the provided {@link JSONArray} of filters into filter set.
+     *
+     * @param filters serialized filter set
+     * @return deserialized filter set
+     * @throws JSONException if the deserialization fails
+     */
+    @NonNull
+    public static List<FilterMap> deserializeFilterSet(@NonNull JSONArray filters)
+            throws JSONException {
+        List<FilterMap> filterSet = new ArrayList<>();
+        for (int i = 0; i < filters.length(); i++) {
+            FilterMap filterMap =
+                    new FilterMap.Builder().buildFilterData(filters.getJSONObject(i)).build();
+            filterSet.add(filterMap);
+        }
+        return filterSet;
     }
 }

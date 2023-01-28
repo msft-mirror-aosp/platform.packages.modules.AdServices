@@ -19,6 +19,7 @@ import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_
 
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CallerMetadata;
+import android.adservices.common.SandboxedSdkContextUtils;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
@@ -126,8 +127,9 @@ public class AdIdManager {
         String sdkPackageName = "";
         // First check if context is SandboxedSdkContext or not
         Context getAdIdRequestContext = getContext();
-        if (getAdIdRequestContext instanceof SandboxedSdkContext) {
-            SandboxedSdkContext requestContext = ((SandboxedSdkContext) getAdIdRequestContext);
+        SandboxedSdkContext requestContext =
+                SandboxedSdkContextUtils.getAsSandboxedSdkContext(getAdIdRequestContext);
+        if (requestContext != null) {
             sdkPackageName = requestContext.getSdkPackageName();
             appPackageName = requestContext.getClientPackageName();
         } else { // This is the case without the Sandbox.

@@ -35,6 +35,10 @@ import java.util.Set;
 
 public class CommonFixture {
     public static final String TEST_PACKAGE_NAME = Process.myProcessName();
+    public static final String TEST_PACKAGE_NAME_1 = "android.adservices.tests1";
+    public static final String TEST_PACKAGE_NAME_2 = "android.adservices.tests2";
+    public static final Set<String> PACKAGE_SET =
+            new HashSet<>(Arrays.asList(TEST_PACKAGE_NAME_1, TEST_PACKAGE_NAME_2));
 
     public static final Flags FLAGS_FOR_TEST = FlagsFactory.getFlagsForTest();
 

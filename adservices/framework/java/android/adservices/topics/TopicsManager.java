@@ -20,6 +20,7 @@ import static android.adservices.common.AdServicesStatusUtils.ILLEGAL_STATE_EXCE
 
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CallerMetadata;
+import android.adservices.common.SandboxedSdkContextUtils;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
@@ -134,9 +135,10 @@ public final class TopicsManager {
         String appPackageName = "";
         String sdkPackageName = "";
         // First check if context is SandboxedSdkContext or not
-        if (mContext instanceof SandboxedSdkContext) {
+        SandboxedSdkContext sandboxedSdkContext =
+                SandboxedSdkContextUtils.getAsSandboxedSdkContext(mContext);
+        if (sandboxedSdkContext != null) {
             // This is the case with the Sandbox.
-            SandboxedSdkContext sandboxedSdkContext = ((SandboxedSdkContext) mContext);
             sdkPackageName = sandboxedSdkContext.getSdkPackageName();
             appPackageName = sandboxedSdkContext.getClientPackageName();
 

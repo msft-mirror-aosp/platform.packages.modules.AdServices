@@ -48,4 +48,15 @@ public class SelectAdsOneBuyerLargeLatency extends AbstractSelectAdsLatencyTest 
                 getClass().getSimpleName(),
                 "selectAds_oneBuyer71CAs_hotStart_noJsCache");
     }
+
+    @Test
+    public void selectAds_oneBuyer71CAs_coldStart_noJsCache() throws Exception {
+        // 1 Seller, 1 Buyer, 71 Custom Audiences
+        disableJsCache();
+        runSelectAds(
+                "CustomAudiencesOneBuyerLargeCAs.json",
+                "AdSelectionConfigOneBuyerLargeCAs.json",
+                getClass().getSimpleName(),
+                "selectAds_oneBuyer71CAs_coldStart_noJsCache");
+    }
 }

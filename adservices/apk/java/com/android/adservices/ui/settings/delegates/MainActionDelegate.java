@@ -103,15 +103,30 @@ public class MainActionDelegate extends BaseActionDelegate {
      * @param fragment the fragment to be initialized.
      */
     public void initMainFragment(AdServicesSettingsMainFragment fragment) {
-        mAdServicesSettingsMainActivity.setTitle(R.string.settingsUI_main_view_title);
         // Hide the main toggle and the entry point of Measurement
         // in Main page behind the GaUxFeature Flag
+
+        int[] betaLayout =
+                new int[] {
+                    R.id.main_switch_bar,
+                    R.id.above_pic_paragraph,
+                    R.id.main_view_pic,
+                    R.id.main_view_footer
+                };
+
+        int[] gaUxLayout = new int[] {R.id.main_view_ga_pic, R.id.main_view_ga_footer};
+
         if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
-            MainSwitchBar mainSwitchBar =
-                    mAdServicesSettingsMainActivity.findViewById(R.id.main_switch_bar);
-            mainSwitchBar.setVisibility(View.GONE);
+            mAdServicesSettingsMainActivity.setTitle(R.string.settingsUI_main_view_ga_title);
+            setLayoutVisibility(betaLayout, View.GONE);
+            setLayoutVisibility(gaUxLayout, View.VISIBLE);
+
             configureMeasurementButton(fragment);
         } else {
+            mAdServicesSettingsMainActivity.setTitle(R.string.settingsUI_main_view_title);
+            setLayoutVisibility(betaLayout, View.VISIBLE);
+            setLayoutVisibility(gaUxLayout, View.GONE);
+
             configureConsentSwitch(fragment);
         }
 
@@ -119,10 +134,16 @@ public class MainActionDelegate extends BaseActionDelegate {
         configureAppsButton(fragment);
     }
 
+    private void setLayoutVisibility(int[] layoutList, int visibility) {
+        for (int each : layoutList) {
+            mAdServicesSettingsMainActivity.findViewById(each).setVisibility(visibility);
+        }
+    }
+
     private void configureConsentSwitch(AdServicesSettingsMainFragment fragment) {
         MainSwitchBar mainSwitchBar =
                 mAdServicesSettingsMainActivity.findViewById(R.id.main_switch_bar);
-        mainSwitchBar.setVisibility(View.VISIBLE);
+
         mMainViewModel.getConsent().observe(fragment, mainSwitchBar::setChecked);
 
         mainSwitchBar.setOnClickListener(
@@ -130,14 +151,22 @@ public class MainActionDelegate extends BaseActionDelegate {
     }
 
     private void configureTopicsButton(AdServicesSettingsMainFragment fragment) {
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            TextView topicsPreferenceTitle =
+                    fragment.requireView().findViewById(R.id.topics_preference_title);
+            topicsPreferenceTitle.setText(R.string.settingsUI_topics_ga_title);
+        }
         View topicsButton = fragment.requireView().findViewById(R.id.topics_preference);
-
         topicsButton.setOnClickListener(preference -> mMainViewModel.topicsButtonClickHandler());
     }
 
     private void configureAppsButton(AdServicesSettingsMainFragment fragment) {
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            TextView appsPreferenceTitle =
+                    fragment.requireView().findViewById(R.id.apps_preference_title);
+            appsPreferenceTitle.setText(R.string.settingsUI_apps_ga_title);
+        }
         View appsButton = fragment.requireView().findViewById(R.id.apps_preference);
-
         appsButton.setOnClickListener(preference -> mMainViewModel.appsButtonClickHandler());
     }
 
