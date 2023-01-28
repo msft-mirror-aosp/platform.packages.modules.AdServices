@@ -26,6 +26,8 @@ import androidx.test.filters.SmallTest;
 
 import org.junit.Test;
 
+import java.time.Duration;
+
 /** Unit tests for {@link KeyedFrequencyCap}. */
 // TODO(b/221876775): Move to CTS tests once public APIs are unhidden
 @SmallTest
@@ -36,13 +38,12 @@ public class KeyedFrequencyCapTest {
                 new KeyedFrequencyCap.Builder()
                         .setAdCounterKey(KeyedFrequencyCapFixture.KEY1)
                         .setMaxCount(KeyedFrequencyCapFixture.VALID_COUNT)
-                        .setIntervalSeconds(KeyedFrequencyCapFixture.DAY_IN_SECONDS)
+                        .setInterval(KeyedFrequencyCapFixture.ONE_DAY_DURATION)
                         .build();
 
         assertThat(originalCap.getAdCounterKey()).isEqualTo(KeyedFrequencyCapFixture.KEY1);
         assertThat(originalCap.getMaxCount()).isEqualTo(KeyedFrequencyCapFixture.VALID_COUNT);
-        assertThat(originalCap.getIntervalSeconds())
-                .isEqualTo(KeyedFrequencyCapFixture.DAY_IN_SECONDS);
+        assertThat(originalCap.getInterval()).isEqualTo(KeyedFrequencyCapFixture.ONE_DAY_DURATION);
     }
 
     @Test
@@ -51,7 +52,7 @@ public class KeyedFrequencyCapTest {
                 new KeyedFrequencyCap.Builder()
                         .setAdCounterKey(KeyedFrequencyCapFixture.KEY1)
                         .setMaxCount(KeyedFrequencyCapFixture.VALID_COUNT)
-                        .setIntervalSeconds(KeyedFrequencyCapFixture.DAY_IN_SECONDS)
+                        .setInterval(KeyedFrequencyCapFixture.ONE_DAY_DURATION)
                         .build();
 
         Parcel targetParcel = Parcel.obtain();
@@ -62,8 +63,8 @@ public class KeyedFrequencyCapTest {
 
         assertThat(capFromParcel.getAdCounterKey()).isEqualTo(KeyedFrequencyCapFixture.KEY1);
         assertThat(capFromParcel.getMaxCount()).isEqualTo(KeyedFrequencyCapFixture.VALID_COUNT);
-        assertThat(capFromParcel.getIntervalSeconds())
-                .isEqualTo(KeyedFrequencyCapFixture.DAY_IN_SECONDS);
+        assertThat(capFromParcel.getInterval())
+                .isEqualTo(KeyedFrequencyCapFixture.ONE_DAY_DURATION);
     }
 
     @Test
@@ -139,15 +140,15 @@ public class KeyedFrequencyCapTest {
                 new KeyedFrequencyCap.Builder()
                         .setAdCounterKey(KeyedFrequencyCapFixture.KEY1)
                         .setMaxCount(KeyedFrequencyCapFixture.VALID_COUNT)
-                        .setIntervalSeconds(KeyedFrequencyCapFixture.DAY_IN_SECONDS)
+                        .setInterval(KeyedFrequencyCapFixture.ONE_DAY_DURATION)
                         .build();
 
         final String expectedString =
                 String.format(
-                        "KeyedFrequencyCap{mAdCounterKey='%s', mMaxCount=%d, mIntervalSeconds=%d}",
+                        "KeyedFrequencyCap{mAdCounterKey='%s', mMaxCount=%s, mInterval=%s}",
                         KeyedFrequencyCapFixture.KEY1,
                         KeyedFrequencyCapFixture.VALID_COUNT,
-                        KeyedFrequencyCapFixture.DAY_IN_SECONDS);
+                        KeyedFrequencyCapFixture.ONE_DAY_DURATION);
         assertThat(originalCap.toString()).isEqualTo(expectedString);
     }
 
@@ -183,14 +184,21 @@ public class KeyedFrequencyCapTest {
     public void testBuildNegativeInterval_throws() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new KeyedFrequencyCap.Builder().setIntervalSeconds(-1));
+                () -> new KeyedFrequencyCap.Builder().setInterval(Duration.ofSeconds(-1)));
     }
 
     @Test
     public void testBuildZeroInterval_throws() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new KeyedFrequencyCap.Builder().setIntervalSeconds(0));
+                () -> new KeyedFrequencyCap.Builder().setInterval(Duration.ofSeconds(0)));
+    }
+
+    @Test
+    public void testBuildIntervalLessThanSecond_throws() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new KeyedFrequencyCap.Builder().setInterval(Duration.ofMillis(50)));
     }
 
     @Test

@@ -72,10 +72,10 @@ public final class FrequencyCapFilters implements Parcelable {
     public static final int AD_EVENT_TYPE_VIEW = 2;
     public static final int AD_EVENT_TYPE_CLICK = 3;
 
-    @NonNull private final Set<KeyedFrequencyCap> mWinKeyedFrequencyCaps;
-    @NonNull private final Set<KeyedFrequencyCap> mImpressionKeyedFrequencyCaps;
-    @NonNull private final Set<KeyedFrequencyCap> mViewKeyedFrequencyCaps;
-    @NonNull private final Set<KeyedFrequencyCap> mClickKeyedFrequencyCaps;
+    @NonNull private final Set<KeyedFrequencyCap> mKeyedFrequencyCapsForWinEvents;
+    @NonNull private final Set<KeyedFrequencyCap> mKeyedFrequencyCapsForImpressionEvents;
+    @NonNull private final Set<KeyedFrequencyCap> mKeyedFrequencyCapsForViewEvents;
+    @NonNull private final Set<KeyedFrequencyCap> mKeyedFrequencyCapsForClickEvents;
 
     @NonNull
     public static final Creator<FrequencyCapFilters> CREATOR =
@@ -95,40 +95,41 @@ public final class FrequencyCapFilters implements Parcelable {
     private FrequencyCapFilters(@NonNull Builder builder) {
         Objects.requireNonNull(builder);
 
-        mWinKeyedFrequencyCaps = builder.mWinKeyedFrequencyCaps;
-        mImpressionKeyedFrequencyCaps = builder.mImpressionKeyedFrequencyCaps;
-        mViewKeyedFrequencyCaps = builder.mViewKeyedFrequencyCaps;
-        mClickKeyedFrequencyCaps = builder.mClickKeyedFrequencyCaps;
+        mKeyedFrequencyCapsForWinEvents = builder.mKeyedFrequencyCapsForWinEvents;
+        mKeyedFrequencyCapsForImpressionEvents = builder.mKeyedFrequencyCapsForImpressionEvents;
+        mKeyedFrequencyCapsForViewEvents = builder.mKeyedFrequencyCapsForViewEvents;
+        mKeyedFrequencyCapsForClickEvents = builder.mKeyedFrequencyCapsForClickEvents;
     }
 
     private FrequencyCapFilters(@NonNull Parcel in) {
         Objects.requireNonNull(in);
 
-        mWinKeyedFrequencyCaps =
+        mKeyedFrequencyCapsForWinEvents =
                 AdServicesParcelableUtil.readSetFromParcel(in, KeyedFrequencyCap.CREATOR);
-        mImpressionKeyedFrequencyCaps =
+        mKeyedFrequencyCapsForImpressionEvents =
                 AdServicesParcelableUtil.readSetFromParcel(in, KeyedFrequencyCap.CREATOR);
-        mViewKeyedFrequencyCaps =
+        mKeyedFrequencyCapsForViewEvents =
                 AdServicesParcelableUtil.readSetFromParcel(in, KeyedFrequencyCap.CREATOR);
-        mClickKeyedFrequencyCaps =
+        mKeyedFrequencyCapsForClickEvents =
                 AdServicesParcelableUtil.readSetFromParcel(in, KeyedFrequencyCap.CREATOR);
     }
 
     /**
-     * Gets the set of {@link KeyedFrequencyCap} objects that will filter on the win event type.
+     * Gets the set of {@link KeyedFrequencyCap} objects that will filter on the {@link
+     * #AD_EVENT_TYPE_WIN} event type.
      *
      * <p>These frequency caps apply to events for ads that were selected as winners in ad
      * selection. Winning ads are used to automatically increment the associated counter keys on the
      * win event type.
      */
     @NonNull
-    public Set<KeyedFrequencyCap> getWinKeyedFrequencyCaps() {
-        return mWinKeyedFrequencyCaps;
+    public Set<KeyedFrequencyCap> getKeyedFrequencyCapsForWinEvents() {
+        return mKeyedFrequencyCapsForWinEvents;
     }
 
     /**
-     * Gets the set of {@link KeyedFrequencyCap} objects that will filter on the impression event
-     * type.
+     * Gets the set of {@link KeyedFrequencyCap} objects that will filter on the {@link
+     * #AD_EVENT_TYPE_IMPRESSION} event type.
      *
      * <p>These frequency caps apply to events which correlate to an impression as interpreted by an
      * adtech. Note that events are not automatically counted when calling {@link
@@ -136,38 +137,41 @@ public final class FrequencyCapFilters implements Parcelable {
      * Executor, OutcomeReceiver)}.
      */
     @NonNull
-    public Set<KeyedFrequencyCap> getImpressionKeyedFrequencyCaps() {
-        return mImpressionKeyedFrequencyCaps;
+    public Set<KeyedFrequencyCap> getKeyedFrequencyCapsForImpressionEvents() {
+        return mKeyedFrequencyCapsForImpressionEvents;
     }
 
     /**
-     * Gets the set of {@link KeyedFrequencyCap} objects that will filter on the view event type.
+     * Gets the set of {@link KeyedFrequencyCap} objects that will filter on the {@link
+     * #AD_EVENT_TYPE_VIEW} event type.
      *
      * <p>These frequency caps apply to events which correlate to a view as interpreted by an
      * adtech.
      */
     @NonNull
-    public Set<KeyedFrequencyCap> getViewKeyedFrequencyCaps() {
-        return mViewKeyedFrequencyCaps;
+    public Set<KeyedFrequencyCap> getKeyedFrequencyCapsForViewEvents() {
+        return mKeyedFrequencyCapsForViewEvents;
     }
 
     /**
-     * Gets the set of {@link KeyedFrequencyCap} objects that will filter on the click event type.
+     * Gets the set of {@link KeyedFrequencyCap} objects that will filter on the {@link
+     * #AD_EVENT_TYPE_CLICK} event type.
      *
      * <p>These frequency caps apply to events which correlate to a click as interpreted by an
      * adtech.
      */
     @NonNull
-    public Set<KeyedFrequencyCap> getClickKeyedFrequencyCaps() {
-        return mClickKeyedFrequencyCaps;
+    public Set<KeyedFrequencyCap> getKeyedFrequencyCapsForClickEvents() {
+        return mKeyedFrequencyCapsForClickEvents;
     }
 
     @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        AdServicesParcelableUtil.writeSetToParcel(dest, mWinKeyedFrequencyCaps);
-        AdServicesParcelableUtil.writeSetToParcel(dest, mImpressionKeyedFrequencyCaps);
-        AdServicesParcelableUtil.writeSetToParcel(dest, mViewKeyedFrequencyCaps);
-        AdServicesParcelableUtil.writeSetToParcel(dest, mClickKeyedFrequencyCaps);
+    public void writeToParcel(@NonNull Parcel dest, int flags) {
+        Objects.requireNonNull(dest);
+        AdServicesParcelableUtil.writeSetToParcel(dest, mKeyedFrequencyCapsForWinEvents);
+        AdServicesParcelableUtil.writeSetToParcel(dest, mKeyedFrequencyCapsForImpressionEvents);
+        AdServicesParcelableUtil.writeSetToParcel(dest, mKeyedFrequencyCapsForViewEvents);
+        AdServicesParcelableUtil.writeSetToParcel(dest, mKeyedFrequencyCapsForClickEvents);
     }
 
     /** @hide */
@@ -182,97 +186,102 @@ public final class FrequencyCapFilters implements Parcelable {
         if (this == o) return true;
         if (!(o instanceof FrequencyCapFilters)) return false;
         FrequencyCapFilters that = (FrequencyCapFilters) o;
-        return mWinKeyedFrequencyCaps.equals(that.mWinKeyedFrequencyCaps)
-                && mImpressionKeyedFrequencyCaps.equals(that.mImpressionKeyedFrequencyCaps)
-                && mViewKeyedFrequencyCaps.equals(that.mViewKeyedFrequencyCaps)
-                && mClickKeyedFrequencyCaps.equals(that.mClickKeyedFrequencyCaps);
+        return mKeyedFrequencyCapsForWinEvents.equals(that.mKeyedFrequencyCapsForWinEvents)
+                && mKeyedFrequencyCapsForImpressionEvents.equals(
+                        that.mKeyedFrequencyCapsForImpressionEvents)
+                && mKeyedFrequencyCapsForViewEvents.equals(that.mKeyedFrequencyCapsForViewEvents)
+                && mKeyedFrequencyCapsForClickEvents.equals(that.mKeyedFrequencyCapsForClickEvents);
     }
 
     /** Returns the hash of the {@link FrequencyCapFilters} object's data. */
     @Override
     public int hashCode() {
         return Objects.hash(
-                mWinKeyedFrequencyCaps,
-                mImpressionKeyedFrequencyCaps,
-                mViewKeyedFrequencyCaps,
-                mClickKeyedFrequencyCaps);
+                mKeyedFrequencyCapsForWinEvents,
+                mKeyedFrequencyCapsForImpressionEvents,
+                mKeyedFrequencyCapsForViewEvents,
+                mKeyedFrequencyCapsForClickEvents);
     }
 
     @Override
     public String toString() {
         return "FrequencyCapFilters{"
-                + "mWinKeyedFrequencyCaps="
-                + mWinKeyedFrequencyCaps
-                + ", mImpressionKeyedFrequencyCaps="
-                + mImpressionKeyedFrequencyCaps
-                + ", mViewKeyedFrequencyCaps="
-                + mViewKeyedFrequencyCaps
-                + ", mClickKeyedFrequencyCaps="
-                + mClickKeyedFrequencyCaps
+                + "mKeyedFrequencyCapsForWinEvents="
+                + mKeyedFrequencyCapsForWinEvents
+                + ", mKeyedFrequencyCapsForImpressionEvents="
+                + mKeyedFrequencyCapsForImpressionEvents
+                + ", mKeyedFrequencyCapsForViewEvents="
+                + mKeyedFrequencyCapsForViewEvents
+                + ", mKeyedFrequencyCapsForClickEvents="
+                + mKeyedFrequencyCapsForClickEvents
                 + '}';
     }
 
     /** Builder for creating {@link FrequencyCapFilters} objects. */
     public static final class Builder {
-        @NonNull private Set<KeyedFrequencyCap> mWinKeyedFrequencyCaps = new HashSet<>();
-        @NonNull private Set<KeyedFrequencyCap> mImpressionKeyedFrequencyCaps = new HashSet<>();
-        @NonNull private Set<KeyedFrequencyCap> mViewKeyedFrequencyCaps = new HashSet<>();
-        @NonNull private Set<KeyedFrequencyCap> mClickKeyedFrequencyCaps = new HashSet<>();
+        @NonNull private Set<KeyedFrequencyCap> mKeyedFrequencyCapsForWinEvents = new HashSet<>();
+
+        @NonNull
+        private Set<KeyedFrequencyCap> mKeyedFrequencyCapsForImpressionEvents = new HashSet<>();
+
+        @NonNull private Set<KeyedFrequencyCap> mKeyedFrequencyCapsForViewEvents = new HashSet<>();
+        @NonNull private Set<KeyedFrequencyCap> mKeyedFrequencyCapsForClickEvents = new HashSet<>();
 
         public Builder() {}
 
         /**
-         * Sets the set of {@link KeyedFrequencyCap} objects that will filter on the win event type.
+         * Sets the set of {@link KeyedFrequencyCap} objects that will filter on the {@link
+         * #AD_EVENT_TYPE_WIN} event type.
          *
-         * <p>See {@link #getWinKeyedFrequencyCaps()} for more information.
+         * <p>See {@link #getKeyedFrequencyCapsForWinEvents()} for more information.
          */
         @NonNull
-        public Builder setWinKeyedFrequencyCaps(
-                @NonNull Set<KeyedFrequencyCap> winKeyedFrequencyCaps) {
-            Objects.requireNonNull(winKeyedFrequencyCaps);
-            mWinKeyedFrequencyCaps = winKeyedFrequencyCaps;
+        public Builder setKeyedFrequencyCapsForWinEvents(
+                @NonNull Set<KeyedFrequencyCap> keyedFrequencyCapsForWinEvents) {
+            Objects.requireNonNull(keyedFrequencyCapsForWinEvents);
+            mKeyedFrequencyCapsForWinEvents = keyedFrequencyCapsForWinEvents;
             return this;
         }
 
         /**
-         * Sets the set of {@link KeyedFrequencyCap} objects that will filter on the impression
-         * event type.
+         * Sets the set of {@link KeyedFrequencyCap} objects that will filter on the {@link
+         * #AD_EVENT_TYPE_IMPRESSION} event type.
          *
-         * <p>See {@link #getImpressionKeyedFrequencyCaps()} for more information.
+         * <p>See {@link #getKeyedFrequencyCapsForImpressionEvents()} for more information.
          */
         @NonNull
-        public Builder setImpressionKeyedFrequencyCaps(
-                @NonNull Set<KeyedFrequencyCap> impressionKeyedFrequencyCaps) {
-            Objects.requireNonNull(impressionKeyedFrequencyCaps);
-            mImpressionKeyedFrequencyCaps = impressionKeyedFrequencyCaps;
+        public Builder setKeyedFrequencyCapsForImpressionEvents(
+                @NonNull Set<KeyedFrequencyCap> keyedFrequencyCapsForImpressionEvents) {
+            Objects.requireNonNull(keyedFrequencyCapsForImpressionEvents);
+            mKeyedFrequencyCapsForImpressionEvents = keyedFrequencyCapsForImpressionEvents;
             return this;
         }
 
         /**
-         * Sets the set of {@link KeyedFrequencyCap} objects that will filter on the view event
-         * type.
+         * Sets the set of {@link KeyedFrequencyCap} objects that will filter on the {@link
+         * #AD_EVENT_TYPE_VIEW} event type.
          *
-         * <p>See {@link #getViewKeyedFrequencyCaps()} for more information.
+         * <p>See {@link #getKeyedFrequencyCapsForViewEvents()} for more information.
          */
         @NonNull
-        public Builder setViewKeyedFrequencyCaps(
-                @NonNull Set<KeyedFrequencyCap> viewKeyedFrequencyCaps) {
-            Objects.requireNonNull(viewKeyedFrequencyCaps);
-            mViewKeyedFrequencyCaps = viewKeyedFrequencyCaps;
+        public Builder setKeyedFrequencyCapsForViewEvents(
+                @NonNull Set<KeyedFrequencyCap> keyedFrequencyCapsForViewEvents) {
+            Objects.requireNonNull(keyedFrequencyCapsForViewEvents);
+            mKeyedFrequencyCapsForViewEvents = keyedFrequencyCapsForViewEvents;
             return this;
         }
 
         /**
-         * Sets the set of {@link KeyedFrequencyCap} objects that will filter on the click event
-         * type.
+         * Sets the set of {@link KeyedFrequencyCap} objects that will filter on the {@link
+         * #AD_EVENT_TYPE_CLICK} event type.
          *
-         * <p>See {@link #getClickKeyedFrequencyCaps()} for more information.
+         * <p>See {@link #getKeyedFrequencyCapsForClickEvents()} for more information.
          */
         @NonNull
-        public Builder setClickKeyedFrequencyCaps(
-                @NonNull Set<KeyedFrequencyCap> clickKeyedFrequencyCaps) {
-            Objects.requireNonNull(clickKeyedFrequencyCaps);
-            mClickKeyedFrequencyCaps = clickKeyedFrequencyCaps;
+        public Builder setKeyedFrequencyCapsForClickEvents(
+                @NonNull Set<KeyedFrequencyCap> keyedFrequencyCapsForClickEvents) {
+            Objects.requireNonNull(keyedFrequencyCapsForClickEvents);
+            mKeyedFrequencyCapsForClickEvents = keyedFrequencyCapsForClickEvents;
             return this;
         }
 
