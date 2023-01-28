@@ -49,4 +49,15 @@ public class SelectAdsFiveBuyersLargeLatency extends AbstractSelectAdsLatencyTes
                 getClass().getSimpleName(),
                 "selectAds_fiveBuyers71CAs_hotStart_noJsCache");
     }
+
+    @Test
+    public void selectAds_fiveBuyers71CAs_coldStart_noJsCache() throws Exception {
+        // 1 Seller, 5 Buyer, each buyer has 71 Custom Audiences
+        disableJsCache();
+        runSelectAds(
+                "CustomAudiencesFiveBuyersLargeCAs.json",
+                "AdSelectionConfigFiveBuyersLargeCAs.json",
+                getClass().getSimpleName(),
+                "selectAds_fiveBuyers71CAs_coldStart_noJsCache");
+    }
 }

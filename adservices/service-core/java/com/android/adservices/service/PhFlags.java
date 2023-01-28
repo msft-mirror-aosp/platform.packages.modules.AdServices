@@ -338,7 +338,7 @@ public final class PhFlags implements Flags {
     static final String KEY_ENABLE_TOPIC_CONTRIBUTORS_CHECK = "enable_topic_contributors_check";
 
     // Database Schema Version Flags
-    static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_5 = "enable_database_schema_version_5";
+    static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_7 = "enable_database_schema_version_7";
 
     // Enrollment flags.
     static final String KEY_ENROLLMENT_BLOCKLIST_IDS = "enrollment_blocklist_ids";
@@ -1499,10 +1499,12 @@ public final class PhFlags implements Flags {
 
     @Override
     public String getUiOtaStringsManifestFileUrl() {
-        return DeviceConfig.getString(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL,
-                /* defaultValue */ UI_OTA_STRINGS_MANIFEST_FILE_URL);
+        return SystemProperties.get(
+                getSystemPropertyName(KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL),
+                /* defaultValue */ DeviceConfig.getString(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL,
+                        /* defaultValue */ UI_OTA_STRINGS_MANIFEST_FILE_URL));
     }
 
     @Override
@@ -1510,10 +1512,12 @@ public final class PhFlags implements Flags {
         if (getGlobalKillSwitch()) {
             return false;
         }
-        return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_UI_OTA_STRINGS_FEATURE_ENABLED,
-                /* defaultValue */ UI_OTA_STRINGS_FEATURE_ENABLED);
+        return SystemProperties.getBoolean(
+                getSystemPropertyName(KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL),
+                /* defaultValue */ DeviceConfig.getBoolean(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_UI_OTA_STRINGS_FEATURE_ENABLED,
+                        /* defaultValue */ UI_OTA_STRINGS_FEATURE_ENABLED));
     }
 
     @Override
@@ -1818,8 +1822,8 @@ public final class PhFlags implements Flags {
     public boolean getEnableDatabaseSchemaVersion5() {
         return DeviceConfig.getBoolean(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_ENABLE_DATABASE_SCHEMA_VERSION_5,
-                /* defaultValue */ ENABLE_DATABASE_SCHEMA_VERSION_5);
+                /* flagName */ KEY_ENABLE_DATABASE_SCHEMA_VERSION_7,
+                /* defaultValue */ ENABLE_DATABASE_SCHEMA_VERSION_7);
     }
 
     @Override

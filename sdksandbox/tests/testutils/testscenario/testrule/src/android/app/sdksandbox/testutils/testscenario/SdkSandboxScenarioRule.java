@@ -61,7 +61,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * assertSdkTestRunPasses() contains the logic to trigger an in-SDK test and retrieve its results,
  * while {@link SdkSandboxTestScenarioRunner} handles the Sdk-side logic for test execution.
  */
-public final class SdkSandboxScenarioRule implements TestRule {
+public class SdkSandboxScenarioRule implements TestRule {
     // This flag is used internally for behaviors that are
     // enabled by default.
     private static final int ENABLE_ALWAYS = 0x1;
@@ -79,20 +79,26 @@ public final class SdkSandboxScenarioRule implements TestRule {
     private static final int TEST_TIMEOUT_S = 60;
     private final String mSdkName;
     private ISdkSandboxTestExecutor mTestExecutor;
+    private final Bundle mTestInstanceSetupParams;
     private @Nullable IBinder mBinder;
     private final int mFlags;
 
     public SdkSandboxScenarioRule(String sdkName) {
-        this(sdkName, null, ENABLE_ALWAYS);
-    }
-
-    public SdkSandboxScenarioRule(String sdkName, @Nullable IBinder customInterface) {
-        this(sdkName, customInterface, ENABLE_ALWAYS);
+        this(sdkName, null, null, ENABLE_ALWAYS);
     }
 
     public SdkSandboxScenarioRule(
-            String sdkName, @Nullable IBinder customInterface, @RuleOptions int flags) {
+            String sdkName, Bundle testInstanceSetupParams, @Nullable IBinder customInterface) {
+        this(sdkName, testInstanceSetupParams, customInterface, ENABLE_ALWAYS);
+    }
+
+    public SdkSandboxScenarioRule(
+            String sdkName,
+            Bundle testInstanceSetupParams,
+            @Nullable IBinder customInterface,
+            @RuleOptions int flags) {
         mSdkName = sdkName;
+        mTestInstanceSetupParams = testInstanceSetupParams;
         mBinder = customInterface;
         // The always enable flag is added to the flags
         // so that we have a way to indicate when a behavior
@@ -112,7 +118,7 @@ public final class SdkSandboxScenarioRule implements TestRule {
                             InstrumentationRegistry.getInstrumentation().getContext();
                     SdkSandboxManager sdkSandboxManager =
                             context.getSystemService(SdkSandboxManager.class);
-                    final SandboxedSdk sdk = getLoadedSdk(sdkSandboxManager, mSdkName);
+                    final SandboxedSdk sdk = getLoadedSdk(sdkSandboxManager);
                     assertThat(scenario.getState()).isEqualTo(Lifecycle.State.RESUMED);
                     setView(scenario, sdkSandboxManager);
                     mTestExecutor = ISdkSandboxTestExecutor.Stub.asInterface(sdk.getInterface());
@@ -221,18 +227,20 @@ public final class SdkSandboxScenarioRule implements TestRule {
         }
     }
 
-    private SandboxedSdk getLoadedSdk(SdkSandboxManager mSdkSandboxManager, String sdkName)
-            throws Exception {
-        final Bundle loadParams = new Bundle(1);
+    private SandboxedSdk getLoadedSdk(SdkSandboxManager mSdkSandboxManager) throws Exception {
+        final Bundle loadParams = new Bundle(2);
+        loadParams.putBundle(ISdkSandboxTestExecutor.TEST_SETUP_PARAMS, mTestInstanceSetupParams);
         loadParams.putBinder(ISdkSandboxTestExecutor.TEST_AUTHOR_DEFINED_BINDER, mBinder);
         final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
-        mSdkSandboxManager.loadSdk(sdkName, loadParams, Runnable::run, callback);
-        if (!callback.isLoadSdkSuccessful()) {
+        mSdkSandboxManager.loadSdk(mSdkName, loadParams, Runnable::run, callback);
+        try {
+            callback.assertLoadSdkIsSuccessful();
+        } catch (Exception e) {
             Assume.assumeTrue(
                     "Skipping test because Sdk Sandbox is disabled",
                     callback.getLoadSdkErrorCode()
                             != SdkSandboxManager.LOAD_SDK_SDK_SANDBOX_DISABLED);
-            throw callback.getLoadSdkException();
+            throw e;
         }
         return callback.getSandboxedSdk();
     }

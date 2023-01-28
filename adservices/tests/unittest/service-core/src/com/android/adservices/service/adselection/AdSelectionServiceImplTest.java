@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.adselection.ReportInteractionInput.DESTINATION_BUYER;
+import static android.adservices.adselection.ReportInteractionInput.DESTINATION_SELLER;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
@@ -25,8 +27,6 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZE
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
-import static com.android.adservices.data.adselection.DBRegisteredAdEvent.DESTINATION_BUYER;
-import static com.android.adservices.data.adselection.DBRegisteredAdEvent.DESTINATION_SELLER;
 import static com.android.adservices.service.adselection.ImpressionReporter.REPORT_IMPRESSION_THROTTLED;
 import static com.android.adservices.service.adselection.ImpressionReporter.UNABLE_TO_FIND_AD_SELECTION_WITH_GIVEN_ID;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
@@ -34,6 +34,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_AD_SELECTION_CONFIG_REMOTE_OVERRIDES;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
@@ -63,6 +64,8 @@ import android.adservices.adselection.AdSelectionResponse;
 import android.adservices.adselection.CustomAudienceSignalsFixture;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
+import android.adservices.adselection.SetAppInstallAdvertisersCallback;
+import android.adservices.adselection.SetAppInstallAdvertisersInput;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
@@ -133,6 +136,8 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -524,36 +529,36 @@ public class AdSelectionServiceImplTest {
 
         // Check that database has correct seller registered events
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
         assertEquals(
                 clickUriSeller,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
 
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
         assertEquals(
                 hoverUriSeller,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
 
         // Check that database has correct buyer registered events
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
         assertEquals(
                 clickUriBuyer,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
 
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_BUYER, DESTINATION_BUYER));
         assertEquals(
                 hoverUriBuyer,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, HOVER_EVENT_BUYER, DESTINATION_BUYER));
 
         RecordedRequest fetchRequest = server.takeRequest();
@@ -683,30 +688,30 @@ public class AdSelectionServiceImplTest {
 
         // Check that seller click uri was not registered
         assertFalse(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
 
         // Check that seller hover uri was registered
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
         assertEquals(
                 hoverUriSeller,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
 
         // Check that buyer click uri was registered
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
         assertEquals(
                 clickUriBuyer,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
 
         // Check that buyer hover uri was not registered
         assertFalse(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_BUYER, DESTINATION_BUYER));
 
         RecordedRequest fetchRequest = server.takeRequest();
@@ -833,30 +838,30 @@ public class AdSelectionServiceImplTest {
 
         // Check that seller click uri was not registered
         assertFalse(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
 
         // Check that seller hover uri was registered
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
         assertEquals(
                 hoverUriSeller,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
 
         // Check that buyer click uri was registered
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
         assertEquals(
                 clickUriBuyer,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
 
         // Check that buyer hover uri was not registered
         assertFalse(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_BUYER, DESTINATION_BUYER));
 
         RecordedRequest fetchRequest = server.takeRequest();
@@ -980,28 +985,28 @@ public class AdSelectionServiceImplTest {
 
         // Check that database has correct seller registered events
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
         assertEquals(
                 clickUriSeller,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
 
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
         assertEquals(
                 hoverUriSeller,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
 
         // Check that buyer events were not registered
         assertFalse(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
 
         assertFalse(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_BUYER, DESTINATION_BUYER));
 
         assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_INTERNAL_ERROR);
@@ -1119,19 +1124,19 @@ public class AdSelectionServiceImplTest {
 
         // Check that no events were registered
         assertFalse(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
 
         assertFalse(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
 
         assertFalse(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
 
         assertFalse(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_BUYER, DESTINATION_BUYER));
 
         assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_INTERNAL_ERROR);
@@ -1260,28 +1265,28 @@ public class AdSelectionServiceImplTest {
 
         // Check that only the first seller event uri pairing was registered
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
         assertEquals(
                 clickUriSeller,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
 
         assertFalse(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
 
         // Check that only the first buyer event uri pairing was registered
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
         assertEquals(
                 clickUriBuyer,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
 
         assertFalse(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_BUYER, DESTINATION_BUYER));
 
         RecordedRequest fetchRequest = server.takeRequest();
@@ -2312,36 +2317,36 @@ public class AdSelectionServiceImplTest {
 
         // Check that database has correct seller registered events
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
         assertEquals(
                 clickUriSeller,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
 
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
         assertEquals(
                 hoverUriSeller,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
 
         // Check that database has correct buyer registered events
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
         assertEquals(
                 clickUriBuyer,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
 
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_BUYER, DESTINATION_BUYER));
         assertEquals(
                 hoverUriBuyer,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, HOVER_EVENT_BUYER, DESTINATION_BUYER));
 
         List<String> notifications =
@@ -5453,6 +5458,59 @@ public class AdSelectionServiceImplTest {
         assertEquals(AD_SELECTION_ID_1, selectionCallback.mAdSelectionResponse.getAdSelectionId());
     }
 
+    @Test
+    public void testSetAppInstallAdvertisersSuccess() throws Exception {
+        SetAppInstallAdvertisersInput input =
+                new SetAppInstallAdvertisersInput.Builder()
+                        .setAdvertisers(
+                                new HashSet<>(
+                                        Arrays.asList(
+                                                AdTechIdentifier.fromString("example1.com"),
+                                                AdTechIdentifier.fromString("example2.com"))))
+                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                        .build();
+        SetAppInstallAdvertisersTestCallback callback =
+                callSetAppInstallAdvertisers(generateAdSelectionServiceImpl(), input);
+        assertTrue(callback.mIsSuccess);
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
+        // TODO(b/265469079) Add tests to ensure adtechs were fetched and stored
+    }
+
+    @Test
+    public void testSetAppInstallAdvertisersNullInput() {
+        assertThrows(
+                NullPointerException.class,
+                () -> callSetAppInstallAdvertisers(generateAdSelectionServiceImpl(), null));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS),
+                        eq(STATUS_INVALID_ARGUMENT),
+                        eq(0));
+    }
+
+    private AdSelectionServiceImpl generateAdSelectionServiceImpl() {
+        return new AdSelectionServiceImpl(
+                mAdSelectionEntryDao,
+                mCustomAudienceDao,
+                mClient,
+                mDevContextFilter,
+                mAppImportanceFilter,
+                mLightweightExecutorService,
+                mBackgroundExecutorService,
+                mScheduledExecutor,
+                CONTEXT,
+                mConsentManagerMock,
+                mAdServicesLoggerMock,
+                mFlagsGaUxDisabled,
+                CallingAppUidSupplierProcessImpl.create(),
+                mFledgeAuthorizationFilterSpy,
+                mFledgeAllowListsFilterSpy);
+    }
+
     private void persistAdSelectionEntryDaoResults(Map<Long, Double> adSelectionIdToBidMap) {
         persistAdSelectionEntryDaoResults(adSelectionIdToBidMap, TEST_PACKAGE_NAME);
     }
@@ -5675,6 +5733,29 @@ public class AdSelectionServiceImplTest {
         return callback;
     }
 
+    private SetAppInstallAdvertisersTestCallback callSetAppInstallAdvertisers(
+            AdSelectionServiceImpl adSelectionService, SetAppInstallAdvertisersInput request)
+            throws Exception {
+        // Counted down in 1) callback and 2) logApiCall
+        CountDownLatch resultLatch = new CountDownLatch(2);
+        SetAppInstallAdvertisersTestCallback callback =
+                new SetAppInstallAdvertisersTestCallback(resultLatch);
+
+        // Wait for the logging call, which happens after the callback
+        Answer<Void> countDownAnswer =
+                unused -> {
+                    resultLatch.countDown();
+                    return null;
+                };
+        doAnswer(countDownAnswer)
+                .when(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+
+        adSelectionService.setAppInstallAdvertisers(request, callback);
+        resultLatch.await(5, TimeUnit.SECONDS);
+        return callback;
+    }
+
     private String insertJsWait(long waitTime) {
         return "    const wait = (ms) => {\n"
                 + "       var start = new Date().getTime();\n"
@@ -5692,6 +5773,29 @@ public class AdSelectionServiceImplTest {
         FledgeErrorResponse mFledgeErrorResponse;
 
         public ReportImpressionTestCallback(CountDownLatch countDownLatch) {
+            mCountDownLatch = countDownLatch;
+        }
+
+        @Override
+        public void onSuccess() throws RemoteException {
+            mIsSuccess = true;
+            mCountDownLatch.countDown();
+        }
+
+        @Override
+        public void onFailure(FledgeErrorResponse fledgeErrorResponse) throws RemoteException {
+            mFledgeErrorResponse = fledgeErrorResponse;
+            mCountDownLatch.countDown();
+        }
+    }
+
+    public static class SetAppInstallAdvertisersTestCallback
+            extends SetAppInstallAdvertisersCallback.Stub {
+        private final CountDownLatch mCountDownLatch;
+        boolean mIsSuccess = false;
+        FledgeErrorResponse mFledgeErrorResponse;
+
+        public SetAppInstallAdvertisersTestCallback(CountDownLatch countDownLatch) {
             mCountDownLatch = countDownLatch;
         }
 

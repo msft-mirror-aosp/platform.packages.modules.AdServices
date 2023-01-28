@@ -63,8 +63,9 @@ public class SdkSandboxServiceImpl extends Service {
 
     private static final String TAG = "SdkSandbox";
 
+    private final Object mLock = new Object();
     // Mapping from sdk name to its holder
-    @GuardedBy("mHeldSdk")
+    @GuardedBy("mLock")
     private final Map<String, SandboxedSdkHolder> mHeldSdk = new ArrayMap<>();
 
     private volatile boolean mInitialized;
@@ -321,7 +322,7 @@ public class SdkSandboxServiceImpl extends Service {
 
     @Override
     protected void dump(FileDescriptor fd, PrintWriter writer, String[] args) {
-        synchronized (mHeldSdk) {
+        synchronized (mLock) {
             // TODO(b/211575098): Use IndentingPrintWriter for better formatting
             if (mHeldSdk.isEmpty()) {
                 writer.println("mHeldSdk is empty");
@@ -355,7 +356,7 @@ public class SdkSandboxServiceImpl extends Service {
             @NonNull Bundle params,
             @NonNull ILoadSdkInSandboxCallback callback,
             @NonNull SandboxLatencyInfo sandboxLatencyInfo) {
-        synchronized (mHeldSdk) {
+        synchronized (mLock) {
             if (mHeldSdk.containsKey(sdkName)) {
                 sendLoadError(
                         callback,
@@ -367,7 +368,6 @@ public class SdkSandboxServiceImpl extends Service {
         }
 
         ClassLoader loader = getClassLoader(applicationInfo);
-        SandboxedSdkHolder sandboxedSdkHolder = new SandboxedSdkHolder();
 
         // We want to ensure that SandboxedSdkContext.getSystemService() will return different
         // instances for different SandboxedSdkContext contexts, so that different SDKs
@@ -394,6 +394,10 @@ public class SdkSandboxServiceImpl extends Service {
                         sdkName,
                         sdkCeDataDir,
                         sdkDeDataDir);
+
+        final SandboxedSdkHolder sandboxedSdkHolder = new SandboxedSdkHolder();
+        SdkHolderToSdkSandboxServiceCallbackImpl sdkHolderToSdkSandboxServiceCallback =
+                new SdkHolderToSdkSandboxServiceCallbackImpl(sdkName, sandboxedSdkHolder);
         sandboxedSdkHolder.init(
                 params,
                 callback,
@@ -401,14 +405,12 @@ public class SdkSandboxServiceImpl extends Service {
                 loader,
                 sandboxedSdkContext,
                 mInjector,
-                sandboxLatencyInfo);
-        synchronized (mHeldSdk) {
-            mHeldSdk.put(sdkName, sandboxedSdkHolder);
-        }
+                sandboxLatencyInfo,
+                sdkHolderToSdkSandboxServiceCallback);
     }
 
     private void unloadSdkInternal(@NonNull String sdkName) {
-        synchronized (mHeldSdk) {
+        synchronized (mLock) {
             SandboxedSdkHolder sandboxedSdkHolder = mHeldSdk.get(sdkName);
             if (sandboxedSdkHolder != null) {
                 sandboxedSdkHolder.unloadSdk();
@@ -514,6 +516,31 @@ public class SdkSandboxServiceImpl extends Service {
         public void isDisabled(@NonNull ISdkSandboxDisabledCallback callback) {
             Objects.requireNonNull(callback, "callback should not be null");
             SdkSandboxServiceImpl.this.isDisabled(callback);
+        }
+    }
+
+    /**
+     * Interface for {@link SandboxedSdkHolder} to indicate that the SDK has loaded successfully.
+     */
+    interface SdkHolderToSdkSandboxServiceCallback {
+        void onSuccess();
+    }
+
+    private class SdkHolderToSdkSandboxServiceCallbackImpl
+            implements SdkHolderToSdkSandboxServiceCallback {
+        private final SandboxedSdkHolder mHolder;
+        private final String mSdkName;
+
+        SdkHolderToSdkSandboxServiceCallbackImpl(String sdkName, SandboxedSdkHolder holder) {
+            mSdkName = sdkName;
+            mHolder = holder;
+        }
+
+        @Override
+        public void onSuccess() {
+            synchronized (SdkSandboxServiceImpl.this.mLock) {
+                mHeldSdk.put(mSdkName, mHolder);
+            }
         }
     }
 }
