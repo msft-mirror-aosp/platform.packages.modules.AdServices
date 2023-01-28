@@ -93,9 +93,6 @@ public class XnaSourceCreator {
             List<Source> parentSources,
             Trigger trigger,
             Set<String> alreadyConsumedSourceIds) {
-        if (parentSources == null) {
-            return Collections.emptyList();
-        }
         Pair<Long, Long> sourcePriorityRange = attributionConfig.getSourcePriorityRange();
         List<FilterMap> sourceFilters = attributionConfig.getSourceFilters();
         List<FilterMap> sourceNotFilters = attributionConfig.getSourceNotFilters();
