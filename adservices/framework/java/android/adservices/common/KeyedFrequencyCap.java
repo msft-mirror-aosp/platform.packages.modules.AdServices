@@ -23,6 +23,7 @@ import android.os.Parcelable;
 
 import com.android.internal.util.Preconditions;
 
+import java.time.Duration;
 import java.util.Objects;
 
 /**
@@ -38,7 +39,7 @@ import java.util.Objects;
 public final class KeyedFrequencyCap implements Parcelable {
     @NonNull private final String mAdCounterKey;
     private final int mMaxCount;
-    private final int mIntervalSeconds;
+    @NonNull private final Duration mInterval;
 
     @NonNull
     public static final Creator<KeyedFrequencyCap> CREATOR =
@@ -60,7 +61,7 @@ public final class KeyedFrequencyCap implements Parcelable {
 
         mAdCounterKey = builder.mAdCounterKey;
         mMaxCount = builder.mMaxCount;
-        mIntervalSeconds = builder.mIntervalSeconds;
+        mInterval = builder.mInterval;
     }
 
     private KeyedFrequencyCap(@NonNull Parcel in) {
@@ -68,7 +69,7 @@ public final class KeyedFrequencyCap implements Parcelable {
 
         mAdCounterKey = in.readString();
         mMaxCount = in.readInt();
-        mIntervalSeconds = in.readInt();
+        mInterval = Duration.ofSeconds(in.readLong());
     }
 
     /**
@@ -88,21 +89,23 @@ public final class KeyedFrequencyCap implements Parcelable {
      * Returns the maximum count within a given time interval that a frequency cap applies to.
      *
      * <p>If there are more events for an adtech counted on the device within the time interval
-     * defined by {@link #getIntervalSeconds()}, the frequency cap has been exceeded.
+     * defined by {@link #getInterval()}, the frequency cap has been exceeded.
      */
     public int getMaxCount() {
         return mMaxCount;
     }
 
     /**
-     * Returns the interval, in seconds, over which the frequency cap applies.
+     * Returns the interval, as a {@link Duration} which will be truncated to the nearest second,
+     * over which the frequency cap is calculated.
      *
      * <p>When this frequency cap is computed, the number of persisted events is counted in the most
      * recent time interval. If the count of specified events for an adtech is equal to or greater
      * than the number returned by {@link #getMaxCount()}, the frequency cap has been exceeded.
      */
-    public int getIntervalSeconds() {
-        return mIntervalSeconds;
+    @NonNull
+    public Duration getInterval() {
+        return mInterval;
     }
 
     @Override
@@ -110,7 +113,7 @@ public final class KeyedFrequencyCap implements Parcelable {
         Objects.requireNonNull(dest);
         dest.writeString(mAdCounterKey);
         dest.writeInt(mMaxCount);
-        dest.writeInt(mIntervalSeconds);
+        dest.writeLong(mInterval.getSeconds());
     }
 
     /** @hide */
@@ -126,14 +129,14 @@ public final class KeyedFrequencyCap implements Parcelable {
         if (!(o instanceof KeyedFrequencyCap)) return false;
         KeyedFrequencyCap that = (KeyedFrequencyCap) o;
         return mMaxCount == that.mMaxCount
-                && mIntervalSeconds == that.mIntervalSeconds
+                && mInterval.equals(that.mInterval)
                 && mAdCounterKey.equals(that.mAdCounterKey);
     }
 
     /** Returns the hash of the {@link KeyedFrequencyCap} object's data. */
     @Override
     public int hashCode() {
-        return Objects.hash(mAdCounterKey, mMaxCount, mIntervalSeconds);
+        return Objects.hash(mAdCounterKey, mMaxCount, mInterval);
     }
 
     @Override
@@ -144,8 +147,8 @@ public final class KeyedFrequencyCap implements Parcelable {
                 + '\''
                 + ", mMaxCount="
                 + mMaxCount
-                + ", mIntervalSeconds="
-                + mIntervalSeconds
+                + ", mInterval="
+                + mInterval
                 + '}';
     }
 
@@ -153,7 +156,7 @@ public final class KeyedFrequencyCap implements Parcelable {
     public static final class Builder {
         @Nullable private String mAdCounterKey;
         private int mMaxCount;
-        private int mIntervalSeconds;
+        @Nullable private Duration mInterval;
 
         public Builder() {}
 
@@ -183,32 +186,32 @@ public final class KeyedFrequencyCap implements Parcelable {
         }
 
         /**
-         * Sets the interval, in seconds, over which the frequency cap is calculated.
+         * Sets the interval, as a {@link Duration} which will be truncated to the nearest second,
+         * over which the frequency cap is calculated.
          *
-         * <p>See {@link #getIntervalSeconds()} for more information.
+         * <p>See {@link #getInterval()} for more information.
          */
         @NonNull
-        public Builder setIntervalSeconds(int intervalSeconds) {
+        public Builder setInterval(@NonNull Duration interval) {
+            Objects.requireNonNull(interval, "Interval must not be null");
             Preconditions.checkArgument(
-                    intervalSeconds > 0, "Interval in seconds must be positive and non-zero");
-            mIntervalSeconds = intervalSeconds;
+                    interval.getSeconds() > 0, "Interval in seconds must be positive and non-zero");
+            mInterval = interval;
             return this;
         }
 
         /**
          * Builds and returns a {@link KeyedFrequencyCap} instance.
          *
-         * @throws NullPointerException if the ad counter key is null
-         * @throws IllegalArgumentException if the ad counter key, max count, or interval in seconds
-         *     are invalid
+         * @throws NullPointerException if the ad counter key or interval are null
+         * @throws IllegalArgumentException if the ad counter key, max count, or interval are
+         *     invalid
          */
         @NonNull
         public KeyedFrequencyCap build() throws NullPointerException, IllegalArgumentException {
             Objects.requireNonNull(mAdCounterKey, "Event key must be set");
-            Preconditions.checkStringNotEmpty(mAdCounterKey, "Ad counter key must not be empty");
             Preconditions.checkArgument(mMaxCount > 0, "Max count must be positive and non-zero");
-            Preconditions.checkArgument(
-                    mIntervalSeconds > 0, "Interval in seconds must be positive and non-zero");
+            Objects.requireNonNull(mInterval, "Interval must not be null");
 
             return new KeyedFrequencyCap(this);
         }
