@@ -16,15 +16,19 @@
 
 package com.android.adservices.download;
 
+import static com.android.adservices.service.topics.classifier.ModelManager.BUNDLED_CLASSIFIER_ASSETS_METADATA_PATH;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 
 import androidx.annotation.NonNull;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.topics.classifier.CommonClassifierHelper;
 
 import com.google.android.downloader.AndroidDownloaderLogger;
 import com.google.android.downloader.ConnectivityHandler;
@@ -45,6 +49,7 @@ import com.google.android.libraries.mobiledatadownload.file.integration.download
 import com.google.android.libraries.mobiledatadownload.file.integration.downloader.SharedPreferencesDownloadMetadata;
 import com.google.android.libraries.mobiledatadownload.monitor.NetworkUsageMonitor;
 import com.google.android.libraries.mobiledatadownload.populator.ManifestConfigFileParser;
+import com.google.android.libraries.mobiledatadownload.populator.ManifestConfigOverrider;
 import com.google.android.libraries.mobiledatadownload.populator.ManifestFileGroupPopulator;
 import com.google.android.libraries.mobiledatadownload.populator.SharedPreferencesManifestFileMetadata;
 import com.google.common.annotations.VisibleForTesting;
@@ -53,10 +58,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.mobiledatadownload.DownloadConfigProto;
 import com.google.mobiledatadownload.DownloadConfigProto.ManifestFileFlag;
 import com.google.protobuf.MessageLite;
 
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Executor;
 
 /** Mobile Data Download Factory. */
@@ -218,6 +226,31 @@ public class MobileDataDownloadFactory {
                 new ManifestConfigFileParser(
                         fileStorage, AdServicesExecutors.getBackgroundExecutor());
 
+        // Only download Topics classifier model when Mdd model build_id is greater than bundled
+        // model.
+        ManifestConfigOverrider manifestConfigOverrider =
+                manifestConfig -> {
+                    List<DownloadConfigProto.DataFileGroup> groups = new ArrayList<>();
+                    for (DownloadConfigProto.ManifestConfig.Entry entry :
+                            manifestConfig.getEntryList()) {
+                        long dataFileGroupBuildId = entry.getDataFileGroup().getBuildId();
+                        long bundledModelBuildId =
+                                CommonClassifierHelper.getBundledModelBuildId(
+                                        context, BUNDLED_CLASSIFIER_ASSETS_METADATA_PATH);
+                        if (dataFileGroupBuildId > bundledModelBuildId) {
+                            groups.add(entry.getDataFileGroup());
+                            LogUtil.d("Added topics classifier file group to MDD");
+                        } else {
+                            LogUtil.d(
+                                    "Topics Classifier's Bundled BuildId = %d is bigger than or"
+                                        + " equal to the BuildId = %d from Server side, skipping"
+                                        + " the downloading.",
+                                    bundledModelBuildId, dataFileGroupBuildId);
+                        }
+                    }
+                    return Futures.immediateFuture(groups);
+                };
+
         return ManifestFileGroupPopulator.builder()
                 .setContext(context)
                 // topics resources should not be downloaded pre-consent
@@ -235,6 +268,7 @@ public class MobileDataDownloadFactory {
                                 AdServicesExecutors.getBackgroundExecutor()))
                 // TODO(b/239265537): Enable Dedup using Etag.
                 .setDedupDownloadWithEtag(false)
+                .setOverriderOptional(Optional.of(manifestConfigOverrider))
                 // TODO(b/243829623): use proper Logger.
                 .setLogger(
                         new Logger() {

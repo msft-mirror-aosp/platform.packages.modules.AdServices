@@ -30,6 +30,7 @@ import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -40,11 +41,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -93,6 +96,9 @@ public class Source {
     private AggregatableAttributionSource mAggregatableAttributionSource;
     private boolean mAdIdPermission;
     private boolean mArDebugPermission;
+    @Nullable private String mRegistrationId;
+    @Nullable private String mSharedAggregationKeys;
+    @Nullable private Long mInstallTime;
 
     @IntDef(value = {Status.ACTIVE, Status.IGNORED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -337,7 +343,10 @@ public class Source {
                 && Objects.equals(mAggregateSource, source.mAggregateSource)
                 && mAggregateContributions == source.mAggregateContributions
                 && Objects.equals(
-                        mAggregatableAttributionSource, source.mAggregatableAttributionSource);
+                        mAggregatableAttributionSource, source.mAggregatableAttributionSource)
+                && Objects.equals(mRegistrationId, source.mRegistrationId)
+                && Objects.equals(mSharedAggregationKeys, source.mSharedAggregationKeys)
+                && Objects.equals(mInstallTime, source.mInstallTime);
     }
 
     @Override
@@ -365,7 +374,10 @@ public class Source {
                 mAggregatableAttributionSource,
                 mDebugKey,
                 mAdIdPermission,
-                mArDebugPermission);
+                mArDebugPermission,
+                mRegistrationId,
+                mSharedAggregationKeys,
+                mInstallTime);
     }
 
     /**
@@ -587,17 +599,10 @@ public class Source {
 
     /**
      * Returns aggregate filter data string used for aggregation. aggregate filter data json is a
-     * JSONObject in Attribution-Reporting-Register-Source header.
-     * Example:
-     * Attribution-Reporting-Register-Source: {
-     *   // some other fields.
-     *   "filter_data" : {
-     *    "conversion_subdomain": ["electronics.megastore"],
-     *    "product": ["1234", "2345"],
-     *    "ctid": ["id"],
-     *    ......
-     * }
-     * }
+     * JSONObject in Attribution-Reporting-Register-Source header. Example:
+     * Attribution-Reporting-Register-Source: { // some other fields. "filter_data" : {
+     * "conversion_subdomain": ["electronics.megastore"], "product": ["1234", "2345"], "ctid":
+     * ["id"], ...... } }
      */
     public String getFilterData() {
         return mFilterData;
@@ -605,19 +610,11 @@ public class Source {
 
     /**
      * Returns aggregate source string used for aggregation. aggregate source json is a JSONArray.
-     * Example:
-     * [{
-     *   // Generates a "0x159" key piece (low order bits of the key) named
-     *   // "campaignCounts"
-     *   "id": "campaignCounts",
-     *   "key_piece": "0x159", // User saw ad from campaign 345 (out of 511)
-     * },
-     * {
-     *   // Generates a "0x5" key piece (low order bits of the key) named "geoValue"
-     *   "id": "geoValue",
-     *   // Source-side geo region = 5 (US), out of a possible ~100 regions.
-     *   "key_piece": "0x5",
-     * }]
+     * Example: [{ // Generates a "0x159" key piece (low order bits of the key) named //
+     * "campaignCounts" "id": "campaignCounts", "key_piece": "0x159", // User saw ad from campaign
+     * 345 (out of 511) }, { // Generates a "0x5" key piece (low order bits of the key) named
+     * "geoValue" "id": "geoValue", // Source-side geo region = 5 (US), out of a possible ~100
+     * regions. "key_piece": "0x5", }]
      */
     public String getAggregateSource() {
         return mAggregateSource;
@@ -636,6 +633,27 @@ public class Source {
      */
     public AggregatableAttributionSource getAggregatableAttributionSource() {
         return mAggregatableAttributionSource;
+    }
+
+    /** Returns the registration id. */
+    @Nullable
+    public String getRegistrationId() {
+        return mRegistrationId;
+    }
+
+    /**
+     * Returns the shared aggregation keys of the source as a unique list of strings. Example:
+     * [“campaignCounts”]
+     */
+    @Nullable
+    public String getSharedAggregationKeys() {
+        return mSharedAggregationKeys;
+    }
+
+    /** Returns the install time of the source which is the same value as event time. */
+    @Nullable
+    public Long getInstallTime() {
+        return mInstallTime;
     }
 
     /** Set app install attribution to the {@link Source}. */
@@ -667,12 +685,11 @@ public class Source {
             filterMap = new FilterMap.Builder().build();
         } else {
             filterMap =
-                    new FilterMap.Builder()
-                            .buildFilterData(new JSONObject(mFilterData))
-                            .build();
+                    new FilterMap.Builder().buildFilterData(new JSONObject(mFilterData)).build();
         }
-        filterMap.getAttributionFilterMap().put("source_type",
-                Collections.singletonList(mSourceType.getValue()));
+        filterMap
+                .getAttributionFilterMap()
+                .put("source_type", Collections.singletonList(mSourceType.getValue()));
         return filterMap;
     }
 
@@ -698,6 +715,20 @@ public class Source {
                         .setAggregatableSource(aggregateSourceMap);
         aggregatableAttributionSourceBuilder.setFilterMap(parseFilterData());
         return Optional.of(aggregatableAttributionSourceBuilder.build());
+    }
+
+    /** Generates SharedAggregationKeys object from the shared aggregation keys string in Source. */
+    @Nullable
+    public Set<String> parseSharedAggregationKeys() throws JSONException {
+        if (mSharedAggregationKeys == null) {
+            return null;
+        }
+        Set<String> sharedAggregationKeys = new HashSet<>();
+        JSONArray jsonArray = new JSONArray(mSharedAggregationKeys);
+        for (int i = 0; i < jsonArray.length(); i++) {
+            sharedAggregationKeys.add(jsonArray.getString(i));
+        }
+        return sharedAggregationKeys;
     }
 
     private List<FakeReport> generateVtcDualDestinationPostInstallFakeReports() {
@@ -946,6 +977,24 @@ public class Source {
         @NonNull
         public Builder setAggregateContributions(int aggregateContributions) {
             mBuilding.mAggregateContributions = aggregateContributions;
+            return this;
+        }
+
+        /** See {@link Source#getRegistrationId()} */
+        public Builder setRegistrationId(@Nullable String registrationId) {
+            mBuilding.mRegistrationId = registrationId;
+            return this;
+        }
+
+        /** See {@link Source#getSharedAggregationKeys()} */
+        public Builder setSharedAggregationKeys(@Nullable String sharedAggregationKeys) {
+            mBuilding.mSharedAggregationKeys = sharedAggregationKeys;
+            return this;
+        }
+
+        /** See {@link Source#getInstallTime()} */
+        public Builder setInstallTime(@Nullable Long installTime) {
+            mBuilding.mInstallTime = installTime;
             return this;
         }
 

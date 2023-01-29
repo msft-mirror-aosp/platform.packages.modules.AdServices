@@ -20,10 +20,14 @@ import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
+import android.util.Pair;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
+import com.android.adservices.service.measurement.aggregation.AggregateDeduplicationKey;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
+import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Validation;
 import com.android.adservices.service.measurement.util.Web;
@@ -44,10 +48,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-/**
- * POJO for Trigger.
- */
-
+/** POJO for Trigger. */
 public class Trigger {
 
     private String mId;
@@ -60,6 +61,7 @@ public class Trigger {
     private Uri mRegistrant;
     private String mAggregateTriggerData;
     private String mAggregateValues;
+    private String mAggregateDeduplicationKeys;
     private boolean mIsDebugReporting;
     private AggregatableAttributionTrigger mAggregatableAttributionTrigger;
     private String mFilters;
@@ -67,6 +69,8 @@ public class Trigger {
     @Nullable private UnsignedLong mDebugKey;
     private boolean mAdIdPermission;
     private boolean mArDebugPermission;
+    @Nullable private String mAttributionConfig;
+    @Nullable private String mAdtechBitMapping;
 
     @IntDef(value = {Status.PENDING, Status.IGNORED, Status.ATTRIBUTED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -107,7 +111,9 @@ public class Trigger {
                 && Objects.equals(
                         mAggregatableAttributionTrigger, trigger.mAggregatableAttributionTrigger)
                 && Objects.equals(mFilters, trigger.mFilters)
-                && Objects.equals(mNotFilters, trigger.mNotFilters);
+                && Objects.equals(mNotFilters, trigger.mNotFilters)
+                && Objects.equals(mAttributionConfig, trigger.mAttributionConfig)
+                && Objects.equals(mAdtechBitMapping, trigger.mAdtechBitMapping);
     }
 
     @Override
@@ -127,12 +133,12 @@ public class Trigger {
                 mNotFilters,
                 mDebugKey,
                 mAdIdPermission,
-                mArDebugPermission);
+                mArDebugPermission,
+                mAttributionConfig,
+                mAdtechBitMapping);
     }
 
-    /**
-     * Unique identifier for the {@link Trigger}.
-     */
+    /** Unique identifier for the {@link Trigger}. */
     public String getId() {
         return mId;
     }
@@ -232,6 +238,15 @@ public class Trigger {
     }
 
     /**
+     * Returns a list of aggregate deduplication keys. aggregate deduplication key is a JSONObject.
+     * example: { "deduplication_key": "32768", "filters": [ {type: [filter_1, filter_2]} ],
+     * "not_filters": [ {type: [not_filter_1, not_filter_2]} ] }
+     */
+    public String getAggregateDeduplicationKeys() {
+        return mAggregateDeduplicationKeys;
+    }
+
+    /**
      * Returns the AggregatableAttributionTrigger object, which is constructed using the aggregate
      * trigger data string and aggregate values string in Trigger.
      */
@@ -273,9 +288,31 @@ public class Trigger {
     }
 
     /** Debug key of {@link Trigger}. */
-    public @Nullable UnsignedLong getDebugKey() {
+    @Nullable
+    public UnsignedLong getDebugKey() {
         return mDebugKey;
     }
+
+    /**
+     * Returns field attribution config JSONArray as String. example: [{ "source_adtech":
+     * "AdTech1-Ads", "source_priority_range": { “start”: 100, “end”: 1000 }, "source_filters": {
+     * "campaign_type": ["install"], "source_type": ["navigation"], }, "priority": "99", "expiry":
+     * "604800", "filter_data":{ "campaign_type": ["install"], } }]
+     */
+    @Nullable
+    public String getAttributionConfig() {
+        return mAttributionConfig;
+    }
+
+    /**
+     * Returns adtech bit mapping JSONObject as String. example: "adtech_bit_mapping": {
+     * "AdTechA-enrollment_id": "0x1", "AdTechB-enrollment_id": "0x2", }
+     */
+    @Nullable
+    public String getAdtechBitMapping() {
+        return mAdtechBitMapping;
+    }
+
     /**
      * Generates AggregatableAttributionTrigger from aggregate trigger data string and aggregate
      * values string in Trigger.
@@ -310,6 +347,17 @@ public class Trigger {
                 List<FilterMap> notFilterSet = getFilterSet(jsonObject, "not_filters");
                 builder.setNotFilterSet(notFilterSet);
             }
+            if (!jsonObject.isNull("serving_adtech_network")) {
+                JSONObject servingAdtechNetworkJson =
+                        jsonObject.getJSONObject("serving_adtech_network");
+                if (!servingAdtechNetworkJson.isNull("offset")) {
+                    ServingAdtechNetwork servingAdtechNetwork =
+                            new ServingAdtechNetwork.Builder()
+                                    .setOffset(servingAdtechNetworkJson.getLong("offset"))
+                                    .build();
+                    builder.setServingAdtechNetwork(servingAdtechNetwork);
+                }
+            }
             triggerDataList.add(builder.build());
         }
         JSONObject values = new JSONObject(this.mAggregateValues);
@@ -317,8 +365,34 @@ public class Trigger {
         for (String key : values.keySet()) {
             valueMap.put(key, values.getInt(key));
         }
-        return Optional.of(new AggregatableAttributionTrigger.Builder()
-                .setTriggerData(triggerDataList).setValues(valueMap).build());
+        List<AggregateDeduplicationKey> dedupKeyList = new ArrayList<>();
+        if (this.mAggregateDeduplicationKeys != null) {
+            JSONArray dedupKeyObjects = new JSONArray(this.mAggregateDeduplicationKeys);
+            for (int i = 0; i < dedupKeyObjects.length(); i++) {
+                JSONObject dedupKeyObject = dedupKeyObjects.getJSONObject(i);
+                UnsignedLong dedupKey =
+                        new UnsignedLong(dedupKeyObject.getLong("deduplication_key"));
+                AggregateDeduplicationKey.Builder builder =
+                        new AggregateDeduplicationKey.Builder(dedupKey);
+                if (dedupKeyObject.has("filters") && !dedupKeyObject.isNull("filters")) {
+                    List<FilterMap> filterSet =
+                            Filter.deserializeFilterSet(dedupKeyObject.getJSONArray("filters"));
+                    builder.setFilterSet(filterSet);
+                }
+                if (dedupKeyObject.has("not_filters") && !dedupKeyObject.isNull("not_filters")) {
+                    List<FilterMap> notFilterSet =
+                            Filter.deserializeFilterSet(dedupKeyObject.getJSONArray("not_filters"));
+                    builder.setNotFilterSet(notFilterSet);
+                }
+                dedupKeyList.add(builder.build());
+            }
+        }
+        return Optional.of(
+                new AggregatableAttributionTrigger.Builder()
+                        .setTriggerData(triggerDataList)
+                        .setValues(valueMap)
+                        .setAggregateDeduplicationKeys(dedupKeyList)
+                        .build());
     }
 
     /**
@@ -368,6 +442,108 @@ public class Trigger {
     }
 
     /**
+     * Parses the json array under {@link #mAttributionConfig} to form a list of {@link
+     * AttributionConfig}s.
+     *
+     * @return list of {@link AttributionConfig}s
+     * @throws JSONException if JSON parsing fails
+     */
+    @Nullable
+    public List<AttributionConfig> parseAttributionConfigs() throws JSONException {
+        if (this.mAttributionConfig == null) {
+            return null;
+        }
+        List<AttributionConfig> attributionConfigs = new ArrayList<>();
+        JSONArray jsonArray = new JSONArray(this.mAttributionConfig);
+        for (int i = 0; i < jsonArray.length(); i++) {
+            AttributionConfig.Builder attributionConfigBuilder = new AttributionConfig.Builder();
+            JSONObject attributionConfigsJson = jsonArray.getJSONObject(i);
+
+            if (attributionConfigsJson.isNull(AttributionConfigContract.SOURCE_ADTECH)) {
+                LogUtil.d("Required field source_adtech is not present.");
+                continue;
+            }
+            attributionConfigBuilder.setSourceAdtech(
+                    attributionConfigsJson.getString(AttributionConfigContract.SOURCE_ADTECH));
+
+            if (!attributionConfigsJson.isNull(AttributionConfigContract.SOURCE_PRIORITY_RANGE)) {
+                JSONObject sourcePriorityRangeJson =
+                        attributionConfigsJson.getJSONObject(
+                                AttributionConfigContract.SOURCE_PRIORITY_RANGE);
+                Pair<Long, Long> sourcePriorityRange =
+                        new Pair<>(
+                                sourcePriorityRangeJson.getLong(AttributionConfigContract.START),
+                                sourcePriorityRangeJson.getLong(AttributionConfigContract.END));
+                attributionConfigBuilder.setSourcePriorityRange(sourcePriorityRange);
+            }
+            if (!attributionConfigsJson.isNull(AttributionConfigContract.SOURCE_FILTERS)) {
+                List<FilterMap> sourceFilters =
+                        getFilterSet(
+                                attributionConfigsJson, AttributionConfigContract.SOURCE_FILTERS);
+                attributionConfigBuilder.setSourceFilters(sourceFilters);
+            }
+            if (!attributionConfigsJson.isNull(AttributionConfigContract.SOURCE_NOT_FILTERS)) {
+                List<FilterMap> sourceNotFilters =
+                        getFilterSet(
+                                attributionConfigsJson,
+                                AttributionConfigContract.SOURCE_NOT_FILTERS);
+                attributionConfigBuilder.setSourceNotFilters(sourceNotFilters);
+            }
+            if (!attributionConfigsJson.isNull(AttributionConfigContract.SOURCE_EXPIRY_OVERRIDE)) {
+                attributionConfigBuilder.setSourceExpiryOverride(
+                        attributionConfigsJson.getLong(
+                                AttributionConfigContract.SOURCE_EXPIRY_OVERRIDE));
+            }
+            if (!attributionConfigsJson.isNull(AttributionConfigContract.PRIORITY)) {
+                attributionConfigBuilder.setPriority(
+                        attributionConfigsJson.getLong(AttributionConfigContract.PRIORITY));
+            }
+            if (!attributionConfigsJson.isNull(AttributionConfigContract.EXPIRY)) {
+                attributionConfigBuilder.setExpiry(
+                        attributionConfigsJson.getLong(AttributionConfigContract.EXPIRY));
+            }
+            if (!attributionConfigsJson.isNull(AttributionConfigContract.FILTER_DATA)) {
+                List<FilterMap> filterData =
+                        getFilterSet(attributionConfigsJson, AttributionConfigContract.FILTER_DATA);
+                attributionConfigBuilder.setFilterData(filterData);
+            }
+            if (!attributionConfigsJson.isNull(
+                    AttributionConfigContract.POST_INSTALL_EXCLUSIVITY_WINDOW)) {
+                attributionConfigBuilder.setPostInstallExclusivityWindow(
+                        attributionConfigsJson.getLong(
+                                AttributionConfigContract.POST_INSTALL_EXCLUSIVITY_WINDOW));
+            }
+            attributionConfigs.add(attributionConfigBuilder.build());
+        }
+        return attributionConfigs;
+    }
+
+    /**
+     * Parses the json object under {@link #mAdtechBitMapping} to create a mapping of adtechs to
+     * their bits.
+     *
+     * @return mapping of String to BigInteger
+     * @throws JSONException if JSON parsing fails
+     * @throws NumberFormatException if BigInteger parsing fails
+     */
+    @Nullable
+    public Map<String, BigInteger> parseAdtechBitMapping()
+            throws JSONException, NumberFormatException {
+        if (mAdtechBitMapping == null) {
+            return null;
+        }
+        Map<String, BigInteger> adtechBitMapping = new HashMap<>();
+        JSONObject jsonObject = new JSONObject(mAdtechBitMapping);
+        for (String key : jsonObject.keySet()) {
+            // Remove "0x" prefix.
+            String hexString = jsonObject.getString(key).substring(2);
+            BigInteger bigInteger = new BigInteger(hexString, 16);
+            adtechBitMapping.put(key, bigInteger);
+        }
+        return adtechBitMapping;
+    }
+
+    /**
      * Returns a {@code Uri} with scheme and (1) public suffix + 1 in case of a web destination, or
      * (2) the Android package name in case of an app destination. Returns null if extracting the
      * public suffix + 1 fails.
@@ -381,9 +557,7 @@ public class Trigger {
         }
     }
 
-    /**
-     * Builder for {@link Trigger}.
-     */
+    /** Builder for {@link Trigger}. */
     public static final class Builder {
 
         private final Trigger mBuilding;
@@ -465,6 +639,13 @@ public class Trigger {
             return this;
         }
 
+        /** See {@link Trigger#getAggregateDeduplicationKeys()} */
+        @NonNull
+        public Builder setAggregateDeduplicationKeys(@Nullable String aggregateDeduplicationKeys) {
+            mBuilding.mAggregateDeduplicationKeys = aggregateDeduplicationKeys;
+            return this;
+        }
+
         /** See {@link Trigger#getFilters()} */
         @NonNull
         public Builder setFilters(@Nullable String filters) {
@@ -503,6 +684,18 @@ public class Trigger {
             return this;
         }
 
+        /** See {@link Trigger#getAttributionConfig()} ()} */
+        public Builder setAttributionConfig(@Nullable String attributionConfig) {
+            mBuilding.mAttributionConfig = attributionConfig;
+            return this;
+        }
+
+        /** See {@link Trigger#getAdtechBitMapping()} ()} */
+        public Builder setAdtechBitMapping(@Nullable String adtechBitMapping) {
+            mBuilding.mAdtechBitMapping = adtechBitMapping;
+            return this;
+        }
+
         /** See {@link Trigger#getAggregatableAttributionTrigger()} */
         @NonNull
         public Builder setAggregatableAttributionTrigger(
@@ -532,14 +725,27 @@ public class Trigger {
         String NOT_FILTERS = "not_filters";
     }
 
+    /** Attribution Config field keys. */
+    public interface AttributionConfigContract {
+        String SOURCE_ADTECH = "source_adtech";
+        String SOURCE_PRIORITY_RANGE = "source_priority_range";
+        String SOURCE_FILTERS = "source_filters";
+        String SOURCE_NOT_FILTERS = "source_not_filters";
+        String SOURCE_EXPIRY_OVERRIDE = "source_expiry_override";
+        String PRIORITY = "priority";
+        String EXPIRY = "expiry";
+        String FILTER_DATA = "filter_data";
+        String POST_INSTALL_EXCLUSIVITY_WINDOW = "post_install_exclusivity_window";
+        String START = "start";
+        String END = "end";
+    }
+
     private static List<FilterMap> getFilterSet(JSONObject obj, String key) throws JSONException {
         List<FilterMap> filterSet = new ArrayList<>();
         JSONArray filters = obj.getJSONArray(key);
         for (int i = 0; i < filters.length(); i++) {
             FilterMap filterMap =
-                    new FilterMap.Builder()
-                            .buildFilterData(filters.getJSONObject(i))
-                            .build();
+                    new FilterMap.Builder().buildFilterData(filters.getJSONObject(i)).build();
             filterSet.add(filterMap);
         }
         return filterSet;

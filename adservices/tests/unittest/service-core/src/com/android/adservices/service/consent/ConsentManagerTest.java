@@ -16,19 +16,15 @@
 
 package com.android.adservices.service.consent;
 
-import static com.android.adservices.service.consent.ConsentManager.CONSENT_KEY;
-import static com.android.adservices.service.consent.ConsentManager.FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED;
-import static com.android.adservices.service.consent.ConsentManager.GA_UX_NOTIFICATION_DISPLAYED_ONCE;
-import static com.android.adservices.service.consent.ConsentManager.NOTIFICATION_DISPLAYED_ONCE;
-import static com.android.adservices.service.consent.ConsentManager.SHARED_PREFS_CONSENT;
-import static com.android.adservices.service.consent.ConsentManager.SHARED_PREFS_KEY_HAS_MIGRATED;
-import static com.android.adservices.service.consent.ConsentManager.SHARED_PREFS_KEY_PPAPI_HAS_CLEARED;
-import static com.android.adservices.service.consent.ConsentManager.TOPICS_CONSENT_PAGE_DISPLAYED;
+import static com.android.adservices.service.consent.ConsentConstants.CONSENT_KEY;
+import static com.android.adservices.service.consent.ConsentConstants.FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED;
+import static com.android.adservices.service.consent.ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE;
+import static com.android.adservices.service.consent.ConsentConstants.NOTIFICATION_DISPLAYED_ONCE;
+import static com.android.adservices.service.consent.ConsentConstants.SHARED_PREFS_CONSENT;
+import static com.android.adservices.service.consent.ConsentConstants.SHARED_PREFS_KEY_HAS_MIGRATED;
+import static com.android.adservices.service.consent.ConsentConstants.SHARED_PREFS_KEY_PPAPI_HAS_CLEARED;
+import static com.android.adservices.service.consent.ConsentConstants.TOPICS_CONSENT_PAGE_DISPLAYED;
 import static com.android.adservices.service.consent.ConsentManager.resetSharedPreference;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_IN_SELECTED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -94,7 +90,7 @@ import com.android.adservices.service.measurement.reporting.AggregateReportingJo
 import com.android.adservices.service.measurement.reporting.EventFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.EventReportingJobService;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
-import com.android.adservices.service.stats.UIStats;
+import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.service.topics.AppUpdateManager;
 import com.android.adservices.service.topics.BlockedTopicsManager;
 import com.android.adservices.service.topics.CacheManager;
@@ -139,7 +135,7 @@ public class ConsentManagerTest {
     @Mock private MeasurementImpl mMeasurementImpl;
     @Mock private AdServicesLoggerImpl mAdServicesLoggerImpl;
     @Mock private CustomAudienceDao mCustomAudienceDaoMock;
-
+    @Mock private UiStatsLogger mUiStatsLogger;
     @Mock private AppUpdateManager mAppUpdateManager;
     @Mock private CacheManager mCacheManager;
     @Mock private BlockedTopicsManager mBlockedTopicsManager;
@@ -165,6 +161,7 @@ public class ConsentManagerTest {
                         .spyStatic(DeleteExpiredJobService.class)
                         .spyStatic(DeleteUninstalledJobService.class)
                         .spyStatic(FlagsFactory.class)
+                        .spyStatic(AdServicesLoggerImpl.class)
                         .spyStatic(MaintenanceJobService.class)
                         .spyStatic(MddJobService.class)
                         .spyStatic(DeviceRegionProvider.class)
@@ -189,6 +186,7 @@ public class ConsentManagerTest {
         mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.PPAPI_ONLY);
 
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        ExtendedMockito.doReturn(mAdServicesLoggerImpl).when(AdServicesLoggerImpl::getInstance);
         ExtendedMockito.doReturn(true)
                 .when(() -> EpochJobService.scheduleIfNeeded(any(Context.class), eq(false)));
         ExtendedMockito.doReturn(true)
@@ -2456,8 +2454,7 @@ public class ConsentManagerTest {
         assertThat(mConsentDatastore.get(NOTIFICATION_DISPLAYED_ONCE)).isTrue();
 
         // Clear shared preference
-        ConsentManager.resetSharedPreference(
-                mContextSpy, ConsentManager.SHARED_PREFS_KEY_PPAPI_HAS_CLEARED);
+        ConsentManager.resetSharedPreference(mContextSpy, SHARED_PREFS_KEY_PPAPI_HAS_CLEARED);
     }
 
     @Test
@@ -2638,7 +2635,6 @@ public class ConsentManagerTest {
                         mAppConsentDao,
                         mEnrollmentDao,
                         mMeasurementImpl,
-                        mAdServicesLoggerImpl,
                         mCustomAudienceDaoMock,
                         mAdServicesManager,
                         mConsentDatastore,
@@ -2667,15 +2663,7 @@ public class ConsentManagerTest {
 
         temporalConsentManager.enable(mContextSpy);
 
-        UIStats expectedUIStats =
-                new UIStats.Builder()
-                        .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
-                        .setRegion(AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW)
-                        .setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_IN_SELECTED)
-                        .build();
-
-        verify(mAdServicesLoggerImpl, times(1)).logUIStats(any());
-        verify(mAdServicesLoggerImpl, times(1)).logUIStats(expectedUIStats);
+        verify(mUiStatsLogger, times(1)).logOptInSelected(mContextSpy);
     }
 
     @Test
@@ -2687,15 +2675,7 @@ public class ConsentManagerTest {
 
         temporalConsentManager.enable(mContextSpy);
 
-        UIStats expectedUIStats =
-                new UIStats.Builder()
-                        .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
-                        .setRegion(AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU)
-                        .setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_IN_SELECTED)
-                        .build();
-
-        verify(mAdServicesLoggerImpl, times(1)).logUIStats(any());
-        verify(mAdServicesLoggerImpl, times(1)).logUIStats(expectedUIStats);
+        verify(mUiStatsLogger, times(1)).logOptInSelected(mContextSpy);
     }
 
     @Test
@@ -2858,7 +2838,6 @@ public class ConsentManagerTest {
                 mAppConsentDao,
                 mEnrollmentDao,
                 mMeasurementImpl,
-                mAdServicesLoggerImpl,
                 mCustomAudienceDaoMock,
                 mAdServicesManager,
                 mConsentDatastore,

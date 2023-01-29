@@ -36,6 +36,7 @@ import com.android.adservices.service.topics.PackageManagerUtil;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.common.primitives.Ints;
 
 import org.tensorflow.lite.support.label.Category;
 import org.tensorflow.lite.task.text.nlclassifier.BertNLClassifier;
@@ -331,15 +332,7 @@ public class OnDeviceClassifier implements Classifier {
         mLabelsVersion =
                 Long.parseLong(
                         classifierAssetsMetadata.get(LABELS_ASSET_FIELD).get(ASSET_VERSION_FIELD));
-        try {
-            mBuildId =
-                    Integer.parseInt(
-                            classifierAssetsMetadata.get(VERSION_INFO_FIELD).get(BUILD_ID_FIELD));
-        } catch (NumberFormatException e) {
-            // No build id is available.
-            LogUtil.d(e, "Build id is not available");
-            mBuildId = -1;
-        }
+        mBuildId = Ints.saturatedCast(mModelManager.getBuildId());
         return true;
     }
 
