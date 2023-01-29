@@ -105,7 +105,9 @@ public class AppSetIdServiceImpl extends IAppSetIdService.Stub {
                 () -> {
                     int resultCode = STATUS_SUCCESS;
                     try {
-                        if (!canCallerInvokeAppSetIdService(appSetIdParam, callingUid, callback)) {
+                        resultCode =
+                                canCallerInvokeAppSetIdService(appSetIdParam, callingUid, callback);
+                        if (resultCode != STATUS_SUCCESS) {
                             return;
                         }
                         mAppSetIdWorker.getAppSetId(packageName, callingUid, callback);
@@ -179,9 +181,9 @@ public class AppSetIdServiceImpl extends IAppSetIdService.Stub {
      *
      * @param appSetIdParam {@link GetAppSetIdParam} to get information about the request.
      * @param callback {@link IGetAppSetIdCallback} to invoke when caller is not allowed.
-     * @return true if caller is allowed to invoke AppSetId API, false otherwise.
+     * @return API response status code.
      */
-    private boolean canCallerInvokeAppSetIdService(
+    private int canCallerInvokeAppSetIdService(
             GetAppSetIdParam appSetIdParam, int callingUid, IGetAppSetIdCallback callback) {
         // Enforce caller calls AppSetId API from foreground.
         try {
@@ -189,7 +191,7 @@ public class AppSetIdServiceImpl extends IAppSetIdService.Stub {
         } catch (WrongCallingApplicationStateException backgroundCaller) {
             invokeCallbackWithStatus(
                     callback, STATUS_BACKGROUND_CALLER, backgroundCaller.getMessage());
-            return false;
+            return STATUS_BACKGROUND_CALLER;
         }
 
         // This needs to access PhFlag which requires READ_DEVICE_CONFIG which
@@ -203,7 +205,7 @@ public class AppSetIdServiceImpl extends IAppSetIdService.Stub {
                     callback,
                     STATUS_CALLER_NOT_ALLOWED,
                     "Unauthorized caller. Caller is not allowed.");
-            return false;
+            return STATUS_CALLER_NOT_ALLOWED;
         }
 
         // Check whether calling package belongs to the callingUid
@@ -211,9 +213,9 @@ public class AppSetIdServiceImpl extends IAppSetIdService.Stub {
                 enforceCallingPackageBelongsToUid(appSetIdParam.getAppPackageName(), callingUid);
         if (resultCode != STATUS_SUCCESS) {
             invokeCallbackWithStatus(callback, resultCode, "Caller is not authorized.");
-            return false;
+            return resultCode;
         }
-        return true;
+        return STATUS_SUCCESS;
     }
 
     private void invokeCallbackWithStatus(

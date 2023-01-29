@@ -25,6 +25,8 @@ import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.AdSelectionOverrideCallback;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
+import android.adservices.adselection.SetAppInstallAdvertisersCallback;
+import android.adservices.adselection.SetAppInstallAdvertisersInput;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.CallerMetadata;
 import android.net.Uri;
@@ -151,6 +153,13 @@ interface AdSelectionService {
     void overrideAdSelectionConfigRemoteInfo(in AdSelectionConfig adSelectionConfig,
             in String decisionLogicJS, in AdSelectionSignals trustedScoringSignals,
             in AdSelectionOverrideCallback callback);
+    /**
+     * Gives the provided list of adtechs permission do app install filtering based on the presence
+     * of the calling app.
+     * @hide
+     */
+    void setAppInstallAdvertisers(
+            in SetAppInstallAdvertisersInput request, in SetAppInstallAdvertisersCallback callback);
 
     /**
      * Deletes any override created by calling

@@ -4633,8 +4633,7 @@ public class MeasurementDaoTest {
         String san1MatchingEnrollmentId = "san1EnrollmentId";
         String san2MatchingEnrollmentId = "san2EnrollmentId";
         String san3MatchingEnrollmentId = "san3EnrollmentId";
-        String san4NonMatchingEnrollmentId = "san4EnrollmentId";
-        String san5MatchingEnrollmentId = "san5EnrollmentId";
+        String san4NonMatchingEnrollmentId = "sanXEnrollmentId";
 
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
@@ -4739,21 +4738,6 @@ public class MeasurementDaoTest {
                         // expired before trigger time
                         .setExpiryTime(trigger.getTriggerTime() - TimeUnit.DAYS.toMillis(1))
                         .build();
-        String registrationIdForTriggerAndOtherRegistration = UUID.randomUUID().toString();
-        Source s14San5RegIdClasesWithMmp =
-                createSourceBuilder()
-                        .setId("s14")
-                        .setEnrollmentId(san5MatchingEnrollmentId)
-                        .setAppDestination(matchingDestination)
-                        .setRegistrationId(registrationIdForTriggerAndOtherRegistration)
-                        .build();
-        Source s15MmpMatching =
-                createSourceBuilder()
-                        .setId("s15")
-                        .setEnrollmentId(mmpMatchingEnrollmentId)
-                        .setAppDestination(matchingDestination)
-                        .setRegistrationId(registrationIdForTriggerAndOtherRegistration)
-                        .build();
         List<Source> sources =
                 Arrays.asList(
                         s1MmpMatching,
@@ -4768,9 +4752,7 @@ public class MeasurementDaoTest {
                         s10San3Matching,
                         s11San4EnrollmentNonMatching,
                         s12San1NullSharedAggregationKeys,
-                        s13San1Expired,
-                        s14San5RegIdClasesWithMmp,
-                        s15MmpMatching);
+                        s13San1Expired);
         SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
         Objects.requireNonNull(db);
         // Insert all sources to the DB
@@ -4789,8 +4771,7 @@ public class MeasurementDaoTest {
                         s5MmpMatching,
                         s6San1Matching,
                         s8San2Matching,
-                        s10San3Matching,
-                        s15MmpMatching);
+                        s10San3Matching);
         Comparator<Source> sortingComparator = Comparator.comparing(Source::getId);
         expectedMatchingSources.sort(sortingComparator);
 
@@ -4802,8 +4783,7 @@ public class MeasurementDaoTest {
                             Arrays.asList(
                                     san1MatchingEnrollmentId,
                                     san2MatchingEnrollmentId,
-                                    san3MatchingEnrollmentId,
-                                    san5MatchingEnrollmentId);
+                                    san3MatchingEnrollmentId);
                     List<Source> actualMatchingSources =
                             dao.fetchTriggerMatchingSourcesForXna(
                                     trigger, matchingSanEnrollmentIds);
@@ -4877,7 +4857,7 @@ public class MeasurementDaoTest {
                 .setAggregateSource(SourceFixture.ValidSourceParams.buildAggregateSource())
                 .setFilterData(SourceFixture.ValidSourceParams.buildFilterData())
                 .setIsDebugReporting(true)
-                .setRegistrationId(UUID.randomUUID().toString())
+                .setRegistrationId(SourceFixture.ValidSourceParams.REGISTRATION_ID)
                 .setSharedAggregationKeys(SHARED_AGGREGATE_KEYS)
                 .setInstallTime(SourceFixture.ValidSourceParams.INSTALL_TIME);
     }

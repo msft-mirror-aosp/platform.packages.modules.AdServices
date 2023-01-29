@@ -154,6 +154,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 ExtendedMockito.mockitoSession()
                         .mockStatic(LocalManagerRegistry.class)
                         .mockStatic(SdkSandboxStatsLog.class)
+                        .spyStatic(Process.class)
                         .startMocking();
 
         Context context = InstrumentationRegistry.getInstrumentation().getContext();
@@ -1001,6 +1002,83 @@ public class SdkSandboxManagerServiceUnitTest {
         final String processName =
                 sSdkSandboxManagerLocal.getSdkSandboxProcessNameForInstrumentation(info);
         assertThat(processName).isEqualTo(TEST_PACKAGE + "_sdk_sandbox_instr");
+    }
+
+    /** Tests expected behavior when broadcast receiver restrictions are not available. */
+    @Test
+    public void testCanRegisterBroadcastReceiver_deviceConfigUnset() {
+        ExtendedMockito.when(Process.isSdkSandboxUid(Mockito.anyInt())).thenReturn(true);
+        sSdkSandboxSettingsListener.onPropertiesChanged(
+                new DeviceConfig.Properties(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        Map.of(PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS, "")));
+        assertThat(
+                        sSdkSandboxManagerLocal.canRegisterBroadcastReceiver(
+                                new IntentFilter(),
+                                /*flags= */ 0,
+                                /*onlyProtectedBroadcasts= */ false))
+                .isTrue();
+    }
+
+    /** Tests expected behavior when broadcast receiver restrictions are not applied. */
+    @Test
+    public void testCanRegisterBroadcastReceiver_restrictionsNotApplied() {
+        ExtendedMockito.when(Process.isSdkSandboxUid(Mockito.anyInt())).thenReturn(true);
+        sSdkSandboxSettingsListener.onPropertiesChanged(
+                new DeviceConfig.Properties(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        Map.of(PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS, "false")));
+        assertThat(
+                        sSdkSandboxManagerLocal.canRegisterBroadcastReceiver(
+                                new IntentFilter(),
+                                /*flags= */ 0,
+                                /*onlyProtectedBroadcasts= */ false))
+                .isTrue();
+    }
+
+    /** Tests expected behavior when broadcast receiver restrictions are applied. */
+    @Test
+    public void testCanRegisterBroadcastReceiver_restrictionsApplied() {
+        ExtendedMockito.when(Process.isSdkSandboxUid(Mockito.anyInt())).thenReturn(true);
+        sSdkSandboxSettingsListener.onPropertiesChanged(
+                new DeviceConfig.Properties(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        Map.of(PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS, "true")));
+        assertThat(
+                        sSdkSandboxManagerLocal.canRegisterBroadcastReceiver(
+                                new IntentFilter(),
+                                /*flags= */ 0,
+                                /*onlyProtectedBroadcasts= */ false))
+                .isFalse();
+    }
+
+    /** Tests expected behavior when callingUid is not a sandbox UID. */
+    @Test
+    public void testCanRegisterBroadcastReceiver_notSandboxProcess() {
+        assertThat(
+                        sSdkSandboxManagerLocal.canRegisterBroadcastReceiver(
+                                new IntentFilter(),
+                                /*flags= */ 0,
+                                /*onlyProtectedBroadcasts= */ false))
+                .isTrue();
+    }
+
+    /**
+     * Tests expected behavior when broadcast receiver is registering to an unexported broadcast.
+     */
+    @Test
+    public void testCanRegisterBroadcastReceiver_exportedBroadcast() {
+        ExtendedMockito.when(Process.isSdkSandboxUid(Mockito.anyInt())).thenReturn(true);
+        sSdkSandboxSettingsListener.onPropertiesChanged(
+                new DeviceConfig.Properties(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        Map.of(PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS, "true")));
+        assertThat(
+                        sSdkSandboxManagerLocal.canRegisterBroadcastReceiver(
+                                new IntentFilter(),
+                                /*flags= */ Context.RECEIVER_NOT_EXPORTED,
+                                /*onlyProtectedBroadcasts= */ false))
+                .isTrue();
     }
 
     /** Tests expected behavior when broadcast receiver restrictions are not available. */
@@ -2219,21 +2297,6 @@ public class SdkSandboxManagerServiceUnitTest {
         assertThat(callback.getLoadSdkErrorCode())
                 .isEqualTo(SdkSandboxManager.LOAD_SDK_SDK_SANDBOX_DISABLED);
         assertThat(callback.getLoadSdkErrorMsg()).isEqualTo("SDK sandbox is disabled");
-    }
-
-    @Test
-    public void testSdkSandboxSettings_enforceBroadcastReceiverRestrictions() {
-        assertThat(sSdkSandboxSettingsListener.isBroadcastReceiverRestrictionsEnforced()).isFalse();
-        sSdkSandboxSettingsListener.onPropertiesChanged(
-                new DeviceConfig.Properties(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        Map.of(PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS, "true")));
-        assertThat(sSdkSandboxSettingsListener.isBroadcastReceiverRestrictionsEnforced()).isTrue();
-        sSdkSandboxSettingsListener.onPropertiesChanged(
-                new DeviceConfig.Properties(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        Map.of(PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS, "false")));
-        assertThat(sSdkSandboxSettingsListener.isBroadcastReceiverRestrictionsEnforced()).isFalse();
     }
 
     @Test
