@@ -23,10 +23,13 @@ public class FrequencyCapFiltersFixture {
 
     public static FrequencyCapFilters.Builder getValidFrequencyCapFiltersBuilder() {
         return new FrequencyCapFilters.Builder()
-                .setWinKeyedFrequencyCaps(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET)
-                .setImpressionKeyedFrequencyCaps(
+                .setKeyedFrequencyCapsForWinEvents(
                         KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET)
-                .setViewKeyedFrequencyCaps(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET)
-                .setClickKeyedFrequencyCaps(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET);
+                .setKeyedFrequencyCapsForImpressionEvents(
+                        KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET)
+                .setKeyedFrequencyCapsForViewEvents(
+                        KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET)
+                .setKeyedFrequencyCapsForClickEvents(
+                        KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET);
     }
 }
