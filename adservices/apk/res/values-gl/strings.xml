@@ -113,8 +113,7 @@
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text3" msgid="5347980571056638783">"•  Como usan estes datos as aplicacións?"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text4" msgid="4738335469671465639">"As aplicacións poden almacenar información con Android sobre o que che gusta. Por exemplo, se usas unha aplicación de adestramento para maratóns, esa aplicación podería determinar que che interesan as zapatillas deportivas. Máis tarde, se utilizas unha aplicación diferente, esta poderá mostrarche un anuncio de zapatillas deportivas suxerido pola primeira aplicación."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text5" msgid="8737925570089314631">"•  Como podes xestionar os teus datos?"</string>
-    <!-- no translation found for notificationUI_how_it_works_fledge_measurement_expanded_text6 (495908587748380196) -->
-    <skip />
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android elimina automaticamente os datos suxeridos polas aplicacións de forma regular. Se volves usar unha aplicación, podería aparecer outra vez na lista."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"Tamén podes impedir que unha aplicación che suxira anuncios, restablecer todos os datos de suxestión de anuncios ou desactivar os anuncios suxeridos por aplicacións en calquera momento desde a configuración de privacidade."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"As aplicacións que usas poden solicitarlle información a Android para axudarlles a medir o rendemento dos seus anuncios. Co obxectivo de protexer a túa privacidade, Android limita a información que as aplicacións poden compartir entre si."</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Privacy Sandbox"</string>
@@ -128,21 +127,20 @@
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"Bloquear"</string>
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Desbloquear"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Intereses que bloqueaches"</string>
-    <!-- no translation found for settingsUI_blocked_topics_ga_view_title (3139405409436543147) -->
-    <skip />
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Restablecer todos os intereses"</string>
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Neste momento non hai ningún interese para mostrar"</string>
     <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"Neste momento non hai ningún tema para mostrar"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"A versión beta de privacidade nos anuncios de Android ofrece novas funcións que poden utilizar as aplicacións para mostrarche anuncios que poderían gustarche. Estas tecnoloxías non utilizan identificadores de dispositivos.\n\nAndroid pode determinar os tipos de anuncios que poderían interesarche e gardar eses intereses de maneira temporal no teu dispositivo. Deste xeito, as aplicacións poden mostrarche anuncios relevantes sen facer un seguimento da túa actividade nos sitios web e nas aplicacións doutros programadores."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Non tes ningún interese bloqueado"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_ga_text" msgid="4484435371306742210">"Non hai ningún tema bloqueado"</string>
-    <string name="settingsUI_topics_view_view_blocked_topics" msgid="2337437967442005365">"Ver temas bloqueados"</string>
+    <!-- no translation found for settingsUI_no_blocked_topics_ga_text (377459829879121256) -->
+    <skip />
+    <!-- no translation found for settingsUI_view_blocked_topics_title (3705333677440361392) -->
+    <skip />
     <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Restablecéronse os intereses"</string>
     <string name="settingsUI_topics_are_reset_ga" msgid="5250296990870048195">"Restablecéronse os temas"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"As aplicacións poden determinar cales son os teus intereses e gardalos de forma temporal en Android. Máis adiante, calquera delas pode mostrarche anuncios baseados neses intereses.\n\nSe bloqueas unha aplicación, deixará de suxerir cales son os teus intereses. Non se engadirá de novo a esta lista de aplicacións a menos que a desbloquees. Eliminaranse os intereses que xa determinase esa aplicación, aínda que é posible que sigas vendo algún anuncio relacionado."</string>
-    <!-- no translation found for settingsUI_blocked_apps_title (1260257485713408637) -->
-    <skip />
+    <string name="settingsUI_blocked_apps_title" msgid="1260257485713408637">"Aplicacións bloqueadas"</string>
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"Ver aplicacións bloqueadas"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Restablecer intereses que determinan as aplicacións"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"Nestes momentos, non hai ningunha aplicación que estea determinando os teus intereses"</string>
@@ -150,7 +148,8 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"A versión beta de privacidade nos anuncios de Android ofrece novas funcións que poden utilizar as aplicacións para mostrarche anuncios que poderían gustarche. Estas tecnoloxías non utilizan identificadores de dispositivos.\n\nAs aplicacións poden determinar os tipos de anuncios que poderían interesarche e gardar eses intereses de maneira temporal no teu dispositivo. Deste xeito, as aplicacións poden mostrarche anuncios relevantes sen facer un seguimento da túa actividade nos sitios web e nas aplicacións doutros programadores."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Non tes ningunha aplicación bloqueada"</string>
-    <string name="settingsUI_apps_view_no_blocked_apps_ga_text" msgid="3588711487944931608">"Non hai aplicacións bloqueadas"</string>
+    <!-- no translation found for settingsUI_no_blocked_apps_ga_text (7488680173653861943) -->
+    <skip />
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"Permitir medición de anuncios"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"As aplicacións e os anunciantes poden solicitarlle a Android información que lles axude a medir o rendemento dos seus anuncios.\n\nOs datos das medicións dos anuncios elimínanse periodicamente do teu dispositivo."</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"Restablecer datos de medición"</string>
@@ -161,26 +160,28 @@
     <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Se cambias de opinión ou queres obter máis información sobre a versión beta de privacidade nos anuncios de Android, vai á configuración de privacidade"</string>
     <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Desactivar"</string>
     <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Queres bloquear <xliff:g id="TOPIC">%1$s</xliff:g>?"</string>
-    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"Este interese bloquearase e non volverá a aparecer na túa lista, a non ser que o engadas de novo. É posible que sigas vendo anuncios relacionados."</string>
-    <string name="settingsUI_dialog_block_topic_ga_message" msgid="7397705817955848275">"Este tema bloquearase e non volverá aparecer na túa lista, a non ser que o engadas de novo. É posible que sigas vendo algúns anuncios relacionados."</string>
+    <!-- no translation found for settingsUI_dialog_block_topic_message (2581824495438333677) -->
+    <skip />
     <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Bloquear"</string>
     <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"Desbloqueouse <xliff:g id="TOPIC">%1$s</xliff:g>"</string>
-    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"É posible que Android engada este interese á túa lista outra vez, pero podería non aparecer de inmediato"</string>
-    <string name="settingsUI_dialog_unblock_topic_ga_message" msgid="3582004316141072103">"É posible que Android engada este tema á túa lista outra vez, pero podería non aparecer de inmediato"</string>
+    <!-- no translation found for settingsUI_dialog_unblock_topic_message (1090743551997420666) -->
+    <skip />
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"Aceptar"</string>
-    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Queres restablecer todos os teus intereses?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"Borrarase a túa lista e calcularanse novos intereses a partir de agora. É posible que sigas vendo anuncios relacionados cos intereses que se eliminaron."</string>
-    <string name="settingsUI_dialog_reset_topic_ga_message" msgid="5826866496652403990">"A lista borrarase e engadiranse novos temas a partir de agora. É posible que sigas vendo anuncios relacionados cos temas que restableciches."</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_title (8025836207966712435) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (4243744527757134000) -->
+    <skip />
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Restablecer"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Queres bloquear <xliff:g id="APP">%1$s</xliff:g>?"</string>
-    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Esta aplicación non determinará intereses para Privacy Sandbox nin se volverá engadir á túa lista, a non ser que a desbloquees.\n\nOs intereses que xa determinase esta aplicación eliminaranse, pero poderías seguir vendo anuncios relacionados."</string>
-    <string name="settingsUI_dialog_block_app_ga_message" msgid="5843160418232238694">"Esta aplicación non suxerirá anuncios nin se volverá engadir á túa lista, a non ser que a desbloquees. É posible que sigas vendo anuncios relacionados."</string>
+    <!-- no translation found for settingsUI_dialog_block_app_message (758788973278770119) -->
+    <skip />
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Desbloqueouse <xliff:g id="APP">%1$s</xliff:g>"</string>
-    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Esta aplicación pode volver determinar intereses por ti, pero poderían non aparecer na túa lista de inmediato. Poderías tardar algo en ver anuncios relacionados."</string>
-    <string name="settingsUI_dialog_unblock_app_ga_message" msgid="215670726484505390">"Esta aplicación pode volver suxerirche anuncios, pero podería non aparecer na túa lista de inmediato. É posible que tardes algo en ver anuncios relacionados."</string>
-    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Queres restablecer os intereses xerados polas aplicacións?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"Os intereses estimados polas aplicacións da túa lista eliminaranse de Privacy Sandbox e as aplicacións calcularán outros novos a partir de agora. É posible que sigas vendo anuncios relacionados."</string>
-    <string name="settingsUI_dialog_reset_app_ga_message" msgid="8436063980923088005">"Eliminaranse os datos de suxestión de anuncios das aplicacións da túa lista e as aplicacións suxerirán novos anuncios no futuro. É posible que sigas vendo algúns anuncios relacionados."</string>
+    <!-- no translation found for settingsUI_dialog_unblock_app_message (5758218424845642060) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_title (5177572712117150557) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_message (7845329616145691006) -->
+    <skip />
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Restablecéronse os datos das aplicacións"</string>
     <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"Queres restablecer todos os temas?"</string>
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"Queres restablecer os anuncios suxeridos polas aplicacións?"</string>
@@ -198,14 +199,14 @@
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Desactivado"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Para mostrarche anuncios personalizados, as aplicacións usan os temas que che interesan, que se determinan a partir das que usases recentemente.\n\nPodes bloquear os temas que non queiras que se compartan coas aplicacións. Android tamén elimina os temas de forma automática e periódica."</string>
     <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"Permitir temas de anuncios"</string>
-    <string name="settingsUI_blocked_topics_ga_title" msgid="1778578928932167070">"Temas que bloqueaches"</string>
-    <string name="settingsUI_reset_topics_ga_title" msgid="8223331046430417414">"Restablecer todos os temas"</string>
+    <string name="settingsUI_blocked_topics_ga_title" msgid="7163366621282449273">"Temas de anuncios bloqueados"</string>
+    <!-- no translation found for settingsUI_reset_topics_ga_title (5365554894399951300) -->
+    <skip />
     <string name="settingsU_topics_view_footer" msgid="4769146330248953561">"Android rexistra temas de interese en función das aplicacións que usases nas últimas semanas.\n\nMáis tarde, as aplicacións que utilices poderán solicitarlle información a Android sobre os teus temas para personalizar os anuncios que se che mostren. Android comparte ata 3 temas protexendo a túa identidade e a información sobre o uso que fas das aplicacións.\n\nAndroid elimina automaticamente os temas de forma regular. Un tema podería aparecer outra vez na lista ao seguires usando as aplicacións. Tamén podes bloquear os temas que non queiras que Android comparta coas aplicacións.\n\nNelas poderían mostrárseche anuncios personalizados en función desta opción de configuración, da opción relacionada cos anuncios suxeridos polas aplicacións, da configuración do teu identificador de publicidade ou de se a aplicación que uses personaliza os anuncios."</string>
     <string name="settingsUI_apps_switch_title" msgid="1308209012769248890">"Permitir anuncios suxeridos polas aplicacións"</string>
     <string name="settingsUI_apps_view_ga_subtitle" msgid="1911743837387384160">"As aplicacións que usas poden determinar o que che gusta e logo suxerir anuncios noutras aplicacións.\n\nPodes impedir que as aplicacións che fagan suxestións. Android tamén elimina automaticamente os datos suxeridos polas aplicacións de forma regular."</string>
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Aplicacións bloqueadas"</string>
-    <!-- no translation found for settingsUI_reset_apps_ga_title (371969808353100852) -->
-    <skip />
+    <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Restablecer datos suxeridos polas aplicacións"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"É habitual que as aplicacións que usas garden os teus intereses para ofrecerche unha experiencia personalizada. As aplicacións tamén poden almacenar con Android información sobre os teus temas.\n\nPor exemplo, se usas unha aplicación sobre adestramento para correr maratóns, a aplicación podería determinar que che interesan as zapatillas de correr. Máis tarde, se usas unha aplicación diferente, esta pode mostrarche un anuncio de zapatillas de correr suxerido pola primeira aplicación.\n\nAndroid elimina de forma automática e periódica os datos suxeridos polas aplicacións. Se volves usar unha aplicación, podería aparecer de novo na lista. Tamén podes impedir que unha aplicación suxira anuncios.\n\nOs anuncios que se che mostran nas aplicacións poden estar personalizados en función desta opción de configuración, da relativa aos temas dos anuncios, da configuración do teu identificador de publicidade ou de se as aplicacións en cuestión personalizan os anuncios."</string>
     <string name="topic10001" msgid="1636806320891333775">"Arte e entretemento"</string>
     <string name="topic10002" msgid="1226367977754287428">"Representacións e teatro"</string>

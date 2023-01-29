@@ -113,8 +113,7 @@
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text3" msgid="5347980571056638783">"•  Jinsi programu zinavyotumia data hii"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text4" msgid="4738335469671465639">"Programu zinaweza kuhifadhi maelezo kwenye Android kuhusu vitu unavyopenda. Kwa mfano, ikiwa unatumia programu iliyo na maudhui ya mafunzo ya kukimbia mbio ndefu, huenda programu ikaamua kwamba unapendelea viatu vya mazoezi ya kukimbia. Pia, ikiwa unatumia programu tofauti, programu hiyo inaweza kukuonyesha tangazo la viatu vya mazoezi ya kukimbia lililopendekezwa na programu ya awali."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text5" msgid="8737925570089314631">"•  Jinsi unavyoweza kudhibiti data yako"</string>
-    <!-- no translation found for notificationUI_how_it_works_fledge_measurement_expanded_text6 (495908587748380196) -->
-    <skip />
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android hufuta kiotomatiki data ya mapendekezo ya programu mara kwa mara. Programu unayotumia tena huenda ikaonekana tena kwenye orodha."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"Unaweza pia kuzuia programu isikupendekezee matangazo, kuweka upya data yote ya mapendekezo ya matangazo au kuzima matangazo yanayopendekezwa na programu muda wowote kwenye mipangilio ya faragha."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"Programu unazotumia zinaweza kuiomba Android taarifa zinazozisaidia kupima utendaji wake wa matangazo. Android hulinda faragha yako kwa kudhibiti taarifa ambazo programu zinaweza kushiriki na programu zingine."</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Mazingira ya Faragha"</string>
@@ -128,21 +127,20 @@
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"Zuia"</string>
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Ondoa kizuizi"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Mambo yanayokuvutia uliyoyazuia"</string>
-    <!-- no translation found for settingsUI_blocked_topics_ga_view_title (3139405409436543147) -->
-    <skip />
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Weka upya mambo yote yanayokuvutia"</string>
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Hakuna mambo yanayokuvutia ya kuonyesha kwa sasa"</string>
     <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"Hakuna mada za kuonyesha kwa sasa"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Mazingira ya Faragha"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Toleo la beta la faragha ya matangazo kwenye Android hutoa vipengele vipya ambavyo programu zinaweza kutumia ili zikuonyeshe matangazo ambayo huenda ukayapenda. Teknolojia hizi hazitumii vitambulishi vya kifaa.\n\nAndroid inaweza kukadiria aina ya matangazo ambayo huenda yakakuvutia na kuhifadhi mambo haya yanayokuvutia kwa muda kwenye kifaa chako. Hali hii huwezesha programu kukuonyesha matangazo yanayokufaa, bila kufuatilia shughuli zako kwenye tovuti na programu za wasanidi programu wengine."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Huna mambo yanayokuvutia uliyozuia"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_ga_text" msgid="4484435371306742210">"Hakuna mada zilizozuiwa"</string>
-    <string name="settingsUI_topics_view_view_blocked_topics" msgid="2337437967442005365">"Angalia mada zilizozuiwa"</string>
+    <!-- no translation found for settingsUI_no_blocked_topics_ga_text (377459829879121256) -->
+    <skip />
+    <!-- no translation found for settingsUI_view_blocked_topics_title (3705333677440361392) -->
+    <skip />
     <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Mambo yanayokuvutia yamewekwa upya"</string>
     <string name="settingsUI_topics_are_reset_ga" msgid="5250296990870048195">"Mada zimewekwa upya"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Programu zinaweza kukadiria mambo yanayokuvutia na kuyahifadhi kwa muda kupitia Android. Hapo baadaye, programu tofauti inaweza kukuonyesha tangazo kulingana na mambo haya yanayokuvutia.\n\nIwapo utazuia programu, haitakadiria mambo yanayokuvutia. Haitawekwa tena kwenye orodha hii ya programu isipokuwa uiondolee kizuizi. Mambo yanayokuvutia yaliyoakadiriwa na programu hiyo yatafutwa, ila huenda bado ukaona baadhi ya matangazo yanayohusiana."</string>
-    <!-- no translation found for settingsUI_blocked_apps_title (1260257485713408637) -->
-    <skip />
+    <string name="settingsUI_blocked_apps_title" msgid="1260257485713408637">"Programu ulizozuia"</string>
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"Angalia programu zilizozuiwa"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Weka upya mambo yanayokuvutia yaliyokadiriwa na programu"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"Huna programu zinazokadiria mambo yanayokuvutia kwa sasa"</string>
@@ -150,7 +148,8 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Mazingira ya Faragha"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Toleo la beta la faragha ya matangazo kwenye Android hutoa vipengele vipya ambavyo programu zinaweza kutumia ili zikuonyeshe matangazo ambayo huenda ukayapenda. Teknolojia hizi hazitumii vitambulishi vya kifaa.\n\nProgramu zako zinaweza kukadiria aina ya matangazo ambayo huenda yakakuvutia na kuhifadhi mambo haya yanayokuvitia kwa muda kwenye kifaa chako. Hali hii huwezesha programu kukuonyesha matangazo yanayokufaa, bila kufuatilia shughuli zako kwenye tovuti na programu za wasanidi programu wengine."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Huna programu ulizozuia"</string>
-    <string name="settingsUI_apps_view_no_blocked_apps_ga_text" msgid="3588711487944931608">"Hakuna programu zilizozuiwa"</string>
+    <!-- no translation found for settingsUI_no_blocked_apps_ga_text (7488680173653861943) -->
+    <skip />
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"Ruhusu upimaji wa matangazo"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"Programu na watangazaji wanaweza kuomba maelezo kwenye Android yatakayowasaidia kupima utendaji wa matangazo yao.\n\nData ya kupima matangazo hufutwa mara kwa mara kwenye kifaa chako."</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"Weka upya data ya upimaji"</string>
@@ -161,26 +160,28 @@
     <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Iwapo utabadili mawazo yako au utataka kupata maelezo zaidi kuhusu toleo la beta la faragha ya matangazo kwenye Android, nenda kwenye mipangilio ya faragha"</string>
     <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Zima"</string>
     <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Ungependa kuzuia mada ya <xliff:g id="TOPIC">%1$s</xliff:g>?"</string>
-    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"Mada hii inayokuvutia itazuiwa na haitawekwa kwenye orodha yako tena, isipokuwa ukiiweka mwenyewe. Huenda bado ukaona baadhi ya matangazo yanayohusiana."</string>
-    <string name="settingsUI_dialog_block_topic_ga_message" msgid="7397705817955848275">"Mada hii itazuiwa na haitawekwa kwenye orodha yako tena, isipokuwa ukiiweka mwenyewe. Bado unaweza kuona baadhi ya matangazo yanayohusiana."</string>
+    <!-- no translation found for settingsUI_dialog_block_topic_message (2581824495438333677) -->
+    <skip />
     <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Zuia"</string>
     <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"Umeiondolea kizuizi mada ya <xliff:g id="TOPIC">%1$s</xliff:g>"</string>
-    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Huenda Android ikaweka tena mada hii inayokuvutia kwenye orodha yako, lakini inaweza isionekane papo hapo"</string>
-    <string name="settingsUI_dialog_unblock_topic_ga_message" msgid="3582004316141072103">"Android inaweza ikaweka tena mada hii kwenye orodha yako, lakini huenda isionekane papo hapo"</string>
+    <!-- no translation found for settingsUI_dialog_unblock_topic_message (1090743551997420666) -->
+    <skip />
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"Sawa"</string>
-    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Ungependa kuweka upya mambo yote yanayokuvutia?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"Orodha yako itafutwa na mambo mapya yanayokuvutia yatakadiriwa kuanzia sasa. Bado unaweza kuona baadhi ya matangazo yanayohusiana na mambo yanayokuvutia yaliyofutwa."</string>
-    <string name="settingsUI_dialog_reset_topic_ga_message" msgid="5826866496652403990">"Orodha yako itafutwa na mada mpya zitawekwa kuanzia sasa. Huenda ukaendelea kuona baadhi ya matangazo yanayohusiana na mada ulizoziweka upya."</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_title (8025836207966712435) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (4243744527757134000) -->
+    <skip />
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Weka upya"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Ungependa kuzuia programu ya <xliff:g id="APP">%1$s</xliff:g>?"</string>
-    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Programu hii haitakadiria mambo yanayokuvutia kwa ajili ya kipengele cha Mazingira ya faragha na haitawekwa kwenye orodha yako tena isipokuwa ukiondoa kizuizi.\n\nMambo yanayokuvutia yaliyokadiriwa na programu hii yatafutwa, ila huenda bado ukaona baadhi ya matangazo yanayohusiana."</string>
-    <string name="settingsUI_dialog_block_app_ga_message" msgid="5843160418232238694">"Programu hii haitapendekeza matangazo na haitawekwa tena kwenye orodha yako, isipokuwa uiondolee kizuizi. Huenda bado ukaona baadhi ya matangazo yanayohusiana."</string>
+    <!-- no translation found for settingsUI_dialog_block_app_message (758788973278770119) -->
+    <skip />
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Umeiondolea kizuizi programu ya <xliff:g id="APP">%1$s</xliff:g>"</string>
-    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Programu hii inaweza kukadiria tena mambo yanayokuvutia lakini inaweza isionekane kwenye orodha yako papo hapo. Huenda ikachukua muda hadi uone matangazo yanayohusiana."</string>
-    <string name="settingsUI_dialog_unblock_app_ga_message" msgid="215670726484505390">"Programu hii inaweza kupendekeza tena matangazo kwa ajili yako, lakini huenda isionekane kwenye orodha yako papo hapo. Huenda ikachukua muda hadi uone matangazo yanayohusiana."</string>
-    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Ungependa kuweka upya mambo yanayokuvutia yaliyokadiriwa na programu?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"Mambo yanayokuvutia yanayokadiriwa na programu kwenye orodha yako yatafutwa kwenye Mazingira ya faragha na programu zitakadiria mambo mapya yanayokuvutia kuanzia sasa. Bado unaweza kuona baadhi ya matangazo yanayohusiana."</string>
-    <string name="settingsUI_dialog_reset_app_ga_message" msgid="8436063980923088005">"Data ya mapendekezo ya matangazo kutoka kwa programu kwenye orodha yako itafutwa na programu zitapendekeza matangazo mapya kuanzia sasa. Bado unaweza kuona baadhi ya matangazo yanayohusiana."</string>
+    <!-- no translation found for settingsUI_dialog_unblock_app_message (5758218424845642060) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_title (5177572712117150557) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_message (7845329616145691006) -->
+    <skip />
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Data ya programu iliwekwa upya"</string>
     <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"Ungependa kuweka upya mada zote?"</string>
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"Je, ungependa kuweka upya matangazo yanayopendekezwa na programu?"</string>
@@ -198,14 +199,14 @@
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Umezima"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Mada zinazovutia hulingana na programu ulizotumia hivi karibuni na hutumiwa na programu ili kukuonyesha matangazo yaliyowekewa mapendeleo.\n\nUnaweza kuzuia mada ambazo hungependa kushiriki kwenye programu. Android pia hufuta kiotomatiki mada mara kwa mara."</string>
     <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"Ruhusu mada za matangazo"</string>
-    <string name="settingsUI_blocked_topics_ga_title" msgid="1778578928932167070">"Mada ulizozuia"</string>
-    <string name="settingsUI_reset_topics_ga_title" msgid="8223331046430417414">"Weka upya mada zote"</string>
+    <string name="settingsUI_blocked_topics_ga_title" msgid="7163366621282449273">"Mada za matangazo ulizozuia"</string>
+    <!-- no translation found for settingsUI_reset_topics_ga_title (5365554894399951300) -->
+    <skip />
     <string name="settingsU_topics_view_footer" msgid="4769146330248953561">"Android hunukuu mada unazopendelea kulingana na programu ulizotumia wiki kadhaa zilizopita.\n\nPia, programu unayotumia inaweza kuomba mfumo wa Android kuhusu mada unazopendelea ili kuweka mapendeleo ya matangazo unayoyaona. Android inashiriki hadi mada 3 huku ikilinda utambulisho wako na maelezo kuhusu matumizi ya programu yako.\n\nAndroid hufuta mada kiotomatiki mara kwa mara. Kadiri unavyoendelea kutumia programu, huenda mada ikaonekana tena kwenye orodha. Au unaweza kuzuia mada ambazo hutaki Android ishiriki kwenye programu.\n\nKwenye programu zako, tangazo unaloliona huenda likawekewa mapendeleo, kulingana na mipangilio hii, mipangilio ya matangazo ya mapendekezo ya programu, mipangilio yako ya kitambulisho cha matangazo na iwapo programu unayotumia inaweka mapendeleo ya matangazo."</string>
     <string name="settingsUI_apps_switch_title" msgid="1308209012769248890">"Ruhusu matangazo yanayopendekezwa na programu"</string>
     <string name="settingsUI_apps_view_ga_subtitle" msgid="1911743837387384160">"Programu unazotumia zinaweza kubainisha unachopenda kisha kupendekeza matangazo kwenye programu nyingine.\n\nUnaweza kuzuia programu kuweka mapendekezo. Android pia hufuta kiotomatiki data ya mapendekezo ya programu mara kwa mara."</string>
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Programu ulizozuia"</string>
-    <!-- no translation found for settingsUI_reset_apps_ga_title (371969808353100852) -->
-    <skip />
+    <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Weka upya data iliyopendekezwa na programu"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Ni kawaida kwa programu unazotumia kukumbuka mambo yanayokuvutia ili kuweka mapendeleo kwenye matumizi yako. Programu zinaweza pia kuhifadhi maelezo kwenye Android kuhusu mada zako.\n\nKwa mfano, ikiwa unatumia programu inayohusu mafunzo ya mbio, programu inaweza kuamua kuwa unavutiwa na viatu vya mazoezi ya kukimbia. Baadaye, ukitumia programu tofauti, programu hiyo inaweza kukuonyesha tangazo la viatu vya mazoezi ya kukimbia lililopendekezwa na programu ya kwanza.\n\nAndroid hufuta kiotomatiki data iliyopendekezwa na programu mara kwa mara. Huenda programu unayotumia tena ikaonekana tena kwenye orodha. Au unaweza kuizuia programu isikupendekezee matangazo.\n\nKwenye programu zako, tangazo unaloona linaweza kuwekewa mapendeleo, kulingana na mipangilio hii, mipangilio ya mada za matangazo, mipangilio ya kitambulisho chako cha matangazo na ikiwa programu unayotumia inaweka mapendeleo kwenye matangazo."</string>
     <string name="topic10001" msgid="1636806320891333775">"Sanaa na Burudani"</string>
     <string name="topic10002" msgid="1226367977754287428">"Uigizaji na Ukumbi wa Maonyesho"</string>

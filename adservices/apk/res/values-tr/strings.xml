@@ -113,8 +113,7 @@
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text3" msgid="5347980571056638783">"• Uygulamaların bu verileri kullanma şekli"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text4" msgid="4738335469671465639">"Uygulamalar, sevdiğiniz şeylerle ilgili bilgileri Android\'de saklayabilir. Örneğin, maraton antrenmanı ile ilgili bir uygulama kullanırsanız uygulama, koşu ayakkabılarıyla ilgilendiğinize karar verebilir. Daha sonra kullandığınız farklı bir uygulama da ilk uygulama tarafından önerilen koşu ayakkabılarına dair reklam gösterebilir."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text5" msgid="8737925570089314631">"•  Verilerinizi nasıl yönetebilirsiniz?"</string>
-    <!-- no translation found for notificationUI_how_it_works_fledge_measurement_expanded_text6 (495908587748380196) -->
-    <skip />
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android, uygulamalar tarafından önerilen verileri düzenli bir şekilde otomatik olarak siler. Tekrar kullandığınız bir uygulama listede yeniden görünebilir."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"Ayrıca istediğiniz zaman gizlilik ayarlarına giderek bir uygulamanın size reklam önermesini engelleyebilir, tüm reklam önerisi verilerini sıfırlayabilir veya uygulamalar tarafından önerilen reklamları kapatabilirsiniz."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"Kullandığınız uygulamalar, gösterdikleri reklamların performansını ölçmelerine yardımcı olması için Android\'den bilgi isteyebilir. Android, uygulamaların diğer uygulamalarla paylaşabileceği bilgileri sınırlandırarak gizliliğinizi korur."</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Özel Korumalı Alan"</string>
@@ -128,21 +127,20 @@
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"Engelle"</string>
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Engellemeyi kaldır"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Engellediğiniz ilgi alanları"</string>
-    <!-- no translation found for settingsUI_blocked_topics_ga_view_title (3139405409436543147) -->
-    <skip />
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Tüm ilgi alanlarını sıfırla"</string>
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Şu anda gösterilecek ilgi alanı yok"</string>
     <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"Şu anda gösterilecek konu yok"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Özel Korumalı Alan"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android reklam gizliliği beta programı, uygulamaların size beğenebileceğiniz reklamları göstermek için kullanabileceği yeni özellikler sunar. Bu teknolojiler, cihaz tanımlayıcılarını kullanmaz.\n\nAndroid, ilginizi çekebilecek reklam türlerini tahmin edebilir ve bu ilgi alanlarını geçici olarak cihazınıza kaydedebilir. Böylece, uygulamalar, web sitelerindeki ve diğer geliştiricilerin uygulamalarındaki etkinliklerinizi izlemeden size alakalı reklamlar gösterebilir."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Engellenmiş ilgi alanınız yok"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_ga_text" msgid="4484435371306742210">"Engellenmiş konu yok"</string>
-    <string name="settingsUI_topics_view_view_blocked_topics" msgid="2337437967442005365">"Engellenen konuları göster"</string>
+    <!-- no translation found for settingsUI_no_blocked_topics_ga_text (377459829879121256) -->
+    <skip />
+    <!-- no translation found for settingsUI_view_blocked_topics_title (3705333677440361392) -->
+    <skip />
     <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"İlgi alanları sıfırlandı"</string>
     <string name="settingsUI_topics_are_reset_ga" msgid="5250296990870048195">"Konular sıfırlandı"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Uygulamalar, ilgi alanlarınızı tahmin ederek geçici bir süreliğine Android\'e kaydedebilir. Daha sonra farklı bir uygulama size bu ilgi alanlarına dayalı bir reklam gösterebilir.\n\nEngellediğiniz uygulamalar artık ilgi alanlarınızı tahmin edemez. Bu uygulamalar, engellemeyi kaldırmadığınız sürece bu uygulama listesine tekrar eklenmez. Uygulamanın daha önce tahmin ettiği ilgi alanları silinse de bunlarla alakalı reklamlar görmeye devam edebilirsiniz."</string>
-    <!-- no translation found for settingsUI_blocked_apps_title (1260257485713408637) -->
-    <skip />
+    <string name="settingsUI_blocked_apps_title" msgid="1260257485713408637">"Engellediğiniz uygulamalar"</string>
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"Engellenen uygulamaları göster"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Uygulamaların tahmin ettiği ilgi alanlarını sıfırla"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"Şu anda ilgi alanlarınızı tahmin eden uygulama yok"</string>
@@ -150,7 +148,8 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Özel Korumalı Alan"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android reklam gizliliği beta programı, uygulamaların size beğenebileceğiniz reklamları göstermek için kullanabileceği yeni özellikler sunar. Bu teknolojiler, cihaz tanımlayıcılarını kullanmaz.\n\nUygulamalar, ilginizi çekebilecek reklam türlerini tahmin edebilir ve bu ilgi alanlarını geçici olarak cihazınıza kaydedebilir. Böylece, uygulamalar, web sitelerindeki ve diğer geliştiricilerin uygulamalarındaki etkinliklerinizi izlemeden size alakalı reklamlar gösterebilir."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Engellenmiş uygulamanız yok"</string>
-    <string name="settingsUI_apps_view_no_blocked_apps_ga_text" msgid="3588711487944931608">"Engellenen uygulama yok"</string>
+    <!-- no translation found for settingsUI_no_blocked_apps_ga_text (7488680173653861943) -->
+    <skip />
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"Reklam ölçümüne izin ver"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"Uygulamalar ve reklamverenler Android\'den reklamlarının performansını ölçmeye yardımcı olacak bilgiler isteyebilir.\n\nReklam ölçümü verileri, cihazınızdan düzenli olarak silinir."</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"Ölçüm verilerini sıfırla"</string>
@@ -161,26 +160,28 @@
     <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Fikrinizi değiştirirseniz veya Android reklam gizliliği beta sürümü hakkında daha fazla bilgi edinmek isterseniz gizlilik ayarlarınıza gidebilirsiniz"</string>
     <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Kapat"</string>
     <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"<xliff:g id="TOPIC">%1$s</xliff:g> engellensin mi?"</string>
-    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"Tekrar eklemediğiniz sürece bu ilgi alanı engellenecek ve bir daha listenize eklenmeyecektir. Ancak, ilgi alanıyla alakalı bazı reklamları görmeye devam edebilirsiniz."</string>
-    <string name="settingsUI_dialog_block_topic_ga_message" msgid="7397705817955848275">"Tekrar eklemediğiniz sürece bu konu engellenir ve bir daha listenize eklenmez. Ancak, konuyla alakalı bazı reklamları görmeye devam edebilirsiniz."</string>
+    <!-- no translation found for settingsUI_dialog_block_topic_message (2581824495438333677) -->
+    <skip />
     <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Engelle"</string>
     <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"<xliff:g id="TOPIC">%1$s</xliff:g> engellemesi kaldırıldı"</string>
-    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android bu ilgi alanını tekrar listenize ekleyebilir ancak ilgi alanı hemen görünmeyebilir"</string>
-    <string name="settingsUI_dialog_unblock_topic_ga_message" msgid="3582004316141072103">"Android bu konuyu tekrar listenize ekleyebilir ancak konu hemen görünmeyebilir"</string>
+    <!-- no translation found for settingsUI_dialog_unblock_topic_message (1090743551997420666) -->
+    <skip />
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"Tamam"</string>
-    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Tüm ilgi alanlarınız sıfırlansın mı?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"Listeniz temizlenir ve gelecekte yeni ilgi alanları tahmin edilir. Ancak, silinen ilgi alanlarıyla alakalı bazı reklamları görmeye devam edebilirsiniz."</string>
-    <string name="settingsUI_dialog_reset_topic_ga_message" msgid="5826866496652403990">"Listeniz temizlenecek ve gelecekte yeni konular eklenecektir. Ancak sıfırladığınız konularla alakalı reklamlar görmeye devam edebilirsiniz."</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_title (8025836207966712435) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (4243744527757134000) -->
+    <skip />
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Sıfırla"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g> engellensin mi?"</string>
-    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Engellemesini kaldırmadığınız sürece bu uygulama Özel Korumalı Alan için ilgi alanlarını tahmin etmeyecek ve bir daha listenize eklenmeyecektir.\n\nBu uygulamanın daha önce tahmin ettiği ilgi alanları silinecek olsa da bazı alakalı reklamları görmeye devam edebilirsiniz."</string>
-    <string name="settingsUI_dialog_block_app_ga_message" msgid="5843160418232238694">"Bu uygulama, engellemesini kaldırmadığınız sürece reklam önermeyecek ve bir daha listenize eklenmeyecektir. Ancak, ilgi alanıyla alakalı bazı reklamları görmeye devam edebilirsiniz."</string>
+    <!-- no translation found for settingsUI_dialog_block_app_message (758788973278770119) -->
+    <skip />
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> engellemesi kaldırıldı"</string>
-    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Bu uygulama, ilgi alanlarınızı tahmin etmeye başlayacak olsa da ilgi alanları, listenizde hemen görünmeyebilir. Alakalı reklamları görmeye başlamanız biraz zaman alabilir."</string>
-    <string name="settingsUI_dialog_unblock_app_ga_message" msgid="215670726484505390">"Bu uygulama size tekrar reklamlar önerebilir, ancak bunlar hemen listenizde görünmeyebilir Alakalı reklamları görmeye başlamanız biraz zaman alabilir."</string>
-    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Uygulamaların oluşturduğu ilgi alanları sıfırlansın mı?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"Listenizdeki uygulamalar tarafından tahmin edilen ilgi alanları Özel Korumalı Alan\'dan silinir ve uygulamalar gelecekte yeni ilgi alanları tahmin eder. Ancak, ilgi alanıyla alakalı bazı reklamları görmeye devam edebilirsiniz."</string>
-    <string name="settingsUI_dialog_reset_app_ga_message" msgid="8436063980923088005">"Listenizdeki uygulamalardan reklam önerisi verileri silinecek ve uygulamalar bundan sonra yeni reklamlar önerecek. Ancak, bazı alakalı reklamları görmeye devam edebilirsiniz."</string>
+    <!-- no translation found for settingsUI_dialog_unblock_app_message (5758218424845642060) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_title (5177572712117150557) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_message (7845329616145691006) -->
+    <skip />
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Uygulama verileri sıfırlandı"</string>
     <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"Tüm konular sıfırlansın mı?"</string>
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"Uygulamaların önerdiği reklamlar sıfırlansın mı?"</string>
@@ -198,14 +199,14 @@
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Kapalı"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"İlgilendiğiniz konular, son kullandığınız uygulamalara göre belirlenir ve uygulamalar tarafından size kişiselleştirilmiş reklamlar göstermek için kullanılır.\n\nUygulamalarla paylaşılmasını istemediğiniz konuları engelleyebilirsiniz. Ayrıca Android, konuları düzenli bir şekilde otomatik olarak siler."</string>
     <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"Reklam konularına izin ver"</string>
-    <string name="settingsUI_blocked_topics_ga_title" msgid="1778578928932167070">"Engellediğiniz konular"</string>
-    <string name="settingsUI_reset_topics_ga_title" msgid="8223331046430417414">"Tüm konuları sıfırla"</string>
+    <string name="settingsUI_blocked_topics_ga_title" msgid="7163366621282449273">"Engellediğiniz reklam konuları"</string>
+    <!-- no translation found for settingsUI_reset_topics_ga_title (5365554894399951300) -->
+    <skip />
     <string name="settingsU_topics_view_footer" msgid="4769146330248953561">"Android, son haftalarda kullandığınız uygulamalara bağlı olarak ilgilendiğiniz konuları not eder.\n\nDaha sonra, kullandığınız bir uygulama size gösterilen reklamları kişiselleştirmek için Android\'e ilgilendiğiniz konuları sorabilir. Android bu konuları (3\'e kadar) uygulamalarla paylaşır. Bunu yaparken kimliğinizi ve uygulama kullanımınızla ilgili bilgileri gizler.\n\nAndroid, konuları düzenli bir şekilde otomatik olarak siler. Uygulamaları kullanmaya devam ettikçe listede bir konu yeniden görünebilir. Dilerseniz Android\'in uygulamalarla paylaşmasını istemediğiniz konuları engelleyebilirsiniz.\n\nBu ayara, uygulama tarafından önerilen reklam ayarına, reklam kimliği ayarlarınıza ve kullandığınız uygulamanın reklamları kişiselleştirip kişiselleştirmediğine bağlı olarak uygulamalarınızda kişiselleştirilmiş reklamlar görebilirsiniz."</string>
     <string name="settingsUI_apps_switch_title" msgid="1308209012769248890">"Uygulama tarafından önerilen reklamlara izin ver"</string>
     <string name="settingsUI_apps_view_ga_subtitle" msgid="1911743837387384160">"Kullandığınız uygulamalar neleri beğendiğinizi belirleyip ardından diğer uygulamalara reklamlar önerebilir.\n\nUygulamaların önerilerde bulunmasını engelleyebilirsiniz. Android ayrıca uygulamalar tarafından önerilen verileri düzenli bir şekilde otomatik olarak siler."</string>
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Engellediğiniz uygulamalar"</string>
-    <!-- no translation found for settingsUI_reset_apps_ga_title (371969808353100852) -->
-    <skip />
+    <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Uygulamalar tarafından önerilen verileri sıfırla"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Kullandığınız uygulamaların, deneyiminizi kişiselleştirmek amacıyla, ilgilendiğiniz şeyleri hatırlaması yaygın bir durumdur. Uygulamalar ayrıca konularınızla ilgili bilgileri Android\'de depolayabilirler.\n\nÖrneğin, maraton antrenmanı ile ilgili bir uygulama kullanırsanız uygulama koşu ayakkabılarıyla ilgilendiğinize karar verebilir. Daha sonra kullandığınız farklı bir uygulama da, ilk uygulama tarafından önerilen koşu ayakkabılarına dair reklam gösterebilir.\n\nAndroid, uygulama tarafından önerilen verileri düzenli bir şekilde otomatik olarak siler. Tekrar kullandığınız bir uygulama listede yeniden görünebilir. İsterseniz bir uygulamanın sizin için reklamlar önermesini engelleyebilirsiniz.\n\nUygulamalarınızda gördüğünüz reklamlar bu ayara, reklam konuları ayarına, reklamveren kimliği ayarlarınıza ve uygulamanın kişiselleştirilmiş reklamlar kullanıp kullanmadığına bağlı olarak kişiselleştirilmiş olabilir."</string>
     <string name="topic10001" msgid="1636806320891333775">"Sanat ve Eğlence"</string>
     <string name="topic10002" msgid="1226367977754287428">"Oyunculuk ve Tiyatro"</string>

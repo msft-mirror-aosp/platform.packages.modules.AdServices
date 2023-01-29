@@ -167,7 +167,7 @@ class AttributionJobHandler {
 
         try {
             Optional<AggregatableAttributionSource> aggregateAttributionSource =
-                    source.getAggregatableAttributionSource();
+                    source.parseAggregateSource();
             Optional<AggregatableAttributionTrigger> aggregateAttributionTrigger =
                     trigger.parseAggregateTrigger();
             if (aggregateAttributionSource.isPresent() && aggregateAttributionTrigger.isPresent()) {
@@ -415,7 +415,7 @@ class AttributionJobHandler {
      */
     private boolean doTopLevelFiltersMatch(@NonNull Source source, @NonNull Trigger trigger) {
         try {
-            FilterMap sourceFilters = source.getFilterData();
+            FilterMap sourceFilters = source.parseFilterData();
             List<FilterMap> triggerFilterSet = extractFilterSet(trigger.getFilters());
             List<FilterMap> triggerNotFilterSet = extractFilterSet(trigger.getNotFilters());
             return Filter.isFilterMatch(sourceFilters, triggerFilterSet, true)
@@ -429,7 +429,7 @@ class AttributionJobHandler {
 
     private Optional<EventTrigger> findFirstMatchingEventTrigger(Source source, Trigger trigger) {
         try {
-            FilterMap sourceFiltersData = source.getFilterData();
+            FilterMap sourceFiltersData = source.parseFilterData();
             List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
             return eventTriggers.stream()
                     .filter(

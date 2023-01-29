@@ -47,7 +47,6 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -232,7 +231,7 @@ public class AsyncSourceFetcher {
                 && webDestinationFromRequest != null // Only validate when non-null in request
                 && !doUriFieldsMatch(
                         json, SourceHeaderContract.WEB_DESTINATION, webDestinationFromRequest)) {
-            LogUtil.d("Expected web_destination to match with ths supplied one!");
+            LogUtil.d("Expected web_destination to match with the supplied one!");
             return false;
         }
         if (!json.isNull(SourceHeaderContract.WEB_DESTINATION)) {
@@ -255,7 +254,6 @@ public class AsyncSourceFetcher {
     /** Parse a {@code Source}, given response headers, adding the {@code Source} to a given list */
     @VisibleForTesting
     public boolean parseSource(
-            @NonNull String registrationId,
             @NonNull Uri publisher,
             @NonNull String enrollmentId,
             @Nullable Uri appDestination,
@@ -271,7 +269,6 @@ public class AsyncSourceFetcher {
             boolean adIdPermission,
             boolean arDebugPermission) {
         Source.Builder result = new Source.Builder();
-        result.setRegistrationId(registrationId);
         result.setPublisher(publisher);
         result.setEnrollmentId(enrollmentId);
         result.setRegistrant(registrant);
@@ -311,13 +308,6 @@ public class AsyncSourceFetcher {
                 }
                 result.setAggregateSource(json.getString(SourceHeaderContract.AGGREGATION_KEYS));
             }
-            if (!json.isNull(SourceHeaderContract.SHARED_AGGREGATION_KEYS)) {
-                // Parsed as JSONArray for validation
-                JSONArray sharedAggregationKeys =
-                        json.getJSONArray(SourceHeaderContract.SHARED_AGGREGATION_KEYS);
-                result.setSharedAggregationKeys(sharedAggregationKeys.toString());
-            }
-
             sources.add(result.build());
             return true;
         } catch (JSONException | NumberFormatException e) {
@@ -371,7 +361,6 @@ public class AsyncSourceFetcher {
             AsyncRedirect asyncRedirect) {
         List<Source> out = new ArrayList<>();
         fetchSource(
-                asyncRegistration.getId(),
                 asyncRegistration.getTopOrigin(),
                 asyncRegistration.getRegistrationUri(),
                 asyncRegistration.getOsDestination(),
@@ -397,7 +386,6 @@ public class AsyncSourceFetcher {
     }
 
     private void fetchSource(
-            @NonNull String registrationId,
             @NonNull Uri publisher,
             @NonNull Uri registrationUri,
             @Nullable Uri appDestination,
@@ -464,7 +452,6 @@ public class AsyncSourceFetcher {
             asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
             final boolean parsed =
                     parseSource(
-                            registrationId,
                             publisher,
                             enrollmentId.get(),
                             appDestination,
@@ -533,7 +520,6 @@ public class AsyncSourceFetcher {
         String FILTER_DATA = "filter_data";
         String WEB_DESTINATION = "web_destination";
         String AGGREGATION_KEYS = "aggregation_keys";
-        String SHARED_AGGREGATION_KEYS = "shared_aggregation_keys";
         String DEBUG_REPORTING = "debug_reporting";
     }
 }
