@@ -28,19 +28,24 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_SCO
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_SELECTION_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.UPDATE_CUSTOM_AUDIENCE_PROCESS_REPORTED;
 
+import com.android.internal.annotations.GuardedBy;
+
 import javax.annotation.concurrent.ThreadSafe;
 
 /** {@link AdServicesLogger} that log stats to StatsD */
 @ThreadSafe
 public class StatsdAdServicesLogger implements AdServicesLogger {
+    @GuardedBy("SINGLETON_LOCK")
     private static volatile StatsdAdServicesLogger sStatsdAdServicesLogger;
+
+    private static final Object SINGLETON_LOCK = new Object();
 
     private StatsdAdServicesLogger() {}
 
     /** Returns an instance of {@link StatsdAdServicesLogger}. */
     public static StatsdAdServicesLogger getInstance() {
         if (sStatsdAdServicesLogger == null) {
-            synchronized (StatsdAdServicesLogger.class) {
+            synchronized (SINGLETON_LOCK) {
                 if (sStatsdAdServicesLogger == null) {
                     sStatsdAdServicesLogger = new StatsdAdServicesLogger();
                 }

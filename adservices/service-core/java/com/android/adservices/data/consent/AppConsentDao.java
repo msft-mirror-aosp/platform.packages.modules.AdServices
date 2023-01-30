@@ -23,6 +23,7 @@ import androidx.annotation.NonNull;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.common.BooleanFileDatastore;
+import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.base.Preconditions;
@@ -36,14 +37,20 @@ import java.util.stream.Collectors;
 /**
  * Data access object for the App Consent datastore serving the Privacy Sandbox Consent Manager and
  * the FLEDGE Custom Audience and Ad Selection APIs.
+ *
+ * <p>This class is not thread safe. It's methods are not synchronized.
  */
 public class AppConsentDao {
     @VisibleForTesting public static final int DATASTORE_VERSION = 1;
     @VisibleForTesting public static final String DATASTORE_NAME = "adservices.appconsent.xml";
 
+    private static final Object SINGLETON_LOCK = new Object();
+
     @VisibleForTesting static final String DATASTORE_KEY_SEPARATOR = "  ";
 
+    @GuardedBy("SINGLETON_LOCK")
     private static volatile AppConsentDao sAppConsentDao;
+
     private volatile boolean mInitialized = false;
 
     /**
@@ -71,7 +78,7 @@ public class AppConsentDao {
         Objects.requireNonNull(context, "Context must be provided.");
 
         if (sAppConsentDao == null) {
-            synchronized (AppConsentDao.class) {
+            synchronized (SINGLETON_LOCK) {
                 if (sAppConsentDao == null) {
                     BooleanFileDatastore datastore =
                             new BooleanFileDatastore(context, DATASTORE_NAME, DATASTORE_VERSION);
@@ -94,7 +101,7 @@ public class AppConsentDao {
     @VisibleForTesting
     void initializeDatastoreIfNeeded() throws IOException {
         if (!mInitialized) {
-            synchronized (this) {
+            synchronized (SINGLETON_LOCK) {
                 if (!mInitialized) {
                     mDatastore.initialize();
                     mInitialized = true;
