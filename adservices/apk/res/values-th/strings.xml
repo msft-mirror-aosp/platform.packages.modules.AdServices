@@ -113,8 +113,7 @@
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text3" msgid="5347980571056638783">"•  แอปใช้ข้อมูลนี้อย่างไร"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text4" msgid="4738335469671465639">"แอปต่างๆ สามารถเก็บข้อมูลเกี่ยวกับสิ่งที่คุณชอบไว้กับ Android ตัวอย่างเช่น หากคุณใช้แอปเกี่ยวกับการฝึกวิ่งมาราธอน แอปอาจเข้าใจว่าคุณสนใจรองเท้าวิ่ง ภายหลัง เมื่อคุณเข้าใช้แอปอื่น แอปนั้นอาจแสดงโฆษณารองเท้าวิ่งที่แนะนำโดยแอปแรก"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text5" msgid="8737925570089314631">"•  วิธีจัดการข้อมูลของตนเอง"</string>
-    <!-- no translation found for notificationUI_how_it_works_fledge_measurement_expanded_text6 (495908587748380196) -->
-    <skip />
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android จะลบข้อมูลที่แอปแนะนำโดยอัตโนมัติเป็นระยะๆ แอปที่คุณเข้าใช้อีกครั้งอาจกลับมาปรากฏในรายการอีก"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"คุณยังสามารถบล็อกแอปไม่ให้แนะนำโฆษณา รีเซ็ตข้อมูลคำแนะนำโฆษณาทั้งหมด หรือปิดโฆษณาที่แอปแนะนำได้ทุกเมื่อในการตั้งค่าความเป็นส่วนตัว"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"แอปที่คุณใช้สามารถขอข้อมูลที่จะช่วยในการวัดประสิทธิภาพของโฆษณาจาก Android ได้ Android ปกป้องความเป็นส่วนตัวของคุณโดยจำกัดข้อมูลที่แอปสามารถแชร์ระหว่างกัน"</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Privacy Sandbox"</string>
@@ -128,21 +127,18 @@
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"บล็อก"</string>
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"เลิกบล็อก"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"ความสนใจที่คุณบล็อก"</string>
-    <!-- no translation found for settingsUI_blocked_topics_ga_view_title (3139405409436543147) -->
-    <skip />
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"รีเซ็ตความสนใจทั้งหมด"</string>
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"ไม่มีความสนใจที่จะแสดงในขณะนี้"</string>
     <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"ไม่มีหัวข้อที่จะแสดงในขณะนี้"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"โปรแกรมความเป็นส่วนตัวสำหรับโฆษณาใน Android (เบต้า) มีฟีเจอร์ใหม่ๆ ที่แอปสามารถใช้เพื่อแสดงโฆษณาที่คุณอาจชอบ เทคโนโลยีเหล่านี้ไม่ใช้ตัวระบุอุปกรณ์\n\nAndroid สามารถคาดการณ์ประเภทของโฆษณาที่คุณอาจสนใจ และบันทึกความสนใจเหล่านี้ไว้บนอุปกรณ์ของคุณชั่วคราว วิธีนี้ช่วยให้แอปต่างๆ แสดงโฆษณาที่เกี่ยวข้องได้โดยที่ไม่ต้องติดตามกิจกรรมของคุณบนเว็บไซต์และแอปจากนักพัฒนารายอื่น"</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"ไม่มีความสนใจที่คุณบล็อกไว้"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_ga_text" msgid="4484435371306742210">"ไม่มีหัวข้อที่บล็อก"</string>
-    <string name="settingsUI_topics_view_view_blocked_topics" msgid="2337437967442005365">"ดูหัวข้อที่บล็อก"</string>
+    <string name="settingsUI_no_blocked_topics_ga_text" msgid="377459829879121256">"ไม่มีหัวข้อที่บล็อก"</string>
+    <string name="settingsUI_view_blocked_topics_title" msgid="3705333677440361392">"ดูหัวข้อที่บล็อก"</string>
     <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"ระบบจะรีเซ็ตความสนใจ"</string>
     <string name="settingsUI_topics_are_reset_ga" msgid="5250296990870048195">"รีเซ็ตหัวข้อแล้ว"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"แอปสามารถคาดการณ์ความสนใจของคุณและบันทึกสิ่งเหล่านี้ไว้กับ Android ชั่วคราวได้ จากนั้น แอปอื่นๆ ก็จะแสดงโฆษณาตามความสนใจเหล่านี้ต่อคุณได้\n\nหากบล็อกแอป แอปดังกล่าวก็จะไม่คาดการณ์ความสนใจอีก ระบบจะไม่เพิ่มความสนใจลงในรายการของแอปอีก เว้นแต่คุณจะเลิกบล็อก ระบบจะลบข้อมูลความสนใจที่แอปคาดการณ์แล้ว แต่คุณอาจยังเห็นโฆษณาที่เกี่ยวข้องอยู่บ้าง"</string>
-    <!-- no translation found for settingsUI_blocked_apps_title (1260257485713408637) -->
-    <skip />
+    <string name="settingsUI_blocked_apps_title" msgid="1260257485713408637">"แอปที่คุณบล็อก"</string>
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"ดูแอปที่บล็อก"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"รีเซ็ตความสนใจที่คาดการณ์โดยแอป"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"ไม่มีแอปที่คาดการณ์ความสนใจของคุณในขณะนี้"</string>
@@ -150,7 +146,7 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"โปรแกรมความเป็นส่วนตัวสำหรับโฆษณาใน Android (เบต้า) มีฟีเจอร์ใหม่ๆ ที่แอปสามารถใช้เพื่อแสดงโฆษณาที่คุณอาจชอบ เทคโนโลยีเหล่านี้ไม่ใช้ตัวระบุอุปกรณ์\n\nแอปสามารถคาดการณ์ประเภทของโฆษณาที่คุณอาจสนใจ และบันทึกความสนใจเหล่านี้ไว้บนอุปกรณ์ของคุณชั่วคราว วิธีนี้ช่วยให้แอปต่างๆ แสดงโฆษณาที่เกี่ยวข้องได้โดยที่ไม่ต้องติดตามกิจกรรมของคุณบนเว็บไซต์และแอปจากนักพัฒนารายอื่น"</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"คุณไม่มีแอปที่ถูกบล็อก"</string>
-    <string name="settingsUI_apps_view_no_blocked_apps_ga_text" msgid="3588711487944931608">"ไม่มีแอปที่บล็อก"</string>
+    <string name="settingsUI_no_blocked_apps_ga_text" msgid="7488680173653861943">"ไม่มีแอปที่บล็อก"</string>
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"อนุญาตการวัดผลโฆษณา"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"แอปและผู้ลงโฆษณาสามารถขอข้อมูลที่จะช่วยในการวัดประสิทธิภาพของโฆษณาจาก Android ได้\n\nระบบจะลบข้อมูลการวัดผลโฆษณาออกจากอุปกรณ์ของคุณเป็นประจำ"</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"รีเซ็ตข้อมูลการวัดผล"</string>
@@ -161,26 +157,20 @@
     <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"หากคุณเปลี่ยนใจหรือต้องการดูข้อมูลเพิ่มเติมสำหรับโปรแกรมความเป็นส่วนตัวเกี่ยวกับโฆษณาใน Android (เบต้า) ให้ไปที่การตั้งค่าความเป็นส่วนตัว"</string>
     <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"ปิด"</string>
     <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"บล็อก \"<xliff:g id="TOPIC">%1$s</xliff:g>\" ใช่ไหม"</string>
-    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"ระบบจะบล็อกความสนใจนี้และไม่เพิ่มลงในรายการอีกครั้ง เว้นแต่คุณจะเพิ่มกลับเข้าไป คุณอาจยังเห็นโฆษณาที่เกี่ยวข้องอยู่บ้าง"</string>
-    <string name="settingsUI_dialog_block_topic_ga_message" msgid="7397705817955848275">"ระบบจะบล็อกหัวข้อนี้และไม่เพิ่มลงในรายการอีก เว้นแต่คุณจะเพิ่มกลับเข้าไปเอง คุณอาจยังคงเห็นโฆษณาที่เกี่ยวข้องอยู่บ้าง"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2581824495438333677">"ระบบจะบล็อกหัวข้อนี้และไม่เพิ่มลงในรายการอีก เว้นแต่คุณจะเพิ่มกลับเข้าไปเอง คุณอาจยังคงเห็นโฆษณาที่เกี่ยวข้องอยู่บ้าง"</string>
     <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"บล็อก"</string>
     <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"เลิกบล็อก \"<xliff:g id="TOPIC">%1$s</xliff:g>\" แล้ว"</string>
-    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android อาจเพิ่มความสนใจนี้ลงในรายการอีกครั้ง แต่อาจไม่ปรากฏโดยทันที"</string>
-    <string name="settingsUI_dialog_unblock_topic_ga_message" msgid="3582004316141072103">"Android อาจเพิ่มหัวข้อนี้ลงในรายการอีกครั้ง แต่อาจไม่ปรากฏโดยทันที"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="1090743551997420666">"Android อาจเพิ่มหัวข้อนี้ลงในรายการอีกครั้ง แต่อาจไม่ปรากฏโดยทันที"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"ตกลง"</string>
-    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"รีเซ็ตความสนใจทั้งหมดไหม"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"ระบบจะล้างรายการของคุณและจะประเมินความสนใจใหม่ของคุณในอนาคต คุณอาจยังคงเห็นโฆษณาที่เกี่ยวข้องกับความสนใจที่ระบบล้างไปแล้วอยู่บ้าง"</string>
-    <string name="settingsUI_dialog_reset_topic_ga_message" msgid="5826866496652403990">"ระบบจะล้างรายการของคุณและจะเพิ่มหัวข้อใหม่ในอนาคต คุณอาจยังคงเห็นโฆษณาที่เกี่ยวข้องกับหัวข้อที่รีเซ็ตไปอยู่บ้าง"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="8025836207966712435">"รีเซ็ตหัวข้อโฆษณาทั้งหมดไหม"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="4243744527757134000">"ระบบจะล้างรายการของคุณและจะเพิ่มหัวข้อใหม่ในอนาคต คุณอาจยังคงเห็นโฆษณาที่เกี่ยวข้องกับหัวข้อที่รีเซ็ตไปอยู่บ้าง"</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"รีเซ็ต"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"บล็อก \"<xliff:g id="APP">%1$s</xliff:g>\" ใช่ไหม"</string>
-    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"แอปนี้จะไม่คาดการณ์ความสนใจสำหรับ Privacy Sandbox และไม่เพิ่มลงในรายการอีกครั้ง เว้นแต่คุณจะเลิกบล็อก\n\nระบบจะลบความสนใจที่แอปนี้คาดการณ์แล้ว แต่คุณอาจยังเห็นโฆษณาที่เกี่ยวข้องอยู่บ้าง"</string>
-    <string name="settingsUI_dialog_block_app_ga_message" msgid="5843160418232238694">"แอปนี้จะไม่แนะนำโฆษณาและระบบจะไม่เพิ่มแอปลงในรายการอีก เว้นแต่คุณจะเลิกบล็อก คุณอาจยังคงเห็นโฆษณาที่เกี่ยวข้องอยู่บ้าง"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="758788973278770119">"แอปนี้จะไม่แนะนำโฆษณาและระบบจะไม่เพิ่มแอปลงในรายการอีก เว้นแต่คุณจะเลิกบล็อก คุณอาจยังคงเห็นโฆษณาที่เกี่ยวข้องอยู่บ้าง"</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"เลิกบล็อก \"<xliff:g id="APP">%1$s</xliff:g>\" แล้ว"</string>
-    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"แอปนี้คาดการณ์ความสนใจให้คุณอีกครั้งได้ แต่อาจไม่ปรากฏในรายการโดยทันที อาจใช้เวลาสักครู่จึงจะเห็นโฆษณาที่เกี่ยวข้อง"</string>
-    <string name="settingsUI_dialog_unblock_app_ga_message" msgid="215670726484505390">"แอปนี้แนะนำโฆษณาให้คุณอีกครั้งได้ แต่อาจไม่ปรากฏในรายการโดยทันที อาจใช้เวลาสักครู่จึงจะเห็นโฆษณาที่เกี่ยวข้อง"</string>
-    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"รีเซ็ตความสนใจที่สร้างโดยแอปไหม"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"ระบบจะลบความสนใจที่คาดการณ์โดยแอปในรายการของคุณออกจาก Privacy Sandbox โดยแอปจะคาดการณ์ความสนใจใหม่ในอนาคต คุณอาจยังคงเห็นโฆษณาที่เกี่ยวข้องอยู่บ้าง"</string>
-    <string name="settingsUI_dialog_reset_app_ga_message" msgid="8436063980923088005">"ระบบจะลบข้อมูลคำแนะนำโฆษณาออกจากแอปในรายการของคุณ และแอปจะแนะนำโฆษณาใหม่ในอนาคต คุณอาจยังคงเห็นโฆษณาที่เกี่ยวข้องอยู่บ้าง"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="5758218424845642060">"แอปนี้แนะนำโฆษณาให้คุณอีกครั้งได้ แต่อาจไม่ปรากฏในรายการโดยทันที อาจใช้เวลาสักครู่จึงจะเห็นโฆษณาที่เกี่ยวข้อง"</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"รีเซ็ตโฆษณาที่แอปแนะนำไหม"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"ระบบจะลบข้อมูลคำแนะนำโฆษณาออกจากแอปในรายการของคุณ และแอปจะแนะนำโฆษณาใหม่ในอนาคต คุณอาจยังคงเห็นโฆษณาที่เกี่ยวข้องอยู่บ้าง"</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"รีเซ็ตข้อมูลแอปแล้ว"</string>
     <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"รีเซ็ตหัวข้อทั้งหมดไหม"</string>
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"รีเซ็ตโฆษณาที่แอปแนะนำไหม"</string>
@@ -198,14 +188,13 @@
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"ปิดอยู่"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"หัวข้อที่คุณสนใจจะอิงจากแอปที่ใช้ล่าสุด โดยแอปจะนำมาใช้เพื่อแสดงโฆษณาที่ปรับตามโปรไฟล์ของคุณ\n\nคุณบล็อกหัวข้อที่ไม่ต้องการให้แชร์กับแอปได้ นอกจากนี้ Android ยังลบหัวข้อโดยอัตโนมัติเป็นประจำอีกด้วย"</string>
     <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"อนุญาตหัวข้อโฆษณา"</string>
-    <string name="settingsUI_blocked_topics_ga_title" msgid="1778578928932167070">"หัวข้อที่คุณบล็อก"</string>
-    <string name="settingsUI_reset_topics_ga_title" msgid="8223331046430417414">"รีเซ็ตหัวข้อทั้งหมด"</string>
+    <string name="settingsUI_blocked_topics_ga_title" msgid="7163366621282449273">"หัวข้อโฆษณาที่คุณบล็อก"</string>
+    <string name="settingsUI_reset_topics_ga_title" msgid="5365554894399951300">"รีเซ็ตหัวข้อโฆษณาทั้งหมด"</string>
     <string name="settingsU_topics_view_footer" msgid="4769146330248953561">"Android บันทึกหัวข้อที่คุณสนใจจากแอปที่ใช้ในช่วง 2-3 สัปดาห์ที่ผ่านมา\n\nภายหลัง แอปที่คุณใช้อาจขอหัวข้อจาก Android เพื่อปรับเปลี่ยนโฆษณาที่คุณเห็น Android จะแชร์หัวข้อไม่เกิน 3 หัวข้อพร้อมกับปกป้องตัวตนของคุณและข้อมูลเกี่ยวกับการใช้งานแอป\n\nรวมถึงจะลบหัวข้ออัตโนมัติเป็นระยะๆ ในขณะที่คุณใช้แอปไปเรื่อยๆ หัวข้ออาจกลับมาปรากฏในรายการอีก หรือคุณจะบล็อกหัวข้อที่ไม่ต้องการให้ Android แชร์กับแอปก็ได้\n\nในแอปจะมีการปรับโฆษณาที่แสดงให้เหมาะกับคุณหรือไม่นั้นขึ้นอยู่กับการตั้งค่านี้ รวมถึงการตั้งค่าโฆษณาที่แอปแนะนำ การตั้งค่ารหัสโฆษณา และแอปที่คุณใช้ว่ามีการปรับโฆษณาตามโปรไฟล์ของผู้ใช้ไหม"</string>
     <string name="settingsUI_apps_switch_title" msgid="1308209012769248890">"อนุญาตโฆษณาที่แอปแนะนำ"</string>
     <string name="settingsUI_apps_view_ga_subtitle" msgid="1911743837387384160">"แอปที่คุณใช้สามารถระบุสิ่งที่คุณชื่นชอบแล้วแนะนำโฆษณาในแอปอื่นๆ\n\nคุณบล็อกแอปไม่ให้แสดงคำแนะนำได้ นอกจากนี้ Android ยังลบข้อมูลที่แอปแนะนำโดยอัตโนมัติเป็นประจำอีกด้วย"</string>
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"แอปที่คุณบล็อก"</string>
-    <!-- no translation found for settingsUI_reset_apps_ga_title (371969808353100852) -->
-    <skip />
+    <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"รีเซ็ตข้อมูลที่แอปแนะนำ"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"โดยทั่วไป แอปที่คุณใช้จะจดจำสิ่งที่คุณสนใจเพื่อปรับเปลี่ยนประสบการณ์การใช้งานให้เหมาะกับคุณ แอปยังสามารถจัดเก็บข้อมูลเกี่ยวกับหัวข้อที่คุณสนใจไว้กับ Android ได้ด้วย\n\nตัวอย่างเช่น หากคุณใช้แอปเกี่ยวกับการฝึกวิ่งมาราธอน แอปอาจเข้าใจว่าคุณสนใจรองเท้าวิ่ง ภายหลัง เมื่อคุณใช้แอปอื่น แอปนี้ก็อาจแสดงโฆษณารองเท้าวิ่งที่แนะนำโดยแอปแรก\n\nAndroid จะลบข้อมูลที่แอปแนะนำโดยอัตโนมัติเป็นประจำ แอปที่คุณเข้าใช้อีกครั้งอาจกลับมาปรากฏในรายการอีก หรือคุณจะบล็อกแอปไม่ให้แนะนำโฆษณาก็ได้\n\nในแอปจะมีการปรับโฆษณาที่แสดงให้เหมาะกับคุณหรือไม่นั้นขึ้นอยู่กับการตั้งค่านี้ รวมถึงการตั้งค่าหัวข้อโฆษณา การตั้งค่ารหัสโฆษณา และแอปที่ใช้มีการปรับโฆษณาตามโปรไฟล์ของผู้ใช้ไหม"</string>
     <string name="topic10001" msgid="1636806320891333775">"ศิลปะและบันเทิง"</string>
     <string name="topic10002" msgid="1226367977754287428">"การแสดงและโรงละคร"</string>
