@@ -16,10 +16,7 @@
 
 package com.android.adservices.service.measurement.aggregation;
 
-import android.annotation.Nullable;
-
 import com.android.adservices.service.measurement.FilterMap;
-import com.android.adservices.service.measurement.ServingAdtechNetwork;
 
 import java.math.BigInteger;
 import java.util.HashSet;
@@ -37,7 +34,6 @@ public class AggregateTriggerData {
     private Set<String> mSourceKeys;
     private Optional<List<FilterMap>> mFilterSet;
     private Optional<List<FilterMap>> mNotFilterSet;
-    @Nullable private ServingAdtechNetwork mServingAdtechNetwork;
 
     private AggregateTriggerData() {
         mKey = null;
@@ -55,14 +51,12 @@ public class AggregateTriggerData {
         return Objects.equals(mKey, attributionTriggerData.mKey)
                 && Objects.equals(mSourceKeys, attributionTriggerData.mSourceKeys)
                 && Objects.equals(mFilterSet, attributionTriggerData.mFilterSet)
-                && Objects.equals(mNotFilterSet, attributionTriggerData.mNotFilterSet)
-                && Objects.equals(
-                        mServingAdtechNetwork, attributionTriggerData.mServingAdtechNetwork);
+                && Objects.equals(mNotFilterSet, attributionTriggerData.mNotFilterSet);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mKey, mSourceKeys, mServingAdtechNetwork);
+        return Objects.hash(mKey, mSourceKeys);
     }
 
     /**
@@ -94,12 +88,6 @@ public class AggregateTriggerData {
         return mNotFilterSet;
     }
 
-    /** Returns the serving adtech network object */
-    @Nullable
-    public ServingAdtechNetwork getServingAdtechNetwork() {
-        return mServingAdtechNetwork;
-    }
-
     /**
      * Builder for {@link AggregateTriggerData}.
      */
@@ -126,21 +114,16 @@ public class AggregateTriggerData {
             return this;
         }
 
-        /** See {@link AggregateTriggerData#getFilterSet()}. */
+        /** See {@link AggregateTriggerData#getFilter()}. */
         public Builder setFilterSet(List<FilterMap> filterSet) {
             mBuilding.mFilterSet = Optional.of(filterSet);
             return this;
         }
 
-        /** See {@link AggregateTriggerData#getNotFilterSet()} */
+        /** See {@link AggregateTriggerData#getNotFilter()} */
         public Builder setNotFilterSet(List<FilterMap> notFilterSet) {
             mBuilding.mNotFilterSet = Optional.of(notFilterSet);
             return this;
-        }
-
-        /** See {@link AggregateTriggerData#getServingAdtechNetwork()} */
-        public void setServingAdtechNetwork(ServingAdtechNetwork servingAdtechNetwork) {
-            mBuilding.mServingAdtechNetwork = servingAdtechNetwork;
         }
 
         /**
