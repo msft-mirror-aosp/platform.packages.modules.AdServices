@@ -17,6 +17,7 @@
 package com.android.ctssdkprovider;
 
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
 
@@ -28,6 +29,13 @@ import java.io.InputStreamReader;
 
 public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
     private Context mContext;
+    private static final String CLIENT_PACKAGE_NAME = "com.android.tests.sdksandbox.endtoend";
+    private static final String SDK_NAME = "com.android.ctssdkprovider";
+
+    private static final String SDK_CE_DATA_DIR =
+            "/data/misc_ce/0/sdksandbox/" + CLIENT_PACKAGE_NAME;
+    private static final String SDK_DE_DATA_DIR =
+            "/data/misc_de/0/sdksandbox/" + CLIENT_PACKAGE_NAME;
 
     private static final String STRING_RESOURCE = "Test String";
     private static final int INTEGER_RESOURCE = 1234;
@@ -84,6 +92,50 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
             }
         } catch (IOException e) {
             throw new IllegalStateException("File not found: " + ASSET_FILE);
+        }
+    }
+
+    @Override
+    public boolean isPermissionGranted(String permissionName, boolean useApplicationContext) {
+        final Context cut = useApplicationContext ? mContext.getApplicationContext() : mContext;
+        return cut.checkSelfPermission(permissionName) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    @Override
+    public int getContextHashCode(boolean useApplicationContext) {
+        final Context cut = useApplicationContext ? mContext.getApplicationContext() : mContext;
+        return cut.hashCode();
+    }
+
+    @Override
+    public void testStoragePaths() {
+        // Verify CE data directories
+        {
+            final String sdkPathPrefix = SDK_CE_DATA_DIR + "/" + SDK_NAME;
+            final String dataDir = mContext.getDataDir().getPath();
+            if (!dataDir.startsWith(sdkPathPrefix)) {
+                throw new IllegalStateException("Data dir for CE is wrong: " + dataDir);
+            }
+
+            final String fileDir = mContext.getFilesDir().getPath();
+            if (!fileDir.startsWith(sdkPathPrefix)) {
+                throw new IllegalStateException("File dir for CE is wrong: " + fileDir);
+            }
+        }
+
+        // Verify DE data directories
+        {
+            final Context cut = mContext.createDeviceProtectedStorageContext();
+            final String sdkPathPrefix = SDK_DE_DATA_DIR + "/" + SDK_NAME;
+            final String dataDir = cut.getDataDir().getPath();
+            if (!dataDir.startsWith(sdkPathPrefix)) {
+                throw new IllegalStateException("Data dir for DE is wrong: " + dataDir);
+            }
+
+            final String fileDir = cut.getFilesDir().getPath();
+            if (!fileDir.startsWith(sdkPathPrefix)) {
+                throw new IllegalStateException("File dir for DE is wrong: " + fileDir);
+            }
         }
     }
 
