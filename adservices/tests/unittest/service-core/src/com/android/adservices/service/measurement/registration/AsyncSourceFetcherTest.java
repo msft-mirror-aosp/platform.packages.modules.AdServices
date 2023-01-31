@@ -1776,7 +1776,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(new UnsignedLong(987654321L), result.getEventId());
         assertEquals(
                 "{\"product\":[\"1234\",\"2345\"],\"ctid\":[\"id\"]}",
-                result.getFilterData());
+                result.getFilterDataString());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -2623,7 +2623,7 @@ public final class AsyncSourceFetcherTest {
                 result.getEventTime() + TimeUnit.SECONDS.toMillis(
                         MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                 result.getExpiryTime());
-        assertNull(result.getFilterData());
+        assertNull(result.getFilterDataString());
         assertNull(result.getAggregateSource());
     }
 
@@ -2712,7 +2712,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(0, asyncRedirect.getRedirects().size());
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
         assertEquals(OS_DESTINATION, result.getAppDestination());
-        assertEquals(filterData, result.getFilterData());
+        assertEquals(filterData, result.getFilterDataString());
         assertEquals(new UnsignedLong(987654321L), result.getEventId());
         assertEquals(
                 result.getEventTime() + TimeUnit.SECONDS.toMillis(456789L),
@@ -2770,7 +2770,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(0, asyncRedirect.getRedirects().size());
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
         assertEquals(Uri.parse(DEFAULT_DESTINATION), result.getAppDestination());
-        assertEquals(filterData, result.getFilterData());
+        assertEquals(filterData, result.getFilterDataString());
         assertEquals(new UnsignedLong(987654321L), result.getEventId());
         assertEquals(
                 result.getEventTime() + TimeUnit.SECONDS.toMillis(456789L),
@@ -2910,7 +2910,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(0, asyncRedirect.getRedirects().size());
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
         assertEquals(OS_DESTINATION, result.getAppDestination());
-        assertNull(result.getFilterData());
+        assertNull(result.getFilterDataString());
         assertEquals(new UnsignedLong(987654321L), result.getEventId());
         assertEquals(
                 result.getEventTime() + TimeUnit.SECONDS.toMillis(456789L),
@@ -2962,7 +2962,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(0, asyncRedirect.getRedirects().size());
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
         assertEquals(OS_DESTINATION, result.getAppDestination());
-        assertNull(result.getFilterData());
+        assertNull(result.getFilterDataString());
         assertEquals(new UnsignedLong(987654321L), result.getEventId());
         assertEquals(
                 result.getEventTime() + TimeUnit.SECONDS.toMillis(456789L),
@@ -3011,7 +3011,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(0, asyncRedirect.getRedirects().size());
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
         assertEquals(OS_DESTINATION, result.getAppDestination());
-        assertNull(result.getFilterData());
+        assertNull(result.getFilterDataString());
         assertEquals(new UnsignedLong(987654321L), result.getEventId());
         assertEquals(
                 result.getEventTime() + TimeUnit.SECONDS.toMillis(456789L),
@@ -3089,7 +3089,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(0, asyncRedirect.getRedirects().size());
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
         assertEquals(Uri.parse(DEFAULT_DESTINATION), result.getAppDestination());
-        assertNull(result.getFilterData());
+        assertNull(result.getFilterDataString());
         assertEquals(EVENT_ID_1, result.getEventId());
         assertEquals(
                 result.getEventTime() + TimeUnit.SECONDS.toMillis(
