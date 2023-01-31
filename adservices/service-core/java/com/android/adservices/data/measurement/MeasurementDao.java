@@ -1820,6 +1820,24 @@ class MeasurementDao implements IMeasurementDao {
         }
     }
 
+    @Override
+    public void insertIgnoredSourceForEnrollment(
+            @NonNull String sourceId, @NonNull String enrollmentId) throws DatastoreException {
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.XnaIgnoredSourcesContract.SOURCE_ID, sourceId);
+        values.put(MeasurementTables.XnaIgnoredSourcesContract.ENROLLMENT_ID, enrollmentId);
+        long rowId =
+                mSQLTransaction
+                        .getDatabase()
+                        .insert(
+                                MeasurementTables.XnaIgnoredSourcesContract.TABLE,
+                                /*nullColumnHack=*/ null,
+                                values);
+        if (rowId == -1) {
+            throw new DatastoreException("Xna ignored source insertion failed.");
+        }
+    }
+
     private static Optional<Pair<String, String>> getDestinationColumnAndValue(Trigger trigger) {
         if (trigger.getDestinationType() == EventSurfaceType.APP) {
             return Optional.of(
