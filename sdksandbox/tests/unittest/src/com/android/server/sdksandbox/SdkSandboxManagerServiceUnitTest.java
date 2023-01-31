@@ -54,6 +54,7 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ProviderInfo;
 import android.content.pm.UserInfo;
 import android.os.Binder;
 import android.os.Bundle;
@@ -147,6 +148,9 @@ public class SdkSandboxManagerServiceUnitTest {
 
     private static final String PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS =
             "enforce_broadcast_receiver_restrictions";
+
+    private static final String PROPERTY_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS =
+            "enforce_content_provider_restrictions";
 
     @Before
     public void setup() {
@@ -2266,6 +2270,45 @@ public class SdkSandboxManagerServiceUnitTest {
         assertThat(callback.getLoadSdkErrorCode())
                 .isEqualTo(SdkSandboxManager.LOAD_SDK_SDK_SANDBOX_DISABLED);
         assertThat(callback.getLoadSdkErrorMsg()).isEqualTo("SDK sandbox is disabled");
+    }
+
+    @Test
+    public void testSdkSandboxSettings_canAccessContentProviderFromSdkSandbox_DefaultAccess()
+            throws Exception {
+        /** Ensuring that the property is not present in DeviceConfig */
+        DeviceConfig.deleteProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS);
+        ExtendedMockito.when(Process.isSdkSandboxUid(Mockito.anyInt())).thenReturn(true);
+        assertThat(
+                        sSdkSandboxManagerLocal.canAccessContentProviderFromSdkSandbox(
+                                new ProviderInfo()))
+                .isTrue();
+    }
+
+    @Test
+    public void testSdkSandboxSettings_canAccessContentProviderFromSdkSandbox_AccessNotAllowed() {
+        ExtendedMockito.when(Process.isSdkSandboxUid(Mockito.anyInt())).thenReturn(true);
+        sSdkSandboxSettingsListener.onPropertiesChanged(
+                new DeviceConfig.Properties(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        Map.of(PROPERTY_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS, "true")));
+        assertThat(
+                        sSdkSandboxManagerLocal.canAccessContentProviderFromSdkSandbox(
+                                new ProviderInfo()))
+                .isFalse();
+    }
+
+    @Test
+    public void testSdkSandboxSettings_canAccessContentProviderFromSdkSandbox_AccessAllowed() {
+        ExtendedMockito.when(Process.isSdkSandboxUid(Mockito.anyInt())).thenReturn(true);
+        sSdkSandboxSettingsListener.onPropertiesChanged(
+                new DeviceConfig.Properties(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        Map.of(PROPERTY_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS, "false")));
+        assertThat(
+                        sSdkSandboxManagerLocal.canAccessContentProviderFromSdkSandbox(
+                                new ProviderInfo()))
+                .isTrue();
     }
 
     @Test
