@@ -22,6 +22,7 @@ import static com.android.adservices.data.measurement.MeasurementTables.EventRep
 import static com.android.adservices.data.measurement.MeasurementTables.MSMT_TABLE_PREFIX;
 import static com.android.adservices.data.measurement.MeasurementTables.SourceContract;
 import static com.android.adservices.data.measurement.MeasurementTables.TriggerContract;
+import static com.android.adservices.data.measurement.MeasurementTables.XnaIgnoredSourcesContract;
 import static com.android.adservices.service.measurement.PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -1389,6 +1390,29 @@ public class MeasurementDaoTest {
     }
 
     @Test
+    public void installAttribution_install_installTimeEqualsEventTime() {
+        long currentTimestamp = System.currentTimeMillis();
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+        AbstractDbIntegrationTest.insertToDb(
+                createSourceForIATest(
+                        "IA1", currentTimestamp, -1, 10, false, DEFAULT_ENROLLMENT_ID),
+                db);
+        assertTrue(
+                DatastoreManagerFactory.getDatastoreManager(sContext)
+                        .runInTransaction(
+                                measurementDao -> {
+                                    measurementDao.doInstallAttribution(
+                                            INSTALLED_PACKAGE,
+                                            currentTimestamp - TimeUnit.DAYS.toMillis(7));
+                                }));
+        assertEquals(
+                currentTimestamp - TimeUnit.DAYS.toMillis(7),
+                getInstallAttributionInstallTime("IA1", db).longValue());
+        removeSources(Arrays.asList("IA1"), db);
+    }
+
+    @Test
     public void doInstallAttribution_noValidSourceStatus_IgnoresSources() {
         long currentTimestamp = System.currentTimeMillis();
         SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
@@ -1605,6 +1629,42 @@ public class MeasurementDaoTest {
     }
 
     @Test
+    public void deleteSource_providedId_deletesMatchingXnaIgnoredSource() {
+        // Setup
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+
+        Source s1 =
+                SourceFixture.getValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setId("S1")
+                        .setEnrollmentId("1")
+                        .build();
+
+        ContentValues sourceValues = new ContentValues();
+        sourceValues.put(SourceContract.ID, s1.getId());
+        sourceValues.put(SourceContract.EVENT_ID, s1.getEventId().getValue());
+
+        ContentValues xnaIgnoredSourceValues = new ContentValues();
+        xnaIgnoredSourceValues.put(XnaIgnoredSourcesContract.SOURCE_ID, s1.getId());
+        xnaIgnoredSourceValues.put(XnaIgnoredSourcesContract.ENROLLMENT_ID, s1.getEnrollmentId());
+
+        // Execution
+        db.insert(SourceContract.TABLE, null, sourceValues);
+        db.insert(XnaIgnoredSourcesContract.TABLE, null, xnaIgnoredSourceValues);
+
+        // Assertion
+        assertEquals(1, DatabaseUtils.queryNumEntries(db, SourceContract.TABLE));
+        assertEquals(1, DatabaseUtils.queryNumEntries(db, XnaIgnoredSourcesContract.TABLE));
+
+        // Execution
+        removeSources(Collections.singletonList(s1.getId()), db);
+
+        // Assertion
+        assertEquals(0, DatabaseUtils.queryNumEntries(db, SourceContract.TABLE));
+        assertEquals(0, DatabaseUtils.queryNumEntries(db, XnaIgnoredSourcesContract.TABLE));
+    }
+
+    @Test
     public void deleteTriggers_providedIds_deletesMatchingTriggersAndRelatedData()
             throws JSONException {
         // Setup - Creates the following -
@@ -1785,6 +1845,25 @@ public class MeasurementDaoTest {
                                         measurementDao.undoInstallAttribution(INSTALLED_PACKAGE)));
         // Should set installAttributed = false for id=IA1
         assertFalse(getInstallAttributionStatus("IA1", db));
+    }
+
+    @Test
+    public void undoInstallAttribution_uninstall_nullInstallTime() {
+        long currentTimestamp = System.currentTimeMillis();
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+        Source source =
+                createSourceForIATest(
+                        "IA1", currentTimestamp, 10, 10, false, DEFAULT_ENROLLMENT_ID);
+        source.setInstallAttributed(true);
+        AbstractDbIntegrationTest.insertToDb(source, db);
+        assertTrue(
+                DatastoreManagerFactory.getDatastoreManager(sContext)
+                        .runInTransaction(
+                                measurementDao ->
+                                        measurementDao.undoInstallAttribution(INSTALLED_PACKAGE)));
+        // Should set installTime = null for id=IA1
+        assertNull(getInstallAttributionInstallTime("IA1", db));
     }
 
     @Test
@@ -4832,6 +4911,24 @@ public class MeasurementDaoTest {
                         null);
         assertTrue(cursor.moveToFirst());
         return cursor.getInt(0) == 1;
+    }
+
+    private Long getInstallAttributionInstallTime(String sourceDbId, SQLiteDatabase db) {
+        Cursor cursor =
+                db.query(
+                        SourceContract.TABLE,
+                        new String[] {SourceContract.INSTALL_TIME},
+                        SourceContract.ID + " = ? ",
+                        new String[] {sourceDbId},
+                        null,
+                        null,
+                        null,
+                        null);
+        assertTrue(cursor.moveToFirst());
+        if (!cursor.isNull(0)) {
+            return cursor.getLong(0);
+        }
+        return null;
     }
 
     private void removeSources(List<String> dbIds, SQLiteDatabase db) {
