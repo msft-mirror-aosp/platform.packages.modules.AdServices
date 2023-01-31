@@ -36,6 +36,11 @@ interface IAdServicesManager {
     void setConsent(in ConsentParcel consentParcel);
 
     /**
+     * Saves information to the storage that a deletion of measurement data occurred.
+     */
+     void recordAdServicesDeletionOccurred(in int deletionType);
+
+    /**
      * Saves information to the storage that notification was displayed for the first time to the
      * user.
      */
