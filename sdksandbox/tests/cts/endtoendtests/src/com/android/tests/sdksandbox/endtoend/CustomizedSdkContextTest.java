@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assume.assumeTrue;
 
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
@@ -33,6 +34,7 @@ import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.ctssdkprovider.ICtsSdkProviderApi;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -118,12 +120,16 @@ public class CustomizedSdkContextTest {
 
     @Test
     public void testStoragePaths() throws Exception {
+        assumeTrue("Test is meant for U+ devices only", SdkLevel.isAtLeastU());
+
         loadSdk();
         mSdk.testStoragePaths();
     }
 
     @Test
     public void testSdkPermissions() throws Exception {
+        assumeTrue("Test is meant for U+ devices only", SdkLevel.isAtLeastU());
+
         // Collect list of permissions requested by sdk sandbox
         final PackageManager pm =
                 InstrumentationRegistry.getInstrumentation().getContext().getPackageManager();
@@ -154,6 +160,8 @@ public class CustomizedSdkContextTest {
     /** Test that sdk context instances are different while application context is same */
     @Test
     public void testSdkContextInstances() throws Exception {
+        assumeTrue("Test is meant for U+ devices only", SdkLevel.isAtLeastU());
+
         loadEmptySdk(); // So that sandbox does not die in the middle of test
 
         loadSdk();
@@ -174,12 +182,16 @@ public class CustomizedSdkContextTest {
 
     @Test
     public void testClassloader() throws Exception {
+        assumeTrue("Test is meant for U+ devices only", SdkLevel.isAtLeastU());
+
         loadSdk();
         mSdk.checkClassloaders();
     }
 
     @Test
     public void testResourcesAndAssets() throws Exception {
+        assumeTrue("Test is meant for U+ devices only", SdkLevel.isAtLeastU());
+
         loadSdk();
         mSdk.checkResourcesAndAssets();
     }
