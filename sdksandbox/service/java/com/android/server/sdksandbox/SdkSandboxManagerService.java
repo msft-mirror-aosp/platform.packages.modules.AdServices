@@ -154,8 +154,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     @GuardedBy("mLock")
     private final UidImportanceListener mUidImportanceListener = new UidImportanceListener();
 
-    private final SdkSandboxManagerLocal mLocalManager;
-
     private final String mAdServicesPackageName;
 
     private Injector mInjector;
@@ -180,6 +178,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     static class Injector {
         private final Context mContext;
+        private SdkSandboxManagerLocal mLocalManager;
 
         Injector(Context context) {
             mContext = context;
@@ -208,6 +207,22 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         SdkSandboxPulledAtoms getSdkSandboxPulledAtoms() {
             return new SdkSandboxPulledAtoms();
         }
+
+        PackageManagerLocal getPackageManagerLocal() {
+            return LocalManagerRegistry.getManager(PackageManagerLocal.class);
+        }
+
+        SdkSandboxStorageManager getSdkSandboxStorageManager() {
+            return new SdkSandboxStorageManager(mContext, mLocalManager, getPackageManagerLocal());
+        }
+
+        void setLocalManager(SdkSandboxManagerLocal localManager) {
+            mLocalManager = localManager;
+        }
+
+        SdkSandboxManagerLocal getLocalManager() {
+            return mLocalManager;
+        }
     }
 
     SdkSandboxManagerService(Context context) {
@@ -218,15 +233,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     SdkSandboxManagerService(Context context, Injector injector) {
         mContext = context;
         mInjector = injector;
+        mInjector.setLocalManager(new LocalImpl());
         mServiceProvider = mInjector.getSdkSandboxServiceProvider();
         mActivityManager = mContext.getSystemService(ActivityManager.class);
-        mLocalManager = new LocalImpl();
         mSdkSandboxPulledAtoms = mInjector.getSdkSandboxPulledAtoms();
-
         PackageManagerLocal packageManagerLocal =
                 LocalManagerRegistry.getManager(PackageManagerLocal.class);
-        mSdkSandboxStorageManager =
-                new SdkSandboxStorageManager(mContext, mLocalManager, packageManagerLocal);
+        mSdkSandboxStorageManager = mInjector.getSdkSandboxStorageManager();
 
         // Start the handler thread.
         HandlerThread handlerThread = new HandlerThread("SdkSandboxManagerServiceHandler");
@@ -1469,7 +1482,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
     }
 
-    private List<String> getListOfStoragePaths(List<StorageDirInfo> storageDirInfos) {
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    List<String> getListOfStoragePaths(List<StorageDirInfo> storageDirInfos) {
         final List<String> paths = new ArrayList<>();
 
         for (int i = 0; i < storageDirInfos.size(); i++) {
@@ -1654,7 +1668,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
     SdkSandboxManagerLocal getLocalManager() {
-        return mLocalManager;
+        return mInjector.getLocalManager();
     }
 
     private void notifyInstrumentationStarted(CallingInfo callingInfo) {
