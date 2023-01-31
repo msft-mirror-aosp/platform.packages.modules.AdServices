@@ -51,6 +51,7 @@
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">
         <option name="package" value="android.sdksandbox.test.scenario"/>
         <option name="runner" value="androidx.test.runner.AndroidJUnitRunner" />
+        <option name="class" value="android.sdksandbox.test.scenario.sampleclient.LoadSdkMicrobenchmark,android.sdksandbox.test.scenario.sampleclient.RemoteRenderAdMicrobenchmark" />
 
         <!-- Listener for collecting the traces and waiting for the device to stabilize. -->
         <option name="device-listeners" value="android.device.collectors.PerfettoListener" />

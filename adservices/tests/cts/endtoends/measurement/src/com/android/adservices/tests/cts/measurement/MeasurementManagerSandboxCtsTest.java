@@ -69,7 +69,8 @@ public class MeasurementManagerSandboxCtsTest {
                     /* info = */ sContext.getApplicationInfo(),
                     /* sdkName = */ "sdkName",
                     /* sdkCeDataDir = */ null,
-                    /* sdkDeDataDir = */ null);
+                    /* sdkDeDataDir = */ null,
+                    /* isCustomizedSdkContext = */ false);
 
     private Executor mMockCallbackExecutor;
     private OutcomeReceiver mMockOutcomeReceiver;

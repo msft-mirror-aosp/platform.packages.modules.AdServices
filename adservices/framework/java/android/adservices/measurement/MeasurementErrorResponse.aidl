@@ -18,7 +18,8 @@ package android.adservices.measurement;
 
 /**
  * This interface defines the generic response of Measurement API's.
- * An MeasurementErrorResponse is a Parcelable object that contains a status code and a nullable error message.
+ * An MeasurementErrorResponse is a Parcelable object that contains a status code and a nullable
+ * error message.
  *
  * {@hide}
  */

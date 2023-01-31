@@ -18,7 +18,8 @@ package android.adservices.adselection;
 
 /**
  * This interface defines the input to the RunAdSelection API.
- * A AdSelectionInput is a Parcelable object that contains an AdSelectionConfig and a callerPackageName.
+ * A AdSelectionInput is a Parcelable object that contains an AdSelectionConfig and a
+ * callerPackageName.
  *
  * {@hide}
  */

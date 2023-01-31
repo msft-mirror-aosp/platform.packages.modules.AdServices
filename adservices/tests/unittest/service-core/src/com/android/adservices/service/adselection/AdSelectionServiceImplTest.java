@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.adselection.ReportInteractionInput.DESTINATION_BUYER;
+import static android.adservices.adselection.ReportInteractionInput.DESTINATION_SELLER;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
@@ -25,8 +27,6 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZE
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
-import static com.android.adservices.data.adselection.DBRegisteredAdEvent.DESTINATION_BUYER;
-import static com.android.adservices.data.adselection.DBRegisteredAdEvent.DESTINATION_SELLER;
 import static com.android.adservices.service.adselection.ImpressionReporter.REPORT_IMPRESSION_THROTTLED;
 import static com.android.adservices.service.adselection.ImpressionReporter.UNABLE_TO_FIND_AD_SELECTION_WITH_GIVEN_ID;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
@@ -34,6 +34,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_AD_SELECTION_CONFIG_REMOTE_OVERRIDES;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
@@ -63,6 +64,8 @@ import android.adservices.adselection.AdSelectionResponse;
 import android.adservices.adselection.CustomAudienceSignalsFixture;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
+import android.adservices.adselection.SetAppInstallAdvertisersCallback;
+import android.adservices.adselection.SetAppInstallAdvertisersInput;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
@@ -100,6 +103,7 @@ import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
@@ -132,6 +136,8 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -223,11 +229,16 @@ public class AdSelectionServiceImplTest {
                     new EnrollmentDao(CONTEXT, DbTestUtil.getDbHelperForTest()),
                     mAdServicesLoggerMock);
 
-    private Flags mFlags = new FlagsWithEnrollmentCheckEnabledSwitch(false);
+    private Flags mFlagsGaUxDisabled = new FlagsWithEnrollmentCheckEnabledSwitch(false, false);
+    private Flags mFlagsGaUxEnabled = new FlagsWithEnrollmentCheckEnabledSwitch(false, true);
 
     @Spy
     FledgeAllowListsFilter mFledgeAllowListsFilterSpy =
-            new FledgeAllowListsFilter(mFlags, mAdServicesLoggerMock);
+            new FledgeAllowListsFilter(mFlagsGaUxDisabled, mAdServicesLoggerMock);
+
+    @Spy
+    FledgeAllowListsFilter mFledgeAllowListsFilterGaUxEnabledSpy =
+            new FledgeAllowListsFilter(mFlagsGaUxEnabled, mAdServicesLoggerMock);
 
     private MockitoSession mStaticMockSession = null;
     @Mock private ConsentManager mConsentManagerMock;
@@ -299,9 +310,20 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
-    public void testReportImpressionSuccess() throws Exception {
+    public void testReportImpressionSuccessGaUxDisabled() throws Exception {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+        reportImpressionSuccess(mFlagsGaUxDisabled);
+    }
 
+    @Test
+    public void testReportImpressionSuccessGaUxEnabled() throws Exception {
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(mConsentManagerMock)
+                .getConsent(AdServicesApiType.FLEDGE);
+        reportImpressionSuccess(mFlagsGaUxEnabled);
+    }
+
+    private void reportImpressionSuccess(Flags flags) throws Exception {
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -370,10 +392,12 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        flags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeAllowListsFilterSpy);
+                        flags.getGaUxFeatureEnabled()
+                                ? mFledgeAllowListsFilterGaUxEnabledSpy
+                                : mFledgeAllowListsFilterSpy);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -488,7 +512,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -505,36 +529,36 @@ public class AdSelectionServiceImplTest {
 
         // Check that database has correct seller registered events
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
         assertEquals(
                 clickUriSeller,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
 
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
         assertEquals(
                 hoverUriSeller,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
 
         // Check that database has correct buyer registered events
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
         assertEquals(
                 clickUriBuyer,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
 
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_BUYER, DESTINATION_BUYER));
         assertEquals(
                 hoverUriBuyer,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, HOVER_EVENT_BUYER, DESTINATION_BUYER));
 
         RecordedRequest fetchRequest = server.takeRequest();
@@ -647,7 +671,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -664,30 +688,30 @@ public class AdSelectionServiceImplTest {
 
         // Check that seller click uri was not registered
         assertFalse(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
 
         // Check that seller hover uri was registered
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
         assertEquals(
                 hoverUriSeller,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
 
         // Check that buyer click uri was registered
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
         assertEquals(
                 clickUriBuyer,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
 
         // Check that buyer hover uri was not registered
         assertFalse(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_BUYER, DESTINATION_BUYER));
 
         RecordedRequest fetchRequest = server.takeRequest();
@@ -797,7 +821,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -814,30 +838,30 @@ public class AdSelectionServiceImplTest {
 
         // Check that seller click uri was not registered
         assertFalse(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
 
         // Check that seller hover uri was registered
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
         assertEquals(
                 hoverUriSeller,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
 
         // Check that buyer click uri was registered
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
         assertEquals(
                 clickUriBuyer,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
 
         // Check that buyer hover uri was not registered
         assertFalse(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_BUYER, DESTINATION_BUYER));
 
         RecordedRequest fetchRequest = server.takeRequest();
@@ -944,7 +968,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -961,28 +985,28 @@ public class AdSelectionServiceImplTest {
 
         // Check that database has correct seller registered events
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
         assertEquals(
                 clickUriSeller,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
 
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
         assertEquals(
                 hoverUriSeller,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
 
         // Check that buyer events were not registered
         assertFalse(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
 
         assertFalse(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_BUYER, DESTINATION_BUYER));
 
         assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_INTERNAL_ERROR);
@@ -1083,7 +1107,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -1100,19 +1124,19 @@ public class AdSelectionServiceImplTest {
 
         // Check that no events were registered
         assertFalse(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
 
         assertFalse(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
 
         assertFalse(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
 
         assertFalse(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_BUYER, DESTINATION_BUYER));
 
         assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_INTERNAL_ERROR);
@@ -1204,7 +1228,7 @@ public class AdSelectionServiceImplTest {
         // Create new flag with overridden value so that only one pairing per ad-tech can be
         // registered
         Flags flagsWithSmallerMaxEventUris =
-                new FlagsWithEnrollmentCheckEnabledSwitch(false) {
+                new FlagsWithEnrollmentCheckEnabledSwitch(false, false) {
                     @Override
                     public long getReportImpressionMaxEventUriEntriesCount() {
                         return 1;
@@ -1241,28 +1265,28 @@ public class AdSelectionServiceImplTest {
 
         // Check that only the first seller event uri pairing was registered
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
         assertEquals(
                 clickUriSeller,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
 
         assertFalse(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
 
         // Check that only the first buyer event uri pairing was registered
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
         assertEquals(
                 clickUriBuyer,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
 
         assertFalse(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_BUYER, DESTINATION_BUYER));
 
         RecordedRequest fetchRequest = server.takeRequest();
@@ -1281,9 +1305,20 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
-    public void testReportImpressionWithRevokedUserConsentSuccess() throws Exception {
+    public void testReportImpressionWithRevokedUserConsentSuccessGaUxDisabled() throws Exception {
         doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent();
+        reportImpressionWithRevokedUserConsentSuccess(mFlagsGaUxDisabled);
+    }
 
+    @Test
+    public void testReportImpressionWithRevokedUserConsentSuccessGaUxEnabled() throws Exception {
+        doReturn(AdServicesApiConsent.REVOKED)
+                .when(mConsentManagerMock)
+                .getConsent(AdServicesApiType.FLEDGE);
+        reportImpressionWithRevokedUserConsentSuccess(mFlagsGaUxEnabled);
+    }
+
+    private void reportImpressionWithRevokedUserConsentSuccess(Flags flags) throws Exception {
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
         String buyerDecisionLogicJs =
@@ -1343,10 +1378,12 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        flags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeAllowListsFilterSpy);
+                        flags.getGaUxFeatureEnabled()
+                                ? mFledgeAllowListsFilterGaUxEnabledSpy
+                                : mFledgeAllowListsFilterSpy);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1374,7 +1411,7 @@ public class AdSelectionServiceImplTest {
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
         String jsWaitMoreThanAllowed =
-                insertJsWait(2 * mFlags.getReportImpressionOverallTimeoutMs());
+                insertJsWait(2 * mFlagsGaUxDisabled.getReportImpressionOverallTimeoutMs());
 
         String sellerDecisionLogicJs =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
@@ -1439,7 +1476,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -1471,7 +1508,7 @@ public class AdSelectionServiceImplTest {
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
         String jsWaitMoreThanAllowed =
-                insertJsWait(2 * mFlags.getReportImpressionOverallTimeoutMs());
+                insertJsWait(2 * mFlagsGaUxDisabled.getReportImpressionOverallTimeoutMs());
 
         String sellerDecisionLogicJs =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
@@ -1536,7 +1573,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -1568,7 +1605,8 @@ public class AdSelectionServiceImplTest {
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
         String jsWaitMoreThanAllowed =
-                insertJsWait((long) (.25 * mFlags.getReportImpressionOverallTimeoutMs()));
+                insertJsWait(
+                        (long) (.25 * mFlagsGaUxDisabled.getReportImpressionOverallTimeoutMs()));
 
         String sellerDecisionLogicJs =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
@@ -1595,7 +1633,10 @@ public class AdSelectionServiceImplTest {
                                 .setBody(sellerDecisionLogicJs)
                                 .throttleBody(
                                         mBytesPerPeriod,
-                                        (long) (.5 * mFlags.getReportImpressionOverallTimeoutMs()),
+                                        (long)
+                                                (.5
+                                                        * mFlagsGaUxDisabled
+                                                                .getReportImpressionOverallTimeoutMs()),
                                         TimeUnit.MILLISECONDS),
                         new MockResponse(),
                         new MockResponse()));
@@ -1639,7 +1680,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -1693,7 +1734,7 @@ public class AdSelectionServiceImplTest {
                                 .setBody(sellerDecisionLogicJs)
                                 .throttleBody(
                                         mBytesPerPeriod,
-                                        mFlags.getReportImpressionOverallTimeoutMs(),
+                                        mFlagsGaUxDisabled.getReportImpressionOverallTimeoutMs(),
                                         TimeUnit.MILLISECONDS),
                         new MockResponse(),
                         new MockResponse()));
@@ -1737,7 +1778,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -1830,7 +1871,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -1922,7 +1963,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -2015,7 +2056,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -2128,7 +2169,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -2260,7 +2301,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -2276,36 +2317,36 @@ public class AdSelectionServiceImplTest {
 
         // Check that database has correct seller registered events
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
         assertEquals(
                 clickUriSeller,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, CLICK_EVENT_SELLER, DESTINATION_SELLER));
 
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
         assertEquals(
                 hoverUriSeller,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, HOVER_EVENT_SELLER, DESTINATION_SELLER));
 
         // Check that database has correct buyer registered events
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
         assertEquals(
                 clickUriBuyer,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, CLICK_EVENT_BUYER, DESTINATION_BUYER));
 
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_BUYER, DESTINATION_BUYER));
         assertEquals(
                 hoverUriBuyer,
-                mAdSelectionEntryDao.getRegisteredAdEventUri(
+                mAdSelectionEntryDao.getRegisteredAdInteractionUri(
                         AD_SELECTION_ID, HOVER_EVENT_BUYER, DESTINATION_BUYER));
 
         List<String> notifications =
@@ -2343,7 +2384,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -2393,7 +2434,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -2438,7 +2479,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -2488,7 +2529,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -2550,7 +2591,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -2608,7 +2649,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -2670,7 +2711,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -2733,7 +2774,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -2837,7 +2878,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -2943,7 +2984,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -3045,7 +3086,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -3144,7 +3185,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -3180,7 +3221,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -3290,7 +3331,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -3395,7 +3436,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -3489,7 +3530,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -3618,7 +3659,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -3714,7 +3755,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -3746,7 +3787,7 @@ public class AdSelectionServiceImplTest {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         // Reset flags to perform enrollment check
-        mFlags = new FlagsWithEnrollmentCheckEnabledSwitch(true);
+        mFlagsGaUxDisabled = new FlagsWithEnrollmentCheckEnabledSwitch(true, false);
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -3814,7 +3855,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -3846,7 +3887,7 @@ public class AdSelectionServiceImplTest {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         // Reset flags to perform enrollment check
-        mFlags = new FlagsWithEnrollmentCheckEnabledSwitch(true);
+        mFlagsGaUxDisabled = new FlagsWithEnrollmentCheckEnabledSwitch(true, false);
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -3922,7 +3963,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -4016,7 +4057,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -4263,7 +4304,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -4365,7 +4406,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -4469,7 +4510,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -4520,7 +4561,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -4574,7 +4615,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -4622,7 +4663,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -4676,7 +4717,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -4742,7 +4783,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -4802,7 +4843,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -4866,7 +4907,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -4929,7 +4970,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -5041,7 +5082,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -5147,7 +5188,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -5258,7 +5299,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -5386,7 +5427,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFlagsGaUxDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -5415,6 +5456,59 @@ public class AdSelectionServiceImplTest {
 
         assertTrue(selectionCallback.mIsSuccess);
         assertEquals(AD_SELECTION_ID_1, selectionCallback.mAdSelectionResponse.getAdSelectionId());
+    }
+
+    @Test
+    public void testSetAppInstallAdvertisersSuccess() throws Exception {
+        SetAppInstallAdvertisersInput input =
+                new SetAppInstallAdvertisersInput.Builder()
+                        .setAdvertisers(
+                                new HashSet<>(
+                                        Arrays.asList(
+                                                AdTechIdentifier.fromString("example1.com"),
+                                                AdTechIdentifier.fromString("example2.com"))))
+                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                        .build();
+        SetAppInstallAdvertisersTestCallback callback =
+                callSetAppInstallAdvertisers(generateAdSelectionServiceImpl(), input);
+        assertTrue(callback.mIsSuccess);
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
+        // TODO(b/265469079) Add tests to ensure adtechs were fetched and stored
+    }
+
+    @Test
+    public void testSetAppInstallAdvertisersNullInput() {
+        assertThrows(
+                NullPointerException.class,
+                () -> callSetAppInstallAdvertisers(generateAdSelectionServiceImpl(), null));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS),
+                        eq(STATUS_INVALID_ARGUMENT),
+                        eq(0));
+    }
+
+    private AdSelectionServiceImpl generateAdSelectionServiceImpl() {
+        return new AdSelectionServiceImpl(
+                mAdSelectionEntryDao,
+                mCustomAudienceDao,
+                mClient,
+                mDevContextFilter,
+                mAppImportanceFilter,
+                mLightweightExecutorService,
+                mBackgroundExecutorService,
+                mScheduledExecutor,
+                CONTEXT,
+                mConsentManagerMock,
+                mAdServicesLoggerMock,
+                mFlagsGaUxDisabled,
+                CallingAppUidSupplierProcessImpl.create(),
+                mFledgeAuthorizationFilterSpy,
+                mFledgeAllowListsFilterSpy);
     }
 
     private void persistAdSelectionEntryDaoResults(Map<Long, Double> adSelectionIdToBidMap) {
@@ -5639,6 +5733,29 @@ public class AdSelectionServiceImplTest {
         return callback;
     }
 
+    private SetAppInstallAdvertisersTestCallback callSetAppInstallAdvertisers(
+            AdSelectionServiceImpl adSelectionService, SetAppInstallAdvertisersInput request)
+            throws Exception {
+        // Counted down in 1) callback and 2) logApiCall
+        CountDownLatch resultLatch = new CountDownLatch(2);
+        SetAppInstallAdvertisersTestCallback callback =
+                new SetAppInstallAdvertisersTestCallback(resultLatch);
+
+        // Wait for the logging call, which happens after the callback
+        Answer<Void> countDownAnswer =
+                unused -> {
+                    resultLatch.countDown();
+                    return null;
+                };
+        doAnswer(countDownAnswer)
+                .when(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+
+        adSelectionService.setAppInstallAdvertisers(request, callback);
+        resultLatch.await(5, TimeUnit.SECONDS);
+        return callback;
+    }
+
     private String insertJsWait(long waitTime) {
         return "    const wait = (ms) => {\n"
                 + "       var start = new Date().getTime();\n"
@@ -5656,6 +5773,29 @@ public class AdSelectionServiceImplTest {
         FledgeErrorResponse mFledgeErrorResponse;
 
         public ReportImpressionTestCallback(CountDownLatch countDownLatch) {
+            mCountDownLatch = countDownLatch;
+        }
+
+        @Override
+        public void onSuccess() throws RemoteException {
+            mIsSuccess = true;
+            mCountDownLatch.countDown();
+        }
+
+        @Override
+        public void onFailure(FledgeErrorResponse fledgeErrorResponse) throws RemoteException {
+            mFledgeErrorResponse = fledgeErrorResponse;
+            mCountDownLatch.countDown();
+        }
+    }
+
+    public static class SetAppInstallAdvertisersTestCallback
+            extends SetAppInstallAdvertisersCallback.Stub {
+        private final CountDownLatch mCountDownLatch;
+        boolean mIsSuccess = false;
+        FledgeErrorResponse mFledgeErrorResponse;
+
+        public SetAppInstallAdvertisersTestCallback(CountDownLatch countDownLatch) {
             mCountDownLatch = countDownLatch;
         }
 
@@ -5724,9 +5864,12 @@ public class AdSelectionServiceImplTest {
 
     private static class FlagsWithEnrollmentCheckEnabledSwitch implements Flags {
         private final boolean mEnrollmentCheckEnabled;
+        private final boolean mIsGaUxEnabled;
 
-        FlagsWithEnrollmentCheckEnabledSwitch(boolean enrollmentCheckEnabled) {
+        FlagsWithEnrollmentCheckEnabledSwitch(
+                boolean enrollmentCheckEnabled, boolean isGaUxEnabled) {
             mEnrollmentCheckEnabled = enrollmentCheckEnabled;
+            mIsGaUxEnabled = isGaUxEnabled;
         }
 
         @Override
@@ -5757,6 +5900,11 @@ public class AdSelectionServiceImplTest {
         @Override
         public boolean getEnforceIsolateMaxHeapSize() {
             return false;
+        }
+
+        @Override
+        public boolean getGaUxFeatureEnabled() {
+            return mIsGaUxEnabled;
         }
 
         @Override

@@ -116,19 +116,44 @@ public class AsyncSourceFetcher {
             }
         }
         result.setEventId(eventId);
+        long expiry;
         if (!json.isNull(SourceHeaderContract.EXPIRY)) {
-            long expiry =
+            expiry =
                     extractValidNumberInRange(
                             json.getLong(SourceHeaderContract.EXPIRY),
                             MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
                             MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
-            result.setExpiryTime(sourceEventTime + TimeUnit.SECONDS.toMillis(expiry));
         } else {
-            result.setExpiryTime(
-                    sourceEventTime
-                            + TimeUnit.SECONDS.toMillis(
-                                    MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS));
+            expiry = MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
         }
+        result.setExpiryTime(sourceEventTime + TimeUnit.SECONDS.toMillis(expiry));
+        long eventReportWindow;
+        if (!json.isNull(SourceHeaderContract.EVENT_REPORT_WINDOW)) {
+            eventReportWindow =
+                    Math.min(
+                            expiry,
+                            extractValidNumberInRange(
+                                    json.getLong(SourceHeaderContract.EVENT_REPORT_WINDOW),
+                                    MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
+                                    MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS));
+        } else {
+            eventReportWindow = expiry;
+        }
+        result.setEventReportWindow(sourceEventTime + TimeUnit.SECONDS.toMillis(eventReportWindow));
+        long aggregateReportWindow;
+        if (!json.isNull(SourceHeaderContract.AGGREGATABLE_REPORT_WINDOW)) {
+            aggregateReportWindow =
+                    Math.min(
+                            expiry,
+                            extractValidNumberInRange(
+                                    json.getLong(SourceHeaderContract.AGGREGATABLE_REPORT_WINDOW),
+                                    MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
+                                    MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS));
+        } else {
+            aggregateReportWindow = expiry;
+        }
+        result.setAggregatableReportWindow(
+                sourceEventTime + TimeUnit.SECONDS.toMillis(aggregateReportWindow));
         if (!json.isNull(SourceHeaderContract.PRIORITY)) {
             result.setPriority(json.getLong(SourceHeaderContract.PRIORITY));
         }
@@ -206,7 +231,7 @@ public class AsyncSourceFetcher {
                 && webDestinationFromRequest != null // Only validate when non-null in request
                 && !doUriFieldsMatch(
                         json, SourceHeaderContract.WEB_DESTINATION, webDestinationFromRequest)) {
-            LogUtil.d("Expected web_destination to match with ths supplied one!");
+            LogUtil.d("Expected web_destination to match with the supplied one!");
             return false;
         }
         if (!json.isNull(SourceHeaderContract.WEB_DESTINATION)) {
@@ -487,6 +512,8 @@ public class AsyncSourceFetcher {
         String DEBUG_KEY = "debug_key";
         String DESTINATION = "destination";
         String EXPIRY = "expiry";
+        String EVENT_REPORT_WINDOW = "event_report_window";
+        String AGGREGATABLE_REPORT_WINDOW = "aggregatable_report_window";
         String PRIORITY = "priority";
         String INSTALL_ATTRIBUTION_WINDOW_KEY = "install_attribution_window";
         String POST_INSTALL_EXCLUSIVITY_WINDOW_KEY = "post_install_exclusivity_window";
