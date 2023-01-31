@@ -2622,13 +2622,14 @@ public class SdkSandboxManagerServiceUnitTest {
                         Mockito.any(SandboxLatencyInfo.class));
     }
 
+    // TODO(b/267155761): Add tests to check correct methods with parameters are called.
     @Test
     public void testLoadSdk_computeSdkStorage() throws Exception {
         loadSdk(SDK_NAME);
         // Assume sdk storage information calculated and sent
         mSdkSandboxService.sendStorageInfoToSystemServer();
 
-        Mockito.verify(sSdkSandboxPulledAtoms)
+        Mockito.verify(sSdkSandboxPulledAtoms, Mockito.timeout(5000))
                 .logStorage(mClientAppUid, /*sharedStorage=*/ 0, /*sdkStorage=*/ 0);
     }
 
