@@ -19,7 +19,6 @@ package com.android.server.sdksandbox;
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND;
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE;
 import static android.app.sdksandbox.SdkSandboxManager.EXTRA_SANDBOXED_ACTIVITY_HANDLER;
-import static android.app.sdksandbox.SdkSandboxManager.EXTRA_SANDBOXED_ACTIVITY_SDK_NAME;
 import static android.app.sdksandbox.SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR;
 import static android.app.sdksandbox.SdkSandboxManager.LOAD_SDK_SDK_SANDBOX_DISABLED;
 import static android.app.sdksandbox.SdkSandboxManager.REQUEST_SURFACE_PACKAGE_SDK_NOT_LOADED;
@@ -1838,13 +1837,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         return EXTRA_SANDBOXED_ACTIVITY_HANDLER;
     }
 
-    // For testing as SANDBOXED_ACTIVITY_SDK_NAME_KEY is hidden from
-    // SdkSandboxManagerServiceUnitTests
-    @NonNull
-    public String getSandboxedActivitySdkNameKey() {
-        return EXTRA_SANDBOXED_ACTIVITY_SDK_NAME;
-    }
-
     private class LocalImpl implements SdkSandboxManagerLocal {
         @Override
         public void registerAdServicesManagerService(IBinder iBinder) {
@@ -1953,19 +1945,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                                 + clientAppUid);
             }
             Bundle extras = intent.getExtras();
-            if (extras == null
-                    || extras.getBinder(getSandboxedActivityHandlerKey()) == null
-                    || extras.getString(getSandboxedActivitySdkNameKey()) == null) {
+            if (extras == null || extras.getBinder(getSandboxedActivityHandlerKey()) == null) {
                 throw new IllegalArgumentException(
-                        "Intent should contain two extra params, First has "
-                                + "key = "
+                        "Intent should contain an extra params with key = "
                                 + getSandboxedActivityHandlerKey()
-                                + "with value is an IBinder "
-                                + "identifier for a registered SandboxedActivityHandler"
-                                + "and Second has key = "
-                                + getSandboxedActivitySdkNameKey()
-                                + "with value is the name of SDK registered "
-                                + "SandboxedActivityHandler");
+                                + " and value is an IBinder that identifies a registered "
+                                + "SandboxedActivityHandler.");
             }
         }
 
