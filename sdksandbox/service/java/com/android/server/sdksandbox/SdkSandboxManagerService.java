@@ -117,6 +117,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     private final ActivityManager mActivityManager;
     private final ActivityManagerLocal mActivityManagerLocal;
     private final Handler mHandler;
+    private final Handler mBackgroundHandler;
     private final SdkSandboxStorageManager mSdkSandboxStorageManager;
     private final SdkSandboxServiceProvider mServiceProvider;
 
@@ -255,6 +256,14 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         HandlerThread handlerThread = new HandlerThread("SdkSandboxManagerServiceHandler");
         handlerThread.start();
         mHandler = new Handler(handlerThread.getLooper());
+
+        // Start a background handler thread.
+        HandlerThread backgroundHandlerThread =
+                new HandlerThread(
+                        "SdkSandboxManagerServiceHandler", Process.THREAD_PRIORITY_BACKGROUND);
+        backgroundHandlerThread.start();
+        mBackgroundHandler = new Handler(backgroundHandlerThread.getLooper());
+
         registerBroadcastReceivers();
 
         mAdServicesPackageName = resolveAdServicesPackage();
@@ -1051,7 +1060,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             // Once bound service has been set, sync manager is notified.
             notifySyncManagerSandboxStarted(mCallingInfo);
 
-            mHandler.post(
+            mBackgroundHandler.post(
                     () -> {
                         computeSdkStorage(mCallingInfo, mService);
                     });
