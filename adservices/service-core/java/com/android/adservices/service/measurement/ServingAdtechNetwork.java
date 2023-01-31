@@ -16,15 +16,23 @@
 
 package com.android.adservices.service.measurement;
 
+import static com.android.adservices.service.measurement.ServingAdtechNetwork.ServingAdtechNetworkContract.OFFSET;
+
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+
+import com.android.adservices.LogUtil;
+import com.android.adservices.service.measurement.util.UnsignedLong;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.Objects;
 
 /** POJO for ServingAdtechNetwork. */
 public class ServingAdtechNetwork {
 
-    @Nullable private final Long mOffset;
+    @Nullable private final UnsignedLong mOffset;
 
     private ServingAdtechNetwork(@NonNull ServingAdtechNetwork.Builder builder) {
         mOffset = builder.mOffset;
@@ -46,19 +54,53 @@ public class ServingAdtechNetwork {
 
     /** Returns the value of offset as Long */
     @Nullable
-    public Long getOffset() {
+    public UnsignedLong getOffset() {
         return mOffset;
+    }
+
+    /**
+     * Serializes the object as Json.
+     *
+     * @return serialized json object
+     */
+    @Nullable
+    public JSONObject serializeAsJson() {
+        JSONObject servingAdtechNetworkJson = new JSONObject();
+        try {
+            if (mOffset != null) {
+                servingAdtechNetworkJson.put(OFFSET, mOffset.getValue());
+            }
+        } catch (JSONException e) {
+            LogUtil.d(e, "Serialization of ServingAdtechNetwork failed.");
+            return null;
+        }
+        return servingAdtechNetworkJson;
     }
 
     /** Builder for {@link ServingAdtechNetwork}. */
     public static final class Builder {
-        private Long mOffset;
+        private UnsignedLong mOffset;
 
         public Builder() {}
 
+        public Builder(@NonNull JSONObject jsonObject) throws JSONException {
+            if (!jsonObject.isNull(OFFSET)) {
+                String offset = jsonObject.getString(OFFSET);
+                // Unassigned in order to validate the long value
+                try {
+                    mOffset = new UnsignedLong(offset);
+                } catch (NumberFormatException e) {
+                    LogUtil.d(e, "ServingAdtechNetwork.Builder: Failed to parse offset.");
+                    // Wrapped into JSONException so that it does not crash and becomes a checked
+                    // Exception that is caught by the caller.
+                    throw new JSONException(e);
+                }
+            }
+        }
+
         /** See {@link ServingAdtechNetwork#getOffset()}. */
         @NonNull
-        public Builder setOffset(@Nullable Long offset) {
+        public Builder setOffset(@Nullable UnsignedLong offset) {
             mOffset = offset;
             return this;
         }
@@ -68,5 +110,10 @@ public class ServingAdtechNetwork {
         public ServingAdtechNetwork build() {
             return new ServingAdtechNetwork(this);
         }
+    }
+
+    /** Constants related to ServingAdTechNetwork. */
+    public interface ServingAdtechNetworkContract {
+        String OFFSET = "offset";
     }
 }

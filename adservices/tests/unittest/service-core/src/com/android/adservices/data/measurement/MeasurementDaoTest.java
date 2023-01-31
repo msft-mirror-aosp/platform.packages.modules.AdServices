@@ -190,6 +190,9 @@ public class MeasurementDaoTest {
             assertEquals(
                     validSource.getAggregateContributions(), source.getAggregateContributions());
             assertEquals(validSource.isDebugReporting(), source.isDebugReporting());
+            assertEquals(validSource.getSharedAggregationKeys(), source.getSharedAggregationKeys());
+            assertEquals(validSource.getRegistrationId(), source.getRegistrationId());
+            assertEquals(validSource.getInstallTime(), source.getInstallTime());
         }
     }
 
@@ -259,6 +262,8 @@ public class MeasurementDaoTest {
             assertEquals(validTrigger.getRegistrant(), trigger.getRegistrant());
             assertEquals(validTrigger.getTriggerTime(), trigger.getTriggerTime());
             assertEquals(validTrigger.getEventTriggers(), trigger.getEventTriggers());
+            assertEquals(validTrigger.getAttributionConfig(), trigger.getAttributionConfig());
+            assertEquals(validTrigger.getAdtechBitMapping(), trigger.getAdtechBitMapping());
         }
     }
 

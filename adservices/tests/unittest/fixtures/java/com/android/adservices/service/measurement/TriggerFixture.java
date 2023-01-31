@@ -52,6 +52,8 @@ public final class TriggerFixture {
                 .setAggregateValues(ValidTriggerParams.AGGREGATE_VALUES)
                 .setFilters(ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING)
                 .setNotFilters(ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING)
+                .setAttributionConfig(ValidTriggerParams.ATTRIBUTION_CONFIG)
+                .setAdtechBitMapping(ValidTriggerParams.ADTECH_BIT_MAPPING)
                 .build();
     }
 
