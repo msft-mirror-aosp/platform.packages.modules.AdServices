@@ -26,13 +26,14 @@ import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_AP
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SANDBOX_TO_SYSTEM_SERVER;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_SANDBOX_TO_APP;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_SANDBOX;
-
-import com.android.server.SystemService.TargetUser;
+import static com.android.server.wm.ActivityInterceptorCallback.MAINLINE_SDK_SANDBOX_ORDER_ID;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assume.assumeTrue;
+import static org.mockito.ArgumentMatchers.eq;
 
 import android.Manifest;
 import android.app.ActivityManager;
@@ -52,6 +53,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ProviderInfo;
@@ -71,13 +73,18 @@ import androidx.annotation.Nullable;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.dx.mockito.inline.extended.StaticMockitoSessionBuilder;
+import com.android.modules.utils.build.SdkLevel;
 import com.android.sdksandbox.ISdkSandboxService;
 import com.android.sdksandbox.IUnloadSdkCallback;
 import com.android.sdksandbox.SandboxLatencyInfo;
 import com.android.sdksandbox.service.stats.SdkSandboxStatsLog;
 import com.android.server.LocalManagerRegistry;
+import com.android.server.SystemService.TargetUser;
 import com.android.server.am.ActivityManagerLocal;
 import com.android.server.pm.PackageManagerLocal;
+import com.android.server.wm.ActivityInterceptorCallback;
+import com.android.server.wm.ActivityInterceptorCallbackRegistry;
 
 import org.junit.After;
 import org.junit.Before;
@@ -109,6 +116,8 @@ public class SdkSandboxManagerServiceUnitTest {
     private int mClientAppUid;
     private PackageManagerLocal mPmLocal;
     private ActivityManagerLocal mAmLocal;
+    private ArgumentCaptor<ActivityInterceptorCallback> mInterceptorCallbackArgumentCaptor =
+            ArgumentCaptor.forClass(ActivityInterceptorCallback.class);
 
     private static FakeSdkSandboxProvider sProvider;
     private static SdkSandboxPulledAtoms sSdkSandboxPulledAtoms;
@@ -154,12 +163,29 @@ public class SdkSandboxManagerServiceUnitTest {
 
     @Before
     public void setup() {
-        mStaticMockSession =
+        StaticMockitoSessionBuilder mockitoSessionBuilder =
                 ExtendedMockito.mockitoSession()
                         .mockStatic(LocalManagerRegistry.class)
                         .mockStatic(SdkSandboxStatsLog.class)
-                        .spyStatic(Process.class)
-                        .startMocking();
+                        .spyStatic(Process.class);
+        if (SdkLevel.isAtLeastU()) {
+            mockitoSessionBuilder =
+                    mockitoSessionBuilder.mockStatic(ActivityInterceptorCallbackRegistry.class);
+        }
+        mStaticMockSession = mockitoSessionBuilder.startMocking();
+
+        if (SdkLevel.isAtLeastU()) {
+            // mock the activity interceptor registry anc capture the callback if called
+            ActivityInterceptorCallbackRegistry registryMock =
+                    Mockito.mock(ActivityInterceptorCallbackRegistry.class);
+            ExtendedMockito.doReturn(registryMock)
+                    .when(ActivityInterceptorCallbackRegistry::getInstance);
+            Mockito.doNothing()
+                    .when(registryMock)
+                    .registerActivityInterceptorCallback(
+                            eq(MAINLINE_SDK_SANDBOX_ORDER_ID),
+                            mInterceptorCallbackArgumentCaptor.capture());
+        }
 
         Context context = InstrumentationRegistry.getInstrumentation().getContext();
         mSpyContext = Mockito.spy(context);
@@ -2565,6 +2591,36 @@ public class SdkSandboxManagerServiceUnitTest {
                 .logStorage(mClientAppUid, /*sharedStorage=*/ 0, /*sdkStorage=*/ 0);
     }
 
+    @Test
+    public void testRegisterActivityInterceptorCallbackOnServiceStart() {
+        assumeTrue(SdkLevel.isAtLeastU());
+
+        // Build ActivityInterceptorInfo
+        int callingUid = 1000;
+        Intent intent = new Intent();
+        intent.setAction(SdkSandboxManager.ACTION_START_SANDBOXED_ACTIVITY);
+        ActivityInfo activityInfo = new ActivityInfo();
+        activityInfo.applicationInfo = new ApplicationInfo();
+        ActivityInterceptorCallback.ActivityInterceptorInfo info =
+                new ActivityInterceptorCallback.ActivityInterceptorInfo.Builder(
+                                callingUid, 0, 0, 0, 0, intent, null, activityInfo)
+                        .setCallingPackage(TEST_PACKAGE)
+                        .build();
+
+        ActivityInterceptorCallback.ActivityInterceptResult result =
+                mInterceptorCallbackArgumentCaptor.getValue().onInterceptActivityLaunch(info);
+
+        assertThat(result.getIntent()).isEqualTo(intent);
+        assertThat(result.getActivityOptions()).isNull();
+        assertThat(result.isActivityResolved()).isTrue();
+        assertThat(activityInfo.processName)
+                .isEqualTo(
+                        mInjector
+                                .getSdkSandboxServiceProvider()
+                                .toSandboxProcessName(TEST_PACKAGE));
+        assertThat(activityInfo.applicationInfo.uid).isEqualTo(Process.toSdkSandboxUid(callingUid));
+    }
+
     private SandboxLatencyInfo getFakedSandboxLatencies() {
         final SandboxLatencyInfo sandboxLatencyInfo =
                 new SandboxLatencyInfo(TIME_SYSTEM_SERVER_CALLED_SANDBOX);
@@ -2687,6 +2743,12 @@ public class SdkSandboxManagerServiceUnitTest {
         @Override
         public void dump(PrintWriter writer) {
             writer.println("FakeDump");
+        }
+
+        @NonNull
+        @Override
+        public String toSandboxProcessName(@NonNull String packageName) {
+            return TEST_PACKAGE + SANDBOX_PROCESS_NAME_SUFFIX;
         }
     }
 
