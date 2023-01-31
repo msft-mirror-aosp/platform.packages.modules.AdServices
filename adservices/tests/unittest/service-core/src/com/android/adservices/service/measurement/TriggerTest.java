@@ -310,7 +310,7 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY,
-                TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIG,
+                TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIGS_STRING,
                 TriggerFixture.ValidTriggerParams.ADTECH_BIT_MAPPING);
         assertInvalidTriggerArguments(
                 Uri.parse("com.destination"),
@@ -323,7 +323,7 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY,
-                TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIG,
+                TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIGS_STRING,
                 TriggerFixture.ValidTriggerParams.ADTECH_BIT_MAPPING);
     }
 
@@ -340,7 +340,7 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY,
-                TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIG,
+                TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIGS_STRING,
                 TriggerFixture.ValidTriggerParams.ADTECH_BIT_MAPPING);
     }
 
@@ -357,7 +357,7 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY,
-                TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIG,
+                TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIGS_STRING,
                 TriggerFixture.ValidTriggerParams.ADTECH_BIT_MAPPING);
         assertInvalidTriggerArguments(
                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION,
@@ -370,7 +370,7 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY,
-                TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIG,
+                TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIGS_STRING,
                 TriggerFixture.ValidTriggerParams.ADTECH_BIT_MAPPING);
     }
 
