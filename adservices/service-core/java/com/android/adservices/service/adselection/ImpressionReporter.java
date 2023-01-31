@@ -19,7 +19,6 @@ package com.android.adservices.service.adselection;
 import static android.adservices.adselection.ReportInteractionInput.DESTINATION_BUYER;
 import static android.adservices.adselection.ReportInteractionInput.DESTINATION_SELLER;
 
-import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
 
 import android.adservices.adselection.AdSelectionConfig;
@@ -35,6 +34,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.LimitExceededException;
 import android.os.RemoteException;
+import android.os.Trace;
 import android.util.Pair;
 
 import com.android.adservices.LogUtil;
@@ -49,13 +49,13 @@ import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.common.FledgeServiceFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.ValidatorUtil;
-import com.android.adservices.service.consent.AdServicesApiConsent;
-import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.internal.util.Preconditions;
 
@@ -87,26 +87,60 @@ public class ImpressionReporter {
     private static final String REPORTING_URI_FIELD_NAME = "reporting URI";
     private static final String EVENT_URI_FIELD_NAME = "event URI";
 
-    @VisibleForTesting
-    static final String REPORT_IMPRESSION_THROTTLED = "Report impression exceeded rate limit";
-
-    @NonNull private final Context mContext;
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
     @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
     @NonNull private final ListeningExecutorService mBackgroundExecutorService;
     @NonNull private final ScheduledThreadPoolExecutor mScheduledExecutor;
     @NonNull private final ReportImpressionScriptEngine mJsEngine;
-    @NonNull private final ConsentManager mConsentManager;
     @NonNull private final AdSelectionDevOverridesHelper mAdSelectionDevOverridesHelper;
     @NonNull private final AdServicesLogger mAdServicesLogger;
     @NonNull private final Flags mFlags;
-    @NonNull private final Supplier<Throttler> mThrottlerSupplier;
-    @NonNull private final AppImportanceFilter mAppImportanceFilter;
-    private final int mCallerUid;
-    @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
-    @NonNull private final FledgeAllowListsFilter mFledgeAllowListsFilter;
+    @NonNull private final FledgeServiceFilter mFledgeServiceFilter;
+    private int mCallerUid;
 
+    public ImpressionReporter(
+            @NonNull Context context,
+            @NonNull ExecutorService lightweightExecutor,
+            @NonNull ExecutorService backgroundExecutor,
+            @NonNull ScheduledThreadPoolExecutor scheduledExecutor,
+            @NonNull AdSelectionEntryDao adSelectionEntryDao,
+            @NonNull AdServicesHttpsClient adServicesHttpsClient,
+            @NonNull DevContext devContext,
+            @NonNull AdServicesLogger adServicesLogger,
+            @NonNull final Flags flags,
+            @NonNull final FledgeServiceFilter fledgeServiceFilter,
+            final int callerUid) {
+        Objects.requireNonNull(context);
+        Objects.requireNonNull(lightweightExecutor);
+        Objects.requireNonNull(backgroundExecutor);
+        Objects.requireNonNull(scheduledExecutor);
+        Objects.requireNonNull(adSelectionEntryDao);
+        Objects.requireNonNull(adServicesHttpsClient);
+        Objects.requireNonNull(devContext);
+        Objects.requireNonNull(adServicesLogger);
+        Objects.requireNonNull(flags);
+        Objects.requireNonNull(fledgeServiceFilter);
+
+        mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutor);
+        mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutor);
+        mScheduledExecutor = scheduledExecutor;
+        mAdSelectionEntryDao = adSelectionEntryDao;
+        mAdServicesHttpsClient = adServicesHttpsClient;
+        mJsEngine =
+                new ReportImpressionScriptEngine(
+                        context,
+                        () -> flags.getEnforceIsolateMaxHeapSize(),
+                        () -> flags.getIsolateMaxHeapSizeBytes());
+        mAdSelectionDevOverridesHelper =
+                new AdSelectionDevOverridesHelper(devContext, mAdSelectionEntryDao);
+        mAdServicesLogger = adServicesLogger;
+        mFlags = flags;
+        mFledgeServiceFilter = fledgeServiceFilter;
+        mCallerUid = callerUid;
+    }
+
+    @VisibleForTesting
     public ImpressionReporter(
             @NonNull Context context,
             @NonNull ExecutorService lightweightExecutor,
@@ -138,7 +172,6 @@ public class ImpressionReporter {
         Objects.requireNonNull(fledgeAuthorizationFilter);
         Objects.requireNonNull(fledgeAllowListsFilter);
 
-        mContext = context;
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutor);
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutor);
         mScheduledExecutor = scheduledExecutor;
@@ -146,19 +179,22 @@ public class ImpressionReporter {
         mAdServicesHttpsClient = adServicesHttpsClient;
         mJsEngine =
                 new ReportImpressionScriptEngine(
-                        mContext,
+                        context,
                         () -> flags.getEnforceIsolateMaxHeapSize(),
                         () -> flags.getIsolateMaxHeapSizeBytes());
-        mConsentManager = consentManager;
         mAdSelectionDevOverridesHelper =
                 new AdSelectionDevOverridesHelper(devContext, mAdSelectionEntryDao);
         mAdServicesLogger = adServicesLogger;
         mFlags = flags;
-        mThrottlerSupplier = throttlerSupplier;
-        mAppImportanceFilter = appImportanceFilter;
-        mCallerUid = callerUid;
-        mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
-        mFledgeAllowListsFilter = fledgeAllowListsFilter;
+        mFledgeServiceFilter =
+                new FledgeServiceFilter(
+                        context,
+                        consentManager,
+                        flags,
+                        appImportanceFilter,
+                        fledgeAuthorizationFilter,
+                        fledgeAllowListsFilter,
+                        throttlerSupplier);
     }
 
     /** Invokes the onFailure function from the callback and handles the exception. */
@@ -240,14 +276,29 @@ public class ImpressionReporter {
             @NonNull ReportImpressionCallback callback) {
         long adSelectionId = requestParams.getAdSelectionId();
         AdSelectionConfig adSelectionConfig = requestParams.getAdSelectionConfig();
-        ListenableFuture<Void> validateRequestFuture =
+        ListenableFuture<Void> filterAndValidateRequestFuture =
                 Futures.submit(
-                        () ->
-                                validateRequest(
-                                        adSelectionConfig, requestParams.getCallerPackageName()),
+                        () -> {
+                            try {
+                                Trace.beginSection(Tracing.VALIDATE_REQUEST);
+                                LogUtil.v("Starting filtering and validation.");
+                                mFledgeServiceFilter.filterRequest(
+                                        adSelectionConfig.getSeller(),
+                                        requestParams.getCallerPackageName(),
+                                        mFlags
+                                                .getEnforceForegroundStatusForFledgeReportImpression(),
+                                        mCallerUid,
+                                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                                        Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS);
+                                validateAdSelectionConfig(adSelectionConfig);
+                            } finally {
+                                LogUtil.v("Completed filtering and validation.");
+                                Trace.endSection();
+                            }
+                        },
                         mLightweightExecutorService);
 
-        FluentFuture.from(validateRequestFuture)
+        FluentFuture.from(filterAndValidateRequestFuture)
                 .transformAsync(
                         ignoredVoid ->
                                 computeReportingUris(
@@ -634,159 +685,15 @@ public class ImpressionReporter {
     }
 
     /**
-     * Asserts that FLEDGE APIs and the Privacy Sandbox as a whole have user consent.
-     *
-     * @return an ignorable {@code null}
-     * @throws ConsentManager.RevokedConsentException if FLEDGE or the Privacy Sandbox do not have
-     *     user consent
-     */
-    private Void assertCallerHasUserConsent() throws ConsentManager.RevokedConsentException {
-        AdServicesApiConsent userConsent;
-        if (mFlags.getGaUxFeatureEnabled()) {
-            userConsent = mConsentManager.getConsent(AdServicesApiType.FLEDGE);
-        } else {
-            userConsent = mConsentManager.getConsent();
-        }
-
-        if (!userConsent.isGiven()) {
-            throw new ConsentManager.RevokedConsentException();
-        }
-        return null;
-    }
-
-    /**
-     * Asserts that the caller has the appropriate foreground status, if enabled.
-     *
-     * @return an ignorable {@code null}
-     * @throws WrongCallingApplicationStateException if the foreground check is enabled and fails
-     */
-    private Void maybeAssertForegroundCaller() throws WrongCallingApplicationStateException {
-        if (mFlags.getEnforceForegroundStatusForFledgeReportImpression()) {
-            mAppImportanceFilter.assertCallerIsInForeground(
-                    mCallerUid, AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, null);
-        }
-        return null;
-    }
-
-    /**
-     * Asserts that the package name provided by the caller is one of the packages of the calling
-     * uid.
-     *
-     * @param callerPackageName caller package name from the request
-     * @throws FledgeAuthorizationFilter.CallerMismatchException if the provided {@code
-     *     callerPackageName} is not valid
-     * @return an ignorable {@code null}
-     */
-    private Void assertCallerPackageName(String callerPackageName)
-            throws FledgeAuthorizationFilter.CallerMismatchException {
-        mFledgeAuthorizationFilter.assertCallingPackageName(
-                callerPackageName, mCallerUid, AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION);
-        return null;
-    }
-
-    /**
      * Validates the {@code adSelectionConfig} from the request.
      *
      * @param adSelectionConfig the adSelectionConfig to be validated
      * @throws IllegalArgumentException if the provided {@code adSelectionConfig} is not valid
-     * @return an ignorable {@code null}
      */
-    private Void validateAdSelectionConfig(AdSelectionConfig adSelectionConfig)
+    private void validateAdSelectionConfig(AdSelectionConfig adSelectionConfig)
             throws IllegalArgumentException {
         AdSelectionConfigValidator adSelectionConfigValidator = new AdSelectionConfigValidator();
         adSelectionConfigValidator.validate(adSelectionConfig);
-
-        return null;
-    }
-
-    /**
-     * Check if a certain ad tech is enrolled and authorized to perform the operation for the
-     * package.
-     *
-     * @param callerPackageName the package name to check against
-     * @param adSelectionConfig contains the ad tech to check against
-     * @throws FledgeAuthorizationFilter.AdTechNotAllowedException if the ad tech is not authorized
-     *     to perform the operation
-     */
-    private Void assertFledgeEnrollment(
-            AdSelectionConfig adSelectionConfig, String callerPackageName)
-            throws FledgeAuthorizationFilter.AdTechNotAllowedException {
-        if (!mFlags.getDisableFledgeEnrollmentCheck()) {
-            mFledgeAuthorizationFilter.assertAdTechAllowed(
-                    mContext,
-                    callerPackageName,
-                    adSelectionConfig.getSeller(),
-                    AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION);
-        }
-
-        return null;
-    }
-
-    /**
-     * Asserts the package is allowed to call PPAPI.
-     *
-     * @param callerPackageName the package name to be validated.
-     * @throws FledgeAllowListsFilter.AppNotAllowedException if the package is not authorized.
-     */
-    private Void assertAppInAllowList(String callerPackageName)
-            throws FledgeAllowListsFilter.AppNotAllowedException {
-        mFledgeAllowListsFilter.assertAppCanUsePpapi(
-                callerPackageName, AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION);
-
-        return null;
-    }
-
-    /**
-     * Ensures that the caller package is not throttled from calling current the API
-     *
-     * @param callerPackageName the package name, which should be verified
-     * @throws LimitExceededException if the provided {@code callerPackageName} exceeds its rate
-     *     limits
-     * @return an ignorable {@code null}
-     */
-    private Void assertCallerNotThrottled(final String callerPackageName)
-            throws LimitExceededException {
-        LogUtil.v("Checking if API is throttled for package: %s ", callerPackageName);
-        Throttler throttler = mThrottlerSupplier.get();
-        boolean isThrottled =
-                !throttler.tryAcquire(FLEDGE_API_REPORT_IMPRESSIONS, callerPackageName);
-
-        if (isThrottled) {
-            LogUtil.e("Rate Limit Reached for API: %s", FLEDGE_API_REPORT_IMPRESSIONS);
-            throw new LimitExceededException(REPORT_IMPRESSION_THROTTLED);
-        }
-        return null;
-    }
-
-    /**
-     * Validates the {@code reportImpression} request.
-     *
-     * @param adSelectionConfig the adSelectionConfig to be validated
-     * @param callerPackageName caller package name to be validated
-     * @throws FledgeAuthorizationFilter.CallerMismatchException if the {@code callerPackageName} is
-     *     not valid
-     * @throws WrongCallingApplicationStateException if the foreground check is enabled and fails
-     * @throws FledgeAuthorizationFilter.AdTechNotAllowedException if the ad tech is not authorized
-     *     to perform the operation
-     * @throws FledgeAllowListsFilter.AppNotAllowedException if the package is not authorized.
-     * @throws ConsentManager.RevokedConsentException if FLEDGE or the Privacy Sandbox do not have
-     *     user consent
-     * @throws IllegalArgumentException if the provided {@code adSelectionConfig} is not valid
-     * @throws LimitExceededException if the provided {@code callerPackageName} exceeds the rate
-     *     limits
-     * @return an ignorable {@code null}
-     */
-    private Void validateRequest(AdSelectionConfig adSelectionConfig, String callerPackageName) {
-        LogUtil.v("Validating reportImpression Request");
-        assertCallerPackageName(callerPackageName);
-        maybeAssertForegroundCaller();
-        assertCallerNotThrottled(callerPackageName);
-        assertFledgeEnrollment(adSelectionConfig, callerPackageName);
-        assertAppInAllowList(callerPackageName);
-        assertCallerHasUserConsent();
-        validateAdSelectionConfig(adSelectionConfig);
-
-        return null;
     }
 
     private static class ReportingContext {
