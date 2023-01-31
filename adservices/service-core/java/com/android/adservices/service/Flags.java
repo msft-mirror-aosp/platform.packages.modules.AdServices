@@ -1639,10 +1639,10 @@ public interface Flags extends Dumpable {
         return ImmutableList.of();
     }
 
-    /** Kill switch to guard backward-compatible logging. */
-    boolean COMPAT_LOGGING_KILL_SWITCH = true;
+    /** Kill switch to guard backward-compatible logging. See go/rbc-ww-logging */
+    boolean COMPAT_LOGGING_KILL_SWITCH = false;
 
-    /** Returns whether backward-compatible logging should be enabled. */
+    /** Returns true if backward-compatible logging should be disabled; false otherwise. */
     default boolean getCompatLoggingKillSwitch() {
         return COMPAT_LOGGING_KILL_SWITCH;
     }
