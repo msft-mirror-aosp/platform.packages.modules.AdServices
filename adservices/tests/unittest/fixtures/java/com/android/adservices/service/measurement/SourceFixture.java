@@ -67,9 +67,6 @@ public final class SourceFixture {
                 .setAggregateSource(ValidSourceParams.buildAggregateSource())
                 .setFilterData(ValidSourceParams.buildFilterData())
                 .setIsDebugReporting(true)
-                .setRegistrationId(ValidSourceParams.REGISTRATION_ID)
-                .setSharedAggregationKeys(ValidSourceParams.SHARED_AGGREGATE_KEYS)
-                .setInstallTime(ValidSourceParams.INSTALL_TIME)
                 .build();
     }
 
@@ -91,9 +88,6 @@ public final class SourceFixture {
         public static final @Source.AttributionMode int ATTRIBUTION_MODE =
                 Source.AttributionMode.TRUTHFULLY;
         public static final int AGGREGATE_CONTRIBUTIONS = 0;
-        public static final String REGISTRATION_ID = "R1";
-        public static final String SHARED_AGGREGATE_KEYS = "[\"key1\"]";
-        public static final Long INSTALL_TIME = 100L;
 
         public static final String buildAggregateSource() {
             try {
