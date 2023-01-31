@@ -24,6 +24,7 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import android.net.Uri;
+import android.util.Pair;
 
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
@@ -34,6 +35,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
 
+import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -95,6 +98,8 @@ public class TriggerTest {
         JSONObject values  = new JSONObject();
         values.put("campaignCounts", 32768);
         values.put("geoValue", 1664);
+        JSONObject adtechBitMapping = new JSONObject();
+        adtechBitMapping.put("AdTechA-enrollment_id", "0x1");
         assertEquals(
                 TriggerFixture.getValidTriggerBuilder()
                         .setEnrollmentId("enrollment-id")
@@ -116,6 +121,8 @@ public class TriggerTest {
                         .setAggregatableAttributionTrigger(
                                 TriggerFixture.getValidTrigger()
                                         .getAggregatableAttributionTrigger())
+                        .setAttributionConfig(createAttributionConfigJSONArray().toString())
+                        .setAdtechBitMapping(adtechBitMapping.toString())
                         .build(),
                 TriggerFixture.getValidTriggerBuilder()
                         .setEnrollmentId("enrollment-id")
@@ -137,6 +144,8 @@ public class TriggerTest {
                         .setAggregatableAttributionTrigger(
                                 TriggerFixture.getValidTrigger()
                                         .getAggregatableAttributionTrigger())
+                        .setAttributionConfig(createAttributionConfigJSONArray().toString())
+                        .setAdtechBitMapping(adtechBitMapping.toString())
                         .build());
     }
 
@@ -212,6 +221,59 @@ public class TriggerTest {
                         .setNotFilters(TOP_LEVEL_FILTERS_JSON_STRING).build(),
                 TriggerFixture.getValidTriggerBuilder()
                         .setNotFilters(TOP_LEVEL_FILTERS_JSON_STRING_X).build());
+        JSONArray attributionConfigList1 = new JSONArray();
+        JSONObject attributionConfig1 = new JSONObject();
+        attributionConfig1.put("source_adtech", "AdTech1-Ads");
+        JSONObject sourcePriorityRange1 = new JSONObject();
+        sourcePriorityRange1.put("start", 100);
+        sourcePriorityRange1.put("end", 1000);
+        attributionConfig1.put("source_priority_range", sourcePriorityRange1);
+        JSONObject sourceFilters1 = new JSONObject();
+        sourceFilters1.put("campaign_type", Arrays.asList("install"));
+        sourceFilters1.put("source_type", Arrays.asList("navigation"));
+        attributionConfig1.put("source_filters", sourceFilters1);
+        attributionConfig1.put("priority", "99");
+        attributionConfig1.put("expiry", "604800");
+        JSONObject filterData1 = new JSONObject();
+        filterData1.put("campaign_type", Arrays.asList("install"));
+        attributionConfig1.put("filter_data", filterData1);
+        attributionConfigList1.put(attributionConfig1);
+
+        JSONArray attributionConfigList2 = new JSONArray();
+        JSONObject attributionConfig2 = new JSONObject();
+        attributionConfig2.put("source_adtech", "AdTech2-Ads");
+        JSONObject sourcePriorityRange2 = new JSONObject();
+        sourcePriorityRange2.put("start", 100);
+        sourcePriorityRange2.put("end", 1000);
+        attributionConfig1.put("source_priority_range", sourcePriorityRange2);
+        JSONObject sourceFilters2 = new JSONObject();
+        sourceFilters2.put("campaign_type", Arrays.asList("install"));
+        sourceFilters2.put("source_type", Arrays.asList("navigation"));
+        attributionConfig2.put("source_filters", sourceFilters2);
+        attributionConfig2.put("priority", "99");
+        attributionConfig2.put("expiry", "604800");
+        JSONObject filterData2 = new JSONObject();
+        filterData1.put("campaign_type", Arrays.asList("install"));
+        attributionConfig2.put("filter_data", filterData2);
+        attributionConfigList2.put(attributionConfig2);
+        assertNotEquals(
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAttributionConfig(attributionConfigList1.toString())
+                        .build(),
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAttributionConfig(attributionConfigList2.toString())
+                        .build());
+        JSONObject adtechBitMapping1 = new JSONObject();
+        adtechBitMapping1.put("AdTechA-enrollment_id", "0x1");
+        JSONObject adtechBitMapping2 = new JSONObject();
+        adtechBitMapping2.put("AdTechA-enrollment_id", "0x2");
+        assertNotEquals(
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAdtechBitMapping(adtechBitMapping1.toString())
+                        .build(),
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAdtechBitMapping(adtechBitMapping2.toString())
+                        .build());
     }
 
     @Test
@@ -248,7 +310,9 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING,
-                TriggerFixture.ValidTriggerParams.DEBUG_KEY);
+                TriggerFixture.ValidTriggerParams.DEBUG_KEY,
+                TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIG,
+                TriggerFixture.ValidTriggerParams.ADTECH_BIT_MAPPING);
         assertInvalidTriggerArguments(
                 Uri.parse("com.destination"),
                 TriggerFixture.ValidTriggerParams.ENROLLMENT_ID,
@@ -259,7 +323,9 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING,
-                TriggerFixture.ValidTriggerParams.DEBUG_KEY);
+                TriggerFixture.ValidTriggerParams.DEBUG_KEY,
+                TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIG,
+                TriggerFixture.ValidTriggerParams.ADTECH_BIT_MAPPING);
     }
 
     @Test
@@ -274,7 +340,9 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING,
-                TriggerFixture.ValidTriggerParams.DEBUG_KEY);
+                TriggerFixture.ValidTriggerParams.DEBUG_KEY,
+                TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIG,
+                TriggerFixture.ValidTriggerParams.ADTECH_BIT_MAPPING);
     }
 
     @Test
@@ -289,7 +357,9 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING,
-                TriggerFixture.ValidTriggerParams.DEBUG_KEY);
+                TriggerFixture.ValidTriggerParams.DEBUG_KEY,
+                TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIG,
+                TriggerFixture.ValidTriggerParams.ADTECH_BIT_MAPPING);
         assertInvalidTriggerArguments(
                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION,
                 TriggerFixture.ValidTriggerParams.ENROLLMENT_ID,
@@ -300,7 +370,9 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING,
-                TriggerFixture.ValidTriggerParams.DEBUG_KEY);
+                TriggerFixture.ValidTriggerParams.DEBUG_KEY,
+                TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIG,
+                TriggerFixture.ValidTriggerParams.ADTECH_BIT_MAPPING);
     }
 
     @Test
@@ -333,9 +405,11 @@ public class TriggerTest {
         jsonObject1.put("source_keys", new JSONArray(Arrays.asList("campaignCounts")));
         jsonObject1.put("filters", createFilterJSONArray());
         jsonObject1.put("not_filters", createFilterJSONArray());
+        jsonObject1.put("serving_adtech_network", createServingAdtechNetworkJSONObject());
         JSONObject jsonObject2 = new JSONObject();
         jsonObject2.put("key_piece", "0xA80");
         jsonObject2.put("source_keys", new JSONArray(Arrays.asList("geoValue", "noMatch")));
+        jsonObject1.put("serving_adtech_network", createServingAdtechNetworkJSONObject());
         triggerDatas.put(jsonObject1);
         triggerDatas.put(jsonObject2);
 
@@ -377,6 +451,14 @@ public class TriggerTest {
         assertTrue(aggregateTrigger.getTriggerData().get(0).getNotFilterSet().isPresent());
         assertEquals(aggregateTrigger.getTriggerData().get(0).getNotFilterSet().get()
                 .get(0).getAttributionFilterMap().size(), 2);
+        assertEquals(
+                aggregateTrigger
+                        .getTriggerData()
+                        .get(0)
+                        .getServingAdtechNetwork()
+                        .getOffset()
+                        .longValue(),
+                10L);
         assertEquals(aggregateTrigger.getTriggerData().get(1).getKey().intValue(), 2688);
         assertEquals(aggregateTrigger.getTriggerData().get(1).getSourceKeys().size(), 2);
         assertTrue(aggregateTrigger.getTriggerData().get(1).getSourceKeys().contains("geoValue"));
@@ -384,6 +466,14 @@ public class TriggerTest {
         assertEquals(aggregateTrigger.getValues().size(), 2);
         assertEquals(aggregateTrigger.getValues().get("campaignCounts").intValue(), 32768);
         assertEquals(aggregateTrigger.getValues().get("geoValue").intValue(), 1664);
+        assertEquals(
+                aggregateTrigger
+                        .getTriggerData()
+                        .get(0)
+                        .getServingAdtechNetwork()
+                        .getOffset()
+                        .longValue(),
+                10L);
         assertTrue(aggregateTrigger.getAggregateDeduplicationKeys().isPresent());
         assertEquals(aggregateTrigger.getAggregateDeduplicationKeys().get().size(), 2);
         assertEquals(
@@ -609,6 +699,84 @@ public class TriggerTest {
         assertEquals(Arrays.asList(eventTrigger1, eventTrigger2), actualEventTriggers);
     }
 
+    @Test
+    public void parseAttributionConfig_nonEmpty_parseSuccess() throws JSONException {
+        Pair<Long, Long> sourcePriorityRange = new Pair<>(100L, 1000L);
+
+        JSONObject sourceFiltersMap = new JSONObject();
+        sourceFiltersMap.put("campaign_type", new JSONArray(Arrays.asList("install")));
+        sourceFiltersMap.put("source_type", new JSONArray(Arrays.asList("navigation")));
+        FilterMap sourceFilters = new FilterMap.Builder().buildFilterData(sourceFiltersMap).build();
+
+        JSONObject sourceNotFiltersMap = new JSONObject();
+        sourceNotFiltersMap.put("campaign_type", new JSONArray(Arrays.asList("product")));
+        FilterMap sourceNotFilters =
+                new FilterMap.Builder().buildFilterData(sourceNotFiltersMap).build();
+
+        JSONObject filterDataMap = new JSONObject();
+        filterDataMap.put("campaign_type", new JSONArray(Arrays.asList("install")));
+        FilterMap filterData = new FilterMap.Builder().buildFilterData(filterDataMap).build();
+
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId1")
+                        .setStatus(Trigger.Status.PENDING)
+                        .setAttributionConfig(createAttributionConfigJSONArray().toString())
+                        .build();
+
+        AttributionConfig attributionConfig1 =
+                new AttributionConfig.Builder()
+                        .setSourceAdtech("AdTech1-Ads")
+                        .setSourcePriorityRange(sourcePriorityRange)
+                        .setSourceFilters(List.of(sourceFilters))
+                        .setSourceNotFilters(List.of(sourceNotFilters))
+                        .setSourceExpiryOverride(600000L)
+                        .setPriority(99L)
+                        .setExpiry(604800L)
+                        .setFilterData(List.of(filterData))
+                        .setPostInstallExclusivityWindow(100000L)
+                        .build();
+
+        AttributionConfig attributionConfig2 =
+                new AttributionConfig.Builder()
+                        .setSourceAdtech("AdTech2-Ads")
+                        .setSourcePriorityRange(sourcePriorityRange)
+                        .setSourceFilters(List.of(sourceFilters))
+                        .setSourceNotFilters(List.of(sourceNotFilters))
+                        .setSourceExpiryOverride(600000L)
+                        .setPriority(99L)
+                        .setExpiry(604800L)
+                        .setFilterData(List.of(filterData))
+                        .setPostInstallExclusivityWindow(100000L)
+                        .build();
+
+        // Action
+        List<AttributionConfig> actualAttributionConfigs = trigger.parseAttributionConfigs();
+
+        // Assertion
+        assertEquals(
+                Arrays.asList(attributionConfig1, attributionConfig2), actualAttributionConfigs);
+    }
+
+    @Test
+    public void parseAdtechBitMapping_nonEmpty_parseSuccess() throws JSONException {
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId1")
+                        .setStatus(Trigger.Status.PENDING)
+                        .setAdtechBitMapping(
+                                "{\"AdTechA-enrollment_id\": \"0x1\","
+                                        + "\"AdTechB-enrollment_id\": \"0x2\"}")
+                        .build();
+
+        Map<String, BigInteger> adtechMapping = trigger.parseAdtechBitMapping();
+        assertEquals(adtechMapping.size(), 2);
+        BigInteger adtechBit1 = new BigInteger("1", 16);
+        BigInteger adtechBit2 = new BigInteger("2", 16);
+        assertEquals(adtechMapping.get("AdTechA-enrollment_id"), adtechBit1);
+        assertEquals(adtechMapping.get("AdTechB-enrollment_id"), adtechBit2);
+    }
+
     private void assertInvalidTriggerArguments(
             Uri attributionDestination,
             String enrollmentId,
@@ -619,7 +787,9 @@ public class TriggerTest {
             String aggregateValues,
             String filters,
             String notFilters,
-            UnsignedLong debugKey) {
+            UnsignedLong debugKey,
+            String mAttributionConfig,
+            String mAdtechBitMapping) {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -634,6 +804,8 @@ public class TriggerTest {
                                 .setFilters(filters)
                                 .setNotFilters(notFilters)
                                 .setDebugKey(debugKey)
+                                .setAttributionConfig(mAttributionConfig)
+                                .setAdtechBitMapping(mAdtechBitMapping)
                                 .build());
     }
 
@@ -645,5 +817,46 @@ public class TriggerTest {
         JSONArray filterSet = new JSONArray();
         filterSet.put(filterMap);
         return filterSet;
+    }
+
+    private JSONObject createServingAdtechNetworkJSONObject() throws JSONException {
+        JSONObject servingAdtechNetwork = new JSONObject();
+        servingAdtechNetwork.put("offset", 10L);
+        return servingAdtechNetwork;
+    }
+
+    private JSONArray createAttributionConfigJSONArray() throws JSONException {
+        JSONArray attributionConfigList = new JSONArray();
+        List<String> adtechIds = new ArrayList<>(Arrays.asList("AdTech1-Ads", "AdTech2-Ads"));
+        for (String adtechId : adtechIds) {
+            JSONObject attributionConfig = new JSONObject();
+            attributionConfig.put("source_adtech", adtechId);
+            JSONObject sourcePriorityRange = new JSONObject();
+            sourcePriorityRange.put("start", 100L);
+            sourcePriorityRange.put("end", 1000L);
+            attributionConfig.put("source_priority_range", sourcePriorityRange);
+            JSONObject sourceFilters = new JSONObject();
+            sourceFilters.put("campaign_type", new JSONArray(Arrays.asList("install")));
+            sourceFilters.put("source_type", new JSONArray(Arrays.asList("navigation")));
+            JSONArray sourceFilterSet = new JSONArray();
+            sourceFilterSet.put(sourceFilters);
+            attributionConfig.put("source_filters", sourceFilterSet);
+            JSONObject sourceNotFilters = new JSONObject();
+            sourceNotFilters.put("campaign_type", new JSONArray(Arrays.asList("product")));
+            JSONArray sourceNotFilterSet = new JSONArray();
+            sourceNotFilterSet.put(sourceNotFilters);
+            attributionConfig.put("source_not_filters", sourceNotFilterSet);
+            attributionConfig.put("source_expiry_override", 600000L);
+            attributionConfig.put("priority", 99L);
+            attributionConfig.put("expiry", 604800L);
+            JSONObject filterData = new JSONObject();
+            filterData.put("campaign_type", new JSONArray(Arrays.asList("install")));
+            JSONArray filterDataSet = new JSONArray();
+            filterDataSet.put(filterData);
+            attributionConfig.put("filter_data", filterDataSet);
+            attributionConfig.put("post_install_exclusivity_window", 100000L);
+            attributionConfigList.put(attributionConfig);
+        }
+        return attributionConfigList;
     }
 }
