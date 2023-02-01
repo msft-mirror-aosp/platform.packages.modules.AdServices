@@ -20,28 +20,24 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.topics.GetTopicsResponse;
-import android.annotation.NonNull;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
-import android.content.pm.ServiceInfo;
 import android.os.Bundle;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.AdservicesCtsHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.time.Duration;
-import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
@@ -51,10 +47,9 @@ import java.util.concurrent.TimeoutException;
  */
 @RunWith(JUnit4.class)
 public class SandboxedTopicsManagerTest {
+    private static final String TAG = "SandboxedTopicsManagerTest";
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final String SDK_NAME = "com.android.tests.providers.sdk1";
-    // Used to get the package name. Copied over from com.android.adservices.AdServicesCommon
-    private static final String TOPICS_SERVICE_NAME = "android.adservices.TOPICS_SERVICE";
 
     // The JobId of the Epoch Computation.
     private static final int EPOCH_JOB_ID = 2;
@@ -71,9 +66,14 @@ public class SandboxedTopicsManagerTest {
 
     private static final Context sContext =
             InstrumentationRegistry.getInstrumentation().getContext();
+    private static final String ADSERVICES_PACKAGE_NAME =
+            AdservicesCtsHelper.getAdServicesPackageName(sContext, TAG);
 
     @Before
     public void setup() throws TimeoutException, InterruptedException {
+        // Skip the test if it runs on unsupported platforms.
+        Assume.assumeTrue(AdservicesCtsHelper.isDeviceSupported());
+
         // We need to skip 3 epochs so that if there is any usage from other test runs, it will
         // not be used for epoch retrieval.
         Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
@@ -138,7 +138,7 @@ public class SandboxedTopicsManagerTest {
 
         // This verifies that the Sdk1 in the Sandbox gets back the correct topic.
         // If the Sdk1 did not get correct topic, it will trigger the callback.onLoadSdkError
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        callback.assertLoadSdkIsSuccessful();
     }
 
     // Override the Epoch Period to shorten the Epoch Length in the test.
@@ -157,35 +157,6 @@ public class SandboxedTopicsManagerTest {
     /** Forces JobScheduler to run the Epoch Computation job */
     private void forceEpochComputationJob() {
         ShellUtils.runShellCommand(
-                "cmd jobscheduler run -f" + " " + getAdServicesPackageName() + " " + EPOCH_JOB_ID);
-    }
-
-    // Used to get the package name. Copied over from com.android.adservices.AndroidServiceBinder
-    @NonNull
-    private static String getAdServicesPackageName() {
-        final Intent intent = new Intent(TOPICS_SERVICE_NAME);
-        final List<ResolveInfo> resolveInfos =
-                sContext.getPackageManager()
-                        .queryIntentServices(intent, PackageManager.MATCH_SYSTEM_ONLY);
-
-        if (resolveInfos == null || resolveInfos.isEmpty()) {
-            String errorMsg =
-                    "Failed to find resolveInfo for adServices service. Intent action: "
-                            + TOPICS_SERVICE_NAME;
-            throw new IllegalStateException(errorMsg);
-        }
-
-        if (resolveInfos.size() > 1) {
-            String errorMsg = "Found multiple services for the same intent action. ";
-            throw new IllegalStateException(errorMsg);
-        }
-
-        final ServiceInfo serviceInfo = resolveInfos.get(0).serviceInfo;
-        if (serviceInfo == null) {
-            String errorMsg = "Failed to find serviceInfo for adServices service. ";
-            throw new IllegalStateException(errorMsg);
-        }
-
-        return serviceInfo.packageName;
+                "cmd jobscheduler run -f" + " " + ADSERVICES_PACKAGE_NAME + " " + EPOCH_JOB_ID);
     }
 }

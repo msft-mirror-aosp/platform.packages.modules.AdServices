@@ -18,9 +18,11 @@ package com.android.adservices.ui.notifications;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import android.content.Context;
 import android.content.Intent;
@@ -40,6 +42,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.common.BackgroundJobsManager;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -63,6 +66,7 @@ public class NotificationActivityUiAutomatorTest {
     private static UiDevice sDevice;
     private static Intent sIntent;
     private MockitoSession mStaticMockSession;
+    @Mock private ConsentManager mConsentManager;
 
     // TODO(b/261216850): Migrate this NotificationActivity to non-mock test
     @Mock private Flags mMockFlags;
@@ -82,8 +86,7 @@ public class NotificationActivityUiAutomatorTest {
 
         doReturn(true).when(mMockFlags).getUIDialogsFeatureEnabled();
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        ConsentManager consentManager = mock(ConsentManager.class);
-        ExtendedMockito.doReturn(consentManager)
+        ExtendedMockito.doReturn(mConsentManager)
                 .when(() -> ConsentManager.getInstance(any(Context.class)));
 
         ExtendedMockito.doReturn(false).when(mMockFlags).getGaUxFeatureEnabled();
@@ -182,6 +185,7 @@ public class NotificationActivityUiAutomatorTest {
         UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
 
         verifyControlsAndMoreButtonAreDisplayed(leftControlButton, rightControlButton, moreButton);
+        verifyNoMoreInteractions(mConsentManager);
     }
 
     @Test
@@ -198,6 +202,7 @@ public class NotificationActivityUiAutomatorTest {
         UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
 
         verifyControlsAndMoreButtonAreDisplayed(leftControlButton, rightControlButton, moreButton);
+        verifyNoMoreInteractions(mConsentManager);
     }
 
     @Test
@@ -217,8 +222,13 @@ public class NotificationActivityUiAutomatorTest {
 
         rightControlButton.click();
 
-        UiObject acceptedTitle = getElement(R.string.notificationUI_confirmation_ga_title_eu);
+        UiObject acceptedTitle = getElement(R.string.notificationUI_fledge_measurement_title);
         assertThat(acceptedTitle.exists()).isTrue();
+
+        verify(mConsentManager).enable(any(Context.class), eq(AdServicesApiType.TOPICS));
+        verify(mConsentManager).enable(any(Context.class), eq(AdServicesApiType.FLEDGE));
+        verify(mConsentManager).enable(any(Context.class), eq(AdServicesApiType.MEASUREMENTS));
+        verifyNoMoreInteractions(mConsentManager);
     }
 
     @Test
@@ -236,10 +246,15 @@ public class NotificationActivityUiAutomatorTest {
 
         verifyControlsAndMoreButtonAreDisplayed(leftControlButton, rightControlButton, moreButton);
 
-        rightControlButton.click();
+        leftControlButton.click();
 
-        UiObject acceptedTitle = getElement(R.string.notificationUI_confirmation_ga_title_eu);
+        UiObject acceptedTitle = getElement(R.string.notificationUI_fledge_measurement_title);
         assertThat(acceptedTitle.exists()).isTrue();
+
+        verify(mConsentManager).disable(any(Context.class), eq(AdServicesApiType.TOPICS));
+        verify(mConsentManager).enable(any(Context.class), eq(AdServicesApiType.FLEDGE));
+        verify(mConsentManager).enable(any(Context.class), eq(AdServicesApiType.MEASUREMENTS));
+        verifyNoMoreInteractions(mConsentManager);
     }
 
     private void verifyControlsAndMoreButtonAreDisplayed(

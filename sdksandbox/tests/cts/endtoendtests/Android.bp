@@ -25,6 +25,7 @@ android_test {
         "androidx.test.ext.junit",
         "androidx.test.runner",
         "truth-prebuilt",
+        "modules-utils-build",
         "SdkSandboxTestUtils",
         "CtsSdkProviderApi",
     ],
@@ -32,6 +33,7 @@ android_test {
         "android.test.base",
         "android.test.mock",
         "android.test.runner",
+        "framework-configinfrastructure",
     ],
     data: [
       ":SdkSandboxManagerCtsProvider",

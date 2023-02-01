@@ -28,6 +28,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.App;
 import com.android.adservices.ui.settings.activities.AppsActivity;
 import com.android.adservices.ui.settings.delegates.AppsActionDelegate;
@@ -118,13 +119,18 @@ public class AdServicesSettingsAppsFragment extends Fragment {
                                 blockedAppsWhenEmptyStateButton.setAlpha(
                                         getResources().getFloat(R.dimen.disabled_button_alpha));
                                 blockedAppsWhenEmptyStateButton.setText(
-                                        R.string.settingsUI_apps_view_no_blocked_apps_text);
+                                        FlagsFactory.getFlags().getGaUxFeatureEnabled()
+                                                ? R.string.settingsUI_no_blocked_apps_ga_text
+                                                : R.string
+                                                        .settingsUI_apps_view_no_blocked_apps_text);
                             } else {
                                 blockedAppsWhenEmptyStateButton.setEnabled(true);
                                 blockedAppsWhenEmptyStateButton.setAlpha(
                                         getResources().getFloat(R.dimen.enabled_button_alpha));
                                 blockedAppsWhenEmptyStateButton.setText(
-                                        R.string.settingsUI_blocked_apps_title);
+                                        FlagsFactory.getFlags().getGaUxFeatureEnabled()
+                                                ? R.string.settingsUI_view_blocked_apps_title
+                                                : R.string.settingsUI_blocked_apps_title);
                             }
                         });
     }

@@ -57,6 +57,8 @@ public final class SourceFixture {
                 .setRegistrant(ValidSourceParams.REGISTRANT)
                 .setEventTime(ValidSourceParams.SOURCE_EVENT_TIME)
                 .setExpiryTime(ValidSourceParams.EXPIRY_TIME)
+                .setEventReportWindow(ValidSourceParams.EXPIRY_TIME)
+                .setAggregatableReportWindow(ValidSourceParams.EXPIRY_TIME)
                 .setPriority(ValidSourceParams.PRIORITY)
                 .setSourceType(ValidSourceParams.SOURCE_TYPE)
                 .setInstallAttributionWindow(ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW)

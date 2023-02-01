@@ -22,8 +22,10 @@ import android.annotation.Nullable;
 import android.net.Uri;
 
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
+import com.android.adservices.service.measurement.aggregation.AggregateDeduplicationKey;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
+import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Validation;
 import com.android.adservices.service.measurement.util.Web;
@@ -44,10 +46,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-/**
- * POJO for Trigger.
- */
-
+/** POJO for Trigger. */
 public class Trigger {
 
     private String mId;
@@ -60,6 +59,7 @@ public class Trigger {
     private Uri mRegistrant;
     private String mAggregateTriggerData;
     private String mAggregateValues;
+    private String mAggregateDeduplicationKeys;
     private boolean mIsDebugReporting;
     private AggregatableAttributionTrigger mAggregatableAttributionTrigger;
     private String mFilters;
@@ -130,9 +130,7 @@ public class Trigger {
                 mArDebugPermission);
     }
 
-    /**
-     * Unique identifier for the {@link Trigger}.
-     */
+    /** Unique identifier for the {@link Trigger}. */
     public String getId() {
         return mId;
     }
@@ -232,6 +230,15 @@ public class Trigger {
     }
 
     /**
+     * Returns a list of aggregate deduplication keys. aggregate deduplication key is a JSONObject.
+     * example: { "deduplication_key": "32768", "filters": [ {type: [filter_1, filter_2]} ],
+     * "not_filters": [ {type: [not_filter_1, not_filter_2]} ] }
+     */
+    public String getAggregateDeduplicationKeys() {
+        return mAggregateDeduplicationKeys;
+    }
+
+    /**
      * Returns the AggregatableAttributionTrigger object, which is constructed using the aggregate
      * trigger data string and aggregate values string in Trigger.
      */
@@ -317,8 +324,34 @@ public class Trigger {
         for (String key : values.keySet()) {
             valueMap.put(key, values.getInt(key));
         }
-        return Optional.of(new AggregatableAttributionTrigger.Builder()
-                .setTriggerData(triggerDataList).setValues(valueMap).build());
+        List<AggregateDeduplicationKey> dedupKeyList = new ArrayList<>();
+        if (this.mAggregateDeduplicationKeys != null) {
+            JSONArray dedupKeyObjects = new JSONArray(this.mAggregateDeduplicationKeys);
+            for (int i = 0; i < dedupKeyObjects.length(); i++) {
+                JSONObject dedupKeyObject = dedupKeyObjects.getJSONObject(i);
+                UnsignedLong dedupKey =
+                        new UnsignedLong(dedupKeyObject.getLong("deduplication_key"));
+                AggregateDeduplicationKey.Builder builder =
+                        new AggregateDeduplicationKey.Builder(dedupKey);
+                if (dedupKeyObject.has("filters") && !dedupKeyObject.isNull("filters")) {
+                    List<FilterMap> filterSet =
+                            Filter.deserializeFilterSet(dedupKeyObject.getJSONArray("filters"));
+                    builder.setFilterSet(filterSet);
+                }
+                if (dedupKeyObject.has("not_filters") && !dedupKeyObject.isNull("not_filters")) {
+                    List<FilterMap> notFilterSet =
+                            Filter.deserializeFilterSet(dedupKeyObject.getJSONArray("not_filters"));
+                    builder.setNotFilterSet(notFilterSet);
+                }
+                dedupKeyList.add(builder.build());
+            }
+        }
+        return Optional.of(
+                new AggregatableAttributionTrigger.Builder()
+                        .setTriggerData(triggerDataList)
+                        .setValues(valueMap)
+                        .setAggregateDeduplicationKeys(dedupKeyList)
+                        .build());
     }
 
     /**
@@ -381,9 +414,7 @@ public class Trigger {
         }
     }
 
-    /**
-     * Builder for {@link Trigger}.
-     */
+    /** Builder for {@link Trigger}. */
     public static final class Builder {
 
         private final Trigger mBuilding;
@@ -465,6 +496,13 @@ public class Trigger {
             return this;
         }
 
+        /** See {@link Trigger#getAggregateDeduplicationKeys()} */
+        @NonNull
+        public Builder setAggregateDeduplicationKeys(@Nullable String aggregateDeduplicationKeys) {
+            mBuilding.mAggregateDeduplicationKeys = aggregateDeduplicationKeys;
+            return this;
+        }
+
         /** See {@link Trigger#getFilters()} */
         @NonNull
         public Builder setFilters(@Nullable String filters) {
@@ -537,9 +575,7 @@ public class Trigger {
         JSONArray filters = obj.getJSONArray(key);
         for (int i = 0; i < filters.length(); i++) {
             FilterMap filterMap =
-                    new FilterMap.Builder()
-                            .buildFilterData(filters.getJSONObject(i))
-                            .build();
+                    new FilterMap.Builder().buildFilterData(filters.getJSONObject(i)).build();
             filterSet.add(filterMap);
         }
         return filterSet;

@@ -23,6 +23,8 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsAppsFragment;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragment;
@@ -128,5 +130,25 @@ public class MainViewModel extends AndroidViewModel {
 
     private boolean getConsentFromConsentManager() {
         return mConsentManager.getConsent().isGiven();
+    }
+
+    public boolean getMeasurementConsentFromConsentManager() {
+        return mConsentManager.getConsent(AdServicesApiType.MEASUREMENTS).isGiven();
+    }
+
+    public boolean getTopicsConsentFromConsentManager() {
+        return mConsentManager.getConsent(AdServicesApiType.TOPICS).isGiven();
+    }
+
+    public boolean getAppsConsentFromConsentManager() {
+        return mConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven();
+    }
+
+    public int getCountOfTopics() {
+        return mConsentManager.getKnownTopicsWithConsent().size();
+    }
+
+    public int getCountOfApps() {
+        return mConsentManager.getKnownAppsWithConsent().size();
     }
 }

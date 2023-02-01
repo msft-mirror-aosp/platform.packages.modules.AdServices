@@ -1884,6 +1884,7 @@ public class AsyncRegistrationQueueRunnerTest {
                 /* adIdPermission */ true,
                 APP_TOP_ORIGIN,
                 /* requestTime */ 100,
+                Source.SourceType.NAVIGATION,
                 mEnrollmentDao,
                 datastoreManager);
 
@@ -1964,6 +1965,7 @@ public class AsyncRegistrationQueueRunnerTest {
                 DEFAULT_AD_ID_PERMISSION,
                 APP_TOP_ORIGIN,
                 100,
+                Source.SourceType.NAVIGATION,
                 mEnrollmentDao,
                 datastoreManager);
 

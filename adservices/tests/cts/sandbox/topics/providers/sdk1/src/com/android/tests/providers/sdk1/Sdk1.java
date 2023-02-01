@@ -42,8 +42,8 @@ public class Sdk1 extends SandboxedSdkProvider {
 
     // Expected Taxonomy version and Model version. This should be changed along with corresponding
     // model change.
-    private static final long TAXONOMY_VERSION = 2L;
-    private static final long MODEL_VERSION = 2L;
+    private static final long TAXONOMY_VERSION = 3L;
+    private static final long MODEL_VERSION = 3L;
 
     // Set of classification topics for the Test App. The returned topic should be one of these
     // Topics.
