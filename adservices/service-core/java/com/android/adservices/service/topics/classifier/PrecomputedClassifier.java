@@ -16,16 +16,14 @@
 
 package com.android.adservices.service.topics.classifier;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__PRECOMPUTED_CLASSIFIER;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_NOT_INVOKED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_FAILURE;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_SUCCESS;
-
 import android.annotation.NonNull;
 
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.EpochComputationClassifierStats;
+import com.android.adservices.service.stats.EpochComputationClassifierStats.ClassifierType;
+import com.android.adservices.service.stats.EpochComputationClassifierStats.OnDeviceClassifierStatus;
+import com.android.adservices.service.stats.EpochComputationClassifierStats.PrecomputedClassifierStatus;
 import com.android.adservices.service.topics.CacheManager;
 
 import com.google.common.collect.ImmutableList;
@@ -113,14 +111,16 @@ public class PrecomputedClassifier implements Classifier {
                                 .setTopicIds(topicIdsToReturn.build())
                                 .setBuildId(mBuildId)
                                 .setAssetVersion(Long.toString(mModelVersion))
-                                .setClassifierType(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__PRECOMPUTED_CLASSIFIER)
+                                .setClassifierType(ClassifierType.PRECOMPUTED_CLASSIFIER)
                                 .setOnDeviceClassifierStatus(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_NOT_INVOKED)
+                                        OnDeviceClassifierStatus
+                                                .ON_DEVICE_CLASSIFIER_STATUS_NOT_INVOKED)
                                 .setPrecomputedClassifierStatus(
                                         topicIds.isEmpty()
-                                                ? AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_FAILURE
-                                                : AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_SUCCESS)
+                                                ? PrecomputedClassifierStatus
+                                                        .PRECOMPUTED_CLASSIFIER_STATUS_FAILURE
+                                                : PrecomputedClassifierStatus
+                                                        .PRECOMPUTED_CLASSIFIER_STATUS_SUCCESS)
                                 .build());
 
                 appsToClassifiedTopics.put(app, topicsToReturn.build());
