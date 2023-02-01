@@ -16,6 +16,8 @@
 
 package com.android.adservices.data.consent;
 
+import static com.android.adservices.data.consent.AppConsentDao.DATASTORE_KEY_SEPARATOR;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -56,7 +58,6 @@ import java.util.Set;
 public class AppConsentDaoTest {
     @Rule public final MockitoRule rule = MockitoJUnit.rule();
     private final Context mContext = ApplicationProvider.getApplicationContext();
-    private final PackageManager mPackageManager = mContext.getPackageManager();
     private AppConsentDao mAppConsentDao;
 
     @Spy
@@ -89,20 +90,22 @@ public class AppConsentDaoTest {
     @Test
     public void testGetUidForInstalledPackageNameWithRealTestNameSuccess()
             throws PackageManager.NameNotFoundException {
+        mAppConsentDao = new AppConsentDao(mDatastoreSpy, mContext.getPackageManager());
         int expectedUid = mContext.getApplicationInfo().uid;
-        int testUid =
-                AppConsentDao.getUidForInstalledPackageName(
-                        mPackageManager, mContext.getPackageName());
+        int testUid = mAppConsentDao.getUidForInstalledPackageName(mContext.getPackageName());
         assertEquals(expectedUid, testUid);
     }
 
     @Test
     public void testGetUidForInstalledPackageNameWithFakePackageNameThrows() {
-        assertThrows(
-                PackageManager.NameNotFoundException.class,
-                () ->
-                        AppConsentDao.getUidForInstalledPackageName(
-                                mPackageManager, AppConsentDaoFixture.APP_NOT_FOUND_PACKAGE_NAME));
+        mAppConsentDao = new AppConsentDao(mDatastoreSpy, mContext.getPackageManager());
+        Exception exception =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () ->
+                                mAppConsentDao.getUidForInstalledPackageName(
+                                        AppConsentDaoFixture.APP_NOT_FOUND_PACKAGE_NAME));
+        assertTrue(exception.getCause() instanceof PackageManager.NameNotFoundException);
     }
 
     @Test
@@ -545,5 +548,49 @@ public class AppConsentDaoTest {
                                 null, AppConsentDaoFixture.APP10_UID));
 
         verify(mDatastoreSpy).initialize();
+    }
+
+    @Test
+    public void testClearAllConsentForUninstalledApp() throws IOException {
+        final String app20User10PackageName =
+                AppConsentDaoFixture.APP20_PACKAGE_NAME
+                        + DATASTORE_KEY_SEPARATOR
+                        + AppConsentDaoFixture.APP10_UID;
+
+        // Ensure that a different package name that begins with the one being uninstalled isn't
+        // removed from the store.
+        final String app20PackageNameAsPrefix =
+                AppConsentDaoFixture.APP20_PACKAGE_NAME
+                        + "test"
+                        + DATASTORE_KEY_SEPARATOR
+                        + AppConsentDaoFixture.APP10_UID;
+
+        mDatastoreSpy.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, true);
+        mDatastoreSpy.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
+        mDatastoreSpy.put(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
+        mDatastoreSpy.put(app20User10PackageName, false);
+        mDatastoreSpy.put(app20PackageNameAsPrefix, true);
+
+        mAppConsentDao.clearConsentForUninstalledApp(AppConsentDaoFixture.APP20_PACKAGE_NAME);
+
+        assertNotNull(mDatastoreSpy.get(AppConsentDaoFixture.APP10_DATASTORE_KEY));
+        assertNull(mDatastoreSpy.get(AppConsentDaoFixture.APP20_DATASTORE_KEY));
+        assertNotNull(mDatastoreSpy.get(AppConsentDaoFixture.APP30_DATASTORE_KEY));
+        assertNull(mDatastoreSpy.get(app20User10PackageName));
+        assertNotNull(mDatastoreSpy.get(app20PackageNameAsPrefix));
+
+        verify(mDatastoreSpy).initialize();
+        verify(mDatastoreSpy).removeByPrefix(any());
+    }
+
+    @Test
+    public void testClearAllConsentForUninstalledAppWithInvalidArgsThrows() throws IOException {
+        assertThrows(
+                NullPointerException.class,
+                () -> mAppConsentDao.clearConsentForUninstalledApp(null));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> mAppConsentDao.clearConsentForUninstalledApp(""));
+        verify(mDatastoreSpy, never()).initialize();
     }
 }

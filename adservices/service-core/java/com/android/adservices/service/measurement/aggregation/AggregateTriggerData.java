@@ -114,17 +114,13 @@ public class AggregateTriggerData {
             return this;
         }
 
-        /**
-         * See {@link AggregateTriggerData#getFilter()}.
-         */
+        /** See {@link AggregateTriggerData#getFilter()}. */
         public Builder setFilterSet(List<FilterMap> filterSet) {
             mBuilding.mFilterSet = Optional.of(filterSet);
             return this;
         }
 
-        /**
-         * See {@link AggregateTriggerData#getNotFilter()}
-         */
+        /** See {@link AggregateTriggerData#getNotFilter()} */
         public Builder setNotFilterSet(List<FilterMap> notFilterSet) {
             mBuilding.mNotFilterSet = Optional.of(notFilterSet);
             return this;

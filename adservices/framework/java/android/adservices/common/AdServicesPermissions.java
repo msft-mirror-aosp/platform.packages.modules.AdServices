@@ -34,6 +34,14 @@ public class AdServicesPermissions {
     public static final String ACCESS_ADSERVICES_CUSTOM_AUDIENCE =
             "android.permission.ACCESS_ADSERVICES_CUSTOM_AUDIENCE";
 
+    /**
+     * This permission needs to be declared by the caller of App Install APIS
+     *
+     * @hide
+     */
+    public static final String ACCESS_ADSERVICES_APP_INSTALL =
+            "android.permission.ACCESS_ADSERVICES_APP_INSTALL";
+
     /** This permission needs to be declared by the caller of Advertising ID APIs. */
     public static final String ACCESS_ADSERVICES_AD_ID =
             "android.permission.ACCESS_ADSERVICES_AD_ID";

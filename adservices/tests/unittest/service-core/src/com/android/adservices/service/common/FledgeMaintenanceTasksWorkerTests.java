@@ -20,6 +20,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import android.adservices.adselection.CustomAudienceSignalsFixture;
+import android.adservices.adselection.ReportInteractionInput;
 import android.net.Uri;
 
 import androidx.room.Room;
@@ -29,7 +30,7 @@ import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.DBBuyerDecisionLogic;
-import com.android.adservices.data.adselection.DBRegisteredAdEvent;
+import com.android.adservices.data.adselection.DBRegisteredAdInteraction;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -53,7 +54,7 @@ public class FledgeMaintenanceTasksWorkerTests {
     private static final long AD_SELECTION_ID_2 = 23456L;
 
     private static final String CLICK_EVENT = "click";
-    private static final int SELLER_DESTINATION = DBRegisteredAdEvent.DESTINATION_SELLER;
+    private static final int SELLER_DESTINATION = ReportInteractionInput.DESTINATION_SELLER;
     private static final Uri SELLER_CLICK_URI = Uri.parse("https://www.seller.com/" + CLICK_EVENT);
 
     private static final DBAdSelection DB_AD_SELECTION =
@@ -74,12 +75,12 @@ public class FledgeMaintenanceTasksWorkerTests {
                     .setBiddingLogicUri(BIDDING_LOGIC_URI)
                     .build();
 
-    private static final DBRegisteredAdEvent DB_REGISTERED_EVENT =
-            DBRegisteredAdEvent.builder()
+    private static final DBRegisteredAdInteraction DB_REGISTERED_INTERACTION =
+            DBRegisteredAdInteraction.builder()
                     .setAdSelectionId(AD_SELECTION_ID_1)
-                    .setEventType(CLICK_EVENT)
+                    .setInteractionKey(CLICK_EVENT)
                     .setDestination(SELLER_DESTINATION)
-                    .setEventUri(SELLER_CLICK_URI)
+                    .setInteractionReportingUri(SELLER_CLICK_URI)
                     .build();
 
     private static final DBAdSelection EXPIRED_DB_AD_SELECTION =
@@ -103,12 +104,12 @@ public class FledgeMaintenanceTasksWorkerTests {
                     .setBiddingLogicUri(EXPIRED_BIDDING_LOGIC_URI)
                     .build();
 
-    private static final DBRegisteredAdEvent EXPIRED_DB_REGISTERED_EVENT =
-            DBRegisteredAdEvent.builder()
+    private static final DBRegisteredAdInteraction EXPIRED_DB_REGISTERED_INTERACTION =
+            DBRegisteredAdInteraction.builder()
                     .setAdSelectionId(AD_SELECTION_ID_2)
-                    .setEventType(CLICK_EVENT)
+                    .setInteractionKey(CLICK_EVENT)
                     .setDestination(SELLER_DESTINATION)
-                    .setEventUri(SELLER_CLICK_URI)
+                    .setInteractionReportingUri(SELLER_CLICK_URI)
                     .build();
 
     private AdSelectionEntryDao mAdSelectionEntryDao;
@@ -154,13 +155,14 @@ public class FledgeMaintenanceTasksWorkerTests {
                         DB_BUYER_DECISION_LOGIC.getBiddingLogicUri()));
 
         // Add valid registered ad event
-        mAdSelectionEntryDao.persistDBRegisteredAdEvents(ImmutableList.of(DB_REGISTERED_EVENT));
+        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(
+                ImmutableList.of(DB_REGISTERED_INTERACTION));
 
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
-                        DB_REGISTERED_EVENT.getAdSelectionId(),
-                        DB_REGISTERED_EVENT.getEventType(),
-                        DB_REGISTERED_EVENT.getDestination()));
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        DB_REGISTERED_INTERACTION.getAdSelectionId(),
+                        DB_REGISTERED_INTERACTION.getInteractionKey(),
+                        DB_REGISTERED_INTERACTION.getDestination()));
 
         // Clear expired data
         mFledgeMaintenanceTasksWorker.clearExpiredAdSelectionData();
@@ -171,10 +173,10 @@ public class FledgeMaintenanceTasksWorkerTests {
                 mAdSelectionEntryDao.doesBuyerDecisionLogicExist(
                         DB_BUYER_DECISION_LOGIC.getBiddingLogicUri()));
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
-                        DB_REGISTERED_EVENT.getAdSelectionId(),
-                        DB_REGISTERED_EVENT.getEventType(),
-                        DB_REGISTERED_EVENT.getDestination()));
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        DB_REGISTERED_INTERACTION.getAdSelectionId(),
+                        DB_REGISTERED_INTERACTION.getInteractionKey(),
+                        DB_REGISTERED_INTERACTION.getDestination()));
     }
 
     @Test
@@ -200,19 +202,19 @@ public class FledgeMaintenanceTasksWorkerTests {
                         EXPIRED_DB_BUYER_DECISION_LOGIC.getBiddingLogicUri()));
 
         // Add valid and expired registered ad events
-        mAdSelectionEntryDao.persistDBRegisteredAdEvents(
-                ImmutableList.of(DB_REGISTERED_EVENT, EXPIRED_DB_REGISTERED_EVENT));
+        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(
+                ImmutableList.of(DB_REGISTERED_INTERACTION, EXPIRED_DB_REGISTERED_INTERACTION));
 
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
-                        DB_REGISTERED_EVENT.getAdSelectionId(),
-                        DB_REGISTERED_EVENT.getEventType(),
-                        DB_REGISTERED_EVENT.getDestination()));
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        DB_REGISTERED_INTERACTION.getAdSelectionId(),
+                        DB_REGISTERED_INTERACTION.getInteractionKey(),
+                        DB_REGISTERED_INTERACTION.getDestination()));
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
-                        EXPIRED_DB_REGISTERED_EVENT.getAdSelectionId(),
-                        EXPIRED_DB_REGISTERED_EVENT.getEventType(),
-                        EXPIRED_DB_REGISTERED_EVENT.getDestination()));
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        EXPIRED_DB_REGISTERED_INTERACTION.getAdSelectionId(),
+                        EXPIRED_DB_REGISTERED_INTERACTION.getInteractionKey(),
+                        EXPIRED_DB_REGISTERED_INTERACTION.getDestination()));
 
         // Clear expired data
         mFledgeMaintenanceTasksWorker.clearExpiredAdSelectionData();
@@ -225,10 +227,10 @@ public class FledgeMaintenanceTasksWorkerTests {
                 mAdSelectionEntryDao.doesBuyerDecisionLogicExist(
                         EXPIRED_DB_BUYER_DECISION_LOGIC.getBiddingLogicUri()));
         assertFalse(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
-                        EXPIRED_DB_REGISTERED_EVENT.getAdSelectionId(),
-                        EXPIRED_DB_REGISTERED_EVENT.getEventType(),
-                        EXPIRED_DB_REGISTERED_EVENT.getDestination()));
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        EXPIRED_DB_REGISTERED_INTERACTION.getAdSelectionId(),
+                        EXPIRED_DB_REGISTERED_INTERACTION.getInteractionKey(),
+                        EXPIRED_DB_REGISTERED_INTERACTION.getDestination()));
 
         // Assert that valid data was not cleared
         assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(DB_AD_SELECTION.getAdSelectionId()));
@@ -236,9 +238,9 @@ public class FledgeMaintenanceTasksWorkerTests {
                 mAdSelectionEntryDao.doesBuyerDecisionLogicExist(
                         DB_BUYER_DECISION_LOGIC.getBiddingLogicUri()));
         assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdEventExist(
-                        DB_REGISTERED_EVENT.getAdSelectionId(),
-                        DB_REGISTERED_EVENT.getEventType(),
-                        DB_REGISTERED_EVENT.getDestination()));
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        DB_REGISTERED_INTERACTION.getAdSelectionId(),
+                        DB_REGISTERED_INTERACTION.getInteractionKey(),
+                        DB_REGISTERED_INTERACTION.getDestination()));
     }
 }

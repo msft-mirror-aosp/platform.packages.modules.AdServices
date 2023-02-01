@@ -114,7 +114,7 @@ public class TopicDbMigratorV5Test {
         // Now downgrade db and upgrade it again.
         when(mMockFlags.getEnableDatabaseSchemaVersion5()).thenReturn(false);
         mTopicsDbHelper.onDowngrade(
-                db, DbHelper.DATABASE_VERSION_V5, DbHelper.CURRENT_DATABASE_VERSION);
+                db, DbHelper.DATABASE_VERSION_V7, DbHelper.CURRENT_DATABASE_VERSION);
         when(mMockFlags.getEnableDatabaseSchemaVersion5()).thenReturn(true);
         new TopicDbMigratorV5().performMigration(db);
         // Commit the schema change

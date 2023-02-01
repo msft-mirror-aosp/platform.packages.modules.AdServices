@@ -57,13 +57,13 @@ public class DBAdSelectionEntryTest {
                         .setBuyerDecisionLogicJs(BUYER_DECISION_LOGIC_JS)
                         .build();
 
-        assertEquals(dbAdSelectionEntry.getAdSelectionId(), AD_SELECTION_ID);
-        assertEquals(dbAdSelectionEntry.getCustomAudienceSignals(), CUSTOM_AUDIENCE_SIGNALS);
-        assertEquals(dbAdSelectionEntry.getContextualSignals(), CONTEXTUAL_SIGNALS);
-        assertEquals(dbAdSelectionEntry.getWinningAdRenderUri(), RENDER_URI);
-        assertEquals(dbAdSelectionEntry.getWinningAdBid(), BID, 0);
-        assertEquals(dbAdSelectionEntry.getCreationTimestamp(), ACTIVATION_TIME);
-        assertEquals(dbAdSelectionEntry.getBuyerDecisionLogicJs(), BUYER_DECISION_LOGIC_JS);
+        assertEquals(AD_SELECTION_ID, dbAdSelectionEntry.getAdSelectionId());
+        assertEquals(CUSTOM_AUDIENCE_SIGNALS, dbAdSelectionEntry.getCustomAudienceSignals());
+        assertEquals(CONTEXTUAL_SIGNALS, dbAdSelectionEntry.getContextualSignals());
+        assertEquals(RENDER_URI, dbAdSelectionEntry.getWinningAdRenderUri());
+        assertEquals(BID, dbAdSelectionEntry.getWinningAdBid(), 0);
+        assertEquals(ACTIVATION_TIME, dbAdSelectionEntry.getCreationTimestamp());
+        assertEquals(BUYER_DECISION_LOGIC_JS, dbAdSelectionEntry.getBuyerDecisionLogicJs());
     }
 
     @Test

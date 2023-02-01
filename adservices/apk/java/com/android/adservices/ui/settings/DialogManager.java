@@ -301,37 +301,6 @@ public class DialogManager {
                 .show();
     }
 
-    /**
-     * Shows the dialog for resetting Measurement data.
-     *
-     * @param context Application context.
-     * @param measurementViewModel {@link MeasurementViewModel}
-     */
-    public static void showResetMeasurementDialog(
-            @NonNull Context context, MeasurementViewModel measurementViewModel) {
-        if (!sSemaphore.tryAcquire()) return;
-        OnClickListener positiveOnClickListener =
-                (dialogInterface, buttonId) -> {
-                    measurementViewModel.resetMeasurement();
-                    sSemaphore.release();
-                    Toast.makeText(
-                                    context,
-                                    R.string.settingsUI_measurement_are_reset,
-                                    Toast.LENGTH_SHORT)
-                            .show();
-                };
-        new AlertDialog.Builder(context)
-                .setTitle(R.string.settingsUI_dialog_reset_measurement_title)
-                .setMessage(R.string.settingsUI_dialog_reset_measurement_message)
-                .setPositiveButton(
-                        R.string.settingsUI_dialog_reset_measurement_positive_text,
-                        positiveOnClickListener)
-                .setNegativeButton(
-                        R.string.settingsUI_dialog_negative_text, getNegativeOnClickListener())
-                .setOnDismissListener(getOnDismissListener())
-                .show();
-    }
-
     private static OnClickListener getNegativeOnClickListener() {
         return (dialogInterface, buttonId) -> sSemaphore.release();
     }
