@@ -19,7 +19,6 @@ package com.android.server.sdksandbox;
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND;
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE;
 import static android.app.sdksandbox.SdkSandboxManager.EXTRA_SANDBOXED_ACTIVITY_HANDLER;
-import static android.app.sdksandbox.SdkSandboxManager.EXTRA_SANDBOXED_ACTIVITY_SDK_NAME;
 import static android.app.sdksandbox.SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR;
 import static android.app.sdksandbox.SdkSandboxManager.LOAD_SDK_SDK_SANDBOX_DISABLED;
 import static android.app.sdksandbox.SdkSandboxManager.REQUEST_SURFACE_PACKAGE_SDK_NOT_LOADED;
@@ -34,6 +33,7 @@ import static com.android.server.sdksandbox.SdkSandboxStorageManager.StorageDirI
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.annotation.RequiresPermission;
+import android.annotation.WorkerThread;
 import android.app.ActivityManager;
 import android.app.sdksandbox.ILoadSdkCallback;
 import android.app.sdksandbox.IRequestSurfacePackageCallback;
@@ -1051,11 +1051,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             // Once bound service has been set, sync manager is notified.
             notifySyncManagerSandboxStarted(mCallingInfo);
 
-            try {
-                computeSdkStorage(mCallingInfo, mService);
-            } catch (RemoteException e) {
-                Log.e(TAG, "Error while computing sdk storage for CallingInfo: " + mCallingInfo);
-            }
+            mHandler.post(
+                    () -> {
+                        computeSdkStorage(mCallingInfo, mService);
+                    });
 
             final int timeToLoadSandbox =
                     (int) (mInjector.getCurrentTime() - mStartTimeForLoadingSandbox);
@@ -1356,6 +1355,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS,
                         DEFAULT_VALUE_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS);
 
+        @GuardedBy("mLock")
+        private boolean mEnforceContentProviderRestrictions =
+                DeviceConfig.getBoolean(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        PROPERTY_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS,
+                        DEFAULT_VALUE_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS);
+
         SdkSandboxSettingsListener(Context context) {
             mContext = context;
         }
@@ -1402,6 +1408,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
         }
 
+        boolean areContentProviderRestrictionsEnforced() {
+            synchronized (mLock) {
+                return mEnforceContentProviderRestrictions;
+            }
+        }
+
         @Override
         public void onPropertiesChanged(@NonNull DeviceConfig.Properties properties) {
             synchronized (mLock) {
@@ -1438,6 +1450,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                                     properties.getBoolean(
                                             PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS,
                                             DEFAULT_VALUE_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS);
+                            break;
+                        case PROPERTY_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS:
+                            mEnforceContentProviderRestrictions =
+                                    properties.getBoolean(
+                                            PROPERTY_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS,
+                                            DEFAULT_VALUE_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS);
                             break;
                         default:
                     }
@@ -1511,23 +1529,27 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 || sandboxStatus == SdkSandboxServiceProvider.CREATE_PENDING;
     }
 
-    private void computeSdkStorage(CallingInfo callingInfo, ISdkSandboxService service)
-            throws RemoteException {
+    @WorkerThread
+    private void computeSdkStorage(CallingInfo callingInfo, ISdkSandboxService service) {
         final List<StorageDirInfo> sharedStorageDirsInfo =
                 mSdkSandboxStorageManager.getInternalStorageDirInfo(callingInfo);
         final List<StorageDirInfo> sdkStorageDirsInfo =
                 mSdkSandboxStorageManager.getSdkStorageDirInfo(callingInfo);
 
-        service.computeSdkStorage(
-                getListOfStoragePaths(sharedStorageDirsInfo),
-                getListOfStoragePaths(sdkStorageDirsInfo),
-                new IComputeSdkStorageCallback.Stub() {
-                    @Override
-                    public void onStorageInfoComputed(int sharedStorageKb, int sdkStorageKb) {
-                        mSdkSandboxPulledAtoms.logStorage(
-                                callingInfo.getUid(), sharedStorageKb, sdkStorageKb);
-                    }
-                });
+        try {
+            service.computeSdkStorage(
+                    getListOfStoragePaths(sharedStorageDirsInfo),
+                    getListOfStoragePaths(sdkStorageDirsInfo),
+                    new IComputeSdkStorageCallback.Stub() {
+                        @Override
+                        public void onStorageInfoComputed(int sharedStorageKb, int sdkStorageKb) {
+                            mSdkSandboxPulledAtoms.logStorage(
+                                    callingInfo.getUid(), sharedStorageKb, sdkStorageKb);
+                        }
+                    });
+        } catch (RemoteException e) {
+            Log.e(TAG, "Error while computing sdk storage for CallingInfo: " + callingInfo);
+        }
     }
 
     private List<String> getListOfStoragePaths(List<StorageDirInfo> storageDirInfos) {
@@ -1834,13 +1856,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         return EXTRA_SANDBOXED_ACTIVITY_HANDLER;
     }
 
-    // For testing as SANDBOXED_ACTIVITY_SDK_NAME_KEY is hidden from
-    // SdkSandboxManagerServiceUnitTests
-    @NonNull
-    public String getSandboxedActivitySdkNameKey() {
-        return EXTRA_SANDBOXED_ACTIVITY_SDK_NAME;
-    }
-
     private class LocalImpl implements SdkSandboxManagerLocal {
         @Override
         public void registerAdServicesManagerService(IBinder iBinder) {
@@ -1922,13 +1937,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             final long token = Binder.clearCallingIdentity();
 
             try {
-                if (DeviceConfig.getBoolean(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        PROPERTY_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS,
-                        DEFAULT_VALUE_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS)) {
-                    return false;
-                }
-                return true;
+                return !mSdkSandboxSettingsListener.areContentProviderRestrictionsEnforced();
             } finally {
                 Binder.restoreCallingIdentity(token);
             }
@@ -1949,19 +1958,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                                 + clientAppUid);
             }
             Bundle extras = intent.getExtras();
-            if (extras == null
-                    || extras.getBinder(getSandboxedActivityHandlerKey()) == null
-                    || extras.getString(getSandboxedActivitySdkNameKey()) == null) {
+            if (extras == null || extras.getBinder(getSandboxedActivityHandlerKey()) == null) {
                 throw new IllegalArgumentException(
-                        "Intent should contain two extra params, First has "
-                                + "key = "
+                        "Intent should contain an extra params with key = "
                                 + getSandboxedActivityHandlerKey()
-                                + "with value is an IBinder "
-                                + "identifier for a registered SandboxedActivityHandler"
-                                + "and Second has key = "
-                                + getSandboxedActivitySdkNameKey()
-                                + "with value is the name of SDK registered "
-                                + "SandboxedActivityHandler");
+                                + " and value is an IBinder that identifies a registered "
+                                + "SandboxedActivityHandler.");
             }
         }
 
