@@ -16,7 +16,7 @@
 
 package com.android.adservices.data.topics.migration;
 
-import static com.android.adservices.data.DbHelper.DATABASE_VERSION_V5;
+import static com.android.adservices.data.DbHelper.DATABASE_VERSION_V7;
 
 import android.database.sqlite.SQLiteDatabase;
 
@@ -36,7 +36,7 @@ public class TopicDbMigratorV5 extends AbstractTopicsDbMigrator {
     };
 
     public TopicDbMigratorV5() {
-        super(DATABASE_VERSION_V5);
+        super(DATABASE_VERSION_V7);
     }
 
     @Override

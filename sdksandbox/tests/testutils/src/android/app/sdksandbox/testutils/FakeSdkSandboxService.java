@@ -80,7 +80,8 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
     }
 
     @Override
-    public void initialize(ISdkToServiceCallback sdkToServiceCallback) {
+    public void initialize(
+            ISdkToServiceCallback sdkToServiceCallback, boolean isCustomizedSdkContextEnabled) {
         mInitializationCount++;
     }
 

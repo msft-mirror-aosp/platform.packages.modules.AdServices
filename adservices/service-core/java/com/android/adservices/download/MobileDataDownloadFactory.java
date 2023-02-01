@@ -16,14 +16,19 @@
 
 package com.android.adservices.download;
 
+import static com.android.adservices.service.topics.classifier.ModelManager.BUNDLED_CLASSIFIER_ASSETS_METADATA_PATH;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 
 import androidx.annotation.NonNull;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.topics.classifier.CommonClassifierHelper;
 
 import com.google.android.downloader.AndroidDownloaderLogger;
 import com.google.android.downloader.ConnectivityHandler;
@@ -44,6 +49,7 @@ import com.google.android.libraries.mobiledatadownload.file.integration.download
 import com.google.android.libraries.mobiledatadownload.file.integration.downloader.SharedPreferencesDownloadMetadata;
 import com.google.android.libraries.mobiledatadownload.monitor.NetworkUsageMonitor;
 import com.google.android.libraries.mobiledatadownload.populator.ManifestConfigFileParser;
+import com.google.android.libraries.mobiledatadownload.populator.ManifestConfigOverrider;
 import com.google.android.libraries.mobiledatadownload.populator.ManifestFileGroupPopulator;
 import com.google.android.libraries.mobiledatadownload.populator.SharedPreferencesManifestFileMetadata;
 import com.google.common.annotations.VisibleForTesting;
@@ -52,10 +58,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.mobiledatadownload.DownloadConfigProto;
 import com.google.mobiledatadownload.DownloadConfigProto.ManifestFileFlag;
 import com.google.protobuf.MessageLite;
 
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Executor;
 
 /** Mobile Data Download Factory. */
@@ -111,35 +120,6 @@ public class MobileDataDownloadFactory {
         }
     }
 
-    /** Returns a MobileDataDownload instance for testing. */
-    @VisibleForTesting
-    @NonNull
-    static MobileDataDownload getMddForTesting(@NonNull Context context, @NonNull Flags flags) {
-        context = context.getApplicationContext();
-        SynchronousFileStorage fileStorage = getFileStorage(context);
-        FileDownloader fileDownloader = getFileDownloader(context, flags, fileStorage);
-        NetworkUsageMonitor networkUsageMonitor =
-                new NetworkUsageMonitor(context, System::currentTimeMillis);
-
-        return MobileDataDownloadBuilder.newBuilder()
-                .setContext(context)
-                .setControlExecutor(getControlExecutor())
-                .setNetworkUsageMonitor(networkUsageMonitor)
-                .setFileStorage(fileStorage)
-                .setFileDownloaderSupplier(() -> fileDownloader)
-                .addFileGroupPopulator(
-                        getTopicsManifestPopulator(context, flags, fileStorage, fileDownloader))
-                .addFileGroupPopulator(
-                        getMeasurementManifestPopulator(
-                                context, flags, fileStorage, fileDownloader))
-                .setLoggerOptional(getMddLogger(flags))
-                // Use default MDD flags so that it does not need to access DeviceConfig
-                // which is inaccessible from Unit Tests.
-                .setFlagsOptional(
-                        Optional.of(new com.google.android.libraries.mobiledatadownload.Flags() {}))
-                .build();
-    }
-
     // Connectivity constraints will be checked by JobScheduler/WorkManager instead.
     private static class NoOpConnectivityHandler implements ConnectivityHandler {
         @Override
@@ -166,7 +146,8 @@ public class MobileDataDownloadFactory {
     }
 
     @NonNull
-    private static ListeningExecutorService getControlExecutor() {
+    @VisibleForTesting
+    static ListeningExecutorService getControlExecutor() {
         return AdServicesExecutors.getBackgroundExecutor();
     }
 
@@ -180,8 +161,8 @@ public class MobileDataDownloadFactory {
         // TODO(b/219594618): Switch to use CronetUrlEngine.
         return new PlatformUrlEngine(
                 AdServicesExecutors.getBlockingExecutor(),
-                /* connectTimeoutMs = */ flags.getDownloaderConnectionTimeoutMs(),
-                /* readTimeoutMs = */ flags.getDownloaderReadTimeoutMs());
+                /* connectTimeoutMs= */ flags.getDownloaderConnectionTimeoutMs(),
+                /* readTimeoutMs= */ flags.getDownloaderReadTimeoutMs());
     }
 
     @NonNull
@@ -190,7 +171,8 @@ public class MobileDataDownloadFactory {
     }
 
     @NonNull
-    private static FileDownloader getFileDownloader(
+    @VisibleForTesting
+    static FileDownloader getFileDownloader(
             @NonNull Context context,
             @NonNull Flags flags,
             @NonNull SynchronousFileStorage fileStorage) {
@@ -227,7 +209,8 @@ public class MobileDataDownloadFactory {
 
     // Create the Manifest File Group Populator for Topics Classifier.
     @NonNull
-    private static ManifestFileGroupPopulator getTopicsManifestPopulator(
+    @VisibleForTesting
+    static ManifestFileGroupPopulator getTopicsManifestPopulator(
             @NonNull Context context,
             @NonNull Flags flags,
             @NonNull SynchronousFileStorage fileStorage,
@@ -243,8 +226,36 @@ public class MobileDataDownloadFactory {
                 new ManifestConfigFileParser(
                         fileStorage, AdServicesExecutors.getBackgroundExecutor());
 
+        // Only download Topics classifier model when Mdd model build_id is greater than bundled
+        // model.
+        ManifestConfigOverrider manifestConfigOverrider =
+                manifestConfig -> {
+                    List<DownloadConfigProto.DataFileGroup> groups = new ArrayList<>();
+                    for (DownloadConfigProto.ManifestConfig.Entry entry :
+                            manifestConfig.getEntryList()) {
+                        long dataFileGroupBuildId = entry.getDataFileGroup().getBuildId();
+                        long bundledModelBuildId =
+                                CommonClassifierHelper.getBundledModelBuildId(
+                                        context, BUNDLED_CLASSIFIER_ASSETS_METADATA_PATH);
+                        if (dataFileGroupBuildId > bundledModelBuildId) {
+                            groups.add(entry.getDataFileGroup());
+                            LogUtil.d("Added topics classifier file group to MDD");
+                        } else {
+                            LogUtil.d(
+                                    "Topics Classifier's Bundled BuildId = %d is bigger than or"
+                                        + " equal to the BuildId = %d from Server side, skipping"
+                                        + " the downloading.",
+                                    bundledModelBuildId, dataFileGroupBuildId);
+                        }
+                    }
+                    return Futures.immediateFuture(groups);
+                };
+
         return ManifestFileGroupPopulator.builder()
                 .setContext(context)
+                // topics resources should not be downloaded pre-consent
+                .setEnabledSupplier(
+                        () -> ConsentManager.getInstance(context).getConsent().isGiven())
                 .setBackgroundExecutor(AdServicesExecutors.getBackgroundExecutor())
                 .setFileDownloader(() -> fileDownloader)
                 .setFileStorage(fileStorage)
@@ -257,6 +268,7 @@ public class MobileDataDownloadFactory {
                                 AdServicesExecutors.getBackgroundExecutor()))
                 // TODO(b/239265537): Enable Dedup using Etag.
                 .setDedupDownloadWithEtag(false)
+                .setOverriderOptional(Optional.of(manifestConfigOverrider))
                 // TODO(b/243829623): use proper Logger.
                 .setLogger(
                         new Logger() {
@@ -269,7 +281,8 @@ public class MobileDataDownloadFactory {
     }
 
     @NonNull
-    private static ManifestFileGroupPopulator getUiOtaStringsManifestPopulator(
+    @VisibleForTesting
+    static ManifestFileGroupPopulator getUiOtaStringsManifestPopulator(
             @NonNull Context context,
             @NonNull Flags flags,
             @NonNull SynchronousFileStorage fileStorage,
@@ -287,6 +300,13 @@ public class MobileDataDownloadFactory {
 
         return ManifestFileGroupPopulator.builder()
                 .setContext(context)
+                // OTA resources can be downloaded pre-consent before notification, or with consent
+                .setEnabledSupplier(
+                        () ->
+                                !ConsentManager.getInstance(context).wasGaUxNotificationDisplayed()
+                                        || ConsentManager.getInstance(context)
+                                                .getConsent()
+                                                .isGiven())
                 .setBackgroundExecutor(AdServicesExecutors.getBackgroundExecutor())
                 .setFileDownloader(() -> fileDownloader)
                 .setFileStorage(fileStorage)
@@ -311,7 +331,8 @@ public class MobileDataDownloadFactory {
     }
 
     @NonNull
-    private static ManifestFileGroupPopulator getMeasurementManifestPopulator(
+    @VisibleForTesting
+    static ManifestFileGroupPopulator getMeasurementManifestPopulator(
             @NonNull Context context,
             @NonNull Flags flags,
             @NonNull SynchronousFileStorage fileStorage,
@@ -329,6 +350,9 @@ public class MobileDataDownloadFactory {
 
         return ManifestFileGroupPopulator.builder()
                 .setContext(context)
+                // measurement resources should not be downloaded pre-consent
+                .setEnabledSupplier(
+                        () -> ConsentManager.getInstance(context).getConsent().isGiven())
                 .setBackgroundExecutor(AdServicesExecutors.getBackgroundExecutor())
                 .setFileDownloader(() -> fileDownloader)
                 .setFileStorage(fileStorage)

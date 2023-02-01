@@ -75,7 +75,8 @@ public class MeasurementManagerTest {
                     sContext.getApplicationInfo(),
                     "sdkName",
                     /* sdkCeDataDir = */ null,
-                    /* sdkDeDataDir = */ null);
+                    /* sdkDeDataDir = */ null,
+                    /* isCustomizedSdkContext = */ false);
 
     @After
     public void tearDown() {

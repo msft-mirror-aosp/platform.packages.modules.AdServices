@@ -93,7 +93,7 @@ public class SdkSandboxRestrictionsTestApp {
         Thread.sleep(1000);
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        callback.assertLoadSdkIsSuccessful();
 
         FakeRequestSurfacePackageCallback surfacePackageCallback1 =
                 new FakeRequestSurfacePackageCallback();
