@@ -16,6 +16,7 @@
 
 package com.android.adservices.data.measurement.migration;
 
+import android.annotation.NonNull;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -37,6 +38,8 @@ import java.util.Optional;
 /** Migrates Measurement DB from user version 2 to 3. */
 public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
     private static final String ANDROID_APP_SCHEME = "android-app";
+    private static final String FILTERS = "filters";
+    private static final String NOT_FILTERS = "not_filters";
     private static final String EVENT_REPORT_CONTRACT_BACKUP =
             MeasurementTables.EventReportContract.TABLE + "_backup";
     private static final String AGGREGATE_REPORT_CONTRACT_BACKUP =
@@ -85,7 +88,34 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
     };
 
     private static final String TRIGGER_DATA_KEY = "trigger_data";
-    private static final String TRIGGER_DATA_VALUE = "0";
+    private static final String TRIGGER_DATA_DEFAULT_VALUE = "0";
+
+    private static final String[] ALTER_STATEMENTS = {
+        String.format(
+                "ALTER TABLE %1$s ADD %2$s INTEGER",
+                MeasurementTables.SourceContract.TABLE,
+                MeasurementTables.SourceContract.DEBUG_REPORTING),
+        String.format(
+                "ALTER TABLE %1$s ADD %2$s INTEGER",
+                MeasurementTables.TriggerContract.TABLE,
+                MeasurementTables.TriggerContract.DEBUG_REPORTING),
+        String.format(
+                "ALTER TABLE %1$s ADD %2$s INTEGER",
+                MeasurementTables.SourceContract.TABLE,
+                MeasurementTables.SourceContract.AD_ID_PERMISSION),
+        String.format(
+                "ALTER TABLE %1$s ADD %2$s INTEGER",
+                MeasurementTables.SourceContract.TABLE,
+                MeasurementTables.SourceContract.AR_DEBUG_PERMISSION),
+        String.format(
+                "ALTER TABLE %1$s ADD %2$s INTEGER",
+                MeasurementTables.TriggerContract.TABLE,
+                MeasurementTables.TriggerContract.AD_ID_PERMISSION),
+        String.format(
+                "ALTER TABLE %1$s ADD %2$s INTEGER",
+                MeasurementTables.TriggerContract.TABLE,
+                MeasurementTables.TriggerContract.AR_DEBUG_PERMISSION),
+    };
 
     public MeasurementDbMigratorV3() {
         super(3);
@@ -99,12 +129,14 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
                 db,
                 MeasurementTables.EventReportContract.TABLE,
                 MeasurementTables.EventReportContract.SOURCE_EVENT_ID)) {
+            LogUtil.d("Source event id exists. Skipping Migration");
             return;
         }
         // Drop and create a new AsyncRegistrationTable if it exists.
         for (String query : UPDATE_ASYNC_REGISTRATION_TABLE_QUERIES) {
             db.execSQL(query);
         }
+        db.execSQL(MeasurementTables.CREATE_TABLE_DEBUG_REPORT_LATEST);
 
         alterEventReportTable(db);
         alterAggregateReportTable(db);
@@ -114,8 +146,12 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
         db.execSQL(ATTRIBUTION_CREATE_INDEX_SS_SO_DS_DO_EI_TT);
 
         migrateSourceData(db);
-        migrateEventTrigger(db);
         migrateEventReportData(db);
+        migrateTriggers(db);
+
+        for (String sql : ALTER_STATEMENTS) {
+            db.execSQL(sql);
+        }
     }
 
     private static void alterEventReportTable(SQLiteDatabase db) {
@@ -170,34 +206,6 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
                 MeasurementTables.CREATE_TABLE_ATTRIBUTION_LATEST);
     }
 
-    private static void migrateEventTrigger(SQLiteDatabase db) {
-        try (Cursor cursor =
-                db.query(
-                        MeasurementTables.TriggerContract.TABLE,
-                        new String[] {
-                            MeasurementTables.TriggerContract.ID,
-                            MeasurementTables.TriggerContract.EVENT_TRIGGERS
-                        },
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null)) {
-            while (cursor.moveToNext()) {
-                String id =
-                        cursor.getString(
-                                cursor.getColumnIndex(MeasurementTables.TriggerContract.ID));
-                String eventTriggersV3 =
-                        cursor.getString(
-                                cursor.getColumnIndex(
-                                        MeasurementTables.TriggerContract.EVENT_TRIGGERS));
-                String eventTriggerV4 = convertEventTrigger(eventTriggersV3);
-                updateEventTrigger(db, id, eventTriggerV4);
-            }
-        }
-    }
-
     private static void migrateEventReportData(SQLiteDatabase db) {
         try (Cursor cursor = db.query(
                     MeasurementTables.EventReportContract.TABLE,
@@ -240,6 +248,23 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
         }
     }
 
+    private static void migrateTriggers(SQLiteDatabase db) {
+        try (Cursor cursor = db.query(
+                    MeasurementTables.TriggerContract.TABLE,
+                    new String[] {
+                        MeasurementTables.TriggerContract.ID,
+                        MeasurementTables.TriggerContract.EVENT_TRIGGERS,
+                        MeasurementTables.TriggerContract.AGGREGATE_TRIGGER_DATA,
+                        MeasurementTables.TriggerContract.FILTERS,
+                        MeasurementTables.TriggerContract.NOT_FILTERS
+                    },
+                    null, null, null, null, null, null)) {
+            while (cursor.moveToNext()) {
+                updateTrigger(db, cursor);
+            }
+        }
+    }
+
     private static void updateAggregateSource(
             SQLiteDatabase db, String id, String aggregateSourceV3) {
         ContentValues values = new ContentValues();
@@ -265,7 +290,7 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
                         MeasurementTables.TriggerContract.ID + " = ?",
                         new String[] {id});
         if (rowCount != 1) {
-            LogUtil.d("MeasurementDbMigratorV4: failed to update event trigger record.");
+            LogUtil.d("MeasurementDbMigratorV3: failed to update event trigger record.");
         }
     }
 
@@ -289,6 +314,39 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
             }
         } else {
             LogUtil.d("MeasurementDbMigratorV3: baseUri not present. %s", destination);
+        }
+    }
+
+    private static void updateTrigger(SQLiteDatabase db, Cursor cursor) {
+        String id = cursor.getString(cursor.getColumnIndex(MeasurementTables.TriggerContract.ID));
+        String eventTriggers = cursor.getString(cursor.getColumnIndex(
+                MeasurementTables.TriggerContract.EVENT_TRIGGERS));
+        String aggregateTriggerData = cursor.getString(cursor.getColumnIndex(
+                MeasurementTables.TriggerContract.AGGREGATE_TRIGGER_DATA));
+        String filters = cursor.getString(cursor.getColumnIndex(
+                MeasurementTables.TriggerContract.FILTERS));
+        String notFilters = cursor.getString(cursor.getColumnIndex(
+                MeasurementTables.TriggerContract.NOT_FILTERS));
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.TriggerContract.EVENT_TRIGGERS,
+                updateEventTriggers(eventTriggers));
+        values.put(MeasurementTables.TriggerContract.AGGREGATE_TRIGGER_DATA,
+                convertAggregateTriggerData(aggregateTriggerData));
+        if (filters != null) {
+            values.put(MeasurementTables.TriggerContract.FILTERS,
+                    convertFilters(filters).toString());
+        }
+        if (notFilters != null) {
+            values.put(MeasurementTables.TriggerContract.NOT_FILTERS,
+                    convertFilters(notFilters).toString());
+        }
+        long rowCount = db.update(
+                MeasurementTables.TriggerContract.TABLE,
+                values,
+                MeasurementTables.TriggerContract.ID + " = ?",
+                new String[]{id});
+        if (rowCount != 1) {
+            LogUtil.d("MeasurementDbMigratorV3: failed to update trigger record.");
         }
     }
 
@@ -330,22 +388,74 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
         }
     }
 
-    private static String convertEventTrigger(String eventTriggers) {
+    private static String updateEventTriggers(String eventTriggers) {
         if (eventTriggers == null) {
             return new JSONArray().toString();
         }
+
         try {
-            JSONArray jsonArray = new JSONArray(eventTriggers);
-            for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject jsonObject = jsonArray.getJSONObject(i);
-                if (jsonObject.isNull(TRIGGER_DATA_KEY)) {
-                    jsonObject.put(TRIGGER_DATA_KEY, TRIGGER_DATA_VALUE);
+            return updateEventTriggers(new JSONArray(eventTriggers));
+        } catch (JSONException e) {
+            LogUtil.e(e, "MeasurementDbMigratorV3: failed to parse event triggers.");
+            return null;
+        }
+    }
+
+    private static String updateEventTriggers(JSONArray eventTriggers) throws JSONException {
+        for (int i = 0; i < eventTriggers.length(); i++) {
+            JSONObject eventTrigger = eventTriggers.getJSONObject(i);
+            if (eventTrigger.isNull(TRIGGER_DATA_KEY)) {
+                eventTrigger.put(TRIGGER_DATA_KEY, TRIGGER_DATA_DEFAULT_VALUE);
+            }
+        }
+        return convertFiltersInObjectArray(eventTriggers);
+    }
+
+    private static String convertAggregateTriggerData(String aggregateTriggerData) {
+        if (aggregateTriggerData == null) {
+            return null;
+        }
+
+        try {
+            return convertFiltersInObjectArray(new JSONArray(aggregateTriggerData));
+        } catch (JSONException e) {
+            LogUtil.e(e, "MeasurementDbMigratorV3: failed to parse aggregate trigger data.");
+            return null;
+        }
+    }
+
+    private static String convertFiltersInObjectArray(JSONArray objectArray) throws JSONException {
+        for (int i = 0; i < objectArray.length(); i++) {
+            JSONObject obj = objectArray.getJSONObject(i);
+            if (!obj.isNull(FILTERS)) {
+                JSONArray convertedFilters = convertFilters(
+                        obj.getJSONObject(FILTERS).toString());
+                if (convertedFilters == null) {
+                    return null;
+                } else {
+                    obj.put(FILTERS, convertedFilters);
                 }
             }
-            return jsonArray.toString();
+            if (!obj.isNull(NOT_FILTERS)) {
+                JSONArray convertedNotFilters = convertFilters(
+                        obj.getJSONObject(NOT_FILTERS).toString());
+                if (convertedNotFilters == null) {
+                    return null;
+                } else {
+                    obj.put(NOT_FILTERS, convertedNotFilters);
+                }
+            }
+        }
+
+        return objectArray.toString();
+    }
+
+    private static JSONArray convertFilters(@NonNull String filters) {
+        try {
+            return new JSONArray().put(new JSONObject(filters));
         } catch (JSONException e) {
-            LogUtil.e(e, "Event trigger parsing failed when migrating from V3 to V4.");
-            return new JSONArray().toString();
+            LogUtil.e(e, "MeasurementDbMigratorV3: failed to parse filters.");
+            return null;
         }
     }
 }

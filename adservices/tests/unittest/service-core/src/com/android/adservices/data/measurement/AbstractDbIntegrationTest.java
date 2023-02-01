@@ -109,14 +109,8 @@ public abstract class AbstractDbIntegrationTest {
         DbState dbState = new DbState(readerDb);
         mOutput.sortAll();
         dbState.sortAll();
-        Assert.assertTrue("Source mismatch",
-                areEqual(mOutput.mSourceList, dbState.mSourceList));
-        Assert.assertTrue("Trigger mismatch",
-                areEqual(mOutput.mTriggerList, dbState.mTriggerList));
-        Assert.assertTrue(
-                "Report mismatch", areEqual(mOutput.mEventReportList, dbState.mEventReportList));
-        Assert.assertTrue("Attribution mismatch",
-                areEqual(mOutput.mAttrRateLimitList, dbState.mAttrRateLimitList));
+        Assert.assertTrue("Event report mismatch",
+                areEqual(mOutput.mEventReportList, dbState.mEventReportList));
         // Custom matching for AggregateReport due to non-deterministic reporting random number
         // TODO: Remove custom matching using DI for Random class
         Assert.assertEquals(
@@ -132,6 +126,12 @@ public abstract class AbstractDbIntegrationTest {
         }
         Assert.assertTrue("AggregateEncryptionKey mismatch",
                 areEqual(mOutput.mAggregateEncryptionKeyList, dbState.mAggregateEncryptionKeyList));
+        Assert.assertTrue("Attribution mismatch",
+                areEqual(mOutput.mAttrRateLimitList, dbState.mAttrRateLimitList));
+        Assert.assertTrue("Source mismatch",
+                areEqual(mOutput.mSourceList, dbState.mSourceList));
+        Assert.assertTrue("Trigger mismatch",
+                areEqual(mOutput.mTriggerList, dbState.mTriggerList));
     }
 
     private boolean fuzzyCompareAggregateReport(
@@ -309,6 +309,10 @@ public abstract class AbstractDbIntegrationTest {
         values.put(MeasurementTables.SourceContract.STATUS, source.getStatus());
         values.put(MeasurementTables.SourceContract.EVENT_TIME, source.getEventTime());
         values.put(MeasurementTables.SourceContract.EXPIRY_TIME, source.getExpiryTime());
+        values.put(MeasurementTables.SourceContract.EVENT_REPORT_WINDOW,
+                source.getEventReportWindow());
+        values.put(MeasurementTables.SourceContract.AGGREGATABLE_REPORT_WINDOW,
+                source.getAggregatableReportWindow());
         values.put(MeasurementTables.SourceContract.PRIORITY, source.getPriority());
         values.put(MeasurementTables.SourceContract.REGISTRANT, source.getRegistrant().toString());
         values.put(MeasurementTables.SourceContract.INSTALL_ATTRIBUTION_WINDOW,

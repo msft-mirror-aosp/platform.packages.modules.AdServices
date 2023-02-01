@@ -98,7 +98,7 @@ public class TopicsWorkerTest {
         DbTestUtil.deleteTable(TopicsTables.TopicContributorsContract.TABLE);
 
         mTopicsDao = new TopicsDao(mDbHelper);
-        mCacheManager = new CacheManager(mMockEpochManager, mTopicsDao, mMockFlags, mLogger);
+        mCacheManager = new CacheManager(mTopicsDao, mMockFlags, mLogger);
         AppUpdateManager appUpdateManager =
                 new AppUpdateManager(mDbHelper, mTopicsDao, new Random(), mMockFlags);
         mBlockedTopicsManager = new BlockedTopicsManager(mTopicsDao);
@@ -116,12 +116,9 @@ public class TopicsWorkerTest {
         final long epochId = 4L;
         final int numberOfLookBackEpochs = 3;
         final Pair<String, String> appSdkKey = Pair.create("app", "sdk");
-        Topic topic1 =
-                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
-        Topic topic2 =
-                Topic.create(/* topic */ 2, /* taxonomyVersion = */ 2L, /* modelVersion = */ 5L);
-        Topic topic3 =
-                Topic.create(/* topic */ 3, /* taxonomyVersion = */ 3L, /* modelVersion = */ 6L);
+        Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion */ 1L, /* modelVersion */ 4L);
+        Topic topic2 = Topic.create(/* topic */ 2, /* taxonomyVersion */ 2L, /* modelVersion */ 5L);
+        Topic topic3 = Topic.create(/* topic */ 3, /* taxonomyVersion */ 3L, /* modelVersion */ 6L);
         Topic[] topics = {topic1, topic2, topic3};
         // persist returned topics into DB
         for (int numEpoch = 1; numEpoch <= numberOfLookBackEpochs; numEpoch++) {
@@ -197,8 +194,7 @@ public class TopicsWorkerTest {
         final long epochId = 4L;
         final int numberOfLookBackEpochs = 1;
         final Pair<String, String> appSdkKey = Pair.create("app", "sdk");
-        Topic topic1 =
-                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
+        Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion */ 1L, /* modelVersion */ 4L);
         Topic[] topics = {topic1};
         // persist returned topics into DB
         for (int numEpoch = 1; numEpoch <= numberOfLookBackEpochs; numEpoch++) {
@@ -232,8 +228,7 @@ public class TopicsWorkerTest {
         final long epochId = 4L;
         final int numberOfLookBackEpochs = 1;
         final Pair<String, String> appSdkKey = Pair.create("app", "sdk");
-        Topic topic1 =
-                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
+        Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion */ 1L, /* modelVersion */ 4L);
         Topic[] topics = {topic1};
         // persist returned topics into DB
         for (int numEpoch = 1; numEpoch <= numberOfLookBackEpochs; numEpoch++) {
@@ -272,22 +267,24 @@ public class TopicsWorkerTest {
 
         Pair<String, String> appOnlyCaller = Pair.create(app, /* sdk */ "");
 
-        Topic topic1 =
-                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
-        Topic topic2 =
-                Topic.create(/* topic */ 2, /* taxonomyVersion = */ 2L, /* modelVersion = */ 5L);
-        Topic topic3 =
-                Topic.create(/* topic */ 3, /* taxonomyVersion = */ 3L, /* modelVersion = */ 6L);
+        Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion */ 1L, /* modelVersion */ 4L);
+        Topic topic2 = Topic.create(/* topic */ 2, /* taxonomyVersion */ 2L, /* modelVersion */ 5L);
+        Topic topic3 = Topic.create(/* topic */ 3, /* taxonomyVersion */ 3L, /* modelVersion */ 6L);
         Topic[] topics = {topic1, topic2, topic3};
 
-        // persist returned topics into DB
         for (long epoch = 0; epoch < numberOfLookBackEpochs; epoch++) {
             long epochId = currentEpochId - 1 - epoch;
             Topic topic = topics[(int) epoch];
 
+            // Assign returned topics to app-only caller for epochs in [current - 3, current - 1]
             mTopicsDao.persistReturnedAppTopicsMap(epochId, Map.of(appOnlyCaller, topic));
-            // SDK needs to be able to learn this topic in past epochs
-            mTopicsDao.persistCallerCanLearnTopics(epochId, Map.of(topic, Set.of(sdk)));
+
+            // Make the topic learnable to app-sdk caller for epochs in [current - 3, current - 1].
+            // In order to achieve this, persist learnability in [current - 5, current - 3]. This
+            // ensures to test the earliest epoch to be learnt from.
+            long earliestEpochIdToLearnFrom = epochId - numberOfLookBackEpochs + 1;
+            mTopicsDao.persistCallerCanLearnTopics(
+                    earliestEpochIdToLearnFrom, Map.of(topic, Set.of(sdk)));
         }
 
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
@@ -325,27 +322,30 @@ public class TopicsWorkerTest {
         Pair<String, String> appOnlyCaller = Pair.create(app, /* sdk */ "");
         Pair<String, String> appSdkCaller = Pair.create(app, sdk);
 
-        Topic topic1 =
-                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
-        Topic topic2 =
-                Topic.create(/* topic */ 2, /* taxonomyVersion = */ 2L, /* modelVersion = */ 5L);
-        Topic topic3 =
-                Topic.create(/* topic */ 3, /* taxonomyVersion = */ 3L, /* modelVersion = */ 6L);
+        Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion */ 1L, /* modelVersion */ 4L);
+        Topic topic2 = Topic.create(/* topic */ 2, /* taxonomyVersion */ 2L, /* modelVersion */ 5L);
+        Topic topic3 = Topic.create(/* topic */ 3, /* taxonomyVersion */ 3L, /* modelVersion */ 6L);
         Topic[] topics = {topic1, topic2, topic3};
 
-        // persist returned topics into DB
         for (long epoch = 0; epoch < numberOfLookBackEpochs; epoch++) {
             long epochId = currentEpochId - 1 - epoch;
             Topic topic = topics[(int) epoch];
 
+            // Assign returned topics to app-only caller for epochs in [current - 3, current - 1]
             mTopicsDao.persistReturnedAppTopicsMap(epochId, Map.of(appOnlyCaller, topic));
-            // SDK needs to be able to learn this topic in past epochs
-            mTopicsDao.persistCallerCanLearnTopics(epochId, Map.of(topic, Set.of(sdk)));
+
+            // Make the topic learnable to app-sdk caller for epochs in [current - 3, current - 1].
+            // In order to achieve this, persist learnability in [current - 5, current - 3]. This
+            // ensures to test the earliest epoch to be learnt from.
+            long earliestEpochIdToLearnFrom = epochId - numberOfLookBackEpochs + 1;
+            mTopicsDao.persistCallerCanLearnTopics(
+                    earliestEpochIdToLearnFrom, Map.of(topic, Set.of(sdk)));
         }
 
-        // Sdk has an existing topic in Epoch 1
+        // Current epoch is 5. Sdk has an existing topic in Epoch 2, which is an epoch in
+        // [current epoch - 3, current epoch - 1]
         mTopicsDao.persistReturnedAppTopicsMap(
-                currentEpochId - numberOfLookBackEpochs + 1, Map.of(appSdkCaller, topic1));
+                currentEpochId - numberOfLookBackEpochs, Map.of(appSdkCaller, topic1));
 
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
@@ -390,12 +390,9 @@ public class TopicsWorkerTest {
         final long lastEpoch = 3;
         final int numberOfLookBackEpochs = 3;
         final Pair<String, String> appSdkKey = Pair.create("app", "sdk");
-        Topic topic1 =
-                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
-        Topic topic2 =
-                Topic.create(/* topic */ 2, /* taxonomyVersion = */ 2L, /* modelVersion = */ 5L);
-        Topic topic3 =
-                Topic.create(/* topic */ 3, /* taxonomyVersion = */ 3L, /* modelVersion = */ 6L);
+        Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion */ 1L, /* modelVersion */ 4L);
+        Topic topic2 = Topic.create(/* topic */ 2, /* taxonomyVersion */ 2L, /* modelVersion */ 5L);
+        Topic topic3 = Topic.create(/* topic */ 3, /* taxonomyVersion */ 3L, /* modelVersion */ 6L);
         Topic[] topics = {topic1, topic2, topic3};
         // persist returned topics into Db
         // populate topics for different epochs to get realistic state of the Db for testing
@@ -409,7 +406,7 @@ public class TopicsWorkerTest {
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(lastEpoch);
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
         Topic blockedTopic1 =
-                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 3L, /* modelVersion = */ 6L);
+                Topic.create(/* topic */ 1, /* taxonomyVersion */ 3L, /* modelVersion */ 6L);
         mTopicsDao.recordBlockedTopic(blockedTopic1);
 
         mTopicsWorker.loadCache();
@@ -429,12 +426,9 @@ public class TopicsWorkerTest {
         final long lastEpoch = 3;
         final int numberOfLookBackEpochs = 3;
         final Pair<String, String> appSdkKey = Pair.create("app", "sdk");
-        Topic topic1 =
-                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
-        Topic topic2 =
-                Topic.create(/* topic */ 2, /* taxonomyVersion = */ 2L, /* modelVersion = */ 5L);
-        Topic topic3 =
-                Topic.create(/* topic */ 3, /* taxonomyVersion = */ 3L, /* modelVersion = */ 6L);
+        Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion */ 1L, /* modelVersion */ 4L);
+        Topic topic2 = Topic.create(/* topic */ 2, /* taxonomyVersion */ 2L, /* modelVersion */ 5L);
+        Topic topic3 = Topic.create(/* topic */ 3, /* taxonomyVersion */ 3L, /* modelVersion */ 6L);
         Topic[] topics = {topic1, topic2, topic3};
         // persist returned topics into DB
         for (int numEpoch = 1; numEpoch <= numberOfLookBackEpochs; numEpoch++) {
@@ -459,11 +453,11 @@ public class TopicsWorkerTest {
     @Test
     public void testTopicsWithRevokedConsent() {
         Topic blockedTopic1 =
-                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
+                Topic.create(/* topic */ 1, /* taxonomyVersion */ 1L, /* modelVersion */ 4L);
         Topic blockedTopic2 =
-                Topic.create(/* topic */ 2, /* taxonomyVersion = */ 2L, /* modelVersion = */ 5L);
+                Topic.create(/* topic */ 2, /* taxonomyVersion */ 2L, /* modelVersion */ 5L);
         Topic blockedTopic3 =
-                Topic.create(/* topic */ 3, /* taxonomyVersion = */ 3L, /* modelVersion = */ 6L);
+                Topic.create(/* topic */ 3, /* taxonomyVersion */ 3L, /* modelVersion */ 6L);
         // block all blockedTopics
         mTopicsDao.recordBlockedTopic(blockedTopic1);
         mTopicsDao.recordBlockedTopic(blockedTopic2);
@@ -471,8 +465,7 @@ public class TopicsWorkerTest {
 
         // persist one not blocked topic.
         final Pair<String, String> appSdkKey = Pair.create("app", "sdk");
-        Topic topic1 =
-                Topic.create(/* topic */ 4, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
+        Topic topic1 = Topic.create(/* topic */ 4, /* taxonomyVersion */ 1L, /* modelVersion */ 4L);
         Map<Pair<String, String>, Topic> returnedAppSdkTopicsMap = new HashMap<>();
         returnedAppSdkTopicsMap.put(appSdkKey, topic1);
         mTopicsDao.persistReturnedAppTopicsMap(/* epochId */ 1, returnedAppSdkTopicsMap);
@@ -490,12 +483,9 @@ public class TopicsWorkerTest {
     public void testTopicsWithRevokedConsent_noTopicsBlocked() {
         final int numberOfLookBackEpochs = 3;
         final Pair<String, String> appSdkKey = Pair.create("app", "sdk");
-        Topic topic1 =
-                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
-        Topic topic2 =
-                Topic.create(/* topic */ 2, /* taxonomyVersion = */ 2L, /* modelVersion = */ 5L);
-        Topic topic3 =
-                Topic.create(/* topic */ 3, /* taxonomyVersion = */ 3L, /* modelVersion = */ 6L);
+        Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion */ 1L, /* modelVersion */ 4L);
+        Topic topic2 = Topic.create(/* topic */ 2, /* taxonomyVersion */ 2L, /* modelVersion */ 5L);
+        Topic topic3 = Topic.create(/* topic */ 3, /* taxonomyVersion */ 3L, /* modelVersion */ 6L);
         Topic[] topics = {topic1, topic2, topic3};
         // persist returned topics into DB
         // populate topics for different epochs to get realistic state of the Db for testing
@@ -515,8 +505,7 @@ public class TopicsWorkerTest {
 
     @Test
     public void testRevokeConsent() {
-        Topic topic1 =
-                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
+        Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion */ 1L, /* modelVersion */ 4L);
         mTopicsWorker.loadCache();
         mTopicsWorker.revokeConsentForTopic(topic1);
 
@@ -530,8 +519,7 @@ public class TopicsWorkerTest {
 
     @Test
     public void testRevokeAndRestoreConsent() {
-        Topic topic1 =
-                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
+        Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion */ 1L, /* modelVersion */ 4L);
         mTopicsWorker.loadCache();
 
         // Revoke consent for topic1
@@ -560,12 +548,9 @@ public class TopicsWorkerTest {
         ArrayList<String> tableExclusionList = new ArrayList<>();
         tableExclusionList.add(TopicsTables.BlockedTopicsContract.TABLE);
 
-        Topic topic1 =
-                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
-        Topic topic2 =
-                Topic.create(/* topic */ 2, /* taxonomyVersion = */ 2L, /* modelVersion = */ 5L);
-        Topic topic3 =
-                Topic.create(/* topic */ 3, /* taxonomyVersion = */ 3L, /* modelVersion = */ 6L);
+        Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion */ 1L, /* modelVersion */ 4L);
+        Topic topic2 = Topic.create(/* topic */ 2, /* taxonomyVersion */ 2L, /* modelVersion */ 5L);
+        Topic topic3 = Topic.create(/* topic */ 3, /* taxonomyVersion */ 3L, /* modelVersion */ 6L);
         Topic[] topics = {topic1, topic2, topic3};
         // persist returned topics into DB
         for (int numEpoch = 1; numEpoch <= numberOfLookBackEpochs; numEpoch++) {
@@ -865,12 +850,9 @@ public class TopicsWorkerTest {
         final String sdk = "sdk";
 
         final Pair<String, String> appSdkKey = Pair.create(app, sdk);
-        Topic topic1 =
-                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
-        Topic topic2 =
-                Topic.create(/* topic */ 2, /* taxonomyVersion = */ 2L, /* modelVersion = */ 5L);
-        Topic topic3 =
-                Topic.create(/* topic */ 3, /* taxonomyVersion = */ 3L, /* modelVersion = */ 6L);
+        Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion */ 1L, /* modelVersion */ 4L);
+        Topic topic2 = Topic.create(/* topic */ 2, /* taxonomyVersion */ 2L, /* modelVersion */ 5L);
+        Topic topic3 = Topic.create(/* topic */ 3, /* taxonomyVersion */ 3L, /* modelVersion */ 6L);
         Topic[] topics = {topic1, topic2, topic3};
         // persist returned topics into DB
         for (int numEpoch = 1; numEpoch <= numberOfLookBackEpochs; numEpoch++) {

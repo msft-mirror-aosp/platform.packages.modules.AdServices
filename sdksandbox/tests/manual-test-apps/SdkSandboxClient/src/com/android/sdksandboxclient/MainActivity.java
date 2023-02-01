@@ -37,6 +37,7 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
+import android.os.StrictMode;
 import android.preference.PreferenceManager;
 import android.text.InputType;
 import android.util.Log;
@@ -65,10 +66,12 @@ public class MainActivity extends Activity {
     private static final String VIDEO_URL_KEY = "video-url";
 
     private static final Handler sHandler = new Handler(Looper.getMainLooper());
+    private static final String EXTRA_SDK_SDK_ENABLED_KEY = "sdkSdkCommEnabled";
 
     private static String sVideoUrl;
 
     private boolean mSdksLoaded = false;
+    private boolean mSdkSdkCommEnabled = false;
     private SdkSandboxManager mSdkSandboxManager;
 
     private Button mLoadButton;
@@ -76,6 +79,7 @@ public class MainActivity extends Activity {
     private Button mCreateFileButton;
     private Button mPlayVideoButton;
     private Button mSyncKeysButton;
+    private Button mSdkSdkCommButton;
 
     private SurfaceView mRenderedView;
 
@@ -83,6 +87,7 @@ public class MainActivity extends Activity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        enableStrictMode();
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mSdkSandboxManager = getApplicationContext().getSystemService(SdkSandboxManager.class);
@@ -100,12 +105,14 @@ public class MainActivity extends Activity {
         mCreateFileButton = findViewById(R.id.create_file_button);
         mPlayVideoButton = findViewById(R.id.play_video_button);
         mSyncKeysButton = findViewById(R.id.sync_keys_button);
+        mSdkSdkCommButton = findViewById(R.id.enable_sdk_sdk_button);
 
         registerLoadSdkProviderButton();
         registerLoadSurfacePackageButton();
         registerCreateFileButton();
         registerPlayVideoButton();
         registerSyncKeysButton();
+        registerSdkSdkButton();
     }
 
     private void registerLoadSdkProviderButton() {
@@ -245,6 +252,20 @@ public class MainActivity extends Activity {
                 });
     }
 
+    private void registerSdkSdkButton() {
+        mSdkSdkCommButton.setOnClickListener(
+                v -> {
+                    mSdkSdkCommEnabled = !mSdkSdkCommEnabled;
+                    if (mSdkSdkCommEnabled) {
+                        mSdkSdkCommButton.setText("Disable SDK SDK comm");
+                        makeToast("Sdk Sdk Comm Enabled");
+                    } else {
+                        mSdkSdkCommButton.setText("Enable SDK SDK comm");
+                        makeToast("Sdk Sdk Comm Disabled");
+                    }
+                });
+    }
+
     private void registerSyncKeysButton() {
         mSyncKeysButton.setOnClickListener(
                 v -> {
@@ -311,6 +332,7 @@ public class MainActivity extends Activity {
         params.putInt(EXTRA_HEIGHT_IN_PIXELS, mRenderedView.getHeight());
         params.putInt(EXTRA_DISPLAY_ID, getDisplay().getDisplayId());
         params.putBinder(EXTRA_HOST_TOKEN, mRenderedView.getHostToken());
+        params.putBoolean(EXTRA_SDK_SDK_ENABLED_KEY, mSdkSdkCommEnabled);
         return params;
     }
 
@@ -338,5 +360,16 @@ public class MainActivity extends Activity {
             makeToast("Failed: " + error.getMessage());
             Log.e(TAG, error.getMessage(), error);
         }
+    }
+
+    private void enableStrictMode() {
+        StrictMode.setThreadPolicy(
+                new StrictMode.ThreadPolicy.Builder()
+                        .detectAll()
+                        .penaltyLog()
+                        .penaltyDeath()
+                        .build());
+        StrictMode.setVmPolicy(
+                new StrictMode.VmPolicy.Builder().detectAll().penaltyLog().penaltyDeath().build());
     }
 }

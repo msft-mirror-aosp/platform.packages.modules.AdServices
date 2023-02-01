@@ -16,15 +16,14 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.adselection.AdSelectionFromOutcomesConfigFixture.SAMPLE_SELLER;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
 
 import static com.android.adservices.data.adselection.AdSelectionDatabase.DATABASE_NAME;
-import static com.android.adservices.service.adselection.AdSelectionFromOutcomesConfigValidator.AD_SELECTION_IDS_DONT_EXIST;
-import static com.android.adservices.service.adselection.AdSelectionFromOutcomesConfigValidator.HTTPS_PREFIX;
-import static com.android.adservices.service.adselection.AdSelectionFromOutcomesConfigValidator.SELLER_AND_URI_HOST_ARE_INCONSISTENT;
 import static com.android.adservices.service.adselection.OutcomeSelectionRunner.SELECTED_OUTCOME_MUST_BE_ONE_OF_THE_INPUTS;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.DB_AD_SELECTION_FILE_SIZE;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -47,6 +46,7 @@ import android.adservices.common.FledgeErrorResponse;
 import android.adservices.http.MockWebServerRule;
 import android.content.Context;
 import android.net.Uri;
+import android.os.Process;
 import android.os.RemoteException;
 import android.os.SystemClock;
 
@@ -66,16 +66,15 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdServicesHttpsClient;
-import com.android.adservices.service.common.AppImportanceFilter;
-import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.common.FledgeServiceFilter;
+import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
-import com.android.adservices.service.consent.AdServicesApiConsent;
-import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.mockwebserver.Dispatcher;
@@ -102,6 +101,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 public class AdSelectionFromOutcomesE2ETest {
+    private static final int CALLER_UID = Process.myUid();
     private static final String SELECTION_PICK_HIGHEST_LOGIC_JS_PATH = "/selectionPickHighestJS/";
     private static final String SELECTION_PICK_NONE_LOGIC_JS_PATH = "/selectionPickNoneJS/";
     private static final String SELECTION_WATERFALL_LOGIC_JS_PATH = "/selectionWaterfallJS/";
@@ -153,24 +153,17 @@ public class AdSelectionFromOutcomesE2ETest {
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
     // Mocking DevContextFilter to test behavior with and without override api authorization
     @Mock DevContextFilter mDevContextFilter;
-    @Mock AppImportanceFilter mAppImportanceFilter;
     @Mock CallerMetadata mMockCallerMetadata;
-
-    @Spy
-    FledgeAllowListsFilter mFledgeAllowListsFilterSpy =
-            new FledgeAllowListsFilter(mFlags, mAdServicesLoggerMock);
 
     @Spy private Context mContext = ApplicationProvider.getApplicationContext();
     @Mock private File mMockDBAdSelectionFile;
 
-    @Spy
-    FledgeAuthorizationFilter mFledgeAuthorizationFilterSpy =
+    FledgeAuthorizationFilter mFledgeAuthorizationFilter =
             new FledgeAuthorizationFilter(
                     mContext.getPackageManager(),
                     new EnrollmentDao(mContext, DbTestUtil.getDbHelperForTest()),
                     mAdServicesLoggerMock);
 
-    @Mock private ConsentManager mConsentManagerMock;
     private MockitoSession mStaticMockSession = null;
     private ExecutorService mLightweightExecutorService;
     private ExecutorService mBackgroundExecutorService;
@@ -180,6 +173,8 @@ public class AdSelectionFromOutcomesE2ETest {
     private AdServicesHttpsClient mAdServicesHttpsClient;
     private AdSelectionServiceImpl mAdSelectionService;
     private Dispatcher mDispatcher;
+
+    @Mock private FledgeServiceFilter mFledgeServiceFilter;
 
     @Before
     public void setUp() throws Exception {
@@ -221,17 +216,15 @@ public class AdSelectionFromOutcomesE2ETest {
                         mCustomAudienceDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
-                        mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
                         mContext,
-                        mConsentManagerMock,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
-                        mFledgeAllowListsFilterSpy);
+                        mFledgeAuthorizationFilter,
+                        mFledgeServiceFilter);
 
         // Create a dispatcher that helps map a request -> response in mockWebServer
         mDispatcher =
@@ -255,6 +248,15 @@ public class AdSelectionFromOutcomesE2ETest {
 
         when(mContext.getDatabasePath(DATABASE_NAME)).thenReturn(mMockDBAdSelectionFile);
         when(mMockDBAdSelectionFile.length()).thenReturn(DB_AD_SELECTION_FILE_SIZE);
+        doNothing()
+                .when(mFledgeServiceFilter)
+                .filterRequest(
+                        SAMPLE_SELLER,
+                        CALLER_PACKAGE_NAME,
+                        false,
+                        CALLER_UID,
+                        AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                        Throttler.ApiKey.FLEDGE_API_SELECT_ADS);
     }
 
     @After
@@ -267,7 +269,6 @@ public class AdSelectionFromOutcomesE2ETest {
     @Test
     public void testSelectAdsFromOutcomesPickHighestSuccess() throws Exception {
         doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
         final String selectionLogicPath = SELECTION_PICK_HIGHEST_LOGIC_JS_PATH;
 
@@ -298,7 +299,6 @@ public class AdSelectionFromOutcomesE2ETest {
     public void testSelectAdsFromOutcomesWaterfallMediationAdBidHigherThanBidFloorSuccess()
             throws Exception {
         doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
         final String selectionLogicPath = SELECTION_WATERFALL_LOGIC_JS_PATH;
 
@@ -326,7 +326,6 @@ public class AdSelectionFromOutcomesE2ETest {
     public void testSelectAdsFromOutcomesWaterfallMediationAdBidLowerThanBidFloorSuccess()
             throws Exception {
         doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
         final String selectionLogicPath = SELECTION_WATERFALL_LOGIC_JS_PATH;
 
@@ -352,7 +351,6 @@ public class AdSelectionFromOutcomesE2ETest {
     @Test
     public void testSelectAdsFromOutcomesReturnsNullSuccess() throws Exception {
         doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
         final String selectionLogicPath = SELECTION_PICK_NONE_LOGIC_JS_PATH;
 
@@ -379,9 +377,8 @@ public class AdSelectionFromOutcomesE2ETest {
     }
 
     @Test
-    public void testSelectAdsFromOutcomesInvalidSellerFailure() throws Exception {
+    public void testSelectAdsFromOutcomesInvalidAdSelectionConfigFromOutcomes() throws Exception {
         doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
         final String selectionLogicPath = "/unreachableLogicJS/";
 
@@ -410,56 +407,6 @@ public class AdSelectionFromOutcomesE2ETest {
         assertThat(resultsCallback.mFledgeErrorResponse).isNotNull();
         assertThat(resultsCallback.mFledgeErrorResponse.getStatusCode())
                 .isEqualTo(STATUS_INVALID_ARGUMENT);
-        assertThat(resultsCallback.mFledgeErrorResponse.getErrorMessage())
-                .contains(
-                        String.format(
-                                SELLER_AND_URI_HOST_ARE_INCONSISTENT,
-                                Uri.parse(HTTPS_PREFIX + SELLER_INCONSISTENT_WITH_SELECTION_URI)
-                                        .getHost(),
-                                mMockWebServerRule.uriForPath(selectionLogicPath).getHost()));
-        mMockWebServerRule.verifyMockServerRequests(
-                server, 0, Collections.emptyList(), String::equals);
-    }
-
-    @Test
-    public void testSelectAdsFromOutcomesAdSelectionIdOwnedByDifferentCallerPackageFailure()
-            throws Exception {
-        doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-        MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
-        final String selectionLogicPath = "/unreachableLogicJS/";
-
-        long adSelectionId1 = 12345L;
-        long adSelectionId2 = 123456L;
-        long adSelectionId3 = 1234567L;
-
-        Map<Long, Double> adSelectionIdToBidMap =
-                Map.of(
-                        adSelectionId1, 10.0,
-                        adSelectionId2, 20.0);
-        persistAdSelectionEntryDaoResults(adSelectionIdToBidMap);
-        // Intentionally persisting adSelectionId3 with a different caller package name
-        persistAdSelectionEntryDaoResults(
-                Collections.singletonMap(adSelectionId3, 30.0), "com.another.package");
-
-        AdSelectionFromOutcomesConfig config =
-                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
-                        List.of(adSelectionId1, adSelectionId2, adSelectionId3),
-                        AdSelectionSignals.EMPTY,
-                        mMockWebServerRule.uriForPath(selectionLogicPath));
-
-        AdSelectionFromOutcomesE2ETest.AdSelectionFromOutcomesTestCallback resultsCallback =
-                invokeSelectAdsFromOutcomes(mAdSelectionService, config, CALLER_PACKAGE_NAME);
-
-        assertThat(resultsCallback.mIsSuccess).isFalse();
-        assertThat(resultsCallback.mFledgeErrorResponse).isNotNull();
-        assertThat(resultsCallback.mFledgeErrorResponse.getStatusCode())
-                .isEqualTo(STATUS_INVALID_ARGUMENT);
-        assertThat(resultsCallback.mFledgeErrorResponse.getErrorMessage())
-                .contains(
-                        String.format(
-                                AD_SELECTION_IDS_DONT_EXIST,
-                                Collections.singletonList(adSelectionId3)));
         mMockWebServerRule.verifyMockServerRequests(
                 server, 0, Collections.emptyList(), String::equals);
     }
@@ -467,7 +414,6 @@ public class AdSelectionFromOutcomesE2ETest {
     @Test
     public void testSelectAdsFromOutcomesJsReturnsFaultyAdSelectionIdFailure() throws Exception {
         doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
         final String selectionLogicPath = SELECTION_FAULTY_LOGIC_JS_PATH;
 

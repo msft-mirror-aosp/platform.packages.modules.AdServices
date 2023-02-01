@@ -16,7 +16,6 @@
 
 package com.android.tests.sandbox.fledge;
 
-import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.Manifest;
 import android.app.sdksandbox.SdkSandboxManager;
@@ -102,11 +101,6 @@ public class SandboxedFledgeManagerTest {
 
         sdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), CALLBACK_EXECUTOR, callback);
 
-        assertWithMessage(
-                        callback.isLoadSdkSuccessful()
-                                ? "Callback was successful"
-                                : "Callback failed with message " + callback.getLoadSdkErrorMsg())
-                .that(callback.isLoadSdkSuccessful())
-                .isTrue();
+        callback.assertLoadSdkIsSuccessful();
     }
 }

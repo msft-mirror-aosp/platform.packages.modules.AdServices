@@ -24,6 +24,7 @@ import android.util.Dumpable;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.data.adselection.DBRegisteredAdInteraction;
 import com.android.adservices.service.adselection.AdOutcomeSelectorImpl;
 import com.android.adservices.service.common.cache.FledgeHttpCache;
 
@@ -259,6 +260,13 @@ public interface Flags extends Dumpable {
         return MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED;
     }
 
+    /** Returns whether a click is verified by Input Event. */
+    boolean MEASUREMENT_IS_CLICK_VERIFIED_BY_INPUT_EVENT = false;
+
+    default boolean getMeasurementIsClickVerifiedByInputEvent() {
+        return MEASUREMENT_IS_CLICK_VERIFIED_BY_INPUT_EVENT;
+    }
+
     /** Returns the DB size limit for measurement. */
     default long getMeasurementDbSizeLimit() {
         return MEASUREMENT_DB_SIZE_LIMIT;
@@ -395,10 +403,10 @@ public interface Flags extends Dumpable {
     int FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS = 5 * 1000; // 5 seconds
     int FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS = 30 * 1000; // 30 seconds
     int FLEDGE_BACKGROUND_FETCH_MAX_RESPONSE_SIZE_B = 10 * 1024; // 10 KiB
-    boolean FLEDGE_ENABLE_HTTP_CACHING = true;
-    boolean FLEDGE_AD_SELECTION_ENABLE_JS_CACHING = true;
-    long FLEDGE_HTTP_CACHE_MAX_ENTRIES = 100;
+    boolean FLEDGE_HTTP_CACHE_ENABLE = true;
+    boolean FLEDGE_HTTP_CACHE_ENABLE_JS_CACHING = true;
     long FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS = 2 * 24 * 60 * 60; // 2 days
+    long FLEDGE_HTTP_CACHE_MAX_ENTRIES = 100;
 
     /** Returns {@code true} if the FLEDGE Background Fetch is enabled. */
     default boolean getFledgeBackgroundFetchEnabled() {
@@ -479,12 +487,12 @@ public interface Flags extends Dumpable {
 
     /** Returns boolean, if the caching is enabled for {@link FledgeHttpCache} */
     default boolean getFledgeHttpCachingEnabled() {
-        return FLEDGE_ENABLE_HTTP_CACHING;
+        return FLEDGE_HTTP_CACHE_ENABLE;
     }
 
     /** Returns boolean, if the caching is enabled for JS for bidding and scoring */
-    default boolean getFledgeJsCachingEnabled() {
-        return FLEDGE_AD_SELECTION_ENABLE_JS_CACHING;
+    default boolean getFledgeHttpJsCachingEnabled() {
+        return FLEDGE_HTTP_CACHE_ENABLE_JS_CACHING;
     }
 
     /** Returns max number of entries that should be persisted in cache */
@@ -516,6 +524,9 @@ public interface Flags extends Dumpable {
     long FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS = 10_000;
 
     long FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS = 2000;
+
+    // TODO(b/263055427): Replace with a more realistic number after getting input from ad-techs
+    long FLEDGE_REPORT_IMPRESSION_MAX_EVENT_URI_ENTRIES_COUNT = 100;
 
     /** Returns the timeout constant in milliseconds that limits the bidding per CA */
     default long getAdSelectionBiddingTimeoutPerCaMs() {
@@ -572,6 +583,14 @@ public interface Flags extends Dumpable {
         return FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
     }
 
+    /**
+     * Returns the maximum number of {@link DBRegisteredAdInteraction} that an ad-tech can register
+     * in one call to {@code reportImpression}.
+     */
+    default long getReportImpressionMaxEventUriEntriesCount() {
+        return FLEDGE_REPORT_IMPRESSION_MAX_EVENT_URI_ENTRIES_COUNT;
+    }
+
     // 24 hours in seconds
     long FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S = 60 * 60 * 24;
 
@@ -609,11 +628,8 @@ public interface Flags extends Dumpable {
      * The number of epoch to look back to do garbage collection for old epoch data. Assume current
      * Epoch is T, then any epoch data of (T-NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY-1) (inclusive)
      * should be erased
-     *
-     * <p>In order to provide enough epochs to assign topics for newly installed apps, keep
-     * TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS more epochs in database.
      */
-    int NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY = TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS * 2;
+    int NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY = TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS;
 
     /*
      * Return the number of epochs to keep in the history
@@ -726,7 +742,9 @@ public interface Flags extends Dumpable {
      * which means the PP API is enabled. This flag is used for emergency turning off the whole PP
      * API.
      */
-    boolean GLOBAL_KILL_SWITCH = false; // By default, the PP API is enabled.
+    // Starting M-2023-05, global kill switch is enabled in the binary. Prior to this (namely in
+    // M-2022-11), the value of this flag in the binary was false.
+    boolean GLOBAL_KILL_SWITCH = true;
 
     default boolean getGlobalKillSwitch() {
         return GLOBAL_KILL_SWITCH;
@@ -989,6 +1007,7 @@ public interface Flags extends Dumpable {
                 || getMeasurementKillSwitch()
                 || MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH;
     }
+
     /**
      * Measurement Job Debug Reporting Kill Switch. The default value is false which means Debug
      * Reporting Job is enabled. This flag is used for emergency turning off the Debug Reporting
@@ -1245,6 +1264,18 @@ public interface Flags extends Dumpable {
      */
     float MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND = 5;
 
+    /**
+     * PP API Rate Limit for Topics API based on App Package name. This is the max allowed QPS for
+     * one API client to one PP API. Negative Value means skipping the rate limiting checking.
+     */
+    float TOPICS_API_APP_REQUEST_PERMITS_PER_SECOND = 1;
+
+    /**
+     * PP API Rate Limit for Topics API based on Sdk Name. This is the max allowed QPS for one API
+     * client to one PP API. Negative Value means skipping the rate limiting checking.
+     */
+    float TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND = 1;
+
     /** Returns the Sdk Request Permits Per Second. */
     default float getSdkRequestPermitsPerSecond() {
         return SDK_REQUEST_PERMITS_PER_SECOND;
@@ -1258,6 +1289,16 @@ public interface Flags extends Dumpable {
     /** Returns the App Set Ad Request Permits Per Second. */
     default float getAppSetIdRequestPermitsPerSecond() {
         return APPSETID_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the Topics API Based On App Package Name Request Permits Per Second. */
+    default float getTopicsApiAppRequestPermitsPerSecond() {
+        return TOPICS_API_APP_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the Topics API Based On Sdk Name Request Permits Per Second. */
+    default float getTopicsApiSdkRequestPermitsPerSecond() {
+        return TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND;
     }
 
     /** Returns the Measurement Register Source Request Permits Per Second. */
@@ -1439,6 +1480,38 @@ public interface Flags extends Dumpable {
         return MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES;
     }
 
+    /** Ui OTA strings group name, used for MDD download. */
+    String UI_OTA_STRINGS_GROUP_NAME = "ui-ota-strings";
+
+    /** UI OTA strings group name. */
+    default String getUiOtaStringsGroupName() {
+        return UI_OTA_STRINGS_GROUP_NAME;
+    }
+
+    /** Ui OTA strings manifest file url, used for MDD download. */
+    String UI_OTA_STRINGS_MANIFEST_FILE_URL = "";
+
+    /** UI OTA strings manifest file url. */
+    default String getUiOtaStringsManifestFileUrl() {
+        return UI_OTA_STRINGS_MANIFEST_FILE_URL;
+    }
+
+    /** Ui OTA strings feature flag. */
+    boolean UI_OTA_STRINGS_FEATURE_ENABLED = false;
+
+    /** Returns if UI OTA strings feature is enabled. */
+    default boolean getUiOtaStringsFeatureEnabled() {
+        return UI_OTA_STRINGS_FEATURE_ENABLED;
+    }
+
+    /** Deadline for downloading UI OTA strings. */
+    long UI_OTA_STRINGS_DOWNLOAD_DEADLINE = 86700000; /* 1 day */
+
+    /** Returns the deadline for downloading UI OTA strings. */
+    default long getUiOtaStringsDownloadDeadline() {
+        return UI_OTA_STRINGS_DOWNLOAD_DEADLINE;
+    }
+
     /** UI Dialogs feature enabled. */
     boolean UI_DIALOGS_FEATURE_ENABLED = false;
 
@@ -1464,6 +1537,7 @@ public interface Flags extends Dumpable {
     }
 
     long ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS = (int) TimeUnit.HOURS.toMillis(1);
+
     /** Returns the interval in which to run Registration Job Queue Service. */
     default long getAsyncRegistrationJobQueueIntervalMs() {
         return ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS;
@@ -1502,12 +1576,12 @@ public interface Flags extends Dumpable {
         return ENABLE_TOPIC_CONTRIBUTORS_CHECK;
     }
 
-    /** Whether to enable database schema version 3 */
-    boolean ENABLE_DATABASE_SCHEMA_VERSION_3 = false;
+    /** Whether to enable database schema version 5 */
+    boolean ENABLE_DATABASE_SCHEMA_VERSION_5 = false;
 
-    /** @return if to enable database schema version 3. */
-    default boolean getEnableDatabaseSchemaVersion3() {
-        return ENABLE_DATABASE_SCHEMA_VERSION_3;
+    /** @return if to enable database schema version 5. */
+    default boolean getEnableDatabaseSchemaVersion5() {
+        return ENABLE_DATABASE_SCHEMA_VERSION_5;
     }
 
     /** Returns true if the given enrollmentId is blocked from using PP-API. */

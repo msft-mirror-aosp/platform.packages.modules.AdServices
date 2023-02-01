@@ -43,7 +43,7 @@ import java.util.stream.Collectors;
 /**
  * Class for logging the run ad selection process. It provides the functions to collect and log the
  * corresponding ad selection process and its subcomponent processes and log the data into the
- * de-identified WestWorld logs. This class collect data for the telemetry atoms:
+ * statsd logs. This class collect data for the telemetry atoms:
  *
  * <ul>
  *   <li>RunAdBiddingProcessReportedStats for bidding stage:
@@ -74,7 +74,7 @@ import java.util.stream.Collectors;
  *
  * <p>Each complete parent process (bidding, scoring, and overall ad selection) should call its
  * corresponding start and end methods to record its states and log the generated atom proto into
- * the WestWorld de-identified logger.
+ * the statsd logger.
  *
  * <p>Each subprocess should call its corresponding start method if it starts, and only call the end
  * method for successful completion. In failure cases, the exceptions thrown should propagate to the

@@ -19,8 +19,10 @@ package com.android.adservices.data;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
+
 
 import com.google.common.collect.ImmutableSet;
 
@@ -64,6 +66,8 @@ public final class DbTestUtil {
     public static boolean doesTableExistAndColumnCountMatch(
             SQLiteDatabase db, String tableName, int columnCount) {
         final Set<String> tableColumns = getTableColumns(db, tableName);
+        int actualCol = tableColumns.size();
+        Log.d("DbTestUtil_log_test,", " table name: " + tableName + " column count: " + actualCol);
         return tableColumns.size() == columnCount;
     }
 

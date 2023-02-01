@@ -48,9 +48,10 @@ import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Web;
 
+import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -145,6 +146,11 @@ class AttributionJobHandler {
 
     private boolean maybeGenerateAggregateReport(Source source, Trigger trigger,
             IMeasurementDao measurementDao) throws DatastoreException {
+
+        if (trigger.getTriggerTime() > source.getAggregatableReportWindow()) {
+            return false;
+        }
+
         int numReports =
                 measurementDao.getNumAggregateReportsPerDestination(
                         trigger.getAttributionDestination(), trigger.getDestinationType());
@@ -266,6 +272,10 @@ class AttributionJobHandler {
     private boolean maybeGenerateEventReport(
             Source source, Trigger trigger, IMeasurementDao measurementDao)
             throws DatastoreException {
+        if (trigger.getTriggerTime() > source.getEventReportWindow()) {
+            return false;
+        }
+
         int numReports =
                 measurementDao.getNumEventReportsPerDestination(
                         trigger.getAttributionDestination(), trigger.getDestinationType());
@@ -295,7 +305,7 @@ class AttributionJobHandler {
         EventTrigger eventTrigger = matchingEventTrigger.get();
         // Check if deduplication key clashes with existing reports.
         if (eventTrigger.getDedupKey() != null
-                && source.getDedupKeys().contains(eventTrigger.getDedupKey())) {
+                && source.getEventReportDedupKeys().contains(eventTrigger.getDedupKey())) {
             return false;
         }
 
@@ -342,7 +352,7 @@ class AttributionJobHandler {
         }
 
         if (lowestPriorityEventReport.getTriggerDedupKey() != null) {
-            source.getDedupKeys().remove(lowestPriorityEventReport.getTriggerDedupKey());
+            source.getEventReportDedupKeys().remove(lowestPriorityEventReport.getTriggerDedupKey());
         }
         measurementDao.deleteEventReport(lowestPriorityEventReport);
         return true;
@@ -355,9 +365,9 @@ class AttributionJobHandler {
             IMeasurementDao measurementDao)
             throws DatastoreException {
         if (eventTrigger.getDedupKey() != null) {
-            source.getDedupKeys().add(eventTrigger.getDedupKey());
+            source.getEventReportDedupKeys().add(eventTrigger.getDedupKey());
         }
-        measurementDao.updateSourceDedupKeys(source);
+        measurementDao.updateSourceEventReportDedupKeys(source);
 
         measurementDao.insertEventReport(eventReport);
     }
@@ -406,10 +416,10 @@ class AttributionJobHandler {
     private boolean doTopLevelFiltersMatch(@NonNull Source source, @NonNull Trigger trigger) {
         try {
             FilterMap sourceFilters = source.parseFilterData();
-            FilterMap triggerFilters = extractFilterMap(trigger.getFilters());
-            FilterMap triggerNotFilters = extractFilterMap(trigger.getNotFilters());
-            return Filter.isFilterMatch(sourceFilters, triggerFilters, true)
-                    && Filter.isFilterMatch(sourceFilters, triggerNotFilters, false);
+            List<FilterMap> triggerFilterSet = extractFilterSet(trigger.getFilters());
+            List<FilterMap> triggerNotFilterSet = extractFilterSet(trigger.getNotFilters());
+            return Filter.isFilterMatch(sourceFilters, triggerFilterSet, true)
+                    && Filter.isFilterMatch(sourceFilters, triggerNotFilterSet, false);
         } catch (JSONException e) {
             // If JSON is malformed, we shall consider as not matched.
             LogUtil.e(e, "doTopLevelFiltersMatch: JSON parse failed.");
@@ -435,27 +445,33 @@ class AttributionJobHandler {
 
     private boolean doEventLevelFiltersMatch(
             FilterMap sourceFiltersData, EventTrigger eventTrigger) {
-        if (eventTrigger.getFilterData().isPresent()
+        if (eventTrigger.getFilterSet().isPresent()
                 && !Filter.isFilterMatch(
-                        sourceFiltersData, eventTrigger.getFilterData().get(), true)) {
+                        sourceFiltersData, eventTrigger.getFilterSet().get(), true)) {
             return false;
         }
 
-        if (eventTrigger.getNotFilterData().isPresent()
+        if (eventTrigger.getNotFilterSet().isPresent()
                 && !Filter.isFilterMatch(
-                        sourceFiltersData, eventTrigger.getNotFilterData().get(), false)) {
+                        sourceFiltersData, eventTrigger.getNotFilterSet().get(), false)) {
             return false;
         }
 
         return true;
     }
 
-    private static FilterMap extractFilterMap(String str) throws JSONException {
-        String json = (str == null || str.isEmpty()) ? "{}" : str;
-        JSONObject filterObject = new JSONObject(json);
-        return new FilterMap.Builder()
-                .buildFilterData(filterObject)
-                .build();
+    private static List<FilterMap> extractFilterSet(String str) throws JSONException {
+        String json = (str == null || str.isEmpty()) ? "[]" : str;
+        List<FilterMap> filterSet = new ArrayList<>();
+        JSONArray filters = new JSONArray(json);
+        for (int i = 0; i < filters.length(); i++) {
+            FilterMap filterMap =
+                    new FilterMap.Builder()
+                            .buildFilterData(filters.getJSONObject(i))
+                            .build();
+            filterSet.add(filterMap);
+        }
+        return filterSet;
     }
 
     private static OptionalInt validateAndGetUpdatedAggregateContributions(

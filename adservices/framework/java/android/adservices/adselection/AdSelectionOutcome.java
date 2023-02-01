@@ -42,13 +42,14 @@ public class AdSelectionOutcome {
     /** Represents an AdSelectionOutcome with empty results. */
     @NonNull public static final AdSelectionOutcome NO_OUTCOME = new AdSelectionOutcome();
 
-    private static final int UNSET = 0;
+    /** @hide */
+    public static final int UNSET_AD_SELECTION_ID = 0;
 
     private final long mAdSelectionId;
     @NonNull private final Uri mRenderUri;
 
     private AdSelectionOutcome() {
-        mAdSelectionId = UNSET;
+        mAdSelectionId = UNSET_AD_SELECTION_ID;
         mRenderUri = Uri.EMPTY;
     }
 
@@ -98,7 +99,7 @@ public class AdSelectionOutcome {
      * Builder for {@link AdSelectionOutcome} objects.
      */
     public static final class Builder {
-        private long mAdSelectionId = UNSET;
+        private long mAdSelectionId = UNSET_AD_SELECTION_ID;
         @Nullable private Uri mRenderUri;
 
         public Builder() {}
@@ -130,7 +131,7 @@ public class AdSelectionOutcome {
             Objects.requireNonNull(mRenderUri);
 
             Preconditions.checkArgument(
-                    mAdSelectionId != UNSET, "AdSelectionId has not been set!");
+                    mAdSelectionId != UNSET_AD_SELECTION_ID, "AdSelectionId has not been set!");
 
             return new AdSelectionOutcome(mAdSelectionId, mRenderUri);
         }

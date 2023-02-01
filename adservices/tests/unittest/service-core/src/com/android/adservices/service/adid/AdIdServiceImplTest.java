@@ -20,8 +20,9 @@ import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__ADID;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_ADID;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -54,6 +55,7 @@ import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApp
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -61,10 +63,14 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -142,7 +148,8 @@ public class AdIdServiceImplTest {
         when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
         // Empty allow list.
         when(mMockFlags.getPpapiAppAllowList()).thenReturn("");
-        invokeGetAdIdAndVerifyError(mContext, STATUS_CALLER_NOT_ALLOWED);
+        invokeGetAdIdAndVerifyError(
+                mContext, STATUS_CALLER_NOT_ALLOWED, /* checkLoggingStatus */ true);
     }
 
     @Test
@@ -157,7 +164,9 @@ public class AdIdServiceImplTest {
         // Rate Limit Reached.
         when(mMockThrottler.tryAcquire(eq(Throttler.ApiKey.ADID_API_APP_PACKAGE_NAME), anyString()))
                 .thenReturn(false);
-        invokeGetAdIdAndVerifyError(mContext, STATUS_RATE_LIMIT_REACHED, request);
+        // We don't log STATUS_RATE_LIMIT_REACHED for getAdId API.
+        invokeGetAdIdAndVerifyError(
+                mContext, STATUS_RATE_LIMIT_REACHED, request, /* checkLoggingStatus */ false);
     }
 
     @Test
@@ -234,7 +243,8 @@ public class AdIdServiceImplTest {
                         return mPackageManager;
                     }
                 };
-        invokeGetAdIdAndVerifyError(context, STATUS_PERMISSION_NOT_REQUESTED);
+        invokeGetAdIdAndVerifyError(
+                context, STATUS_PERMISSION_NOT_REQUESTED, /* checkLoggingStatus */ true);
     }
 
     @Test
@@ -242,7 +252,8 @@ public class AdIdServiceImplTest {
         when(mPackageManager.checkPermission(ACCESS_ADSERVICES_AD_ID, SDK_PACKAGE_NAME))
                 .thenReturn(PackageManager.PERMISSION_DENIED);
         when(Binder.getCallingUidOrThrow()).thenReturn(SANDBOX_UID);
-        invokeGetAdIdAndVerifyError(mMockSdkContext, STATUS_PERMISSION_NOT_REQUESTED);
+        invokeGetAdIdAndVerifyError(
+                mMockSdkContext, STATUS_PERMISSION_NOT_REQUESTED, /* checkLoggingStatus */ true);
     }
 
     @Test
@@ -292,15 +303,34 @@ public class AdIdServiceImplTest {
                 .isTrue();
     }
 
-    private void invokeGetAdIdAndVerifyError(Context context, int expectedResultCode)
+    private void invokeGetAdIdAndVerifyError(
+            Context context, int expectedResultCode, boolean checkLoggingStatus)
             throws InterruptedException {
-        invokeGetAdIdAndVerifyError(context, expectedResultCode, mRequest);
+        invokeGetAdIdAndVerifyError(context, expectedResultCode, mRequest, checkLoggingStatus);
     }
 
     private void invokeGetAdIdAndVerifyError(
-            Context context, int expectedResultCode, GetAdIdParam request)
+            Context context,
+            int expectedResultCode,
+            GetAdIdParam request,
+            boolean checkLoggingStatus)
             throws InterruptedException {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
+
+        CountDownLatch logOperationCalledLatch = new CountDownLatch(1);
+        Mockito.doAnswer(
+                        new Answer<Object>() {
+                            @Override
+                            public Object answer(InvocationOnMock invocation) throws Throwable {
+                                // The method logAPiCallStats is called.
+                                invocation.callRealMethod();
+                                logOperationCalledLatch.countDown();
+                                return null;
+                            }
+                        })
+                .when(mAdServicesLogger)
+                .logApiCallStats(ArgumentMatchers.any(ApiCallStats.class));
+
         mAdIdServiceImpl =
                 new AdIdServiceImpl(
                         context,
@@ -332,6 +362,25 @@ public class AdIdServiceImplTest {
                     }
                 });
         jobFinishedCountDown.await();
+
+        if (checkLoggingStatus) {
+            // getAdId method finished executing.
+            logOperationCalledLatch.await();
+
+            ArgumentCaptor<ApiCallStats> argument = ArgumentCaptor.forClass(ApiCallStats.class);
+
+            verify(mAdServicesLogger).logApiCallStats(argument.capture());
+            assertThat(argument.getValue().getCode()).isEqualTo(AD_SERVICES_API_CALLED);
+            assertThat(argument.getValue().getApiClass())
+                    .isEqualTo(AD_SERVICES_API_CALLED__API_CLASS__ADID);
+            assertThat(argument.getValue().getApiName())
+                    .isEqualTo(AD_SERVICES_API_CALLED__API_NAME__GET_ADID);
+            assertThat(argument.getValue().getResultCode()).isEqualTo(expectedResultCode);
+            assertThat(argument.getValue().getAppPackageName())
+                    .isEqualTo(request.getAppPackageName());
+            assertThat(argument.getValue().getSdkPackageName())
+                    .isEqualTo(request.getSdkPackageName());
+        }
     }
 
     private void runGetAdId(AdIdServiceImpl adIdServiceImpl) throws Exception {

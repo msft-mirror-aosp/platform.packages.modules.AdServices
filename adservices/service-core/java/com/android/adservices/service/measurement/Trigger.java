@@ -22,8 +22,10 @@ import android.annotation.Nullable;
 import android.net.Uri;
 
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
+import com.android.adservices.service.measurement.aggregation.AggregateDeduplicationKey;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
+import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Validation;
 import com.android.adservices.service.measurement.util.Web;
@@ -44,10 +46,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-/**
- * POJO for Trigger.
- */
-
+/** POJO for Trigger. */
 public class Trigger {
 
     private String mId;
@@ -60,6 +59,7 @@ public class Trigger {
     private Uri mRegistrant;
     private String mAggregateTriggerData;
     private String mAggregateValues;
+    private String mAggregateDeduplicationKeys;
     private boolean mIsDebugReporting;
     private AggregatableAttributionTrigger mAggregatableAttributionTrigger;
     private String mFilters;
@@ -130,9 +130,7 @@ public class Trigger {
                 mArDebugPermission);
     }
 
-    /**
-     * Unique identifier for the {@link Trigger}.
-     */
+    /** Unique identifier for the {@link Trigger}. */
     public String getId() {
         return mId;
     }
@@ -232,6 +230,15 @@ public class Trigger {
     }
 
     /**
+     * Returns a list of aggregate deduplication keys. aggregate deduplication key is a JSONObject.
+     * example: { "deduplication_key": "32768", "filters": [ {type: [filter_1, filter_2]} ],
+     * "not_filters": [ {type: [not_filter_1, not_filter_2]} ] }
+     */
+    public String getAggregateDeduplicationKeys() {
+        return mAggregateDeduplicationKeys;
+    }
+
+    /**
      * Returns the AggregatableAttributionTrigger object, which is constructed using the aggregate
      * trigger data string and aggregate values string in Trigger.
      */
@@ -302,16 +309,13 @@ public class Trigger {
                             .setKey(bigInteger)
                             .setSourceKeys(sourceKeySet);
             if (jsonObject.has("filters") && !jsonObject.isNull("filters")) {
-                FilterMap filters = new FilterMap.Builder()
-                        .buildFilterData(jsonObject.getJSONObject("filters")).build();
-                builder.setFilter(filters);
+                List<FilterMap> filterSet = getFilterSet(jsonObject, "filters");
+                builder.setFilterSet(filterSet);
             }
             if (jsonObject.has("not_filters")
                     && !jsonObject.isNull("not_filters")) {
-                FilterMap notFilters = new FilterMap.Builder()
-                        .buildFilterData(
-                                jsonObject.getJSONObject("not_filters")).build();
-                builder.setNotFilter(notFilters);
+                List<FilterMap> notFilterSet = getFilterSet(jsonObject, "not_filters");
+                builder.setNotFilterSet(notFilterSet);
             }
             triggerDataList.add(builder.build());
         }
@@ -320,8 +324,34 @@ public class Trigger {
         for (String key : values.keySet()) {
             valueMap.put(key, values.getInt(key));
         }
-        return Optional.of(new AggregatableAttributionTrigger.Builder()
-                .setTriggerData(triggerDataList).setValues(valueMap).build());
+        List<AggregateDeduplicationKey> dedupKeyList = new ArrayList<>();
+        if (this.mAggregateDeduplicationKeys != null) {
+            JSONArray dedupKeyObjects = new JSONArray(this.mAggregateDeduplicationKeys);
+            for (int i = 0; i < dedupKeyObjects.length(); i++) {
+                JSONObject dedupKeyObject = dedupKeyObjects.getJSONObject(i);
+                UnsignedLong dedupKey =
+                        new UnsignedLong(dedupKeyObject.getLong("deduplication_key"));
+                AggregateDeduplicationKey.Builder builder =
+                        new AggregateDeduplicationKey.Builder(dedupKey);
+                if (dedupKeyObject.has("filters") && !dedupKeyObject.isNull("filters")) {
+                    List<FilterMap> filterSet =
+                            Filter.deserializeFilterSet(dedupKeyObject.getJSONArray("filters"));
+                    builder.setFilterSet(filterSet);
+                }
+                if (dedupKeyObject.has("not_filters") && !dedupKeyObject.isNull("not_filters")) {
+                    List<FilterMap> notFilterSet =
+                            Filter.deserializeFilterSet(dedupKeyObject.getJSONArray("not_filters"));
+                    builder.setNotFilterSet(notFilterSet);
+                }
+                dedupKeyList.add(builder.build());
+            }
+        }
+        return Optional.of(
+                new AggregatableAttributionTrigger.Builder()
+                        .setTriggerData(triggerDataList)
+                        .setValues(valueMap)
+                        .setAggregateDeduplicationKeys(dedupKeyList)
+                        .build());
     }
 
     /**
@@ -335,41 +365,34 @@ public class Trigger {
         List<EventTrigger> eventTriggers = new ArrayList<>();
 
         for (int i = 0; i < jsonArray.length(); i++) {
-            JSONObject eventTriggersJsonString = jsonArray.getJSONObject(i);
+            JSONObject eventTrigger = jsonArray.getJSONObject(i);
+
             EventTrigger.Builder eventTriggerBuilder =
                     new EventTrigger.Builder(
                             new UnsignedLong(
-                                    eventTriggersJsonString.getString(
+                                    eventTrigger.getString(
                                             EventTriggerContract.TRIGGER_DATA)));
 
-            if (!eventTriggersJsonString.isNull(EventTriggerContract.PRIORITY)) {
+            if (!eventTrigger.isNull(EventTriggerContract.PRIORITY)) {
                 eventTriggerBuilder.setTriggerPriority(
-                        eventTriggersJsonString.getLong(EventTriggerContract.PRIORITY));
+                        eventTrigger.getLong(EventTriggerContract.PRIORITY));
             }
 
-            if (!eventTriggersJsonString.isNull(EventTriggerContract.DEDUPLICATION_KEY)) {
+            if (!eventTrigger.isNull(EventTriggerContract.DEDUPLICATION_KEY)) {
                 eventTriggerBuilder.setDedupKey(new UnsignedLong(
-                        eventTriggersJsonString.getString(EventTriggerContract.DEDUPLICATION_KEY)));
+                        eventTrigger.getString(EventTriggerContract.DEDUPLICATION_KEY)));
             }
 
-            if (!eventTriggersJsonString.isNull(EventTriggerContract.FILTERS)) {
-                FilterMap filters =
-                        new FilterMap.Builder()
-                                .buildFilterData(
-                                        eventTriggersJsonString.getJSONObject(
-                                                EventTriggerContract.FILTERS))
-                                .build();
-                eventTriggerBuilder.setFilter(filters);
+            if (!eventTrigger.isNull(EventTriggerContract.FILTERS)) {
+                List<FilterMap> filterSet =
+                        getFilterSet(eventTrigger, EventTriggerContract.FILTERS);
+                eventTriggerBuilder.setFilterSet(filterSet);
             }
 
-            if (!eventTriggersJsonString.isNull(EventTriggerContract.NOT_FILTERS)) {
-                FilterMap notFilters =
-                        new FilterMap.Builder()
-                                .buildFilterData(
-                                        eventTriggersJsonString.getJSONObject(
-                                                EventTriggerContract.NOT_FILTERS))
-                                .build();
-                eventTriggerBuilder.setNotFilter(notFilters);
+            if (!eventTrigger.isNull(EventTriggerContract.NOT_FILTERS)) {
+                List<FilterMap> notFilterSet =
+                        getFilterSet(eventTrigger, EventTriggerContract.NOT_FILTERS);
+                eventTriggerBuilder.setNotFilterSet(notFilterSet);
             }
             eventTriggers.add(eventTriggerBuilder.build());
         }
@@ -391,9 +414,7 @@ public class Trigger {
         }
     }
 
-    /**
-     * Builder for {@link Trigger}.
-     */
+    /** Builder for {@link Trigger}. */
     public static final class Builder {
 
         private final Trigger mBuilding;
@@ -424,7 +445,7 @@ public class Trigger {
             return this;
         }
 
-        /** See {@link Trigger#getEnrollmentId()} ()}. */
+        /** See {@link Trigger#getEnrollmentId()}. */
         @NonNull
         public Builder setEnrollmentId(String enrollmentId) {
             mBuilding.mEnrollmentId = enrollmentId;
@@ -475,6 +496,13 @@ public class Trigger {
             return this;
         }
 
+        /** See {@link Trigger#getAggregateDeduplicationKeys()} */
+        @NonNull
+        public Builder setAggregateDeduplicationKeys(@Nullable String aggregateDeduplicationKeys) {
+            mBuilding.mAggregateDeduplicationKeys = aggregateDeduplicationKeys;
+            return this;
+        }
+
         /** See {@link Trigger#getFilters()} */
         @NonNull
         public Builder setFilters(@Nullable String filters) {
@@ -488,13 +516,13 @@ public class Trigger {
             return this;
         }
 
-        /** See {@link Trigger#hasAdIdPermission()} ()} */
+        /** See {@link Trigger#hasAdIdPermission()} */
         public Trigger.Builder setAdIdPermission(boolean adIdPermission) {
             mBuilding.mAdIdPermission = adIdPermission;
             return this;
         }
 
-        /** See {@link Trigger#hasArDebugPermission()} ()} */
+        /** See {@link Trigger#hasArDebugPermission()} */
         public Trigger.Builder setArDebugPermission(boolean arDebugPermission) {
             mBuilding.mArDebugPermission = arDebugPermission;
             return this;
@@ -507,7 +535,7 @@ public class Trigger {
             return this;
         }
 
-        /** See {@link Trigger#getDebugKey()} ()} */
+        /** See {@link Trigger#getDebugKey()} */
         public Builder setDebugKey(@Nullable UnsignedLong debugKey) {
             mBuilding.mDebugKey = debugKey;
             return this;
@@ -540,5 +568,16 @@ public class Trigger {
         String DEDUPLICATION_KEY = "deduplication_key";
         String FILTERS = "filters";
         String NOT_FILTERS = "not_filters";
+    }
+
+    private static List<FilterMap> getFilterSet(JSONObject obj, String key) throws JSONException {
+        List<FilterMap> filterSet = new ArrayList<>();
+        JSONArray filters = obj.getJSONArray(key);
+        for (int i = 0; i < filters.length(); i++) {
+            FilterMap filterMap =
+                    new FilterMap.Builder().buildFilterData(filters.getJSONObject(i)).build();
+            filterSet.add(filterMap);
+        }
+        return filterSet;
     }
 }

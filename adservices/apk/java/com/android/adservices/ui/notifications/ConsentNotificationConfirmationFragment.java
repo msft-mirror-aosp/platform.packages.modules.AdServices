@@ -28,6 +28,7 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
 
 /**
@@ -51,6 +52,7 @@ public class ConsentNotificationConfirmationFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
+        UiStatsLogger.logConfirmationPageDisplayed(getContext());
         setupListeners();
     }
 

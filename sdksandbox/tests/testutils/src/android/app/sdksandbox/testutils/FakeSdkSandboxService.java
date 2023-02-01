@@ -80,7 +80,8 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
     }
 
     @Override
-    public void initialize(ISdkToServiceCallback sdkToServiceCallback) {
+    public void initialize(
+            ISdkToServiceCallback sdkToServiceCallback, boolean isCustomizedSdkContextEnabled) {
         mInitializationCount++;
     }
 
@@ -161,7 +162,7 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
     }
 
     public void sendStorageInfoToSystemServer() throws RemoteException {
-        mComputeSdkStorageCallback.onStorageInfoComputed(0F, 0F);
+        mComputeSdkStorageCallback.onStorageInfoComputed(0, 0);
     }
 
     public void sendLoadCodeError() throws Exception {

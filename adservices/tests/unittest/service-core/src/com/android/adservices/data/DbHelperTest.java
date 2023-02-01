@@ -39,7 +39,7 @@ import android.database.sqlite.SQLiteDatabase;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.measurement.DbHelperV1;
-import com.android.adservices.data.topics.migration.TopicDbMigratorV7;
+import com.android.adservices.data.topics.migration.TopicDbMigratorV5;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -130,20 +130,29 @@ public class DbHelperTest {
         SQLiteDatabase db = mock(SQLiteDatabase.class);
 
         // Do not actually perform queries but verify the invocation.
-        TopicDbMigratorV7 topicDbMigratorV7 = Mockito.spy(new TopicDbMigratorV7());
-        Mockito.doNothing().when(topicDbMigratorV7).performMigration(db);
+        TopicDbMigratorV5 topicDbMigratorV5 = Mockito.spy(new TopicDbMigratorV5());
+        Mockito.doNothing().when(topicDbMigratorV5).performMigration(db);
 
         // Ignore Measurement Migrators
         doReturn(List.of()).when(dbHelper).getOrderedDbMigrators();
-        doReturn(List.of(topicDbMigratorV7)).when(dbHelper).topicsGetOrderedDbMigrators();
+        doReturn(List.of(topicDbMigratorV5)).when(dbHelper).topicsGetOrderedDbMigrators();
 
-        // Negative case - target version 3 is not in (oldVersion, newVersion]
+        // Negative case - target version 5 is not in (oldVersion, newVersion]
         dbHelper.onUpgrade(db, /* oldVersion */ 1, /* new Version */ CURRENT_DATABASE_VERSION);
-        Mockito.verify(topicDbMigratorV7, Mockito.never()).performMigration(db);
+        Mockito.verify(topicDbMigratorV5, Mockito.never()).performMigration(db);
 
-        // Positive case - target version 3 is in (oldVersion, newVersion]
+        // Positive case - target version 5 is in (oldVersion, newVersion]
         dbHelper.onUpgrade(db, /* oldVersion */ 1, /* new Version */ DATABASE_VERSION_V7);
-        Mockito.verify(topicDbMigratorV7).performMigration(db);
+        Mockito.verify(topicDbMigratorV5).performMigration(db);
+    }
+
+    @Test
+    public void testOnDowngrade_topicsV5ToV3() {
+        DbHelper dbHelper = spy(DbTestUtil.getDbHelperForTest());
+        SQLiteDatabase db = mock(SQLiteDatabase.class);
+
+        // Verify no error if migrate db from V5 to V3
+        dbHelper.onDowngrade(db, DATABASE_VERSION_V7, CURRENT_DATABASE_VERSION);
     }
 
     @Test
@@ -155,20 +164,20 @@ public class DbHelperTest {
                         CURRENT_DATABASE_VERSION);
         assertThat(dbHelperV2.supportsTopicContributorsTable()).isFalse();
 
-        DbHelper dbHelperV3 =
+        DbHelper dbHelperV5 =
                 new DbHelper(
                         sContext, getDatabaseNameForTest(), /* dbVersion*/ DATABASE_VERSION_V7);
-        assertThat(dbHelperV3.supportsTopicContributorsTable()).isTrue();
+        assertThat(dbHelperV5.supportsTopicContributorsTable()).isTrue();
     }
 
     @Test
     public void testGetDatabaseVersionToCreate() {
         // Test feature flag is off
-        when(mMockFlags.getEnableDatabaseSchemaVersion3()).thenReturn(false);
+        when(mMockFlags.getEnableDatabaseSchemaVersion5()).thenReturn(false);
         assertThat(DbHelper.getDatabaseVersionToCreate()).isEqualTo(CURRENT_DATABASE_VERSION);
 
         // Test feature flag is on
-        when(mMockFlags.getEnableDatabaseSchemaVersion3()).thenReturn(true);
+        when(mMockFlags.getEnableDatabaseSchemaVersion5()).thenReturn(true);
         assertThat(DbHelper.getDatabaseVersionToCreate()).isEqualTo(DATABASE_VERSION_V7);
     }
 
@@ -186,7 +195,7 @@ public class DbHelperTest {
     }
 
     private void assertMeasurementSchema(SQLiteDatabase db) {
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_source", 25));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_source", 28));
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_trigger", 16));
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_async_registration_contract", 17));
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_event_report", 17));

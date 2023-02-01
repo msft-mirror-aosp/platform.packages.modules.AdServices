@@ -21,10 +21,8 @@ import android.app.adservices.consent.ConsentParcel;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.adservices.LogUtil;
 
+import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Objects;
 
 /**
@@ -33,18 +31,19 @@ import java.util.Objects;
  * @hide
  */
 public final class ConsentManager {
-    // The Data Schema Version of this binary.
-    static final String DATA_SCHEMA_VERSION = "1";
-
-    private static final String CONSENT_DIR = "consent";
-
     public static final String ERROR_MESSAGE_DATASTORE_EXCEPTION_WHILE_GET_CONTENT =
             "getConsent method failed. Revoked consent is returned as fallback.";
 
     @VisibleForTesting
     static final String NOTIFICATION_DISPLAYED_ONCE = "NOTIFICATION-DISPLAYED-ONCE";
 
-    private static final String CONSENT_KEY = "CONSENT";
+    static final String GA_UX_NOTIFICATION_DISPLAYED_ONCE = "GA-UX-NOTIFICATION-DISPLAYED-ONCE";
+
+    static final String TOPICS_CONSENT_PAGE_DISPLAYED = "TOPICS-CONSENT-PAGE-DISPLAYED";
+
+    static final String FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED =
+            "FLDEGE-AND-MSMT-CONDENT-PAGE-DISPLAYED";
+
     private static final String CONSENT_API_TYPE_PREFIX = "CONSENT_API_TYPE_";
 
     // Deprecate this since we store each version in its own folder.
@@ -60,16 +59,17 @@ public final class ConsentManager {
     }
 
     /** Create a ConsentManager with base directory and for userIdentifier */
-    public static ConsentManager createConsentManager(String baseDir, int userIdentifier)
+    @NonNull
+    public static ConsentManager createConsentManager(@NonNull String baseDir, int userIdentifier)
             throws IOException {
+        Objects.requireNonNull(baseDir, "Base dir must be provided.");
+
         // The Data store is in folder with the following format.
         // /data/system/adservices/user_id/consent/data_schema_version/
         // Create the consent directory if needed.
-        String consentDataStoreDir = getConsentDataStoreDir(baseDir, userIdentifier);
-        final Path packageDir = Paths.get(consentDataStoreDir);
-        if (!Files.exists(packageDir)) {
-            Files.createDirectories(packageDir);
-        }
+        String consentDataStoreDir =
+                ConsentDatastoreLocationHelper.getConsentDataStoreDirAndCreateDir(
+                        baseDir, userIdentifier);
 
         BooleanFileDatastore datastore = createAndInitBooleanFileDatastore(consentDataStoreDir);
 
@@ -91,13 +91,16 @@ public final class ConsentManager {
         if (datastore.get(NOTIFICATION_DISPLAYED_ONCE) == null) {
             datastore.put(NOTIFICATION_DISPLAYED_ONCE, false);
         }
+        if (datastore.get(GA_UX_NOTIFICATION_DISPLAYED_ONCE) == null) {
+            datastore.put(GA_UX_NOTIFICATION_DISPLAYED_ONCE, false);
+        }
+        if (datastore.get(TOPICS_CONSENT_PAGE_DISPLAYED) == null) {
+            datastore.put(TOPICS_CONSENT_PAGE_DISPLAYED, false);
+        }
+        if (datastore.get(FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED) == null) {
+            datastore.put(FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED, false);
+        }
         return datastore;
-    }
-
-    @VisibleForTesting
-    @NonNull
-    static String getConsentDataStoreDir(String baseDir, int userIdentifier) {
-        return baseDir + "/" + userIdentifier + "/" + CONSENT_DIR;
     }
 
     /** Retrieves the consent for all PP API services. */
@@ -173,6 +176,113 @@ public final class ConsentManager {
     public boolean wasNotificationDisplayed() {
         synchronized (this) {
             return mDatastore.get(NOTIFICATION_DISPLAYED_ONCE);
+        }
+    }
+
+    /**
+     * Saves information to the storage that GA UX notification was displayed for the first time to
+     * the user.
+     */
+    public void recordGaUxNotificationDisplayed() throws IOException {
+        synchronized (this) {
+            try {
+                // TODO(b/229725886): add metrics / logging
+                mDatastore.put(GA_UX_NOTIFICATION_DISPLAYED_ONCE, true);
+            } catch (IOException e) {
+                LogUtil.e(e, "Record notification failed due to IOException thrown by Datastore.");
+            }
+        }
+    }
+
+    /**
+     * Returns information whether GA Ux Consent Notification was displayed or not.
+     *
+     * @return true if GA UX Consent Notification was displayed, otherwise false.
+     */
+    public boolean wasGaUxNotificationDisplayed() {
+        synchronized (this) {
+            Boolean displayed = mDatastore.get(GA_UX_NOTIFICATION_DISPLAYED_ONCE);
+            return displayed != null ? displayed : false;
+        }
+    }
+
+    /**
+     * Saves information to the storage that topics consent page was displayed for the first time to
+     * the user.
+     */
+    public void recordTopicsConsentPageDisplayed() throws IOException {
+        synchronized (this) {
+            try {
+                // TODO(b/229725886): add metrics / logging
+                mDatastore.put(TOPICS_CONSENT_PAGE_DISPLAYED, true);
+            } catch (IOException e) {
+                LogUtil.e(
+                        e,
+                        "Record topics consent page failed due to"
+                                + " IOException thrown by Datastore.");
+            }
+        }
+    }
+
+    /**
+     * Returns information whether topics consent page was displayed or not.
+     *
+     * @return true if topics consent page was displayed, otherwise false.
+     */
+    public boolean wasTopicsConsentPageDisplayed() {
+        synchronized (this) {
+            Boolean displayed = mDatastore.get(TOPICS_CONSENT_PAGE_DISPLAYED);
+            return displayed != null ? displayed : false;
+        }
+    }
+
+    /**
+     * Saves information to the storage that Fledge and Msmt consent was displayed for the first
+     * time to the user.
+     */
+    public void recordFledgeAndMsmtConsentPageDisplayed() throws IOException {
+        synchronized (this) {
+            try {
+                // TODO(b/229725886): add metrics / logging
+                mDatastore.put(FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED, true);
+            } catch (IOException e) {
+                LogUtil.e(
+                        e,
+                        "Record fledge and Msmt consent page failed due to "
+                                + "IOException thrown by Datastore.");
+            }
+        }
+    }
+
+    /**
+     * Returns information whether fledge and msmt consent page was displayed or not.
+     *
+     * @return true if fledge and msmt consent page was displayed, otherwise false.
+     */
+    public boolean wasFledgeAndMsmtConsentPageDisplayed() {
+        synchronized (this) {
+            Boolean displayed = mDatastore.get(FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED);
+            return displayed != null ? displayed : false;
+        }
+    }
+    /**
+     * Deletes the user directory which contains consent information present at
+     * /data/system/adservices/user_id
+     */
+    public boolean deleteUserDirectory(File dir) throws IOException {
+        synchronized (this) {
+            boolean success = true;
+            File[] files = dir.listFiles();
+            // files will be null if dir is not a directory
+            if (files != null) {
+                for (File file : files) {
+                    if (!deleteUserDirectory(file)) {
+                        LogUtil.d("Failed to delete " + file);
+                        success = false;
+                    }
+                }
+            }
+            return success && dir.delete();
         }
     }
 

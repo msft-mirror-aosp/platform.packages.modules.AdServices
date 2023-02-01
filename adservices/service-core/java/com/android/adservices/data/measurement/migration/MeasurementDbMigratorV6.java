@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,35 +20,34 @@ import android.database.sqlite.SQLiteDatabase;
 
 import com.android.adservices.data.measurement.MeasurementTables;
 
-/** Migrates Measurement DB from user version 5 to 6. */
+/** Migrates Measurement DB from user version 3 to 6. */
 public class MeasurementDbMigratorV6 extends AbstractMeasurementDbMigrator {
-
     private static final String[] ALTER_STATEMENTS_VER_6 = {
         String.format(
-                "ALTER TABLE %1$s ADD %2$s INTEGER",
+                "ALTER TABLE %1$s RENAME COLUMN %2$s TO %3$s",
                 MeasurementTables.SourceContract.TABLE,
-                MeasurementTables.SourceContract.DEBUG_REPORTING),
-        String.format(
-                "ALTER TABLE %1$s ADD %2$s INTEGER",
-                MeasurementTables.TriggerContract.TABLE,
-                MeasurementTables.TriggerContract.DEBUG_REPORTING),
+                MeasurementTables.SourceContract.DEDUP_KEYS,
+                MeasurementTables.SourceContract.EVENT_REPORT_DEDUP_KEYS),
         String.format(
                 "ALTER TABLE %1$s ADD %2$s INTEGER",
                 MeasurementTables.SourceContract.TABLE,
-                MeasurementTables.SourceContract.AD_ID_PERMISSION),
+                MeasurementTables.SourceContract.AGGREGATE_REPORT_DEDUP_KEYS),
         String.format(
                 "ALTER TABLE %1$s ADD %2$s INTEGER",
                 MeasurementTables.SourceContract.TABLE,
-                MeasurementTables.SourceContract.AR_DEBUG_PERMISSION),
+                MeasurementTables.SourceContract.EVENT_REPORT_WINDOW),
         String.format(
                 "ALTER TABLE %1$s ADD %2$s INTEGER",
-                MeasurementTables.TriggerContract.TABLE,
-                MeasurementTables.TriggerContract.AD_ID_PERMISSION),
-        String.format(
-                "ALTER TABLE %1$s ADD %2$s INTEGER",
-                MeasurementTables.TriggerContract.TABLE,
-                MeasurementTables.TriggerContract.AR_DEBUG_PERMISSION),
+                MeasurementTables.SourceContract.TABLE,
+                MeasurementTables.SourceContract.AGGREGATABLE_REPORT_WINDOW)
     };
+
+    public static final String UPDATE_SOURCE_STATEMENT = String.format(
+            "UPDATE %1$s SET %2$s = %3$s, %4$s = %3$s",
+            MeasurementTables.SourceContract.TABLE,
+            MeasurementTables.SourceContract.EVENT_REPORT_WINDOW,
+            MeasurementTables.SourceContract.EXPIRY_TIME,
+            MeasurementTables.SourceContract.AGGREGATABLE_REPORT_WINDOW);
 
     public MeasurementDbMigratorV6() {
         super(6);
@@ -59,15 +58,19 @@ public class MeasurementDbMigratorV6 extends AbstractMeasurementDbMigrator {
         if (!MigrationHelpers.isColumnPresent(
                         db,
                         MeasurementTables.SourceContract.TABLE,
-                        MeasurementTables.SourceContract.DEBUG_REPORTING)
+                        MeasurementTables.SourceContract.EVENT_REPORT_WINDOW)
                 && !MigrationHelpers.isColumnPresent(
                         db,
-                        MeasurementTables.TriggerContract.TABLE,
-                        MeasurementTables.TriggerContract.DEBUG_REPORTING)) {
+                        MeasurementTables.SourceContract.TABLE,
+                        MeasurementTables.SourceContract.AGGREGATABLE_REPORT_WINDOW)) {
             for (String sql : ALTER_STATEMENTS_VER_6) {
                 db.execSQL(sql);
             }
+            migrateSourceData(db);
         }
-        db.execSQL(MeasurementTables.CREATE_TABLE_DEBUG_REPORT_LATEST);
+    }
+
+    private static void migrateSourceData(SQLiteDatabase db) {
+        db.execSQL(UPDATE_SOURCE_STATEMENT);
     }
 }

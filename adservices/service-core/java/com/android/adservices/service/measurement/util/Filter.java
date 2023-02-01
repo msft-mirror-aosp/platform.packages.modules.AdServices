@@ -16,8 +16,14 @@
 
 package com.android.adservices.service.measurement.util;
 
+import android.annotation.NonNull;
+
 import com.android.adservices.service.measurement.FilterMap;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -31,12 +37,25 @@ public final class Filter {
      * source or trigger, ignore that key. When a key is present both in source and trigger, the key
      * matches if the intersection of values is not empty.
      *
-     * @param sourceFilter the filter_data field in attribution source.
-     * @param triggerFilter the AttributionTriggerData in attribution trigger.
+     * @param sourceFilter the {@code FilterMap} in attribution source.
+     * @param triggerFilters a list of {@code FilterMap}, the trigger filter set.
      * @param isFilter true for filters, false for not_filters.
-     * @return return true when all keys in source filter and trigger filter are matched.
+     * @return return true when all keys shared by source filter and trigger filter are matched.
      */
     public static boolean isFilterMatch(
+            FilterMap sourceFilter, List<FilterMap> triggerFilters, boolean isFilter) {
+        if (sourceFilter.getAttributionFilterMap().isEmpty() || triggerFilters.isEmpty()) {
+            return true;
+        }
+        for (FilterMap filterMap : triggerFilters) {
+            if (isFilterMatch(sourceFilter, filterMap, isFilter)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean isFilterMatch(
             FilterMap sourceFilter, FilterMap triggerFilter, boolean isFilter) {
         for (String key : triggerFilter.getAttributionFilterMap().keySet()) {
             if (!sourceFilter.getAttributionFilterMap().containsKey(key)) {
@@ -60,5 +79,24 @@ public final class Filter {
         Set<String> intersection = new HashSet<>(sourceValues);
         intersection.retainAll(triggerValues);
         return isFilter ? !intersection.isEmpty() : intersection.isEmpty();
+    }
+
+    /**
+     * Deserializes the provided {@link JSONArray} of filters into filter set.
+     *
+     * @param filters serialized filter set
+     * @return deserialized filter set
+     * @throws JSONException if the deserialization fails
+     */
+    @NonNull
+    public static List<FilterMap> deserializeFilterSet(@NonNull JSONArray filters)
+            throws JSONException {
+        List<FilterMap> filterSet = new ArrayList<>();
+        for (int i = 0; i < filters.length(); i++) {
+            FilterMap filterMap =
+                    new FilterMap.Builder().buildFilterData(filters.getJSONObject(i)).build();
+            filterSet.add(filterMap);
+        }
+        return filterSet;
     }
 }

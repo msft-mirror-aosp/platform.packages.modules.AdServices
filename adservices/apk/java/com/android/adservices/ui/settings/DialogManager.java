@@ -64,6 +64,80 @@ public class DialogManager {
     }
 
     /**
+     * Shows the dialog for opting out of the measurement of Privacy Sandbox.
+     *
+     * @param context Application context.
+     * @param measurementViewModel {@link MeasurementViewModel}
+     */
+    public static void showMeasurementOptOutDialog(
+            @NonNull Context context, MeasurementViewModel measurementViewModel) {
+        if (!sSemaphore.tryAcquire()) return;
+        OnClickListener positiveOnClickListener =
+                (dialogInterface, buttonId) -> {
+                    measurementViewModel.setMeasurementConsent(false);
+                    sSemaphore.release();
+                };
+        new AlertDialog.Builder(context)
+                .setTitle(R.string.settingsUI_dialog_measurement_opt_out_title)
+                .setMessage(R.string.settingsUI_dialog_opt_out_message)
+                .setPositiveButton(
+                        R.string.settingsUI_dialog_opt_out_positive_text, positiveOnClickListener)
+                .setNegativeButton(
+                        R.string.settingsUI_dialog_negative_text, getNegativeOnClickListener())
+                .setOnDismissListener(getOnDismissListener())
+                .show();
+    }
+
+    /**
+     * Shows the dialog for opting out of the topics of Privacy Sandbox.
+     *
+     * @param context Application context.
+     * @param topicsViewModel {@link TopicsViewModel}
+     */
+    public static void showTopicsOptOutDialog(
+            @NonNull Context context, TopicsViewModel topicsViewModel) {
+        if (!sSemaphore.tryAcquire()) return;
+        OnClickListener positiveOnClickListener =
+                (dialogInterface, buttonId) -> {
+                    topicsViewModel.setTopicsConsent(false);
+                    sSemaphore.release();
+                };
+        new AlertDialog.Builder(context)
+                .setTitle(R.string.settingsUI_dialog_topics_opt_out_title)
+                .setMessage(R.string.settingsUI_dialog_opt_out_message)
+                .setPositiveButton(
+                        R.string.settingsUI_dialog_opt_out_positive_text, positiveOnClickListener)
+                .setNegativeButton(
+                        R.string.settingsUI_dialog_negative_text, getNegativeOnClickListener())
+                .setOnDismissListener(getOnDismissListener())
+                .show();
+    }
+
+    /**
+     * Shows the dialog for opting out of the topics of Privacy Sandbox.
+     *
+     * @param context Application context.
+     * @param appsViewModel {@link AppsViewModel}
+     */
+    public static void showAppsOptOutDialog(@NonNull Context context, AppsViewModel appsViewModel) {
+        if (!sSemaphore.tryAcquire()) return;
+        OnClickListener positiveOnClickListener =
+                (dialogInterface, buttonId) -> {
+                    appsViewModel.setAppsConsent(false);
+                    sSemaphore.release();
+                };
+        new AlertDialog.Builder(context)
+                .setTitle(R.string.settingsUI_dialog_apps_opt_out_title)
+                .setMessage(R.string.settingsUI_dialog_opt_out_message)
+                .setPositiveButton(
+                        R.string.settingsUI_dialog_opt_out_positive_text, positiveOnClickListener)
+                .setNegativeButton(
+                        R.string.settingsUI_dialog_negative_text, getNegativeOnClickListener())
+                .setOnDismissListener(getOnDismissListener())
+                .show();
+    }
+
+    /**
      * Shows the dialog for blocking a topic.
      *
      * @param context Application context.
@@ -221,37 +295,6 @@ public class DialogManager {
                 .setMessage(R.string.settingsUI_dialog_reset_app_message)
                 .setPositiveButton(
                         R.string.settingsUI_dialog_reset_app_positive_text, positiveOnClickListener)
-                .setNegativeButton(
-                        R.string.settingsUI_dialog_negative_text, getNegativeOnClickListener())
-                .setOnDismissListener(getOnDismissListener())
-                .show();
-    }
-
-    /**
-     * Shows the dialog for resetting Measurement data.
-     *
-     * @param context Application context.
-     * @param measurementViewModel {@link MeasurementViewModel}
-     */
-    public static void showResetMeasurementDialog(
-            @NonNull Context context, MeasurementViewModel measurementViewModel) {
-        if (!sSemaphore.tryAcquire()) return;
-        OnClickListener positiveOnClickListener =
-                (dialogInterface, buttonId) -> {
-                    measurementViewModel.resetMeasurement();
-                    sSemaphore.release();
-                    Toast.makeText(
-                                    context,
-                                    R.string.settingsUI_measurement_are_reset,
-                                    Toast.LENGTH_SHORT)
-                            .show();
-                };
-        new AlertDialog.Builder(context)
-                .setTitle(R.string.settingsUI_dialog_reset_measurement_title)
-                .setMessage(R.string.settingsUI_dialog_reset_measurement_message)
-                .setPositiveButton(
-                        R.string.settingsUI_dialog_reset_measurement_positive_text,
-                        positiveOnClickListener)
                 .setNegativeButton(
                         R.string.settingsUI_dialog_negative_text, getNegativeOnClickListener())
                 .setOnDismissListener(getOnDismissListener())

@@ -49,6 +49,7 @@ import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.measurement.inputverification.ClickVerifier;
 import com.android.adservices.service.measurement.registration.EnqueueAsyncRegistration;
@@ -156,6 +157,12 @@ public final class MeasurementImpl {
                                     adIdPermission,
                                     getRegistrant(request.getAppPackageName()),
                                     requestTime,
+                                    request.getRegistrationType()
+                                                    == RegistrationRequest.REGISTER_TRIGGER
+                                            ? null
+                                            : getSourceType(
+                                                    request.getInputEvent(),
+                                                    request.getRequestTime()),
                                     mEnrollmentDao,
                                     mDatastoreManager)
                             ? STATUS_SUCCESS
@@ -191,6 +198,9 @@ public final class MeasurementImpl {
                             adIdPermission,
                             getRegistrant(request.getAppPackageName()),
                             requestTime,
+                            getSourceType(
+                                    sourceRegistrationRequest.getInputEvent(),
+                                    request.getRequestTime()),
                             mEnrollmentDao,
                             mDatastoreManager);
             if (enqueueStatus) {
@@ -261,7 +271,14 @@ public final class MeasurementImpl {
      * Implement a getMeasurementApiStatus request, returning a result code.
      */
     @MeasurementManager.MeasurementApiState int getMeasurementApiStatus() {
-        AdServicesApiConsent consent = ConsentManager.getInstance(mContext).getConsent();
+        AdServicesApiConsent consent;
+        if (mFlags.getGaUxFeatureEnabled()) {
+            consent =
+                    ConsentManager.getInstance(mContext).getConsent(AdServicesApiType.MEASUREMENTS);
+        } else {
+            consent = ConsentManager.getInstance(mContext).getConsent();
+        }
+
         if (consent.isGiven()) {
             return MeasurementManager.MEASUREMENT_API_STATE_ENABLED;
         } else {

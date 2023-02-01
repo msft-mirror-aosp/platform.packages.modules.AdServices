@@ -18,8 +18,8 @@ package android.adservices.adselection;
 
 /**
  * This interface defines the AdSelectionResponse.
- * An AdSelectionResponse is a Parcelable object that is returned upon success of {@link runAdAuction}'
- * by {@link AdSelectionManager}.
+ * An AdSelectionResponse is a Parcelable object that is returned upon success of {@link
+ * runAdAuction}' by {@link AdSelectionManager}.
  *
  * {@hide}
  */

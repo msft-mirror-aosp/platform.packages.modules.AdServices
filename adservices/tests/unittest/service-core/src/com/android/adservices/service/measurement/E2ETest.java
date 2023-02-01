@@ -72,6 +72,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 /**
  * End-to-end test from source and trigger registration to attribution reporting. Extensions of
@@ -254,14 +255,15 @@ public abstract class E2ETest {
         }
     }
 
-    static Collection<Object[]> data(String testDirName) throws IOException, JSONException {
+    static Collection<Object[]> data(String testDirName, Function<String, String> preprocessor)
+            throws IOException, JSONException {
         AssetManager assetManager = sContext.getAssets();
         List<InputStream> inputStreams = new ArrayList<>();
         String[] testDirectoryList = assetManager.list(testDirName);
         for (String testFile : testDirectoryList) {
             inputStreams.add(assetManager.open(testDirName + "/" + testFile));
         }
-        return getTestCasesFrom(inputStreams, testDirectoryList);
+        return getTestCasesFrom(inputStreams, testDirectoryList, preprocessor);
     }
 
     public static Map<String, List<Map<String, List<String>>>> getUriToResponseHeadersMap(
@@ -802,9 +804,15 @@ public abstract class E2ETest {
             long jobTime = sourceTime + 1000 * validExpiry + 3600000L;
 
             reportingJobsActions.add(new EventReportingJob(jobTime));
+            // Add a job two days earlier for interop tests
+            reportingJobsActions.add(new EventReportingJob(jobTime - TimeUnit.DAYS.toMillis(2)));
         }
 
         return reportingJobsActions;
+    }
+
+    static String preprocessTestJson(String json) {
+        return json.replaceAll("\\.test(?=[\"\\/])", ".com");
     }
 
     /**
@@ -816,7 +824,8 @@ public abstract class E2ETest {
      * PrivacyParamsProvider privacyParamsProvider, String name]}
      */
     private static Collection<Object[]> getTestCasesFrom(List<InputStream> inputStreams,
-            String[] filenames) throws IOException, JSONException {
+            String[] filenames, Function<String, String> preprocessor)
+            throws IOException, JSONException {
         List<Object[]> testCases = new ArrayList<>();
 
         for (int i = 0; i < inputStreams.size(); i++) {
@@ -826,10 +835,7 @@ public abstract class E2ETest {
             inputStreams.get(i).close();
             String json = new String(buffer, StandardCharsets.UTF_8);
 
-            JSONObject testObj = new JSONObject(
-                    json.replaceAll("\\.test(?=[\"\\/])", ".com")
-                            // Remove comments (present in interop JSON)
-                            .replaceAll("^\\s*\\/\\/.+\\n", ""));
+            JSONObject testObj = new JSONObject(preprocessor.apply(json));
             String name = filenames[i];
             JSONObject input = testObj.getJSONObject(TestFormatJsonMapping.TEST_INPUT_KEY);
             JSONObject output = testObj.getJSONObject(TestFormatJsonMapping.TEST_OUTPUT_KEY);
