@@ -141,12 +141,6 @@ public class SettingsGaUiAutomatorTest {
                 sDevice.findObject(new UiSelector().className("android.widget.Switch"));
         if (topicsToggle.isChecked()) {
             topicsToggle.click();
-            UiObject dialogTitle = getElement(R.string.settingsUI_dialog_topics_opt_out_title);
-            UiObject positiveText = getElement(R.string.settingsUI_dialog_opt_out_positive_text);
-            assertThat(dialogTitle.exists()).isTrue();
-            assertThat(positiveText.exists()).isTrue();
-            // click positive button that turn off the toggle
-            positiveText.click();
         }
         assertThat(topicsToggle.isChecked()).isFalse();
         sDevice.pressBack();
@@ -161,11 +155,6 @@ public class SettingsGaUiAutomatorTest {
                 sDevice.findObject(new UiSelector().className("android.widget.Switch"));
         if (appsToggle.isChecked()) {
             appsToggle.click();
-            UiObject dialogTitle = getElement(R.string.settingsUI_dialog_apps_opt_out_title);
-            UiObject positiveText = getElement(R.string.settingsUI_dialog_opt_out_positive_text);
-            assertThat(dialogTitle.exists()).isTrue();
-            assertThat(positiveText.exists()).isTrue();
-            positiveText.click();
         }
         assertThat(appsToggle.isChecked()).isFalse();
         sDevice.pressBack();
@@ -179,11 +168,6 @@ public class SettingsGaUiAutomatorTest {
                 sDevice.findObject(new UiSelector().className("android.widget.Switch"));
         if (measurementToggle.isChecked()) {
             measurementToggle.click();
-            UiObject dialogTitle = getElement(R.string.settingsUI_dialog_measurement_opt_out_title);
-            UiObject positiveText = getElement(R.string.settingsUI_dialog_opt_out_positive_text);
-            assertThat(dialogTitle.exists()).isTrue();
-            assertThat(positiveText.exists()).isTrue();
-            positiveText.click();
         }
         assertThat(measurementToggle.isChecked()).isFalse();
         sDevice.pressBack();
