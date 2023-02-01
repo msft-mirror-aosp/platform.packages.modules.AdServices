@@ -157,6 +157,12 @@ public final class MeasurementImpl {
                                     adIdPermission,
                                     getRegistrant(request.getAppPackageName()),
                                     requestTime,
+                                    request.getRegistrationType()
+                                                    == RegistrationRequest.REGISTER_TRIGGER
+                                            ? null
+                                            : getSourceType(
+                                                    request.getInputEvent(),
+                                                    request.getRequestTime()),
                                     mEnrollmentDao,
                                     mDatastoreManager)
                             ? STATUS_SUCCESS
@@ -192,6 +198,9 @@ public final class MeasurementImpl {
                             adIdPermission,
                             getRegistrant(request.getAppPackageName()),
                             requestTime,
+                            getSourceType(
+                                    sourceRegistrationRequest.getInputEvent(),
+                                    request.getRequestTime()),
                             mEnrollmentDao,
                             mDatastoreManager);
             if (enqueueStatus) {

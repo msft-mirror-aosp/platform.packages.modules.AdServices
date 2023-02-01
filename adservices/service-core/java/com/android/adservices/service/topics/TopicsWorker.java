@@ -113,7 +113,7 @@ public class TopicsWorker {
         LogUtil.v("TopicsWorker.getKnownTopicsWithConsent");
         mReadWriteLock.readLock().lock();
         try {
-            return mCacheManager.getKnownTopicsWithConsent();
+            return mCacheManager.getKnownTopicsWithConsent(mEpochManager.getCurrentEpochId());
         } finally {
             mReadWriteLock.readLock().unlock();
         }
@@ -191,7 +191,11 @@ public class TopicsWorker {
         mReadWriteLock.readLock().lock();
         try {
             List<Topic> topics =
-                    mCacheManager.getTopics(mFlags.getTopicsNumberOfLookBackEpochs(), app, sdk);
+                    mCacheManager.getTopics(
+                            mFlags.getTopicsNumberOfLookBackEpochs(),
+                            mEpochManager.getCurrentEpochId(),
+                            app,
+                            sdk);
 
             List<Long> taxonomyVersions = new ArrayList<>(topics.size());
             List<Long> modelVersions = new ArrayList<>(topics.size());
@@ -245,7 +249,7 @@ public class TopicsWorker {
         // Here we use Write lock to block Read during that loading time.
         mReadWriteLock.writeLock().lock();
         try {
-            mCacheManager.loadCache();
+            mCacheManager.loadCache(mEpochManager.getCurrentEpochId());
         } finally {
             mReadWriteLock.writeLock().unlock();
         }

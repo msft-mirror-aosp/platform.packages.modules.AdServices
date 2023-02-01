@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 3,
-    "identityHash": "653856760f5faf36e0006c52b0174487",
+    "identityHash": "2861f24c1b068b1603e33e3180d40eaf",
     "entities": [
       {
         "tableName": "ad_selection",
@@ -209,8 +209,8 @@
         "foreignKeys": []
       },
       {
-        "tableName": "registered_ad_events",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`ad_selection_id` INTEGER NOT NULL, `event_type` TEXT NOT NULL, `destination` INTEGER NOT NULL, `event_uri` TEXT NOT NULL, PRIMARY KEY(`ad_selection_id`, `event_type`, `destination`))",
+        "tableName": "registered_ad_interactions",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`ad_selection_id` INTEGER NOT NULL, `interaction_key` TEXT NOT NULL, `destination` INTEGER NOT NULL, `interaction_reporting_uri` TEXT NOT NULL, PRIMARY KEY(`ad_selection_id`, `interaction_key`, `destination`))",
         "fields": [
           {
             "fieldPath": "adSelectionId",
@@ -219,8 +219,8 @@
             "notNull": true
           },
           {
-            "fieldPath": "eventType",
-            "columnName": "event_type",
+            "fieldPath": "interactionKey",
+            "columnName": "interaction_key",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -231,8 +231,8 @@
             "notNull": true
           },
           {
-            "fieldPath": "eventUri",
-            "columnName": "event_uri",
+            "fieldPath": "interactionReportingUri",
+            "columnName": "interaction_reporting_uri",
             "affinity": "TEXT",
             "notNull": true
           }
@@ -240,7 +240,7 @@
         "primaryKey": {
           "columnNames": [
             "ad_selection_id",
-            "event_type",
+            "interaction_key",
             "destination"
           ],
           "autoGenerate": false
@@ -252,7 +252,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '653856760f5faf36e0006c52b0174487')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '2861f24c1b068b1603e33e3180d40eaf')"
     ]
   }
 }

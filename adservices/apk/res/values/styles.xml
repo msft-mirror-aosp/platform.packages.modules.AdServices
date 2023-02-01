@@ -98,6 +98,14 @@
         <item name="android:textAppearance">@style/TextAppearance.Body2</item>
     </style>
 
+    <style name="MainStyle.Subtitle">
+        <item name="android:textAppearance">?android:attr/textAppearanceSmall</item>
+        <item name="android:textColor">?android:attr/textColorSecondary</item>
+        <item name="android:background">?android:attr/selectableItemBackground</item>
+        <item name="android:layout_marginTop">-15dp</item>
+        <item name="android:paddingLeft">20dp</item>
+    </style>
+
     <style name="TextAppearance" parent="android:TextAppearance.DeviceDefault">
         <item name="android:textColor">@color/primary_text_color</item>
     </style>

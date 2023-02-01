@@ -36,6 +36,11 @@
         <option name="test-file-name" value="SdkSandboxMediationTestProvider.apk" />
     </target_preparer>
 
+    <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
+        <option name="cleanup-apks" value="true" />
+        <option name="test-file-name" value="SdkSandboxMultiUserTestProvider.apk" />
+    </target_preparer>
+
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
         <option name="run-command" value="cmd sdk_sandbox set-state --enabled" />
         <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />
@@ -56,6 +61,11 @@
     <test class="com.android.tradefed.testtype.HostTest" >
         <option name="class"
                 value="com.android.sdksandbox.cts.host.SdkSandboxMediationHostTest" />
+    </test>
+
+    <test class="com.android.tradefed.testtype.HostTest" >
+        <option name="class"
+                value="com.android.sdksandbox.cts.host.SdkSandboxMultiUserHostTest" />
     </test>
 
     <object type="module_controller"

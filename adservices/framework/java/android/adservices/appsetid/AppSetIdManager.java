@@ -17,6 +17,7 @@ package android.adservices.appsetid;
 
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CallerMetadata;
+import android.adservices.common.SandboxedSdkContextUtils;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
 import android.app.sdksandbox.SandboxedSdkContext;
@@ -119,8 +120,9 @@ public class AppSetIdManager {
         String sdkPackageName = "";
         // First check if context is SandboxedSdkContext or not
         Context getAppSetIdRequestContext = getContext();
-        if (getAppSetIdRequestContext instanceof SandboxedSdkContext) {
-            SandboxedSdkContext requestContext = ((SandboxedSdkContext) getAppSetIdRequestContext);
+        SandboxedSdkContext requestContext =
+                SandboxedSdkContextUtils.getAsSandboxedSdkContext(getAppSetIdRequestContext);
+        if (requestContext != null) {
             sdkPackageName = requestContext.getSdkPackageName();
             appPackageName = requestContext.getClientPackageName();
         } else { // This is the case without the Sandbox.

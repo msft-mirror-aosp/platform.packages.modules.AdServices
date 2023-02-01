@@ -25,6 +25,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
@@ -140,7 +141,7 @@ public class EpochJobServiceTest {
         // TopicsWorker.computeEpoch() is executed.
         ExtendedMockito.verify(() -> TopicsWorker.getInstance(any(Context.class)));
         verify(mMockEpochManager).processEpoch();
-        verify(mMockCacheManager).loadCache();
+        verify(mMockCacheManager).loadCache(anyLong());
     }
 
     @Test

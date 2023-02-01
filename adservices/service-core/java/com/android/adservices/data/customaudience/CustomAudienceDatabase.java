@@ -28,8 +28,6 @@ import androidx.room.TypeConverters;
 import androidx.room.migration.AutoMigrationSpec;
 
 import com.android.adservices.data.common.FledgeRoomConverters;
-import com.android.internal.annotations.GuardedBy;
-
 
 import java.util.Objects;
 
@@ -66,18 +64,23 @@ public abstract class CustomAudienceDatabase extends RoomDatabase {
             toColumnName = "daily_update_uri")
     static class AutoMigration1To2 implements AutoMigrationSpec {}
 
-    @GuardedBy("SINGLETON_LOCK")
-    private static CustomAudienceDatabase sSingleton;
+    private static volatile CustomAudienceDatabase sSingleton;
 
     // TODO: How we want handle synchronized situation (b/228101878).
 
-    /** Returns an instance of the AdServiceDatabase given a context. */
+    /** Returns an instance of the CustomAudienceDatabase given a context. */
     public static CustomAudienceDatabase getInstance(@NonNull Context context) {
         Objects.requireNonNull(context, "Context must be provided.");
+        // Initialization pattern recommended on page 334 of "Effective Java" 3rd edition
+        CustomAudienceDatabase singleReadResult = sSingleton;
+        if (singleReadResult != null) {
+            return singleReadResult;
+        }
         synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
                 sSingleton =
                         Room.databaseBuilder(context, CustomAudienceDatabase.class, DATABASE_NAME)
+                                .fallbackToDestructiveMigration()
                                 .build();
             }
             return sSingleton;

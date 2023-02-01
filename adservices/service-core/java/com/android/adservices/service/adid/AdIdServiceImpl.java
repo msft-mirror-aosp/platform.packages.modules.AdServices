@@ -115,8 +115,10 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
                     int resultCode = STATUS_SUCCESS;
 
                     try {
-                        if (!canCallerInvokeAdIdService(
-                                hasAdIdPermission, adIdParam, callingUid, callback)) {
+                        resultCode =
+                                canCallerInvokeAdIdService(
+                                        hasAdIdPermission, adIdParam, callingUid, callback);
+                        if (resultCode != STATUS_SUCCESS) {
                             return;
                         }
                         mAdIdWorker.getAdId(packageName, callingUid, callback);
@@ -191,9 +193,9 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
      * @param sufficientPermission boolean which tells whether caller has sufficient permissions.
      * @param adIdParam {@link GetAdIdParam} to get information about the request.
      * @param callback {@link IGetAdIdCallback} to invoke when caller is not allowed.
-     * @return true if caller is allowed to invoke AdId API, false otherwise.
+     * @return API response status code..
      */
-    private boolean canCallerInvokeAdIdService(
+    private int canCallerInvokeAdIdService(
             boolean sufficientPermission,
             GetAdIdParam adIdParam,
             int callingUid,
@@ -204,7 +206,7 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
         } catch (WrongCallingApplicationStateException backgroundCaller) {
             invokeCallbackWithStatus(
                     callback, STATUS_BACKGROUND_CALLER, backgroundCaller.getMessage());
-            return false;
+            return STATUS_BACKGROUND_CALLER;
         }
 
         if (!sufficientPermission) {
@@ -212,7 +214,7 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
                     callback,
                     STATUS_PERMISSION_NOT_REQUESTED,
                     "Unauthorized caller. Permission not requested.");
-            return false;
+            return STATUS_PERMISSION_NOT_REQUESTED;
         }
         // This needs to access PhFlag which requires READ_DEVICE_CONFIG which
         // is not granted for binder thread. So we have to check it with one
@@ -225,7 +227,7 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
                     callback,
                     STATUS_CALLER_NOT_ALLOWED,
                     "Unauthorized caller. Caller is not allowed.");
-            return false;
+            return STATUS_CALLER_NOT_ALLOWED;
         }
 
         // Check whether calling package belongs to the callingUid
@@ -233,9 +235,9 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
                 enforceCallingPackageBelongsToUid(adIdParam.getAppPackageName(), callingUid);
         if (resultCode != STATUS_SUCCESS) {
             invokeCallbackWithStatus(callback, resultCode, "Caller is not authorized.");
-            return false;
+            return resultCode;
         }
-        return true;
+        return STATUS_SUCCESS;
     }
 
     private void invokeCallbackWithStatus(

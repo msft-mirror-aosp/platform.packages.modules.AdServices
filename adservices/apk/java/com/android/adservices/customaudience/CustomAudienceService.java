@@ -25,6 +25,7 @@ import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.PackageChangedReceiver;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.customaudience.CustomAudienceServiceImpl;
 
@@ -79,6 +80,10 @@ public class CustomAudienceService extends Service {
 
     /** @return {@code true} if the Privacy Sandbox has user consent */
     private boolean hasUserConsent() {
-        return ConsentManager.getInstance(this).getConsent().isGiven();
+        if (mFlags.getGaUxFeatureEnabled()) {
+            return ConsentManager.getInstance(this).getConsent(AdServicesApiType.FLEDGE).isGiven();
+        } else {
+            return ConsentManager.getInstance(this).getConsent().isGiven();
+        }
     }
 }
