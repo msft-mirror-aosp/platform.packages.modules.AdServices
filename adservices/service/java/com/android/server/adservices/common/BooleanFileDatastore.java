@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.server.adservices.consent;
+package com.android.server.adservices.common;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
@@ -56,7 +56,8 @@ import java.util.stream.Collectors;
  * @hide
  */
 public class BooleanFileDatastore {
-    public static final String VERSION_KEY = "android.app.adservices.consent.VERSION";
+    public static final int NO_PREVIOUS_VERSION = -1;
+
     private final int mDatastoreVersion;
 
     private final ReadWriteLock mReadWriteLock = new ReentrantReadWriteLock();
@@ -66,8 +67,14 @@ public class BooleanFileDatastore {
     private final AtomicFile mAtomicFile;
     private final Map<String, Boolean> mLocalMap = new HashMap<>();
 
+    private final String mVersionKey;
+    private int mPreviousStoredVersion;
+
     public BooleanFileDatastore(
-            @NonNull String parentPath, @NonNull String filename, int datastoreVersion) {
+            @NonNull String parentPath,
+            @NonNull String filename,
+            int datastoreVersion,
+            String versionKey) {
         Objects.requireNonNull(parentPath);
         Objects.requireNonNull(filename);
         Preconditions.checkStringNotEmpty(filename, "Filename must not be empty");
@@ -75,6 +82,7 @@ public class BooleanFileDatastore {
 
         mAtomicFile = new AtomicFile(new File(parentPath, filename));
         mDatastoreVersion = datastoreVersion;
+        mVersionKey = versionKey;
     }
 
     /**
@@ -105,7 +113,7 @@ public class BooleanFileDatastore {
         }
 
         // Version unused for now. May be needed in the future for handling migrations.
-        bundleToWrite.putInt(VERSION_KEY, mDatastoreVersion);
+        bundleToWrite.putInt(mVersionKey, mDatastoreVersion);
         bundleToWrite.writeToStream(outputStream);
 
         FileOutputStream out = null;
@@ -131,8 +139,8 @@ public class BooleanFileDatastore {
                     new ByteArrayInputStream(mAtomicFile.readFully());
             final PersistableBundle bundleRead = PersistableBundle.readFromStream(inputStream);
 
-            // Version unused for now. May be needed in the future for handling migrations.
-            bundleRead.remove(VERSION_KEY);
+            mPreviousStoredVersion = bundleRead.getInt(mVersionKey, NO_PREVIOUS_VERSION);
+            bundleRead.remove(mVersionKey);
 
             mLocalMap.clear();
             for (String key : bundleRead.keySet()) {
@@ -140,6 +148,7 @@ public class BooleanFileDatastore {
             }
         } catch (FileNotFoundException e) {
             LogUtil.v("File not found; continuing with clear database");
+            mPreviousStoredVersion = NO_PREVIOUS_VERSION;
             mLocalMap.clear();
         } catch (IOException e) {
             LogUtil.e(e, "Read from store file failed");
@@ -254,6 +263,12 @@ public class BooleanFileDatastore {
         } finally {
             mReadLock.unlock();
         }
+    }
+
+    /** Returns the version that was written prior to the device starting. */
+    @NonNull
+    public int getPreviousStoredVersion() {
+        return mPreviousStoredVersion;
     }
 
     /**
@@ -382,7 +397,7 @@ public class BooleanFileDatastore {
     }
 
     @VisibleForTesting
-    void tearDownForTesting() {
+    public void tearDownForTesting() {
         mWriteLock.lock();
         try {
             mAtomicFile.delete();
