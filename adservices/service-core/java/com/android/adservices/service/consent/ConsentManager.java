@@ -38,6 +38,7 @@ import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.service.topics.TopicsWorker;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.internal.util.Preconditions;
 
 import com.google.common.collect.ImmutableList;
 
@@ -772,6 +773,42 @@ public class ConsentManager {
                         "Error clear consent for uninstalled app %s and uid %d.",
                         packageName,
                         packageUid);
+            }
+        }
+    }
+
+    /**
+     * Clear consent data after an app was uninstalled, but the package Uid is unavailable. This
+     * could happen because the INTERACT_ACROSS_USERS_FULL permission is not available on Android
+     * versions prior to T.
+     *
+     * <p><strong>This method should only be used for R/S back-compat scenarios.</strong>
+     *
+     * @param packageName the package name that had been uninstalled.
+     */
+    public void clearConsentForUninstalledApp(@NonNull String packageName) {
+        Objects.requireNonNull(packageName);
+        Preconditions.checkStringNotEmpty(packageName, "Package name should not be empty");
+
+        synchronized (ConsentManager.class) {
+            try {
+                switch (mConsentSourceOfTruth) {
+                    case Flags.PPAPI_ONLY:
+                        try {
+                            mAppConsentDao.clearConsentForUninstalledApp(packageName);
+                        } catch (IOException exception) {
+                            LogUtil.e(
+                                    exception,
+                                    "Clear consent for uninstalled app %s failed due to"
+                                            + " IOException",
+                                    packageName);
+                        }
+                        break;
+                    default:
+                        LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                }
+            } catch (RuntimeException e) {
+                LogUtil.e(e, "Error clear consent for uninstalled app %s.", packageName);
             }
         }
     }
