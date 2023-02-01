@@ -1,5 +1,5 @@
 {
-   "mainline-presubmit": [
+  "mainline-presubmit": [
     // Install com.google.android.adservices.apex and run the corresponding test.
     {
       "name": "CtsSdkSandboxHostSideTests[com.google.android.adservices.apex]"
@@ -26,7 +26,7 @@
       "name": "SdkSandboxShellHostTest[com.google.android.adservices.apex]"
     },
     {
-      "name": "SdkSandboxRestrictionsHostTest[com.google.android.adservices.apex]"
+      "name": "BroadcastRestrictionsHostTest[com.google.android.adservices.apex]"
     },
     {
       "name": "SdkSandboxStorageHostTest[com.google.android.adservices.apex]",
@@ -37,13 +37,16 @@
       ]
     },
     {
+      "name": "SdkSandboxMetricsHostTest[com.google.android.adservices.apex]"
+    },
+    {
       "name": "CtsSdkSandboxWebkitTestCases[com.google.android.adservices.apex]"
     },
     {
       "name": "SdkSandboxManagerDisabledTests[com.google.android.adservices.apex]"
     },
     {
-     "name": "SdkSandboxPerfScenarioTests[com.google.android.adservices.apex]"
+      "name": "SdkSandboxPerfScenarioTests[com.google.android.adservices.apex]"
     }
   ],
   "mainline-postsubmit": [
@@ -81,9 +84,6 @@
       "name": "SdkSandboxShellHostTest"
     },
     {
-      "name": "SdkSandboxRestrictionsHostTest"
-    },
-    {
       "name": "BroadcastRestrictionsHostTest"
     },
     {
@@ -93,6 +93,9 @@
           "exclude-annotation": "android.platform.test.annotations.LargeTest"
         }
       ]
+    },
+    {
+      "name": "SdkSandboxMetricsHostTest"
     },
     {
       "name": "SdkSandboxManagerDisabledTests"
@@ -107,6 +110,167 @@
   "postsubmit": [
     {
       "name": "SdkSandboxStorageHostTest"
+    }
+  ],
+  "sdksandbox-postsubmit": [
+    {
+      "name": "CtsAccelerationTestCases"
+    },
+    {
+      "name": "CtsAccessibilityServiceTestCases"
+    },
+    {
+      "name": "CtsAccessibilityTestCases"
+    },
+    {
+      "name": "CtsAlarmManagerTestCases"
+    },
+    {
+      "name": "CtsAndroidAppTestCases"
+    },
+    {
+      "name": "CtsAnimationTestCases"
+    },
+    {
+      "name": "CtsAppExitTestCases"
+    },
+    {
+      "name": "CtsAppOpsTestCases"
+    },
+    {
+      "name": "CtsAppTestCases"
+    },
+    {
+      "name": "CtsAppWidgetTestCases"
+    },
+    {
+      "name": "CtsAutoFillServiceTestCases"
+    },
+    {
+      "name": "CtsCameraTestCases"
+    },
+    {
+      "name": "CtsContentTestCases"
+    },
+    {
+      "name": "CtsDatabaseTestCases"
+    },
+    {
+      "name": "CtsDisplayTestCases"
+    },
+    {
+      "name": "CtsDpiTestCases"
+    },
+    {
+      "name": "CtsFragmentTestCases"
+    },
+    {
+      "name": "CtsGameManagerTestCases"
+    },
+    {
+      "name": "CtsGraphicsTestCases"
+    },
+    {
+      "name": "CtsInputMethodTestCases"
+    },
+    {
+      "name": "CtsInputMethodTestCases32"
+    },
+    {
+      "name": "CtsJniTestCases"
+    },
+    {
+      "name": "CtsMediaAudioTestCases"
+    },
+    {
+      "name": "CtsMediaCodecTestCases"
+    },
+    {
+      "name": "CtsMediaMiscTestCases"
+    },
+    {
+      "name": "CtsMediaRecorderTestCases"
+    },
+    {
+      "name": "CtsMultiUserTestCases"
+    },
+    {
+      "name": "CtsNativeMediaAAudioTestCases"
+    },
+    {
+      "name": "CtsNativeNetPlatformTestCases"
+    },
+    {
+      "name": "CtsOsTestCases"
+    },
+    {
+      "name": "CtsPackageInstallAppOpDefaultTestCases"
+    },
+    {
+      "name": "CtsPermission2TestCases"
+    },
+    {
+      "name": "CtsPermission5TestCases"
+    },
+    {
+      "name": "CtsPermissionTestCases"
+    },
+    {
+      "name": "CtsPermissionTestCasesTelephony"
+    },
+    {
+      "name": "CtsPreferenceTestCases"
+    },
+    {
+      "name": "CtsRenderscriptTestCases"
+    },
+    {
+      "name": "CtsSensorPrivacyTestCases"
+    },
+    {
+      "name": "CtsSensorRatePermissionTestCases"
+    },
+    {
+      "name": "CtsSensorTestCases"
+    },
+    {
+      "name": "CtsSystemUiTestCases"
+    },
+    {
+      "name": "CtsTextTestCases"
+    },
+    {
+      "name": "CtsToastTestCases"
+    },
+    {
+      "name": "CtsTranslationTestCases"
+    },
+    {
+      "name": "CtsUiAutomationTestCases "
+    },
+    {
+      "name": "CtsUiRenderingTestCases"
+    },
+    {
+      "name": "CtsUsageStatsTestCases"
+    },
+    {
+      "name": "CtsUtilTestCases"
+    },
+    {
+      "name": "CtsViewReceiveContentTestCases"
+    },
+    {
+      "name": "CtsVirtualDevicesTestCases"
+    },
+    {
+      "name": "CtsVoiceInteractionTestCases"
+    },
+    {
+      "name": "CtsWebkitTestCases"
+    },
+    {
+      "name": "CtsWidgetTestCases"
     }
   ]
 }

@@ -16,7 +16,6 @@
 
 package com.android.tests.sandbox.appsetid;
 
-import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
@@ -78,14 +77,8 @@ public class SandboxedAppSetIdManagerTest {
 
         // This verifies that the appsetidsdk in the Sandbox gets back the correct appsetid.
         // If the appsetidsdk did not get correct appsetid, it will trigger the
-        // callback.onLoadSdkError
-        // callback.isLoadSdkSuccessful returns true if there were no errors.
-        assertWithMessage(
-                        callback.isLoadSdkSuccessful()
-                                ? "Callback was successful"
-                                : "Callback failed with message " + callback.getLoadSdkErrorMsg())
-                .that(callback.isLoadSdkSuccessful())
-                .isTrue();
+        // callback.onLoadSdkError.
+        callback.assertLoadSdkIsSuccessful();
     }
 
     private void overridingBeforeTest() {

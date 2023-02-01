@@ -19,6 +19,7 @@ package com.android.sdksandbox.app;
 import android.app.Activity;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
+import android.app.sdksandbox.testutils.FakeSdkSandboxProcessDeathCallback;
 import android.os.Bundle;
 
 public class SdkSandboxTestActivity extends Activity {
@@ -34,22 +35,16 @@ public class SdkSandboxTestActivity extends Activity {
                 getApplicationContext().getSystemService(SdkSandboxManager.class);
         assert sdkSandboxManager != null;
 
+        // Add a callback so that this app does not die when the sandbox dies.
+        sdkSandboxManager.addSdkSandboxProcessDeathCallback(
+                Runnable::run, new FakeSdkSandboxProcessDeathCallback());
+
         Bundle params = new Bundle();
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         FakeLoadSdkCallback callback2 = new FakeLoadSdkCallback();
         sdkSandboxManager.loadSdk(SDK_NAME, params, Runnable::run, callback);
         sdkSandboxManager.loadSdk(SDK_NAME_2, params, Runnable::run, callback2);
-        if (!callback.isLoadSdkSuccessful()) {
-            throw new AssertionError(
-                    "Failed to load " + SDK_NAME + ": "
-                            + callback.getLoadSdkErrorCode() + "["
-                            + callback.getLoadSdkErrorMsg() + "]");
-        }
-        if (!callback2.isLoadSdkSuccessful()) {
-            throw new AssertionError(
-                    "Failed to load " + SDK_NAME_2 + ": "
-                            + callback.getLoadSdkErrorCode() + "["
-                            + callback.getLoadSdkErrorMsg() + "]");
-        }
+        callback.assertLoadSdkIsSuccessful();
+        callback2.assertLoadSdkIsSuccessful();
     }
 }

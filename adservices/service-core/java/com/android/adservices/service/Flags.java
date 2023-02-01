@@ -24,6 +24,7 @@ import android.util.Dumpable;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.data.adselection.DBRegisteredAdInteraction;
 import com.android.adservices.service.adselection.AdOutcomeSelectorImpl;
 import com.android.adservices.service.common.cache.FledgeHttpCache;
 
@@ -583,9 +584,8 @@ public interface Flags extends Dumpable {
     }
 
     /**
-     * Returns the maximum number of {@link
-     * com.android.adservices.data.adselection.DBRegisteredAdEvent} that an ad-tech can register in
-     * one call to {@code reportImpression}.
+     * Returns the maximum number of {@link DBRegisteredAdInteraction} that an ad-tech can register
+     * in one call to {@code reportImpression}.
      */
     default long getReportImpressionMaxEventUriEntriesCount() {
         return FLEDGE_REPORT_IMPRESSION_MAX_EVENT_URI_ENTRIES_COUNT;
@@ -1489,8 +1489,7 @@ public interface Flags extends Dumpable {
     }
 
     /** Ui OTA strings manifest file url, used for MDD download. */
-    String UI_OTA_STRINGS_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-ui-ota-strings/1341/95580b00edbd8cbf62bfa0df9ebd79fba1e5b7ca";
+    String UI_OTA_STRINGS_MANIFEST_FILE_URL = "";
 
     /** UI OTA strings manifest file url. */
     default String getUiOtaStringsManifestFileUrl() {

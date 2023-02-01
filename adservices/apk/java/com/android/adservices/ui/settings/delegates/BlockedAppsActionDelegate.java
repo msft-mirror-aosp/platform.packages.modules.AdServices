@@ -21,6 +21,7 @@ import android.util.Pair;
 import androidx.lifecycle.Observer;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.consent.App;
 import com.android.adservices.ui.settings.DialogManager;
@@ -83,6 +84,10 @@ public class BlockedAppsActionDelegate extends BaseActionDelegate {
      * AdServicesSettingsBlockedAppsFragment} to handle user actions.
      */
     public void initBlockedAppsFragment() {
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            mBlockedAppsActivity.setTitle(R.string.settingsUI_blocked_apps_ga_title);
+        } else {
         mBlockedAppsActivity.setTitle(R.string.settingsUI_blocked_apps_title);
+        }
     }
 }

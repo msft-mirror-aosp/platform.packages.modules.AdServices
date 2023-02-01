@@ -18,6 +18,12 @@ package com.android.sdksandbox.cts.host;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assume.assumeTrue;
+
+import android.app.sdksandbox.hosttestutils.AdoptableStorageUtils;
+import android.app.sdksandbox.hosttestutils.SecondaryUserUtils;
+
+import com.android.modules.utils.build.testing.DeviceSdkLevel;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 import com.android.tradefed.testtype.junit4.DeviceTestRunOptions;
@@ -36,6 +42,11 @@ public class SdkSandboxDataIsolationHostTest extends BaseHostJUnit4Test {
 
     private static final String APP_2_PACKAGE = "com.android.sdksandbox.cts.app2";
     private static final String APP_2_APK = "CtsSdkSandboxHostTestApp2.apk";
+
+    private final SecondaryUserUtils mUserUtils = new SecondaryUserUtils(this);
+    private final AdoptableStorageUtils mAdoptableUtils = new AdoptableStorageUtils(this);
+
+    private DeviceSdkLevel mDeviceSdkLevel;
 
     /**
      * Runs the given phase of a test by calling into the device. Throws an exception if the test
@@ -60,6 +71,7 @@ public class SdkSandboxDataIsolationHostTest extends BaseHostJUnit4Test {
 
     @Before
     public void setUp() throws Exception {
+        mDeviceSdkLevel = new DeviceSdkLevel(getDevice());
         // These tests run on system user
         uninstallPackage(APP_PACKAGE);
         uninstallPackage(APP_2_PACKAGE);
@@ -67,6 +79,7 @@ public class SdkSandboxDataIsolationHostTest extends BaseHostJUnit4Test {
 
     @After
     public void tearDown() throws Exception {
+        mUserUtils.removeSecondaryUserIfNecessary();
         uninstallPackage(APP_PACKAGE);
         uninstallPackage(APP_2_PACKAGE);
     }
@@ -84,5 +97,80 @@ public class SdkSandboxDataIsolationHostTest extends BaseHostJUnit4Test {
     public void testSdkSandboxDataIsolation_SandboxCanAccessItsDirectory() throws Exception {
         installPackage(APP_APK);
         runPhase("testSdkSandboxDataIsolation_SandboxCanAccessItsDirectory");
+    }
+
+    /**
+     * Test whether an SDK can detect if an app is installed by the error obtained from accessing
+     * other sandbox app directories. ENOENT error should occur regardless of whether the app exists
+     * or not.
+     */
+    @Test
+    public void testSdkSandboxDataIsolation_CannotVerifyAppExistence() throws Exception {
+        // TODO(b/254608808,b/214241165): Remove once merged into QPR.
+        assumeTrue(mDeviceSdkLevel.isDeviceAtLeastU());
+
+        installPackage(APP_APK);
+        installPackage(APP_2_APK);
+
+        runPhase("testSdkSandboxDataIsolation_CannotVerifyAppExistence");
+    }
+
+    /**
+     * Test whether an SDK can detect if an app is installed by the error obtained from accessing
+     * other sandbox user directories. Permission errors should show up regardless of whether the
+     * app exists, when trying to access other user data.
+     */
+    @Test
+    public void testSdkSandboxDataIsolation_CannotVerifyOtherUserAppExistence() throws Exception {
+        // TODO(b/254608808,b/214241165): Remove once merged into QPR.
+        assumeTrue(mDeviceSdkLevel.isDeviceAtLeastU());
+
+        assumeTrue(getDevice().isMultiUserSupported());
+
+        installPackage(APP_APK);
+
+        int userId = mUserUtils.createAndStartSecondaryUser();
+        installPackageAsUser(APP_2_APK, true, userId);
+
+        runPhase(
+                "testSdkSandboxDataIsolation_CannotVerifyOtherUserAppExistence",
+                "sandbox_isolation_user_id",
+                Integer.toString(userId));
+    }
+
+    /**
+     * Test whether an SDK can verify an app's existence by checking other volumes, after data
+     * isolation has occurred.
+     */
+    @Test
+    public void testSdkSandboxDataIsolation_CannotVerifyAcrossVolumes() throws Exception {
+        // TODO(b/254608808,b/214241165): Remove once merged into QPR.
+        assumeTrue(mDeviceSdkLevel.isDeviceAtLeastU());
+
+        assumeTrue(mAdoptableUtils.isAdoptableStorageSupported());
+        installPackage(APP_APK);
+        installPackage(APP_2_APK);
+
+        try {
+            final String uuid = mAdoptableUtils.createNewVolume();
+
+            // Move second package to the newly created volume
+            assertSuccess(
+                    getDevice()
+                            .executeShellCommand("pm move-package " + APP_2_PACKAGE + " " + uuid));
+
+            runPhase(
+                    "testSdkSandboxDataIsolation_CannotVerifyAcrossVolumes",
+                    "sandbox_isolation_uuid",
+                    uuid);
+        } finally {
+            mAdoptableUtils.cleanUpVolume();
+        }
+    }
+
+    private static void assertSuccess(String str) {
+        if (str == null || !str.startsWith("Success")) {
+            throw new AssertionError("Expected success string but found " + str);
+        }
     }
 }

@@ -32,10 +32,13 @@ public class AggregateDeduplicationKey {
     private UnsignedLong mDedupKey;
     private Optional<List<FilterMap>> mFilterSet;
 
+    private Optional<List<FilterMap>> mNotFilterSet;
+
     /** Create a new aggregate encryption key object. */
     private AggregateDeduplicationKey() {
         mDedupKey = null;
         mFilterSet = Optional.empty();
+        mNotFilterSet = Optional.empty();
     }
 
     @Override
@@ -63,6 +66,11 @@ public class AggregateDeduplicationKey {
         return mFilterSet;
     }
 
+    /** Returns the not_filter, reverse of filter. */
+    public Optional<List<FilterMap>> getNotFilterSet() {
+        return mNotFilterSet;
+    }
+
     /** A builder for {@link AggregateDeduplicationKey}. */
     public static final class Builder {
         private final AggregateDeduplicationKey mBuilding;
@@ -74,9 +82,14 @@ public class AggregateDeduplicationKey {
         }
 
         /** See {@link AggregateDeduplicationKey#getFilterSet()}. */
-        public @NonNull AggregateDeduplicationKey.Builder setFilterSet(
-                @Nullable List<FilterMap> filterSet) {
+        public Builder setFilterSet(@Nullable List<FilterMap> filterSet) {
             mBuilding.mFilterSet = Optional.of(filterSet);
+            return this;
+        }
+
+        /** See {@link AggregateDeduplicationKey#getNotFilter()} */
+        public Builder setNotFilterSet(List<FilterMap> notFilterSet) {
+            mBuilding.mNotFilterSet = Optional.of(notFilterSet);
             return this;
         }
 

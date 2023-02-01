@@ -20,7 +20,9 @@ import android.annotation.NonNull;
 import android.annotation.SdkConstant;
 import android.annotation.SystemApi;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.ProviderInfo;
 import android.os.IBinder;
 
 /**
@@ -68,6 +70,40 @@ public interface SdkSandboxManagerLocal {
      * @throws SecurityException if the service is not allowed to be started or bound to.
      */
     void enforceAllowedToStartOrBindService(@NonNull Intent intent);
+
+    /**
+     * Whether the sdk sandbox process is allowed to access a given ContentProvider.
+     *
+     * @param providerInfo info about the Content Provider being accessed.
+     * @return true if the sandbox uid is allowed to access the ContentProvider, false otherwise.
+     */
+    boolean canAccessContentProviderFromSdkSandbox(@NonNull ProviderInfo providerInfo);
+
+    /**
+     * Enforces that the caller app is allowed to start a {@code SandboxedActivity} inside its
+     * sandbox process.
+     *
+     * @param intent the activity intent
+     * @param clientAppUid uid of the client app
+     * @param clientAppPackageName package name of the client app
+     * @throws SecurityException if the caller app is not allowed to start {@code
+     *     SandboxedActivity}.
+     */
+    void enforceAllowedToHostSandboxedActivity(
+            @NonNull Intent intent, int clientAppUid, @NonNull String clientAppPackageName);
+
+    /**
+     * Whether the sdk sandbox process is allowed to register a broadcast receiver with a given
+     * intentFilter.
+     *
+     * @param intentFilter the intentFilter to check.
+     * @param flags flags that the ActivityManagerService.registerReceiver method was called with.
+     * @param onlyProtectedBroadcasts true if all actions in {@code intentFilter} are protected
+     *     broadcasts
+     * @return true if sandbox is allowed to register a broadcastReceiver, otherwise false.
+     */
+    boolean canRegisterBroadcastReceiver(
+            @NonNull IntentFilter intentFilter, int flags, boolean onlyProtectedBroadcasts);
 
     /**
      * Returns name of the sdk sandbox process that corresponds to the given client app.

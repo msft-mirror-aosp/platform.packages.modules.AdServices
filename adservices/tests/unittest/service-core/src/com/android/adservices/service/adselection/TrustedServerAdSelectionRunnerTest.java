@@ -50,11 +50,7 @@ import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdSelectionRunner.AdSelectionOrchestrationResult;
-import com.android.adservices.service.common.AppImportanceFilter;
-import com.android.adservices.service.common.FledgeAllowListsFilter;
-import com.android.adservices.service.common.FledgeAuthorizationFilter;
-import com.android.adservices.service.common.Throttler;
-import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.common.FledgeServiceFilter;
 import com.android.adservices.service.proto.SellerFrontEndGrpc;
 import com.android.adservices.service.proto.SellerFrontEndGrpc.SellerFrontEndFutureStub;
 import com.android.adservices.service.proto.SellerFrontendService.SelectWinningAdRequest;
@@ -84,7 +80,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 
 import io.grpc.ManagedChannel;
 import io.grpc.okhttp.OkHttpChannelBuilder;
@@ -139,13 +134,8 @@ public class TrustedServerAdSelectionRunnerTest {
             };
     private TrustedServerAdSelectionRunner mAdSelectionRunner;
 
-    @Mock private AppImportanceFilter mAppImportanceFilter;
     @Mock private Clock mClock;
-    @Mock private ConsentManager mConsentManagerMock;
-    @Mock private Supplier<Throttler> mThrottlerSupplier;
     @Mock private AdServicesLogger mAdServicesLoggerSpy;
-    @Mock private FledgeAuthorizationFilter mFledgeAuthorizationFilter;
-    @Mock private FledgeAllowListsFilter mFledgeAllowListsFilter;
     @Mock private CustomAudienceDao mCustomAudienceDao;
     @Mock private AdSelectionEntryDao mAdSelectionEntryDao;
     @Mock private JsFetcher mJsFetcher;
@@ -156,6 +146,8 @@ public class TrustedServerAdSelectionRunnerTest {
     private SellerFrontEndFutureStub mStubWithCompression =
             Mockito.mock(SellerFrontEndFutureStub.class, "mStubWithCompression");
     @Mock private AdSelectionExecutionLogger mAdSelectionExecutionLogger;
+
+    @Mock FledgeServiceFilter mFledgeServiceFilter;
 
     @Before
     public void setUp() {
@@ -202,16 +194,12 @@ public class TrustedServerAdSelectionRunnerTest {
                         sLightweightExecutorService,
                         sBackgroundExecutorService,
                         sScheduledExecutor,
-                        mConsentManagerMock,
                         mMockAdSelectionIdGenerator,
                         mClock,
                         mAdServicesLoggerSpy,
-                        mAppImportanceFilter,
                         mFlags,
-                        mThrottlerSupplier,
                         CALLER_UID,
-                        mFledgeAuthorizationFilter,
-                        mFledgeAllowListsFilter,
+                        mFledgeServiceFilter,
                         mJsFetcher,
                         mAdSelectionExecutionLogger);
         AdSelectionOrchestrationResult adSelectionOrchestrationResult =
@@ -263,16 +251,12 @@ public class TrustedServerAdSelectionRunnerTest {
                         sLightweightExecutorService,
                         sBackgroundExecutorService,
                         sScheduledExecutor,
-                        mConsentManagerMock,
                         mMockAdSelectionIdGenerator,
                         mClock,
                         mAdServicesLoggerSpy,
-                        mAppImportanceFilter,
                         mFlags,
-                        mThrottlerSupplier,
                         CALLER_UID,
-                        mFledgeAuthorizationFilter,
-                        mFledgeAllowListsFilter,
+                        mFledgeServiceFilter,
                         mJsFetcher,
                         mAdSelectionExecutionLogger);
 
@@ -326,16 +310,12 @@ public class TrustedServerAdSelectionRunnerTest {
                         sLightweightExecutorService,
                         sBackgroundExecutorService,
                         sScheduledExecutor,
-                        mConsentManagerMock,
                         mMockAdSelectionIdGenerator,
                         mClock,
                         mAdServicesLoggerSpy,
-                        mAppImportanceFilter,
                         mFlags,
-                        mThrottlerSupplier,
                         CALLER_UID,
-                        mFledgeAuthorizationFilter,
-                        mFledgeAllowListsFilter,
+                        mFledgeServiceFilter,
                         mJsFetcher,
                         mAdSelectionExecutionLogger);
 
@@ -394,16 +374,12 @@ public class TrustedServerAdSelectionRunnerTest {
                         sLightweightExecutorService,
                         sBackgroundExecutorService,
                         sScheduledExecutor,
-                        mConsentManagerMock,
                         mMockAdSelectionIdGenerator,
                         mClock,
                         mAdServicesLoggerSpy,
-                        mAppImportanceFilter,
                         mFlags,
-                        mThrottlerSupplier,
                         CALLER_UID,
-                        mFledgeAuthorizationFilter,
-                        mFledgeAllowListsFilter,
+                        mFledgeServiceFilter,
                         mJsFetcher,
                         mAdSelectionExecutionLogger);
 
@@ -446,16 +422,12 @@ public class TrustedServerAdSelectionRunnerTest {
                         sLightweightExecutorService,
                         sBackgroundExecutorService,
                         sScheduledExecutor,
-                        mConsentManagerMock,
                         mMockAdSelectionIdGenerator,
                         mClock,
                         mAdServicesLoggerSpy,
-                        mAppImportanceFilter,
                         flags,
-                        mThrottlerSupplier,
                         CALLER_UID,
-                        mFledgeAuthorizationFilter,
-                        mFledgeAllowListsFilter,
+                        mFledgeServiceFilter,
                         mJsFetcher,
                         mAdSelectionExecutionLogger);
         invokeRunAdSelection(

@@ -16,10 +16,6 @@
 
 package com.android.adservices.ui.notifications;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__REQUESTED_NOTIFICATION;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
 import static com.android.adservices.ui.notifications.ConsentNotificationFragment.IS_EU_DEVICE_ARGUMENT_KEY;
 
 import android.app.Notification;
@@ -37,8 +33,8 @@ import com.android.adservices.api.R;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.stats.AdServicesLoggerImpl;
-import com.android.adservices.service.stats.UIStats;
+import com.android.adservices.service.stats.UiStatsLogger;
+import com.android.adservices.ui.OTAResourcesManager;
 
 /** Provides methods which can be used to display Privacy Sandbox consent notification. */
 public class ConsentNotificationTrigger {
@@ -53,25 +49,20 @@ public class ConsentNotificationTrigger {
      * @param context Context which is used to display {@link NotificationCompat}
      */
     public static void showConsentNotification(@NonNull Context context, boolean isEuDevice) {
+        UiStatsLogger.logRequestedNotification(context);
+
         boolean gaUxFeatureEnabled = FlagsFactory.getFlags().getGaUxFeatureEnabled();
-        UIStats uiStats =
-                new UIStats.Builder()
-                        .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
-                        .setRegion(
-                                isEuDevice
-                                        ? AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU
-                                        : AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW)
-                        .setAction(
-                                AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__REQUESTED_NOTIFICATION)
-                        .build();
-        AdServicesLoggerImpl.getInstance().logUIStats(uiStats);
+        // Set OTA resources if it exists.
+        if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()) {
+            OTAResourcesManager.applyOTAResources(context.getApplicationContext(), true);
+        }
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
 
         ConsentManager consentManager = ConsentManager.getInstance(context);
 
         if (!notificationManager.areNotificationsEnabled()) {
             recordNotificationDisplayed(gaUxFeatureEnabled, consentManager);
-            // TODO(b/242001860): add logging
+            UiStatsLogger.logNotificationDisabled(context);
             return;
         }
 
@@ -88,9 +79,8 @@ public class ConsentNotificationTrigger {
             boolean gaUxFeatureEnabled, ConsentManager consentManager) {
         if (gaUxFeatureEnabled) {
             consentManager.recordGaUxNotificationDisplayed();
-        } else {
-            consentManager.recordNotificationDisplayed();
         }
+        consentManager.recordNotificationDisplayed();
     }
 
     @NonNull

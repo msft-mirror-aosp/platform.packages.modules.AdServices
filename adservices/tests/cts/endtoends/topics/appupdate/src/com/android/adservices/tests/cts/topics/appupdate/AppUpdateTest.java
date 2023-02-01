@@ -276,7 +276,10 @@ public class AppUpdateTest {
                     }
                 };
 
-        sContext.registerReceiver(mTopicsResponseReceiver, topicResponseIntentFilter);
+        sContext.registerReceiver(
+                mTopicsResponseReceiver,
+                topicResponseIntentFilter,
+                Context.RECEIVER_EXPORTED /*UNAUDITED*/);
     }
 
     // Install test sample app 1 and verify the installation.

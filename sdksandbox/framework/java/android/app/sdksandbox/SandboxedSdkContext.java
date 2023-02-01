@@ -57,6 +57,7 @@ public final class SandboxedSdkContext extends ContextWrapper {
     @Nullable private final File mDeDataDir;
     private final SdkSandboxSystemServiceRegistry mSdkSandboxSystemServiceRegistry;
     private final ClassLoader mClassLoader;
+    private final boolean mCustomizedSdkContextEnabled;
 
     public SandboxedSdkContext(
             @NonNull Context baseContext,
@@ -65,7 +66,8 @@ public final class SandboxedSdkContext extends ContextWrapper {
             @NonNull ApplicationInfo info,
             @NonNull String sdkName,
             @Nullable String sdkCeDataDir,
-            @Nullable String sdkDeDataDir) {
+            @Nullable String sdkDeDataDir,
+            boolean isCustomizedSdkContextEnabled) {
         this(
                 baseContext,
                 classLoader,
@@ -74,6 +76,7 @@ public final class SandboxedSdkContext extends ContextWrapper {
                 sdkName,
                 sdkCeDataDir,
                 sdkDeDataDir,
+                isCustomizedSdkContextEnabled,
                 SdkSandboxSystemServiceRegistry.getInstance());
     }
 
@@ -86,6 +89,7 @@ public final class SandboxedSdkContext extends ContextWrapper {
             @NonNull String sdkName,
             @Nullable String sdkCeDataDir,
             @Nullable String sdkDeDataDir,
+            boolean isCustomizedSdkContextEnabled,
             SdkSandboxSystemServiceRegistry sdkSandboxSystemServiceRegistry) {
         super(baseContext);
         mClientPackageName = clientPackageName;
@@ -110,6 +114,8 @@ public final class SandboxedSdkContext extends ContextWrapper {
 
         mSdkSandboxSystemServiceRegistry = sdkSandboxSystemServiceRegistry;
         mClassLoader = classLoader;
+        // On legacy context, we manually create classloader which is different from baseContext's.
+        mCustomizedSdkContextEnabled = isCustomizedSdkContextEnabled;
     }
 
     /**
@@ -129,7 +135,8 @@ public final class SandboxedSdkContext extends ContextWrapper {
                 mSdkProviderInfo,
                 mSdkName,
                 (mCeDataDir != null) ? mCeDataDir.toString() : null,
-                (mDeDataDir != null) ? mDeDataDir.toString() : null);
+                (mDeDataDir != null) ? mDeDataDir.toString() : null,
+                mCustomizedSdkContextEnabled);
     }
 
     /**
@@ -149,7 +156,8 @@ public final class SandboxedSdkContext extends ContextWrapper {
                 mSdkProviderInfo,
                 mSdkName,
                 (mCeDataDir != null) ? mCeDataDir.toString() : null,
-                (mDeDataDir != null) ? mDeDataDir.toString() : null);
+                (mDeDataDir != null) ? mDeDataDir.toString() : null,
+                mCustomizedSdkContextEnabled);
     }
 
     /**
@@ -183,6 +191,9 @@ public final class SandboxedSdkContext extends ContextWrapper {
     @Override
     @Nullable
     public Resources getResources() {
+        if (mCustomizedSdkContextEnabled) {
+            return getBaseContext().getResources();
+        }
         return mResources;
     }
 
@@ -190,6 +201,9 @@ public final class SandboxedSdkContext extends ContextWrapper {
     @Override
     @Nullable
     public AssetManager getAssets() {
+        if (mCustomizedSdkContextEnabled) {
+            return getBaseContext().getAssets();
+        }
         return mAssets;
     }
 
@@ -197,6 +211,10 @@ public final class SandboxedSdkContext extends ContextWrapper {
     @Override
     @Nullable
     public File getDataDir() {
+        if (mCustomizedSdkContextEnabled) {
+            return getBaseContext().getDataDir();
+        }
+
         File res = null;
         if (isCredentialProtectedStorage()) {
             res = mCeDataDir;
@@ -225,6 +243,9 @@ public final class SandboxedSdkContext extends ContextWrapper {
 
     @Override
     public ClassLoader getClassLoader() {
+        if (mCustomizedSdkContextEnabled) {
+            return getBaseContext().getClassLoader();
+        }
         return mClassLoader;
     }
 }

@@ -587,17 +587,10 @@ public class Source {
 
     /**
      * Returns aggregate filter data string used for aggregation. aggregate filter data json is a
-     * JSONObject in Attribution-Reporting-Register-Source header.
-     * Example:
-     * Attribution-Reporting-Register-Source: {
-     *   // some other fields.
-     *   "filter_data" : {
-     *    "conversion_subdomain": ["electronics.megastore"],
-     *    "product": ["1234", "2345"],
-     *    "ctid": ["id"],
-     *    ......
-     * }
-     * }
+     * JSONObject in Attribution-Reporting-Register-Source header. Example:
+     * Attribution-Reporting-Register-Source: { // some other fields. "filter_data" : {
+     * "conversion_subdomain": ["electronics.megastore"], "product": ["1234", "2345"], "ctid":
+     * ["id"], ...... } }
      */
     public String getFilterData() {
         return mFilterData;
@@ -605,19 +598,11 @@ public class Source {
 
     /**
      * Returns aggregate source string used for aggregation. aggregate source json is a JSONArray.
-     * Example:
-     * [{
-     *   // Generates a "0x159" key piece (low order bits of the key) named
-     *   // "campaignCounts"
-     *   "id": "campaignCounts",
-     *   "key_piece": "0x159", // User saw ad from campaign 345 (out of 511)
-     * },
-     * {
-     *   // Generates a "0x5" key piece (low order bits of the key) named "geoValue"
-     *   "id": "geoValue",
-     *   // Source-side geo region = 5 (US), out of a possible ~100 regions.
-     *   "key_piece": "0x5",
-     * }]
+     * Example: [{ // Generates a "0x159" key piece (low order bits of the key) named //
+     * "campaignCounts" "id": "campaignCounts", "key_piece": "0x159", // User saw ad from campaign
+     * 345 (out of 511) }, { // Generates a "0x5" key piece (low order bits of the key) named
+     * "geoValue" "id": "geoValue", // Source-side geo region = 5 (US), out of a possible ~100
+     * regions. "key_piece": "0x5", }]
      */
     public String getAggregateSource() {
         return mAggregateSource;
@@ -667,12 +652,11 @@ public class Source {
             filterMap = new FilterMap.Builder().build();
         } else {
             filterMap =
-                    new FilterMap.Builder()
-                            .buildFilterData(new JSONObject(mFilterData))
-                            .build();
+                    new FilterMap.Builder().buildFilterData(new JSONObject(mFilterData)).build();
         }
-        filterMap.getAttributionFilterMap().put("source_type",
-                Collections.singletonList(mSourceType.getValue()));
+        filterMap
+                .getAttributionFilterMap()
+                .put("source_type", Collections.singletonList(mSourceType.getValue()));
         return filterMap;
     }
 

@@ -231,7 +231,7 @@ public class AsyncSourceFetcher {
                 && webDestinationFromRequest != null // Only validate when non-null in request
                 && !doUriFieldsMatch(
                         json, SourceHeaderContract.WEB_DESTINATION, webDestinationFromRequest)) {
-            LogUtil.d("Expected web_destination to match with ths supplied one!");
+            LogUtil.d("Expected web_destination to match with the supplied one!");
             return false;
         }
         if (!json.isNull(SourceHeaderContract.WEB_DESTINATION)) {

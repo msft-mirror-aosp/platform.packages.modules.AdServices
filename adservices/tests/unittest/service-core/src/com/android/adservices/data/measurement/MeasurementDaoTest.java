@@ -186,8 +186,8 @@ public class MeasurementDaoTest {
             assertEquals(validSource.getAttributionMode(), source.getAttributionMode());
             assertEquals(validSource.getAggregateSource(), source.getAggregateSource());
             assertEquals(validSource.getFilterData(), source.getFilterData());
-            assertEquals(validSource.getAggregateContributions(),
-                    source.getAggregateContributions());
+            assertEquals(
+                    validSource.getAggregateContributions(), source.getAggregateContributions());
             assertEquals(validSource.isDebugReporting(), source.isDebugReporting());
         }
     }

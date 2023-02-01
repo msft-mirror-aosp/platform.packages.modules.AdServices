@@ -55,14 +55,14 @@ public class ConsentNotificationJobService extends JobService {
     static final long MILLISECONDS_IN_THE_DAY = 86400000L;
 
     static final String ADID_ENABLE_STATUS = "adid_enable_status";
-
+    static final String RE_CONSENT_STATUS = "re_consent_status";
     private static final String ADSERVICES_STATUS_SHARED_PREFERENCE =
             "AdserviceStatusSharedPreference";
 
     private ConsentManager mConsentManager;
 
     /** Schedule the Job. */
-    public static void schedule(Context context, boolean adidEnabled) {
+    public static void schedule(Context context, boolean adidEnabled, boolean reConsentStatus) {
         final JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
         long initialDelay = calculateInitialDelay(Calendar.getInstance(TimeZone.getDefault()));
         long deadline = calculateDeadline(Calendar.getInstance(TimeZone.getDefault()));
@@ -89,6 +89,7 @@ public class ConsentNotificationJobService extends JobService {
         PersistableBundle bundle = new PersistableBundle();
         bundle.putBoolean(ADID_ENABLE_STATUS, adidEnabled);
         bundle.putLong(FIRST_ENTRY_REQUEST_TIMESTAMP, firstEntryRequestTimestamp);
+        bundle.putBoolean(RE_CONSENT_STATUS, reConsentStatus);
 
         final JobInfo job =
                 new JobInfo.Builder(
@@ -192,13 +193,17 @@ public class ConsentNotificationJobService extends JobService {
         }
         boolean isEuNotification =
                 !params.getExtras().getBoolean(ADID_ENABLE_STATUS, false) || isEuDevice(this);
+        boolean reConsentStatus = params.getExtras().getBoolean(RE_CONSENT_STATUS, false);
 
         AdServicesExecutors.getBackgroundExecutor()
                 .execute(
                         () -> {
                             try {
+                                boolean gaUxEnabled =
+                                        FlagsFactory.getFlags().getGaUxFeatureEnabled();
                                 if (!FlagsFactory.getFlags().getConsentNotificationDebugMode()
-                                        && mConsentManager.wasNotificationDisplayed()) {
+                                        && reConsentStatus
+                                        && !gaUxEnabled) {
                                     LogUtil.d("already notified, return back");
                                     return;
                                 }

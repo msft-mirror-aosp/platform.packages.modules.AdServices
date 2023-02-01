@@ -21,6 +21,7 @@ import android.net.Uri;
 import com.android.adservices.common.JsonFixture;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import org.json.JSONException;
 
@@ -28,8 +29,16 @@ import java.util.List;
 
 /** Utility class supporting ad services API unit tests */
 public class AdDataFixture {
-    private static final String VALID_METADATA = "{\"example\": \"metadata\", \"valid\": true}";
-    private static final String INVALID_METADATA = "not.{real!metadata} = 1";
+    public static final String VALID_METADATA = "{\"example\": \"metadata\", \"valid\": true}";
+    public static final String INVALID_METADATA = "not.{real!metadata} = 1";
+    public static final ImmutableSet<String> AD_COUNTER_KEYS =
+            ImmutableSet.<String>builder()
+                    .add(
+                            KeyedFrequencyCapFixture.KEY1,
+                            KeyedFrequencyCapFixture.KEY2,
+                            KeyedFrequencyCapFixture.KEY3,
+                            KeyedFrequencyCapFixture.KEY4)
+                    .build();
 
     public static Uri getValidRenderUriByBuyer(AdTechIdentifier buyer, int sequence) {
         return CommonFixture.getUri(buyer, "/testing/hello" + sequence);
@@ -63,7 +72,8 @@ public class AdDataFixture {
                         .build());
     }
 
-    public static AdData getValidAdDataByBuyer(AdTechIdentifier buyer, int sequenceNumber) {
+    public static AdData.Builder getValidAdDataBuilderByBuyer(
+            AdTechIdentifier buyer, int sequenceNumber) {
         String metadata;
         try {
             metadata = JsonFixture.formatAsOrgJsonJSONObjectString(VALID_METADATA);
@@ -73,7 +83,10 @@ public class AdDataFixture {
 
         return new AdData.Builder()
                 .setRenderUri(getValidRenderUriByBuyer(buyer, sequenceNumber))
-                .setMetadata(metadata)
-                .build();
+                .setMetadata(metadata);
+    }
+
+    public static AdData getValidAdDataByBuyer(AdTechIdentifier buyer, int sequenceNumber) {
+        return getValidAdDataBuilderByBuyer(buyer, sequenceNumber).build();
     }
 }

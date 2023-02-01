@@ -61,3 +61,12 @@ java_library {
     min_sdk_version: "Tiramisu",
     defaults: ["framework-module-defaults"],
 }
+
+java_api_contribution {
+    name: "framework-adservices-public-stubs",
+    api_surface: "public",
+    api_file: "api/current.txt",
+    visibility: [
+        "//build/orchestrator/apis",
+    ],
+}

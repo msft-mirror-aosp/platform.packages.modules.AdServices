@@ -41,6 +41,7 @@ android_test {
         "android.test.base",
         "android.test.mock",
         "android.test.runner",
+        "framework-configinfrastructure",
     ],
     jni_libs: [
         // Required for ExtendedMockito

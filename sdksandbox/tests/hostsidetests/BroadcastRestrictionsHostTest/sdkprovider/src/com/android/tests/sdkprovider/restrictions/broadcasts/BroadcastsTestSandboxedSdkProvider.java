@@ -28,7 +28,7 @@ import android.view.View;
 
 public class BroadcastsTestSandboxedSdkProvider extends SandboxedSdkProvider {
 
-    public class BroadcastTestSdkImpl extends IBroadcastSdkApi.Stub {
+    static class BroadcastTestSdkImpl extends IBroadcastSdkApi.Stub {
         private final Context mContext;
 
         public BroadcastTestSdkImpl(Context sdkContext) {
@@ -42,7 +42,8 @@ public class BroadcastsTestSandboxedSdkProvider extends SandboxedSdkProvider {
                         @Override
                         public void onReceive(Context context, Intent intent) {}
                     },
-                    new IntentFilter(Intent.ACTION_SEND));
+                    new IntentFilter(Intent.ACTION_SEND),
+                    Context.RECEIVER_EXPORTED);
         }
     }
 

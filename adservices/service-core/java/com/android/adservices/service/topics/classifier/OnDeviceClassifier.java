@@ -16,10 +16,6 @@
 
 package com.android.adservices.service.topics.classifier;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__ON_DEVICE_CLASSIFIER;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_FAILURE;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_SUCCESS;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED;
 import static com.android.adservices.service.topics.classifier.Preprocessor.limitDescriptionSize;
 
 import android.annotation.NonNull;
@@ -29,6 +25,9 @@ import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.EpochComputationClassifierStats;
+import com.android.adservices.service.stats.EpochComputationClassifierStats.ClassifierType;
+import com.android.adservices.service.stats.EpochComputationClassifierStats.OnDeviceClassifierStatus;
+import com.android.adservices.service.stats.EpochComputationClassifierStats.PrecomputedClassifierStatus;
 import com.android.adservices.service.topics.AppInfo;
 import com.android.adservices.service.topics.CacheManager;
 import com.android.adservices.service.topics.PackageManagerUtil;
@@ -36,6 +35,7 @@ import com.android.adservices.service.topics.PackageManagerUtil;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.common.primitives.Ints;
 
 import org.tensorflow.lite.support.label.Category;
 import org.tensorflow.lite.task.text.nlclassifier.BertNLClassifier;
@@ -150,14 +150,16 @@ public class OnDeviceClassifier implements Classifier {
                         .setTopicIds(topicIds.build())
                         .setBuildId(mBuildId)
                         .setAssetVersion(Long.toString(mModelVersion))
-                        .setClassifierType(
-                                AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__ON_DEVICE_CLASSIFIER)
+                        .setClassifierType(ClassifierType.ON_DEVICE_CLASSIFIER)
                         .setOnDeviceClassifierStatus(
                                 topics.isEmpty()
-                                        ? AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_FAILURE
-                                        : AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_SUCCESS)
+                                        ? OnDeviceClassifierStatus
+                                                .ON_DEVICE_CLASSIFIER_STATUS_FAILURE
+                                        : OnDeviceClassifierStatus
+                                                .ON_DEVICE_CLASSIFIER_STATUS_SUCCESS)
                         .setPrecomputedClassifierStatus(
-                                AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED)
+                                PrecomputedClassifierStatus
+                                        .PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED)
                         .build());
     }
 
@@ -331,15 +333,7 @@ public class OnDeviceClassifier implements Classifier {
         mLabelsVersion =
                 Long.parseLong(
                         classifierAssetsMetadata.get(LABELS_ASSET_FIELD).get(ASSET_VERSION_FIELD));
-        try {
-            mBuildId =
-                    Integer.parseInt(
-                            classifierAssetsMetadata.get(VERSION_INFO_FIELD).get(BUILD_ID_FIELD));
-        } catch (NumberFormatException e) {
-            // No build id is available.
-            LogUtil.d(e, "Build id is not available");
-            mBuildId = -1;
-        }
+        mBuildId = Ints.saturatedCast(mModelManager.getBuildId());
         return true;
     }
 

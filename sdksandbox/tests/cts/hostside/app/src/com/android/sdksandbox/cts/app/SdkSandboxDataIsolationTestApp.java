@@ -27,6 +27,7 @@ import android.os.Process;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
+import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.sdksandbox.cts.provider.dataisolationtest.IDataIsolationTestSdkApi;
 
@@ -90,10 +91,30 @@ public class SdkSandboxDataIsolationTestApp {
         mSdk.testSdkSandboxDataIsolation_SandboxCanAccessItsDirectory();
     }
 
+    @Test
+    public void testSdkSandboxDataIsolation_CannotVerifyAppExistence() throws Exception {
+        loadSdk();
+        mSdk.testSdkSandboxDataIsolation_CannotVerifyAppExistence();
+    }
+
+    @Test
+    public void testSdkSandboxDataIsolation_CannotVerifyOtherUserAppExistence() throws Exception {
+        loadSdk();
+        final Bundle arguments = InstrumentationRegistry.getArguments();
+        mSdk.testSdkSandboxDataIsolation_CannotVerifyOtherUserAppExistence(arguments);
+    }
+
+    @Test
+    public void testSdkSandboxDataIsolation_CannotVerifyAcrossVolumes() throws Exception {
+        loadSdk();
+        final Bundle arguments = InstrumentationRegistry.getArguments();
+        mSdk.testSdkSandboxDataIsolation_CannotVerifyAcrossVolumes(arguments);
+    }
+
     private void loadSdk() {
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        callback.assertLoadSdkIsSuccessful();
 
         // Store the returned SDK interface so that we can interact with it later.
         mSdk = IDataIsolationTestSdkApi.Stub.asInterface(callback.getSandboxedSdk().getInterface());

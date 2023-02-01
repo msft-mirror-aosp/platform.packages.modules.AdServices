@@ -22,6 +22,8 @@ import android.annotation.CallbackExecutor;
 import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
+import android.annotation.SdkConstant;
+import android.annotation.SystemApi;
 import android.annotation.SystemService;
 import android.annotation.TestApi;
 import android.app.sdksandbox.sdkprovider.SdkSandboxController;
@@ -35,6 +37,7 @@ import android.util.Log;
 import android.view.SurfaceControlViewHost.SurfacePackage;
 
 import com.android.internal.annotations.GuardedBy;
+import com.android.modules.utils.build.SdkLevel;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -115,6 +118,33 @@ public final class SdkSandboxManager {
      * client application.
      */
     public static final int LOAD_SDK_INTERNAL_ERROR = 500;
+
+    /**
+     * Action name for the intent which starts {@link android.app.Activity} in sandbox.
+     *
+     * <p>System services would know if the intent is created to start a sandbox {@link
+     * android.app.Activity} by comparing the action of the intent to the value of this field.
+     *
+     * <p>This intent should contain an extra param with key equals to {@link
+     * #EXTRA_SANDBOXED_ACTIVITY_HANDLER} and value equals to the {@link IBinder} that identifies
+     * the {@code SandboxedActivityHandler} registered before by an SDK. If this extra param is
+     * missing, the {@link android.app.Activity} will fail to start.
+     *
+     * @hide
+     */
+    @SdkConstant(SdkConstant.SdkConstantType.ACTIVITY_INTENT_ACTION)
+    @SystemApi(client = SystemApi.Client.MODULE_LIBRARIES)
+    public static final String ACTION_START_SANDBOXED_ACTIVITY =
+            "android.app.sdksandbox.action.START_SANDBOXED_ACTIVITY";
+
+    /**
+     * The key for an element in {@code SandboxedActivity} intent extra params, the value is an
+     * {@code SandboxedActivityHandler} registered by an SDK.
+     *
+     * @hide
+     */
+    public static final String EXTRA_SANDBOXED_ACTIVITY_HANDLER =
+            "android.app.sdksandbox.extra.SANDBOXED_ACTIVITY_HANDLER";
 
     private static final String TAG = "SdkSandboxManager";
 
@@ -352,9 +382,18 @@ public final class SdkSandboxManager {
         Objects.requireNonNull(receiver, "receiver should not be null");
         final LoadSdkReceiverProxy callbackProxy =
                 new LoadSdkReceiverProxy(executor, receiver, mService);
+
+        IBinder appProcessToken;
+        // Context.getProcessToken() only exists on U+.
+        if (SdkLevel.isAtLeastU()) {
+            appProcessToken = mContext.getProcessToken();
+        } else {
+            appProcessToken = null;
+        }
         try {
             mService.loadSdk(
                     mContext.getPackageName(),
+                    appProcessToken,
                     sdkName,
                     /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
                     params,

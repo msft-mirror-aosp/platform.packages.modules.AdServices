@@ -19,6 +19,12 @@
           package="com.android.server.sdksandbox.tests" >
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"/>
 
+    <queries>
+        <package android:name="com.android.codeproviderresources_1" />
+        <package android:name="com.android.serviceprovider" />
+        <package android:name="com.android.codeprovider_1" />
+    </queries>
+
     <application android:debuggable="true">
         <uses-library android:name="android.test.runner" />
         <uses-sdk-library android:name="com.android.codeprovider" android:versionMajor="1"

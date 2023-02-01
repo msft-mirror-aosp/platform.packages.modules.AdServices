@@ -19,7 +19,6 @@ package com.android.adservices.service.profiling;
 import android.annotation.NonNull;
 import android.os.Trace;
 
-
 import java.util.concurrent.ThreadLocalRandom;
 
 /** Utility class providing methods for using {@link android.os.Trace}. */
@@ -43,6 +42,10 @@ public final class Tracing {
     public static final String CACHE_GET = "CacheGet";
     public static final String CACHE_PUT = "CachePut";
     public static final String HTTP_REQUEST = "HttpRequest";
+    public static final String JSSCRIPTENGINE_CREATE_ISOLATE = "JSScriptEngine#createIsolate";
+    public static final String JSSCRIPTENGINE_EVALUATE_ON_SANDBOX =
+            "JSScriptEngine#evaluateOnSandbox";
+    public static final String JSSCRIPTENGINE_CLOSE_ISOLATE = "JSScriptEngine#closeIsolate";
 
     /**
      * Begins an asynchronous trace and generates random cookie.

@@ -36,6 +36,7 @@
                 android:orientation="vertical"
                 android:focusableInTouchMode="true" >
                 <TextView
+                    android:id="@+id/above_pic_paragraph"
                     android:layout_marginTop="8dp"
                     android:text="@string/settingsUI_main_view_subtitle"
                     style="@style/MainStyle.Body2" />
@@ -128,6 +129,7 @@
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/main_view_footer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:paddingHorizontal="24dp"
@@ -141,7 +143,6 @@
                     android:layout_marginStart="2dp"
                     android:src="@drawable/ic_info_icon"
                     tools:ignore="ContentDescription" />
-
                 <TextView
                     android:layout_marginTop="18dp"
                     android:layout_marginStart="0dp"
@@ -176,6 +177,49 @@
                 <TextView
                     android:layout_marginTop="18dp"
                     android:text="@string/settingsUI_main_view_info_text9"
+                    style="@style/MainStyle.Body2" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/main_view_ga_footer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="24dp"
+                android:paddingBottom="48dp"
+                android:orientation="vertical"
+                android:focusableInTouchMode="true"
+                android:visibility="gone">
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginStart="2dp"
+                    android:src="@drawable/ic_info_icon"
+                    tools:ignore="ContentDescription" />
+                <TextView
+                    android:layout_marginTop="18dp"
+                    android:layout_marginStart="0dp"
+                    android:text="@string/settingsUI_topics_ga_title"
+                    style="@style/MainStyle.Body2BoldBullet" />
+                <TextView
+                    android:layout_marginTop="18dp"
+                    android:text="@string/settingsUI_main_view_ad_topics_info"
+                    style="@style/MainStyle.Body2" />
+                <TextView
+                    android:layout_marginTop="18dp"
+                    android:layout_marginStart="0dp"
+                    android:text="@string/settingsUI_apps_ga_title"
+                    style="@style/MainStyle.Body2BoldBullet" />
+                <TextView
+                    android:layout_marginTop="18dp"
+                    android:text="@string/settingsUI_main_view_apps_info"
+                    style="@style/MainStyle.Body2" />
+                <TextView
+                    android:text="@string/settingsUI_measurement_ga_title"
+                    style="@style/MainStyle.Body2BoldBullet" />
+                <TextView
+                    android:layout_marginTop="18dp"
+                    android:text="@string/settingsU_main_view_measurement_info"
                     style="@style/MainStyle.Body2" />
             </LinearLayout>
         </LinearLayout>

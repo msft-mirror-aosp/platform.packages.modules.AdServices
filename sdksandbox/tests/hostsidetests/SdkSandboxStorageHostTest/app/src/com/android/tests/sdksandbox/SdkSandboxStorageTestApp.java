@@ -21,9 +21,9 @@ import static android.os.storage.StorageManager.UUID_DEFAULT;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.fail;
 
 import android.app.sdksandbox.SdkSandboxManager;
+import android.app.sdksandbox.testutils.EmptyActivity;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.app.usage.StorageStats;
 import android.app.usage.StorageStatsManager;
@@ -65,7 +65,7 @@ public class SdkSandboxStorageTestApp {
     private static final String JAVA_FILE_NOT_FOUND_MSG =
             "open failed: ENOENT (No such file or directory)";
 
-    @Rule public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(TestActivity.class);
+    @Rule public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(EmptyActivity.class);
 
     private Context mContext;
     private SdkSandboxManager mSdkSandboxManager;
@@ -85,13 +85,7 @@ public class SdkSandboxStorageTestApp {
     public void loadSdk() throws Exception {
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
-        if (!callback.isLoadSdkSuccessful()) {
-            fail(
-                    "Load SDK was not successful. errorCode: "
-                            + callback.getLoadSdkErrorCode()
-                            + ", errorMsg: "
-                            + callback.getLoadSdkErrorMsg());
-        }
+        callback.assertLoadSdkIsSuccessful();
 
         // Store the returned SDK interface so that we can interact with it later.
         mSdk = IStorageTestSdk1Api.Stub.asInterface(callback.getSandboxedSdk().getInterface());

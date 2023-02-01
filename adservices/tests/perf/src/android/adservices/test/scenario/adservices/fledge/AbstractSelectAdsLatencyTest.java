@@ -16,7 +16,6 @@
 
 package android.adservices.test.scenario.adservices.fledge;
 
-import android.Manifest;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.clients.adselection.AdSelectionClient;
@@ -26,14 +25,16 @@ import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.TrustedBiddingData;
+import android.adservices.test.scenario.adservices.utils.SelectAdsFlagRule;
 import android.adservices.test.scenario.adservices.utils.StaticAdTechServerUtils;
 import android.content.Context;
 import android.net.Uri;
+import android.platform.test.rule.CleanPackageRule;
+import android.platform.test.rule.KillAppsRule;
 import android.platform.test.scenario.annotation.Scenario;
 import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.compatibility.common.util.ShellUtils;
 
@@ -46,6 +47,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Rule;
+import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
@@ -66,10 +69,7 @@ public class AbstractSelectAdsLatencyTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
-    private static final String CACHE_DB =
-            "/data/data/com.google.android.adservices.api/databases/fledgehttpcache.db";
-    private static final String CUSTOM_AUDIENCE_DB =
-            "/data/data/com.google.android.adservices.api/databases/customaudience.db";
+    private static final String PPAPI_PACKAGE = "com.google.android.adservices.api";
     protected static final int API_RESPONSE_TIMEOUT_SECONDS = 100;
     protected static final AdSelectionClient AD_SELECTION_CLIENT =
             new AdSelectionClient.Builder()
@@ -89,17 +89,17 @@ public class AbstractSelectAdsLatencyTest {
             };
     protected static List<CustomAudience> sCustomAudiences;
 
+    // Per-test method rules, run in the given order.
+    @Rule
+    public RuleChain rules =
+            RuleChain.outerRule(new CleanPackageRule(PPAPI_PACKAGE))
+                    .around(new KillAppsRule(PPAPI_PACKAGE))
+                    .around(new SelectAdsFlagRule());
+
     @BeforeClass
     public static void setupBeforeClass() {
         StaticAdTechServerUtils.warmupServers();
         sCustomAudiences = new ArrayList<>();
-        InstrumentationRegistry.getInstrumentation()
-                .getUiAutomation()
-                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
-        extendAuctionTimeouts();
-        disableApiThrottling();
-        disablePhenotypeFlagUpdates();
-        enableAdservicesApi();
     }
 
     protected void runSelectAds(
@@ -151,34 +151,6 @@ public class AbstractSelectAdsLatencyTest {
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     }
 
-    private static void extendAuctionTimeouts() {
-        ShellUtils.runShellCommand(
-                "device_config put adservices fledge_ad_selection_bidding_timeout_per_ca_ms "
-                        + "120000");
-        ShellUtils.runShellCommand(
-                "device_config put adservices fledge_ad_selection_scoring_timeout_ms 120000");
-        ShellUtils.runShellCommand(
-                "device_config put adservices fledge_ad_selection_overall_timeout_ms 120000");
-        ShellUtils.runShellCommand(
-                "device_config put adservices fledge_ad_selection_bidding_timeout_per_buyer_ms "
-                        + "120000");
-    }
-
-    private static void disableApiThrottling() {
-        ShellUtils.runShellCommand(
-                "device_config put adservices sdk_request_permits_per_second 1000");
-    }
-
-    private static void disablePhenotypeFlagUpdates() {
-        ShellUtils.runShellCommand("device_config set_sync_disabled_for_tests persistent");
-    }
-
-    private static void enableAdservicesApi() {
-        ShellUtils.runShellCommand("setprop debug.adservices.disable_fledge_enrollment_check true");
-        ShellUtils.runShellCommand("device_config put adservices global_kill_switch false");
-        ShellUtils.runShellCommand(
-                "device_config put adservices adservice_system_service_enabled true");
-    }
 
     private ImmutableList<CustomAudience> readCustomAudiences(String fileName) throws Exception {
         ImmutableList.Builder<CustomAudience> customAudienceBuilder = ImmutableList.builder();

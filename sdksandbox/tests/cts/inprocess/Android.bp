@@ -43,4 +43,7 @@ android_test {
         "mts-adservices",
         "general-tests"
     ],
+    test_options: {
+        extra_test_configs: ["AndroidTest_MultiUser.xml"]
+    },
 }
