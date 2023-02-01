@@ -21,9 +21,14 @@ import android.util.ArrayMap;
 
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.server.adservices.consent.AppConsentManager;
 import com.android.server.adservices.consent.ConsentManager;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 
 /**
@@ -37,6 +42,9 @@ public class UserInstanceManager {
     @GuardedBy("UserInstanceManager.class")
     private final Map<Integer, ConsentManager> mConsentManagerMapLocked = new ArrayMap<>();
 
+    @GuardedBy("UserInstanceManager.class")
+    private final Map<Integer, AppConsentManager> mAppConsentManagerMapLocked = new ArrayMap<>();
+
     private final String mAdServicesBaseDir;
 
     UserInstanceManager(String adServicesBaseDir) {
@@ -46,7 +54,7 @@ public class UserInstanceManager {
     @NonNull
     ConsentManager getOrCreateUserConsentManagerInstance(int userIdentifier) throws IOException {
         synchronized (UserInstanceManager.class) {
-            ConsentManager instance = mConsentManagerMapLocked.get(userIdentifier);
+            ConsentManager instance = getUserConsentManagerInstance(userIdentifier);
             if (instance == null) {
                 instance = ConsentManager.createConsentManager(mAdServicesBaseDir, userIdentifier);
                 mConsentManagerMapLocked.put(userIdentifier, instance);
@@ -55,11 +63,56 @@ public class UserInstanceManager {
         }
     }
 
+    @NonNull
+    AppConsentManager getOrCreateUserAppConsentManagerInstance(int userIdentifier)
+            throws IOException {
+        synchronized (UserInstanceManager.class) {
+            AppConsentManager instance = mAppConsentManagerMapLocked.get(userIdentifier);
+            if (instance == null) {
+                instance =
+                        AppConsentManager.createAppConsentManager(
+                                mAdServicesBaseDir, userIdentifier);
+                mAppConsentManagerMapLocked.put(userIdentifier, instance);
+            }
+            return instance;
+        }
+    }
+
+    @VisibleForTesting
+    ConsentManager getUserConsentManagerInstance(int userIdentifier) {
+        synchronized (UserInstanceManager.class) {
+            return mConsentManagerMapLocked.get(userIdentifier);
+        }
+    }
+
+    /**
+     * Deletes the user instance and remove the user consent related data. This will delete the
+     * directory: /data/system/adservices/user_id
+     */
+    void deleteUserInstance(int userIdentifier) throws Exception {
+        synchronized (UserInstanceManager.class) {
+            ConsentManager instance = mConsentManagerMapLocked.get(userIdentifier);
+            if (instance != null) {
+                String userDirectoryPath = mAdServicesBaseDir + "/" + userIdentifier;
+                final Path packageDir = Paths.get(userDirectoryPath);
+                if (Files.exists(packageDir)) {
+                    if (!instance.deleteUserDirectory(new File(userDirectoryPath))) {
+                        LogUtil.e("Failed to delete " + userDirectoryPath);
+                    }
+                }
+                mConsentManagerMapLocked.remove(userIdentifier);
+            }
+        }
+    }
+
     @VisibleForTesting
     void tearDownForTesting() {
         synchronized (UserInstanceManager.class) {
             for (ConsentManager consentManager : mConsentManagerMapLocked.values()) {
                 consentManager.tearDownForTesting();
+            }
+            for (AppConsentManager appConsentManager : mAppConsentManagerMapLocked.values()) {
+                appConsentManager.tearDownForTesting();
             }
         }
     }

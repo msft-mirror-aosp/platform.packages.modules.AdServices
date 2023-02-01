@@ -623,9 +623,9 @@ public class AdSelectionScriptEngine {
 
     /**
      * @return Updates the args passed to bidding JS to maintain backward compatibility
-     *     (b/259718738), this shall be removed with TODO(b/260786980).
-     *     Throws back the original {@link JSExecutionException} if the js method does not match
-     *     signature of the backward compat.
+     *     (b/259718738), this shall be removed with TODO(b/260786980). Throws back the original
+     *     {@link JSExecutionException} if the js method does not match signature of the backward
+     *     compat.
      */
     private FluentFuture<List<JSScriptArgument>> updateArgsIfNeeded(
             String generateBidJS,

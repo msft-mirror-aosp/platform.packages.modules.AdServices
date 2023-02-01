@@ -152,6 +152,7 @@ public class EnqueueAsyncRegistrationTest {
                         DEFAULT_AD_ID_PERMISSION,
                         Uri.parse("android-app://test.destination"),
                         System.currentTimeMillis(),
+                        Source.SourceType.EVENT,
                         mEnrollmentDao,
                         datastoreManager));
 
@@ -207,6 +208,7 @@ public class EnqueueAsyncRegistrationTest {
                         DEFAULT_AD_ID_PERMISSION,
                         Uri.parse("android-app://test.destination"),
                         System.currentTimeMillis(),
+                        Source.SourceType.NAVIGATION,
                         mEnrollmentDao,
                         datastoreManager));
 
@@ -261,6 +263,7 @@ public class EnqueueAsyncRegistrationTest {
                         DEFAULT_AD_ID_PERMISSION,
                         Uri.parse("android-app://test.destination"),
                         System.currentTimeMillis(),
+                        null,
                         mEnrollmentDao,
                         datastoreManager));
 
@@ -303,6 +306,7 @@ public class EnqueueAsyncRegistrationTest {
                         DEFAULT_AD_ID_PERMISSION,
                         Uri.parse("android-app://test.destination"),
                         System.currentTimeMillis(),
+                        Source.SourceType.EVENT,
                         mEnrollmentDao,
                         datastoreManager));
 
@@ -481,6 +485,7 @@ public class EnqueueAsyncRegistrationTest {
                         DEFAULT_AD_ID_PERMISSION,
                         Uri.parse("android-app://test.destination"),
                         System.currentTimeMillis(),
+                        Source.SourceType.NAVIGATION,
                         mEnrollmentDao,
                         datastoreManager));
 
@@ -815,6 +820,7 @@ public class EnqueueAsyncRegistrationTest {
                 DEFAULT_AD_ID_PERMISSION,
                 Uri.parse("android-app://test.destination"),
                 System.currentTimeMillis(),
+                Source.SourceType.EVENT,
                 mEnrollmentDao,
                 datastoreManager);
 
@@ -878,6 +884,7 @@ public class EnqueueAsyncRegistrationTest {
                 adIdPermission,
                 Uri.parse("android-app://test.destination"),
                 System.currentTimeMillis(),
+                Source.SourceType.NAVIGATION,
                 mEnrollmentDao,
                 datastore);
     }

@@ -78,8 +78,12 @@ public final class MeasurementTables {
         String APP_DESTINATION = "app_destination";
         String WEB_DESTINATION = "web_destination";
         String DEDUP_KEYS = "dedup_keys";
+        String EVENT_REPORT_DEDUP_KEYS = "event_report_dedup_keys";
+        String AGGREGATE_REPORT_DEDUP_KEYS = "aggregate_report_dedup_keys";
         String EVENT_TIME = "event_time";
         String EXPIRY_TIME = "expiry_time";
+        String EVENT_REPORT_WINDOW = "event_report_window";
+        String AGGREGATABLE_REPORT_WINDOW = "aggregatable_report_window";
         String PRIORITY = "priority";
         String STATUS = "status";
         String SOURCE_TYPE = "source_type";
@@ -315,7 +319,7 @@ public final class MeasurementTables {
                     + " INTEGER "
                     + ")";
 
-    public static final String CREATE_TABLE_SOURCE_LATEST =
+    public static final String CREATE_TABLE_SOURCE_V2 =
             "CREATE TABLE "
                     + SourceContract.TABLE
                     + " ("
@@ -340,6 +344,68 @@ public final class MeasurementTables {
                     + SourceContract.STATUS
                     + " INTEGER, "
                     + SourceContract.DEDUP_KEYS
+                    + " TEXT, "
+                    + SourceContract.SOURCE_TYPE
+                    + " TEXT, "
+                    + SourceContract.REGISTRANT
+                    + " TEXT, "
+                    + SourceContract.ATTRIBUTION_MODE
+                    + " INTEGER, "
+                    + SourceContract.INSTALL_ATTRIBUTION_WINDOW
+                    + " INTEGER, "
+                    + SourceContract.INSTALL_COOLDOWN_WINDOW
+                    + " INTEGER, "
+                    + SourceContract.IS_INSTALL_ATTRIBUTED
+                    + " INTEGER, "
+                    + SourceContract.FILTER_DATA
+                    + " TEXT, "
+                    + SourceContract.AGGREGATE_SOURCE
+                    + " TEXT, "
+                    + SourceContract.AGGREGATE_CONTRIBUTIONS
+                    + " INTEGER, "
+                    + SourceContract.WEB_DESTINATION
+                    + " TEXT, "
+                    + SourceContract.DEBUG_KEY
+                    + " INTEGER , "
+                    + SourceContract.DEBUG_REPORTING
+                    + " INTEGER, "
+                    + SourceContract.AD_ID_PERMISSION
+                    + " INTEGER, "
+                    + SourceContract.AR_DEBUG_PERMISSION
+                    + " INTEGER "
+                    + ")";
+
+    public static final String CREATE_TABLE_SOURCE_LATEST =
+            "CREATE TABLE "
+                    + SourceContract.TABLE
+                    + " ("
+                    + SourceContract.ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + SourceContract.EVENT_ID
+                    + " INTEGER, "
+                    + SourceContract.PUBLISHER
+                    + " TEXT, "
+                    + SourceContract.PUBLISHER_TYPE
+                    + " INTEGER, "
+                    + SourceContract.APP_DESTINATION
+                    + " TEXT, "
+                    + SourceContract.ENROLLMENT_ID
+                    + " TEXT, "
+                    + SourceContract.EVENT_TIME
+                    + " INTEGER, "
+                    + SourceContract.EXPIRY_TIME
+                    + " INTEGER, "
+                    + SourceContract.EVENT_REPORT_WINDOW
+                    + " INTEGER, "
+                    + SourceContract.AGGREGATABLE_REPORT_WINDOW
+                    + " INTEGER, "
+                    + SourceContract.PRIORITY
+                    + " INTEGER, "
+                    + SourceContract.STATUS
+                    + " INTEGER, "
+                    + SourceContract.EVENT_REPORT_DEDUP_KEYS
+                    + " TEXT, "
+                    + SourceContract.AGGREGATE_REPORT_DEDUP_KEYS
                     + " TEXT, "
                     + SourceContract.SOURCE_TYPE
                     + " TEXT, "

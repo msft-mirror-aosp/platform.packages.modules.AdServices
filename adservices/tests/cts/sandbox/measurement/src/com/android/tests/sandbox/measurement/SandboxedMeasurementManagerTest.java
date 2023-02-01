@@ -16,7 +16,6 @@
 
 package com.android.tests.sandbox.measurement;
 
-import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
@@ -95,13 +94,7 @@ public class SandboxedMeasurementManagerTest {
         sdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), CALLBACK_EXECUTOR, callback);
 
         // This verifies SdkMeasurement finished without errors.
-        // callback.isLoadSdkSuccessful returns true if there were no errors.
-        assertWithMessage(
-                        callback.isLoadSdkSuccessful()
-                                ? "Callback was successful"
-                                : "Callback failed with message " + callback.getLoadSdkErrorMsg())
-                .that(callback.isLoadSdkSuccessful())
-                .isTrue();
+        callback.assertLoadSdkIsSuccessful();
     }
 
     private void enforceMeasurementEnrollmentCheck(boolean shouldEnforce) {

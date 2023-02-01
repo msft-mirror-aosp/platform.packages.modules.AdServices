@@ -14,6 +14,6 @@
  * limitations under the License.
  */
 
- package android.adservices.appsetid;
+package android.adservices.appsetid;
 
- parcelable GetAppSetIdResult;
+parcelable GetAppSetIdResult;

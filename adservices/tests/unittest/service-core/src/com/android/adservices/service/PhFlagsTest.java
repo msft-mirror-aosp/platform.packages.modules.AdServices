@@ -112,6 +112,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_ENFORCE_FOREGROUN
 import static com.android.adservices.service.Flags.MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED;
+import static com.android.adservices.service.Flags.MEASUREMENT_IS_CLICK_VERIFIED_BY_INPUT_EVENT;
 import static com.android.adservices.service.Flags.MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH;
@@ -239,6 +240,7 @@ import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_ENFORCE_FOR
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED;
+import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_IS_CLICK_VERIFIED_BY_INPUT_EVENT;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH;
@@ -1061,6 +1063,24 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getMeasurementIsClickVerificationEnabled()).isFalse();
+    }
+
+    @Test
+    public void testGetMeasurementIsClickVerifiedByInputEvent() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getMeasurementIsClickVerifiedByInputEvent())
+                .isEqualTo(MEASUREMENT_IS_CLICK_VERIFIED_BY_INPUT_EVENT);
+
+        final boolean phOverridingValue = false;
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_IS_CLICK_VERIFIED_BY_INPUT_EVENT,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getMeasurementIsClickVerifiedByInputEvent()).isFalse();
     }
 
     @Test

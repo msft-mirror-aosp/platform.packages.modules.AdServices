@@ -78,10 +78,11 @@ public class ReportImpressionScriptEngine {
     public static final String REPORTING_URI_RESPONSE_NAME = "reporting_uri";
     public static final String REPORT_RESULT_FUNC_NAME = "reportResult";
     public static final String REPORT_WIN_FUNC_NAME = "reportWin";
-    public static final String EVENT_URIS_RESPONSE_NAME = "eventUris";
+    public static final String INTERACTION_REPORTING_URIS_RESPONSE_NAME =
+            "interaction_reporting_uris";
 
-    public static final String EVENT_TYPE_ARG_NAME = "event_type";
-    public static final String EVENT_URI_ARG_NAME = "event_uri";
+    public static final String INTERACTION_KEY_ARG_NAME = "interaction_key";
+    public static final String INTERACTION_REPORTING_URI_ARG_NAME = "interaction_reporting_uri";
 
     public static final String REPORT_RESULT_ENTRY_NAME =
             REPORT_RESULT_FUNC_NAME + JSScriptEngine.ENTRY_POINT_FUNC_NAME;
@@ -89,25 +90,25 @@ public class ReportImpressionScriptEngine {
             REPORT_WIN_FUNC_NAME + JSScriptEngine.ENTRY_POINT_FUNC_NAME;
 
     public static final String REGISTER_BEACON_JS =
-            ""
-                    + "const eventUris = [];\n"
+            "const interaction_reporting_uris = [];\n"
                     + "\n"
-                    + "function registerAdBeacon(event_type, event_uri) {\n"
-                    + "    eventUris.push({event_type, event_uri});\n"
+                    + "function registerAdBeacon(interaction_key, interaction_reporting_uri) {\n"
+                    + "    interaction_reporting_uris.push({interaction_key,"
+                    + " interaction_reporting_uri});\n"
                     + "}";
 
     public static final String REPORT_RESULT_ENTRY_JS =
             "function "
                     + REPORT_RESULT_ENTRY_NAME
                     + "(ad_selection_config, render_uri, bid, contextual_signals) {\n"
-                    + "    let results = reportResult(ad_selection_config, render_uri, bid, "
-                    + "contextual_signals);\n"
+                    + "    let results = reportResult(ad_selection_config, render_uri, bid,"
+                    + " contextual_signals);\n"
                     + "\n"
                     + "if(results.hasOwnProperty('results'))\n"
                     + "{\n"
-                    + "    results['results']['eventUris'] = eventUris\n"
-                    + "}"
-                    + "\n"
+                    + "    results['results']['interaction_reporting_uris'] ="
+                    + " interaction_reporting_uris\n"
+                    + "}\n"
                     + "    return results;\n"
                     + "}";
     public static final String REPORT_WIN_ENTRY_JS =
@@ -120,9 +121,9 @@ public class ReportImpressionScriptEngine {
                     + "\n"
                     + "if(results.hasOwnProperty('results'))\n"
                     + "{\n"
-                    + "    results['results']['eventUris'] = eventUris\n"
-                    + "}"
-                    + "\n"
+                    + "    results['results']['interaction_reporting_uris'] ="
+                    + " interaction_reporting_uris\n"
+                    + "}\n"
                     + "    return results;\n"
                     + "}";
 
@@ -278,9 +279,9 @@ public class ReportImpressionScriptEngine {
      * Parses the output from the invocation of the {@code reportResult} JS function and converts it
      * to a {@link SellerReportingResult}. The script output has been pre-parsed into an {@link
      * ReportingScriptResult} object that will contain the script status code and JSONObject that
-     * holds the {@code reportingUri}, {@code signalsForBuyer}, and {@code eventUris}. The method
-     * will throw an exception if the status code is not {@link #JS_SCRIPT_STATUS_SUCCESS} or if
-     * there has been any problem parsing the JS response.
+     * holds the {@code reportingUri}, {@code signalsForBuyer}, and {@code
+     * interactionReportingUris}. The method will throw an exception if the status code is not
+     * {@link #JS_SCRIPT_STATUS_SUCCESS} or if there has been any problem parsing the JS response.
      *
      * @throws IllegalStateException If the result is unsuccessful or doesn't match the expected
      *     structure.
@@ -301,14 +302,14 @@ public class ReportImpressionScriptEngine {
             Uri reportingUri =
                     Uri.parse(getStringFromJson(reportResult.results, REPORTING_URI_RESPONSE_NAME));
 
-            JSONArray eventUriJsonArray =
-                    reportResult.results.getJSONArray(EVENT_URIS_RESPONSE_NAME);
+            JSONArray interactionUriJsonArray =
+                    reportResult.results.getJSONArray(INTERACTION_REPORTING_URIS_RESPONSE_NAME);
 
-            List<EventUriRegistrationInfo> eventUriRegistrationInfoList =
-                    extractEventUriRegistrationInfoFromArray(eventUriJsonArray);
+            List<InteractionUriRegistrationInfo> interactionUriRegistrationInfoList =
+                    extractInteractionUriRegistrationInfoFromArray(interactionUriJsonArray);
 
             return new SellerReportingResult(
-                    adSelectionSignals, reportingUri, eventUriRegistrationInfoList);
+                    adSelectionSignals, reportingUri, interactionUriRegistrationInfoList);
         } catch (Exception e) {
             LogUtil.e(e.getMessage());
             throw new IllegalStateException("Result does not match expected structure!");
@@ -319,9 +320,9 @@ public class ReportImpressionScriptEngine {
      * Parses the output from the invocation of the {@code reportWin} JS function and convert it to
      * a {@link BuyerReportingResult}. The script output has been pre-parsed into an {@link
      * ReportingScriptResult} object that will contain the script status code and JSONObject that
-     * holds both {@code eventUris} and {@code reportingUri}. The method will throw an exception if
-     * the status code is not {@link #JS_SCRIPT_STATUS_SUCCESS} or if there has been any problem
-     * parsing the JS response.
+     * holds both {@code interactionReportingUris} and {@code reportingUri}. The method will throw
+     * an exception if the status code is not {@link #JS_SCRIPT_STATUS_SUCCESS} or if there has been
+     * any problem parsing the JS response.
      *
      * @throws IllegalStateException If the result is unsuccessful or doesn't match the expected
      *     structure.
@@ -338,13 +339,13 @@ public class ReportImpressionScriptEngine {
             Uri reportingUri =
                     Uri.parse(getStringFromJson(reportResult.results, REPORTING_URI_RESPONSE_NAME));
 
-            JSONArray eventUriJsonArray =
-                    reportResult.results.getJSONArray(EVENT_URIS_RESPONSE_NAME);
+            JSONArray interactionUriJsonArray =
+                    reportResult.results.getJSONArray(INTERACTION_REPORTING_URIS_RESPONSE_NAME);
 
-            List<EventUriRegistrationInfo> eventUriRegistrationInfoList =
-                    extractEventUriRegistrationInfoFromArray(eventUriJsonArray);
+            List<InteractionUriRegistrationInfo> interactionUriRegistrationInfoList =
+                    extractInteractionUriRegistrationInfoFromArray(interactionUriJsonArray);
 
-            return new BuyerReportingResult(reportingUri, eventUriRegistrationInfoList);
+            return new BuyerReportingResult(reportingUri, interactionUriRegistrationInfoList);
         } catch (Exception e) {
             throw new IllegalStateException("Result does not match expected structure!");
         }
@@ -383,28 +384,31 @@ public class ReportImpressionScriptEngine {
     }
 
     /**
-     * Parses each entry of {@code eventUriJsonArray} into an {@link EventUriRegistrationInfo}
-     * object and adds it to the resulting list. Any entry that fails to parse properly into an
-     * {@link EventUriRegistrationInfo} object will be skipped and not added to the list.
+     * Parses each entry of {@code interactionUriJsonArray} into an {@link
+     * InteractionUriRegistrationInfo} object and adds it to the resulting list. Any entry that
+     * fails to parse properly into an {@link InteractionUriRegistrationInfo} object will be skipped
+     * and not added to the list.
      */
     @NonNull
-    private List<EventUriRegistrationInfo> extractEventUriRegistrationInfoFromArray(
-            JSONArray eventUriJsonArray) {
-        ImmutableList.Builder<EventUriRegistrationInfo> eventUris = ImmutableList.builder();
+    private List<InteractionUriRegistrationInfo> extractInteractionUriRegistrationInfoFromArray(
+            JSONArray interactionUriJsonArray) {
+        ImmutableList.Builder<InteractionUriRegistrationInfo> interactionReportingUris =
+                ImmutableList.builder();
 
-        for (int i = 0; i < eventUriJsonArray.length(); i++) {
+        for (int i = 0; i < interactionUriJsonArray.length(); i++) {
             try {
-                EventUriRegistrationInfo eventUriRegistrationInfoToAdd =
-                        EventUriRegistrationInfo.fromJson(eventUriJsonArray.getJSONObject(i));
-                eventUris.add(eventUriRegistrationInfoToAdd);
+                InteractionUriRegistrationInfo interactionUriRegistrationInfoToAdd =
+                        InteractionUriRegistrationInfo.fromJson(
+                                interactionUriJsonArray.getJSONObject(i));
+                interactionReportingUris.add(interactionUriRegistrationInfoToAdd);
             } catch (Exception e) {
                 LogUtil.v(
-                        "Error converting this JSONObject to EventUriRegistrationInfo,"
+                        "Error converting this JSONObject to InteractionUriRegistrationInfo,"
                                 + " skipping");
                 LogUtil.v(e.toString());
             }
         }
-        return eventUris.build();
+        return interactionReportingUris.build();
     }
 
     static class ReportingScriptResult {
@@ -422,18 +426,20 @@ public class ReportImpressionScriptEngine {
     static class SellerReportingResult {
         @NonNull private final AdSelectionSignals mSignalsForBuyer;
         @NonNull private final Uri mReportingUri;
-        @NonNull private final List<EventUriRegistrationInfo> mEventUrisRegistrationInfos;
+
+        @NonNull
+        private final List<InteractionUriRegistrationInfo> mInteractionUriRegistrationInfos;
 
         SellerReportingResult(
                 @NonNull AdSelectionSignals signalsForBuyer,
                 @NonNull Uri reportingUri,
-                @NonNull List<EventUriRegistrationInfo> eventUrisRegistrationInfos) {
+                @NonNull List<InteractionUriRegistrationInfo> interactionUriRegistrationInfos) {
             Objects.requireNonNull(signalsForBuyer);
             Objects.requireNonNull(reportingUri);
 
             this.mSignalsForBuyer = signalsForBuyer;
             this.mReportingUri = reportingUri;
-            this.mEventUrisRegistrationInfos = eventUrisRegistrationInfos;
+            this.mInteractionUriRegistrationInfos = interactionUriRegistrationInfos;
         }
 
         public AdSelectionSignals getSignalsForBuyer() {
@@ -444,28 +450,30 @@ public class ReportImpressionScriptEngine {
             return mReportingUri;
         }
 
-        public List<EventUriRegistrationInfo> getEventUris() {
-            return mEventUrisRegistrationInfos;
+        public List<InteractionUriRegistrationInfo> getInteractionReportingUris() {
+            return mInteractionUriRegistrationInfos;
         }
     }
 
     static class BuyerReportingResult {
         @NonNull private final Uri mReportingUri;
-        @NonNull private final List<EventUriRegistrationInfo> mEventUrisRegistrationInfos;
+
+        @NonNull
+        private final List<InteractionUriRegistrationInfo> mInteractionUriRegistrationInfos;
 
         BuyerReportingResult(
                 @NonNull Uri reportingUri,
-                @NonNull List<EventUriRegistrationInfo> eventUrisRegistrationInfos) {
+                @NonNull List<InteractionUriRegistrationInfo> interactionUriRegistrationInfos) {
             mReportingUri = reportingUri;
-            mEventUrisRegistrationInfos = eventUrisRegistrationInfos;
+            mInteractionUriRegistrationInfos = interactionUriRegistrationInfos;
         }
 
         public Uri getReportingUri() {
             return mReportingUri;
         }
 
-        public List<EventUriRegistrationInfo> getEventUris() {
-            return mEventUrisRegistrationInfos;
+        public List<InteractionUriRegistrationInfo> getInteractionReportingUris() {
+            return mInteractionUriRegistrationInfos;
         }
     }
 }

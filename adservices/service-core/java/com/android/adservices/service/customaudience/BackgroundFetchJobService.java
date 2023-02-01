@@ -29,6 +29,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -51,10 +52,20 @@ public class BackgroundFetchJobService extends JobService {
             return skipAndCancelBackgroundJob(params);
         }
 
-        if (FlagsFactory.getFlags().getFledgeCustomAudienceServiceKillSwitch()
-                || !ConsentManager.getInstance(this).getConsent().isGiven()) {
-            LogUtil.d("FLEDGE Custom Audience API is disabled ; skipping and cancelling job");
-            return skipAndCancelBackgroundJob(params);
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            if (FlagsFactory.getFlags().getFledgeCustomAudienceServiceKillSwitch()
+                    || !ConsentManager.getInstance(this)
+                            .getConsent(AdServicesApiType.FLEDGE)
+                            .isGiven()) {
+                LogUtil.d("FLEDGE Custom Audience API is disabled ; skipping and cancelling job");
+                return skipAndCancelBackgroundJob(params);
+            }
+        } else {
+            if (FlagsFactory.getFlags().getFledgeCustomAudienceServiceKillSwitch()
+                    || !ConsentManager.getInstance(this).getConsent().isGiven()) {
+                LogUtil.d("FLEDGE Custom Audience API is disabled ; skipping and cancelling job");
+                return skipAndCancelBackgroundJob(params);
+            }
         }
 
         // TODO(b/235841960): Consider using com.android.adservices.service.stats.Clock instead of

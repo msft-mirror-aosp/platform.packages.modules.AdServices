@@ -184,7 +184,7 @@ public final class EventReportTest {
         assertEquals(source.getEventId(), report.getSourceEventId());
         assertEquals(source.getEnrollmentId(), report.getEnrollmentId());
         assertEquals(trigger.getAttributionDestination(), report.getAttributionDestination());
-        assertEquals(source.getExpiryTime() + ONE_HOUR_IN_MILLIS, report.getReportTime());
+        assertEquals(source.getEventReportWindow() + ONE_HOUR_IN_MILLIS, report.getReportTime());
         assertEquals(source.getSourceType(), report.getSourceType());
         assertEquals(EVENT_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
         assertEquals(SOURCE_ID, report.getSourceId());
@@ -254,7 +254,7 @@ public final class EventReportTest {
         assertEquals(source.getEventId(), report.getSourceEventId());
         assertEquals(source.getEnrollmentId(), report.getEnrollmentId());
         assertEquals(trigger.getAttributionDestination(), report.getAttributionDestination());
-        assertEquals(source.getExpiryTime() + ONE_HOUR_IN_MILLIS, report.getReportTime());
+        assertEquals(source.getEventReportWindow() + ONE_HOUR_IN_MILLIS, report.getReportTime());
         assertEquals(Source.SourceType.EVENT, report.getSourceType());
         assertEquals(EVENT_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
         assertEquals(SOURCE_ID, report.getSourceId());
@@ -282,7 +282,7 @@ public final class EventReportTest {
         assertEquals(source.getEventId(), report.getSourceEventId());
         assertEquals(source.getEnrollmentId(), report.getEnrollmentId());
         assertEquals(trigger.getAttributionDestination(), report.getAttributionDestination());
-        assertEquals(source.getExpiryTime() + ONE_HOUR_IN_MILLIS, report.getReportTime());
+        assertEquals(source.getEventReportWindow() + ONE_HOUR_IN_MILLIS, report.getReportTime());
         assertEquals(Source.SourceType.EVENT, report.getSourceType());
         assertEquals(
                 INSTALL_ATTR_EVENT_NOISE_PROBABILITY,
@@ -313,7 +313,7 @@ public final class EventReportTest {
         assertEquals(source.getEventId(), report.getSourceEventId());
         assertEquals(source.getEnrollmentId(), report.getEnrollmentId());
         assertEquals(trigger.getAttributionDestination(), report.getAttributionDestination());
-        assertEquals(source.getExpiryTime() + ONE_HOUR_IN_MILLIS, report.getReportTime());
+        assertEquals(source.getEventReportWindow() + ONE_HOUR_IN_MILLIS, report.getReportTime());
         assertEquals(Source.SourceType.EVENT, report.getSourceType());
         assertEquals(EVENT_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
         assertEquals(SOURCE_ID, report.getSourceId());
@@ -511,7 +511,7 @@ public final class EventReportTest {
                 .setEnrollmentId("enrollment-id")
                 .setAppDestination(appDestination)
                 .setWebDestination(webDestination)
-                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(10))
+                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(10))
                 .build();
     }
 

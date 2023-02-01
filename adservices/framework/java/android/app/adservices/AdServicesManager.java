@@ -28,6 +28,7 @@ import android.os.RemoteException;
 
 import com.android.internal.annotations.VisibleForTesting;
 
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -104,6 +105,177 @@ public final class AdServicesManager {
     public boolean wasNotificationDisplayed() {
         try {
             return mService.wasNotificationDisplayed();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Saves information to the storage that notification was displayed for the first time to the
+     * user.
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void recordGaUxNotificationDisplayed() {
+        try {
+            mService.recordGaUxNotificationDisplayed();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Returns information whether Consent GA UX Notification was displayed or not.
+     *
+     * @return true if Consent GA UX Notification was displayed, otherwise false.
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public boolean wasGaUxNotificationDisplayed() {
+        try {
+            return mService.wasGaUxNotificationDisplayed();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Saves information to the storage that topics consent page was displayed for the first time to
+     * the user.
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void recordTopicsConsentPageDisplayed() {
+        try {
+            mService.recordTopicsConsentPageDisplayed();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Returns information whether topics Consent page was displayed or not.
+     *
+     * @return true if topics consent page was displayed, otherwise false.
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public boolean wasTopicsConsentPageDisplayed() {
+        try {
+            return mService.wasTopicsConsentPageDisplayed();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Saves information to the storage that fledge and msmt consent page was displayed for the
+     * first time to the user.
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void recordFledgeAndMsmtConsentPageDisplayed() {
+        try {
+            mService.recordFledgeAndMsmtConsentPageDisplayed();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Returns information whether fledge and msmt Consent page was displayed or not.
+     *
+     * @return true if fledge and msmt consent page was displayed, otherwise false.
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public boolean wasFledgeAndMsmtConsentPageDisplayed() {
+        try {
+            return mService.wasFledgeAndMsmtConsentPageDisplayed();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Returns the list of apps with consent. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public List<String> getKnownAppsWithConsent(List<String> installedPackages) {
+        try {
+            return mService.getKnownAppsWithConsent(installedPackages);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Returns the list of apps with revoked consent. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public List<String> getAppsWithRevokedConsent(List<String> installedPackages) {
+        try {
+            return mService.getAppsWithRevokedConsent(installedPackages);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Set user consent for an app */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void setConsentForApp(String packageName, int packageUid, boolean isConsentRevoked) {
+        try {
+            mService.setConsentForApp(packageName, packageUid, isConsentRevoked);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Reset all apps and blocked apps. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void clearKnownAppsWithConsent() {
+        try {
+            mService.clearKnownAppsWithConsent();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Reset all apps consent. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void clearAllAppConsentData() {
+        try {
+            mService.clearAllAppConsentData();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Get if user consent is revoked for a given app.
+     *
+     * @return {@code true} if the user consent was revoked.
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public boolean isConsentRevokedForApp(String packageName, int packageUid) {
+        try {
+            return mService.isConsentRevokedForApp(packageName, packageUid);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Set user consent if the app first time request access and/or return consent value for the
+     * app.
+     *
+     * @return {@code true} if user consent was given.
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public boolean setConsentForAppIfNew(
+            String packageName, int packageUid, boolean isConsentRevoked) {
+        try {
+            return mService.setConsentForAppIfNew(packageName, packageUid, isConsentRevoked);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Clear the app consent entry for uninstalled app. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void clearConsentForUninstalledApp(String packageName, int packageUid) {
+        try {
+            mService.clearConsentForUninstalledApp(packageName, packageUid);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
