@@ -37,6 +37,9 @@
       ]
     },
     {
+      "name": "CtsSdkSandboxWebkitTestCases[com.google.android.adservices.apex]"
+    },
+    {
       "name": "SdkSandboxManagerDisabledTests[com.google.android.adservices.apex]"
     },
     {
@@ -55,6 +58,9 @@
     },
     {
       "name": "CtsSdkSandboxInprocessTests"
+    },
+    {
+      "name": "CtsSdkSandboxWebkitTestCases"
     },
     {
       "name": "SdkSandboxManagerServiceUnitTests"
@@ -76,6 +82,9 @@
     },
     {
       "name": "SdkSandboxRestrictionsHostTest"
+    },
+    {
+      "name": "BroadcastRestrictionsHostTest"
     },
     {
       "name": "SdkSandboxStorageHostTest",

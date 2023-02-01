@@ -19,24 +19,25 @@ package android.adservices.customaudience;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudience;
-import android.adservices.customaudience.ICustomAudienceCallback;
 import android.adservices.customaudience.CustomAudienceOverrideCallback;
+import android.adservices.customaudience.ICustomAudienceCallback;
 import android.net.Uri;
 
 /**
-  * Custom audience service.
-  *
-  * @hide
-  */
+ * Custom audience service.
+ *
+ * @hide
+ */
 interface ICustomAudienceService {
-    void joinCustomAudience(in CustomAudience customAudience, in String ownerPackageName, in ICustomAudienceCallback callback);
+    void joinCustomAudience(in CustomAudience customAudience, in String ownerPackageName,
+            in ICustomAudienceCallback callback);
     void leaveCustomAudience(in String ownerPackageName, in AdTechIdentifier buyer, in String name,
             in ICustomAudienceCallback callback);
 
     /**
-     * Configures PP api to avoid fetching the biddingLogicJS and trustedBiddingData from a server and instead
-     * use the content provided in {@code biddingLogicJS} and {@code trustedBiddingData} for the CA
-     * identified by {@code ownerPackageName}, {@code buyer}, {@code name}
+     * Configures PP api to avoid fetching the biddingLogicJS and trustedBiddingData from a server
+     * and instead use the content provided in {@code biddingLogicJS} and {@code trustedBiddingData}
+     * for the CA identified by {@code ownerPackageName}, {@code buyer}, {@code name}
      *
      * The call will throw a SecurityException if:
      * the API hasn't been enabled by developer options or by an adb command
@@ -45,13 +46,9 @@ interface ICustomAudienceService {
      *
      * The call will fail silently if the CustomAudience has been created by a different app.
      */
-    void overrideCustomAudienceRemoteInfo(
-        in String ownerPackageName,
-        in AdTechIdentifier buyer,
-        in String name,
-        in String biddingLogicJS,
-        in AdSelectionSignals trustedBiddingData,
-        in CustomAudienceOverrideCallback callback);
+    void overrideCustomAudienceRemoteInfo(in String ownerPackageName, in AdTechIdentifier buyer,
+            in String name, in String biddingLogicJS, in AdSelectionSignals trustedBiddingData,
+            in CustomAudienceOverrideCallback callback);
 
     /**
      * Deletes any override created by calling
@@ -64,11 +61,8 @@ interface ICustomAudienceService {
      *
      * The call will fail silently if the CustomAudience has been created by a different app.
      */
-    void removeCustomAudienceRemoteInfoOverride(
-        in String ownerPackageName,
-        in AdTechIdentifier buyer,
-        in String name,
-        in CustomAudienceOverrideCallback callback);
+    void removeCustomAudienceRemoteInfoOverride(in String ownerPackageName,
+            in AdTechIdentifier buyer, in String name, in CustomAudienceOverrideCallback callback);
 
     /**
      * Deletes any override created by calling
@@ -78,6 +72,5 @@ interface ICustomAudienceService {
      * by developer options or by an adb command and if the calling
      * application manifest is not setting Android:debuggable to true.
      */
-    void resetAllCustomAudienceOverrides(
-        in CustomAudienceOverrideCallback callback);
+    void resetAllCustomAudienceOverrides(in CustomAudienceOverrideCallback callback);
 }

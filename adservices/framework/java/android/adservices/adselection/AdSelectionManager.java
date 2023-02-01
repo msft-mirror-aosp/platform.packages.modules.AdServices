@@ -16,11 +16,13 @@
 
 package android.adservices.adselection;
 
+import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_APP_INSTALL;
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE;
 
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CallerMetadata;
 import android.adservices.common.FledgeErrorResponse;
+import android.adservices.common.SandboxedSdkContextUtils;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
@@ -125,6 +127,9 @@ public class AdSelectionManager {
      *
      * <p>If the {@link LimitExceededException} is thrown, it is caused when the calling package
      * exceeds the allowed rate limits and is throttled.
+     *
+     * <p>If the {@link SecurityException} is thrown, it is caused when the caller is not authorized
+     * or permission is not requested.
      */
     @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void selectAds(
@@ -191,22 +196,35 @@ public class AdSelectionManager {
      * the corresponding error message.
      *
      * <p>The input {@code adSelectionFromOutcomesConfig} contains:
-     * <li>{@code Seller} is required to be a registered {@link
-     *     android.adservices.common.AdTechIdentifier}. Otherwise, {@link IllegalStateException}
-     *     will be thrown.
-     * <li>{@code List of ad selection ids} should exist and come from {@link
-     *     AdSelectionManager#selectAds} calls originated from the same application. Otherwise,
-     *     {@link IllegalArgumentException} for input validation will raise listing violating ad
-     *     selection ids.
-     * <li>{@code Selection logic URI} should match the {@code seller} host. Otherwise, {@link
-     *     IllegalArgumentException} will be thrown.
      *
-     *     <p>If the {@link IllegalArgumentException} is thrown, it is caused by invalid input
-     *     argument the API received to run the ad selection.
+     * <ul>
+     *   <li>{@code Seller} is required to be a registered {@link
+     *       android.adservices.common.AdTechIdentifier}. Otherwise, {@link IllegalStateException}
+     *       will be thrown.
+     *   <li>{@code List of ad selection ids} should exist and come from {@link
+     *       AdSelectionManager#selectAds} calls originated from the same application. Otherwise,
+     *       {@link IllegalArgumentException} for input validation will raise listing violating ad
+     *       selection ids.
+     *   <li>{@code Selection logic URI} should match the {@code seller} host. Otherwise, {@link
+     *       IllegalArgumentException} will be thrown.
+     * </ul>
      *
-     *     <p>If the {@link IllegalStateException} is thrown with error message "Failure of
-     *     AdSelection services.", it is caused by an internal failure of the ad selection service.
+     * <p>If the {@link IllegalArgumentException} is thrown, it is caused by invalid input argument
+     * the API received to run the ad selection.
+     *
+     * <p>If the {@link IllegalStateException} is thrown with error message "Failure of AdSelection
+     * services.", it is caused by an internal failure of the ad selection service.
+     *
+     * <p>If the {@link TimeoutException} is thrown, it is caused when a timeout is encountered
+     * during bidding, scoring, or overall selection process to find winning Ad.
+     *
+     * <p>If the {@link LimitExceededException} is thrown, it is caused when the calling package
+     * exceeds the allowed rate limits and is throttled.
+     *
+     * <p>If the {@link SecurityException} is thrown, it is caused when the caller is not authorized
+     * or permission is not requested.
      */
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void selectAds(
             @NonNull AdSelectionFromOutcomesConfig adSelectionFromOutcomesConfig,
             @NonNull @CallbackExecutor Executor executor,
@@ -309,12 +327,79 @@ public class AdSelectionManager {
             receiver.onError(new IllegalStateException("Failure of AdSelection service.", e));
         }
     }
+    /**
+     * Gives the provided list of adtechs the ability to do app install filtering on the calling
+     * app.
+     *
+     * <p>The input {@code request} is provided by the Ads SDK and the {@code request} object is
+     * transferred via a Binder call. For this reason, the total size of these objects is bound to
+     * the Android IPC limitations. Failures to transfer the {@code advertisers} will throws an
+     * {@link TransactionTooLargeException}.
+     *
+     * <p>The output is passed by the receiver, which either returns an empty {@link Object} for a
+     * successful run, or an {@link Exception} includes the type of the exception thrown and the
+     * corresponding error message.
+     *
+     * <p>If the {@link IllegalArgumentException} is thrown, it is caused by invalid input argument
+     * the API received.
+     *
+     * <p>If the {@link IllegalStateException} is thrown with error message "Failure of AdSelection
+     * services.", it is caused by an internal failure of the ad selection service.
+     *
+     * <p>If the {@link LimitExceededException} is thrown, it is caused when the calling package
+     * exceeds the allowed rate limits and is throttled.
+     *
+     * <p>If the {@link SecurityException} is thrown, it is caused when the caller is not authorized
+     * or permission is not requested.
+     *
+     * @hide
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_APP_INSTALL)
+    public void setAppInstallAdvertisers(
+            @NonNull SetAppInstallAdvertisersRequest request,
+            @NonNull Executor executor,
+            @NonNull OutcomeReceiver<Object, Exception> receiver) {
+        Objects.requireNonNull(request);
+        Objects.requireNonNull(executor);
+        Objects.requireNonNull(receiver);
+
+        try {
+            final AdSelectionService service = getService();
+            service.setAppInstallAdvertisers(
+                    new SetAppInstallAdvertisersInput.Builder()
+                            .setAdvertisers(request.getAdvertisers())
+                            .setCallerPackageName(getCallerPackageName())
+                            .build(),
+                    new SetAppInstallAdvertisersCallback.Stub() {
+                        @Override
+                        public void onSuccess() {
+                            executor.execute(() -> receiver.onResult(new Object()));
+                        }
+
+                        @Override
+                        public void onFailure(FledgeErrorResponse failureParcel) {
+                            executor.execute(
+                                    () -> {
+                                        receiver.onError(
+                                                AdServicesStatusUtils.asException(failureParcel));
+                                    });
+                        }
+                    });
+        } catch (NullPointerException e) {
+            LogUtil.e(e, "Unable to find the AdSelection service.");
+            receiver.onError(
+                    new IllegalStateException("Unable to find the AdSelection service.", e));
+        } catch (RemoteException e) {
+            LogUtil.e(e, "Exception");
+            receiver.onError(new IllegalStateException("Failure of AdSelection service.", e));
+        }
+    }
 
     private String getCallerPackageName() {
-        if (mContext instanceof SandboxedSdkContext) {
-            return ((SandboxedSdkContext) mContext).getClientPackageName();
-        } else {
-            return mContext.getPackageName();
-        }
+        SandboxedSdkContext sandboxedSdkContext =
+                SandboxedSdkContextUtils.getAsSandboxedSdkContext(mContext);
+        return sandboxedSdkContext == null
+                ? mContext.getPackageName()
+                : sandboxedSdkContext.getClientPackageName();
     }
 }

@@ -16,11 +16,15 @@
 
 package com.android.adservices.service.measurement.util;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.android.adservices.service.measurement.FilterMap;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -438,5 +442,31 @@ public class FilterTest {
                 new FilterMap.Builder().setAttributionFilterMap(triggerFilterMap).build();
 
         assertFalse(Filter.isFilterMatch(sourceFilter, List.of(triggerFilter), false));
+    }
+
+    @Test
+    public void deserializeFilterSet_success() throws JSONException {
+        // Setup
+        Map<String, List<String>> map1 = new HashMap<>();
+        map1.put("conversion_subdomain", Collections.singletonList("electronics.megastore"));
+        map1.put("product", Arrays.asList("1234", "234"));
+        map1.put("ctid", Collections.singletonList("id"));
+        FilterMap filterMap1 = new FilterMap.Builder().setAttributionFilterMap(map1).build();
+        JSONObject map1Json = new JSONObject(map1);
+
+        Map<String, List<String>> map2 = new HashMap<>();
+        map2.put("conversion_subdomain", Collections.singletonList("electronics.megastore"));
+        // Doesn't match
+        map2.put("product", Arrays.asList("2", "3"));
+        map2.put("id", Arrays.asList("11", "22"));
+        FilterMap filterMap2 = new FilterMap.Builder().setAttributionFilterMap(map2).build();
+        JSONObject map2Json = new JSONObject(map2);
+
+        // Execution
+        JSONArray jsonArray = new JSONArray(Arrays.asList(map1Json, map2Json));
+        List<FilterMap> actualFilterMaps = Filter.deserializeFilterSet(jsonArray);
+
+        // Assertion
+        assertEquals(Arrays.asList(filterMap1, filterMap2), actualFilterMaps);
     }
 }

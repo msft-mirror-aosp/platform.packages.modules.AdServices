@@ -149,8 +149,8 @@ public class MeasurementDataDeleter {
             }
 
             Source source = dao.getSource(report.getSourceId());
-            source.getDedupKeys().remove(report.getTriggerDedupKey());
-            dao.updateSourceDedupKeys(source);
+            source.getEventReportDedupKeys().remove(report.getTriggerDedupKey());
+            dao.updateSourceEventReportDedupKeys(source);
         }
     }
 

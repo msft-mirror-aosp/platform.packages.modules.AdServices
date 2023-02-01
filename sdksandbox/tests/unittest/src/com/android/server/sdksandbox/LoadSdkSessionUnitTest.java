@@ -49,7 +49,7 @@ public class LoadSdkSessionUnitTest {
     @Before
     public void setup() {
         mContext = InstrumentationRegistry.getInstrumentation().getContext();
-        mInjector = new SdkSandboxManagerService.Injector();
+        mInjector = new SdkSandboxManagerService.Injector(mContext);
         mSdkSandboxService = new FakeSdkSandboxService();
         mTestCallingInfo = new CallingInfo(Process.myUid(), TEST_PACKAGE);
     }
@@ -95,7 +95,7 @@ public class LoadSdkSessionUnitTest {
         sdkSession.load(mSdkSandboxService, "", "", -1, -1);
         mSdkSandboxService.sendLoadCodeSuccessful();
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.LOADED);
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        callback.assertLoadSdkIsSuccessful();
         assertThat(sdkSession.getSandboxedSdk()).isNotNull();
     }
 
@@ -111,7 +111,7 @@ public class LoadSdkSessionUnitTest {
         sdkSession.load(mSdkSandboxService, "", "", -1, -1);
         mSdkSandboxService.sendLoadCodeError();
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.LOAD_FAILED);
-        assertThat(callback.isLoadSdkSuccessful()).isFalse();
+        callback.assertLoadSdkIsUnsuccessful();
     }
 
     // Verifies that the same load SDK session cannot be used multiple times to load an SDK even if
@@ -128,7 +128,7 @@ public class LoadSdkSessionUnitTest {
         sdkSession.load(mSdkSandboxService, "", "", -1, -1);
         mSdkSandboxService.sendLoadCodeError();
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.LOAD_FAILED);
-        assertThat(callback.isLoadSdkSuccessful()).isFalse();
+        callback.assertLoadSdkIsUnsuccessful();
 
         // Trying to load the SDK again as part of the same session should fail.
         assertThrows(
@@ -149,7 +149,7 @@ public class LoadSdkSessionUnitTest {
         sdkSession.load(mSdkSandboxService, "", "", -1, -1);
         mSdkSandboxService.sendLoadCodeSuccessful();
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.LOADED);
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        callback.assertLoadSdkIsSuccessful();
 
         // Trying to load the SDK again as part of the same session should fail.
         assertThrows(
@@ -171,7 +171,7 @@ public class LoadSdkSessionUnitTest {
         // Throw a DeadObjectException when loading the SDK.
         mSdkSandboxService.dieOnLoad = true;
         sdkSession.load(mSdkSandboxService, "", "", -1, -1);
-        assertThat(callback.isLoadSdkSuccessful()).isFalse();
+        callback.assertLoadSdkIsUnsuccessful();
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.LOAD_FAILED);
     }
 
@@ -187,7 +187,7 @@ public class LoadSdkSessionUnitTest {
         sdkSession.load(mSdkSandboxService, "", "", -1, -1);
         mSdkSandboxService.sendLoadCodeSuccessful();
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.LOADED);
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        callback.assertLoadSdkIsSuccessful();
 
         // Verify that the SDK status is unloaded.
         sdkSession.onSandboxDeath();
@@ -208,7 +208,7 @@ public class LoadSdkSessionUnitTest {
         // Before invoking the callback, kill the sandbox.
         sdkSession.onSandboxDeath();
 
-        assertThat(callback.isLoadSdkSuccessful()).isFalse();
+        callback.assertLoadSdkIsUnsuccessful();
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.LOAD_FAILED);
     }
 
@@ -224,7 +224,7 @@ public class LoadSdkSessionUnitTest {
         sdkSession.load(mSdkSandboxService, "", "", -1, -1);
         mSdkSandboxService.sendLoadCodeSuccessful();
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.LOADED);
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        callback.assertLoadSdkIsSuccessful();
 
         // Unloading SDK should go through as a successful request.
         sdkSession.unload(-1);
@@ -265,7 +265,7 @@ public class LoadSdkSessionUnitTest {
         sdkSession.load(mSdkSandboxService, "", "", -1, -1);
         mSdkSandboxService.sendLoadCodeError();
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.LOAD_FAILED);
-        assertThat(callback.isLoadSdkSuccessful()).isFalse();
+        callback.assertLoadSdkIsUnsuccessful();
 
         sdkSession.unload(-1);
         // The status should still be failed load, instead of unload.
@@ -284,7 +284,7 @@ public class LoadSdkSessionUnitTest {
         sdkSession.load(mSdkSandboxService, "", "", -1, -1);
         mSdkSandboxService.sendLoadCodeSuccessful();
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.LOADED);
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        callback.assertLoadSdkIsSuccessful();
 
         // Simulate a sandbox kill.
         sdkSession.onSandboxDeath();
@@ -308,7 +308,7 @@ public class LoadSdkSessionUnitTest {
         sdkSession.load(mSdkSandboxService, "", "", -1, -1);
         mSdkSandboxService.sendLoadCodeSuccessful();
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.LOADED);
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        callback.assertLoadSdkIsSuccessful();
 
         // Unloading SDK should go through as a successful request.
         sdkSession.unload(-1);
@@ -332,7 +332,7 @@ public class LoadSdkSessionUnitTest {
         sdkSession.load(mSdkSandboxService, "", "", -1, -1);
         mSdkSandboxService.sendLoadCodeSuccessful();
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.LOADED);
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        callback.assertLoadSdkIsSuccessful();
 
         FakeRequestSurfacePackageCallbackBinder surfacePackageCallback =
                 new FakeRequestSurfacePackageCallbackBinder();
@@ -372,7 +372,7 @@ public class LoadSdkSessionUnitTest {
         sdkSession.load(mSdkSandboxService, "", "", -1, -1);
         mSdkSandboxService.sendLoadCodeSuccessful();
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.LOADED);
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        callback.assertLoadSdkIsSuccessful();
 
         // Request surface package but don't complete the request.
         FakeRequestSurfacePackageCallbackBinder surfacePackageCallback =

@@ -16,6 +16,7 @@
 package com.android.adservices.service.measurement.registration;
 
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATABLE_TRIGGER_DATA;
+import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATE_KEYS_PER_REGISTRATION;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_ATTRIBUTION_EVENT_TRIGGER_DATA;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__TRIGGER;
@@ -144,6 +145,14 @@ public class AsyncTriggerFetcher {
                 }
                 result.setAggregateValues(
                         json.getString(TriggerHeaderContract.AGGREGATABLE_VALUES));
+            }
+            if (!json.isNull(TriggerHeaderContract.AGGREGATABLE_DEDUPLICATION_KEYS)) {
+                if (!isValidAggregateDuplicationKey(
+                        json.getJSONArray(TriggerHeaderContract.AGGREGATABLE_DEDUPLICATION_KEYS))) {
+                    return false;
+                }
+                result.setAggregateDeduplicationKeys(
+                        json.getString(TriggerHeaderContract.AGGREGATABLE_DEDUPLICATION_KEYS));
             }
             if (!json.isNull(TriggerHeaderContract.FILTERS)) {
                 JSONArray filters = maybeWrapFilters(json, TriggerHeaderContract.FILTERS);
@@ -441,6 +450,40 @@ public class AsyncTriggerFetcher {
         return true;
     }
 
+    private boolean isValidAggregateDuplicationKey(JSONArray aggregateDeduplicationKeys)
+            throws JSONException {
+        if (aggregateDeduplicationKeys.length()
+                > MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION) {
+            LogUtil.d(
+                    "Aggregate deduplication keys have more keys than permitted. %s",
+                    aggregateDeduplicationKeys.length());
+            return false;
+        }
+        for (int i = 0; i < aggregateDeduplicationKeys.length(); i++) {
+            JSONObject aggregateDedupKey = aggregateDeduplicationKeys.getJSONObject(i);
+            String deduplicationKey = aggregateDedupKey.optString("deduplication_key");
+            if (!FetcherUtil.isValidAggregateDeduplicationKey(deduplicationKey)) {
+                return false;
+            }
+            if (!aggregateDedupKey.isNull("filters")) {
+                JSONArray filters = maybeWrapFilters(aggregateDedupKey, "filters");
+                if (!FetcherUtil.areValidAttributionFilters(filters)) {
+                    LogUtil.d("Aggregate deduplication key: " + i + " contains invalid filters.");
+                    return false;
+                }
+            }
+            if (!aggregateDedupKey.isNull("not_filters")) {
+                JSONArray notFilters = maybeWrapFilters(aggregateDedupKey, "not_filters");
+                if (!FetcherUtil.areValidAttributionFilters(notFilters)) {
+                    LogUtil.d(
+                            "Aggregate deduplication key: " + i + " contains invalid not filters.");
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     // Filters can be either a JSON object or a JSON array
     private static JSONArray maybeWrapFilters(JSONObject json, String key) throws JSONException {
         JSONObject maybeFilterMap = json.optJSONObject(key);
@@ -458,6 +501,7 @@ public class AsyncTriggerFetcher {
         String NOT_FILTERS = "not_filters";
         String AGGREGATABLE_TRIGGER_DATA = "aggregatable_trigger_data";
         String AGGREGATABLE_VALUES = "aggregatable_values";
+        String AGGREGATABLE_DEDUPLICATION_KEYS = "aggregatable_deduplication_keys";
         String DEBUG_KEY = "debug_key";
         String DEBUG_REPORTING = "debug_reporting";
     }

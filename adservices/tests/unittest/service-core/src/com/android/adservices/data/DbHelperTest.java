@@ -17,7 +17,7 @@
 package com.android.adservices.data;
 
 import static com.android.adservices.data.DbHelper.CURRENT_DATABASE_VERSION;
-import static com.android.adservices.data.DbHelper.DATABASE_VERSION_V5;
+import static com.android.adservices.data.DbHelper.DATABASE_VERSION_V7;
 import static com.android.adservices.data.DbTestUtil.doesIndexExist;
 import static com.android.adservices.data.DbTestUtil.doesTableExistAndColumnCountMatch;
 import static com.android.adservices.data.DbTestUtil.getDatabaseNameForTest;
@@ -142,8 +142,17 @@ public class DbHelperTest {
         Mockito.verify(topicDbMigratorV5, Mockito.never()).performMigration(db);
 
         // Positive case - target version 5 is in (oldVersion, newVersion]
-        dbHelper.onUpgrade(db, /* oldVersion */ 1, /* new Version */ DATABASE_VERSION_V5);
+        dbHelper.onUpgrade(db, /* oldVersion */ 1, /* new Version */ DATABASE_VERSION_V7);
         Mockito.verify(topicDbMigratorV5).performMigration(db);
+    }
+
+    @Test
+    public void testOnDowngrade_topicsV5ToV3() {
+        DbHelper dbHelper = spy(DbTestUtil.getDbHelperForTest());
+        SQLiteDatabase db = mock(SQLiteDatabase.class);
+
+        // Verify no error if migrate db from V5 to V3
+        dbHelper.onDowngrade(db, DATABASE_VERSION_V7, CURRENT_DATABASE_VERSION);
     }
 
     @Test
@@ -157,7 +166,7 @@ public class DbHelperTest {
 
         DbHelper dbHelperV5 =
                 new DbHelper(
-                        sContext, getDatabaseNameForTest(), /* dbVersion*/ DATABASE_VERSION_V5);
+                        sContext, getDatabaseNameForTest(), /* dbVersion*/ DATABASE_VERSION_V7);
         assertThat(dbHelperV5.supportsTopicContributorsTable()).isTrue();
     }
 
@@ -169,7 +178,7 @@ public class DbHelperTest {
 
         // Test feature flag is on
         when(mMockFlags.getEnableDatabaseSchemaVersion5()).thenReturn(true);
-        assertThat(DbHelper.getDatabaseVersionToCreate()).isEqualTo(DATABASE_VERSION_V5);
+        assertThat(DbHelper.getDatabaseVersionToCreate()).isEqualTo(DATABASE_VERSION_V7);
     }
 
     @Test
@@ -186,7 +195,7 @@ public class DbHelperTest {
     }
 
     private void assertMeasurementSchema(SQLiteDatabase db) {
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_source", 25));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_source", 28));
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_trigger", 16));
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_async_registration_contract", 17));
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_event_report", 17));

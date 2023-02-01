@@ -61,6 +61,12 @@
         android:description="@string/permdesc_accessAdServicesCustomAudience"
         android:protectionLevel="normal" />
 
+    <!-- Allows an application to access AdServices App Install APIs. -->
+    <permission android:name="android.permission.ACCESS_ADSERVICES_APP_INSTALL"
+                android:label="@string/permlab_accessAdServicesCustomAudience"
+                android:description="@string/permdesc_accessAdServicesCustomAudience"
+                android:protectionLevel="normal" />
+
     <!-- Allows an application to access AdServices Ad Id API. -->
     <permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID"
         android:label="@string/permlab_accessAdServicesAdId"
@@ -111,6 +117,7 @@
             android:forceQueryable="true"
             android:allowBackup="false"
             android:supportsRtl="true"
+            android:icon="@drawable/ic_android_icon"
             android:theme="@style/FilterTouches">
         <!-- Activity for the main view of Adservices Settings UI-->
         <activity

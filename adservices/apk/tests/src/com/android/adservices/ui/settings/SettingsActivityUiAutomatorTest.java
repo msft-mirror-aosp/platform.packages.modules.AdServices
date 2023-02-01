@@ -23,6 +23,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import android.content.Context;
@@ -46,6 +47,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.common.BackgroundJobsManager;
 import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.App;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -136,6 +138,16 @@ public class SettingsActivityUiAutomatorTest {
         ExtendedMockito.doReturn(mConsentManager)
                 .when(() -> ConsentManager.getInstance(any(Context.class)));
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(mConsentManager)
+                .getConsent(AdServicesApiType.TOPICS);
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(mConsentManager)
+                .getConsent(AdServicesApiType.FLEDGE);
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(mConsentManager)
+                .getConsent(AdServicesApiType.MEASUREMENTS);
+
         doNothing().when(mConsentManager).enable(any(Context.class));
         doNothing().when(mConsentManager).disable(any(Context.class));
         startActivityFromHomeAndCheckMainSwitch();
@@ -278,6 +290,23 @@ public class SettingsActivityUiAutomatorTest {
     }
 
     @Test
+    public void resetMeasurementDialogTest() throws UiObjectNotFoundException {
+        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
+
+        startActivityFromHomeAndCheckMainSwitch();
+        // open measurement view
+        scrollToAndClick(R.string.settingsUI_measurement_view_title);
+
+        // click reset
+        scrollToAndClick(R.string.settingsUI_measurement_view_reset_title);
+
+        // click reset again
+        scrollToAndClick(R.string.settingsUI_measurement_view_reset_title);
+
+        verify(mConsentManager, times(2)).resetMeasurement();
+    }
+
+    @Test
     public void resetTopicDialogTest() throws UiObjectNotFoundException {
         // open topics view
         scrollToAndClick(R.string.settingsUI_topics_title);
@@ -387,38 +416,6 @@ public class SettingsActivityUiAutomatorTest {
         // cancel and verify it has still only been called once
         negativeText.click();
         verify(mConsentManager).resetApps();
-    }
-
-    @Test
-    public void resetMeasurementDialogTest() throws UiObjectNotFoundException {
-        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
-
-        startActivityFromHomeAndCheckMainSwitch();
-        // open measurement view
-        scrollToAndClick(R.string.settingsUI_measurement_view_title);
-
-        // click reset
-        scrollToAndClick(R.string.settingsUI_measurement_view_reset_title);
-        UiObject dialogTitle = getElement(R.string.settingsUI_dialog_reset_measurement_title);
-        UiObject positiveText =
-                getElement(R.string.settingsUI_dialog_reset_measurement_positive_text);
-        assertThat(dialogTitle.exists()).isTrue();
-        assertThat(positiveText.exists()).isTrue();
-
-        // click positive button and confirm mConsentManager.resetMeasurement is called
-        positiveText.click();
-        verify(mConsentManager).resetMeasurement();
-
-        // click reset again
-        scrollToAndClick(R.string.settingsUI_measurement_view_reset_title);
-        dialogTitle = getElement(R.string.settingsUI_dialog_reset_measurement_title);
-        UiObject negativeText = getElement(R.string.settingsUI_dialog_negative_text);
-        assertThat(dialogTitle.exists()).isTrue();
-        assertThat(negativeText.exists()).isTrue();
-
-        // click cancel and verify it has still only been called once
-        negativeText.click();
-        verify(mConsentManager).resetMeasurement();
     }
 
     @Test

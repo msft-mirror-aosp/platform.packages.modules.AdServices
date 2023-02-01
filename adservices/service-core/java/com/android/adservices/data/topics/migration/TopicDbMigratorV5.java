@@ -16,7 +16,7 @@
 
 package com.android.adservices.data.topics.migration;
 
-import static com.android.adservices.data.DbHelper.DATABASE_VERSION_V5;
+import static com.android.adservices.data.DbHelper.DATABASE_VERSION_V7;
 
 import android.database.sqlite.SQLiteDatabase;
 
@@ -28,12 +28,15 @@ import com.android.internal.annotations.VisibleForTesting;
  * TopicContributors Table.
  */
 public class TopicDbMigratorV5 extends AbstractTopicsDbMigrator {
+    // Following go/gmscore-flagging-best-practices, we should clean dated table when upgrading and
+    // do nothing when downgrading.
     private static final String[] QUERIES_TO_PERFORM = {
+        "DROP TABLE IF EXISTS " + TopicsTables.TopicContributorsContract.TABLE,
         TopicsTables.CREATE_TABLE_TOPIC_CONTRIBUTORS
     };
 
     public TopicDbMigratorV5() {
-        super(DATABASE_VERSION_V5);
+        super(DATABASE_VERSION_V7);
     }
 
     @Override
