@@ -178,6 +178,7 @@ public final class AsyncTriggerFetcherTest {
         // For convenience, return the same enrollment-ID since we're using many arbitrary
         // registration URIs and not yet enforcing uniqueness of enrollment.
         when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(any())).thenReturn(ENROLLMENT);
+        when(mFlags.getMeasurementEnableXNA()).thenReturn(false);
     }
 
     @After
@@ -3613,6 +3614,8 @@ public final class AsyncTriggerFetcherTest {
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
 
+        when(mFlags.getMeasurementEnableXNA()).thenReturn(true);
+
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
@@ -3717,6 +3720,8 @@ public final class AsyncTriggerFetcherTest {
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = webTriggerRegistrationRequest(request, true);
 
+        when(mFlags.getMeasurementEnableXNA()).thenReturn(true);
+
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
@@ -3779,6 +3784,8 @@ public final class AsyncTriggerFetcherTest {
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = webTriggerRegistrationRequest(request, true);
 
+        when(mFlags.getMeasurementEnableXNA()).thenReturn(true);
+
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
@@ -3811,6 +3818,8 @@ public final class AsyncTriggerFetcherTest {
 
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
+
+        when(mFlags.getMeasurementEnableXNA()).thenReturn(true);
 
         // Execution
         Optional<Trigger> fetch =
@@ -3845,6 +3854,8 @@ public final class AsyncTriggerFetcherTest {
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
+
+        when(mFlags.getMeasurementEnableXNA()).thenReturn(true);
 
         // Execution
         Optional<Trigger> fetch =
@@ -3886,6 +3897,8 @@ public final class AsyncTriggerFetcherTest {
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
 
+        when(mFlags.getMeasurementEnableXNA()).thenReturn(true);
+
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
@@ -3895,6 +3908,71 @@ public final class AsyncTriggerFetcherTest {
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
         assertNull(result.getAdtechKeyMapping());
+    }
+
+    @Test
+    public void triggerRequest_xnaDisabled_nullXNAFields() throws Exception {
+        // Setup
+        String validAdTechBitMapping =
+                "{" + "\"Google-Ads\":\"0x1\"," + "\"Facebook-Ads\":\"0x2\"" + "}";
+        String validAttributionConfig =
+                "[{\n"
+                        + "\"source_adtech\": \"AdTech1-Ads\",\n"
+                        + "\"source_priority_range\": {\n"
+                        + "\"start\": 100,\n"
+                        + "\"end\": 1000\n"
+                        + "},\n"
+                        + "\"source_filters\": {\n"
+                        + "\"campaign_type\": [\"install\"]"
+                        + "},\n"
+                        + "\"source_not_filters\": {\n"
+                        + "\"product\": [\"prod1\"]"
+                        + "},\n"
+                        + "\"priority\": \"99\",\n"
+                        + "\"expiry\": \"604800\",\n"
+                        + "\"source_expiry_override\": \"680\",\n"
+                        + "\"post_install_exclusivity_window\": \"5000\",\n"
+                        + "\"filter_data\": {\n"
+                        + "\"campaign_type\": [\"install\"]\n"
+                        + "}\n"
+                        + "},"
+                        + "{\n"
+                        + "\"source_adtech\": \"AdTech2-Ads\"}"
+                        + "]";
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"event_trigger_data\":"
+                                                + EVENT_TRIGGERS_1
+                                                + ", \"adtech_bit_mapping\":"
+                                                + validAdTechBitMapping
+                                                + ", \"attribution_config\":"
+                                                + validAttributionConfig
+                                                + "}")));
+        doReturn(5000L).when(mFlags).getMaxResponseBasedRegistrationPayloadSizeBytes();
+
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
+
+        when(mFlags.getMeasurementEnableXNA()).thenReturn(false);
+
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
+        assertTrue(fetch.isPresent());
+        Trigger result = fetch.get();
+        assertNull(result.getAdtechKeyMapping());
+        assertNull(result.getAttributionConfig());
     }
 
     private RegistrationRequest buildRequest(String triggerUri) {
