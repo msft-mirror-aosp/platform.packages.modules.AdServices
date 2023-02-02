@@ -29,9 +29,9 @@ import static org.mockito.Mockito.verify;
 
 import android.adservices.common.AdServicesStatusUtils;
 import android.content.Context;
-import android.os.Process;
 
 import com.android.adservices.service.common.AppImportanceFilter;
+import com.android.adservices.service.common.compat.ProcessCompatUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.Before;
@@ -78,11 +78,12 @@ public class ForegroundEnforcementAccessResolverTest {
     @Test
     public void testIsAllowed_callerNotSandbox_assertCallerForeground() {
         MockitoSession mockitoSession =
-                ExtendedMockito.mockitoSession().spyStatic(Process.class).startMocking();
+                ExtendedMockito.mockitoSession().spyStatic(ProcessCompatUtils.class).startMocking();
 
         try {
             // Not Sandbox
-            ExtendedMockito.doReturn(false).when(() -> Process.isSdkSandboxUid(anyInt()));
+            ExtendedMockito.doReturn(false)
+                    .when(() -> ProcessCompatUtils.isSdkSandboxUid(anyInt()));
 
             // Execute
             new ForegroundEnforcementAccessResolver(
@@ -100,11 +101,11 @@ public class ForegroundEnforcementAccessResolverTest {
     @Test
     public void testIsAllowed_callerIsSandbox_dontAssertCallerForeground() {
         MockitoSession mockitoSession =
-                ExtendedMockito.mockitoSession().spyStatic(Process.class).startMocking();
+                ExtendedMockito.mockitoSession().spyStatic(ProcessCompatUtils.class).startMocking();
 
         try {
             // Is Sandbox
-            ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(anyInt()));
+            ExtendedMockito.doReturn(true).when(() -> ProcessCompatUtils.isSdkSandboxUid(anyInt()));
 
             // Execute
             new ForegroundEnforcementAccessResolver(
