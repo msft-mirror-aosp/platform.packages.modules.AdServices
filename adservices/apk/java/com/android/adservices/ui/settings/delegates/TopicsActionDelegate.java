@@ -65,12 +65,7 @@ public class TopicsActionDelegate extends BaseActionDelegate {
                                 mTopicsViewModel.setTopicsConsent(true);
                                 break;
                             case SWITCH_OFF_TOPICS:
-                                if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
-                                    DialogManager.showTopicsOptOutDialog(
-                                            mTopicsActivity, mTopicsViewModel);
-                                } else {
-                                    mTopicsViewModel.setTopicsConsent(false);
-                                }
+                                mTopicsViewModel.setTopicsConsent(false);
                                 break;
                             case BLOCK_TOPIC:
                                 logUIAction(ActionEnum.BLOCK_TOPIC_SELECTED);

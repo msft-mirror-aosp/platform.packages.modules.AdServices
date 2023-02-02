@@ -120,21 +120,15 @@ public final class SdkSandboxManager {
     public static final int LOAD_SDK_INTERNAL_ERROR = 500;
 
     /**
-     * Action name for the intent which starts {@code SandboxedActivity}.
+     * Action name for the intent which starts {@link android.app.Activity} in sandbox.
      *
-     * <p>System services would know if the intent is created to start {@code SandboxedActivity} by
-     * comparing the action of the intent to the value of this field.
+     * <p>System services would know if the intent is created to start a sandbox {@link
+     * android.app.Activity} by comparing the action of the intent to the value of this field.
      *
-     * <p>This intent should contain the following params in the extra params
-     *
-     * <ul>
-     *   <li>A key equals to {@value EXTRA_SANDBOXED_ACTIVITY_HANDLER} and value equals to {@link
-     *       IBinder} which maps to {@code SandboxedActivityHandler} registered before by an SDK.
-     *   <li>A key equals to {@value EXTRA_SANDBOXED_ACTIVITY_SDK_NAME} and value equals to the name
-     *       of the SDK registered the {@code SandboxedActivityHandler}.
-     * </ul>
-     *
-     * If one or both fields are missing, the {@code SandboxedActivity} will fail to start.
+     * <p>This intent should contain an extra param with key equals to {@link
+     * #EXTRA_SANDBOXED_ACTIVITY_HANDLER} and value equals to the {@link IBinder} that identifies
+     * the {@code SandboxedActivityHandler} registered before by an SDK. If this extra param is
+     * missing, the {@link android.app.Activity} will fail to start.
      *
      * @hide
      */
@@ -151,15 +145,6 @@ public final class SdkSandboxManager {
      */
     public static final String EXTRA_SANDBOXED_ACTIVITY_HANDLER =
             "android.app.sdksandbox.extra.SANDBOXED_ACTIVITY_HANDLER";
-
-    /**
-     * The key for an element in {@code SandboxedActivity} intent extra params, the value is the
-     * name of SDK which registered the corresponding {@code SandboxedActivityHandler}.
-     *
-     * @hide
-     */
-    public static final String EXTRA_SANDBOXED_ACTIVITY_SDK_NAME =
-            "android.app.sdksandbox.extra.SANDBOXED_ACTIVITY_SDK_NAME";
 
     private static final String TAG = "SdkSandboxManager";
 

@@ -54,6 +54,7 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ProviderInfo;
 import android.content.pm.UserInfo;
 import android.os.Binder;
 import android.os.Bundle;
@@ -147,6 +148,9 @@ public class SdkSandboxManagerServiceUnitTest {
 
     private static final String PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS =
             "enforce_broadcast_receiver_restrictions";
+
+    private static final String PROPERTY_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS =
+            "enforce_content_provider_restrictions";
 
     @Before
     public void setup() {
@@ -933,8 +937,6 @@ public class SdkSandboxManagerServiceUnitTest {
         loadSdk(SDK_NAME);
 
         Intent intent = new Intent();
-        Bundle params = new Bundle();
-        params.putString(mService.getSandboxedActivitySdkNameKey(), SDK_NAME);
         intent.putExtras(new Bundle());
         sSdkSandboxManagerLocal.enforceAllowedToHostSandboxedActivity(
                 intent, Process.myUid(), TEST_PACKAGE);
@@ -948,34 +950,6 @@ public class SdkSandboxManagerServiceUnitTest {
         Intent intent = new Intent();
         Bundle params = new Bundle();
         params.putString(mService.getSandboxedActivityHandlerKey(), "");
-        params.putString(mService.getSandboxedActivitySdkNameKey(), SDK_NAME);
-        intent.putExtras(params);
-        sSdkSandboxManagerLocal.enforceAllowedToHostSandboxedActivity(
-                intent, Process.myUid(), TEST_PACKAGE);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testEnforceAllowedToHostSandboxedActivityFailIfIntentHasNoSdkNameExtra()
-            throws RemoteException {
-        loadSdk(SDK_NAME);
-
-        Intent intent = new Intent();
-        Bundle params = new Bundle();
-        params.putBinder(mService.getSandboxedActivityHandlerKey(), new Binder());
-        intent.putExtras(params);
-        sSdkSandboxManagerLocal.enforceAllowedToHostSandboxedActivity(
-                intent, Process.myUid(), TEST_PACKAGE);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testEnforceAllowedToHostSandboxedActivityFailIfIntentHasWrongTypeOfSdkNameExtra()
-            throws RemoteException {
-        loadSdk(SDK_NAME);
-
-        Intent intent = new Intent();
-        Bundle params = new Bundle();
-        params.putBinder(mService.getSandboxedActivityHandlerKey(), new Binder());
-        params.putInt(mService.getSandboxedActivitySdkNameKey(), 0);
         intent.putExtras(params);
         sSdkSandboxManagerLocal.enforceAllowedToHostSandboxedActivity(
                 intent, Process.myUid(), TEST_PACKAGE);
@@ -988,7 +962,6 @@ public class SdkSandboxManagerServiceUnitTest {
         Intent intent = new Intent();
         Bundle params = new Bundle();
         params.putBinder(mService.getSandboxedActivityHandlerKey(), new Binder());
-        params.putString(mService.getSandboxedActivitySdkNameKey(), SDK_NAME);
         intent.putExtras(params);
         sSdkSandboxManagerLocal.enforceAllowedToHostSandboxedActivity(
                 intent, Process.myUid(), TEST_PACKAGE);
@@ -1078,86 +1051,6 @@ public class SdkSandboxManagerServiceUnitTest {
                                 new IntentFilter(),
                                 /*flags= */ Context.RECEIVER_NOT_EXPORTED,
                                 /*onlyProtectedBroadcasts= */ false))
-                .isTrue();
-    }
-
-    /** Tests expected behavior when broadcast receiver restrictions are not available. */
-    @Test
-    public void testCanDeclareBroadcastReceiverFromManifest_deviceConfigUnset() {
-        sSdkSandboxSettingsListener.onPropertiesChanged(
-                new DeviceConfig.Properties(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        Map.of(PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS, "")));
-        assertThat(
-                        sSdkSandboxManagerLocal.canDeclareBroadcastReceiverFromManifest(
-                                new IntentFilter(),
-                                /*unexportedBroadcast= */ false,
-                                /*onlyProtectedBroadcasts= */ false,
-                                /*minTargetSdkVersion= */ 33))
-                .isTrue();
-    }
-
-    /** Tests expected behavior when broadcast receiver restrictions are not applied. */
-    @Test
-    public void testCanDeclareBroadcastReceiverFromManifest_restrictionsNotApplied() {
-        sSdkSandboxSettingsListener.onPropertiesChanged(
-                new DeviceConfig.Properties(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        Map.of(PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS, "false")));
-        assertThat(
-                        sSdkSandboxManagerLocal.canDeclareBroadcastReceiverFromManifest(
-                                new IntentFilter(),
-                                /*unexportedBroadcast= */ false,
-                                /*onlyProtectedBroadcasts= */ false,
-                                /*minTargetSdkVersion= */ 33))
-                .isTrue();
-    }
-
-    /** Tests expected behaviour when broadcast restrictions are applied. */
-    @Test
-    public void testCanDeclareBroadcastReceiverFromManifest_restrictionsApplied() {
-        sSdkSandboxSettingsListener.onPropertiesChanged(
-                new DeviceConfig.Properties(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        Map.of(PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS, "true")));
-        assertThat(
-                        sSdkSandboxManagerLocal.canDeclareBroadcastReceiverFromManifest(
-                                new IntentFilter(),
-                                /*unexportedBroadcast= */ false,
-                                /*onlyProtectedBroadcasts= */ false,
-                                /*minTargetSdkVersion= */ 33))
-                .isFalse();
-    }
-
-    /** Tests expected behaviour for an unexported broadcast receivers. */
-    @Test
-    public void testCanDeclareBroadcastReceiverFromManifest_unexportedBroadcast() {
-        sSdkSandboxSettingsListener.onPropertiesChanged(
-                new DeviceConfig.Properties(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        Map.of(PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS, "true")));
-        assertThat(
-                        sSdkSandboxManagerLocal.canDeclareBroadcastReceiverFromManifest(
-                                new IntentFilter(),
-                                /*unexportedBroadcast= */ true,
-                                /*onlyProtectedBroadcasts= */ false,
-                                /*minTargetSdkVersion= */ 33))
-                .isTrue();
-    }
-
-    /** Tests expected behavior for protected broadcast receivers. */
-    @Test
-    public void testCanDeclareBroadcastReceiverFromManifest_protectedBroadcast() {
-        sSdkSandboxSettingsListener.onPropertiesChanged(
-                new DeviceConfig.Properties(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        Map.of(PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS, "true")));
-        assertThat(
-                        sSdkSandboxManagerLocal.canDeclareBroadcastReceiverFromManifest(
-                                new IntentFilter(),
-                                /*unexportedBroadcast= */ false,
-                                /*onlyProtectedBroadcasts= */ true,
-                                /*minTargetSdkVersion= */ 33))
                 .isTrue();
     }
 
@@ -2300,6 +2193,45 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
+    public void testSdkSandboxSettings_canAccessContentProviderFromSdkSandbox_DefaultAccess()
+            throws Exception {
+        /** Ensuring that the property is not present in DeviceConfig */
+        DeviceConfig.deleteProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS);
+        ExtendedMockito.when(Process.isSdkSandboxUid(Mockito.anyInt())).thenReturn(true);
+        assertThat(
+                        sSdkSandboxManagerLocal.canAccessContentProviderFromSdkSandbox(
+                                new ProviderInfo()))
+                .isTrue();
+    }
+
+    @Test
+    public void testSdkSandboxSettings_canAccessContentProviderFromSdkSandbox_AccessNotAllowed() {
+        ExtendedMockito.when(Process.isSdkSandboxUid(Mockito.anyInt())).thenReturn(true);
+        sSdkSandboxSettingsListener.onPropertiesChanged(
+                new DeviceConfig.Properties(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        Map.of(PROPERTY_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS, "true")));
+        assertThat(
+                        sSdkSandboxManagerLocal.canAccessContentProviderFromSdkSandbox(
+                                new ProviderInfo()))
+                .isFalse();
+    }
+
+    @Test
+    public void testSdkSandboxSettings_canAccessContentProviderFromSdkSandbox_AccessAllowed() {
+        ExtendedMockito.when(Process.isSdkSandboxUid(Mockito.anyInt())).thenReturn(true);
+        sSdkSandboxSettingsListener.onPropertiesChanged(
+                new DeviceConfig.Properties(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        Map.of(PROPERTY_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS, "false")));
+        assertThat(
+                        sSdkSandboxManagerLocal.canAccessContentProviderFromSdkSandbox(
+                                new ProviderInfo()))
+                .isTrue();
+    }
+
+    @Test
     public void
             testLatencyMetrics_systemServerAppToSandbox_RequestSurfacePackage_sandboxNotLoaded() {
         disableForegroundCheck();
@@ -2622,13 +2554,14 @@ public class SdkSandboxManagerServiceUnitTest {
                         Mockito.any(SandboxLatencyInfo.class));
     }
 
+    // TODO(b/267155761): Add tests to check correct methods with parameters are called.
     @Test
     public void testLoadSdk_computeSdkStorage() throws Exception {
         loadSdk(SDK_NAME);
         // Assume sdk storage information calculated and sent
         mSdkSandboxService.sendStorageInfoToSystemServer();
 
-        Mockito.verify(sSdkSandboxPulledAtoms)
+        Mockito.verify(sSdkSandboxPulledAtoms, Mockito.timeout(5000))
                 .logStorage(mClientAppUid, /*sharedStorage=*/ 0, /*sdkStorage=*/ 0);
     }
 

@@ -224,6 +224,30 @@ public class AppConsentDao {
     }
 
     /**
+     * Removes the consent setting for an application (if it exists in the datastore). <strong>All
+     * entries matching this package name will be removed.</strong>
+     *
+     * <p>This method is meant for backwards-compatibility to Android R & S, and should only be
+     * invoked on Android versions prior to T, where the package UID is not available when the
+     * package is uninstalled.
+     *
+     * @throws IllegalArgumentException if the package name is invalid
+     * @throws IOException if the operation fails
+     */
+    public void clearConsentForUninstalledApp(@NonNull String packageName) throws IOException {
+        Objects.requireNonNull(packageName, "Package name must be provided");
+        Preconditions.checkArgument(!packageName.isEmpty(), "Invalid package name");
+
+        initializeDatastoreIfNeeded();
+
+        // It's not possible to use the toDatastoreKey method to look up the key because the
+        // package has been uninstalled. Instead, ask the datastore to clear data for all entries
+        // beginning with the package name + separator, since the datastore stores keys in the
+        // form of package name + separator + package uid.
+        mDatastore.removeByPrefix(packageName + DATASTORE_KEY_SEPARATOR);
+    }
+
+    /**
      * Returns the key that corresponds to the given package name and UID.
      *
      * <p>The given package name and UID are not checked for installation status.
