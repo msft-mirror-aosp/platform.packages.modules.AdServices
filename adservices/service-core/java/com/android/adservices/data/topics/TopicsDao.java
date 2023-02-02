@@ -41,6 +41,7 @@ import java.util.Set;
 /** Data Access Object for the Topics API. */
 public class TopicsDao {
     private static TopicsDao sSingleton;
+    private static final Object SINGLETON_LOCK = new Object();
 
     // TODO(b/227393493): Should support a test to notify if new table is added.
     private static final String[] ALL_TOPICS_TABLES = {
@@ -71,7 +72,7 @@ public class TopicsDao {
     /** Returns an instance of the TopicsDAO given a context. */
     @NonNull
     public static TopicsDao getInstance(@NonNull Context context) {
-        synchronized (TopicsDao.class) {
+        synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
                 sSingleton = new TopicsDao(DbHelper.getInstance(context));
             }
