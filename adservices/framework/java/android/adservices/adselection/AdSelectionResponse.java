@@ -17,6 +17,7 @@
 package android.adservices.adselection;
 
 import static android.adservices.adselection.AdSelectionOutcome.UNSET_AD_SELECTION_ID;
+import static android.adservices.adselection.AdSelectionOutcome.UNSET_AD_SELECTION_ID_MESSAGE;
 
 import android.annotation.NonNull;
 import android.net.Uri;
@@ -144,7 +145,7 @@ public final class AdSelectionResponse implements Parcelable {
             Objects.requireNonNull(mRenderUri);
 
             Preconditions.checkArgument(
-                    mAdSelectionId != UNSET_AD_SELECTION_ID, "AdSelectionId has not been set!");
+                    mAdSelectionId != UNSET_AD_SELECTION_ID, UNSET_AD_SELECTION_ID_MESSAGE);
 
             return new AdSelectionResponse(mAdSelectionId, mRenderUri);
         }

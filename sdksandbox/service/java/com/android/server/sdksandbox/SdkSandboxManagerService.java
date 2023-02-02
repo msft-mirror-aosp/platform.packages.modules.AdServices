@@ -117,6 +117,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     private final ActivityManager mActivityManager;
     private final ActivityManagerLocal mActivityManagerLocal;
     private final Handler mHandler;
+    private final Handler mBackgroundHandler;
     private final SdkSandboxStorageManager mSdkSandboxStorageManager;
     private final SdkSandboxServiceProvider mServiceProvider;
 
@@ -255,6 +256,14 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         HandlerThread handlerThread = new HandlerThread("SdkSandboxManagerServiceHandler");
         handlerThread.start();
         mHandler = new Handler(handlerThread.getLooper());
+
+        // Start a background handler thread.
+        HandlerThread backgroundHandlerThread =
+                new HandlerThread(
+                        "SdkSandboxManagerServiceHandler", Process.THREAD_PRIORITY_BACKGROUND);
+        backgroundHandlerThread.start();
+        mBackgroundHandler = new Handler(backgroundHandlerThread.getLooper());
+
         registerBroadcastReceivers();
 
         mAdServicesPackageName = resolveAdServicesPackage();
@@ -1051,7 +1060,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             // Once bound service has been set, sync manager is notified.
             notifySyncManagerSandboxStarted(mCallingInfo);
 
-            mHandler.post(
+            mBackgroundHandler.post(
                     () -> {
                         computeSdkStorage(mCallingInfo, mService);
                     });
@@ -1986,28 +1995,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         mSdkSandboxSettingsListener.isBroadcastReceiverRestrictionsEnforced();
                 final boolean exported = (flags & Context.RECEIVER_NOT_EXPORTED) == 0;
                 return !enforceRestrictions || !exported;
-            } finally {
-                Binder.restoreCallingIdentity(token);
-            }
-        }
-
-        @Override
-        // TODO(b/265777283): Use minTargetSdkVersion and intentFilter parameter when using an
-        // allowlist
-        public boolean canDeclareBroadcastReceiverFromManifest(
-                @NonNull IntentFilter intentFilter,
-                boolean unexportedBroadcast,
-                boolean onlyProtectedBroadcasts,
-                int minTargetSdkVersion) {
-            /**
-             * By clearing the calling identity, system server identity is set which allows us to
-             * call {@DeviceConfig.getBoolean}
-             */
-            final long token = Binder.clearCallingIdentity();
-            try {
-                final boolean enforceRestrictions =
-                        mSdkSandboxSettingsListener.isBroadcastReceiverRestrictionsEnforced();
-                return !enforceRestrictions || unexportedBroadcast || onlyProtectedBroadcasts;
             } finally {
                 Binder.restoreCallingIdentity(token);
             }
