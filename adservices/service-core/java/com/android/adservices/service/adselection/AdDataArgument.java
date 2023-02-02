@@ -47,9 +47,10 @@ public class AdDataArgument {
      */
     public static AdData parseJsonResponse(JSONObject jsonObject) throws IllegalArgumentException {
         try {
-            return new AdData(
-                    Uri.parse(jsonObject.getString(RENDER_URI_FIELD_NAME)),
-                    jsonObject.getJSONObject(METADATA_FIELD_NAME).toString());
+            return new AdData.Builder()
+                    .setRenderUri(Uri.parse(jsonObject.getString(RENDER_URI_FIELD_NAME)))
+                    .setMetadata(jsonObject.getJSONObject(METADATA_FIELD_NAME).toString())
+                    .build();
         } catch (JSONException e) {
             throw new IllegalArgumentException(
                     "Invalid content for '"

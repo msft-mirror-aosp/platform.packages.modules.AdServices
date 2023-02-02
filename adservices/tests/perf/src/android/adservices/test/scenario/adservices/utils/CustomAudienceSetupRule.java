@@ -24,6 +24,9 @@ import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.TrustedBiddingData;
 import android.net.Uri;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -75,7 +78,71 @@ public class CustomAudienceSetupRule implements TestRule {
                     createCustomAudience(BUYER, "GENERIC_CA_" + i, bidsForBuyer);
             mCustomAudiences.add(customAudience);
         }
+        joinCas();
+    }
 
+    public void populateRealisticCustomAudiences(String rawJson) throws Exception {
+        JSONArray interestGroups = new JSONObject(rawJson).getJSONArray("interestGroups");
+        for (int i = 0; i < interestGroups.length(); i++) {
+            mCustomAudiences.add(customAudienceFromInterestGroup(interestGroups.getJSONObject(i)));
+        }
+        joinCas();
+    }
+
+    private CustomAudience customAudienceFromInterestGroup(JSONObject ig) throws JSONException {
+        Instant expirationTime =
+                Instant.now().plus(Duration.ofSeconds(ig.getInt("expirationTimeInSeconds")));
+        JSONObject igAttributes = ig.getJSONObject("interestGroupAttributes");
+        JSONArray igAds;
+        try {
+            igAds = igAttributes.getJSONArray("ads");
+        } catch (JSONException e) {
+            igAds = new JSONArray();
+        }
+        List<AdData> ads = new ArrayList<>();
+        for (int i = 0; i < igAds.length(); i++) {
+            JSONObject igAd = igAds.getJSONObject(i);
+
+            // Need to make metadata a valid JSON since it isn't in chrome
+            String metadata = "{ \"metadata\": " + igAd.getString("metadata") + " }";
+            ads.add(
+                    new AdData.Builder()
+                            .setMetadata(metadata)
+                            // Can't use the render uri from chrome because the URL doesn't match
+                            // the buyer
+                            .setRenderUri(
+                                    getUri(
+                                            BUYER.toString(),
+                                            AD_URI_PREFIX + "test" + "/ad" + (i + 1)))
+                            .build());
+        }
+        // Need to convert to JSON object
+        String biddingSignals =
+                "{\"biddingSignals\": " + igAttributes.getString("userBiddingSignals") + "}";
+        return new CustomAudience.Builder()
+                // Using localhost buyer we can pull android scripts instead of chrome scripts
+                .setBuyer(BUYER)
+                .setName(igAttributes.getString("name"))
+                .setActivationTime(Instant.now())
+                .setExpirationTime(expirationTime)
+                // Overriding the daily update URL to match the buyer
+                .setDailyUpdateUri(mMockWebServerRule.uriForPath("/update"))
+                .setUserBiddingSignals(AdSelectionSignals.fromString(biddingSignals))
+                // Overriding to match the buyer
+                .setTrustedBiddingData(
+                        getValidTrustedBiddingDataByBuyer(
+                                mMockWebServerRule.uriForPath(
+                                        MockWebServerDispatcherFactory
+                                                .getTrustedBiddingSignalsPath())))
+                // Pointing to a local mockwebserver script
+                .setBiddingLogicUri(
+                        mMockWebServerRule.uriForPath(
+                                MockWebServerDispatcherFactory.getBiddingLogicUriPathFixedBid()))
+                .setAds(ads)
+                .build();
+    }
+
+    private void joinCas() throws Exception {
         for (CustomAudience ca : mCustomAudiences) {
             addDelayToAvoidThrottle();
             mAdvertisingCustomAudienceClient

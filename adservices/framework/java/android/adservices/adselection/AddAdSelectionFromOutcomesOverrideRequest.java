@@ -30,7 +30,6 @@ import java.util.Objects;
  * the specific override, a {@code String} selectionLogicJs and {@code String} selectionSignals
  * field representing the override value
  *
- * @hide
  */
 public class AddAdSelectionFromOutcomesOverrideRequest {
     @NonNull private final AdSelectionFromOutcomesConfig mAdSelectionFromOutcomesConfig;
@@ -59,6 +58,7 @@ public class AddAdSelectionFromOutcomesOverrideRequest {
      *     flow that generates bids and scores to find a wining ad for rendering.
      */
     @NonNull
+    // TODO(b/262667103): Rename getAdSelectionConfig to getAdSelectionFromOutcomesConfig
     public AdSelectionFromOutcomesConfig getAdSelectionConfig() {
         return mAdSelectionFromOutcomesConfig;
     }

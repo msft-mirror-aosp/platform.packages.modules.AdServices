@@ -18,15 +18,31 @@ package com.android.adservices.data.topics.migration;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.mockito.Mockito.when;
+
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.MockitoSession;
+import org.mockito.quality.Strictness;
+
+import java.util.Map;
+import java.util.Set;
 
 /** Unit tests for {@link TopicDbMigratorV5} */
 public class TopicDbMigratorV5Test {
@@ -34,8 +50,28 @@ public class TopicDbMigratorV5Test {
     // The database is created with V2 and will migrate to V5.
     private final TopicsDbHelperV2 mTopicsDbHelper = TopicsDbHelperV2.getInstance(sContext);
 
+    private MockitoSession mStaticMockSession;
+    @Mock private Flags mMockFlags;
+
+    @Before
+    public void setup() {
+        MockitoAnnotations.initMocks(this);
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(FlagsFactory.class)
+                        .strictness(Strictness.WARN)
+                        .startMocking();
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+    }
+
+    @After
+    public void teardown() {
+        mStaticMockSession.finishMocking();
+    }
+
     @Test
     public void testDbMigrationFromV2ToV5() {
+        // Enable DB Schema Flag
         SQLiteDatabase db = mTopicsDbHelper.getWritableDatabase();
 
         // TopicContributors table doesn't exist in V2
@@ -63,5 +99,29 @@ public class TopicDbMigratorV5Test {
                                 TopicsTables.TopicContributorsContract.TABLE,
                                 /* number Of Columns */ 4))
                 .isTrue();
+
+        // Test dated db is cleared when upgrading.
+        db.beginTransaction();
+        db = mTopicsDbHelper.getWritableDatabase();
+        // Insert an entry into the table and verify it.
+        TopicsDao topicsDao = new TopicsDao(mTopicsDbHelper);
+        final long epochId = 1;
+        Map<Integer, Set<String>> topicContributorsMap = Map.of(/* topicId */ 1, Set.of("app"));
+        topicsDao.persistTopicContributors(epochId, topicContributorsMap);
+        assertThat(topicsDao.retrieveTopicToContributorsMap(epochId))
+                .isEqualTo(topicContributorsMap);
+
+        // Now downgrade db and upgrade it again.
+        when(mMockFlags.getEnableDatabaseSchemaVersion5()).thenReturn(false);
+        mTopicsDbHelper.onDowngrade(
+                db, DbHelper.DATABASE_VERSION_V7, DbHelper.CURRENT_DATABASE_VERSION);
+        when(mMockFlags.getEnableDatabaseSchemaVersion5()).thenReturn(true);
+        new TopicDbMigratorV5().performMigration(db);
+        // Commit the schema change
+        db.setTransactionSuccessful();
+        db.endTransaction();
+
+        // TopicContributorTable should be empty when getting upgraded again.
+        assertThat(topicsDao.retrieveTopicToContributorsMap(epochId)).isEmpty();
     }
 }

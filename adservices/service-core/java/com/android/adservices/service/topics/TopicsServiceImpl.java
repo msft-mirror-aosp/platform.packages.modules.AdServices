@@ -53,6 +53,7 @@ import com.android.adservices.service.common.PermissionHelper;
 import com.android.adservices.service.common.SdkRuntimeUtil;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -131,8 +132,10 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                     int resultCode = STATUS_SUCCESS;
 
                     try {
-                        if (!canCallerInvokeTopicsService(
-                                hasTopicsPermission, topicsParam, callingUid, callback)) {
+                        resultCode =
+                                canCallerInvokeTopicsService(
+                                        hasTopicsPermission, topicsParam, callingUid, callback);
+                        if (resultCode != STATUS_SUCCESS) {
                             return;
                         }
 
@@ -223,9 +226,9 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
      * @param sufficientPermission boolean which tells whether caller has sufficient permissions.
      * @param topicsParam {@link GetTopicsParam} to get information about the request.
      * @param callback {@link IGetTopicsCallback} to invoke when caller is not allowed.
-     * @return true if caller is allowed to invoke Topics API, false otherwise.
+     * @return API response status code.
      */
-    private boolean canCallerInvokeTopicsService(
+    private int canCallerInvokeTopicsService(
             boolean sufficientPermission,
             GetTopicsParam topicsParam,
             int callingUid,
@@ -236,7 +239,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
         } catch (WrongCallingApplicationStateException backgroundCaller) {
             invokeCallbackWithStatus(
                     callback, STATUS_BACKGROUND_CALLER, backgroundCaller.getMessage());
-            return false;
+            return STATUS_BACKGROUND_CALLER;
         }
 
         if (!sufficientPermission) {
@@ -244,7 +247,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                     callback,
                     STATUS_PERMISSION_NOT_REQUESTED,
                     "Unauthorized caller. Permission not requested.");
-            return false;
+            return STATUS_PERMISSION_NOT_REQUESTED;
         }
 
         // This needs to access PhFlag which requires READ_DEVICE_CONFIG which
@@ -258,7 +261,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                     callback,
                     STATUS_CALLER_NOT_ALLOWED,
                     "Unauthorized caller. Signatures for calling package not allowed.");
-            return false;
+            return STATUS_CALLER_NOT_ALLOWED;
         }
 
         // Check whether calling package belongs to the callingUid
@@ -266,14 +269,20 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                 enforceCallingPackageBelongsToUid(topicsParam.getAppPackageName(), callingUid);
         if (resultCode != STATUS_SUCCESS) {
             invokeCallbackWithStatus(callback, resultCode, "Caller is not authorized.");
-            return false;
+            return resultCode;
         }
 
-        AdServicesApiConsent userConsent = mConsentManager.getConsent();
+        AdServicesApiConsent userConsent;
+        if (mFlags.getGaUxFeatureEnabled()) {
+            userConsent = mConsentManager.getConsent(AdServicesApiType.TOPICS);
+        } else {
+            userConsent = mConsentManager.getConsent();
+        }
+
         if (!userConsent.isGiven()) {
             invokeCallbackWithStatus(
                     callback, STATUS_USER_CONSENT_REVOKED, "User consent revoked.");
-            return false;
+            return STATUS_USER_CONSENT_REVOKED;
         }
 
         // The app developer declares which SDKs they would like to allow Topics
@@ -294,11 +303,11 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
             if (!permitted) {
                 invokeCallbackWithStatus(
                         callback, STATUS_CALLER_NOT_ALLOWED, "Caller is not authorized.");
-                return false;
+                return STATUS_CALLER_NOT_ALLOWED;
             }
         }
 
-        return true;
+        return STATUS_SUCCESS;
     }
 
     private void invokeCallbackWithStatus(

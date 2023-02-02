@@ -43,7 +43,7 @@ public class SdkSandboxShellCommandUnitTest {
     private static final String NON_DEBUGGABLE_PACKAGE = "android.app.nondebuggable";
     private static final int UID = 10214;
     private static final String INVALID_PACKAGE = "android.app.invalid";
-    private Context mContext;
+    private Context mSpyContext;
     private FakeSdkSandboxManagerService mService;
 
     private final FileDescriptor mIn = FileDescriptor.in;
@@ -54,19 +54,16 @@ public class SdkSandboxShellCommandUnitTest {
 
     @Before
     public void setup() throws Exception {
-        mContext = Mockito.spy(InstrumentationRegistry.getInstrumentation().getContext());
+        mSpyContext = Mockito.spy(InstrumentationRegistry.getInstrumentation().getContext());
 
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.READ_DEVICE_CONFIG);
-        mService =
-                Mockito.spy(
-                        new FakeSdkSandboxManagerService(
-                                mContext, Mockito.mock(SdkSandboxServiceProvider.class)));
+        mService = Mockito.spy(new FakeSdkSandboxManagerService(mSpyContext));
 
         mPackageManager = Mockito.mock(PackageManager.class);
 
-        Mockito.when(mContext.getPackageManager()).thenReturn(mPackageManager);
+        Mockito.when(mSpyContext.getPackageManager()).thenReturn(mPackageManager);
 
         final ApplicationInfo debuggableInfo = Mockito.mock(ApplicationInfo.class);
         debuggableInfo.flags |= ApplicationInfo.FLAG_DEBUGGABLE;
@@ -106,7 +103,8 @@ public class SdkSandboxShellCommandUnitTest {
                         return UserHandle.USER_ALL;
                     }
                 };
-        final SdkSandboxShellCommand cmd = new SdkSandboxShellCommand(mService, mContext, injector);
+        final SdkSandboxShellCommand cmd =
+                new SdkSandboxShellCommand(mService, mSpyContext, injector);
 
         assertThat(cmd.exec(mService, mIn, mOut, mErr, new String[] {"start", DEBUGGABLE_PACKAGE}))
                 .isEqualTo(-1);
@@ -115,7 +113,7 @@ public class SdkSandboxShellCommandUnitTest {
     @Test
     public void testStartFailsForInvalidPackage() throws Exception {
         final SdkSandboxShellCommand cmd =
-                new SdkSandboxShellCommand(mService, mContext, new ShellInjector());
+                new SdkSandboxShellCommand(mService, mSpyContext, new ShellInjector());
 
         assertThat(cmd.exec(mService, mIn, mOut, mErr, new String[] {"start", INVALID_PACKAGE}))
                 .isEqualTo(-1);
@@ -132,7 +130,7 @@ public class SdkSandboxShellCommandUnitTest {
         final CallingInfo callingInfo = new CallingInfo(UID, DEBUGGABLE_PACKAGE);
         Mockito.doReturn(false).when(mService).isSdkSandboxServiceRunning(callingInfo);
         final SdkSandboxShellCommand cmd =
-                new SdkSandboxShellCommand(mService, mContext, new ShellInjector());
+                new SdkSandboxShellCommand(mService, mSpyContext, new ShellInjector());
         mService.setIsSdkSandboxDisabledResponse(true);
 
         assertThat(cmd.exec(mService, mIn, mOut, mErr, new String[] {"start", DEBUGGABLE_PACKAGE}))
@@ -150,7 +148,7 @@ public class SdkSandboxShellCommandUnitTest {
     @Test
     public void testStartFailsForNonDebuggablePackage() throws Exception {
         final SdkSandboxShellCommand cmd =
-                new SdkSandboxShellCommand(mService, mContext, new ShellInjector());
+                new SdkSandboxShellCommand(mService, mSpyContext, new ShellInjector());
 
         assertThat(
                         cmd.exec(
@@ -168,7 +166,9 @@ public class SdkSandboxShellCommandUnitTest {
                         Mockito.any(UserHandle.class));
 
         Mockito.verify(mService, Mockito.never())
-                .startSdkSandbox(Mockito.any(CallingInfo.class), Mockito.anyLong());
+                .startSdkSandboxIfNeeded(
+                        Mockito.any(CallingInfo.class),
+                        Mockito.any(SdkSandboxManagerService.SandboxBindingCallback.class));
     }
 
     @Test
@@ -177,7 +177,7 @@ public class SdkSandboxShellCommandUnitTest {
         Mockito.doReturn(true).when(mService).isSdkSandboxServiceRunning(callingInfo);
 
         final SdkSandboxShellCommand cmd =
-                new SdkSandboxShellCommand(mService, mContext, new ShellInjector());
+                new SdkSandboxShellCommand(mService, mSpyContext, new ShellInjector());
 
         assertThat(cmd.exec(mService, mIn, mOut, mErr, new String[] {"start", DEBUGGABLE_PACKAGE}))
                 .isEqualTo(-1);
@@ -191,7 +191,9 @@ public class SdkSandboxShellCommandUnitTest {
         Mockito.verify(mService).isSdkSandboxServiceRunning(callingInfo);
 
         Mockito.verify(mService, Mockito.never())
-                .startSdkSandbox(Mockito.any(CallingInfo.class), Mockito.anyLong());
+                .startSdkSandboxIfNeeded(
+                        Mockito.any(CallingInfo.class),
+                        Mockito.any(SdkSandboxManagerService.SandboxBindingCallback.class));
     }
 
     @Test
@@ -200,7 +202,7 @@ public class SdkSandboxShellCommandUnitTest {
         Mockito.doReturn(false).when(mService).isSdkSandboxServiceRunning(callingInfo);
 
         final SdkSandboxShellCommand cmd =
-                new SdkSandboxShellCommand(mService, mContext, new ShellInjector());
+                new SdkSandboxShellCommand(mService, mSpyContext, new ShellInjector());
 
         assertThat(cmd.exec(mService, mIn, mOut, mErr, new String[] {"start", DEBUGGABLE_PACKAGE}))
                 .isEqualTo(0);
@@ -214,7 +216,9 @@ public class SdkSandboxShellCommandUnitTest {
         Mockito.verify(mService).isSdkSandboxServiceRunning(callingInfo);
 
         Mockito.verify(mService)
-                .startSdkSandbox(Mockito.eq(callingInfo), Mockito.anyLong());
+                .startSdkSandboxIfNeeded(
+                        Mockito.eq(callingInfo),
+                        Mockito.any(SdkSandboxManagerService.SandboxBindingCallback.class));
     }
 
     @Test
@@ -225,7 +229,7 @@ public class SdkSandboxShellCommandUnitTest {
         Mockito.doReturn(false).when(mService).isSdkSandboxServiceRunning(callingInfo);
 
         final SdkSandboxShellCommand cmd =
-                new SdkSandboxShellCommand(mService, mContext, new ShellInjector());
+                new SdkSandboxShellCommand(mService, mSpyContext, new ShellInjector());
 
         assertThat(cmd.exec(mService, mIn, mOut, mErr, new String[] {"start", DEBUGGABLE_PACKAGE}))
                 .isEqualTo(-1);
@@ -239,13 +243,15 @@ public class SdkSandboxShellCommandUnitTest {
         Mockito.verify(mService).isSdkSandboxServiceRunning(callingInfo);
 
         Mockito.verify(mService)
-                .startSdkSandbox(Mockito.eq(callingInfo), Mockito.anyLong());
+                .startSdkSandboxIfNeeded(
+                        Mockito.eq(callingInfo),
+                        Mockito.any(SdkSandboxManagerService.SandboxBindingCallback.class));
     }
 
     @Test
     public void testStopFailsForInvalidPackage() throws Exception {
         final SdkSandboxShellCommand cmd =
-                new SdkSandboxShellCommand(mService, mContext, new ShellInjector());
+                new SdkSandboxShellCommand(mService, mSpyContext, new ShellInjector());
 
         assertThat(cmd.exec(mService, mIn, mOut, mErr, new String[] {"stop", INVALID_PACKAGE}))
                 .isEqualTo(-1);
@@ -263,7 +269,7 @@ public class SdkSandboxShellCommandUnitTest {
     @Test
     public void testStopFailsForNonDebuggablePackage() throws Exception {
         final SdkSandboxShellCommand cmd =
-                new SdkSandboxShellCommand(mService, mContext, new ShellInjector());
+                new SdkSandboxShellCommand(mService, mSpyContext, new ShellInjector());
 
         assertThat(
                         cmd.exec(
@@ -290,7 +296,7 @@ public class SdkSandboxShellCommandUnitTest {
         Mockito.doReturn(false).when(mService).isSdkSandboxServiceRunning(callingInfo);
 
         final SdkSandboxShellCommand cmd =
-                new SdkSandboxShellCommand(mService, mContext, new ShellInjector());
+                new SdkSandboxShellCommand(mService, mSpyContext, new ShellInjector());
 
         assertThat(cmd.exec(mService, mIn, mOut, mErr, new String[] {"stop", DEBUGGABLE_PACKAGE}))
                 .isEqualTo(-1);
@@ -313,7 +319,7 @@ public class SdkSandboxShellCommandUnitTest {
         Mockito.doReturn(true).when(mService).isSdkSandboxServiceRunning(callingInfo);
 
         final SdkSandboxShellCommand cmd =
-                new SdkSandboxShellCommand(mService, mContext, new ShellInjector());
+                new SdkSandboxShellCommand(mService, mSpyContext, new ShellInjector());
 
         assertThat(cmd.exec(mService, mIn, mOut, mErr, new String[] {"stop", DEBUGGABLE_PACKAGE}))
                 .isEqualTo(0);
@@ -342,18 +348,17 @@ public class SdkSandboxShellCommandUnitTest {
 
         private boolean mBindingSuccessful = true;
         private boolean mIsDisabledResponse = false;
-        private SandboxBindingCallback mCallback = null;
 
-        FakeSdkSandboxManagerService(Context context, SdkSandboxServiceProvider provider) {
-            super(context, provider);
+        FakeSdkSandboxManagerService(Context context) {
+            super(context);
         }
 
         @Override
-        void startSdkSandbox(CallingInfo callingInfo, long time) {
+        void startSdkSandboxIfNeeded(CallingInfo callingInfo, SandboxBindingCallback callback) {
             if (mBindingSuccessful) {
-                mCallback.onBindingSuccessful(Mockito.mock(ISdkSandboxService.class), -1);
+                callback.onBindingSuccessful(Mockito.mock(ISdkSandboxService.class), -1);
             } else {
-                mCallback.onBindingFailed(new LoadSdkException(null, new Bundle()), -1);
+                callback.onBindingFailed(new LoadSdkException(null, new Bundle()), -1);
             }
         }
 
@@ -369,11 +374,6 @@ public class SdkSandboxShellCommandUnitTest {
         @Override
         boolean isSdkSandboxDisabled(ISdkSandboxService boundService) {
             return mIsDisabledResponse;
-        }
-
-        @Override
-        void addSandboxBindingCallback(CallingInfo callingInfo, SandboxBindingCallback callback) {
-            mCallback = callback;
         }
 
         private void setIsSdkSandboxDisabledResponse(boolean response) {

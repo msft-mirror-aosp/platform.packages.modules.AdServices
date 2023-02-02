@@ -40,9 +40,26 @@ public class DBAdSelectionFromOutcomesOverrideTest {
         assertEquals(
                 dbAdSelectionFromOutcomesOverride.getAdSelectionFromOutcomesConfigId(),
                 AD_SELECTION_FROM_OUTCOMES_CONFIG_ID);
-        assertEquals(dbAdSelectionFromOutcomesOverride.getAppPackageName(), APP_PACKAGE_NAME);
-        assertEquals(dbAdSelectionFromOutcomesOverride.getSelectionLogicJs(), SELECTION_LOGIC_JS);
-        assertEquals(dbAdSelectionFromOutcomesOverride.getSelectionSignals(), SELECTION_SIGNALS);
+        assertEquals(APP_PACKAGE_NAME, dbAdSelectionFromOutcomesOverride.getAppPackageName());
+        assertEquals(SELECTION_LOGIC_JS, dbAdSelectionFromOutcomesOverride.getSelectionLogicJs());
+        assertEquals(SELECTION_SIGNALS, dbAdSelectionFromOutcomesOverride.getSelectionSignals());
+    }
+
+    @Test
+    public void testCreateDBAdSelectionOverride() {
+        DBAdSelectionFromOutcomesOverride dbAdSelectionFromOutcomesOverride =
+                DBAdSelectionFromOutcomesOverride.create(
+                        AD_SELECTION_FROM_OUTCOMES_CONFIG_ID,
+                        APP_PACKAGE_NAME,
+                        SELECTION_LOGIC_JS,
+                        SELECTION_SIGNALS);
+
+        assertEquals(
+                dbAdSelectionFromOutcomesOverride.getAdSelectionFromOutcomesConfigId(),
+                AD_SELECTION_FROM_OUTCOMES_CONFIG_ID);
+        assertEquals(APP_PACKAGE_NAME, dbAdSelectionFromOutcomesOverride.getAppPackageName());
+        assertEquals(SELECTION_LOGIC_JS, dbAdSelectionFromOutcomesOverride.getSelectionLogicJs());
+        assertEquals(SELECTION_SIGNALS, dbAdSelectionFromOutcomesOverride.getSelectionSignals());
     }
 
     @Test
