@@ -166,7 +166,9 @@ public class SdkSandboxShellCommandUnitTest {
                         Mockito.any(UserHandle.class));
 
         Mockito.verify(mService, Mockito.never())
-                .startSdkSandbox(Mockito.any(CallingInfo.class), Mockito.anyLong());
+                .startSdkSandboxIfNeeded(
+                        Mockito.any(CallingInfo.class),
+                        Mockito.any(SdkSandboxManagerService.SandboxBindingCallback.class));
     }
 
     @Test
@@ -189,7 +191,9 @@ public class SdkSandboxShellCommandUnitTest {
         Mockito.verify(mService).isSdkSandboxServiceRunning(callingInfo);
 
         Mockito.verify(mService, Mockito.never())
-                .startSdkSandbox(Mockito.any(CallingInfo.class), Mockito.anyLong());
+                .startSdkSandboxIfNeeded(
+                        Mockito.any(CallingInfo.class),
+                        Mockito.any(SdkSandboxManagerService.SandboxBindingCallback.class));
     }
 
     @Test
@@ -212,7 +216,9 @@ public class SdkSandboxShellCommandUnitTest {
         Mockito.verify(mService).isSdkSandboxServiceRunning(callingInfo);
 
         Mockito.verify(mService)
-                .startSdkSandbox(Mockito.eq(callingInfo), Mockito.anyLong());
+                .startSdkSandboxIfNeeded(
+                        Mockito.eq(callingInfo),
+                        Mockito.any(SdkSandboxManagerService.SandboxBindingCallback.class));
     }
 
     @Test
@@ -237,7 +243,9 @@ public class SdkSandboxShellCommandUnitTest {
         Mockito.verify(mService).isSdkSandboxServiceRunning(callingInfo);
 
         Mockito.verify(mService)
-                .startSdkSandbox(Mockito.eq(callingInfo), Mockito.anyLong());
+                .startSdkSandboxIfNeeded(
+                        Mockito.eq(callingInfo),
+                        Mockito.any(SdkSandboxManagerService.SandboxBindingCallback.class));
     }
 
     @Test
@@ -340,18 +348,17 @@ public class SdkSandboxShellCommandUnitTest {
 
         private boolean mBindingSuccessful = true;
         private boolean mIsDisabledResponse = false;
-        private SandboxBindingCallback mCallback = null;
 
         FakeSdkSandboxManagerService(Context context) {
             super(context);
         }
 
         @Override
-        void startSdkSandbox(CallingInfo callingInfo, long time) {
+        void startSdkSandboxIfNeeded(CallingInfo callingInfo, SandboxBindingCallback callback) {
             if (mBindingSuccessful) {
-                mCallback.onBindingSuccessful(Mockito.mock(ISdkSandboxService.class), -1);
+                callback.onBindingSuccessful(Mockito.mock(ISdkSandboxService.class), -1);
             } else {
-                mCallback.onBindingFailed(new LoadSdkException(null, new Bundle()), -1);
+                callback.onBindingFailed(new LoadSdkException(null, new Bundle()), -1);
             }
         }
 
@@ -367,11 +374,6 @@ public class SdkSandboxShellCommandUnitTest {
         @Override
         boolean isSdkSandboxDisabled(ISdkSandboxService boundService) {
             return mIsDisabledResponse;
-        }
-
-        @Override
-        void addSandboxBindingCallback(CallingInfo callingInfo, SandboxBindingCallback callback) {
-            mCallback = callback;
         }
 
         private void setIsSdkSandboxDisabledResponse(boolean response) {

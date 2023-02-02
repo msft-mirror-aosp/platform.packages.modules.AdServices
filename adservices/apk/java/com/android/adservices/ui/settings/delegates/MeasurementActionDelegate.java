@@ -16,13 +16,11 @@
 package com.android.adservices.ui.settings.delegates;
 
 import android.view.View;
+import android.widget.Toast;
 
 import androidx.lifecycle.Observer;
 
 import com.android.adservices.api.R;
-import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.PhFlags;
-import com.android.adservices.ui.settings.DialogManager;
 import com.android.adservices.ui.settings.activities.MeasurementActivity;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsMeasurementFragment;
 import com.android.adservices.ui.settings.viewmodels.MeasurementViewModel;
@@ -56,21 +54,16 @@ public class MeasurementActionDelegate extends BaseActionDelegate {
                                 mMeasurementViewModel.setMeasurementConsent(true);
                                 break;
                             case SWITCH_OFF_MEASUREMENT:
-                                if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
-                                    DialogManager.showMeasurementOptOutDialog(
-                                            mMeasurementActivity, mMeasurementViewModel);
-                                } else {
-                                    mMeasurementViewModel.setMeasurementConsent(false);
-                                }
+                                mMeasurementViewModel.setMeasurementConsent(false);
                                 break;
                             case RESET_MEASUREMENT:
                                 logUIAction(ActionEnum.RESET_TOPIC_SELECTED);
-                                if (PhFlags.getInstance().getUIDialogsFeatureEnabled()) {
-                                    DialogManager.showResetMeasurementDialog(
-                                            mMeasurementActivity, mMeasurementViewModel);
-                                } else {
-                                    mMeasurementViewModel.resetMeasurement();
-                                }
+                                mMeasurementViewModel.resetMeasurement();
+                                Toast.makeText(
+                                                mMeasurementActivity,
+                                                R.string.settingsUI_measurement_are_reset,
+                                                Toast.LENGTH_SHORT)
+                                        .show();
                                 break;
                         }
                     } finally {

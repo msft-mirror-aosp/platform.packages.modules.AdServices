@@ -284,6 +284,10 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.SourceContract.ENROLLMENT_ID, source.getEnrollmentId());
         values.put(MeasurementTables.SourceContract.EVENT_TIME, source.getEventTime());
         values.put(MeasurementTables.SourceContract.EXPIRY_TIME, source.getExpiryTime());
+        values.put(MeasurementTables.SourceContract.EVENT_REPORT_WINDOW,
+                source.getEventReportWindow());
+        values.put(MeasurementTables.SourceContract.AGGREGATABLE_REPORT_WINDOW,
+                source.getAggregatableReportWindow());
         values.put(MeasurementTables.SourceContract.PRIORITY, source.getPriority());
         values.put(MeasurementTables.SourceContract.STATUS, Source.Status.ACTIVE);
         values.put(MeasurementTables.SourceContract.SOURCE_TYPE, source.getSourceType().name());
@@ -662,20 +666,37 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public void updateSourceDedupKeys(@NonNull Source source) throws DatastoreException {
+    public void updateSourceEventReportDedupKeys(@NonNull Source source) throws DatastoreException {
         ContentValues values = new ContentValues();
         values.put(
-                MeasurementTables.SourceContract.DEDUP_KEYS,
-                source.getDedupKeys().stream()
-                        .map(UnsignedLong::getValue)
-                        .map(String::valueOf)
-                        .collect(Collectors.joining(",")));
+                MeasurementTables.SourceContract.EVENT_REPORT_DEDUP_KEYS,
+                listToCommaSeparatedString((source.getEventReportDedupKeys())));
+        long rows =
+                mSQLTransaction
+                        .getDatabase()
+                        .update(
+                                MeasurementTables.SourceContract.TABLE,
+                                values,
+                                MeasurementTables.SourceContract.ID + " = ?",
+                                new String[] {source.getId()});
+        if (rows != 1) {
+            throw new DatastoreException("Source event report dedup key updated failed.");
+        }
+    }
+
+    @Override
+    public void updateSourceAggregateReportDedupKeys(@NonNull Source source)
+            throws DatastoreException {
+        ContentValues values = new ContentValues();
+        values.put(
+                MeasurementTables.SourceContract.AGGREGATE_REPORT_DEDUP_KEYS,
+                listToCommaSeparatedString(source.getAggregateReportDedupKeys()));
         long rows = mSQLTransaction.getDatabase()
                 .update(MeasurementTables.SourceContract.TABLE, values,
                         MeasurementTables.SourceContract.ID + " = ?",
                         new String[]{source.getId()});
         if (rows != 1) {
-            throw new DatastoreException("Source dedup key updated failed.");
+            throw new DatastoreException("Source aggregate report dedup key updated failed.");
         }
     }
 
@@ -1223,6 +1244,13 @@ class MeasurementDao implements IMeasurementDao {
     private static Function<String, String> getRegistrantMatcher(Uri registrant) {
         return (String columnName) ->
                 columnName + " = " + DatabaseUtils.sqlEscapeString(registrant.toString());
+    }
+
+    private String listToCommaSeparatedString(List<UnsignedLong> list) {
+        return list.stream()
+                .map(UnsignedLong::getValue)
+                .map(String::valueOf)
+                .collect(Collectors.joining(","));
     }
 
     private static Function<String, String> getTimeMatcher(Instant start, Instant end) {

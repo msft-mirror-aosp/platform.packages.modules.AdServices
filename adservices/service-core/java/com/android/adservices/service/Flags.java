@@ -24,6 +24,7 @@ import android.util.Dumpable;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.data.adselection.DBRegisteredAdInteraction;
 import com.android.adservices.service.adselection.AdOutcomeSelectorImpl;
 import com.android.adservices.service.common.cache.FledgeHttpCache;
 
@@ -257,6 +258,13 @@ public interface Flags extends Dumpable {
 
     default boolean getMeasurementIsClickVerificationEnabled() {
         return MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED;
+    }
+
+    /** Returns whether a click is verified by Input Event. */
+    boolean MEASUREMENT_IS_CLICK_VERIFIED_BY_INPUT_EVENT = false;
+
+    default boolean getMeasurementIsClickVerifiedByInputEvent() {
+        return MEASUREMENT_IS_CLICK_VERIFIED_BY_INPUT_EVENT;
     }
 
     /** Returns the DB size limit for measurement. */
@@ -576,9 +584,8 @@ public interface Flags extends Dumpable {
     }
 
     /**
-     * Returns the maximum number of {@link
-     * com.android.adservices.data.adselection.DBRegisteredAdEvent} that an ad-tech can register in
-     * one call to {@code reportImpression}.
+     * Returns the maximum number of {@link DBRegisteredAdInteraction} that an ad-tech can register
+     * in one call to {@code reportImpression}.
      */
     default long getReportImpressionMaxEventUriEntriesCount() {
         return FLEDGE_REPORT_IMPRESSION_MAX_EVENT_URI_ENTRIES_COUNT;
@@ -1473,13 +1480,36 @@ public interface Flags extends Dumpable {
         return MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES;
     }
 
+    /** Ui OTA strings group name, used for MDD download. */
+    String UI_OTA_STRINGS_GROUP_NAME = "ui-ota-strings";
+
+    /** UI OTA strings group name. */
+    default String getUiOtaStringsGroupName() {
+        return UI_OTA_STRINGS_GROUP_NAME;
+    }
+
     /** Ui OTA strings manifest file url, used for MDD download. */
-    String UI_OTA_STRINGS_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-ui-ota-strings/1341/95580b00edbd8cbf62bfa0df9ebd79fba1e5b7ca";
+    String UI_OTA_STRINGS_MANIFEST_FILE_URL = "";
 
     /** UI OTA strings manifest file url. */
     default String getUiOtaStringsManifestFileUrl() {
         return UI_OTA_STRINGS_MANIFEST_FILE_URL;
+    }
+
+    /** Ui OTA strings feature flag. */
+    boolean UI_OTA_STRINGS_FEATURE_ENABLED = false;
+
+    /** Returns if UI OTA strings feature is enabled. */
+    default boolean getUiOtaStringsFeatureEnabled() {
+        return UI_OTA_STRINGS_FEATURE_ENABLED;
+    }
+
+    /** Deadline for downloading UI OTA strings. */
+    long UI_OTA_STRINGS_DOWNLOAD_DEADLINE = 86700000; /* 1 day */
+
+    /** Returns the deadline for downloading UI OTA strings. */
+    default long getUiOtaStringsDownloadDeadline() {
+        return UI_OTA_STRINGS_DOWNLOAD_DEADLINE;
     }
 
     /** UI Dialogs feature enabled. */

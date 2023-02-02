@@ -53,6 +53,7 @@ import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
 import com.google.mockwebserver.RecordedRequest;
 
+import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -83,7 +84,7 @@ public class AdServicesHttpsClientTest {
     private final String mJsScript = "function test() { return \"hello world\"; }";
     private final String mReportingPath = "/reporting/";
     private final String mFetchPayloadPath = "/fetchPayload/";
-    private final String mFakeUrl = "https://fake-url.com";
+    private final String mFakeUrl = "https://fakeprivacysandboxdomain.never/this/is/a/fake";
     private final int mTimeoutDeltaMs = 1000;
     private final int mBytesPerPeriod = 1;
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
@@ -95,9 +96,10 @@ public class AdServicesHttpsClientTest {
     @Mock private InputStream mInputStreamMock;
     private HttpCache mCache;
     private CacheEntryDao mCacheEntryDao;
+    private JSONObject mEventData;
 
     @Before
-    public void setup() {
+    public void setup() throws Exception {
         mCacheEntryDao =
                 Room.inMemoryDatabaseBuilder(CONTEXT, CacheDatabase.class)
                         .build()
@@ -105,23 +107,24 @@ public class AdServicesHttpsClientTest {
 
         mCache = new FledgeHttpCache(mCacheEntryDao, MAX_AGE_SECONDS, MAX_ENTRIES);
         mClient = new AdServicesHttpsClient(mExecutorService, mCache);
+        mEventData = new JSONObject().put("key", "value");
     }
 
     @Test
-    public void testReportUrlSuccessfulResponse() throws Exception {
+    public void testGetAndReadNothingSuccessfulResponse() throws Exception {
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(ImmutableList.of(new MockResponse()));
         URL url = server.getUrl(mReportingPath);
 
-        assertThat(reportUrl(Uri.parse(url.toString()))).isNull();
+        assertThat(getAndReadNothing(Uri.parse(url.toString()))).isNull();
     }
 
     @Test
-    public void testReportUrlCorrectPath() throws Exception {
+    public void testGetAndReadNothingCorrectPath() throws Exception {
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(ImmutableList.of(new MockResponse()));
         URL url = server.getUrl(mReportingPath);
-        reportUrl(Uri.parse(url.toString()));
+        getAndReadNothing(Uri.parse(url.toString()));
 
         RecordedRequest request1 = server.takeRequest();
         assertEquals(mReportingPath, request1.getPath());
@@ -129,34 +132,35 @@ public class AdServicesHttpsClientTest {
     }
 
     @Test
-    public void testReportUrlFailedResponse() throws Exception {
+    public void testGetAndReadNothingFailedResponse() throws Exception {
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(
                         ImmutableList.of(new MockResponse().setResponseCode(305)));
         URL url = server.getUrl(mReportingPath);
 
         Exception exception =
-                assertThrows(ExecutionException.class, () -> reportUrl(Uri.parse(url.toString())));
+                assertThrows(
+                        ExecutionException.class,
+                        () -> getAndReadNothing(Uri.parse(url.toString())));
         assertThat(exception.getCause()).isInstanceOf(IOException.class);
     }
 
     @Test
-    public void testReportUrlDomainDoesNotExist() throws Exception {
+    public void testGetAndReadNothingDomainDoesNotExist() throws Exception {
         mMockWebServerRule.startMockWebServer(ImmutableList.of(new MockResponse()));
 
         Exception exception =
                 assertThrows(
-                        ExecutionException.class,
-                        () -> reportUrl(Uri.parse("https://www.domain.com/adverts/123")));
+                        ExecutionException.class, () -> getAndReadNothing(Uri.parse(mFakeUrl)));
         assertThat(exception.getCause()).isInstanceOf(IOException.class);
     }
 
     @Test
-    public void testReportUrlThrowsExceptionIfUsingPlainTextHttp() {
+    public void testGetAndReadNothingThrowsExceptionIfUsingPlainTextHttp() {
         ExecutionException wrapperExecutionException =
                 assertThrows(
                         ExecutionException.class,
-                        () -> fetchPayload(Uri.parse("http://google.com")));
+                        () -> getAndReadNothing(Uri.parse("http://google.com")));
 
         assertThat(wrapperExecutionException.getCause())
                 .isInstanceOf(IllegalArgumentException.class);
@@ -204,9 +208,7 @@ public class AdServicesHttpsClientTest {
         mMockWebServerRule.startMockWebServer(ImmutableList.of(new MockResponse()));
 
         Exception exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> fetchPayload(Uri.parse("https://www.domain.com/adverts/123")));
+                assertThrows(ExecutionException.class, () -> fetchPayload(Uri.parse(mFakeUrl)));
         assertThat(exception.getCause()).isInstanceOf(IOException.class);
     }
 
@@ -445,11 +447,82 @@ public class AdServicesHttpsClientTest {
         assertEquals("This call should not have been cached", 2, server.getRequestCount());
     }
 
+    @Test
+    public void testPostJsonSuccessfulResponse() throws Exception {
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(ImmutableList.of(new MockResponse()));
+        URL url = server.getUrl(mReportingPath);
+        assertThat(postJson(Uri.parse(url.toString()), mEventData)).isNull();
+    }
+
+    @Test
+    public void testPostJsonCorrectPath() throws Exception {
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(ImmutableList.of(new MockResponse()));
+        URL url = server.getUrl(mReportingPath);
+        postJson(Uri.parse(url.toString()), mEventData);
+
+        RecordedRequest request1 = server.takeRequest();
+        assertEquals(mReportingPath, request1.getPath());
+        assertEquals("POST", request1.getMethod());
+    }
+
+    @Test
+    public void testPostJsonCorrectData() throws Exception {
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(ImmutableList.of(new MockResponse()));
+        URL url = server.getUrl(mReportingPath);
+        postJson(Uri.parse(url.toString()), mEventData);
+
+        RecordedRequest request1 = server.takeRequest();
+        assertEquals("POST", request1.getMethod());
+        assertEquals(mEventData.toString(), request1.getUtf8Body());
+    }
+
+    @Test
+    public void testPostJsonFailedResponse() throws Exception {
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        ImmutableList.of(new MockResponse().setResponseCode(305)));
+        URL url = server.getUrl(mReportingPath);
+
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> postJson(Uri.parse(url.toString()), mEventData));
+        assertThat(exception.getCause()).isInstanceOf(IOException.class);
+    }
+
+    @Test
+    public void testPostJsonDomainDoesNotExist() throws Exception {
+        mMockWebServerRule.startMockWebServer(ImmutableList.of(new MockResponse()));
+
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class, () -> postJson(Uri.parse(mFakeUrl), mEventData));
+        assertThat(exception.getCause()).isInstanceOf(IOException.class);
+    }
+
+    @Test
+    public void testPostJsonThrowsExceptionIfUsingPlainTextHttp() {
+        ExecutionException wrapperExecutionException =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> postJson(Uri.parse("http://google.com"), mEventData));
+
+        assertThat(wrapperExecutionException.getCause())
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
     private String fetchPayload(Uri uri) throws Exception {
         return mClient.fetchPayload(uri).get();
     }
 
-    private Void reportUrl(Uri uri) throws Exception {
-        return mClient.reportUri(uri).get();
+    private Void getAndReadNothing(Uri uri) throws Exception {
+        return mClient.getAndReadNothing(uri).get();
+    }
+
+    private Void postJson(Uri uri, JSONObject eventData) throws Exception {
+        return mClient.postJson(uri, eventData).get();
     }
 }

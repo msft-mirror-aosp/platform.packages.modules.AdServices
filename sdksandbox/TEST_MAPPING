@@ -84,6 +84,9 @@
       "name": "SdkSandboxRestrictionsHostTest"
     },
     {
+      "name": "BroadcastRestrictionsHostTest"
+    },
+    {
       "name": "SdkSandboxStorageHostTest",
       "options": [
         {

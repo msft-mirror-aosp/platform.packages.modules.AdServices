@@ -20,6 +20,7 @@ import android.os.Bundle;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.ui.settings.delegates.MeasurementActionDelegate;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsMeasurementFragment;
 import com.android.adservices.ui.settings.viewmodels.MeasurementViewModel;
@@ -36,6 +37,7 @@ public class MeasurementActivity extends AdServicesBaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        UiStatsLogger.logManageMeasurement(getApplicationContext());
         setContentView(R.layout.adservices_settings_main_activity);
         getSupportFragmentManager()
                 .beginTransaction()

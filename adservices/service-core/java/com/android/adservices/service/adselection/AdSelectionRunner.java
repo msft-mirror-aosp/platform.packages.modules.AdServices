@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.adselection;
 
-import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_SELECT_ADS;
 import static com.android.adservices.service.stats.AdServicesLoggerUtil.getResultCodeFromException;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
 
@@ -31,7 +30,6 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
 import android.net.Uri;
-import android.os.LimitExceededException;
 import android.os.RemoteException;
 import android.os.Trace;
 
@@ -42,10 +40,7 @@ import com.android.adservices.data.adselection.DBBuyerDecisionLogic;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.common.AppImportanceFilter;
-import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
-import com.android.adservices.service.common.FledgeAllowListsFilter;
-import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.common.FledgeServiceFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.js.JSScriptEngine;
@@ -53,6 +48,7 @@ import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
+import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.base.Preconditions;
@@ -72,7 +68,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -104,16 +99,12 @@ public abstract class AdSelectionRunner {
     static final String AD_SELECTION_TIMED_OUT = "Ad selection exceeded allowed time limit";
 
     @VisibleForTesting
-    static final String AD_SELECTION_THROTTLED = "Ad selection exceeded allowed rate limit";
-
-    @VisibleForTesting
     static final String JS_SANDBOX_IS_NOT_AVAILABLE =
             String.format(
                     AD_SELECTION_ERROR_PATTERN,
                     ERROR_AD_SELECTION_FAILURE,
                     "JS Sandbox is not available");
 
-    @NonNull protected final Context mContext;
     @NonNull protected final CustomAudienceDao mCustomAudienceDao;
     @NonNull protected final AdSelectionEntryDao mAdSelectionEntryDao;
     @NonNull protected final ListeningExecutorService mLightweightExecutorService;
@@ -121,15 +112,11 @@ public abstract class AdSelectionRunner {
     @NonNull protected final ScheduledThreadPoolExecutor mScheduledExecutor;
     @NonNull protected final AdSelectionIdGenerator mAdSelectionIdGenerator;
     @NonNull protected final Clock mClock;
-    @NonNull protected final ConsentManager mConsentManager;
     @NonNull protected final AdServicesLogger mAdServicesLogger;
     @NonNull protected final Flags mFlags;
-    @NonNull protected final AppImportanceFilter mAppImportanceFilter;
-    @NonNull protected final Supplier<Throttler> mThrottlerSupplier;
-    @NonNull protected final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
-    @NonNull protected final FledgeAllowListsFilter mFledgeAllowListsFilter;
     @NonNull protected final AdSelectionExecutionLogger mAdSelectionExecutionLogger;
-    protected final int mCallerUid;
+    @NonNull private final FledgeServiceFilter mFledgeServiceFilter;
+    private final int mCallerUid;
 
     /**
      * @param context service context
@@ -138,14 +125,9 @@ public abstract class AdSelectionRunner {
      * @param lightweightExecutorService executor for running short tasks
      * @param backgroundExecutorService executor for longer running tasks (ex. network calls)
      * @param scheduledExecutor executor for tasks to be run with a delay or timed executions
-     * @param consentManager instance of {@link ConsentManager} for verifying user consent
      * @param adServicesLogger logger for logging calls to PPAPI
-     * @param appImportanceFilter filter to assert calling app is running in the foreground
      * @param flags for accessing feature flags
-     * @param throttlerSupplier supplier for throttling calls to PPAPI
-     * @param callerUid calling app UID
-     * @param fledgeAuthorizationFilter filter for authorizing the caller on certain behavior
-     * @param fledgeAllowListsFilter filter for verifying the caller can call PPAPI
+     * @param fledgeServiceFilter for validating the request
      */
     public AdSelectionRunner(
             @NonNull final Context context,
@@ -154,49 +136,37 @@ public abstract class AdSelectionRunner {
             @NonNull final ExecutorService lightweightExecutorService,
             @NonNull final ExecutorService backgroundExecutorService,
             @NonNull final ScheduledThreadPoolExecutor scheduledExecutor,
-            @NonNull final ConsentManager consentManager,
             @NonNull final AdServicesLogger adServicesLogger,
-            @NonNull AppImportanceFilter appImportanceFilter,
             @NonNull final Flags flags,
-            @NonNull final Supplier<Throttler> throttlerSupplier,
-            int callerUid,
-            @NonNull final FledgeAuthorizationFilter fledgeAuthorizationFilter,
-            @NonNull final FledgeAllowListsFilter fledgeAllowListsFilter,
-            @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger) {
+            @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger,
+            @NonNull final FledgeServiceFilter fledgeServiceFilter,
+            @NonNull final int callerUid) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(lightweightExecutorService);
         Objects.requireNonNull(backgroundExecutorService);
-        Objects.requireNonNull(consentManager);
         Objects.requireNonNull(adServicesLogger);
-        Objects.requireNonNull(appImportanceFilter);
         Objects.requireNonNull(flags);
-        Objects.requireNonNull(throttlerSupplier);
-        Objects.requireNonNull(fledgeAuthorizationFilter);
-        Objects.requireNonNull(fledgeAllowListsFilter);
+        Objects.requireNonNull(fledgeServiceFilter);
+
         Preconditions.checkArgument(
                 JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable(),
                 JS_SANDBOX_IS_NOT_AVAILABLE);
         Objects.requireNonNull(adSelectionExecutionLogger);
 
-        mContext = context;
         mCustomAudienceDao = customAudienceDao;
         mAdSelectionEntryDao = adSelectionEntryDao;
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
         mScheduledExecutor = scheduledExecutor;
-        mConsentManager = consentManager;
         mAdServicesLogger = adServicesLogger;
         mAdSelectionIdGenerator = new AdSelectionIdGenerator();
         mClock = Clock.systemUTC();
         mFlags = flags;
-        mThrottlerSupplier = throttlerSupplier;
-        mAppImportanceFilter = appImportanceFilter;
-        mCallerUid = callerUid;
-        mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
-        mFledgeAllowListsFilter = fledgeAllowListsFilter;
         mAdSelectionExecutionLogger = adSelectionExecutionLogger;
+        mFledgeServiceFilter = fledgeServiceFilter;
+        mCallerUid = callerUid;
     }
 
     @VisibleForTesting
@@ -207,16 +177,12 @@ public abstract class AdSelectionRunner {
             @NonNull final ExecutorService lightweightExecutorService,
             @NonNull final ExecutorService backgroundExecutorService,
             @NonNull final ScheduledThreadPoolExecutor scheduledExecutor,
-            @NonNull final ConsentManager consentManager,
             @NonNull final AdSelectionIdGenerator adSelectionIdGenerator,
             @NonNull Clock clock,
             @NonNull final AdServicesLogger adServicesLogger,
-            @NonNull AppImportanceFilter appImportanceFilter,
             @NonNull final Flags flags,
-            @NonNull final Supplier<Throttler> throttlerSupplier,
             int callerUid,
-            @NonNull final FledgeAuthorizationFilter fledgeAuthorizationFilter,
-            @NonNull final FledgeAllowListsFilter fledgeAllowListsFilter,
+            @NonNull FledgeServiceFilter fledgeServiceFilter,
             @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(customAudienceDao);
@@ -224,32 +190,28 @@ public abstract class AdSelectionRunner {
         Objects.requireNonNull(lightweightExecutorService);
         Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(scheduledExecutor);
-        Objects.requireNonNull(consentManager);
         Objects.requireNonNull(adSelectionIdGenerator);
         Objects.requireNonNull(clock);
         Objects.requireNonNull(adServicesLogger);
-        Objects.requireNonNull(appImportanceFilter);
         Objects.requireNonNull(flags);
-        Objects.requireNonNull(fledgeAuthorizationFilter);
         Objects.requireNonNull(adSelectionExecutionLogger);
 
-        mContext = context;
+        Preconditions.checkArgument(
+                JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable(),
+                JS_SANDBOX_IS_NOT_AVAILABLE);
+
         mCustomAudienceDao = customAudienceDao;
         mAdSelectionEntryDao = adSelectionEntryDao;
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
         mScheduledExecutor = scheduledExecutor;
-        mConsentManager = consentManager;
         mAdSelectionIdGenerator = adSelectionIdGenerator;
         mClock = clock;
         mAdServicesLogger = adServicesLogger;
         mFlags = flags;
-        mThrottlerSupplier = throttlerSupplier;
-        mAppImportanceFilter = appImportanceFilter;
-        mCallerUid = callerUid;
-        mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
-        mFledgeAllowListsFilter = fledgeAllowListsFilter;
         mAdSelectionExecutionLogger = adSelectionExecutionLogger;
+        mFledgeServiceFilter = fledgeServiceFilter;
+        mCallerUid = callerUid;
     }
 
     /**
@@ -263,18 +225,34 @@ public abstract class AdSelectionRunner {
         final int traceCookie = Tracing.beginAsyncSection(Tracing.RUN_AD_SELECTION);
         Objects.requireNonNull(inputParams);
         Objects.requireNonNull(callback);
+        AdSelectionConfig adSelectionConfig = inputParams.getAdSelectionConfig();
 
         try {
-            ListenableFuture<Void> validateRequestFuture =
+            ListenableFuture<Void> filterAndValidateRequestFuture =
                     Futures.submit(
-                            () ->
-                                    validateRequest(
-                                            inputParams.getAdSelectionConfig(),
-                                            inputParams.getCallerPackageName()),
+                            () -> {
+                                try {
+                                    Trace.beginSection(Tracing.VALIDATE_REQUEST);
+                                    LogUtil.v("Starting filtering and validation.");
+                                    mFledgeServiceFilter.filterRequest(
+                                            adSelectionConfig.getSeller(),
+                                            inputParams.getCallerPackageName(),
+                                            mFlags
+                                                    .getEnforceForegroundStatusForFledgeRunAdSelection(),
+                                            mCallerUid,
+                                            AdServicesStatsLog
+                                                    .AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                                            Throttler.ApiKey.FLEDGE_API_SELECT_ADS);
+                                    validateAdSelectionConfig(adSelectionConfig);
+                                } finally {
+                                    LogUtil.v("Completed filtering and validation.");
+                                    Trace.endSection();
+                                }
+                            },
                             mLightweightExecutorService);
 
             ListenableFuture<DBAdSelection> dbAdSelectionFuture =
-                    FluentFuture.from(validateRequestFuture)
+                    FluentFuture.from(filterAndValidateRequestFuture)
                             .transformAsync(
                                     ignoredVoid ->
                                             orchestrateAdSelection(
@@ -560,152 +538,15 @@ public abstract class AdSelectionRunner {
     }
 
     /**
-     * Asserts that FLEDGE APIs and the Privacy Sandbox as a whole have user consent.
-     *
-     * @return an ignorable {@code null}
-     * @throws ConsentManager.RevokedConsentException if FLEDGE or the Privacy Sandbox do not have
-     *     user consent
-     */
-    private Void assertCallerHasUserConsent() throws ConsentManager.RevokedConsentException {
-        if (!mConsentManager.getConsent().isGiven()) {
-            throw new ConsentManager.RevokedConsentException();
-        }
-        return null;
-    }
-
-    /**
-     * Asserts that the caller has the appropriate foreground status, if enabled.
-     *
-     * @return an ignorable {@code null}
-     * @throws WrongCallingApplicationStateException if the foreground check is enabled and fails
-     */
-    private Void maybeAssertForegroundCaller() throws WrongCallingApplicationStateException {
-        if (mFlags.getEnforceForegroundStatusForFledgeRunAdSelection()) {
-            mAppImportanceFilter.assertCallerIsInForeground(
-                    mCallerUid, AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, null);
-        }
-        return null;
-    }
-
-    /**
-     * Asserts that the package name provided by the caller is one of the packages of the calling
-     * uid.
-     *
-     * @param callerPackageName caller package name from the request
-     * @throws FledgeAuthorizationFilter.CallerMismatchException if the provided {@code
-     *     callerPackageName} is not valid
-     * @return an ignorable {@code null}
-     */
-    private Void assertCallerPackageName(String callerPackageName)
-            throws FledgeAuthorizationFilter.CallerMismatchException {
-        mFledgeAuthorizationFilter.assertCallingPackageName(
-                callerPackageName, mCallerUid, AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS);
-        return null;
-    }
-
-    /**
      * Validates the {@code adSelectionConfig} from the request.
      *
      * @param adSelectionConfig the adSelectionConfig to be validated
      * @throws IllegalArgumentException if the provided {@code adSelectionConfig} is not valid
-     * @return an ignorable {@code null}
      */
-    private Void validateAdSelectionConfig(AdSelectionConfig adSelectionConfig)
+    private void validateAdSelectionConfig(AdSelectionConfig adSelectionConfig)
             throws IllegalArgumentException {
         AdSelectionConfigValidator adSelectionConfigValidator = new AdSelectionConfigValidator();
         adSelectionConfigValidator.validate(adSelectionConfig);
-
-        return null;
-    }
-
-    /**
-     * Check if a certain ad tech is enrolled and authorized to perform the operation for the
-     * package.
-     *
-     * @param callerPackageName the package name to check against
-     * @param adSelectionConfig contains the ad tech to check against
-     * @throws FledgeAuthorizationFilter.AdTechNotAllowedException if the ad tech is not authorized
-     *     to perform the operation
-     */
-    private Void assertFledgeEnrollment(
-            AdSelectionConfig adSelectionConfig, String callerPackageName)
-            throws FledgeAuthorizationFilter.AdTechNotAllowedException {
-        if (!mFlags.getDisableFledgeEnrollmentCheck()) {
-            mFledgeAuthorizationFilter.assertAdTechAllowed(
-                    mContext,
-                    callerPackageName,
-                    adSelectionConfig.getSeller(),
-                    AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS);
-        }
-
-        return null;
-    }
-
-    /**
-     * Asserts the package is allowed to call PPAPI.
-     *
-     * @param callerPackageName the package name to be validated.
-     * @throws FledgeAllowListsFilter.AppNotAllowedException if the package is not authorized.
-     */
-    private Void assertAppInAllowList(String callerPackageName)
-            throws FledgeAllowListsFilter.AppNotAllowedException {
-        mFledgeAllowListsFilter.assertAppCanUsePpapi(
-                callerPackageName, AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS);
-
-        return null;
-    }
-
-    /**
-     * Ensures that the caller package is not throttled from calling the current API
-     *
-     * @param callerPackageName the package name, which should be verified
-     * @throws LimitExceededException if the provided {@code callerPackageName} exceeds its rate
-     *     limits
-     * @return an ignorable {@code null}
-     */
-    private Void assertCallerNotThrottled(final String callerPackageName)
-            throws LimitExceededException {
-        LogUtil.v("Checking if API is throttled for package: %s ", callerPackageName);
-        Throttler throttler = mThrottlerSupplier.get();
-        boolean isThrottled = !throttler.tryAcquire(FLEDGE_API_SELECT_ADS, callerPackageName);
-
-        if (isThrottled) {
-            LogUtil.e("Rate Limit Reached for API: %s", FLEDGE_API_SELECT_ADS);
-            throw new LimitExceededException(AD_SELECTION_THROTTLED);
-        }
-        return null;
-    }
-
-    /**
-     * Validates the {@code runAdSelection} request.
-     *
-     * @param adSelectionConfig the adSelectionConfig to be validated
-     * @param callerPackageName caller package name to be validated
-     * @throws FledgeAuthorizationFilter.CallerMismatchException if the {@code callerPackageName} is
-     *     not valid
-     * @throws WrongCallingApplicationStateException if the foreground check is enabled and fails
-     * @throws FledgeAuthorizationFilter.AdTechNotAllowedException if the ad tech is not authorized
-     *     to perform the operation
-     * @throws FledgeAllowListsFilter.AppNotAllowedException if the package is not authorized.
-     * @throws ConsentManager.RevokedConsentException if FLEDGE or the Privacy Sandbox do not have
-     *     user consent
-     * @throws LimitExceededException if the provided {@code callerPackageName} exceeds the rate
-     *     limits
-     * @throws IllegalArgumentException if the provided {@code adSelectionConfig} is not valid
-     * @return an ignorable {@code null}
-     */
-    private Void validateRequest(AdSelectionConfig adSelectionConfig, String callerPackageName) {
-        Trace.beginSection(Tracing.VALIDATE_REQUEST);
-        assertCallerPackageName(callerPackageName);
-        assertCallerNotThrottled(callerPackageName);
-        maybeAssertForegroundCaller();
-        assertFledgeEnrollment(adSelectionConfig, callerPackageName);
-        assertAppInAllowList(callerPackageName);
-        assertCallerHasUserConsent();
-        validateAdSelectionConfig(adSelectionConfig);
-        Trace.endSection();
-
-        return null;
     }
 
     static class AdSelectionOrchestrationResult {

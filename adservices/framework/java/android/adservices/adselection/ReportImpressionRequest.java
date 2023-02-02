@@ -16,6 +16,9 @@
 
 package android.adservices.adselection;
 
+import static android.adservices.adselection.AdSelectionOutcome.UNSET_AD_SELECTION_ID;
+import static android.adservices.adselection.AdSelectionOutcome.UNSET_AD_SELECTION_ID_MESSAGE;
+
 import android.annotation.NonNull;
 
 import com.android.internal.util.Preconditions;
@@ -26,15 +29,14 @@ import java.util.Objects;
  * Represent input parameters to the reportImpression API.
  */
 public class ReportImpressionRequest {
-    private static final long UNSET = 0;
-
     private final long mAdSelectionId;
     @NonNull private final AdSelectionConfig mAdSelectionConfig;
 
     public ReportImpressionRequest(
             long adSelectionId, @NonNull AdSelectionConfig adSelectionConfig) {
         Objects.requireNonNull(adSelectionConfig);
-        Preconditions.checkArgument(adSelectionId != UNSET, "AdSelectionId not set");
+        Preconditions.checkArgument(
+                adSelectionId != UNSET_AD_SELECTION_ID, UNSET_AD_SELECTION_ID_MESSAGE);
 
         mAdSelectionId = adSelectionId;
         mAdSelectionConfig = adSelectionConfig;
