@@ -351,8 +351,6 @@ public class SettingsActivityUiAutomatorTest {
 
         // open blocked apps view
         scrollToAndClick(R.string.settingsUI_blocked_apps_title);
-        // button click starts a new activity, so wait until the transition is done.
-        sDevice.waitForIdle();
         UiObject unblockAppText = getElement(R.string.settingsUI_unblock_app_title, 0);
         assertThat(unblockAppText.exists()).isTrue();
 
