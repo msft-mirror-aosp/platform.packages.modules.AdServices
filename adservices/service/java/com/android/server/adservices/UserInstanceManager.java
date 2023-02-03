@@ -23,6 +23,7 @@ import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.adservices.consent.AppConsentManager;
 import com.android.server.adservices.consent.ConsentManager;
+import com.android.server.adservices.data.topics.TopicsDao;
 
 import java.io.File;
 import java.io.IOException;
@@ -45,9 +46,15 @@ public class UserInstanceManager {
     @GuardedBy("UserInstanceManager.class")
     private final Map<Integer, AppConsentManager> mAppConsentManagerMapLocked = new ArrayMap<>();
 
-    private final String mAdServicesBaseDir;
+    @GuardedBy("UserInstanceManager.class")
+    private final Map<Integer, BlockedTopicsManager> mBlockedTopicsManagerMapLocked =
+            new ArrayMap<>();
 
-    UserInstanceManager(String adServicesBaseDir) {
+    private final String mAdServicesBaseDir;
+    private final TopicsDao mTopicsDao;
+
+    UserInstanceManager(@NonNull TopicsDao topicsDao, @NonNull String adServicesBaseDir) {
+        mTopicsDao = topicsDao;
         mAdServicesBaseDir = adServicesBaseDir;
     }
 
@@ -78,6 +85,19 @@ public class UserInstanceManager {
         }
     }
 
+    @NonNull
+    BlockedTopicsManager getOrCreateUserBlockedTopicsManagerInstance(int userIdentifier) {
+        synchronized (UserInstanceManager.class) {
+            BlockedTopicsManager instance = mBlockedTopicsManagerMapLocked.get(userIdentifier);
+            if (instance == null) {
+                instance = new BlockedTopicsManager(mTopicsDao, userIdentifier);
+                mBlockedTopicsManagerMapLocked.put(userIdentifier, instance);
+            }
+
+            return instance;
+        }
+    }
+
     @VisibleForTesting
     ConsentManager getUserConsentManagerInstance(int userIdentifier) {
         synchronized (UserInstanceManager.class) {
@@ -102,6 +122,9 @@ public class UserInstanceManager {
                 }
                 mConsentManagerMapLocked.remove(userIdentifier);
             }
+
+            // Delete all data in the database that belongs to this user
+            mTopicsDao.deleteAllDataOfUser(userIdentifier);
         }
     }
 
