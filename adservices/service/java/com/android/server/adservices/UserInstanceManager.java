@@ -39,11 +39,13 @@ import java.util.Map;
  */
 public class UserInstanceManager {
 
+    private final Object mLock = new Object();
+
     // We have 1 ConsentManager per user/user profile. This is to isolate user's data.
-    @GuardedBy("UserInstanceManager.class")
+    @GuardedBy("mLock")
     private final Map<Integer, ConsentManager> mConsentManagerMapLocked = new ArrayMap<>();
 
-    @GuardedBy("UserInstanceManager.class")
+    @GuardedBy("mLock")
     private final Map<Integer, AppConsentManager> mAppConsentManagerMapLocked = new ArrayMap<>();
 
     @GuardedBy("UserInstanceManager.class")
@@ -60,7 +62,7 @@ public class UserInstanceManager {
 
     @NonNull
     ConsentManager getOrCreateUserConsentManagerInstance(int userIdentifier) throws IOException {
-        synchronized (UserInstanceManager.class) {
+        synchronized (mLock) {
             ConsentManager instance = getUserConsentManagerInstance(userIdentifier);
             if (instance == null) {
                 instance = ConsentManager.createConsentManager(mAdServicesBaseDir, userIdentifier);
@@ -73,7 +75,7 @@ public class UserInstanceManager {
     @NonNull
     AppConsentManager getOrCreateUserAppConsentManagerInstance(int userIdentifier)
             throws IOException {
-        synchronized (UserInstanceManager.class) {
+        synchronized (mLock) {
             AppConsentManager instance = mAppConsentManagerMapLocked.get(userIdentifier);
             if (instance == null) {
                 instance =
@@ -100,7 +102,7 @@ public class UserInstanceManager {
 
     @VisibleForTesting
     ConsentManager getUserConsentManagerInstance(int userIdentifier) {
-        synchronized (UserInstanceManager.class) {
+        synchronized (mLock) {
             return mConsentManagerMapLocked.get(userIdentifier);
         }
     }
@@ -110,7 +112,7 @@ public class UserInstanceManager {
      * directory: /data/system/adservices/user_id
      */
     void deleteUserInstance(int userIdentifier) throws Exception {
-        synchronized (UserInstanceManager.class) {
+        synchronized (mLock) {
             ConsentManager instance = mConsentManagerMapLocked.get(userIdentifier);
             if (instance != null) {
                 String userDirectoryPath = mAdServicesBaseDir + "/" + userIdentifier;
@@ -130,7 +132,7 @@ public class UserInstanceManager {
 
     @VisibleForTesting
     void tearDownForTesting() {
-        synchronized (UserInstanceManager.class) {
+        synchronized (mLock) {
             for (ConsentManager consentManager : mConsentManagerMapLocked.values()) {
                 consentManager.tearDownForTesting();
             }

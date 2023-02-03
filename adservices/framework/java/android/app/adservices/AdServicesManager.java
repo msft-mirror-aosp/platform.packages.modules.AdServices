@@ -27,6 +27,7 @@ import android.content.Context;
 import android.os.IBinder;
 import android.os.RemoteException;
 
+import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.List;
@@ -39,8 +40,11 @@ import java.util.Objects;
  * @hide
  */
 public final class AdServicesManager {
+    @GuardedBy("SINGLETON_LOCK")
     private static AdServicesManager sSingleton;
+
     private final IAdServicesManager mService;
+    private static final Object SINGLETON_LOCK = new Object();
 
     @VisibleForTesting
     public AdServicesManager(@NonNull IAdServicesManager iAdServicesManager) {
@@ -50,7 +54,7 @@ public final class AdServicesManager {
 
     /** Get the singleton of AdServicesManager */
     public static AdServicesManager getInstance(@NonNull Context context) {
-        synchronized (AdServicesManager.class) {
+        synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
                 // TODO(b/262282035): Fix this work around in U+.
                 // Get the AdServicesManagerService's Binder from the SdkSandboxManager.
