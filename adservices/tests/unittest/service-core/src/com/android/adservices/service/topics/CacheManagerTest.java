@@ -41,6 +41,8 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.GetTopicsReportedStats;
 
+import com.google.common.collect.ImmutableList;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -53,21 +55,25 @@ import java.io.Writer;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /** Unit tests for {@link com.android.adservices.service.topics.CacheManager} */
 @SmallTest
 public final class CacheManagerTest {
     @SuppressWarnings({"unused"})
     private static final String TAG = "CacheManagerTest";
-
     @SuppressWarnings({"unused"})
     private final Context mContext = ApplicationProvider.getApplicationContext();
 
     private CacheManager mCacheManager;
     private TopicsDao mTopicsDao;
+    private BlockedTopicsManager mBlockedTopicsManager;
+    private GlobalBlockedTopicsManager mGlobalBlockedTopicsManager;
 
     @Mock Flags mMockFlags;
     @Mock AdServicesLogger mLogger;
@@ -90,10 +96,18 @@ public final class CacheManagerTest {
 
         DbHelper dbHelper = DbTestUtil.getDbHelperForTest();
         mTopicsDao = new TopicsDao(dbHelper);
-        BlockedTopicsManager blockedTopicsManager =
+        mGlobalBlockedTopicsManager =
+                new GlobalBlockedTopicsManager(/* globalBlockedTopicIds = */ new HashSet<>());
+        mBlockedTopicsManager =
                 new BlockedTopicsManager(
                         mTopicsDao, mMockAdServicesManager, Flags.PPAPI_AND_SYSTEM_SERVER);
-        mCacheManager = new CacheManager(mTopicsDao, mMockFlags, mLogger, blockedTopicsManager);
+        mCacheManager =
+                new CacheManager(
+                        mTopicsDao,
+                        mMockFlags,
+                        mLogger,
+                        mBlockedTopicsManager,
+                        mGlobalBlockedTopicsManager);
     }
 
     @Test
@@ -462,6 +476,99 @@ public final class CacheManagerTest {
                                 .build());
         // Verify IPC calls
         verify(mMockAdServicesManager).retrieveAllBlockedTopics();
+    }
+
+    @Test
+    public void testGetTopics_globalBlockedTopics() {
+        ArgumentCaptor<GetTopicsReportedStats> argument =
+                ArgumentCaptor.forClass(GetTopicsReportedStats.class);
+
+        // Assume the current epochId is 4L, we will load cache for returned topics in the last 2
+        // epochs: epochId in {3, 2}.
+        long currentEpochId = 4L;
+        // Mock Flags to make it independent of configuration
+        when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(2);
+
+        Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion */ 1L, /* modelVersion */ 1L);
+        Topic topic2 = Topic.create(/* topic */ 2, /* taxonomyVersion */ 1L, /* modelVersion */ 1L);
+        Topic topic3 = Topic.create(/* topic */ 3, /* taxonomyVersion */ 1L, /* modelVersion */ 1L);
+        Topic topic4 = Topic.create(/* topic */ 4, /* taxonomyVersion */ 1L, /* modelVersion */ 1L);
+
+        // EpochId 2
+        Map<Pair<String, String>, Topic> returnedAppSdkTopicsMap2 = new HashMap<>();
+
+        returnedAppSdkTopicsMap2.put(Pair.create("app1", ""), topic2);
+        returnedAppSdkTopicsMap2.put(Pair.create("app1", "sdk1"), topic2);
+        returnedAppSdkTopicsMap2.put(Pair.create("app1", "sdk2"), topic2);
+
+        returnedAppSdkTopicsMap2.put(Pair.create("app2", "sdk1"), topic3);
+
+        returnedAppSdkTopicsMap2.put(Pair.create("app3", "sdk1"), topic4);
+
+        returnedAppSdkTopicsMap2.put(Pair.create("app5", "sdk1"), topic1);
+
+        mTopicsDao.persistReturnedAppTopicsMap(/* epochId */ 2L, returnedAppSdkTopicsMap2);
+
+        // EpochId 3
+        // epochId == 3 does not have any topics. This could happen if the epoch computation failed
+        // or the device was offline and no epoch computation was done.
+        // First enable the flag.
+        when(mMockFlags.getGlobalBlockedTopicIds()).thenReturn(ImmutableList.of(1, 2, 6));
+        HashSet<Integer> globalBlockedTopicIds =
+                Stream.of(1, 2, 6).collect(Collectors.toCollection(HashSet::new));
+
+        mCacheManager =
+                new CacheManager(
+                        mTopicsDao,
+                        mMockFlags,
+                        mLogger,
+                        mBlockedTopicsManager,
+                        new GlobalBlockedTopicsManager(globalBlockedTopicIds));
+        mCacheManager.loadCache(currentEpochId);
+
+        verify(mMockFlags).getTopicsNumberOfLookBackEpochs();
+
+        // Now look at epochId in {3, 2} only by setting numberOfLookBackEpochs = 2.
+        // Should return topic2, but it's blocked - so emptyList is expected.
+        assertThat(
+                        mCacheManager.getTopics(
+                                /* numberOfLookBackEpochs= */ 2, currentEpochId, "app1", ""))
+                .isEmpty();
+        assertThat(
+                        mCacheManager.getTopics(
+                                /* numberOfLookBackEpochs= */ 2, currentEpochId, "app1", "sdk1"))
+                .isEmpty();
+        assertThat(
+                        mCacheManager.getTopics(
+                                /* numberOfLookBackEpochs= */ 2, currentEpochId, "app1", "sdk2"))
+                .isEmpty();
+        assertThat(
+                        mCacheManager.getTopics(
+                                /* numberOfLookBackEpochs= */ 2, currentEpochId, "app5", "sdk1"))
+                .isEmpty();
+
+        assertThat(
+                        mCacheManager.getTopics(
+                                /* numberOfLookBackEpochs= */ 2, currentEpochId, "app2", "sdk1"))
+                .isEqualTo(Collections.singletonList(topic3));
+        assertThat(
+                        mCacheManager.getTopics(
+                                /* numberOfLookBackEpochs= */ 2, currentEpochId, "app3", "sdk1"))
+                .isEqualTo(Collections.singletonList(topic4));
+
+        // GetTopics is invoked 6 times.
+        int numGetTopicsApiInvoked = 6;
+        verify(mLogger, times(numGetTopicsApiInvoked))
+                .logGetTopicsReportedStats(argument.capture());
+        assertThat(argument.getAllValues()).hasSize(numGetTopicsApiInvoked);
+        // Verify log for the first call.
+        assertThat(argument.getAllValues().get(0))
+                .isEqualTo(
+                        GetTopicsReportedStats.builder()
+                                .setFilteredBlockedTopicCount(1)
+                                .setDuplicateTopicCount(0)
+                                .setTopicIdsCount(0)
+                                .build());
     }
 
     @Test

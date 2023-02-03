@@ -222,6 +222,7 @@ import static com.android.adservices.service.PhFlags.KEY_FLEDGE_REPORT_IMPRESSIO
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_SELECT_ADS_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_FOREGROUND_STATUS_LEVEL;
 import static com.android.adservices.service.PhFlags.KEY_GA_UX_FEATURE_ENABLED;
+import static com.android.adservices.service.PhFlags.KEY_GLOBAL_BLOCKED_TOPIC_IDS;
 import static com.android.adservices.service.PhFlags.KEY_GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_ISOLATE_MAX_HEAP_SIZE_BYTES;
 import static com.android.adservices.service.PhFlags.KEY_MAINTENANCE_JOB_FLEX_MS;
@@ -293,6 +294,8 @@ import androidx.test.filters.SmallTest;
 
 import com.android.adservices.service.Flags.ClassifierType;
 import com.android.modules.utils.testing.TestableDeviceConfig;
+
+import com.google.common.collect.ImmutableList;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -3826,6 +3829,39 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getBlockedTopicsSourceOfTruth()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetGlobalBlockedTopicIds() {
+        // Without any overriding, the list is empty
+        assertThat(FlagsFactory.getFlags().getGlobalBlockedTopicIds()).isEmpty();
+
+        Flags phFlags = FlagsFactory.getFlags();
+
+        // Valid values passed as part of the PhFlag
+        setGlobalBlockedTopicIds("10, 11, 12");
+        assertThat(phFlags.getGlobalBlockedTopicIds()).isEqualTo(ImmutableList.of(10, 11, 12));
+
+        setGlobalBlockedTopicIds(" 10, 11, 12");
+        assertThat(phFlags.getGlobalBlockedTopicIds()).isEqualTo(ImmutableList.of(10, 11, 12));
+
+        setGlobalBlockedTopicIds(" ");
+        assertThat(phFlags.getGlobalBlockedTopicIds()).isEqualTo(ImmutableList.of());
+
+        setGlobalBlockedTopicIds("");
+        assertThat(phFlags.getGlobalBlockedTopicIds()).isEqualTo(ImmutableList.of());
+
+        // Invalid values passed as part of PhFlag.
+        setGlobalBlockedTopicIds("1,a");
+        assertThat(FlagsFactory.getFlags().getGlobalBlockedTopicIds()).isEmpty();
+    }
+
+    private void setGlobalBlockedTopicIds(String blockedTopicIds) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_GLOBAL_BLOCKED_TOPIC_IDS,
+                blockedTopicIds,
+                /* makeDefault = */ false);
     }
 
     private void disableGlobalKillSwitch() {
