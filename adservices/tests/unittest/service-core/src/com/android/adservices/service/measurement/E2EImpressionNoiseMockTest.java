@@ -62,12 +62,11 @@ public class E2EImpressionNoiseMockTest extends E2EMockTest {
     public E2EImpressionNoiseMockTest(Collection<Action> actions, ReportObjects expectedOutput,
             PrivacyParamsProvider privacyParamsProvider, String name) throws DatastoreException {
         super(actions, expectedOutput, privacyParamsProvider, name);
-        mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager);
+        mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager, mFlags);
         mMeasurementImpl =
                 TestObjectProvider.getMeasurementImpl(
                         sDatastoreManager,
                         mClickVerifier,
-                        mFlags,
                         mMeasurementDataDeleter,
                         sEnrollmentDao);
         mAsyncRegistrationQueueRunner =
