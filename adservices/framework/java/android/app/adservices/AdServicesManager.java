@@ -21,6 +21,7 @@ import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
 import android.app.adservices.consent.ConsentParcel;
+import android.app.adservices.topics.TopicParcel;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.content.Context;
 import android.os.IBinder;
@@ -145,6 +146,48 @@ public final class AdServicesManager {
     public void recordTopicsConsentPageDisplayed() {
         try {
             mService.recordTopicsConsentPageDisplayed();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Record a blocked topic.
+     *
+     * @param blockedTopicParcels the blocked topic to record
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void recordBlockedTopic(@NonNull List<TopicParcel> blockedTopicParcels) {
+        try {
+            mService.recordBlockedTopic(blockedTopicParcels);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Remove a blocked topic.
+     *
+     * @param blockedTopicParcel the blocked topic to remove
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void removeBlockedTopic(@NonNull TopicParcel blockedTopicParcel) {
+        try {
+            mService.removeBlockedTopic(blockedTopicParcel);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Get all blocked topics.
+     *
+     * @return a {@code List} of all blocked topics.
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public List<TopicParcel> retrieveAllBlockedTopics() {
+        try {
+            return mService.retrieveAllBlockedTopics();
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }

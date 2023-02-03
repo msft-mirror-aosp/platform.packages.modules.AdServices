@@ -17,6 +17,7 @@
 package android.app.adservices;
 
 import android.app.adservices.consent.ConsentParcel;
+import android.app.adservices.topics.TopicParcel;
 
 /**
   * AdServices Manager Service
@@ -65,6 +66,21 @@ interface IAdServicesManager {
      * first time to the user.
      */
     void recordTopicsConsentPageDisplayed();
+
+    /**
+     * Record a blocked topic.
+     */
+    void recordBlockedTopic(in List<TopicParcel> blockedTopicParcels);
+
+    /**
+     * Remove a blocked topic.
+     */
+    void removeBlockedTopic(in TopicParcel blockedTopicParcel);
+
+    /**
+     * Get all blocked topics.
+     */
+    List<TopicParcel> retrieveAllBlockedTopics();
 
     /**
      * Returns information whether topics consent page was displayed or not.
