@@ -103,6 +103,19 @@ class FetcherUtil {
         return id != null && id.getBytes().length <= MAX_BYTES_PER_ATTRIBUTION_AGGREGATE_KEY_ID;
     }
 
+    /** Validate aggregate deduplication key. */
+    static boolean isValidAggregateDeduplicationKey(String deduplicationKey) {
+        if (deduplicationKey == null) {
+            return false;
+        }
+        try {
+            Long.parseUnsignedLong(deduplicationKey);
+        } catch (NumberFormatException exception) {
+            return false;
+        }
+        return true;
+    }
+
     /**
      * Validate aggregate key-piece.
      */

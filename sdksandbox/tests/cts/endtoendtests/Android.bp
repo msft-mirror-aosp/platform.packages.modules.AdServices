@@ -24,7 +24,9 @@ android_test {
     static_libs: [
         "androidx.test.ext.junit",
         "androidx.test.runner",
+        "compatibility-device-util-axt-minus-dexmaker",
         "truth-prebuilt",
+        "modules-utils-build",
         "SdkSandboxTestUtils",
         "CtsSdkProviderApi",
     ],
@@ -32,6 +34,7 @@ android_test {
         "android.test.base",
         "android.test.mock",
         "android.test.runner",
+        "framework-configinfrastructure",
     ],
     data: [
       ":SdkSandboxManagerCtsProvider",

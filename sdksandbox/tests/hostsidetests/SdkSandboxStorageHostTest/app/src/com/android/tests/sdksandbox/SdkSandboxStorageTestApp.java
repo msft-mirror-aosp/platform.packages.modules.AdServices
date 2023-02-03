@@ -21,7 +21,6 @@ import static android.os.storage.StorageManager.UUID_DEFAULT;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.fail;
 
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
@@ -85,13 +84,7 @@ public class SdkSandboxStorageTestApp {
     public void loadSdk() throws Exception {
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
-        if (!callback.isLoadSdkSuccessful()) {
-            fail(
-                    "Load SDK was not successful. errorCode: "
-                            + callback.getLoadSdkErrorCode()
-                            + ", errorMsg: "
-                            + callback.getLoadSdkErrorMsg());
-        }
+        callback.assertLoadSdkIsSuccessful();
 
         // Store the returned SDK interface so that we can interact with it later.
         mSdk = IStorageTestSdk1Api.Stub.asInterface(callback.getSandboxedSdk().getInterface());

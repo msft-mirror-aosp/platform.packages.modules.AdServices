@@ -22,8 +22,8 @@ import android.adservices.measurement.WebSourceRegistrationRequest;
 import android.adservices.measurement.WebTriggerParams;
 import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.net.Uri;
-import android.view.InputEvent;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
@@ -34,7 +34,6 @@ import com.android.adservices.service.measurement.AsyncRegistration;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.util.Enrollment;
 
-import com.google.common.annotations.VisibleForTesting;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -53,6 +52,7 @@ public class EnqueueAsyncRegistration {
             boolean adIdPermission,
             Uri registrant,
             long requestTime,
+            @Nullable Source.SourceType sourceType,
             @NonNull EnrollmentDao enrollmentDao,
             @NonNull DatastoreManager datastoreManager) {
         Objects.requireNonNull(enrollmentDao);
@@ -80,10 +80,7 @@ public class EnqueueAsyncRegistration {
                                             == RegistrationRequest.REGISTER_SOURCE
                                     ? AsyncRegistration.RegistrationType.APP_SOURCE
                                     : AsyncRegistration.RegistrationType.APP_TRIGGER,
-                            registrationRequest.getRegistrationType()
-                                            == RegistrationRequest.REGISTER_TRIGGER
-                                    ? null
-                                    : getSourceType(registrationRequest.getInputEvent()),
+                            sourceType,
                             requestTime,
                             /* mRetryCount */ 0,
                             System.currentTimeMillis(),
@@ -104,6 +101,7 @@ public class EnqueueAsyncRegistration {
             boolean adIdPermission,
             Uri registrant,
             long requestTime,
+            @Nullable Source.SourceType sourceType,
             @NonNull EnrollmentDao enrollmentDao,
             @NonNull DatastoreManager datastoreManager) {
         Objects.requireNonNull(enrollmentDao);
@@ -130,7 +128,7 @@ public class EnqueueAsyncRegistration {
                                 webSourceRegistrationRequest.getVerifiedDestination(),
                                 webSourceRegistrationRequest.getTopOriginUri(),
                                 AsyncRegistration.RegistrationType.WEB_SOURCE,
-                                getSourceType(webSourceRegistrationRequest.getInputEvent()),
+                                sourceType,
                                 requestTime,
                                 /* mRetryCount */ 0,
                                 System.currentTimeMillis(),
@@ -230,10 +228,5 @@ public class EnqueueAsyncRegistration {
                         .build();
 
         dao.insertAsyncRegistration(asyncRegistration);
-    }
-
-    @VisibleForTesting
-    static Source.SourceType getSourceType(InputEvent inputEvent) {
-        return inputEvent == null ? Source.SourceType.EVENT : Source.SourceType.NAVIGATION;
     }
 }

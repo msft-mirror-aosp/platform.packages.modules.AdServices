@@ -215,8 +215,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 stats.getTopicIds().stream().mapToInt(Integer::intValue).toArray(),
                 stats.getBuildId(),
                 stats.getAssetVersion(),
-                stats.getClassifierType(),
-                stats.getOnDeviceClassifierStatus(),
-                stats.getPrecomputedClassifierStatus());
+                stats.getClassifierType().getAutogenLoggingValueForTPlus(),
+                stats.getOnDeviceClassifierStatus().getAutogenLoggingValueForTPlus(),
+                stats.getPrecomputedClassifierStatus().getAutogenLoggingValueForTPlus());
     }
 }

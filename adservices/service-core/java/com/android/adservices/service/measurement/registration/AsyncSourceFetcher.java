@@ -47,6 +47,7 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -116,19 +117,44 @@ public class AsyncSourceFetcher {
             }
         }
         result.setEventId(eventId);
+        long expiry;
         if (!json.isNull(SourceHeaderContract.EXPIRY)) {
-            long expiry =
+            expiry =
                     extractValidNumberInRange(
                             json.getLong(SourceHeaderContract.EXPIRY),
                             MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
                             MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
-            result.setExpiryTime(sourceEventTime + TimeUnit.SECONDS.toMillis(expiry));
         } else {
-            result.setExpiryTime(
-                    sourceEventTime
-                            + TimeUnit.SECONDS.toMillis(
-                                    MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS));
+            expiry = MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
         }
+        result.setExpiryTime(sourceEventTime + TimeUnit.SECONDS.toMillis(expiry));
+        long eventReportWindow;
+        if (!json.isNull(SourceHeaderContract.EVENT_REPORT_WINDOW)) {
+            eventReportWindow =
+                    Math.min(
+                            expiry,
+                            extractValidNumberInRange(
+                                    json.getLong(SourceHeaderContract.EVENT_REPORT_WINDOW),
+                                    MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
+                                    MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS));
+        } else {
+            eventReportWindow = expiry;
+        }
+        result.setEventReportWindow(sourceEventTime + TimeUnit.SECONDS.toMillis(eventReportWindow));
+        long aggregateReportWindow;
+        if (!json.isNull(SourceHeaderContract.AGGREGATABLE_REPORT_WINDOW)) {
+            aggregateReportWindow =
+                    Math.min(
+                            expiry,
+                            extractValidNumberInRange(
+                                    json.getLong(SourceHeaderContract.AGGREGATABLE_REPORT_WINDOW),
+                                    MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
+                                    MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS));
+        } else {
+            aggregateReportWindow = expiry;
+        }
+        result.setAggregatableReportWindow(
+                sourceEventTime + TimeUnit.SECONDS.toMillis(aggregateReportWindow));
         if (!json.isNull(SourceHeaderContract.PRIORITY)) {
             result.setPriority(json.getLong(SourceHeaderContract.PRIORITY));
         }
@@ -206,7 +232,7 @@ public class AsyncSourceFetcher {
                 && webDestinationFromRequest != null // Only validate when non-null in request
                 && !doUriFieldsMatch(
                         json, SourceHeaderContract.WEB_DESTINATION, webDestinationFromRequest)) {
-            LogUtil.d("Expected web_destination to match with ths supplied one!");
+            LogUtil.d("Expected web_destination to match with the supplied one!");
             return false;
         }
         if (!json.isNull(SourceHeaderContract.WEB_DESTINATION)) {
@@ -229,6 +255,7 @@ public class AsyncSourceFetcher {
     /** Parse a {@code Source}, given response headers, adding the {@code Source} to a given list */
     @VisibleForTesting
     public boolean parseSource(
+            @NonNull String registrationId,
             @NonNull Uri publisher,
             @NonNull String enrollmentId,
             @Nullable Uri appDestination,
@@ -244,6 +271,7 @@ public class AsyncSourceFetcher {
             boolean adIdPermission,
             boolean arDebugPermission) {
         Source.Builder result = new Source.Builder();
+        result.setRegistrationId(registrationId);
         result.setPublisher(publisher);
         result.setEnrollmentId(enrollmentId);
         result.setRegistrant(registrant);
@@ -283,6 +311,13 @@ public class AsyncSourceFetcher {
                 }
                 result.setAggregateSource(json.getString(SourceHeaderContract.AGGREGATION_KEYS));
             }
+            if (!json.isNull(SourceHeaderContract.SHARED_AGGREGATION_KEYS)) {
+                // Parsed as JSONArray for validation
+                JSONArray sharedAggregationKeys =
+                        json.getJSONArray(SourceHeaderContract.SHARED_AGGREGATION_KEYS);
+                result.setSharedAggregationKeys(sharedAggregationKeys.toString());
+            }
+
             sources.add(result.build());
             return true;
         } catch (JSONException | NumberFormatException e) {
@@ -336,6 +371,7 @@ public class AsyncSourceFetcher {
             AsyncRedirect asyncRedirect) {
         List<Source> out = new ArrayList<>();
         fetchSource(
+                asyncRegistration.getId(),
                 asyncRegistration.getTopOrigin(),
                 asyncRegistration.getRegistrationUri(),
                 asyncRegistration.getOsDestination(),
@@ -361,6 +397,7 @@ public class AsyncSourceFetcher {
     }
 
     private void fetchSource(
+            @NonNull String registrationId,
             @NonNull Uri publisher,
             @NonNull Uri registrationUri,
             @Nullable Uri appDestination,
@@ -427,6 +464,7 @@ public class AsyncSourceFetcher {
             asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
             final boolean parsed =
                     parseSource(
+                            registrationId,
                             publisher,
                             enrollmentId.get(),
                             appDestination,
@@ -487,12 +525,15 @@ public class AsyncSourceFetcher {
         String DEBUG_KEY = "debug_key";
         String DESTINATION = "destination";
         String EXPIRY = "expiry";
+        String EVENT_REPORT_WINDOW = "event_report_window";
+        String AGGREGATABLE_REPORT_WINDOW = "aggregatable_report_window";
         String PRIORITY = "priority";
         String INSTALL_ATTRIBUTION_WINDOW_KEY = "install_attribution_window";
         String POST_INSTALL_EXCLUSIVITY_WINDOW_KEY = "post_install_exclusivity_window";
         String FILTER_DATA = "filter_data";
         String WEB_DESTINATION = "web_destination";
         String AGGREGATION_KEYS = "aggregation_keys";
+        String SHARED_AGGREGATION_KEYS = "shared_aggregation_keys";
         String DEBUG_REPORTING = "debug_reporting";
     }
 }

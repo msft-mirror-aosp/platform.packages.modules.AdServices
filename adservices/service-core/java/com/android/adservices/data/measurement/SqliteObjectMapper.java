@@ -31,6 +31,7 @@ import com.android.adservices.service.measurement.reporting.DebugReport;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -114,14 +115,22 @@ public class SqliteObjectMapper {
                 (enumValue) -> builder.setSourceType(Source.SourceType.valueOf(enumValue)));
         setLongColumn(cursor, MeasurementTables.SourceContract.EXPIRY_TIME,
                 builder::setExpiryTime);
+        setLongColumn(cursor, MeasurementTables.SourceContract.EVENT_REPORT_WINDOW,
+                builder::setEventReportWindow);
+        setLongColumn(cursor, MeasurementTables.SourceContract.AGGREGATABLE_REPORT_WINDOW,
+                builder::setAggregatableReportWindow);
         setLongColumn(cursor, MeasurementTables.SourceContract.EVENT_TIME,
                 builder::setEventTime);
-        setTextColumn(cursor, MeasurementTables.SourceContract.DEDUP_KEYS,
-                (concatArray) -> builder.setDedupKeys(Arrays.stream(concatArray.split(","))
-                        .map(String::trim)
-                        .filter(not(String::isEmpty))
-                        .map(UnsignedLong::new)
-                        .collect(Collectors.toList())));
+        setTextColumn(
+                cursor,
+                MeasurementTables.SourceContract.EVENT_REPORT_DEDUP_KEYS,
+                (concatArray) ->
+                        builder.setEventReportDedupKeys(dedupKeysStringToList(concatArray)));
+        setTextColumn(
+                cursor,
+                MeasurementTables.SourceContract.AGGREGATE_REPORT_DEDUP_KEYS,
+                (concatArray) ->
+                        builder.setAggregateReportDedupKeys(dedupKeysStringToList(concatArray)));
         setIntColumn(cursor, MeasurementTables.SourceContract.STATUS,
                 builder::setStatus);
         setUriColumn(cursor, MeasurementTables.SourceContract.REGISTRANT,
@@ -154,6 +163,16 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.SourceContract.AR_DEBUG_PERMISSION,
                 builder::setArDebugPermission);
+        setTextColumn(
+                cursor,
+                MeasurementTables.SourceContract.SHARED_AGGREGATION_KEYS,
+                builder::setSharedAggregationKeys);
+        setTextColumn(
+                cursor,
+                MeasurementTables.SourceContract.REGISTRATION_ID,
+                builder::setRegistrationId);
+        setLongColumn(
+                cursor, MeasurementTables.SourceContract.INSTALL_TIME, builder::setInstallTime);
         return builder.build();
     }
 
@@ -199,6 +218,14 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.TriggerContract.AR_DEBUG_PERMISSION,
                 builder::setArDebugPermission);
+        setTextColumn(
+                cursor,
+                MeasurementTables.TriggerContract.ATTRIBUTION_CONFIG,
+                builder::setAttributionConfig);
+        setTextColumn(
+                cursor,
+                MeasurementTables.TriggerContract.X_NETWORK_KEY_MAPPING,
+                builder::setAdtechBitMapping);
         return builder.build();
     }
 
@@ -339,6 +366,10 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.AsyncRegistrationContract.AD_ID_PERMISSION,
                 builder::setAdIdPermission);
+        setTextColumn(
+                cursor,
+                MeasurementTables.AsyncRegistrationContract.REGISTRATION_ID,
+                builder::setRegistrationId);
         return builder.build();
     }
 
@@ -385,5 +416,13 @@ public class SqliteObjectMapper {
         if (index > -1 && !cursor.isNull(index)) {
             setter.apply(getColVal.apply(index));
         }
+    }
+
+    private static List<UnsignedLong> dedupKeysStringToList(String concatArray) {
+        return Arrays.stream(concatArray.split(","))
+                .map(String::trim)
+                .filter(not(String::isEmpty))
+                .map(UnsignedLong::new)
+                .collect(Collectors.toList());
     }
 }

@@ -97,10 +97,16 @@ public class ReportImpressionScriptEngineTest {
     private static final Uri CLICK_URI = Uri.parse("https://domain.com/click");
     private static final Uri HOVER_URI = Uri.parse("https://domain.com/hover");
 
-    private static final EventUriRegistrationInfo CLICK_EVENT_URI_REGISTRATION_INFO =
-            EventUriRegistrationInfo.builder().setEventType("click").setEventUri(CLICK_URI).build();
-    private static final EventUriRegistrationInfo HOVER_EVENT_URI_REGISTRATION_INFO =
-            EventUriRegistrationInfo.builder().setEventType("hover").setEventUri(HOVER_URI).build();
+    private static final InteractionUriRegistrationInfo CLICK_EVENT_URI_REGISTRATION_INFO =
+            InteractionUriRegistrationInfo.builder()
+                    .setInteractionKey("click")
+                    .setInteractionReportingUri(CLICK_URI)
+                    .build();
+    private static final InteractionUriRegistrationInfo HOVER_EVENT_URI_REGISTRATION_INFO =
+            InteractionUriRegistrationInfo.builder()
+                    .setInteractionKey("hover")
+                    .setInteractionReportingUri(HOVER_URI)
+                    .build();
 
     @Test
     public void testCanCallScript() throws Exception {
@@ -221,13 +227,13 @@ public class ReportImpressionScriptEngineTest {
                                 SELLER_KEY + adSelectionConfig.getSeller() + "\"}"))
                 .isEqualTo(result.getSignalsForBuyer());
 
-        assertEquals(2, result.getEventUris().size());
+        assertEquals(2, result.getInteractionReportingUris().size());
 
         assertThat(
                         ImmutableList.of(
                                 CLICK_EVENT_URI_REGISTRATION_INFO,
                                 HOVER_EVENT_URI_REGISTRATION_INFO))
-                .containsExactlyElementsIn(result.getEventUris());
+                .containsExactlyElementsIn(result.getInteractionReportingUris());
     }
 
     @Test
@@ -255,13 +261,13 @@ public class ReportImpressionScriptEngineTest {
                                 SELLER_KEY + adSelectionConfig.getSeller() + "\"}"))
                 .isEqualTo(result.getSignalsForBuyer());
 
-        assertEquals(2, result.getEventUris().size());
+        assertEquals(2, result.getInteractionReportingUris().size());
 
         assertThat(
                         ImmutableList.of(
                                 CLICK_EVENT_URI_REGISTRATION_INFO,
                                 CLICK_EVENT_URI_REGISTRATION_INFO))
-                .containsExactlyElementsIn(result.getEventUris());
+                .containsExactlyElementsIn(result.getInteractionReportingUris());
     }
 
     @Test
@@ -290,13 +296,13 @@ public class ReportImpressionScriptEngineTest {
                                 SELLER_KEY + adSelectionConfig.getSeller() + "\"}"))
                 .isEqualTo(result.getSignalsForBuyer());
 
-        assertEquals(2, result.getEventUris().size());
+        assertEquals(2, result.getInteractionReportingUris().size());
 
         assertThat(
                         ImmutableList.of(
                                 CLICK_EVENT_URI_REGISTRATION_INFO,
                                 HOVER_EVENT_URI_REGISTRATION_INFO))
-                .containsExactlyElementsIn(result.getEventUris());
+                .containsExactlyElementsIn(result.getInteractionReportingUris());
     }
 
     @Test
@@ -324,13 +330,13 @@ public class ReportImpressionScriptEngineTest {
                                 SELLER_KEY + adSelectionConfig.getSeller() + "\"}"))
                 .isEqualTo(result.getSignalsForBuyer());
 
-        assertEquals(2, result.getEventUris().size());
+        assertEquals(2, result.getInteractionReportingUris().size());
 
         assertThat(
                         ImmutableList.of(
                                 CLICK_EVENT_URI_REGISTRATION_INFO,
                                 HOVER_EVENT_URI_REGISTRATION_INFO))
-                .containsExactlyElementsIn(result.getEventUris());
+                .containsExactlyElementsIn(result.getInteractionReportingUris());
     }
 
     @Test
@@ -355,7 +361,7 @@ public class ReportImpressionScriptEngineTest {
                                 SELLER_KEY + adSelectionConfig.getSeller() + "\"}"))
                 .isEqualTo(result.getSignalsForBuyer());
 
-        assertEquals(0, result.getEventUris().size());
+        assertEquals(0, result.getInteractionReportingUris().size());
     }
 
     @Test
@@ -525,13 +531,13 @@ public class ReportImpressionScriptEngineTest {
                         mCustomAudienceSignals);
         assertEquals(REPORTING_URI, result.getReportingUri());
 
-        assertEquals(2, result.getEventUris().size());
+        assertEquals(2, result.getInteractionReportingUris().size());
 
         assertThat(
                         ImmutableList.of(
                                 CLICK_EVENT_URI_REGISTRATION_INFO,
                                 HOVER_EVENT_URI_REGISTRATION_INFO))
-                .containsExactlyElementsIn(result.getEventUris());
+                .containsExactlyElementsIn(result.getInteractionReportingUris());
     }
 
     @Test
@@ -556,13 +562,13 @@ public class ReportImpressionScriptEngineTest {
                         mCustomAudienceSignals);
         assertEquals(REPORTING_URI, result.getReportingUri());
 
-        assertEquals(2, result.getEventUris().size());
+        assertEquals(2, result.getInteractionReportingUris().size());
 
         assertThat(
                         ImmutableList.of(
                                 CLICK_EVENT_URI_REGISTRATION_INFO,
                                 CLICK_EVENT_URI_REGISTRATION_INFO))
-                .containsExactlyElementsIn(result.getEventUris());
+                .containsExactlyElementsIn(result.getInteractionReportingUris());
     }
 
     @Test
@@ -588,13 +594,13 @@ public class ReportImpressionScriptEngineTest {
                         mCustomAudienceSignals);
         assertEquals(REPORTING_URI, result.getReportingUri());
 
-        assertEquals(2, result.getEventUris().size());
+        assertEquals(2, result.getInteractionReportingUris().size());
 
         assertThat(
                         ImmutableList.of(
                                 CLICK_EVENT_URI_REGISTRATION_INFO,
                                 HOVER_EVENT_URI_REGISTRATION_INFO))
-                .containsExactlyElementsIn(result.getEventUris());
+                .containsExactlyElementsIn(result.getInteractionReportingUris());
     }
 
     @Test
@@ -619,13 +625,13 @@ public class ReportImpressionScriptEngineTest {
                         mCustomAudienceSignals);
         assertEquals(REPORTING_URI, result.getReportingUri());
 
-        assertEquals(2, result.getEventUris().size());
+        assertEquals(2, result.getInteractionReportingUris().size());
 
         assertThat(
                         ImmutableList.of(
                                 CLICK_EVENT_URI_REGISTRATION_INFO,
                                 HOVER_EVENT_URI_REGISTRATION_INFO))
-                .containsExactlyElementsIn(result.getEventUris());
+                .containsExactlyElementsIn(result.getInteractionReportingUris());
     }
 
     @Test
@@ -647,7 +653,7 @@ public class ReportImpressionScriptEngineTest {
                         mCustomAudienceSignals);
         assertEquals(REPORTING_URI, result.getReportingUri());
 
-        assertEquals(0, result.getEventUris().size());
+        assertEquals(0, result.getInteractionReportingUris().size());
     }
 
     @Test
