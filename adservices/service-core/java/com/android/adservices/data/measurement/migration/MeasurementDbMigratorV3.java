@@ -67,10 +67,50 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
                     + MeasurementTables.AttributionContract.TRIGGER_TIME
                     + ")";
 
+    public static final String CREATE_TABLE_ASYNC_REGISTRATION_V3 =
+            "CREATE TABLE "
+                    + MeasurementTables.AsyncRegistrationContract.TABLE
+                    + " ("
+                    + MeasurementTables.AsyncRegistrationContract.ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + MeasurementTables.AsyncRegistrationContract.ENROLLMENT_ID
+                    + " TEXT, "
+                    + MeasurementTables.AsyncRegistrationContract.REGISTRATION_URI
+                    + " TEXT, "
+                    + MeasurementTables.AsyncRegistrationContract.WEB_DESTINATION
+                    + " TEXT, "
+                    + MeasurementTables.AsyncRegistrationContract.OS_DESTINATION
+                    + " TEXT, "
+                    + MeasurementTables.AsyncRegistrationContract.VERIFIED_DESTINATION
+                    + " TEXT, "
+                    + MeasurementTables.AsyncRegistrationContract.TOP_ORIGIN
+                    + " TEXT, "
+                    + MeasurementTables.AsyncRegistrationContract.REDIRECT_TYPE
+                    + " INTEGER, "
+                    + MeasurementTables.AsyncRegistrationContract.REDIRECT_COUNT
+                    + " INTEGER, "
+                    + MeasurementTables.AsyncRegistrationContract.SOURCE_TYPE
+                    + " INTEGER, "
+                    + MeasurementTables.AsyncRegistrationContract.REGISTRANT
+                    + " TEXT, "
+                    + MeasurementTables.AsyncRegistrationContract.REQUEST_TIME
+                    + " INTEGER, "
+                    + MeasurementTables.AsyncRegistrationContract.RETRY_COUNT
+                    + " INTEGER, "
+                    + MeasurementTables.AsyncRegistrationContract.LAST_PROCESSING_TIME
+                    + " INTEGER, "
+                    + MeasurementTables.AsyncRegistrationContract.TYPE
+                    + " INTEGER, "
+                    + MeasurementTables.AsyncRegistrationContract.DEBUG_KEY_ALLOWED
+                    + " INTEGER, "
+                    + MeasurementTables.AsyncRegistrationContract.AD_ID_PERMISSION
+                    + " INTEGER "
+                    + ")";
+
     private static final String[] UPDATE_ASYNC_REGISTRATION_TABLE_QUERIES = {
         String.format(
                 "DROP TABLE IF EXISTS %1$s", MeasurementTables.AsyncRegistrationContract.TABLE),
-        MeasurementTables.CREATE_TABLE_ASYNC_REGISTRATION_LATEST,
+        CREATE_TABLE_ASYNC_REGISTRATION_V3,
     };
     private static final String[] ADD_EVENT_REPORT_COLUMNS_VER_3 = {
         MeasurementTables.EventReportContract.SOURCE_ID,
