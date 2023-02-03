@@ -53,7 +53,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:src="@drawable/ic_main_view_ga_image"
-                    tools:ignore="ContentDescription"
+                    android:contentDescription="@string/ic_main_view_ga_image_description"
                     android:visibility="gone"/>
             </LinearLayout>
 
