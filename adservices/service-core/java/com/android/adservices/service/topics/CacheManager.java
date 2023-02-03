@@ -62,6 +62,7 @@ public class CacheManager implements Dumpable {
     // This allows concurrent reads but exclusive update to the cache.
     private final ReadWriteLock mReadWriteLock = new ReentrantReadWriteLock();
     private final TopicsDao mTopicsDao;
+    private final BlockedTopicsManager mBlockedTopicsManager;
     private final Flags mFlags;
     // Map<EpochId, Map<Pair<App, Sdk>, Topic>
     private Map<Long, Map<Pair<String, String>, Topic>> mCachedTopics = new HashMap<>();
@@ -73,10 +74,15 @@ public class CacheManager implements Dumpable {
     private final AdServicesLogger mLogger;
 
     @VisibleForTesting
-    CacheManager(TopicsDao topicsDao, Flags flags, AdServicesLogger logger) {
+    CacheManager(
+            TopicsDao topicsDao,
+            Flags flags,
+            AdServicesLogger logger,
+            BlockedTopicsManager blockedTopicsManager) {
         mTopicsDao = topicsDao;
         mFlags = flags;
         mLogger = logger;
+        mBlockedTopicsManager = blockedTopicsManager;
     }
 
     /** Returns an instance of the CacheManager given a context. */
@@ -88,7 +94,8 @@ public class CacheManager implements Dumpable {
                         new CacheManager(
                                 TopicsDao.getInstance(context),
                                 FlagsFactory.getFlags(),
-                                AdServicesLoggerImpl.getInstance());
+                                AdServicesLoggerImpl.getInstance(),
+                                BlockedTopicsManager.getInstance(context));
             }
             return sSingleton;
         }
@@ -109,7 +116,7 @@ public class CacheManager implements Dumpable {
                 mTopicsDao.retrieveReturnedTopics(currentEpochId, lookbackEpochs + 1);
         // HashSet<BlockedTopic>
         HashSet<Topic> blockedTopicsCacheFromDb =
-                new HashSet<>(mTopicsDao.retrieveAllBlockedTopics());
+                new HashSet<>(mBlockedTopicsManager.retrieveAllBlockedTopics());
         HashSet<Integer> blockedTopicIdsFromDb =
                 blockedTopicsCacheFromDb.stream()
                         .map(Topic::getTopic)

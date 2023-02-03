@@ -1207,6 +1207,26 @@ public class TopicsDao {
         return topicToContributorsMap;
     }
 
+    /**
+     * Delete all entries from a table.
+     *
+     * @param tableName the table to delete entries from
+     */
+    public void deleteAllEntriesFromTable(@NonNull String tableName) {
+        SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
+        if (db == null) {
+            return;
+        }
+
+        try {
+            db.delete(tableName, /* whereClause */ "", /* whereArgs */ new String[0]);
+        } catch (SQLException e) {
+            LogUtil.e(
+                    "Failed to delete all entries from table %s. Error: %s",
+                    tableName, e.getMessage());
+        }
+    }
+
     /** Check whether TopContributors Table is supported in current database. */
     public boolean supportsTopicContributorsTable() {
         return mDbHelper.supportsTopicContributorsTable();
