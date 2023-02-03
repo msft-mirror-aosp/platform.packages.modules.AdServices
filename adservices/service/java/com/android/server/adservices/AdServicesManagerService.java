@@ -54,6 +54,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     private static final String ERROR_MESSAGE_NOT_PERMITTED_TO_CALL_ADSERVICESMANAGER_API =
             "Unauthorized caller. Permission to call AdServicesManager API is not granted in System"
                     + " Server.";
+    private final Object mRegisterReceiverLock = new Object();
 
     /**
      * Broadcast send from the system service to the AdServices module when a package has been
@@ -565,7 +566,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     void registerReceivers() {
         // There could be race condition between registerReceivers call
         // in the AdServicesManagerService constructor and the mOnFlagsChangedListener.
-        synchronized (AdServicesManagerService.class) {
+        synchronized (mRegisterReceiverLock) {
             if (!FlagsFactory.getFlags().getAdServicesSystemServiceEnabled()) {
                 LogUtil.d("AdServicesSystemServiceEnabled is FALSE.");
                 // If there is a SystemServicePackageChangeReceiver, unregister it.
