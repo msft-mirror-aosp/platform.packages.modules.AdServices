@@ -33,6 +33,7 @@ import android.provider.DeviceConfig;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.compatibility.common.util.DeviceConfigStateManager;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.dx.mockito.inline.extended.StaticMockitoSession;
 
@@ -60,20 +61,12 @@ public class SdkSandboxControllerUnitTest {
 
     @BeforeClass
     public static void setUpClass() throws Exception {
-        InstrumentationRegistry.getInstrumentation()
-                .getUiAutomation()
-                .adoptShellPermissionIdentity();
-        try {
-            sCustomizedSdkContextEnabled =
-                    DeviceConfig.getBoolean(
-                            DeviceConfig.NAMESPACE_ADSERVICES,
-                            "sdksandbox_customized_sdk_context_enabled",
-                            false);
-        } finally {
-            InstrumentationRegistry.getInstrumentation()
-                    .getUiAutomation()
-                    .dropShellPermissionIdentity();
-        }
+        DeviceConfigStateManager stateManager =
+                new DeviceConfigStateManager(
+                        InstrumentationRegistry.getInstrumentation().getContext(),
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        "sdksandbox_customized_sdk_context_enabled");
+        sCustomizedSdkContextEnabled = Boolean.parseBoolean(stateManager.get());
     }
 
     @Before

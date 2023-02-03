@@ -43,6 +43,7 @@ import org.junit.runner.RunWith;
 public class SettingsGaUiAutomatorTest {
     private static final String PRIVACY_SANDBOX_TEST_PACKAGE = "android.adservices.ui.SETTINGS";
     private static final int LAUNCH_TIMEOUT = 5000;
+    public static final int PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT = 1000;
     private static UiDevice sDevice;
 
     @Before
@@ -84,8 +85,10 @@ public class SettingsGaUiAutomatorTest {
         scrollToAndClick(R.string.settingsUI_measurement_view_title);
 
         // verify have entered to measurement page
-        UiObject resetButton = getElement(R.string.settingsUI_measurement_view_reset_title);
-        assertThat(resetButton.exists()).isTrue();
+        UiObject measurementSwitch = getElement(R.string.settingsUI_measurement_switch_title);
+        // needed as the new page is displayed (this can take time to propagate to the UiAutomator)
+        measurementSwitch.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        assertThat(measurementSwitch.exists()).isTrue();
 
         sDevice.pressBack();
         // verify back to the main page
