@@ -159,6 +159,7 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
                         + "/sdksandbox/"
                         + CLIENT_PACKAGE_NAME
                         + "/"
-                        + SDK_NAME);
+                        + SDK_NAME
+                        + "@");
     }
 }
