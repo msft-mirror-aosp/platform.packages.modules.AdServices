@@ -42,19 +42,14 @@ public class MeasurementDbMigratorV6Test extends AbstractMeasurementDbMigratorTe
         {"1", "enrollment-id-1"}
     };
 
-    private static final String[][] INSERTED_SOURCE = {
-        // id, expiry
-        {"1", "1673464509232"}
-    };
-
-    private static final String[][] INSERTED_TRIGGER = {
-        // id, attribution_destination
-        {"1", "android-app://com.android.app"}
-    };
-
     private static final String[][] MIGRATED_ASYNC_REGISTRATION = {
         // id, enrollment_id
         {"1", "enrollment-id-1"}
+    };
+
+    private static final String[][] INSERTED_SOURCE = {
+        // id, expiry
+        {"1", "1673464509232"}
     };
 
     private static final String[][] MIGRATED_SOURCE = {
@@ -63,9 +58,16 @@ public class MeasurementDbMigratorV6Test extends AbstractMeasurementDbMigratorTe
         {"1", "1673464509232", "1673464509232", "1673464509232", null, null}
     };
 
+    private static final String[][] INSERTED_TRIGGER = {
+        // id, attribution_destination, event_triggers
+        {"1", "android-app://com.android.app", null},
+        {"2", "android-app://com.android.app2", "[{\"trigger_data\":0}]"}
+    };
+
     private static final String[][] MIGRATED_TRIGGER = {
-        // id, attribution_destination, attribution_config, adtech_bit_mapping
-        {"1", "android-app://com.android.app", null, null}
+        // id, attribution_destination, event_triggers, attribution_config, x_network_key_mapping
+        {"1", "android-app://com.android.app", "[]", null, null},
+        {"2", "android-app://com.android.app2", "[{\"trigger_data\":0}]", null, null}
     };
 
     @Test
@@ -183,7 +185,8 @@ public class MeasurementDbMigratorV6Test extends AbstractMeasurementDbMigratorTe
 
     private static void insertTriggers(SQLiteDatabase db) {
         for (int i = 0; i < INSERTED_TRIGGER.length; i++) {
-            insertTrigger(db, INSERTED_TRIGGER[i][0], INSERTED_TRIGGER[i][1]);
+            insertTrigger(
+                    db, INSERTED_TRIGGER[i][0], INSERTED_TRIGGER[i][1], INSERTED_TRIGGER[i][2]);
         }
     }
 
@@ -201,11 +204,13 @@ public class MeasurementDbMigratorV6Test extends AbstractMeasurementDbMigratorTe
         db.insert(MeasurementTables.SourceContract.TABLE, null, values);
     }
 
-    private static void insertTrigger(SQLiteDatabase db, String id, String attributionDestination) {
+    private static void insertTrigger(SQLiteDatabase db, String id, String attributionDestination,
+            String eventTriggers) {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.TriggerContract.ID, id);
         values.put(
                 MeasurementTables.TriggerContract.ATTRIBUTION_DESTINATION, attributionDestination);
+        values.put(MeasurementTables.TriggerContract.EVENT_TRIGGERS, eventTriggers);
         db.insert(MeasurementTables.TriggerContract.TABLE, null, values);
     }
 
@@ -224,9 +229,12 @@ public class MeasurementDbMigratorV6Test extends AbstractMeasurementDbMigratorTe
                         null,
                         /* orderBy */ MeasurementTables.AsyncRegistrationContract.ID,
                         null);
+        int count = 0;
         while (cursor.moveToNext()) {
             assertAsyncRegistrationMigrated(cursor);
+            count += 1;
         }
+        assertEquals(INSERTED_ASYNC_REGISTRATION.length, count);
     }
 
     private static void assertSourceMigration(SQLiteDatabase db) {
@@ -248,9 +256,12 @@ public class MeasurementDbMigratorV6Test extends AbstractMeasurementDbMigratorTe
                         null,
                         /* orderBy */ MeasurementTables.SourceContract.ID,
                         null);
+        int count = 0;
         while (cursor.moveToNext()) {
             assertSourceMigrated(cursor);
+            count += 1;
         }
+        assertEquals(INSERTED_SOURCE.length, count);
     }
 
     private static void assertTriggerMigration(SQLiteDatabase db) {
@@ -260,8 +271,9 @@ public class MeasurementDbMigratorV6Test extends AbstractMeasurementDbMigratorTe
                         new String[] {
                             MeasurementTables.TriggerContract.ID,
                             MeasurementTables.TriggerContract.ATTRIBUTION_DESTINATION,
+                            MeasurementTables.TriggerContract.EVENT_TRIGGERS,
                             MeasurementTables.TriggerContract.ATTRIBUTION_CONFIG,
-                            MeasurementTables.TriggerContract.ADTECH_BIT_MAPPING
+                            MeasurementTables.TriggerContract.X_NETWORK_KEY_MAPPING
                         },
                         null,
                         null,
@@ -269,9 +281,12 @@ public class MeasurementDbMigratorV6Test extends AbstractMeasurementDbMigratorTe
                         null,
                         /* orderBy */ MeasurementTables.TriggerContract.ID,
                         null);
+        int count = 0;
         while (cursor.moveToNext()) {
             assertTriggerMigrated(cursor);
+            count += 1;
         }
+        assertEquals(INSERTED_TRIGGER.length, count);
     }
 
     private static void assertAsyncRegistrationMigrated(Cursor cursor) {
@@ -338,11 +353,16 @@ public class MeasurementDbMigratorV6Test extends AbstractMeasurementDbMigratorTe
                 MIGRATED_TRIGGER[i][2],
                 cursor.getString(
                         cursor.getColumnIndex(
-                                MeasurementTables.TriggerContract.ATTRIBUTION_CONFIG)));
+                                MeasurementTables.TriggerContract.EVENT_TRIGGERS)));
         assertEquals(
                 MIGRATED_TRIGGER[i][3],
                 cursor.getString(
                         cursor.getColumnIndex(
-                                MeasurementTables.TriggerContract.ADTECH_BIT_MAPPING)));
+                                MeasurementTables.TriggerContract.ATTRIBUTION_CONFIG)));
+        assertEquals(
+                MIGRATED_TRIGGER[i][4],
+                cursor.getString(
+                        cursor.getColumnIndex(
+                                MeasurementTables.TriggerContract.X_NETWORK_KEY_MAPPING)));
     }
 }

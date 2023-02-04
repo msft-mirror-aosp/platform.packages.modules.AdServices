@@ -16,11 +16,6 @@
 
 package com.android.adservices.service.customaudience;
 
-import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
-
-import static com.android.adservices.service.stats.AdServicesLoggerUtil.UNSET;
-
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.content.pm.PackageManager;
@@ -34,7 +29,6 @@ import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetc
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdServicesHttpsClient;
-import com.android.adservices.service.stats.UpdateCustomAudienceExecutionLogger;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -131,15 +125,10 @@ public class BackgroundFetchRunner {
 
     /** Updates a single given custom audience and persists the results. */
     public void updateCustomAudience(
-            @NonNull Instant jobStartTime,
-            @NonNull DBCustomAudienceBackgroundFetchData fetchData,
-            @NonNull UpdateCustomAudienceExecutionLogger updateCustomAudienceExecutionLogger) {
+            @NonNull Instant jobStartTime, @NonNull DBCustomAudienceBackgroundFetchData fetchData) {
         Objects.requireNonNull(jobStartTime);
         Objects.requireNonNull(fetchData);
-        updateCustomAudienceExecutionLogger.start();
-        int numOfAds = UNSET;
-        int adsDataSizeInBytes = UNSET;
-        int resultCode;
+
         CustomAudienceUpdatableData updatableData =
                 fetchAndValidateCustomAudienceUpdatableData(
                         jobStartTime, fetchData.getBuyer(), fetchData.getDailyUpdateUri());
@@ -147,18 +136,11 @@ public class BackgroundFetchRunner {
 
         if (updatableData.getContainsSuccessfulUpdate()) {
             mCustomAudienceDao.updateCustomAudienceAndBackgroundFetchData(fetchData, updatableData);
-            if (Objects.nonNull(updatableData.getAds())) {
-                numOfAds = updatableData.getAds().size();
-                adsDataSizeInBytes = updatableData.getAds().toString().getBytes().length;
-            }
-            resultCode = STATUS_SUCCESS;
         } else {
             // In a failed update, we don't need to update the main CA table, so only update the
             // background fetch table
             mCustomAudienceDao.persistCustomAudienceBackgroundFetchData(fetchData);
-            resultCode = STATUS_INTERNAL_ERROR;
         }
-        updateCustomAudienceExecutionLogger.close(adsDataSizeInBytes, numOfAds, resultCode);
     }
 
     /**

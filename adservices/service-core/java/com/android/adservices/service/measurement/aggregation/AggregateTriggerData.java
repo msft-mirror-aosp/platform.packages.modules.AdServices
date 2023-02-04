@@ -19,7 +19,7 @@ package com.android.adservices.service.measurement.aggregation;
 import android.annotation.Nullable;
 
 import com.android.adservices.service.measurement.FilterMap;
-import com.android.adservices.service.measurement.ServingAdtechNetwork;
+import com.android.adservices.service.measurement.XNetworkData;
 
 import java.math.BigInteger;
 import java.util.HashSet;
@@ -37,13 +37,14 @@ public class AggregateTriggerData {
     private Set<String> mSourceKeys;
     private Optional<List<FilterMap>> mFilterSet;
     private Optional<List<FilterMap>> mNotFilterSet;
-    @Nullable private ServingAdtechNetwork mServingAdtechNetwork;
+    private Optional<XNetworkData> mXNetworkData;
 
     private AggregateTriggerData() {
         mKey = null;
         mSourceKeys = new HashSet<>();
         mFilterSet = Optional.empty();
         mNotFilterSet = Optional.empty();
+        mXNetworkData = Optional.empty();
     }
 
     @Override
@@ -56,13 +57,12 @@ public class AggregateTriggerData {
                 && Objects.equals(mSourceKeys, attributionTriggerData.mSourceKeys)
                 && Objects.equals(mFilterSet, attributionTriggerData.mFilterSet)
                 && Objects.equals(mNotFilterSet, attributionTriggerData.mNotFilterSet)
-                && Objects.equals(
-                        mServingAdtechNetwork, attributionTriggerData.mServingAdtechNetwork);
+                && Objects.equals(mXNetworkData, attributionTriggerData.mXNetworkData);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mKey, mSourceKeys, mServingAdtechNetwork);
+        return Objects.hash(mKey, mSourceKeys, mFilterSet, mNotFilterSet, mXNetworkData);
     }
 
     /**
@@ -95,9 +95,8 @@ public class AggregateTriggerData {
     }
 
     /** Returns the serving adtech network object */
-    @Nullable
-    public ServingAdtechNetwork getServingAdtechNetwork() {
-        return mServingAdtechNetwork;
+    public Optional<XNetworkData> getXNetworkData() {
+        return mXNetworkData;
     }
 
     /**
@@ -127,20 +126,21 @@ public class AggregateTriggerData {
         }
 
         /** See {@link AggregateTriggerData#getFilterSet()}. */
-        public Builder setFilterSet(List<FilterMap> filterSet) {
-            mBuilding.mFilterSet = Optional.of(filterSet);
+        public Builder setFilterSet(@Nullable List<FilterMap> filterSet) {
+            mBuilding.mFilterSet = Optional.ofNullable(filterSet);
             return this;
         }
 
         /** See {@link AggregateTriggerData#getNotFilterSet()} */
-        public Builder setNotFilterSet(List<FilterMap> notFilterSet) {
-            mBuilding.mNotFilterSet = Optional.of(notFilterSet);
+        public Builder setNotFilterSet(@Nullable List<FilterMap> notFilterSet) {
+            mBuilding.mNotFilterSet = Optional.ofNullable(notFilterSet);
             return this;
         }
 
-        /** See {@link AggregateTriggerData#getServingAdtechNetwork()} */
-        public void setServingAdtechNetwork(ServingAdtechNetwork servingAdtechNetwork) {
-            mBuilding.mServingAdtechNetwork = servingAdtechNetwork;
+        /** See {@link AggregateTriggerData#getXNetworkData()} */
+        public Builder setXNetworkData(@Nullable XNetworkData xNetworkData) {
+            mBuilding.mXNetworkData = Optional.ofNullable(xNetworkData);
+            return this;
         }
 
         /**

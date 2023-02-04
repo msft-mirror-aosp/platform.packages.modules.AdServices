@@ -10,6 +10,14 @@
         <item name="android:textDirection">locale</item>
     </style>
 
+    <style name="PreferenceStyle">
+        <item name="android:layout_height">fill_parent</item>
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:padding">20dp</item>
+        <item name="android:background">?android:attr/selectableItemBackground</item>
+    </style>
+
     <style name="MainStyle.SettingsControlButton" parent="android:Widget.DeviceDefault.Button">
         <item name="android:textSize">16sp</item>
         <item name="android:minHeight">16sp</item>
@@ -101,9 +109,7 @@
     <style name="MainStyle.Subtitle">
         <item name="android:textAppearance">?android:attr/textAppearanceSmall</item>
         <item name="android:textColor">?android:attr/textColorSecondary</item>
-        <item name="android:background">?android:attr/selectableItemBackground</item>
-        <item name="android:layout_marginTop">-15dp</item>
-        <item name="android:paddingLeft">20dp</item>
+        <item name="android:maxLines">4</item>
     </style>
 
     <style name="TextAppearance" parent="android:TextAppearance.DeviceDefault">

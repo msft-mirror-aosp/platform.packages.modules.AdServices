@@ -17,10 +17,6 @@
 package com.android.adservices.service.topics.classifier;
 
 import static com.android.adservices.service.Flags.CLASSIFIER_NUMBER_OF_TOP_LABELS;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__ON_DEVICE_CLASSIFIER;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_FAILURE;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_SUCCESS;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -172,11 +168,14 @@ public class OnDeviceClassifierTest {
                                 .setBuildId(8)
                                 .setAssetVersion("2")
                                 .setClassifierType(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__ON_DEVICE_CLASSIFIER)
+                                        EpochComputationClassifierStats.ClassifierType
+                                                .ON_DEVICE_CLASSIFIER)
                                 .setOnDeviceClassifierStatus(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_SUCCESS)
+                                        EpochComputationClassifierStats.OnDeviceClassifierStatus
+                                                .ON_DEVICE_CLASSIFIER_STATUS_SUCCESS)
                                 .setPrecomputedClassifierStatus(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED)
+                                        EpochComputationClassifierStats.PrecomputedClassifierStatus
+                                                .PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED)
                                 .build());
     }
 
@@ -277,11 +276,14 @@ public class OnDeviceClassifierTest {
                                 .setBuildId(8)
                                 .setAssetVersion("2")
                                 .setClassifierType(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__ON_DEVICE_CLASSIFIER)
+                                        EpochComputationClassifierStats.ClassifierType
+                                                .ON_DEVICE_CLASSIFIER)
                                 .setOnDeviceClassifierStatus(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_SUCCESS)
+                                        EpochComputationClassifierStats.OnDeviceClassifierStatus
+                                                .ON_DEVICE_CLASSIFIER_STATUS_SUCCESS)
                                 .setPrecomputedClassifierStatus(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED)
+                                        EpochComputationClassifierStats.PrecomputedClassifierStatus
+                                                .PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED)
                                 .build());
         // Log for appPackage2.
         assertThat(argument.getAllValues().get(1))
@@ -291,11 +293,14 @@ public class OnDeviceClassifierTest {
                                 .setBuildId(8)
                                 .setAssetVersion("2")
                                 .setClassifierType(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__ON_DEVICE_CLASSIFIER)
+                                        EpochComputationClassifierStats.ClassifierType
+                                                .ON_DEVICE_CLASSIFIER)
                                 .setOnDeviceClassifierStatus(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_SUCCESS)
+                                        EpochComputationClassifierStats.OnDeviceClassifierStatus
+                                                .ON_DEVICE_CLASSIFIER_STATUS_SUCCESS)
                                 .setPrecomputedClassifierStatus(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED)
+                                        EpochComputationClassifierStats.PrecomputedClassifierStatus
+                                                .PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED)
                                 .build());
     }
 
@@ -411,11 +416,14 @@ public class OnDeviceClassifierTest {
                                 .setBuildId(8)
                                 .setAssetVersion("2")
                                 .setClassifierType(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__ON_DEVICE_CLASSIFIER)
+                                        EpochComputationClassifierStats.ClassifierType
+                                                .ON_DEVICE_CLASSIFIER)
                                 .setOnDeviceClassifierStatus(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_FAILURE)
+                                        EpochComputationClassifierStats.OnDeviceClassifierStatus
+                                                .ON_DEVICE_CLASSIFIER_STATUS_FAILURE)
                                 .setPrecomputedClassifierStatus(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED)
+                                        EpochComputationClassifierStats.PrecomputedClassifierStatus
+                                                .PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED)
                                 .build());
     }
 

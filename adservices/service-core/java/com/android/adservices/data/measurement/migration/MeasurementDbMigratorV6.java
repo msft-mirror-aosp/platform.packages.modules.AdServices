@@ -23,6 +23,8 @@ import android.database.sqlite.SQLiteDatabase;
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.MeasurementTables;
 
+import org.json.JSONArray;
+
 import java.util.UUID;
 
 /** Migrates Measurement DB from user version 3 to 6. */
@@ -94,7 +96,7 @@ public class MeasurementDbMigratorV6 extends AbstractMeasurementDbMigrator {
         String.format(
                 "ALTER TABLE %1$s ADD %2$s TEXT",
                 MeasurementTables.TriggerContract.TABLE,
-                MeasurementTables.TriggerContract.ADTECH_BIT_MAPPING)
+                MeasurementTables.TriggerContract.X_NETWORK_KEY_MAPPING)
     };
 
     private static final String[] UPDATE_XNA_IGNORED_SOURCES_TABLE_STATEMENT = {
@@ -110,6 +112,12 @@ public class MeasurementDbMigratorV6 extends AbstractMeasurementDbMigrator {
                     MeasurementTables.SourceContract.EVENT_REPORT_WINDOW,
                     MeasurementTables.SourceContract.EXPIRY_TIME,
                     MeasurementTables.SourceContract.AGGREGATABLE_REPORT_WINDOW);
+
+    public static final String UPDATE_TRIGGER_STATEMENT = String.format(
+            "UPDATE %1$s SET %2$s = '%3$s' WHERE %2$s IS NULL",
+            MeasurementTables.TriggerContract.TABLE,
+            MeasurementTables.TriggerContract.EVENT_TRIGGERS,
+            new JSONArray().toString());
 
     public MeasurementDbMigratorV6() {
         super(6);
@@ -139,6 +147,7 @@ public class MeasurementDbMigratorV6 extends AbstractMeasurementDbMigrator {
         migrateSourceReportWindows(db);
         migrateAsyncRegistrationRegistrationId(db);
         migrateSourceRegistrationId(db);
+        migrateTriggerData(db);
     }
 
     private static void alterAsyncRegistrationTable(SQLiteDatabase db) {
@@ -191,7 +200,7 @@ public class MeasurementDbMigratorV6 extends AbstractMeasurementDbMigrator {
                 && !MigrationHelpers.isColumnPresent(
                         db,
                         MeasurementTables.TriggerContract.TABLE,
-                        MeasurementTables.TriggerContract.ADTECH_BIT_MAPPING)) {
+                        MeasurementTables.TriggerContract.X_NETWORK_KEY_MAPPING)) {
             for (String sql : ALTER_STATEMENTS_XNA_TRIGGER) {
                 db.execSQL(sql);
             }
@@ -274,5 +283,9 @@ public class MeasurementDbMigratorV6 extends AbstractMeasurementDbMigrator {
         if (rowCount != 1) {
             LogUtil.d("MeasurementDbMigratorV6: failed to update source record.");
         }
+    }
+
+    private static void migrateTriggerData(SQLiteDatabase db) {
+        db.execSQL(UPDATE_TRIGGER_STATEMENT);
     }
 }

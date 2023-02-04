@@ -460,8 +460,18 @@
     <string name="settingsU_main_view_measurement_info">Apps you use can ask Android for information to help them measure the performance of their ads. Android lets apps collect limited types of data.</string>
     <!-- Text for the topic subtitle in the settings UI showing On and the count of topics. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_topics_subtitle">On / <xliff:g id="topics_count" example="7">%1$d</xliff:g> topics</string>
+    <!-- Text for the topic subtitle with plural changes in the settings UI showing On and the count of topics. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_topics_subtitle_plural">{count, plural,
+    =1    {On / # topic}
+    other {On / # topics}
+    }</string>
     <!-- Text for the apps subtitle in the settings UI showing On and the count of apps. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_apps_subtitle">On / <xliff:g id="apps_count" example="6">%1$d</xliff:g> apps</string>
+    <!-- Text for the apps subtitle with plural changes in the settings UI showing On and the count of apps. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_apps_subtitle_plural">{count, plural,
+    =1    {On / # app}
+    other {On / # apps}
+    }</string>
     <!-- Text for subtitle in the settings UI showing measurement consent is On.[CHAR LIMIT=NONE] -->
     <string name="settingsUI_subtitle_consent_on">On</string>
     <!-- Text for the any subtitle in the settings UI showing whose consent is Off.[CHAR LIMIT=NONE] -->
@@ -496,6 +506,15 @@
     <!-- Text for the info of app-suggested ads. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_apps_view_footer">It’s common for apps you use to remember things you’re interested in to personalize your experience. Apps can also store information with Android about your topics.\n\nFor example, if you use an app about marathon training, the app might decide that you’re interested in running shoes. Later, if you use a different app, that app can show you an ad for running shoes suggested by the first app.\n\nAndroid auto-deletes app-suggested data regularly. An app you use again might reappear on the list. Or you can block an app from suggesting ads for you.\n\nIn your apps, an ad you see may be personalized, depending on this setting, the ad topics setting, your advertising ID settings, and whether the app you’re using personalizes ads.</string>
 
+    <!-- Illustration description texts ****************************************************-->
+    <!-- Description for an illustration for accessibility purposes. [CHAR LIMIT=NONE] -->
+    <string name="ic_consent_notification_ga_image_description">Colorful illustration of symbols representing topics of interest like music, news, and sports</string>
+    <!-- Description for an illustration for accessibility purposes. [CHAR LIMIT=NONE] -->
+    <string name="ic_main_view_ga_image_description">Colorful illustration of a lock inside a circle</string>
+    <!-- Description for an illustration for accessibility purposes. [CHAR LIMIT=NONE] -->
+    <string name="ic_placeholder_icon_for_empty_apps_list_description">Small black and white illustration of nine dots forming a square</string>
+    <!-- Description for an illustration for accessibility purposes. [CHAR LIMIT=NONE] -->
+    <string name="ic_placeholder_icon_for_empty_topics_list_description">Small black and white illustration of simple shapes like a heart, triangle, and square</string>
 
     <!-- All Topics strings *********************************************************************-->
     <!-- Text for the topic name for topic Arts &amp; Entertainment. [CHAR LIMIT=NONE] -->
@@ -1390,5 +1409,4 @@
     <string name="topic10445">Travel Agencies &amp; Services</string>
     <!-- Text for the topic name for topic Travel Guides &amp; Travelogues. [CHAR LIMIT=NONE] -->
     <string name="topic10446">Travel Guides &amp; Travelogues</string>
-
 </resources>

@@ -127,7 +127,7 @@ public final class MeasurementTables {
         String AD_ID_PERMISSION = "ad_id_permission";
         String AR_DEBUG_PERMISSION = "ar_debug_permission";
         String ATTRIBUTION_CONFIG = "attribution_config";
-        String ADTECH_BIT_MAPPING = "adtech_bit_mapping";
+        String X_NETWORK_KEY_MAPPING = "x_network_key_mapping";
     }
 
     /** Contract for EventReport. */
@@ -471,7 +471,7 @@ public final class MeasurementTables {
                     + " INTEGER, "
                     + TriggerContract.ATTRIBUTION_CONFIG
                     + " TEXT, "
-                    + TriggerContract.ADTECH_BIT_MAPPING
+                    + TriggerContract.X_NETWORK_KEY_MAPPING
                     + " TEXT "
                     + ")";
 

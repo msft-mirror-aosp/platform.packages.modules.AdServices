@@ -61,7 +61,7 @@
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"Važi"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"Vi ste deo beta verzije"</string>
     <string name="notificationUI_container2_body_text" msgid="758560159693325060">"Zaštićeno okruženje privatnosti je uključeno za uređaj i aplikacije mogu da testiraju ove nove privatnije načine za prikazivanje oglasa. Uvek možete da isključite beta verziju u podešavanjima privatnosti."</string>
-    <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"Upravljaj podešavanjima privatnosti"</string>
+    <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"Upravljaj podešavanjima priv."</string>
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"Važi"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Android zaštićeno okruženje privatnosti pruža nove funkcije koje aplikacije mogu da koriste da bi vam prikazivale oglase koji će vam se možda dopasti. Ove tehnologije ne koriste identifikatore uređaja.\n\nAndroid i aplikacije mogu da procenjuju vrste oglasa koji će vas možda zanimati i čuvaju interesovanja privremeno na uređaju. To omogućava aplikacijama da vam prikazuju oglase koji će vam se možda dopasti, bez praćenja vaših aktivnosti na veb-sajtovima i u aplikacijama drugih programera."</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"Personalizacija oglasa uz Zaštićeno okruženje privatnosti"</string>
@@ -133,10 +133,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Zaštićeno okruženje privatnosti"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Beta verzija Android privatnosti za oglase pruža nove funkcije koje aplikacije mogu da koriste da bi vam prikazivale oglase koji će vam se možda dopasti. Ove tehnologije ne koriste identifikatore uređaja.\n\nAndroid može da procenjuje vrste oglasa koji će vas možda zanimati i čuva interesovanja privremeno na uređaju. To omogućava aplikacijama da vam prikazuju relevantne oglase, bez praćenja vaših aktivnosti na veb-sajtovima i u aplikacijama drugih programera."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Nemate nijedno blokirano interesovanje"</string>
-    <!-- no translation found for settingsUI_no_blocked_topics_ga_text (377459829879121256) -->
-    <skip />
-    <!-- no translation found for settingsUI_view_blocked_topics_title (3705333677440361392) -->
-    <skip />
+    <string name="settingsUI_no_blocked_topics_ga_text" msgid="377459829879121256">"Nema blokiranih tema"</string>
+    <string name="settingsUI_view_blocked_topics_title" msgid="3705333677440361392">"Prikaži blokirane teme"</string>
     <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Interesovanja su resetovana"</string>
     <string name="settingsUI_topics_are_reset_ga" msgid="5250296990870048195">"Teme su resetovane"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Aplikacije mogu da procenjuju interesovanja i privremeno ih čuvaju pomoću Android-a. Kasnije druga aplikacija može da vam prikaže oglas na osnovu tih interesovanja.\n\nAko blokirate aplikaciju, ona više neće procenjivati interesovanja. Neće biti dodata na ovu listu aplikacija ponovo ako je ne odblokirate. Interesovanja koja je aplikacija već procenila biće izbrisana, ali ćete možda i dalje videti neke povezane oglase."</string>
@@ -148,8 +146,7 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Zaštićeno okruženje privatnosti"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Beta verzija Android privatnosti za oglase pruža nove funkcije koje aplikacije mogu da koriste da bi vam prikazivale oglase koji će vam se možda dopasti. Ove tehnologije ne koriste identifikatore uređaja.\n\nAplikacije mogu da procenjuju vrste oglasa koji će vas možda zanimati i čuvaju interesovanja privremeno na uređaju. To omogućava aplikacijama da vam prikazuju relevantne oglase, bez praćenja vaših aktivnosti na veb-sajtovima i u aplikacijama drugih programera."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Nemate nijednu blokiranu aplikaciju"</string>
-    <!-- no translation found for settingsUI_no_blocked_apps_ga_text (7488680173653861943) -->
-    <skip />
+    <string name="settingsUI_no_blocked_apps_ga_text" msgid="7488680173653861943">"Nema blokiranih aplikacija"</string>
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"Dozvoli merenje oglasa"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"Aplikacije i oglašavači mogu da zatraže informacije od Android-a koje će im pomoći da izmere učinak oglasa.\n\nPodaci za merenje oglasa redovno se brišu sa uređaja."</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"Resetuj podatke merenja"</string>
@@ -160,28 +157,20 @@
     <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Ako se predomislite ili želite da saznate više o Android privatnosti sa oglasima beta, idite u podešavanja privatnosti"</string>
     <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Isključi"</string>
     <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Želite da blokirate temu <xliff:g id="TOPIC">%1$s</xliff:g>?"</string>
-    <!-- no translation found for settingsUI_dialog_block_topic_message (2581824495438333677) -->
-    <skip />
+    <string name="settingsUI_dialog_block_topic_message" msgid="2581824495438333677">"Ova tema će biti blokirana i neće ponovo biti dodata na listu ako je vi lično ponovo ne dodate. I dalje mogu da vam se prikazuju neki srodni oglasi."</string>
     <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Blokiraj"</string>
     <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"Tema <xliff:g id="TOPIC">%1$s</xliff:g> je odblokirana"</string>
-    <!-- no translation found for settingsUI_dialog_unblock_topic_message (1090743551997420666) -->
-    <skip />
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="1090743551997420666">"Android može ponovo da doda ovu temu na listu, ali se ona možda neće odmah pojaviti"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"Potvrdi"</string>
-    <!-- no translation found for settingsUI_dialog_reset_topic_title (8025836207966712435) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (4243744527757134000) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_topic_title" msgid="8025836207966712435">"Želite da resetujete sve teme oglasa?"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="4243744527757134000">"Lista će se obrisati i ubuduće će se dodavati nove teme. I dalje mogu da vam se prikazuju neki oglasi povezani sa temama koje ste resetovali."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Resetuj"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Želite da blokirate aplikaciju <xliff:g id="APP">%1$s</xliff:g>?"</string>
-    <!-- no translation found for settingsUI_dialog_block_app_message (758788973278770119) -->
-    <skip />
+    <string name="settingsUI_dialog_block_app_message" msgid="758788973278770119">"Ova aplikacija neće predlagati oglase i neće ponovo biti dodata na listu ako je ne odblokirate. I dalje mogu da vam se prikazuju neki povezani oglasi."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Aplikacija <xliff:g id="APP">%1$s</xliff:g> je odblokirana"</string>
-    <!-- no translation found for settingsUI_dialog_unblock_app_message (5758218424845642060) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_app_title (5177572712117150557) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_app_message (7845329616145691006) -->
-    <skip />
+    <string name="settingsUI_dialog_unblock_app_message" msgid="5758218424845642060">"Ova aplikacija može ponovo da vam predlaže oglase, ali se možda neće odmah pojaviti na listi. Možda će proći neko vreme dok ne budete videli srodne oglase."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"Želite da resetujete oglase koje predlažu aplikacije?"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Podaci predloga za oglas iz aplikacija na listi će biti izbrisani i aplikacije će ubuduće predlagati nove oglase. I dalje mogu da vam se prikazuju neki srodni oglasi."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Podaci aplikacija su resetovani"</string>
     <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"Želite da resetujete sve teme?"</string>
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"Želite da resetujete oglase koje predlažu aplikacije?"</string>
@@ -200,8 +189,7 @@
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Teme od interesa su zasnovane na aplikacijama koje ste nedavno koristili, a aplikacije ih koriste za prikazivanje personalizovanih oglasa.\n\nMožete da blokirate teme za koje ne želite da se dele sa aplikacijama. Android takođe redovno automatski briše teme."</string>
     <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"Dozvoli teme oglasa"</string>
     <string name="settingsUI_blocked_topics_ga_title" msgid="7163366621282449273">"Teme oglasa koje ste blokirali"</string>
-    <!-- no translation found for settingsUI_reset_topics_ga_title (5365554894399951300) -->
-    <skip />
+    <string name="settingsUI_reset_topics_ga_title" msgid="5365554894399951300">"Resetuj sve teme oglasa"</string>
     <string name="settingsU_topics_view_footer" msgid="4769146330248953561">"Android beleži teme od interesa na osnovu aplikacija koje ste koristili u poslednjih nekoliko nedelja.\n\nAplikacija koju koristite kasnije može da traži od Android-a vaše teme da bi personalizovala oglase koje vidite. Android deli do 3 teme i istovremeno štiti vaš identitet i informacije o korišćenju aplikacije.\n\nAndroid redovno automatski briše teme. Ako nastavite da koristite aplikacije, određena tema može ponovo da se pojavi na listi. Možete i da blokirate teme za koje ne želite da ih Android deli sa aplikacijama.\n\nOglas koji vidite u aplikaciji može da bude personalizovan u zavisnosti od ovog podešavanja, podešavanja oglasa predloženih u aplikaciji, podešavanja ID-a oglašavanja i toga da li aplikacija koju koristite personalizuje oglase."</string>
     <string name="settingsUI_apps_switch_title" msgid="1308209012769248890">"Dozvoli oglase koje predlažu aplikacije"</string>
     <string name="settingsUI_apps_view_ga_subtitle" msgid="1911743837387384160">"Aplikacije koje koristite mogu da utvrde šta vam se dopada i da zatim predlažu oglase u drugim aplikacijama.\n\nMožete da sprečite da vam aplikacije šalju predloge. Android takođe redovno automatski briše podatke predloga aplikacija."</string>

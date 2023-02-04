@@ -20,9 +20,7 @@ import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
-import android.util.Pair;
 
-import com.android.adservices.LogUtil;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateDeduplicationKey;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
@@ -63,14 +61,14 @@ public class Trigger {
     private String mAggregateValues;
     private String mAggregateDeduplicationKeys;
     private boolean mIsDebugReporting;
-    private AggregatableAttributionTrigger mAggregatableAttributionTrigger;
+    private Optional<AggregatableAttributionTrigger> mAggregatableAttributionTrigger;
     private String mFilters;
     private String mNotFilters;
     @Nullable private UnsignedLong mDebugKey;
     private boolean mAdIdPermission;
     private boolean mArDebugPermission;
     @Nullable private String mAttributionConfig;
-    @Nullable private String mAdtechBitMapping;
+    @Nullable private String mAdtechKeyMapping;
 
     @IntDef(value = {Status.PENDING, Status.IGNORED, Status.ATTRIBUTED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -113,7 +111,7 @@ public class Trigger {
                 && Objects.equals(mFilters, trigger.mFilters)
                 && Objects.equals(mNotFilters, trigger.mNotFilters)
                 && Objects.equals(mAttributionConfig, trigger.mAttributionConfig)
-                && Objects.equals(mAdtechBitMapping, trigger.mAdtechBitMapping);
+                && Objects.equals(mAdtechKeyMapping, trigger.mAdtechKeyMapping);
     }
 
     @Override
@@ -135,7 +133,7 @@ public class Trigger {
                 mAdIdPermission,
                 mArDebugPermission,
                 mAttributionConfig,
-                mAdtechBitMapping);
+                mAdtechKeyMapping);
     }
 
     /** Unique identifier for the {@link Trigger}. */
@@ -199,27 +197,14 @@ public class Trigger {
 
     /**
      * Returns aggregate trigger data string used for aggregation. aggregate trigger data json is a
-     * JSONArray.
-     * example:
-     * [
-     * // Each dict independently adds pieces to multiple source keys.
-     * {
-     *   // Conversion type purchase = 2 at a 9 bit offset, i.e. 2 << 9.
-     *   // A 9 bit offset is needed because there are 511 possible campaigns, which
-     *   // will take up 9 bits in the resulting key.
-     *   "key_piece": "0x400",
-     *   // Apply this key piece to:
-     *   "source_keys": ["campaignCounts"]
-     * },
-     * {
-     *   // Purchase category shirts = 21 at a 7 bit offset, i.e. 21 << 7.
-     *   // A 7 bit offset is needed because there are ~100 regions for the geo key,
-     *   // which will take up 7 bits of space in the resulting key.
-     *   "key_piece": "0xA80",
-     *   // Apply this key piece to:
-     *   "source_keys": ["geoValue", "nonMatchingKeyIdsAreIgnored"]
-     * }
-     * ]
+     * JSONArray. example: [ // Each dict independently adds pieces to multiple source keys. { //
+     * Conversion type purchase = 2 at a 9 bit key_offset, i.e. 2 << 9. // A 9 bit key_offset is
+     * needed because there are 511 possible campaigns, which // will take up 9 bits in the
+     * resulting key. "key_piece": "0x400", // Apply this key piece to: "source_keys":
+     * ["campaignCounts"] }, { // Purchase category shirts = 21 at a 7 bit key_offset, i.e. 21 << 7.
+     * // A 7 bit key_offset is needed because there are ~100 regions for the geo key, // which will
+     * take up 7 bits of space in the resulting key. "key_piece": "0xA80", // Apply this key piece
+     * to: "source_keys": ["geoValue", "nonMatchingKeyIdsAreIgnored"] } ]
      */
     public String getAggregateTriggerData() {
         return mAggregateTriggerData;
@@ -250,7 +235,13 @@ public class Trigger {
      * Returns the AggregatableAttributionTrigger object, which is constructed using the aggregate
      * trigger data string and aggregate values string in Trigger.
      */
-    public AggregatableAttributionTrigger getAggregatableAttributionTrigger() {
+    public Optional<AggregatableAttributionTrigger> getAggregatableAttributionTrigger()
+            throws JSONException {
+        if (mAggregatableAttributionTrigger != null) {
+            return mAggregatableAttributionTrigger;
+        }
+
+        mAggregatableAttributionTrigger = parseAggregateTrigger();
         return mAggregatableAttributionTrigger;
     }
 
@@ -294,7 +285,7 @@ public class Trigger {
     }
 
     /**
-     * Returns field attribution config JSONArray as String. example: [{ "source_adtech":
+     * Returns field attribution config JSONArray as String. example: [{ "source_network":
      * "AdTech1-Ads", "source_priority_range": { “start”: 100, “end”: 1000 }, "source_filters": {
      * "campaign_type": ["install"], "source_type": ["navigation"], }, "priority": "99", "expiry":
      * "604800", "filter_data":{ "campaign_type": ["install"], } }]
@@ -305,19 +296,19 @@ public class Trigger {
     }
 
     /**
-     * Returns adtech bit mapping JSONObject as String. example: "adtech_bit_mapping": {
+     * Returns adtech bit mapping JSONObject as String. example: "x_network_key_mapping": {
      * "AdTechA-enrollment_id": "0x1", "AdTechB-enrollment_id": "0x2", }
      */
     @Nullable
-    public String getAdtechBitMapping() {
-        return mAdtechBitMapping;
+    public String getAdtechKeyMapping() {
+        return mAdtechKeyMapping;
     }
 
     /**
      * Generates AggregatableAttributionTrigger from aggregate trigger data string and aggregate
      * values string in Trigger.
      */
-    public Optional<AggregatableAttributionTrigger> parseAggregateTrigger()
+    private Optional<AggregatableAttributionTrigger> parseAggregateTrigger()
             throws JSONException, NumberFormatException {
         if (this.mAggregateTriggerData == null || this.mAggregateValues == null) {
             return Optional.empty();
@@ -339,24 +330,20 @@ public class Trigger {
                             .setKey(bigInteger)
                             .setSourceKeys(sourceKeySet);
             if (jsonObject.has("filters") && !jsonObject.isNull("filters")) {
-                List<FilterMap> filterSet = getFilterSet(jsonObject, "filters");
+                List<FilterMap> filterSet =
+                        Filter.deserializeFilterSet(jsonObject.getJSONArray("filters"));
                 builder.setFilterSet(filterSet);
             }
             if (jsonObject.has("not_filters")
                     && !jsonObject.isNull("not_filters")) {
-                List<FilterMap> notFilterSet = getFilterSet(jsonObject, "not_filters");
+                List<FilterMap> notFilterSet =
+                        Filter.deserializeFilterSet(jsonObject.getJSONArray("not_filters"));
                 builder.setNotFilterSet(notFilterSet);
             }
-            if (!jsonObject.isNull("serving_adtech_network")) {
-                JSONObject servingAdtechNetworkJson =
-                        jsonObject.getJSONObject("serving_adtech_network");
-                if (!servingAdtechNetworkJson.isNull("offset")) {
-                    ServingAdtechNetwork servingAdtechNetwork =
-                            new ServingAdtechNetwork.Builder()
-                                    .setOffset(servingAdtechNetworkJson.getLong("offset"))
-                                    .build();
-                    builder.setServingAdtechNetwork(servingAdtechNetwork);
-                }
+            if (!jsonObject.isNull("x_network_data")) {
+                JSONObject xNetworkDataJson = jsonObject.getJSONObject("x_network_data");
+                XNetworkData xNetworkData = new XNetworkData.Builder(xNetworkDataJson).build();
+                builder.setXNetworkData(xNetworkData);
             }
             triggerDataList.add(builder.build());
         }
@@ -426,13 +413,15 @@ public class Trigger {
 
             if (!eventTrigger.isNull(EventTriggerContract.FILTERS)) {
                 List<FilterMap> filterSet =
-                        getFilterSet(eventTrigger, EventTriggerContract.FILTERS);
+                        Filter.deserializeFilterSet(
+                                eventTrigger.getJSONArray(EventTriggerContract.FILTERS));
                 eventTriggerBuilder.setFilterSet(filterSet);
             }
 
             if (!eventTrigger.isNull(EventTriggerContract.NOT_FILTERS)) {
                 List<FilterMap> notFilterSet =
-                        getFilterSet(eventTrigger, EventTriggerContract.NOT_FILTERS);
+                        Filter.deserializeFilterSet(
+                                eventTrigger.getJSONArray(EventTriggerContract.NOT_FILTERS));
                 eventTriggerBuilder.setNotFilterSet(notFilterSet);
             }
             eventTriggers.add(eventTriggerBuilder.build());
@@ -442,84 +431,7 @@ public class Trigger {
     }
 
     /**
-     * Parses the json array under {@link #mAttributionConfig} to form a list of {@link
-     * AttributionConfig}s.
-     *
-     * @return list of {@link AttributionConfig}s
-     * @throws JSONException if JSON parsing fails
-     */
-    @Nullable
-    public List<AttributionConfig> parseAttributionConfigs() throws JSONException {
-        if (this.mAttributionConfig == null) {
-            return null;
-        }
-        List<AttributionConfig> attributionConfigs = new ArrayList<>();
-        JSONArray jsonArray = new JSONArray(this.mAttributionConfig);
-        for (int i = 0; i < jsonArray.length(); i++) {
-            AttributionConfig.Builder attributionConfigBuilder = new AttributionConfig.Builder();
-            JSONObject attributionConfigsJson = jsonArray.getJSONObject(i);
-
-            if (attributionConfigsJson.isNull(AttributionConfigContract.SOURCE_ADTECH)) {
-                LogUtil.d("Required field source_adtech is not present.");
-                continue;
-            }
-            attributionConfigBuilder.setSourceAdtech(
-                    attributionConfigsJson.getString(AttributionConfigContract.SOURCE_ADTECH));
-
-            if (!attributionConfigsJson.isNull(AttributionConfigContract.SOURCE_PRIORITY_RANGE)) {
-                JSONObject sourcePriorityRangeJson =
-                        attributionConfigsJson.getJSONObject(
-                                AttributionConfigContract.SOURCE_PRIORITY_RANGE);
-                Pair<Long, Long> sourcePriorityRange =
-                        new Pair<>(
-                                sourcePriorityRangeJson.getLong(AttributionConfigContract.START),
-                                sourcePriorityRangeJson.getLong(AttributionConfigContract.END));
-                attributionConfigBuilder.setSourcePriorityRange(sourcePriorityRange);
-            }
-            if (!attributionConfigsJson.isNull(AttributionConfigContract.SOURCE_FILTERS)) {
-                List<FilterMap> sourceFilters =
-                        getFilterSet(
-                                attributionConfigsJson, AttributionConfigContract.SOURCE_FILTERS);
-                attributionConfigBuilder.setSourceFilters(sourceFilters);
-            }
-            if (!attributionConfigsJson.isNull(AttributionConfigContract.SOURCE_NOT_FILTERS)) {
-                List<FilterMap> sourceNotFilters =
-                        getFilterSet(
-                                attributionConfigsJson,
-                                AttributionConfigContract.SOURCE_NOT_FILTERS);
-                attributionConfigBuilder.setSourceNotFilters(sourceNotFilters);
-            }
-            if (!attributionConfigsJson.isNull(AttributionConfigContract.SOURCE_EXPIRY_OVERRIDE)) {
-                attributionConfigBuilder.setSourceExpiryOverride(
-                        attributionConfigsJson.getLong(
-                                AttributionConfigContract.SOURCE_EXPIRY_OVERRIDE));
-            }
-            if (!attributionConfigsJson.isNull(AttributionConfigContract.PRIORITY)) {
-                attributionConfigBuilder.setPriority(
-                        attributionConfigsJson.getLong(AttributionConfigContract.PRIORITY));
-            }
-            if (!attributionConfigsJson.isNull(AttributionConfigContract.EXPIRY)) {
-                attributionConfigBuilder.setExpiry(
-                        attributionConfigsJson.getLong(AttributionConfigContract.EXPIRY));
-            }
-            if (!attributionConfigsJson.isNull(AttributionConfigContract.FILTER_DATA)) {
-                List<FilterMap> filterData =
-                        getFilterSet(attributionConfigsJson, AttributionConfigContract.FILTER_DATA);
-                attributionConfigBuilder.setFilterData(filterData);
-            }
-            if (!attributionConfigsJson.isNull(
-                    AttributionConfigContract.POST_INSTALL_EXCLUSIVITY_WINDOW)) {
-                attributionConfigBuilder.setPostInstallExclusivityWindow(
-                        attributionConfigsJson.getLong(
-                                AttributionConfigContract.POST_INSTALL_EXCLUSIVITY_WINDOW));
-            }
-            attributionConfigs.add(attributionConfigBuilder.build());
-        }
-        return attributionConfigs;
-    }
-
-    /**
-     * Parses the json object under {@link #mAdtechBitMapping} to create a mapping of adtechs to
+     * Parses the json object under {@link #mAdtechKeyMapping} to create a mapping of adtechs to
      * their bits.
      *
      * @return mapping of String to BigInteger
@@ -527,13 +439,13 @@ public class Trigger {
      * @throws NumberFormatException if BigInteger parsing fails
      */
     @Nullable
-    public Map<String, BigInteger> parseAdtechBitMapping()
+    public Map<String, BigInteger> parseAdtechKeyMapping()
             throws JSONException, NumberFormatException {
-        if (mAdtechBitMapping == null) {
+        if (mAdtechKeyMapping == null) {
             return null;
         }
         Map<String, BigInteger> adtechBitMapping = new HashMap<>();
-        JSONObject jsonObject = new JSONObject(mAdtechBitMapping);
+        JSONObject jsonObject = new JSONObject(mAdtechKeyMapping);
         for (String key : jsonObject.keySet()) {
             // Remove "0x" prefix.
             String hexString = jsonObject.getString(key).substring(2);
@@ -548,7 +460,8 @@ public class Trigger {
      * (2) the Android package name in case of an app destination. Returns null if extracting the
      * public suffix + 1 fails.
      */
-    public @Nullable Uri getAttributionDestinationBaseUri() {
+    @Nullable
+    public Uri getAttributionDestinationBaseUri() {
         if (mDestinationType == EventSurfaceType.APP) {
             return BaseUriExtractor.getBaseUri(mAttributionDestination);
         } else {
@@ -690,9 +603,9 @@ public class Trigger {
             return this;
         }
 
-        /** See {@link Trigger#getAdtechBitMapping()} ()} */
+        /** See {@link Trigger#getAdtechKeyMapping()} ()} */
         public Builder setAdtechBitMapping(@Nullable String adtechBitMapping) {
-            mBuilding.mAdtechBitMapping = adtechBitMapping;
+            mBuilding.mAdtechKeyMapping = adtechBitMapping;
             return this;
         }
 
@@ -700,7 +613,8 @@ public class Trigger {
         @NonNull
         public Builder setAggregatableAttributionTrigger(
                 @Nullable AggregatableAttributionTrigger aggregatableAttributionTrigger) {
-            mBuilding.mAggregatableAttributionTrigger = aggregatableAttributionTrigger;
+            mBuilding.mAggregatableAttributionTrigger =
+                    Optional.ofNullable(aggregatableAttributionTrigger);
             return this;
         }
 
@@ -723,31 +637,5 @@ public class Trigger {
         String DEDUPLICATION_KEY = "deduplication_key";
         String FILTERS = "filters";
         String NOT_FILTERS = "not_filters";
-    }
-
-    /** Attribution Config field keys. */
-    public interface AttributionConfigContract {
-        String SOURCE_ADTECH = "source_adtech";
-        String SOURCE_PRIORITY_RANGE = "source_priority_range";
-        String SOURCE_FILTERS = "source_filters";
-        String SOURCE_NOT_FILTERS = "source_not_filters";
-        String SOURCE_EXPIRY_OVERRIDE = "source_expiry_override";
-        String PRIORITY = "priority";
-        String EXPIRY = "expiry";
-        String FILTER_DATA = "filter_data";
-        String POST_INSTALL_EXCLUSIVITY_WINDOW = "post_install_exclusivity_window";
-        String START = "start";
-        String END = "end";
-    }
-
-    private static List<FilterMap> getFilterSet(JSONObject obj, String key) throws JSONException {
-        List<FilterMap> filterSet = new ArrayList<>();
-        JSONArray filters = obj.getJSONArray(key);
-        for (int i = 0; i < filters.length(); i++) {
-            FilterMap filterMap =
-                    new FilterMap.Builder().buildFilterData(filters.getJSONObject(i)).build();
-            filterSet.add(filterMap);
-        }
-        return filterSet;
     }
 }

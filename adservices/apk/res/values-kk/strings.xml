@@ -133,10 +133,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android-тың жарнама құпиялығы (бета нұсқасы) қолданбалар сізге ұнайды деген жарнамаларды көрсету үшін пайдалана алатын жаңа функцияларды ұсынады. Бұл технологиялар құрылғы идентификаторларын пайдаланбайды.\n\nAndroid сізді қызықтыруы мүмкін жарнама түрлерін бағалап, бұл қызығушылықтарды құрылғыңызда уақытша сақтай алады. Соның нәтижесінде қолданбалар басқа әзірлеушілердің веб-сайттары мен қолданбаларында жасаған әрекеттеріңізді бақыламай, сізге сәйкес жарнамаларды көрсете алады."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Сізде бөгелген қызығушылықтар жоқ"</string>
-    <!-- no translation found for settingsUI_no_blocked_topics_ga_text (377459829879121256) -->
-    <skip />
-    <!-- no translation found for settingsUI_view_blocked_topics_title (3705333677440361392) -->
-    <skip />
+    <string name="settingsUI_no_blocked_topics_ga_text" msgid="377459829879121256">"Бөгелген тақырыптар жоқ."</string>
+    <string name="settingsUI_view_blocked_topics_title" msgid="3705333677440361392">"Бөгелген тақырыптарды көру"</string>
     <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Қызығушылықтар қайта орнатылды."</string>
     <string name="settingsUI_topics_are_reset_ga" msgid="5250296990870048195">"Тақырыптар қайтарылды."</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Қолданбалар қызығушылықтарыңызды бағалап, оларды уақытша Android-та сақтай алады. Содан кейін осы қызығушылыққа қарай басқа қолданба сізге марафондарға қатысты жарнама көрсете алады.\n\nҚолданбаны бөгесеңіз, ол бұдан былай қызығушылықтарды бағаламайды. Қолданбаны бөгеуден алмайынша, ол қолданбалар тізіміне қайта қосылмайды. Қолданба бағалап қойған қызығушылықтар жойылады, бірақ оған қатысты кейбір жарнамалар көрсетіле беруі мүмкін."</string>
@@ -148,8 +146,7 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android-тың жарнама құпиялығы (бета нұсқасы) қолданбалар сізге ұнайды деген жарнамаларды көрсету үшін пайдалана алатын жаңа функцияларды ұсынады. Бұл технологиялар құрылғы идентификаторларын пайдаланбайды.\n\nҚолданбалар сізді қызықтыруы мүмкін жарнама түрлерін бағалап, бұл қызығушылықтарды құрылғыңызда уақытша сақтай алады. Соның нәтижесінде қолданбалар басқа әзірлеушілердің веб-сайттары мен қолданбаларында жасаған әрекеттеріңізді бақыламай, сізге сәйкес жарнамаларды көрсете алады."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Сізде бөгелген қолданбалар жоқ"</string>
-    <!-- no translation found for settingsUI_no_blocked_apps_ga_text (7488680173653861943) -->
-    <skip />
+    <string name="settingsUI_no_blocked_apps_ga_text" msgid="7488680173653861943">"Бөгелген қолданбалар жоқ."</string>
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"Жарнама тиімділігін анықтауға рұқсат ету"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"Қолданбалар мен жарнама берушілер Android жүйесінен тиісті жарнамалардың өнімділігін анықтауға көмектесетін ақпаратты сұрауы мүмкін.\n\nЖарнама көрсеткіштерін анықтау деректері құрылғыңыздан тұрақты негізде жойылып отырады."</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"Тиімділікті анықтау деректерін қайта орнату"</string>
@@ -160,28 +157,20 @@
     <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Ойыңыздан айнып қалсаңыз немесе Android-тың жарнама құпиялығы (бета нұсқасы) туралы толық ақпарат алғыңыз келсе, құпиялық параметрлеріне өтіңіз."</string>
     <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Өшіру"</string>
     <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"<xliff:g id="TOPIC">%1$s</xliff:g> бөгелсін бе?"</string>
-    <!-- no translation found for settingsUI_dialog_block_topic_message (2581824495438333677) -->
-    <skip />
+    <string name="settingsUI_dialog_block_topic_message" msgid="2581824495438333677">"Бұл тақырып бөгеледі және тізімге өзіңіз қоспайынша, қайта пайда болмайды. Кейбір сәйкес жарнамалар көрсетіле беруі мүмкін."</string>
     <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Бөгеу"</string>
     <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"<xliff:g id="TOPIC">%1$s</xliff:g> бөгеуден шығарылды"</string>
-    <!-- no translation found for settingsUI_dialog_unblock_topic_message (1090743551997420666) -->
-    <skip />
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="1090743551997420666">"Android бұл тақырыпты тізімге қайта қосуы мүмкін. Алайда ол тізімде дереу пайда болмайды."</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"Жарайды"</string>
-    <!-- no translation found for settingsUI_dialog_reset_topic_title (8025836207966712435) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (4243744527757134000) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_topic_title" msgid="8025836207966712435">"Барлық жарнама тақырыбы бастапқы күйге қайтарылсын ба?"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="4243744527757134000">"Тізім өшіріледі және алдағы уақытта жаңа тақырыптар қосылады. Бастапқы күйге қайтарылған тақырыптарға қатысты кейбір жарнамалар көрсетіле беруі мүмкін."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Қайтару"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g> бөгелсін бе?"</string>
-    <!-- no translation found for settingsUI_dialog_block_app_message (758788973278770119) -->
-    <skip />
+    <string name="settingsUI_dialog_block_app_message" msgid="758788973278770119">"Бұл қолданба жарнамалар ұсынбайды және бөгеу алынбайынша, тізімге қайта қосылмайды. Кейбір сәйкес жарнамалар көрсетіле беруі мүмкін."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> бөгеуден шығарылды"</string>
-    <!-- no translation found for settingsUI_dialog_unblock_app_message (5758218424845642060) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_app_title (5177572712117150557) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_app_message (7845329616145691006) -->
-    <skip />
+    <string name="settingsUI_dialog_unblock_app_message" msgid="5758218424845642060">"Бұл қолданба жарнамаларды қайта ұсына алады. Алайда ол тізімде бірден шықпайды. Тиісті жарнамалардың көрсетілуіне біраз уақыт керек болуы мүмкін."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"Қолданба ұсынатын жарнамалардың параметрі бастапқы күйге қайтарылсын ба?"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Тізіміңіздегі қолданбалар ұсынған жарнама деректері жойылады және қолданбалар алдағы уақытта жаңа жарнамалар ұсынатын болады. Кейбір сәйкес жарнамалар көрсетіле беруі мүмкін."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Қолданба деректері қайтарылды."</string>
     <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"Барлық тақырып қайтарылсын ба?"</string>
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"Қолданба ұсынатын жарнамалардың параметрі бастапқы күйге қайтарылсын ба?"</string>
@@ -200,8 +189,7 @@
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Қызығушылық тақырыптары сіз жақында пайдаланған қолданбаларға негізделеді. Қолданбалар оларды жекелендірілген жарнамалар көрсету үшін пайдаланады.\n\nҚолданбалармен бөліскіңіз келмейтін тақырыптарды бөгеуіңізге болады. Сондай-ақ Android жүйесі тақырыптарды тұрақты негізде автоматты жойып отырады."</string>
     <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"Жарнама тақырыптарына рұқсат ету"</string>
     <string name="settingsUI_blocked_topics_ga_title" msgid="7163366621282449273">"Сіз бөгеген жарнама тақырыптары"</string>
-    <!-- no translation found for settingsUI_reset_topics_ga_title (5365554894399951300) -->
-    <skip />
+    <string name="settingsUI_reset_topics_ga_title" msgid="5365554894399951300">"Барлық жарнама тақырыбын бастапқы күйге қайтару"</string>
     <string name="settingsU_topics_view_footer" msgid="4769146330248953561">"Android жүйесі сіз соңғы апталарда пайдаланған қолданбаларға негізделген қызықты тақырыптарды көрсетеді.\n\nКейін сіз пайдаланатын қолданба Android жүйесінен сізге арналған тақырыптарды сұрап, сіз көретін жарнамаларды жекелендіре алады. Android жүйесі жеке басыңызды және сіздің қолданбаны пайдалануыңыз туралы ақпаратты қорғай отырып, 3 тақырыпқа дейін бөліседі.\n\nAndroid жүйесі тақырыптарды үнемі автоматты жойып отырады. Қолданбаларды пайдалануыңызға байланысты тақырып тізімде қайта шығуы мүмкін. Бұл ретте Android-тың қолданбалармен бөліскенін қаламайтын тақырыптарды бөгеуіңізге болады.\n\nҚолданбаларда сіз көретін жарнама осы параметрге, қолданба ұсынған жарнамалар параметріне, жарнама идентификаторы параметрлеріне және сіз пайдаланатын қолданбаның жарнамаларды өңдеуіне байланыстыжекелендірілуі мүмкін."</string>
     <string name="settingsUI_apps_switch_title" msgid="1308209012769248890">"Қолданба ұсынатын жарнамаларға рұқсат ету"</string>
     <string name="settingsUI_apps_view_ga_subtitle" msgid="1911743837387384160">"Пайдаланатын қолданбаларыңыз сізге ненің ұнайтынын анықтап, басқа қолданбаларда сәйкес жарнамалар ұсына алады.\n\nҚолданбалардың ұсыныс жасауын бөгеуіңізге болады. Сонымен қатар Android қолданба ұсынатын деректерді әрдайым автоматты жойып отырады."</string>

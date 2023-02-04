@@ -15,11 +15,14 @@
  */
 package com.android.server.adservices;
 
+import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_MANAGER;
+
 import android.adservices.common.AdServicesPermissions;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
 import android.app.adservices.IAdServicesManager;
 import android.app.adservices.consent.ConsentParcel;
+import android.app.adservices.topics.TopicParcel;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -35,6 +38,7 @@ import android.provider.DeviceConfig;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.LocalManagerRegistry;
 import com.android.server.SystemService;
+import com.android.server.adservices.data.topics.TopicsDao;
 import com.android.server.sdksandbox.SdkSandboxManagerLocal;
 
 import java.io.IOException;
@@ -42,6 +46,7 @@ import java.util.List;
 import java.util.Objects;
 
 /** @hide */
+// TODO(b/267667963): Offload methods from binder thread to background thread.
 public class AdServicesManagerService extends IAdServicesManager.Stub {
     // The base directory for AdServices System Service.
     private static final String SYSTEM_DATA = "/data/system/";
@@ -49,6 +54,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     private static final String ERROR_MESSAGE_NOT_PERMITTED_TO_CALL_ADSERVICESMANAGER_API =
             "Unauthorized caller. Permission to call AdServicesManager API is not granted in System"
                     + " Server.";
+    private final Object mRegisterReceiverLock = new Object();
 
     /**
      * Broadcast send from the system service to the AdServices module when a package has been
@@ -70,6 +76,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     private static final String PACKAGE_DATA_CLEARED = "package_data_cleared";
 
     private final Context mContext;
+    private final TopicsDao mTopicsDao;
 
     private BroadcastReceiver mSystemServicePackageChangedReceiver;
     private BroadcastReceiver mSystemServiceUserActionReceiver;
@@ -89,9 +96,11 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     private final UserInstanceManager mUserInstanceManager;
 
     @VisibleForTesting
-    AdServicesManagerService(Context context, UserInstanceManager userInstanceManager) {
+    AdServicesManagerService(
+            Context context, UserInstanceManager userInstanceManager, TopicsDao topicsDao) {
         mContext = context;
         mUserInstanceManager = userInstanceManager;
+        mTopicsDao = topicsDao;
 
         DeviceConfig.addOnPropertiesChangedListener(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -108,9 +117,12 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         /** @hide */
         public Lifecycle(Context context) {
             super(context);
+            TopicsDao topicsDao = TopicsDao.getInstance(context);
             mService =
                     new AdServicesManagerService(
-                            context, new UserInstanceManager(ADSERVICES_BASE_DIR));
+                            context,
+                            new UserInstanceManager(topicsDao, ADSERVICES_BASE_DIR),
+                            topicsDao);
         }
 
         /** @hide */
@@ -194,6 +206,57 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         }
     }
 
+    /**
+     * Record blocked topics.
+     *
+     * @param blockedTopicParcels the blocked topics to record
+     */
+    @Override
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void recordBlockedTopic(@NonNull List<TopicParcel> blockedTopicParcels) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("recordBlockedTopic() for User Identifier %d", userIdentifier);
+        mUserInstanceManager
+                .getOrCreateUserBlockedTopicsManagerInstance(userIdentifier)
+                .recordBlockedTopic(blockedTopicParcels);
+    }
+
+    /**
+     * Remove a blocked topic.
+     *
+     * @param blockedTopicParcel the blocked topic to remove
+     */
+    @Override
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void removeBlockedTopic(@NonNull TopicParcel blockedTopicParcel) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("removeBlockedTopic() for User Identifier %d", userIdentifier);
+        mUserInstanceManager
+                .getOrCreateUserBlockedTopicsManagerInstance(userIdentifier)
+                .removeBlockedTopic(blockedTopicParcel);
+    }
+
+    /**
+     * Get all blocked topics.
+     *
+     * @return a {@code List} of all blocked topics.
+     */
+    @Override
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public List<TopicParcel> retrieveAllBlockedTopics() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("removeBlockedTopic() for User Identifier %d", userIdentifier);
+        return mUserInstanceManager
+                .getOrCreateUserBlockedTopicsManagerInstance(userIdentifier)
+                .retrieveAllBlockedTopics();
+    }
+
     @Override
     @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
     public boolean wasNotificationDisplayed() {
@@ -241,7 +304,6 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         } catch (IOException e) {
             LogUtil.e(e, "Fail to get the wasGaUxNotificationDisplayed.");
             return false;
-
         }
     }
 
@@ -504,7 +566,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     void registerReceivers() {
         // There could be race condition between registerReceivers call
         // in the AdServicesManagerService constructor and the mOnFlagsChangedListener.
-        synchronized (AdServicesManagerService.class) {
+        synchronized (mRegisterReceiverLock) {
             if (!FlagsFactory.getFlags().getAdServicesSystemServiceEnabled()) {
                 LogUtil.d("AdServicesSystemServiceEnabled is FALSE.");
                 // If there is a SystemServicePackageChangeReceiver, unregister it.
@@ -560,7 +622,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         mContext.registerReceiverForAllUsers(
                 mSystemServiceUserActionReceiver,
                 new IntentFilter(Intent.ACTION_USER_REMOVED),
-                /*broadcastPermission=*/ null,
+                /* broadcastPermission= */ null,
                 mHandler);
         LogUtil.d("SystemServiceUserActionReceiver registered.");
     }

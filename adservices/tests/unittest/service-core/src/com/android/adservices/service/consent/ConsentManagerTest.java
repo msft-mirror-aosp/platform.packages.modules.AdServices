@@ -36,6 +36,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
@@ -1837,6 +1838,36 @@ public class ConsentManagerTest {
     }
 
     @Test
+    public void clearConsentForUninstalledAppWithoutUid_ppApiOnly() throws IOException {
+        mDatastore.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, true);
+        mDatastore.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
+        mDatastore.put(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
+
+        mConsentManager.clearConsentForUninstalledApp(AppConsentDaoFixture.APP20_PACKAGE_NAME);
+
+        assertEquals(true, mDatastore.get(AppConsentDaoFixture.APP10_DATASTORE_KEY));
+        assertNull(mDatastore.get(AppConsentDaoFixture.APP20_DATASTORE_KEY));
+        assertEquals(false, mDatastore.get(AppConsentDaoFixture.APP30_DATASTORE_KEY));
+
+        verify(mAppConsentDao).clearConsentForUninstalledApp(anyString());
+    }
+
+    @Test
+    public void clearConsentForUninstalledAppWithoutUid_ppApiOnly_validatesInput()
+            throws IOException {
+        assertThrows(
+                NullPointerException.class,
+                () -> {
+                    mConsentManager.clearConsentForUninstalledApp(null);
+                });
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> {
+                    mConsentManager.clearConsentForUninstalledApp("");
+                });
+    }
+
+    @Test
     public void testGetKnownTopicsWithConsent() {
         long taxonomyVersion = 1L;
         long modelVersion = 1L;
@@ -2496,7 +2527,7 @@ public class ConsentManagerTest {
 
         assertThat(
                         sharedPreferences.getBoolean(
-                                SHARED_PREFS_KEY_HAS_MIGRATED, /* defValue */ false))
+                                SHARED_PREFS_KEY_PPAPI_HAS_CLEARED, /* defValue */ false))
                 .isTrue();
         assertThat(
                         sharedPreferences.getBoolean(

@@ -71,7 +71,7 @@
     <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"Aplikazioek zure interesak estima ditzakete, eta Android-en aldi baterako gorde. Adibidez, baliteke korrika egiteko oinetakoak eroste aldera erabiltzen duzun aplikazio batek \"maratoiak\" interes gisa estimatzea.\n\nGeroago, interes horretan oinarrituta, baliteke beste aplikazio batek maratoiekin erlazionatutako iragarki bat erakustea.\n\nInteresak gorde dituzten aplikazioen zerrenda kudeatzeko, joan pribatutasun-ezarpenetara."</string>
     <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"Iragarkien inguruko pribatutasuna babesteko eginbide berriak"</string>
     <string name="notificationUI_notification_ga_content" msgid="3483979694272908942">"Iragarkien gaiekin eta kontrolatzeko aukera berriekin, ikusten dituzun iragarkien gaineko kontrol handiagoa izango duzu"</string>
-    <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"Berriki erabili dituzun aplikazioetan oinarrituta hartzen ditu kontuan Android-ek interesatzen zaizkizun gaiak. Halaber, erabiltzen dituzun aplikazioek gustuko dituzun gaiak zehatz ditzakete. Geroago, erabiltzen dituzun aplikazioek informazio hori galde dezakete, iragarki pertsonalizatuak erakusteko. Iragarkiak erakusteko zein gai eta aplikazio erabiltzen diren aukera ditzakezu."</string>
+    <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"Berriki erabili dituzun aplikazioetan oinarrituta hartzen ditu kontuan Android-ek interesatzen zaizkizun gaiak. Halaber, erabiltzen dituzun aplikazioek gustuko dituzun gaiak zehatz ditzakete. Geroago, erabiltzen dituzun aplikazioek informazio hori eska dezakete, iragarki pertsonalizatuak erakusteko. Iragarkiak erakusteko zein gai eta aplikazio erabiltzen diren aukera ditzakezu."</string>
     <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"Iragarkien errendimendua neurtzeko, datu mota mugatuak partekatzen dira aplikazioen artean."</string>
     <string name="notificationUI_ga_container1_control_text" msgid="2711321174550177509">"Android-eko iragarkiei buruzko informazio gehiago"</string>
     <string name="notificationUI_how_it_works_row_subtitle1" msgid="8685034725335826096">"Iragarki lagungarriagoak"</string>
@@ -103,7 +103,7 @@
     <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"Android-ek erregulartasunez ezabatzen ditu automatikoki gaiak. Aplikazioak erabiltzen jarraitu ahala, baliteke gaiak berriro agertzea zerrendan. Hauek ere egin ditzakezu pribatutasun-ezarpenetan: Android-ek aplikazioekin partekatzea nahi ez duzun gaiak blokeatu eta gaiak desaktibatu."</string>
     <string name="notificationUI_you_can_change_in_privacy_settings" msgid="4781410091509838647">"Aldaketak egiteko, joan pribatutasun-ezarpenetara."</string>
     <string name="notificationUI_fledge_measurement_title" msgid="5279119450359078459">"Iragarkien pribatutasuna areagotzen duten beste eginbide batzuk"</string>
-    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="6943787406043534689">"Aplikazioek, iragarki pertsonalizatuak erakusten dizkizutenean, zuri buruz ikas dezaketena mugatzeko modu berriak kaleratuko ditu Android-ek."</string>
+    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="6943787406043534689">"Aplikazioek iragarki pertsonalizatuak erakusten dizkizutenean zuri buruz ikas dezaketena mugatzeko modu berriak kaleratuko ditu Android-ek."</string>
     <string name="notificationUI_fledge_measurement_introduction_text2" msgid="601600895880486962">"• Aplikazioek iradokitako iragarkiei esker, zure identitatea eta aplikazioen erabilerari buruzko informazioa babesten da, eta aplikazioek iragarki egokiak erakusten dizkizute. Zure jardueretan oinarrituta, baliteke erabiltzen dituzun aplikazioek erlazionatutako iragarkiak erakustea beste aplikazio batzuetan. Pribatutasun-ezarpenetan, aplikazioen zerrenda bat ikus dezakezu, eta haiei iradokizunak egiteko aukera blokeatu."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"• Iragarkien neurketarekin, datu mota mugatuak partekatzen dira aplikazioen artean bertako iragarkien errendimendua neurtzeko; esate baterako, iragarkiak agertu zaizkizun eguneko orduak."</string>
     <string name="notificationUI_fledge_measurement_control_ga_text_eu" msgid="2346851728118443500">"Aplikazioek iradokitako iragarkiei eta iragarkien neurketari buruzko informazio gehiago"</string>
@@ -133,10 +133,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox-a"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Eginbide berriak eskaintzen ditu Android-eko iragarkien pribatutasunaren beta-bertsioak; eginbide horiei esker, aplikazioek agian gustatuko zaizkizun iragarkiak erakutsiko dizkizute. Teknologia horiek ez dute erabiltzen gailuaren identifikatzailerik.\n\nAgian interesatuko zaizkizun iragarki motak estima ditzake Android-ek, eta interesak gailuan aldi baterako gorde. Hala, aplikazioek iragarki egokiak erakutsiko dizkizute beste garatzaile batzuen webgune eta aplikazioetan egindako jardueren jarraipena egin gabe."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Ez daukazu blokeatutako interesik"</string>
-    <!-- no translation found for settingsUI_no_blocked_topics_ga_text (377459829879121256) -->
-    <skip />
-    <!-- no translation found for settingsUI_view_blocked_topics_title (3705333677440361392) -->
-    <skip />
+    <string name="settingsUI_no_blocked_topics_ga_text" msgid="377459829879121256">"Ez dago blokeatutako gairik"</string>
+    <string name="settingsUI_view_blocked_topics_title" msgid="3705333677440361392">"Ikusi blokeatutako gaiak"</string>
     <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Berrezarri dira interesak"</string>
     <string name="settingsUI_topics_are_reset_ga" msgid="5250296990870048195">"Berrezarri dira gaiak"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Aplikazioek zure interesak estima ditzakete, eta Android-en aldi baterako gorde. Geroago, interes horietan oinarrituta, baliteke beste aplikazio batek iragarki bat erakustea.\n\nAplikazio bat blokeatzen baduzu, ez du interes gehiagorik estimatuko. Aplikazioa ez da berriz gehituko aplikazioen zerrenda honetan baldin eta aplikazio hori desblokeatzen ez baduzu. Aplikazioak estimatutako interesak ezabatuko dira; hala ere, baliteke haiekin erlazionatutako iragarki batzuk ikusten jarraitzea."</string>
@@ -148,10 +146,9 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox-a"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Eginbide berriak eskaintzen ditu Android-eko iragarkien pribatutasunaren beta-bertsioak; eginbide horiei esker, aplikazioek agian gustatuko zaizkizun iragarkiak erakutsiko dizkizute. Teknologia horiek ez dute erabiltzen gailuaren identifikatzailerik.\n\nAgian interesatuko zaizkizun iragarki motak estima ditzakete aplikazioek, eta interesak gailuan aldi baterako gorde. Hala, aplikazioek iragarki egokiak erakutsiko dizkizute beste garatzaile batzuen webgune eta aplikazioetan egindako jardueren jarraipena egin gabe."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Ez daukazu blokeatutako aplikaziorik"</string>
-    <!-- no translation found for settingsUI_no_blocked_apps_ga_text (7488680173653861943) -->
-    <skip />
+    <string name="settingsUI_no_blocked_apps_ga_text" msgid="7488680173653861943">"Ez dago blokeatutako aplikaziorik"</string>
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"Eman iragarkien neurketa aktibatzeko baimena"</string>
-    <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"Iragarkien errendimendua hobetzen laguntzen dien informazioa eska diezaiekete aplikazioek eta iragarleek Android-i.\n\nIragarkien neurketari buruzko datuak erregulartasunez ezabatzen dira gailutik."</string>
+    <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"Iragarkien errendimendua hobetzen laguntzen dien informazioa eska diezaiokete aplikazioek eta iragarleek Android-i.\n\nIragarkien neurketari buruzko datuak erregulartasunez ezabatzen dira gailutik."</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"Berrezarri neurketei buruzko datuak"</string>
     <string name="settingsUI_measurement_view_footer_text" msgid="3296828552097878309">"Aplikazioek haien artean parteka dezaketen informazioa mugatuta babesten du zure pribatutasuna Android-ek. Zure identitatea babeste aldera, txostenak atzeratuta bidaltzen dira.\n\nBaliteke darabilzun arakatzaileak antzeko ezarpen bat izatea. Iragarkien neurketa Android-en eta darabilzun arakatzailean aktibatuta badago, agian enpresek iragarkien eraginkortasuna neurtu ahalko dute erabiltzen dituzun aplikazioen eta bisitatzen dituzun webguneen artean. Arakatze-historia pribatu mantentzen da gailuan.\n\nAndroid-ek zure datuak babesteko dauzkan moduei buruzko informazio gehiago lortzeko, irakurri gure Pribatutasun-gidalerroak."</string>
     <string name="settingsUI_measurement_are_reset" msgid="4375330550418573499">"Berrezarri dira iragarkien neurketen datuak"</string>
@@ -160,28 +157,20 @@
     <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Iritziz aldatzen bazara edo Android-eko iragarkien pribatutasunaren beta-bertsioari buruzko informazio gehiago lortu nahi baduzu, joan pribatutasun-ezarpenetara"</string>
     <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Desaktibatu"</string>
     <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"<xliff:g id="TOPIC">%1$s</xliff:g> blokeatu nahi duzu?"</string>
-    <!-- no translation found for settingsUI_dialog_block_topic_message (2581824495438333677) -->
-    <skip />
+    <string name="settingsUI_dialog_block_topic_message" msgid="2581824495438333677">"Gaia blokeatu egingo da, eta ez da gehituko berriro zerrendan, zuk berriz gehitzen ez baduzu. Hala ere, baliteke harekin erlazionatutako iragarki batzuk ikusten jarraitzea."</string>
     <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Blokeatu"</string>
     <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"Desblokeatu da <xliff:g id="TOPIC">%1$s</xliff:g>"</string>
-    <!-- no translation found for settingsUI_dialog_unblock_topic_message (1090743551997420666) -->
-    <skip />
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="1090743551997420666">"Agian Android-ek berriro gehituko du gaia zerrendan, baina baliteke berehala ez agertzea"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"Ados"</string>
-    <!-- no translation found for settingsUI_dialog_reset_topic_title (8025836207966712435) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (4243744527757134000) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_topic_title" msgid="8025836207966712435">"Iragarkien gai guztiak berrezarri nahi dituzu?"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="4243744527757134000">"Zerrenda garbitu egingo da, eta gai berriak gehituko dira aurrerantzean. Hala ere, baliteke berrezarri dituzun gaiekin erlazionatutako iragarki batzuk ikusten jarraitzea."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Berrezarri"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g> blokeatu nahi duzu?"</string>
-    <!-- no translation found for settingsUI_dialog_block_app_message (758788973278770119) -->
-    <skip />
+    <string name="settingsUI_dialog_block_app_message" msgid="758788973278770119">"Aplikazioak ez du iradokiko iragarkirik, eta ez da gehituko berriro zerrendan, zuk desblokeatzen ez baduzu. Hala ere, baliteke harekin erlazionatutako iragarki batzuk ikusten jarraitzea."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Desblokeatu da <xliff:g id="APP">%1$s</xliff:g>"</string>
-    <!-- no translation found for settingsUI_dialog_unblock_app_message (5758218424845642060) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_app_title (5177572712117150557) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_app_message (7845329616145691006) -->
-    <skip />
+    <string name="settingsUI_dialog_unblock_app_message" msgid="5758218424845642060">"Aplikazio honek berriro iradoki ditzake iragarkiak, baina baliteke zerrendan berehala ez agertzea. Baliteke erlazionatutako iragarkiak ikusteko tarte bat behar izatea."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"Aplikazioek iradokitako iragarkiekin erlazionatutako datuak berrezarri nahi dituzu?"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Zerrendako aplikazioek iragarkien iradokizunekin erlazionatuta dauzkaten datuak ezabatuko dira, eta aplikazioek iragarki berriak iradokiko dituzte aurrerantzean. Hala ere, baliteke aplikazio horiekin erlazionatutako iragarki batzuk ikusten jarraitzea."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Berrezarri dira aplikazioetako datuak"</string>
     <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"Gai guztiak berrezarri nahi dituzu?"</string>
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"Aplikazioek iradokitako iragarkiekin erlazionatutako datuak berrezarri nahi dituzu?"</string>
@@ -199,10 +188,9 @@
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Desaktibatuta"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Berriki erabili dituzun aplikazioetan daude oinarrituta interesatzen zaizkizun gaiak, eta aplikazioek iragarki pertsonalizatuak erakusteko erabiltzen dituzte.\n\nAplikazioekin partekatzea nahi ez duzun gaiak blokea ditzakezu. Horrez gain, Android-ek erregulartasunez ezabatzen ditu automatikoki gaiak."</string>
     <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"Eman iragarkien gaiak erabiltzeko baimena"</string>
-    <string name="settingsUI_blocked_topics_ga_title" msgid="7163366621282449273">"Iragarkien gai blokeatuak"</string>
-    <!-- no translation found for settingsUI_reset_topics_ga_title (5365554894399951300) -->
-    <skip />
-    <string name="settingsU_topics_view_footer" msgid="4769146330248953561">"Azken asteetan erabili dituzun aplikazioetan oinarritzen da Android zer gai interesatzen zaizkizun zehazteko.\n\nGeroago, erabiltzen dituzun aplikazioek zer gai interesatzen zaizkizun galde diezaiokete Android-i zer iragarki erakutsiko dizkizun erabakitzeko. Android-ek hiru gai partekatzen ditu gehienez, zure identitatea eta aplikazioaren erabilerari buruzko informazioa babesten duen bitartean.\n\nAndroid-ek erregulartasunez ezabatzen ditu gaiak automatikoki. Aplikazioak erabiltzen jarraitu ahala, baliteke gaiak berriro agertzea zerrendan. Bestela, gaiak blokea ditzakezu Android-ek aplikazioekin parteka ez ditzan.\n\nAplikazioetan ikusten dituzun iragarkiak pertsonalizatzea, edo ez, hainbat faktoreren mende dago; besteak beste, ezarpen hau, aplikazioek iradokitako iragarkien ezarpena, zure publizitate IDaren ezarpenak eta erabiltzen ari zaren aplikazioak iragarkiak pertsonalizatzen dituen ala ez."</string>
+    <string name="settingsUI_blocked_topics_ga_title" msgid="7163366621282449273">"Blokeatu dituzun iragarkien gaiak"</string>
+    <string name="settingsUI_reset_topics_ga_title" msgid="5365554894399951300">"Berrezarri iragarkien gai guztiak"</string>
+    <string name="settingsU_topics_view_footer" msgid="4769146330248953561">"Azken asteetan erabili dituzun aplikazioetan oinarritzen da Android zer gai interesatzen zaizkizun zehazteko.\n\nGeroago, erabiltzen dituzun aplikazioek zer gai interesatzen zaizkizun galde diezaiokete Android-i zer iragarki erakutsiko dizkizuten erabakitzeko. Android-ek hiru gai partekatzen ditu gehienez, zure identitatea eta aplikazioaren erabilerari buruzko informazioa babesten duen bitartean.\n\nAndroid-ek erregulartasunez ezabatzen ditu gaiak automatikoki. Aplikazioak erabiltzen jarraitu ahala, baliteke gaiak berriro agertzea zerrendan. Bestela, gaiak blokea ditzakezu Android-ek aplikazioekin parteka ez ditzan.\n\nAplikazioetan ikusten dituzun iragarkiak pertsonalizatzea, edo ez, hainbat faktoreren mende dago; besteak beste, ezarpen hau, aplikazioek iradokitako iragarkien ezarpena, zure publizitate IDaren ezarpenak eta erabiltzen ari zaren aplikazioak iragarkiak pertsonalizatzen dituen ala ez."</string>
     <string name="settingsUI_apps_switch_title" msgid="1308209012769248890">"Eman aplikazioek iradokitako iragarkiak erabiltzeko baimena"</string>
     <string name="settingsUI_apps_view_ga_subtitle" msgid="1911743837387384160">"Erabiltzen dituzun aplikazioek gustuko dituzun gaiak zehatz ditzakete, eta, ondoren, beste aplikazio batzuetan iragarkiak iradoki.\n\nIradokizunak egiteko aukera blokea diezaiekezu aplikazioei. Horrez gain, Android-ek erregulartasunez ezabatzen ditu automatikoki aplikazioek iradokitako datuak."</string>
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Blokeatu dituzun aplikazioak"</string>
@@ -586,7 +574,7 @@
     <string name="topic10376" msgid="6387800251638760737">"Fisika"</string>
     <string name="topic10377" msgid="7834619927563362042">"Robotika"</string>
     <string name="topic10378" msgid="242496862821758873">"Erosketak"</string>
-    <string name="topic10379" msgid="5505228335012447165">"Antzinako gauzak eta bildumak"</string>
+    <string name="topic10379" msgid="5505228335012447165">"Antigoaleko gauzak eta bildumak"</string>
     <string name="topic10380" msgid="4989560205486143927">"Arropa"</string>
     <string name="topic10381" msgid="7585496746485093505">"Haurren arropa"</string>
     <string name="topic10382" msgid="5088060295126473451">"Mozorroak"</string>
