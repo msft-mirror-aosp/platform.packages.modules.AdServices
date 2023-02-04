@@ -3533,7 +3533,7 @@ public final class AsyncTriggerFetcherTest {
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         String originalAttributionConfigString =
                 "[{\n"
-                        + "\"source_adtech\": \"AdTech1-Ads\",\n"
+                        + "\"source_network\": \"AdTech1-Ads\",\n"
                         + "\"source_priority_range\": {\n"
                         + "\"start\": 100,\n"
                         + "\"end\": 1000\n"
@@ -3546,14 +3546,14 @@ public final class AsyncTriggerFetcherTest {
                         + "},\n"
                         + "\"priority\": \"99\",\n"
                         + "\"expiry\": \"604800\",\n"
-                        + "\"source_expiry_override\": \"680\",\n"
+                        + "\"source_expiry_override\": \"1209600\",\n"
                         + "\"post_install_exclusivity_window\": \"5000\",\n"
                         + "\"filter_data\": {\n"
                         + "\"campaign_type\": [\"install\"]\n"
                         + "}\n"
                         + "},"
                         + "{\n"
-                        + "\"source_adtech\": \"AdTech2-Ads\"}"
+                        + "\"source_network\": \"AdTech2-Ads\"}"
                         + "]";
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -3597,7 +3597,7 @@ public final class AsyncTriggerFetcherTest {
                         .setSourceNotFilters(sourceNotFilters)
                         .setPriority(99L)
                         .setExpiry(604800L)
-                        .setSourceExpiryOverride(680L)
+                        .setSourceExpiryOverride(1209600L)
                         .setPostInstallExclusivityWindow(5000L)
                         .setFilterData(filterData)
                         .build();
@@ -3639,7 +3639,7 @@ public final class AsyncTriggerFetcherTest {
                 .thenReturn(CONTEXT.getPackageName() + ",some_other_package");
         String originalAttributionConfigString =
                 "[{\n"
-                        + "\"source_adtech\": \"AdTech1-Ads\",\n"
+                        + "\"source_network\": \"AdTech1-Ads\",\n"
                         + "\"source_priority_range\": {\n"
                         + "\"start\": 100,\n"
                         + "\"end\": 1000\n"
@@ -3652,14 +3652,14 @@ public final class AsyncTriggerFetcherTest {
                         + "},\n"
                         + "\"priority\": \"99\",\n"
                         + "\"expiry\": \"604800\",\n"
-                        + "\"source_expiry_override\": \"680\",\n"
+                        + "\"source_expiry_override\": \"1209600\",\n"
                         + "\"post_install_exclusivity_window\": \"5000\",\n"
                         + "\"filter_data\": {\n"
                         + "\"campaign_type\": [\"install\"]\n"
                         + "}\n"
                         + "},"
                         + "{\n"
-                        + "\"source_adtech\": \"AdTech2-Ads\"}"
+                        + "\"source_network\": \"AdTech2-Ads\"}"
                         + "]";
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -3703,7 +3703,7 @@ public final class AsyncTriggerFetcherTest {
                         .setSourceNotFilters(sourceNotFilters)
                         .setPriority(99L)
                         .setExpiry(604800L)
-                        .setSourceExpiryOverride(680L)
+                        .setSourceExpiryOverride(1209600L)
                         .setPostInstallExclusivityWindow(5000L)
                         .setFilterData(filterData)
                         .build();
@@ -3745,7 +3745,7 @@ public final class AsyncTriggerFetcherTest {
         when(mFlags.getWebContextClientAppAllowList()).thenReturn("some_other_package");
         String originalAttributionConfigString =
                 "[{\n"
-                        + "\"source_adtech\": \"AdTech1-Ads\",\n"
+                        + "\"source_network\": \"AdTech1-Ads\",\n"
                         + "\"source_priority_range\": {\n"
                         + "\"start\": 100,\n"
                         + "\"end\": 1000\n"
@@ -3765,7 +3765,7 @@ public final class AsyncTriggerFetcherTest {
                         + "}\n"
                         + "},"
                         + "{\n"
-                        + "\"source_adtech\": \"AdTech2-Ads\"}"
+                        + "\"source_network\": \"AdTech2-Ads\"}"
                         + "]";
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -3917,7 +3917,7 @@ public final class AsyncTriggerFetcherTest {
                 "{" + "\"Google-Ads\":\"0x1\"," + "\"Facebook-Ads\":\"0x2\"" + "}";
         String validAttributionConfig =
                 "[{\n"
-                        + "\"source_adtech\": \"AdTech1-Ads\",\n"
+                        + "\"source_network\": \"AdTech1-Ads\",\n"
                         + "\"source_priority_range\": {\n"
                         + "\"start\": 100,\n"
                         + "\"end\": 1000\n"
@@ -3937,7 +3937,7 @@ public final class AsyncTriggerFetcherTest {
                         + "}\n"
                         + "},"
                         + "{\n"
-                        + "\"source_adtech\": \"AdTech2-Ads\"}"
+                        + "\"source_network\": \"AdTech2-Ads\"}"
                         + "]";
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));

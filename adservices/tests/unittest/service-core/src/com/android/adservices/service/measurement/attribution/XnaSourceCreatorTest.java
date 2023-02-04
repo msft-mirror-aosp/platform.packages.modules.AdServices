@@ -213,7 +213,8 @@ public class XnaSourceCreatorTest {
                         // Set it such that
                         .setEventTime(
                                 trigger.getTriggerTime()
-                                        - attributionConfig2.getSourceExpiryOverride()
+                                        - TimeUnit.SECONDS.toMillis(
+                                                attributionConfig2.getSourceExpiryOverride())
                                         - 50L /* random value so that eventTime+override is before
                                               trigger time*/)
                         .build();

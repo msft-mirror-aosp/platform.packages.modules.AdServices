@@ -831,7 +831,6 @@ public class Source {
         /** See {@link Source#getId()}. */
         @NonNull
         public Builder setId(@NonNull String id) {
-            Validation.validateNonNull(id);
             mBuilding.mId = id;
             return this;
         }

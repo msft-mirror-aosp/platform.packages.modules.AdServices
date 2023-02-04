@@ -218,7 +218,7 @@ class AttributionJobHandler {
                             .setAttributionDestination(trigger.getAttributionDestinationBaseUri())
                             .setSourceRegistrationTime(roundDownToDay(source.getEventTime()))
                             .setScheduledReportTime(trigger.getTriggerTime() + randomTime)
-                            .setEnrollmentId(source.getEnrollmentId())
+                            .setEnrollmentId(trigger.getEnrollmentId())
                             .setDebugCleartextPayload(
                                     AggregateReport.generateDebugPayload(contributions.get()))
                             .setAggregateAttributionData(
@@ -306,7 +306,7 @@ class AttributionJobHandler {
                 // It can't be null, has already been validated at fetcher
                 enrollmentIds.add(
                         attributionConfigJson.getString(
-                                AttributionConfig.AttributionConfigContract.SOURCE_ADTECH));
+                                AttributionConfig.AttributionConfigContract.SOURCE_NETWORK));
             }
         } catch (JSONException e) {
             LogUtil.d(e, "Failed to parse attribution configs.");

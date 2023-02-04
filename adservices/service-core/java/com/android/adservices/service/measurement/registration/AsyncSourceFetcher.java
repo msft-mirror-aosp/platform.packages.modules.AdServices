@@ -23,7 +23,10 @@ import static com.android.adservices.service.measurement.PrivacyParams.MIN_POST_
 import static com.android.adservices.service.measurement.PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATE_KEYS_PER_REGISTRATION;
 import static com.android.adservices.service.measurement.util.BaseUriExtractor.getBaseUri;
+import static com.android.adservices.service.measurement.util.MathUtils.extractValidNumberInRange;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__SOURCE;
+
+import static java.lang.Math.min;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
@@ -144,7 +147,7 @@ public class AsyncSourceFetcher {
         long aggregateReportWindow;
         if (!json.isNull(SourceHeaderContract.AGGREGATABLE_REPORT_WINDOW)) {
             aggregateReportWindow =
-                    Math.min(
+                    min(
                             expiry,
                             extractValidNumberInRange(
                                     json.getLong(SourceHeaderContract.AGGREGATABLE_REPORT_WINDOW),
@@ -341,15 +344,6 @@ public class AsyncSourceFetcher {
         }
         return !json.isNull(fieldName)
                 && Objects.equals(expectedValue, Uri.parse(json.getString(fieldName)));
-    }
-
-    private static long extractValidNumberInRange(long value, long lowerLimit, long upperLimit) {
-        if (value < lowerLimit) {
-            return lowerLimit;
-        } else if (value > upperLimit) {
-            return upperLimit;
-        }
-        return value;
     }
 
     /** Provided a testing hook. */
