@@ -29,6 +29,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.GetTopicsReportedStats;
+import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
@@ -57,6 +58,9 @@ import javax.annotation.concurrent.ThreadSafe;
 public class CacheManager implements Dumpable {
     // The verbose level for dumpsys usage
     private static final int VERBOSE = 1;
+    private static final Object SINGLETON_LOCK = new Object();
+
+    @GuardedBy("SINGLETON_LOCK")
     private static CacheManager sSingleton;
     // Lock for Read and Write on the cached topics map.
     // This allows concurrent reads but exclusive update to the cache.
@@ -82,7 +86,7 @@ public class CacheManager implements Dumpable {
     /** Returns an instance of the CacheManager given a context. */
     @NonNull
     public static CacheManager getInstance(Context context) {
-        synchronized (CacheManager.class) {
+        synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
                 sSingleton =
                         new CacheManager(

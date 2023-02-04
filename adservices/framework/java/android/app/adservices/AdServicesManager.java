@@ -21,11 +21,13 @@ import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
 import android.app.adservices.consent.ConsentParcel;
+import android.app.adservices.topics.TopicParcel;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.content.Context;
 import android.os.IBinder;
 import android.os.RemoteException;
 
+import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.List;
@@ -38,8 +40,11 @@ import java.util.Objects;
  * @hide
  */
 public final class AdServicesManager {
+    @GuardedBy("SINGLETON_LOCK")
     private static AdServicesManager sSingleton;
+
     private final IAdServicesManager mService;
+    private static final Object SINGLETON_LOCK = new Object();
 
     @VisibleForTesting
     public AdServicesManager(@NonNull IAdServicesManager iAdServicesManager) {
@@ -49,7 +54,7 @@ public final class AdServicesManager {
 
     /** Get the singleton of AdServicesManager */
     public static AdServicesManager getInstance(@NonNull Context context) {
-        synchronized (AdServicesManager.class) {
+        synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
                 // TODO(b/262282035): Fix this work around in U+.
                 // Get the AdServicesManagerService's Binder from the SdkSandboxManager.
@@ -145,6 +150,48 @@ public final class AdServicesManager {
     public void recordTopicsConsentPageDisplayed() {
         try {
             mService.recordTopicsConsentPageDisplayed();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Record a blocked topic.
+     *
+     * @param blockedTopicParcels the blocked topic to record
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void recordBlockedTopic(@NonNull List<TopicParcel> blockedTopicParcels) {
+        try {
+            mService.recordBlockedTopic(blockedTopicParcels);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Remove a blocked topic.
+     *
+     * @param blockedTopicParcel the blocked topic to remove
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void removeBlockedTopic(@NonNull TopicParcel blockedTopicParcel) {
+        try {
+            mService.removeBlockedTopic(blockedTopicParcel);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Get all blocked topics.
+     *
+     * @return a {@code List} of all blocked topics.
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public List<TopicParcel> retrieveAllBlockedTopics() {
+        try {
+            return mService.retrieveAllBlockedTopics();
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
