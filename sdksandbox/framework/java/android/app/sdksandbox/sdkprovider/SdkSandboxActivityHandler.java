@@ -27,8 +27,10 @@ import androidx.annotation.RequiresApi;
  * This is used to notify the SDK when an {@link Activity} is created for it.
  *
  * <p>When an SDK wants to start an {@link Activity}, it should register an implementation of this
- * class. the SDK will be notified when the {@link Activity} gets created by calling {@link
- * #onActivityCreated(Activity)}
+ * class by calling {@link
+ * SdkSandboxController#registerSdkSandboxActivityHandler(SdkSandboxActivityHandler)} that will
+ * return an {@link android.os.IBinder} identifier for the registered {@link
+ * SdkSandboxActivityHandler} to The SDK.
  *
  * @hide
  */
