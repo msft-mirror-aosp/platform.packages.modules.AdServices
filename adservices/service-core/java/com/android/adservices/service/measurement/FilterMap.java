@@ -16,6 +16,10 @@
 
 package com.android.adservices.service.measurement;
 
+import android.annotation.Nullable;
+
+import com.android.adservices.LogUtil;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -57,6 +61,30 @@ public class FilterMap {
      */
     public Map<String, List<String>> getAttributionFilterMap() {
         return mAttributionFilterMap;
+    }
+
+    /**
+     * Serializes the object into a {@link JSONObject}.
+     *
+     * @return serialized {@link JSONObject}.
+     */
+    @Nullable
+    public JSONObject serializeAsJson() {
+        if (mAttributionFilterMap == null) {
+            return null;
+        }
+
+        try {
+            JSONObject result = new JSONObject();
+            for (String key : mAttributionFilterMap.keySet()) {
+                result.put(key, new JSONArray(mAttributionFilterMap.get(key)));
+            }
+
+            return result;
+        } catch (JSONException e) {
+            LogUtil.d(e, "Failed to serialize filtermap.");
+            return null;
+        }
     }
 
     /**

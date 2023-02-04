@@ -40,27 +40,27 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Class to get the state of Topics' database on version 2 for test purpose. V2 doesn't include
+ * Class to get the state of Topics' database on version 6 for test purpose. V6 doesn't include
  * TopicContributors Table.
  */
-public class TopicsDbHelperV2 extends DbHelper {
-    private static final int CURRENT_DATABASE_VERSION = 2;
+public class TopicsDbHelperV6 extends DbHelper {
+    private static final int CURRENT_DATABASE_VERSION = 6;
     // TODO(b/255964885): Consolidate DB Migrator Class across Rubidium
     private static final String DATABASE_NAME_TOPICS_MIGRATION = "adservices_topics_migration.db";
-    private static TopicsDbHelperV2 sSingleton = null;
+    private static TopicsDbHelperV6 sSingleton = null;
 
-    TopicsDbHelperV2(Context context, String dbName, int dbVersion) {
+    TopicsDbHelperV6(Context context, String dbName, int dbVersion) {
         super(context, dbName, dbVersion);
     }
 
     /** Returns an instance of the DbHelper given a context. */
     @NonNull
-    public static TopicsDbHelperV2 getInstance(@NonNull Context context) {
-        synchronized (TopicsDbHelperV2.class) {
+    public static TopicsDbHelperV6 getInstance(@NonNull Context context) {
+        synchronized (TopicsDbHelperV6.class) {
             if (sSingleton == null) {
                 clearDatabase(context);
                 sSingleton =
-                        new TopicsDbHelperV2(
+                        new TopicsDbHelperV6(
                                 context, DATABASE_NAME_TOPICS_MIGRATION, CURRENT_DATABASE_VERSION);
             }
             return sSingleton;
@@ -69,7 +69,7 @@ public class TopicsDbHelperV2 extends DbHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        for (String sql : TOPICS_CREATE_STATEMENT_V2) {
+        for (String sql : TOPICS_CREATE_STATEMENT_V6) {
             db.execSQL(sql);
         }
     }
@@ -82,8 +82,8 @@ public class TopicsDbHelperV2 extends DbHelper {
         }
     }
 
-    // This will create tables for DB V2.
-    private static final List<String> TOPICS_CREATE_STATEMENT_V2 =
+    // This will create tables for DB V6.
+    private static final List<String> TOPICS_CREATE_STATEMENT_V6 =
             Collections.unmodifiableList(
                     Arrays.asList(
                             CREATE_TABLE_TOPICS_TAXONOMY,
