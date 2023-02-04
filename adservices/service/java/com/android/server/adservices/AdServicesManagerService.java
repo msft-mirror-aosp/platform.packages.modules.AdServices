@@ -31,11 +31,16 @@ import android.content.IntentFilter;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.content.pm.VersionedPackage;
+import android.content.rollback.PackageRollbackInfo;
+import android.content.rollback.RollbackInfo;
+import android.content.rollback.RollbackManager;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.UserHandle;
 import android.provider.DeviceConfig;
+import android.util.ArrayMap;
 
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.LocalManagerRegistry;
@@ -45,6 +50,7 @@ import com.android.server.sdksandbox.SdkSandboxManagerLocal;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /** @hide */
@@ -57,6 +63,8 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
             "Unauthorized caller. Permission to call AdServicesManager API is not granted in System"
                     + " Server.";
     private final Object mRegisterReceiverLock = new Object();
+    private final Object mRollbackCheckLock = new Object();
+    private final Object mSetPackageVersionLock = new Object();
 
     /**
      * Broadcast send from the system service to the AdServices module when a package has been
@@ -87,6 +95,9 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     private Handler mHandler;
 
     private int mAdServicesModuleVersion;
+    private String mAdServicesModuleName;
+    private Map<Integer, VersionedPackage> mAdServicesPackagesRolledBackFrom = new ArrayMap<>();
+    private Map<Integer, VersionedPackage> mAdServicesPackagesRolledBackTo = new ArrayMap<>();
 
     // This will be triggered when there is a flag change.
     private final DeviceConfig.OnPropertiesChangedListener mOnFlagsChangedListener =
@@ -96,6 +107,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
                 }
                 registerReceivers();
                 setAdServicesApexVersion();
+                setRollbackStatus();
             };
 
     private final UserInstanceManager mUserInstanceManager;
@@ -114,6 +126,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
 
         registerReceivers();
         setAdServicesApexVersion();
+        setRollbackStatus();
     }
 
     /** @hide */
@@ -587,6 +600,35 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         }
     }
 
+    public boolean needsToHandleRollbackReconciliation(
+            @AdServicesManager.DeletionApiType int deletionType) {
+        // Check if there was at least one rollback of the AdServices module.
+        if (getAdServicesPackagesRolledBackFrom().isEmpty()) {
+            return false;
+        }
+
+        // Check if the deletion bit is set.
+        if (!hasAdServicesDeletionOccurred(deletionType)) {
+            return false;
+        }
+
+        // For each rollback, check if the rolled back from version matches the previously stored
+        // version and the rolled back to version matches the current version.
+        int previousStoredVersion = getPreviousStoredVersion(deletionType);
+        for (Integer rollbackId : getAdServicesPackagesRolledBackFrom().keySet()) {
+            if (getAdServicesPackagesRolledBackFrom().get(rollbackId).getLongVersionCode()
+                            == previousStoredVersion
+                    && getAdServicesPackagesRolledBackTo().get(rollbackId).getLongVersionCode()
+                            == getAdServicesApexVersion()) {
+                resetAdServicesDeletionOccurred(deletionType);
+                return true;
+            }
+        }
+
+        // None of the stored rollbacks match the versions.
+        return false;
+    }
+
     @VisibleForTesting
     boolean hasAdServicesDeletionOccurred(@AdServicesManager.DeletionApiType int deletionType) {
         enforceAdServicesManagerPermission();
@@ -607,7 +649,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     }
 
     @VisibleForTesting
-    void resetMeasurementDeletionOccurred(@AdServicesManager.DeletionApiType int deletionType) {
+    void resetAdServicesDeletionOccurred(@AdServicesManager.DeletionApiType int deletionType) {
         enforceAdServicesManagerPermission();
 
         final int userIdentifier = getUserIdentifierFromBinderCallingUid();
@@ -619,6 +661,22 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
                     .resetAdServicesDataDeletion(deletionType);
         } catch (IOException e) {
             LogUtil.e(e, "Failed to remove the measurement deletion status.");
+        }
+    }
+
+    @VisibleForTesting
+    int getPreviousStoredVersion(@AdServicesManager.DeletionApiType int deletionType) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        try {
+            return mUserInstanceManager
+                    .getOrCreateUserRollbackHandlingManagerInstance(
+                            userIdentifier, getAdServicesApexVersion())
+                    .getPreviousStoredVersion(deletionType);
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to get the previous version stored in the datastore file.");
+            return 0;
         }
     }
 
@@ -668,7 +726,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
      * the AdServices system service starts.
      */
     void setAdServicesApexVersion() {
-        synchronized (AdServicesManagerService.class) {
+        synchronized (mSetPackageVersionLock) {
             if (!FlagsFactory.getFlags().getAdServicesSystemServiceEnabled()) {
                 LogUtil.d("AdServicesSystemServiceEnabled is FALSE.");
                 return;
@@ -683,6 +741,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
             installedPackages.forEach(
                     packageInfo -> {
                         if (packageInfo.packageName.contains("adservices") && packageInfo.isApex) {
+                            mAdServicesModuleName = packageInfo.packageName;
                             mAdServicesModuleVersion = (int) packageInfo.getLongVersionCode();
                         }
                     });
@@ -692,6 +751,57 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     @VisibleForTesting
     int getAdServicesApexVersion() {
         return mAdServicesModuleVersion;
+    }
+
+    @VisibleForTesting
+    /** Checks the RollbackManager to see the rollback status of the AdServices module. */
+    void setRollbackStatus() {
+        synchronized (mRollbackCheckLock) {
+            if (!FlagsFactory.getFlags().getAdServicesSystemServiceEnabled()) {
+                LogUtil.d("AdServicesSystemServiceEnabled is FALSE.");
+                mAdServicesPackagesRolledBackFrom = new ArrayMap<>();
+                mAdServicesPackagesRolledBackTo = new ArrayMap<>();
+                return;
+            }
+
+            RollbackManager rollbackManager = mContext.getSystemService(RollbackManager.class);
+            if (rollbackManager == null) {
+                LogUtil.d("Failed to get the RollbackManager service.");
+                mAdServicesPackagesRolledBackFrom = new ArrayMap<>();
+                mAdServicesPackagesRolledBackTo = new ArrayMap<>();
+                return;
+            }
+            List<RollbackInfo> recentlyCommittedRollbacks =
+                    rollbackManager.getRecentlyCommittedRollbacks();
+
+            for (RollbackInfo rollbackInfo : recentlyCommittedRollbacks) {
+                for (PackageRollbackInfo packageRollbackInfo : rollbackInfo.getPackages()) {
+                    if (packageRollbackInfo.getPackageName().equals(mAdServicesModuleName)) {
+                        mAdServicesPackagesRolledBackFrom.put(
+                                rollbackInfo.getRollbackId(),
+                                packageRollbackInfo.getVersionRolledBackFrom());
+                        mAdServicesPackagesRolledBackTo.put(
+                                rollbackInfo.getRollbackId(),
+                                packageRollbackInfo.getVersionRolledBackTo());
+                        LogUtil.d(
+                                "Rollback of AdServices module occurred, "
+                                        + "from version %d to version %d",
+                                packageRollbackInfo.getVersionRolledBackFrom().getLongVersionCode(),
+                                packageRollbackInfo.getVersionRolledBackTo().getLongVersionCode());
+                    }
+                }
+            }
+        }
+    }
+
+    @VisibleForTesting
+    Map<Integer, VersionedPackage> getAdServicesPackagesRolledBackFrom() {
+        return mAdServicesPackagesRolledBackFrom;
+    }
+
+    @VisibleForTesting
+    Map<Integer, VersionedPackage> getAdServicesPackagesRolledBackTo() {
+        return mAdServicesPackagesRolledBackTo;
     }
 
     /**
