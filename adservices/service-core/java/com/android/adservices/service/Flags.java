@@ -282,6 +282,13 @@ public interface Flags extends Dumpable {
         return MEASUREMENT_MANIFEST_FILE_URL;
     }
 
+    boolean MEASUREMENT_ENABLE_XNA = false;
+
+    /** Returns whether XNA should be used for eligible sources. */
+    default boolean getMeasurementEnableXNA() {
+        return MEASUREMENT_ENABLE_XNA;
+    }
+
     long FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = 4000L;
     long FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT = 1000L;
     long FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT = 1000L;
