@@ -19,6 +19,7 @@ package android.app.sdksandbox.sdkprovider;
 import android.annotation.NonNull;
 import android.app.Activity;
 import android.os.Build;
+import android.os.IBinder;
 import android.view.View;
 
 import androidx.annotation.RequiresApi;
@@ -31,6 +32,11 @@ import androidx.annotation.RequiresApi;
  * SdkSandboxController#registerSdkSandboxActivityHandler(SdkSandboxActivityHandler)} that will
  * return an {@link android.os.IBinder} identifier for the registered {@link
  * SdkSandboxActivityHandler} to The SDK.
+ *
+ * <p>The SDK should be notified about the {@link Activity} creation by calling {@link
+ * SdkSandboxActivityHandler#onActivityCreated(Activity)} which happens when the caller app calls
+ * {@link android.app.sdksandbox.SdkSandboxManager#startSdkSandboxActivity(Activity, IBinder)} using
+ * the same {@link IBinder} identifier for the registered {@link SdkSandboxActivityHandler}.
  *
  * @hide
  */
