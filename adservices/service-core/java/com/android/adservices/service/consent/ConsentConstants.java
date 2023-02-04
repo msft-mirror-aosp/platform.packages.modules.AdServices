@@ -64,6 +64,6 @@ public class ConsentConstants {
 
     static final String ERROR_MESSAGE_WHILE_SET_CONTENT = "setConsent method failed.";
 
-    static final String ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH =
+    public static final String ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH =
             "Invalid type of consent source of truth.";
 }

@@ -2527,7 +2527,7 @@ public class ConsentManagerTest {
 
         assertThat(
                         sharedPreferences.getBoolean(
-                                SHARED_PREFS_KEY_HAS_MIGRATED, /* defValue */ false))
+                                SHARED_PREFS_KEY_PPAPI_HAS_CLEARED, /* defValue */ false))
                 .isTrue();
         assertThat(
                         sharedPreferences.getBoolean(
