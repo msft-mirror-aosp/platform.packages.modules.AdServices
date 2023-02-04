@@ -60,7 +60,6 @@ import com.android.adservices.service.stats.AdServicesLoggerUtil;
 import com.android.adservices.service.stats.BackgroundFetchExecutionLogger;
 import com.android.adservices.service.stats.BackgroundFetchProcessReportedStats;
 import com.android.adservices.service.stats.Clock;
-import com.android.adservices.service.stats.UpdateCustomAudienceExecutionLogger;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -193,7 +192,7 @@ public class BackgroundFetchWorkerTest {
                 TimeoutException.class,
                 () -> mBackgroundFetchWorker.runBackgroundFetch(jobStartTime));
 
-        verify(mBackgroundFetchRunnerSpy, never()).updateCustomAudience(any(), any(), any());
+        verify(mBackgroundFetchRunnerSpy, never()).updateCustomAudience(any(), any());
         verifyBackgroundFetchTimeout(UNSET, STATUS_TIMEOUT);
     }
 
@@ -220,10 +219,7 @@ public class BackgroundFetchWorkerTest {
             @Override
             public void updateCustomAudience(
                     @NonNull Instant jobStartTime,
-                    @NonNull DBCustomAudienceBackgroundFetchData fetchData,
-                    @NonNull
-                            UpdateCustomAudienceExecutionLogger
-                                    updateCustomAudienceExecutionLogger) {
+                    @NonNull DBCustomAudienceBackgroundFetchData fetchData) {
                 try {
                     Thread.sleep(500L);
                 } catch (InterruptedException e) {
@@ -280,8 +276,8 @@ public class BackgroundFetchWorkerTest {
         verify(mCustomAudienceDaoSpy).deleteAllDisallowedOwnerCustomAudienceData(any(), any());
         verify(mBackgroundFetchRunnerSpy).deleteDisallowedBuyerCustomAudiences();
         verify(mCustomAudienceDaoSpy).deleteAllDisallowedBuyerCustomAudienceData(any(), any());
+        verify(mBackgroundFetchRunnerSpy, never()).updateCustomAudience(any(), any());
         verifyBackgroundFetchNothingToUpdate(STATUS_SUCCESS);
-        verify(mBackgroundFetchRunnerSpy, never()).updateCustomAudience(any(), any(), any());
     }
 
     @Test
@@ -296,12 +292,9 @@ public class BackgroundFetchWorkerTest {
         doReturn(Arrays.asList(fetchData))
                 .when(mCustomAudienceDaoSpy)
                 .getActiveEligibleCustomAudienceBackgroundFetchData(any(), anyLong());
-
+        doNothing().when(mBackgroundFetchRunnerSpy).updateCustomAudience(any(), any());
         when(mClockMock.elapsedRealtime())
                 .thenReturn(BACKGROUND_FETCH_START_TIMESTAMP, STOP_ELAPSED_TIMESTAMP);
-
-        doNothing().when(mBackgroundFetchRunnerSpy).updateCustomAudience(any(), any(), any());
-
         mBackgroundFetchWorker.runBackgroundFetch(CommonFixture.FIXED_NOW);
 
         verify(mBackgroundFetchRunnerSpy).deleteExpiredCustomAudiences(any());
@@ -310,8 +303,8 @@ public class BackgroundFetchWorkerTest {
         verify(mCustomAudienceDaoSpy).deleteAllDisallowedOwnerCustomAudienceData(any(), any());
         verify(mBackgroundFetchRunnerSpy).deleteDisallowedBuyerCustomAudiences();
         verify(mCustomAudienceDaoSpy).deleteAllDisallowedBuyerCustomAudienceData(any(), any());
+        verify(mBackgroundFetchRunnerSpy).updateCustomAudience(any(), any());
         verifyBackgroundFetchSuccess(1);
-        verify(mBackgroundFetchRunnerSpy).updateCustomAudience(any(), any(), any());
     }
 
     @Test
@@ -332,9 +325,9 @@ public class BackgroundFetchWorkerTest {
         doReturn(fetchDataList)
                 .when(mCustomAudienceDaoSpy)
                 .getActiveEligibleCustomAudienceBackgroundFetchData(any(), anyLong());
+        doNothing().when(mBackgroundFetchRunnerSpy).updateCustomAudience(any(), any());
         when(mClockMock.elapsedRealtime())
                 .thenReturn(BACKGROUND_FETCH_START_TIMESTAMP, STOP_ELAPSED_TIMESTAMP);
-        doNothing().when(mBackgroundFetchRunnerSpy).updateCustomAudience(any(), any(), any());
         mBackgroundFetchWorker.runBackgroundFetch(CommonFixture.FIXED_NOW);
 
         verify(mBackgroundFetchRunnerSpy).deleteExpiredCustomAudiences(any());
@@ -344,7 +337,7 @@ public class BackgroundFetchWorkerTest {
         verify(mBackgroundFetchRunnerSpy).deleteDisallowedBuyerCustomAudiences();
         verify(mCustomAudienceDaoSpy).deleteAllDisallowedBuyerCustomAudienceData(any(), any());
         verify(mBackgroundFetchRunnerSpy, times(numEligibleCustomAudiences))
-                .updateCustomAudience(any(), any(), any());
+                .updateCustomAudience(any(), any());
         verifyBackgroundFetchSuccess(numEligibleCustomAudiences);
     }
 
@@ -374,7 +367,7 @@ public class BackgroundFetchWorkerTest {
                             return null;
                         })
                 .when(mBackgroundFetchRunnerSpy)
-                .updateCustomAudience(any(), any(), any());
+                .updateCustomAudience(any(), any());
         when(mClockMock.elapsedRealtime())
                 .thenReturn(BACKGROUND_FETCH_START_TIMESTAMP, STOP_ELAPSED_TIMESTAMP);
         CountDownLatch bgfWorkStoppedLatch = new CountDownLatch(1);
@@ -403,7 +396,7 @@ public class BackgroundFetchWorkerTest {
         verify(mBackgroundFetchRunnerSpy).deleteDisallowedBuyerCustomAudiences();
         verify(mCustomAudienceDaoSpy).deleteAllDisallowedBuyerCustomAudienceData(any(), any());
         verify(mBackgroundFetchRunnerSpy, times(numEligibleCustomAudiences))
-                .updateCustomAudience(any(), any(), any());
+                .updateCustomAudience(any(), any());
     }
 
     @Test
@@ -437,7 +430,7 @@ public class BackgroundFetchWorkerTest {
                             return null;
                         })
                 .when(mBackgroundFetchRunnerSpy)
-                .updateCustomAudience(any(), any(), any());
+                .updateCustomAudience(any(), any());
 
         CountDownLatch bgfWorkStoppedLatch = new CountDownLatch(1);
         mExecutorService.execute(
