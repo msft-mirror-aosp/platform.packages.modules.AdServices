@@ -19,6 +19,7 @@ package com.android.adservices.service.common;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyLong;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyString;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doCallRealMethod;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
@@ -35,6 +36,8 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -62,6 +65,8 @@ import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -439,6 +444,80 @@ public class PackageChangedReceiverTest {
         }
     }
 
+    /**
+     * Tests that when no packageUid is present via the Intent Extra, consent data for this app is
+     * cleared when the app is removed.
+     */
+    @Test
+    public void testReceivePackageFullyRemoved_consent_noPackageUid()
+            throws InterruptedException, IOException {
+        Intent intent = createDefaultIntentWithAction(PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
+        intent.removeExtra(Intent.EXTRA_UID);
+
+        validateConsentWhenPackageUidAbsent(intent, false);
+        validateConsentWhenPackageUidAbsent(intent, true);
+    }
+
+    /**
+     * Tests that when packageUid is explicitly set to the default value via the Intent Extra,
+     * consent data for this app is cleared when the app is removed.
+     */
+    @Test
+    public void testReceivePackageFullyRemoved_consent_packageUidIsExplicitlyDefault()
+            throws InterruptedException, IOException {
+        Intent intent = createDefaultIntentWithAction(PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
+        intent.putExtra(Intent.EXTRA_UID, DEFAULT_PACKAGE_UID);
+
+        validateConsentWhenPackageUidAbsent(intent, false);
+        validateConsentWhenPackageUidAbsent(intent, true);
+    }
+
+    private void validateConsentWhenPackageUidAbsent(Intent intent, boolean isPackageStillInstalled)
+            throws IOException, InterruptedException {
+        // Start a mockitoSession to mock static method
+        // Lenient added to allow easy disabling of other APIs' methods
+        MockitoSession session =
+                ExtendedMockito.mockitoSession()
+                        .mockStatic(ConsentManager.class)
+                        .strictness(Strictness.LENIENT)
+                        .initMocks(this)
+                        .startMocking();
+        try {
+            // Mock static method AppConsentDao.getInstance() executed on a separate thread
+            doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any()));
+
+            // Track whether the clearConsentForUninstalledApp was ever invoked.
+            // Use a CountDownLatch since this invocation happens on a background thread.
+            CountDownLatch completionLatch = new CountDownLatch(1);
+            doAnswer(
+                            unusedInvocation -> {
+                                completionLatch.countDown();
+                                return null;
+                            })
+                    .when(mConsentManager)
+                    .clearConsentForUninstalledApp(anyString());
+
+            // Initialize package receiver meant for Consent
+            PackageChangedReceiver spyReceiver = createSpyPackageReceiverForConsent();
+            doReturn(isPackageStillInstalled)
+                    .when(spyReceiver)
+                    .isPackageStillInstalled(any(), anyString());
+
+            // Invoke the onReceive method to test the behavior
+            spyReceiver.onReceive(sContext, intent);
+
+            // Package UID is expected to be -1 if there is no EXTRA_UID in the Intent's Extra.
+            verify(spyReceiver).consentOnPackageFullyRemoved(any(), any(), eq(DEFAULT_PACKAGE_UID));
+
+            // Verify method inside background thread executes if package is no longer installed
+            // and that it does not execute if the package is still installed.
+            assertThat(completionLatch.await(500, TimeUnit.MILLISECONDS))
+                    .isEqualTo(!isPackageStillInstalled);
+        } finally {
+            session.finishMocking();
+        }
+    }
+
     @Test
     public void testReceivePackageAdded_topics() throws InterruptedException {
         final long epochId = 1;
@@ -714,5 +793,29 @@ public class PackageChangedReceiverTest {
         } finally {
             session.finishMocking();
         }
+    }
+
+    @Test
+    public void testIsPackageStillInstalled() {
+        final String packageNamePrefix = "com.example.package";
+        final int count = 4;
+        final List<PackageInfo> packages = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            PackageInfo packageInfo = new PackageInfo();
+            packageInfo.packageName = packageNamePrefix + i;
+            packages.add(packageInfo);
+        }
+
+        PackageManager pm = mock(PackageManager.class);
+        doReturn(packages).when(pm).getInstalledPackages(any());
+
+        Context spyContext = Mockito.spy(sContext);
+        doReturn(pm).when(spyContext).getPackageManager();
+
+        // Initialize package receiver
+        PackageChangedReceiver receiver = createSpyPackageReceiverForConsent();
+        assertThat(receiver.isPackageStillInstalled(spyContext, packageNamePrefix + 0)).isTrue();
+        assertThat(receiver.isPackageStillInstalled(spyContext, packageNamePrefix + count))
+                .isFalse();
     }
 }

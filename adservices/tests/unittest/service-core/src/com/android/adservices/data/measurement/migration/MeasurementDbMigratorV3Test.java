@@ -69,13 +69,13 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
         EVENT_TRIGGERS_V3 =
                 "[{\"trigger_data\":1,\"filters\":" + FILTERS_V3_1 + "},"
                 + "{\"trigger_data\":2,\"filters\":" + FILTERS_V3_1
-                + ",\"not_filters\":" + FILTERS_V3_2 + "}]";
+                + ",\"not_filters\":" + FILTERS_V3_2 + "},"
+                + "{\"priority\":100,\"trigger_data\":\"0\"},{\"trigger_data\":\"0\"}]";
         AGGREGATE_TRIGGER_DATA_V3 =
                 "[{\"key_piece\":\"0x400\",\"source_keys\":[\"key11\"],"
                 + "\"filters\":" + FILTERS_V3_1 + "},"
                 + "{\"key_piece\":\"0x800\",\"source_keys\":[\"key21\",\"key22\"],"
-                + "\"filters\":" + FILTERS_V3_1 + ",\"not_filters\":" + FILTERS_V3_2 + "}"
-                + "{\"priority\":100,\"trigger_data\":\"0\"},{\"trigger_data\":\"0\"}]";
+                + "\"filters\":" + FILTERS_V3_1 + ",\"not_filters\":" + FILTERS_V3_2 + "}]";
     }
 
     private static final String[][] INSERTED_EVENT_REPORT_DATA = {
@@ -97,11 +97,11 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
     };
 
     private static final String[][] INSERTED_TRIGGER_DATA = {
-        // id, eventTriggers, aggregateTriggerData, filters, notFilters
-        {"1", null, null, null, null},
-        {"2", "{[]}", null, null, null},
-        {"3", "[}]", null, null, null},
-        {"4", EVENT_TRIGGERS_V2, AGGREGATE_TRIGGER_DATA_V2, FILTERS_V2_1, FILTERS_V2_2}
+        // id, eventTriggers, aggregateTriggerData, filters
+        {"1", null, null, null},
+        {"2", "{[]}", null, null},
+        {"3", "[}]", null, null},
+        {"4", EVENT_TRIGGERS_V2, AGGREGATE_TRIGGER_DATA_V2, FILTERS_V2_1}
     };
 
     private static final String[][] MIGRATED_TRIGGER_DATA = {
@@ -109,7 +109,7 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
         {"1", "[]", null, null, null},
         {"2", "[]", null, null, null},
         {"3", "[]", null, null, null},
-        {"4", EVENT_TRIGGERS_V3, AGGREGATE_TRIGGER_DATA_V3, FILTERS_V3_1, FILTERS_V3_2}
+        {"4", EVENT_TRIGGERS_V3, AGGREGATE_TRIGGER_DATA_V3, FILTERS_V3_1}
     };
 
     @Test
@@ -246,8 +246,7 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
                     INSERTED_TRIGGER_DATA[i][0],
                     INSERTED_TRIGGER_DATA[i][1],
                     INSERTED_TRIGGER_DATA[i][2],
-                    INSERTED_TRIGGER_DATA[i][3],
-                    INSERTED_TRIGGER_DATA[i][4]);
+                    INSERTED_TRIGGER_DATA[i][3]);
         }
     }
 
@@ -437,9 +436,12 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
                 null, null, null, null,
                 /* orderBy */ MeasurementTables.EventReportContract.ID,
                 null);
+        int count = 0;
         while (cursor.moveToNext()) {
             assertEventReportMigrated(cursor);
+            count += 1;
         }
+        assertEquals(INSERTED_EVENT_REPORT_DATA.length, count);
     }
 
     private static void assertTriggerMigration(SQLiteDatabase db) {
@@ -449,15 +451,17 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
                     MeasurementTables.TriggerContract.ID,
                     MeasurementTables.TriggerContract.EVENT_TRIGGERS,
                     MeasurementTables.TriggerContract.AGGREGATE_TRIGGER_DATA,
-                    MeasurementTables.TriggerContract.FILTERS,
-                    MeasurementTables.TriggerContract.NOT_FILTERS
+                    MeasurementTables.TriggerContract.FILTERS
                 },
                 null, null, null, null,
                 /* orderBy */ MeasurementTables.TriggerContract.ID,
                 null);
+        int count = 0;
         while (cursor.moveToNext()) {
             assertTriggerMigrated(cursor);
+            count += 1;
         }
+        assertEquals(INSERTED_TRIGGER_DATA.length, count);
     }
 
     private static void assertSourceMigration(SQLiteDatabase db) throws JSONException {
@@ -503,13 +507,12 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
     }
 
     private static void insertTrigger(SQLiteDatabase db, String id, String eventTriggers,
-            String aggregateTriggerData, String filters, String notFilters) {
+            String aggregateTriggerData, String filters) {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.TriggerContract.ID, id);
         values.put(MeasurementTables.TriggerContract.EVENT_TRIGGERS, eventTriggers);
         values.put(MeasurementTables.TriggerContract.AGGREGATE_TRIGGER_DATA, aggregateTriggerData);
         values.put(MeasurementTables.TriggerContract.FILTERS, filters);
-        values.put(MeasurementTables.TriggerContract.NOT_FILTERS, notFilters);
         db.insert(MeasurementTables.TriggerContract.TABLE, null, values);
     }
 
@@ -532,8 +535,6 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
         assertEquals(MIGRATED_TRIGGER_DATA[i][2], cursor.getString(cursor.getColumnIndex(
                 MeasurementTables.TriggerContract.AGGREGATE_TRIGGER_DATA)));
         assertEquals(MIGRATED_TRIGGER_DATA[i][3], cursor.getString(cursor.getColumnIndex(
-                MeasurementTables.TriggerContract.FILTERS)));
-        assertEquals(MIGRATED_TRIGGER_DATA[i][4], cursor.getString(cursor.getColumnIndex(
                 MeasurementTables.TriggerContract.FILTERS)));
     }
 }

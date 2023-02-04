@@ -34,11 +34,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdServicesHttpsClient;
-import com.android.adservices.service.common.AppImportanceFilter;
-import com.android.adservices.service.common.FledgeAllowListsFilter;
-import com.android.adservices.service.common.FledgeAuthorizationFilter;
-import com.android.adservices.service.common.Throttler;
-import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.common.FledgeServiceFilter;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
@@ -60,7 +56,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /** Orchestrate on-device ad selection. */
@@ -77,16 +72,12 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final ExecutorService lightweightExecutorService,
             @NonNull final ExecutorService backgroundExecutorService,
             @NonNull final ScheduledThreadPoolExecutor scheduledExecutor,
-            @NonNull final ConsentManager consentManager,
             @NonNull final AdServicesLogger adServicesLogger,
             @NonNull final DevContext devContext,
-            @NonNull AppImportanceFilter appImportanceFilter,
             @NonNull final Flags flags,
-            @NonNull final Supplier<Throttler> throttlerSupplier,
-            int callerUid,
-            @NonNull final FledgeAuthorizationFilter fledgeAuthorizationFilter,
-            @NonNull final FledgeAllowListsFilter fledgeAllowListsFilter,
-            @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger) {
+            @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger,
+            @NonNull final FledgeServiceFilter fledgeServiceFilter,
+            final int callerUid) {
         super(
                 context,
                 customAudienceDao,
@@ -94,15 +85,11 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 lightweightExecutorService,
                 backgroundExecutorService,
                 scheduledExecutor,
-                consentManager,
                 adServicesLogger,
-                appImportanceFilter,
                 flags,
-                throttlerSupplier,
-                callerUid,
-                fledgeAuthorizationFilter,
-                fledgeAllowListsFilter,
-                adSelectionExecutionLogger);
+                adSelectionExecutionLogger,
+                fledgeServiceFilter,
+                callerUid);
 
         Objects.requireNonNull(adServicesHttpsClient);
 
@@ -110,7 +97,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
         mAdsScoreGenerator =
                 new AdsScoreGeneratorImpl(
                         new AdSelectionScriptEngine(
-                                mContext,
+                                context,
                                 () -> flags.getEnforceIsolateMaxHeapSize(),
                                 () -> flags.getIsolateMaxHeapSizeBytes()),
                         mLightweightExecutorService,
@@ -151,17 +138,13 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final ExecutorService lightweightExecutorService,
             @NonNull final ExecutorService backgroundExecutorService,
             @NonNull final ScheduledThreadPoolExecutor scheduledExecutor,
-            @NonNull final ConsentManager consentManager,
             @NonNull final AdsScoreGenerator adsScoreGenerator,
             @NonNull final AdSelectionIdGenerator adSelectionIdGenerator,
             @NonNull Clock clock,
             @NonNull final AdServicesLogger adServicesLogger,
-            @NonNull AppImportanceFilter appImportanceFilter,
             @NonNull final Flags flags,
-            @NonNull final Supplier<Throttler> throttlerSupplier,
             int callerUid,
-            @NonNull final FledgeAuthorizationFilter fledgeAuthorizationFilter,
-            @NonNull final FledgeAllowListsFilter fledgeAllowListsFilter,
+            @NonNull final FledgeServiceFilter fledgeServiceFilter,
             @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger,
             @NonNull final PerBuyerBiddingRunner perBuyerBiddingRunner) {
         super(
@@ -171,16 +154,12 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 lightweightExecutorService,
                 backgroundExecutorService,
                 scheduledExecutor,
-                consentManager,
                 adSelectionIdGenerator,
                 clock,
                 adServicesLogger,
-                appImportanceFilter,
                 flags,
-                throttlerSupplier,
                 callerUid,
-                fledgeAuthorizationFilter,
-                fledgeAllowListsFilter,
+                fledgeServiceFilter,
                 adSelectionExecutionLogger);
 
         Objects.requireNonNull(adsScoreGenerator);

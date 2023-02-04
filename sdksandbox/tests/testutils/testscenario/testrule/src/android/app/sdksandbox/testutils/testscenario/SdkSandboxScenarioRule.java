@@ -227,12 +227,12 @@ public class SdkSandboxScenarioRule implements TestRule {
         }
     }
 
-    private SandboxedSdk getLoadedSdk(SdkSandboxManager mSdkSandboxManager) throws Exception {
+    private SandboxedSdk getLoadedSdk(SdkSandboxManager sdkSandboxManager) throws Exception {
         final Bundle loadParams = new Bundle(2);
         loadParams.putBundle(ISdkSandboxTestExecutor.TEST_SETUP_PARAMS, mTestInstanceSetupParams);
         loadParams.putBinder(ISdkSandboxTestExecutor.TEST_AUTHOR_DEFINED_BINDER, mBinder);
         final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
-        mSdkSandboxManager.loadSdk(mSdkName, loadParams, Runnable::run, callback);
+        sdkSandboxManager.loadSdk(mSdkName, loadParams, Runnable::run, callback);
         try {
             callback.assertLoadSdkIsSuccessful();
         } catch (Exception e) {
@@ -245,7 +245,7 @@ public class SdkSandboxScenarioRule implements TestRule {
         return callback.getSandboxedSdk();
     }
 
-    private void setView(ActivityScenario scenario, SdkSandboxManager mSdkSandboxManager)
+    private void setView(ActivityScenario scenario, SdkSandboxManager sdkSandboxManager)
             throws Exception {
         AtomicReference<RequestSurfacePackageException> surfacePackageException =
                 new AtomicReference<>(null);
@@ -261,7 +261,7 @@ public class SdkSandboxScenarioRule implements TestRule {
                     params.putInt(EXTRA_DISPLAY_ID, activity.getDisplay().getDisplayId());
                     params.putBinder(EXTRA_HOST_TOKEN, renderedView.getHostToken());
 
-                    mSdkSandboxManager.requestSurfacePackage(
+                    sdkSandboxManager.requestSurfacePackage(
                             mSdkName, params, Runnable::run, surfacePackageCallback);
 
                     if (!surfacePackageCallback.isRequestSurfacePackageSuccessful()) {

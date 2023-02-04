@@ -52,6 +52,7 @@ public final class FrequencyCapFilters implements Parcelable {
     @IntDef(
             prefix = {"AD_EVENT_TYPE_"},
             value = {
+                AD_EVENT_TYPE_INVALID,
                 AD_EVENT_TYPE_WIN,
                 AD_EVENT_TYPE_IMPRESSION,
                 AD_EVENT_TYPE_VIEW,
@@ -59,6 +60,9 @@ public final class FrequencyCapFilters implements Parcelable {
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface AdEventType {}
+
+    /** @hide */
+    public static final int AD_EVENT_TYPE_INVALID = -1;
 
     /**
      * The WIN ad event type is automatically populated within the FLEDGE service for any winning ad

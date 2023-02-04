@@ -61,7 +61,7 @@
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"Tôi hiểu"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"Bạn là một phần của bản beta"</string>
     <string name="notificationUI_container2_body_text" msgid="758560159693325060">"Hộp cát về quyền riêng tư đã được bật cho thiết bị của bạn, nhờ vậy, các ứng dụng có thể thử nghiệm những cách mới, riêng tư hơn để hiển thị quảng cáo cho bạn. Bạn có thể tắt bản beta bất kỳ lúc nào trong chế độ cài đặt quyền riêng tư."</string>
-    <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"Quản lý các tùy chọn cài đặt bảo mật"</string>
+    <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"Quản lý chế độ cài đặt bảo mật"</string>
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"Đã hiểu"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Hộp cát về quyền riêng tư của Android cung cấp các tính năng mới mà các ứng dụng có thể dùng để hiển thị những quảng cáo bạn có thể thích. Những công nghệ này không sử dụng số nhận dạng thiết bị.\n\nAndroid và ứng dụng có thể ước tính các loại quảng cáo mà bạn có thể quan tâm và tạm thời lưu những sở thích này trên thiết bị của bạn. Điều này cho phép các ứng dụng hiển thị những quảng cáo bạn có thể thích mà không cần theo dõi hoạt động của bạn trên các trang web cũng như ứng dụng từ các nhà phát triển khác."</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"Cá nhân hóa quảng cáo với Hộp cát về quyền riêng tư"</string>
@@ -85,7 +85,7 @@
     <!-- no translation found for notificationUI_how_it_works_row_body7 (8158317350415462142) -->
     <skip />
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"Dùng thử các tính năng mới về quyền riêng tư trong quảng cáo"</string>
-    <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"Chủ đề quảng cáo đưa ra cho bạn nhiều lựa chọn hơn so với các quảng cáo bạn nhìn thấy"</string>
+    <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"Các chủ đề quảng cáo mang đến cho bạn nhiều sự lựa chọn hơn đối với các quảng cáo bạn nhìn thấy"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"Xem thông tin chi tiết"</string>
     <string name="notificationUI_header_ga_title_eu" msgid="4461095539795574989">"Quyền riêng tư nâng cao trong quảng cáo trên Android"</string>
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android đang ra mắt các tính năng mới liên quan đến quyền riêng tư, giúp bạn có thêm nhiều lựa chọn về quảng cáo mà mình thấy."</string>
@@ -123,7 +123,7 @@
     <string name="settingsUI_apps_title" msgid="2772289096915264175">"Ứng dụng ước tính sở thích"</string>
     <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"Đo lường quảng cáo"</string>
     <string name="settingsUI_main_view_info_text9" msgid="5431131706102562540">"Các ứng dụng có thể sử dụng Hộp cát về quyền riêng tư để đo lường hiệu quả của quảng cáo. Để làm điều này, các nhà quảng cáo có thể tạm thời lưu dữ liệu tương tác của bạn giữa quảng cáo và ứng dụng của họ qua Android. Lượng dữ liệu họ có thể lưu bị hạn chế và sẽ bị xóa thường xuyên.\n\nBạn có thể xóa dữ liệu này bất kỳ lúc nào bằng cách tắt Hộp cát về quyền riêng tư."</string>
-    <string name="settingsUI_topics_view_subtitle" msgid="6608135144119617292">"Android ước tính định kỳ những mối quan tâm hàng đầu dựa trên các ứng dụng bạn dùng. Các ứng dụng có thể yêu cầu Android sử dụng những sở thích đó để hiển thị cho bạn các quảng cáo phù hợp hơn.\n\nNếu bạn chặn một sở thích thì sở thích đó sẽ không được thêm lại vào danh sách trừ khi bạn bỏ chặn. Bạn vẫn có thể thấy một số quảng cáo có liên quan."</string>
+    <string name="settingsUI_topics_view_subtitle" msgid="6608135144119617292">"Android ước tính định kỳ những mối quan tâm hàng đầu dựa trên các ứng dụng bạn dùng. Các ứng dụng có thể yêu cầu Android sử dụng những mối quan tâm đó để hiển thị cho bạn các quảng cáo phù hợp hơn.\n\nNếu bạn chặn một mối quan tâm thì mối quan tâm đó sẽ không được thêm lại vào danh sách trừ khi bạn bỏ chặn. Bạn vẫn có thể thấy một số quảng cáo có liên quan."</string>
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"Chặn"</string>
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Bỏ chặn"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Mối quan tâm bạn đã chặn"</string>
@@ -132,12 +132,10 @@
     <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"Hiện không có chủ đề nào để hiển thị"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Hộp cát về quyền riêng tư"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Bản beta về quyền riêng tư trong quảng cáo của Android cung cấp các tính năng mới mà ứng dụng có thể dùng để hiển thị những quảng cáo bạn có thể thích. Các công nghệ này không sử dụng số nhận dạng thiết bị.\n\nAndroid có thể ước tính các loại quảng cáo mà bạn có thể quan tâm và tạm thời lưu những sở thích này trên thiết bị của bạn. Điều này cho phép các ứng dụng hiển thị những quảng cáo có liên quan mà không cần theo dõi hoạt động của bạn trên các trang web cũng như ứng dụng từ nhà phát triển khác."</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Bạn không có sở thích nào bị chặn"</string>
-    <!-- no translation found for settingsUI_no_blocked_topics_ga_text (377459829879121256) -->
-    <skip />
-    <!-- no translation found for settingsUI_view_blocked_topics_title (3705333677440361392) -->
-    <skip />
-    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Mối quan tâm đã được đặt lại"</string>
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Bạn chưa chặn chủ đề nào"</string>
+    <string name="settingsUI_no_blocked_topics_ga_text" msgid="377459829879121256">"Chưa chặn chủ đề nào"</string>
+    <string name="settingsUI_view_blocked_topics_title" msgid="3705333677440361392">"Xem chủ đề bị chặn"</string>
+    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Đã đặt lại mối quan tâm"</string>
     <string name="settingsUI_topics_are_reset_ga" msgid="5250296990870048195">"Đã đặt lại chủ đề"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Các ứng dụng có thể ước tính sở thích của bạn và tạm thời lưu những sở thích này trong Android. Sau đó, một ứng dụng khác có thể hiển thị cho bạn quảng cáo dựa trên những sở thích này.\n\nNếu bạn chặn một ứng dụng, ứng dụng đó sẽ không ước tính thêm sở thích nào nữa. Ứng dụng bị chặn sẽ không được thêm lại vào danh sách ứng dụng này trừ khi bạn bỏ chặn. Các sở thích đã được ứng dụng ước tính sẽ bị xóa, nhưng bạn vẫn có thể thấy một số quảng cáo có liên quan."</string>
     <string name="settingsUI_blocked_apps_title" msgid="1260257485713408637">"Ứng dụng bạn đã chặn"</string>
@@ -148,8 +146,7 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Hộp cát về quyền riêng tư"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Bản beta về quyền riêng tư trong quảng cáo của Android cung cấp các tính năng mới mà ứng dụng có thể dùng để hiển thị những quảng cáo bạn có thể thích. Các công nghệ này không sử dụng số nhận dạng thiết bị.\n\nỨng dụng có thể ước tính các loại quảng cáo mà bạn có thể quan tâm và tạm thời lưu những sở thích này trên thiết bị của bạn. Điều này cho phép các ứng dụng hiển thị những quảng cáo có liên quan mà không cần theo dõi hoạt động của bạn trên các trang web cũng như ứng dụng từ nhà phát triển khác."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Bạn không có ứng dụng nào bị chặn"</string>
-    <!-- no translation found for settingsUI_no_blocked_apps_ga_text (7488680173653861943) -->
-    <skip />
+    <string name="settingsUI_no_blocked_apps_ga_text" msgid="7488680173653861943">"Chưa chặn ứng dụng nào"</string>
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"Cho phép đo lường quảng cáo"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"Ứng dụng và nhà quảng cáo có thể yêu cầu Android cung cấp thông tin giúp đo lường hiệu suất quảng cáo của ứng dụng/nhà quảng cáo đó.\n\nDữ liệu đo lường quảng cáo thường xuyên bị xoá khỏi thiết bị của bạn."</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"Đặt lại dữ liệu đo lường"</string>
@@ -160,28 +157,20 @@
     <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Nếu bạn đổi ý hoặc muốn tìm hiểu thêm về bản beta về quyền riêng tư trong quảng cáo của Android, hãy chuyển đến phần cài đặt quyền riêng tư"</string>
     <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Tắt"</string>
     <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Chặn chủ đề <xliff:g id="TOPIC">%1$s</xliff:g>?"</string>
-    <!-- no translation found for settingsUI_dialog_block_topic_message (2581824495438333677) -->
-    <skip />
+    <string name="settingsUI_dialog_block_topic_message" msgid="2581824495438333677">"Chủ đề này sẽ bị chặn và không được thêm lại vào danh sách của bạn, trừ phi bạn thêm lại chủ đề đó. Có thể bạn vẫn sẽ thấy một số quảng cáo có liên quan."</string>
     <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Chặn"</string>
     <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"Đã bỏ chặn chủ đề <xliff:g id="TOPIC">%1$s</xliff:g>"</string>
-    <!-- no translation found for settingsUI_dialog_unblock_topic_message (1090743551997420666) -->
-    <skip />
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="1090743551997420666">"Android có thể thêm lại chủ đề này vào danh sách của bạn, nhưng có khả năng chủ đề này chưa xuất hiện ngay"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
-    <!-- no translation found for settingsUI_dialog_reset_topic_title (8025836207966712435) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (4243744527757134000) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_topic_title" msgid="8025836207966712435">"Đặt lại tất cả chủ đề quảng cáo?"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="4243744527757134000">"Danh sách của bạn sẽ bị xoá và các chủ đề mới sẽ được thêm vào sau này. Có thể bạn vẫn sẽ thấy một số quảng cáo liên quan đến các chủ đề mà mình đã đặt lại."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Đặt lại"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Chặn ứng dụng <xliff:g id="APP">%1$s</xliff:g>?"</string>
-    <!-- no translation found for settingsUI_dialog_block_app_message (758788973278770119) -->
-    <skip />
+    <string name="settingsUI_dialog_block_app_message" msgid="758788973278770119">"Ứng dụng này sẽ không đề xuất quảng cáo và không được thêm lại vào danh sách của bạn, trừ phi bạn bỏ chặn ứng dụng đó. Có thể bạn vẫn sẽ thấy một số quảng cáo có liên quan."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Đã bỏ chặn ứng dụng <xliff:g id="APP">%1$s</xliff:g>"</string>
-    <!-- no translation found for settingsUI_dialog_unblock_app_message (5758218424845642060) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_app_title (5177572712117150557) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_app_message (7845329616145691006) -->
-    <skip />
+    <string name="settingsUI_dialog_unblock_app_message" msgid="5758218424845642060">"Ứng dụng này có thể đề xuất lại quảng cáo cho bạn, nhưng có khả năng ứng dụng này sẽ chưa xuất hiện ngay trên danh sách của bạn. Có thể phải chờ một lúc thì bạn mới thấy quảng cáo có liên quan."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"Đặt lại quảng cáo do ứng dụng đề xuất?"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Dữ liệu đề xuất quảng cáo của các ứng dụng có trong danh sách của bạn sẽ bị xoá và các ứng dụng sẽ đề xuất quảng cáo mới từ giờ trở đi. Có thể bạn vẫn sẽ thấy một số quảng cáo có liên quan."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Đã đặt lại dữ liệu ứng dụng"</string>
     <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"Đặt lại mọi chủ đề?"</string>
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"Đặt lại quảng cáo do ứng dụng đề xuất?"</string>
@@ -200,8 +189,7 @@
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Các chủ đề bạn quan tâm sẽ được xác định dựa trên các ứng dụng bạn dùng gần đây và được các ứng dụng dùng để hiển thị quảng cáo phù hợp với bạn.\n\nBạn có thể chặn những chủ đề mà bạn không muốn chia sẻ với ứng dụng. Android cũng thường xuyên tự động xoá các chủ đề."</string>
     <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"Cho phép chủ đề quảng cáo"</string>
     <string name="settingsUI_blocked_topics_ga_title" msgid="7163366621282449273">"Chủ đề quảng cáo bạn đã chặn"</string>
-    <!-- no translation found for settingsUI_reset_topics_ga_title (5365554894399951300) -->
-    <skip />
+    <string name="settingsUI_reset_topics_ga_title" msgid="5365554894399951300">"Đặt lại tất cả chủ đề quảng cáo"</string>
     <string name="settingsU_topics_view_footer" msgid="4769146330248953561">"Android ghi lại các chủ đề bạn quan tâm dựa trên những ứng dụng bạn đã dùng trong vài tuần qua.\n\nSau đó, ứng dụng bạn dùng có thể yêu cầu Android cung cấp các chủ đề của bạn để cá nhân hoá quảng cáo mà bạn nhìn thấy. Android sẽ chia sẻ tối đa 3 chủ đề trong khi vẫn bảo vệ danh tính và thông tin về việc bạn dùng ứng dụng.\n\nAndroid thường xuyên tự động xoá các chủ đề. Khi bạn tiếp tục dùng các ứng dụng, một chủ đề có thể xuất hiện lại trong danh sách. Hoặc bạn có thể chặn các chủ đề mà bạn không muốn Android chia sẻ với các ứng dụng.\n\nTrong các ứng dụng của bạn, một quảng cáo mà bạn nhìn thấy có thể được cá nhân hoá, tuỳ thuộc vào chế độ cài đặt này, chế độ cài đặt quảng cáo do ứng dụng đề xuất, chế độ cài đặt mã nhận dạng cho quảng cáo và liệu ứng dụng bạn đang dùng có cá nhân hoá quảng cáo hay không."</string>
     <string name="settingsUI_apps_switch_title" msgid="1308209012769248890">"Cho phép quảng cáo do ứng dụng đề xuất"</string>
     <string name="settingsUI_apps_view_ga_subtitle" msgid="1911743837387384160">"Ứng dụng bạn dùng có thể xác định sở thích của bạn rồi đề xuất quảng cáo trên các ứng dụng khác.\n\nBạn có thể chặn không cho ứng dụng đưa ra đề xuất. Android cũng thường tự động xoá dữ liệu do ứng dụng đề xuất."</string>

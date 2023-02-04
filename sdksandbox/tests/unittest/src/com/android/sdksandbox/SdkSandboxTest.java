@@ -38,9 +38,13 @@ import android.os.Binder;
 import android.os.Bundle;
 import android.os.Looper;
 import android.os.Process;
+import android.provider.DeviceConfig;
 import android.view.SurfaceControlViewHost;
 
 import androidx.test.platform.app.InstrumentationRegistry;
+
+import com.android.compatibility.common.util.DeviceConfigStateManager;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import dalvik.system.PathClassLoader;
 
@@ -51,6 +55,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
+import org.mockito.MockitoSession;
+import org.mockito.quality.Strictness;
 
 import java.io.File;
 import java.io.FileDescriptor;
@@ -101,10 +107,13 @@ public class SdkSandboxTest {
     private static final SandboxLatencyInfo SANDBOX_LATENCY_INFO =
             new SandboxLatencyInfo(TIME_SYSTEM_SERVER_CALLED_SANDBOX);
 
+    private static boolean sCustomizedSdkContextEnabled;
+
     private Context mContext;
     private InjectorForTest mInjector;
 
     private PackageManager mSpyPackageManager;
+    private MockitoSession mStaticMockSession;
 
     static class InjectorForTest extends SdkSandboxServiceImpl.Injector {
 
@@ -130,10 +139,24 @@ public class SdkSandboxTest {
     public static void setupClass() {
         // Required to create a SurfaceControlViewHost
         Looper.prepare();
+
+        DeviceConfigStateManager stateManager =
+                new DeviceConfigStateManager(
+                        InstrumentationRegistry.getInstrumentation().getContext(),
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        "sdksandbox_customized_sdk_context_enabled");
+        sCustomizedSdkContextEnabled = Boolean.parseBoolean(stateManager.get());
     }
 
     @Before
     public void setup() throws Exception {
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .strictness(Strictness.LENIENT)
+                        .mockStatic(Process.class)
+                        .startMocking();
+        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandbox());
+
         Context context = InstrumentationRegistry.getInstrumentation().getContext();
         mContext = Mockito.spy(context);
         mSpyPackageManager = Mockito.spy(mContext.getPackageManager());
@@ -147,6 +170,7 @@ public class SdkSandboxTest {
     @After
     public void teardown() throws Exception {
         mService.getClientSharedPreferences().edit().clear().commit();
+        mStaticMockSession.finishMocking();
     }
 
     @Test
@@ -154,7 +178,7 @@ public class SdkSandboxTest {
         assertThrows(
                 IllegalStateException.class, () -> SdkSandboxLocalSingleton.getExistingInstance());
 
-        mService.initialize(new StubSdkToServiceLink());
+        mService.initialize(new StubSdkToServiceLink(), sCustomizedSdkContextEnabled);
 
         assertThat(SdkSandboxLocalSingleton.getExistingInstance()).isNotNull();
     }
@@ -164,7 +188,7 @@ public class SdkSandboxTest {
         // First write some data
         mService.syncDataFromClient(TEST_UPDATE);
 
-        mService.initialize(new StubSdkToServiceLink());
+        mService.initialize(new StubSdkToServiceLink(), sCustomizedSdkContextEnabled);
 
         assertThat(mService.getClientSharedPreferences().getAll()).isEmpty();
     }
@@ -622,6 +646,7 @@ public class SdkSandboxTest {
                         SDK_NAME,
                         null,
                         null,
+                        sCustomizedSdkContextEnabled,
                         new SdkSandboxSystemServiceRegistry()),
                 new InjectorForTest(mContext),
                 SANDBOX_LATENCY_INFO,

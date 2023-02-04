@@ -16,9 +16,31 @@
 
 package com.android.adservices.service.measurement;
 
+import static com.android.adservices.service.measurement.AttributionConfig.AttributionConfigContract.END;
+import static com.android.adservices.service.measurement.AttributionConfig.AttributionConfigContract.EXPIRY;
+import static com.android.adservices.service.measurement.AttributionConfig.AttributionConfigContract.FILTER_DATA;
+import static com.android.adservices.service.measurement.AttributionConfig.AttributionConfigContract.POST_INSTALL_EXCLUSIVITY_WINDOW;
+import static com.android.adservices.service.measurement.AttributionConfig.AttributionConfigContract.PRIORITY;
+import static com.android.adservices.service.measurement.AttributionConfig.AttributionConfigContract.SOURCE_EXPIRY_OVERRIDE;
+import static com.android.adservices.service.measurement.AttributionConfig.AttributionConfigContract.SOURCE_FILTERS;
+import static com.android.adservices.service.measurement.AttributionConfig.AttributionConfigContract.SOURCE_NETWORK;
+import static com.android.adservices.service.measurement.AttributionConfig.AttributionConfigContract.SOURCE_NOT_FILTERS;
+import static com.android.adservices.service.measurement.AttributionConfig.AttributionConfigContract.SOURCE_PRIORITY_RANGE;
+import static com.android.adservices.service.measurement.AttributionConfig.AttributionConfigContract.START;
+import static com.android.adservices.service.measurement.PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+import static com.android.adservices.service.measurement.PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.util.Pair;
+
+import com.android.adservices.LogUtil;
+import com.android.adservices.service.measurement.util.Filter;
+import com.android.adservices.service.measurement.util.MathUtils;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.List;
 import java.util.Objects;
@@ -129,7 +151,9 @@ public class AttributionConfig {
         return mPriority;
     }
 
-    /** Returns the derived source expiry as long. */
+    /**
+     * Returns the derived source expiry in {@link java.util.concurrent.TimeUnit#SECONDS} as long.
+     */
     @Nullable
     public Long getExpiry() {
         return mExpiry;
@@ -150,6 +174,62 @@ public class AttributionConfig {
         return mPostInstallExclusivityWindow;
     }
 
+    /**
+     * Serializes the object as JSON. This is consistent with the format that is received in the
+     * response headers as well as stored as is in the database.
+     *
+     * @return serialized JSON object
+     */
+    @Nullable
+    public JSONObject serializeAsJson() {
+        try {
+            JSONObject attributionConfig = new JSONObject();
+            attributionConfig.put(SOURCE_NETWORK, mSourceAdtech);
+
+            if (mSourcePriorityRange != null) {
+                JSONObject sourcePriorityRange = new JSONObject();
+                sourcePriorityRange.put(START, mSourcePriorityRange.first);
+                sourcePriorityRange.put(END, mSourcePriorityRange.second);
+                attributionConfig.put(SOURCE_PRIORITY_RANGE, sourcePriorityRange);
+            }
+
+            if (mSourceFilters != null) {
+                attributionConfig.put(SOURCE_FILTERS, Filter.serializeFilterSet(mSourceFilters));
+            }
+
+            if (mSourceNotFilters != null) {
+                attributionConfig.put(
+                        SOURCE_NOT_FILTERS, Filter.serializeFilterSet(mSourceNotFilters));
+            }
+
+            if (mSourceExpiryOverride != null) {
+                attributionConfig.put(SOURCE_EXPIRY_OVERRIDE, mSourceExpiryOverride);
+            }
+
+            if (mPriority != null) {
+                attributionConfig.put(PRIORITY, mPriority);
+            }
+
+            if (mExpiry != null) {
+                attributionConfig.put(EXPIRY, mExpiry);
+            }
+
+            if (mFilterData != null) {
+                attributionConfig.put(FILTER_DATA, Filter.serializeFilterSet(mFilterData));
+            }
+
+            if (mPostInstallExclusivityWindow != null) {
+                attributionConfig.put(
+                        POST_INSTALL_EXCLUSIVITY_WINDOW, mPostInstallExclusivityWindow);
+            }
+
+            return attributionConfig;
+        } catch (JSONException e) {
+            LogUtil.d(e, "Serializing attribution config failed");
+            return null;
+        }
+    }
+
     /** Builder for {@link AttributionConfig}. */
     public static final class Builder {
         private String mSourceAdtech;
@@ -163,6 +243,70 @@ public class AttributionConfig {
         private Long mPostInstallExclusivityWindow;
 
         public Builder() {}
+
+        /**
+         * Parses the string serialized json object under an {@link AttributionConfig}.
+         *
+         * @throws JSONException if JSON parsing fails
+         */
+        public Builder(@NonNull JSONObject attributionConfigsJson) throws JSONException {
+            if (attributionConfigsJson == null) {
+                throw new JSONException(
+                        "AttributionConfig.Builder: Empty or null attributionConfigsJson");
+            }
+            if (attributionConfigsJson.isNull(SOURCE_NETWORK)) {
+                throw new JSONException(
+                        "AttributionConfig.Builder: Required field source_network is not present.");
+            }
+
+            mSourceAdtech = attributionConfigsJson.getString(SOURCE_NETWORK);
+
+            if (!attributionConfigsJson.isNull(SOURCE_PRIORITY_RANGE)) {
+                JSONObject sourcePriorityRangeJson =
+                        attributionConfigsJson.getJSONObject(SOURCE_PRIORITY_RANGE);
+                mSourcePriorityRange =
+                        new Pair<>(
+                                sourcePriorityRangeJson.getLong(START),
+                                sourcePriorityRangeJson.getLong(END));
+            }
+            if (!attributionConfigsJson.isNull(SOURCE_FILTERS)) {
+                JSONArray filterSet =
+                        Filter.maybeWrapFilters(attributionConfigsJson, SOURCE_FILTERS);
+                mSourceFilters = Filter.deserializeFilterSet(filterSet);
+            }
+            if (!attributionConfigsJson.isNull(SOURCE_NOT_FILTERS)) {
+                JSONArray filterSet =
+                        Filter.maybeWrapFilters(attributionConfigsJson, SOURCE_NOT_FILTERS);
+                mSourceNotFilters = Filter.deserializeFilterSet(filterSet);
+            }
+            if (!attributionConfigsJson.isNull(SOURCE_EXPIRY_OVERRIDE)) {
+                long override = attributionConfigsJson.getLong(SOURCE_EXPIRY_OVERRIDE);
+                mSourceExpiryOverride =
+                        MathUtils.extractValidNumberInRange(
+                                override,
+                                MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
+                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+            }
+            if (!attributionConfigsJson.isNull(PRIORITY)) {
+                mPriority = attributionConfigsJson.getLong(PRIORITY);
+            }
+            if (!attributionConfigsJson.isNull(EXPIRY)) {
+                long expiry = attributionConfigsJson.getLong(EXPIRY);
+                mExpiry =
+                        MathUtils.extractValidNumberInRange(
+                                expiry,
+                                MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
+                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+            }
+            if (!attributionConfigsJson.isNull(FILTER_DATA)) {
+                JSONArray filterSet = Filter.maybeWrapFilters(attributionConfigsJson, FILTER_DATA);
+                mFilterData = Filter.deserializeFilterSet(filterSet);
+            }
+            if (!attributionConfigsJson.isNull(POST_INSTALL_EXCLUSIVITY_WINDOW)) {
+                mPostInstallExclusivityWindow =
+                        attributionConfigsJson.getLong(POST_INSTALL_EXCLUSIVITY_WINDOW);
+            }
+        }
 
         /** See {@link AttributionConfig#getSourceAdtech()} */
         @NonNull
@@ -235,5 +379,20 @@ public class AttributionConfig {
             Objects.requireNonNull(mSourceAdtech);
             return new AttributionConfig(this);
         }
+    }
+
+    /** Attribution Config field keys. */
+    public interface AttributionConfigContract {
+        String SOURCE_NETWORK = "source_network";
+        String SOURCE_PRIORITY_RANGE = "source_priority_range";
+        String SOURCE_FILTERS = "source_filters";
+        String SOURCE_NOT_FILTERS = "source_not_filters";
+        String SOURCE_EXPIRY_OVERRIDE = "source_expiry_override";
+        String PRIORITY = "priority";
+        String EXPIRY = "expiry";
+        String FILTER_DATA = "filter_data";
+        String POST_INSTALL_EXCLUSIVITY_WINDOW = "post_install_exclusivity_window";
+        String START = "start";
+        String END = "end";
     }
 }

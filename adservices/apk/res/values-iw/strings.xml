@@ -93,7 +93,7 @@
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"לפרטים"</string>
     <string name="notificationUI_header_ga_title_eu" msgid="4461095539795574989">"‏פרטיות משופרת בפרסום ב-Android"</string>
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"‏מושקות ב-Android תכונות פרטיות חדשות שמאפשרות לך לבחור טוב יותר את המודעות שמוצגות לך."</string>
-    <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"‏כשאפליקציות מציגות לך מודעות לפי נושאי המודעות שלך, המודעות שמוצגות לך רלוונטיות ובכל זאת הזהות שלך והמידע לגבי השימוש שלך באפליקציות נשארים מוגנים. יכולה להתגבש ב-Android רשימת של נושאים שמעניינים אותך על סמך האפליקציות שבהן השתמשת לאחרונה. לאחר מכן, אפליקציה שבה השתמשת יכולה לשלוח ל-Android בקשה לקבלת מידע על הנושאים הרלוונטיים כדי להתאים אישית את המודעות שמוצגות לך."</string>
+    <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"‏כשאפליקציות מציגות לך מודעות לפי נושאי המודעות שלך, המודעות שמוצגות לך רלוונטיות ובכל זאת הזהות שלך והמידע לגבי השימוש שלך באפליקציות נשארים מוגנים. ב-Android תיווצר רשימת נושאים שמעניינים אותך על סמך האפליקציות שבהן השתמשת לאחרונה. לאחר מכן, אפליקציה שבה השתמשת יכולה לשלוח ל-Android בקשה לקבלת מידע על הנושאים הרלוונטיים כדי להתאים אישית את המודעות שמוצגות לך."</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"‏אפשר לראות את הנושאים של המודעות בהגדרות של המכשיר, ולחסום את הנושאים שלא רוצים שישותפו עם האפליקציות. בנוסף, נושאי מודעות נמחקים אוטומטית מ-Android באופן קבוע."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"אפשר לשנות את ההחלטה בכל שלב בהגדרות הפרטיות."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"מידע נוסף על נושאי מודעות"</string>
@@ -104,9 +104,9 @@
     <string name="notificationUI_how_it_works_topics_expanded_text5" msgid="5976468008939416198">"•  איך אנחנו משתמשים בנתונים האלה"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text6" msgid="6318275524155409408">"‏בזמן השימוש באפליקציות, מתגבשת ב-Android רשימה של נושאים שמעניינים אותך. התוויות של הנושאים מוגדרות מראש וכוללות בין היתר \'אומנויות ובידור\', \'קניות\' ו\'ספורט\'. לאחר מכן, אפליקציה שבה השתמשת יכולה לשלוח ל-Android בקשה לקבלת מידע על חלק מהנושאים (אבל היא לא יכולה לבקש נתונים על השימוש שלך באפליקציה או על הזהות שלך) כדי להתאים אישית את המודעות שמוצגות לך."</string>
     <string name="notificationUI_how_it_works_topics_expanded_text7" msgid="4275126336833782389">"•  מה האפשרויות שזמינות לך לניהול הנתונים שלך"</string>
-    <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"‏הנושאים נמחקים ב-Android באופן קבוע. אם המשכת להשתמש באפליקציות, אחד הנושאים עשוי להופיע ברשימה מחדש. בכל שלב ניתן להיכנס להגדרות הפרטיות, למנוע שיתוף של נושאים מסוימים בין Android לאפליקציות ולהשבית את נושאי המודעות."</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"‏נושאים נמחקים ב-Android באופן קבוע. אם המשכת להשתמש באפליקציות, אחד הנושאים עשוי להופיע ברשימה מחדש. בכל שלב ניתן להיכנס להגדרות הפרטיות, למנוע שיתוף של נושאים מסוימים בין Android לאפליקציות ולהשבית את נושאי המודעות."</string>
     <string name="notificationUI_you_can_change_in_privacy_settings" msgid="4781410091509838647">"אפשר לערוך שינויים בהגדרות הפרטיות."</string>
-    <string name="notificationUI_fledge_measurement_title" msgid="5279119450359078459">"תכונות אחרות לשיפור הפרטיות בנושא הצגת המודעות"</string>
+    <string name="notificationUI_fledge_measurement_title" msgid="5279119450359078459">"תכונות אחרות לשיפור הפרטיות בפרסום"</string>
     <string name="notificationUI_fledge_measurement_introduction_text1" msgid="6943787406043534689">"‏מושקות ב-Android דרכים חדשות שיאפשרו להגביל את מה שהאפליקציות יכולות לגלות עליך כשהן מציגות לך מודעות בהתאמה אישית."</string>
     <string name="notificationUI_fledge_measurement_introduction_text2" msgid="601600895880486962">"•  מודעות שאפליקציות מציעות עוזרות להגן על הזהות שלך ועל המידע לגבי השימוש שלך באפליקציות, ובמקביל מאפשרות לאפליקציות להראות לך מודעות רלוונטיות. על סמך הפעילות שלך, אפליקציה יכולה להציע לך מודעות קשורות באפליקציות אחרות. בהגדרות הפרטיות ניתן לראות את רשימת האפליקציות ולחסום את האפשרות שלהן להציע מודעות."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"•  במסגרת מדידת הנתונים של המודעות, סוגים מסוימים של נתונים ישותפו בין אפליקציות כדי למדוד את הביצועים של המודעות שלהן, למשל השעה ביום שבה הוצגה לך מודעה מסוימת."</string>
@@ -137,10 +137,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"ארגז חול לפרטיות"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"‏תוכנית הבטא של פרטיות במודעות ב-Android מספקת תכונות חדשות שמאפשרות לאפליקציות להציג לך מודעות שעשויות להיות רלוונטיות עבורך. בטכנולוגיות האלה לא נעשה שימוש במזהי המכשיר.\n\nמערכת Android יכולה להעריך אילו סוגי מודעות עשויים לעניין אותך, ולשמור את תחומי העניין האלה באופן זמני על המכשיר. באופן הזה, האפליקציות יכולות להציג לך מודעות רלוונטיות בלי לעקוב אחרי הפעילות שלך באתרים ובאפליקציות של מפתחים אחרים."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"לא חסמת אף תחום עניין"</string>
-    <!-- no translation found for settingsUI_no_blocked_topics_ga_text (377459829879121256) -->
-    <skip />
-    <!-- no translation found for settingsUI_view_blocked_topics_title (3705333677440361392) -->
-    <skip />
+    <string name="settingsUI_no_blocked_topics_ga_text" msgid="377459829879121256">"אין נושאים חסומים"</string>
+    <string name="settingsUI_view_blocked_topics_title" msgid="3705333677440361392">"הצגת הנושאים החסומים"</string>
     <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"תחומי העניין אופסו"</string>
     <string name="settingsUI_topics_are_reset_ga" msgid="5250296990870048195">"הנושאים אופסו"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"‏האפליקציות יכולות להעריך את תחומי העניין שלך ולשמור אותם באופן זמני באמצעות Android. בהמשך, אפליקציות אחרות יוכלו להציג לך מודעות על סמך תחומי העניין האלה.\n\nאם בחרת לחסום אפליקציה מסוימת, היא לא תוכל להעריך את תחומי העניין שלך יותר. האפליקציה הזו לא תתווסף שוב לרשימת האפליקציות אלא אם החסימה תבוטל. כל תחומי העניין שהאפליקציה כבר העריכה יימחקו, אך יכול להיות שעדיין יוצגו לך כמה מודעות קשורות."</string>
@@ -152,8 +150,7 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"ארגז חול לפרטיות"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"‏תוכנית הבטא של פרטיות במודעות ב-Android מספקת תכונות חדשות שמאפשרות לאפליקציות להציג לך מודעות שעשויות להיות רלוונטיות עבורך. בטכנולוגיות האלה לא נעשה שימוש במזהי המכשיר.\n\nהאפליקציות יכולות להעריך אילו סוגי מודעות עשויים לעניין אותך, ולשמור את תחומי העניין האלה באופן זמני על המכשיר. באופן הזה, האפליקציות יכולות להציג לך מודעות רלוונטיות בלי לעקוב אחרי הפעילות שלך באתרים ובאפליקציות של מפתחים אחרים."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"לא חסמת אף אפליקציה"</string>
-    <!-- no translation found for settingsUI_no_blocked_apps_ga_text (7488680173653861943) -->
-    <skip />
+    <string name="settingsUI_no_blocked_apps_ga_text" msgid="7488680173653861943">"אין אפליקציות חסומות"</string>
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"מתן הרשאה למדידת הנתונים של מודעות"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"‏אפליקציות ומפרסמים יכולים לשלוח ל-Android בקשה לקבלת מידע שיעזור להם למדוד את הביצועים של המודעות שלהם.\n\nהנתונים של מדידת המודעות נמחקים באופן קבוע מהמכשיר."</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"איפוס נתוני המדידה"</string>
@@ -164,28 +161,20 @@
     <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"‏אם שינית את דעתך או שברצונך לקבל מידע נוסף על תוכנית הבטא של \'פרטיות בפרסום\' ב-Android, אפשר להיכנס אל הגדרות הפרטיות"</string>
     <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"השבתה"</string>
     <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"לחסום את <xliff:g id="TOPIC">%1$s</xliff:g>?"</string>
-    <!-- no translation found for settingsUI_dialog_block_topic_message (2581824495438333677) -->
-    <skip />
+    <string name="settingsUI_dialog_block_topic_message" msgid="2581824495438333677">"הנושא הזה ייחסם ולא יתווסף שוב לרשימה שלך, אלא אם הוספת אותו בחזרה. ייתכן שעדיין יוצגו כמה מודעות קשורות."</string>
     <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"חסימה"</string>
     <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"בוטלה החסימה של <xliff:g id="TOPIC">%1$s</xliff:g>"</string>
-    <!-- no translation found for settingsUI_dialog_unblock_topic_message (1090743551997420666) -->
-    <skip />
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="1090743551997420666">"‏ייתכן שהנושא הזה יתווסף מחדש לרשימה ב-Android, אבל אולי לא יופיע מיד"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"אישור"</string>
-    <!-- no translation found for settingsUI_dialog_reset_topic_title (8025836207966712435) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (4243744527757134000) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_topic_title" msgid="8025836207966712435">"לאפס את כל נושאי המודעות?"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="4243744527757134000">"הרשימה שלך תימחק ומעכשיו יתווספו נושאים חדשים. ייתכן שעדיין יוצגו כמה מודעות הקשורות לנושאים שאיפסת."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"איפוס"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"לחסום את <xliff:g id="APP">%1$s</xliff:g>?"</string>
-    <!-- no translation found for settingsUI_dialog_block_app_message (758788973278770119) -->
-    <skip />
+    <string name="settingsUI_dialog_block_app_message" msgid="758788973278770119">"האפליקציה הזו לא תציע לך מודעות ולא תתווסף שוב לרשימה שלך, אלא אם ביטלת את החסימה שלה. יכול להיות שעדיין יוצגו לך כמה מודעות קשורות."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"בוטלה החסימה של <xliff:g id="APP">%1$s</xliff:g>"</string>
-    <!-- no translation found for settingsUI_dialog_unblock_app_message (5758218424845642060) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_app_title (5177572712117150557) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_app_message (7845329616145691006) -->
-    <skip />
+    <string name="settingsUI_dialog_unblock_app_message" msgid="5758218424845642060">"האפליקציה הזו יכולה שוב להציע לך מודעות, אבל אולי היא לא תופיע מיד ברשימה. הצגת כל המודעות הקשורות עשויה לקחת זמן מה."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"לאפס את הנתונים של מודעות שהאפליקציות מציעות?"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"הנתונים של המודעות שהציעו האפליקציות ברשימה שלך יימחקו, ומעכשיו האפליקציות האלה יציעו לך מודעות חדשות. ייתכן שעדיין יוצגו כמה מודעות קשורות."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"נתוני האפליקציות אופסו"</string>
     <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"לאפס את כל הנושאים?"</string>
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"לאפס את הנתונים של מודעות שהאפליקציות מציעות?"</string>
@@ -201,12 +190,11 @@
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"מופעלת / <xliff:g id="APPS_COUNT">%1$d</xliff:g> אפליקציות"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"מופעלת"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"מושבתת"</string>
-    <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"‏הנושאים של המודעות שלך מבוססים על אפליקציות שבהן השתמשת לאחרונה. האפליקציות משתמשות בנושאים האלה כדי להציג לך מודעות בהתאמה אישית.\n\nניתן לחסום נושאים כדי שלא ישותפו עם האפליקציות. בנוסף הנושאים נמחקים אוטומטית מ-Android באופן קבוע."</string>
+    <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"‏הנושאים שמעניינים אותך מבוססים על אפליקציות שבהן השתמשת לאחרונה. האפליקציות משתמשות בנושאים האלה כדי להציג לך מודעות בהתאמה אישית.\n\nניתן לחסום נושאים כדי שלא ישותפו עם האפליקציות. בנוסף נושאים נמחקים אוטומטית מ-Android באופן קבוע."</string>
     <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"מתן הרשאה לנושאים של מודעות"</string>
     <string name="settingsUI_blocked_topics_ga_title" msgid="7163366621282449273">"נושאי מודעות שחסמת"</string>
-    <!-- no translation found for settingsUI_reset_topics_ga_title (5365554894399951300) -->
-    <skip />
-    <string name="settingsU_topics_view_footer" msgid="4769146330248953561">"‏Android עורך רשימה של נושאים שמעניינים אותך על סמך האפליקציות שהשתמשת בהן בשבועות האחרונים.\n\nלאחר מכן, אפליקציה שהשתמשת בה יכולה לשלוח ל-Android בקשה לקבלת מידע על הנושאים האלה כדי להתאים אישית את המודעות שמוצגות לך. Android משתף עד 3 נושאים ומגן על הזהות שלך ועל הנתונים לגבי השימוש שלך באפליקציות.\n\nהנושאים נמחקים אוטומטית מ-Android באופן קבוע. אם המשכת להשתמש באפליקציות, אחד הנושאים עשוי להופיע ברשימה מחדש. ניתן גם לחסום נושאים כדי שלא ישותפו בין Android לאפליקציות.\n\nיכול להיות שיוצגו מודעות מותאמות אישית באפליקציות שלך בהתאם להגדרה הזו, להגדרה של המודעות שאפליקציות מציעות, להגדרות של מזהי הפרסום ולשאלה אם באפליקציה שבה השתמשת מוצגות מודעות בהתאמה אישית."</string>
+    <string name="settingsUI_reset_topics_ga_title" msgid="5365554894399951300">"איפוס כל נושאי המודעות"</string>
+    <string name="settingsU_topics_view_footer" msgid="4769146330248953561">"‏Android עורך רשימה של נושאים שמעניינים אותך על סמך האפליקציות שהשתמשת בהן בשבועות האחרונים.\n\nלאחר מכן, אפליקציה שהשתמשת בה יכולה לשלוח ל-Android בקשה לקבלת מידע על הנושאים האלה כדי להתאים אישית את המודעות שמוצגות לך. Android משתף עד 3 נושאים ומגן על הזהות שלך ועל הנתונים לגבי השימוש שלך באפליקציות.\n\nנושאים נמחקים אוטומטית מ-Android באופן קבוע. אם המשכת להשתמש באפליקציות, אחד הנושאים עשוי להופיע ברשימה מחדש. ניתן גם לחסום נושאים כדי שלא ישותפו בין Android לאפליקציות.\n\nיכול להיות שיוצגו מודעות מותאמות אישית באפליקציות שלך בהתאם להגדרה הזו, להגדרה של המודעות שאפליקציות מציעות, להגדרות של מזהי הפרסום ולשאלה אם באפליקציה שבה השתמשת מוצגות מודעות בהתאמה אישית."</string>
     <string name="settingsUI_apps_switch_title" msgid="1308209012769248890">"מתן הרשאה למודעות שהאפליקציות מציעות"</string>
     <string name="settingsUI_apps_view_ga_subtitle" msgid="1911743837387384160">"‏האפליקציות שבהן השתמשת יכולות להעריך מה מעניין אותך ואז להציע לך מודעות באפליקציות אחרות.\n\nניתן לחסום את האפשרות של אפליקציות מסוימות להציע לך מודעות. בנוסף, הנתונים שקשורים למודעות שאפליקציות מציעות נמחקים אוטומטית מ-Android באופן קבוע."</string>
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"אפליקציות שחסמת"</string>

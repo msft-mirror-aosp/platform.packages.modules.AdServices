@@ -395,6 +395,80 @@ public class AdSelectionManager {
         }
     }
 
+    /**
+     * Updates the counter histograms for an ad.
+     *
+     * <p>The counter histograms are used in ad selection to inform frequency cap filtering on
+     * candidate ads, where ads whose frequency caps are met or exceeded are removed from the
+     * bidding process during ad selection.
+     *
+     * <p>Counter histograms can only be updated for ads specified by the given {@code
+     * adSelectionId} returned by a recent call to FLEDGE ad selection from the same caller app.
+     *
+     * <p>A {@link SecurityException} is returned via the {@code outcomeReceiver} if:
+     *
+     * <ol>
+     *   <li>the app has not declared the correct permissions in its manifest, or
+     *   <li>the app or entity identified by the {@code callerAdTechIdentifier} are not authorized
+     *       to use the API.
+     * </ol>
+     *
+     * An {@link IllegalStateException} is returned via the {@code outcomeReceiver} if the call does
+     * not come from an app with a foreground activity.
+     *
+     * <p>A {@link LimitExceededException} is returned via the {@code outcomeReceiver} if the call
+     * exceeds the calling app's API throttle.
+     *
+     * <p>In all other failure cases, the {@code outcomeReceiver} will return an empty {@link
+     * Object}. Note that to protect user privacy, internal errors will not be sent back via an
+     * exception.
+     *
+     * @hide
+     */
+    // TODO(b/221876775): Unhide for frequency cap API review
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
+    public void updateAdCounterHistogram(
+            @NonNull UpdateAdCounterHistogramRequest updateAdCounterHistogramRequest,
+            @NonNull @CallbackExecutor Executor executor,
+            @NonNull OutcomeReceiver<Object, Exception> outcomeReceiver) {
+        Objects.requireNonNull(updateAdCounterHistogramRequest, "Request must not be null");
+        Objects.requireNonNull(executor, "Executor must not be null");
+        Objects.requireNonNull(outcomeReceiver, "Outcome receiver must not be null");
+
+        try {
+            final AdSelectionService service = Objects.requireNonNull(getService());
+            service.updateAdCounterHistogram(
+                    new UpdateAdCounterHistogramInput.Builder()
+                            .setAdEventType(updateAdCounterHistogramRequest.getAdEventType())
+                            .setAdSelectionId(updateAdCounterHistogramRequest.getAdSelectionId())
+                            .setCallerAdTech(updateAdCounterHistogramRequest.getCallerAdTech())
+                            .setCallerPackageName(getCallerPackageName())
+                            .build(),
+                    new UpdateAdCounterHistogramCallback.Stub() {
+                        @Override
+                        public void onSuccess() {
+                            executor.execute(() -> outcomeReceiver.onResult(new Object()));
+                        }
+
+                        @Override
+                        public void onFailure(FledgeErrorResponse failureParcel) {
+                            executor.execute(
+                                    () -> {
+                                        outcomeReceiver.onError(
+                                                AdServicesStatusUtils.asException(failureParcel));
+                                    });
+                        }
+                    });
+        } catch (NullPointerException e) {
+            LogUtil.e(e, "Unable to find the AdSelection service");
+            outcomeReceiver.onError(
+                    new IllegalStateException("Unable to find the AdSelection service", e));
+        } catch (RemoteException e) {
+            LogUtil.e(e, "Remote exception encountered while updating ad counter histogram");
+            outcomeReceiver.onError(new IllegalStateException("Failure of AdSelection service", e));
+        }
+    }
+
     private String getCallerPackageName() {
         SandboxedSdkContext sandboxedSdkContext =
                 SandboxedSdkContextUtils.getAsSandboxedSdkContext(mContext);
