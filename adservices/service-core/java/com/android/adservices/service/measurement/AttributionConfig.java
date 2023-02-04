@@ -21,12 +21,14 @@ import static com.android.adservices.service.measurement.AttributionConfig.Attri
 import static com.android.adservices.service.measurement.AttributionConfig.AttributionConfigContract.FILTER_DATA;
 import static com.android.adservices.service.measurement.AttributionConfig.AttributionConfigContract.POST_INSTALL_EXCLUSIVITY_WINDOW;
 import static com.android.adservices.service.measurement.AttributionConfig.AttributionConfigContract.PRIORITY;
-import static com.android.adservices.service.measurement.AttributionConfig.AttributionConfigContract.SOURCE_ADTECH;
 import static com.android.adservices.service.measurement.AttributionConfig.AttributionConfigContract.SOURCE_EXPIRY_OVERRIDE;
 import static com.android.adservices.service.measurement.AttributionConfig.AttributionConfigContract.SOURCE_FILTERS;
+import static com.android.adservices.service.measurement.AttributionConfig.AttributionConfigContract.SOURCE_NETWORK;
 import static com.android.adservices.service.measurement.AttributionConfig.AttributionConfigContract.SOURCE_NOT_FILTERS;
 import static com.android.adservices.service.measurement.AttributionConfig.AttributionConfigContract.SOURCE_PRIORITY_RANGE;
 import static com.android.adservices.service.measurement.AttributionConfig.AttributionConfigContract.START;
+import static com.android.adservices.service.measurement.PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+import static com.android.adservices.service.measurement.PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
@@ -34,6 +36,7 @@ import android.util.Pair;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.measurement.util.Filter;
+import com.android.adservices.service.measurement.util.MathUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -181,7 +184,7 @@ public class AttributionConfig {
     public JSONObject serializeAsJson() {
         try {
             JSONObject attributionConfig = new JSONObject();
-            attributionConfig.put(SOURCE_ADTECH, mSourceAdtech);
+            attributionConfig.put(SOURCE_NETWORK, mSourceAdtech);
 
             if (mSourcePriorityRange != null) {
                 JSONObject sourcePriorityRange = new JSONObject();
@@ -251,12 +254,12 @@ public class AttributionConfig {
                 throw new JSONException(
                         "AttributionConfig.Builder: Empty or null attributionConfigsJson");
             }
-            if (attributionConfigsJson.isNull(SOURCE_ADTECH)) {
+            if (attributionConfigsJson.isNull(SOURCE_NETWORK)) {
                 throw new JSONException(
-                        "AttributionConfig.Builder: Required field source_adtech is not present.");
+                        "AttributionConfig.Builder: Required field source_network is not present.");
             }
 
-            mSourceAdtech = attributionConfigsJson.getString(SOURCE_ADTECH);
+            mSourceAdtech = attributionConfigsJson.getString(SOURCE_NETWORK);
 
             if (!attributionConfigsJson.isNull(SOURCE_PRIORITY_RANGE)) {
                 JSONObject sourcePriorityRangeJson =
@@ -277,13 +280,23 @@ public class AttributionConfig {
                 mSourceNotFilters = Filter.deserializeFilterSet(filterSet);
             }
             if (!attributionConfigsJson.isNull(SOURCE_EXPIRY_OVERRIDE)) {
-                mSourceExpiryOverride = attributionConfigsJson.getLong(SOURCE_EXPIRY_OVERRIDE);
+                long override = attributionConfigsJson.getLong(SOURCE_EXPIRY_OVERRIDE);
+                mSourceExpiryOverride =
+                        MathUtils.extractValidNumberInRange(
+                                override,
+                                MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
+                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
             }
             if (!attributionConfigsJson.isNull(PRIORITY)) {
                 mPriority = attributionConfigsJson.getLong(PRIORITY);
             }
             if (!attributionConfigsJson.isNull(EXPIRY)) {
-                mExpiry = attributionConfigsJson.getLong(EXPIRY);
+                long expiry = attributionConfigsJson.getLong(EXPIRY);
+                mExpiry =
+                        MathUtils.extractValidNumberInRange(
+                                expiry,
+                                MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
+                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
             }
             if (!attributionConfigsJson.isNull(FILTER_DATA)) {
                 JSONArray filterSet = Filter.maybeWrapFilters(attributionConfigsJson, FILTER_DATA);
@@ -370,7 +383,7 @@ public class AttributionConfig {
 
     /** Attribution Config field keys. */
     public interface AttributionConfigContract {
-        String SOURCE_ADTECH = "source_adtech";
+        String SOURCE_NETWORK = "source_network";
         String SOURCE_PRIORITY_RANGE = "source_priority_range";
         String SOURCE_FILTERS = "source_filters";
         String SOURCE_NOT_FILTERS = "source_not_filters";

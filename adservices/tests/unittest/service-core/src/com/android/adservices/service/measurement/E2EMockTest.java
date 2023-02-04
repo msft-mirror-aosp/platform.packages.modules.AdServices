@@ -21,6 +21,7 @@ import static com.android.adservices.ResultCode.RESULT_OK;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import android.net.Uri;
@@ -34,7 +35,7 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.measurement.actions.Action;
 import com.android.adservices.service.measurement.actions.AggregateReportingJob;
@@ -78,7 +79,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -115,7 +115,6 @@ public abstract class E2EMockTest extends E2ETest {
 
     private static final long MAX_RECORDS_PROCESSED = 20L;
     private static final short ASYNC_REG_RETRY_LIMIT = 1;
-    private final AtomicInteger mEnrollmentCount = new AtomicInteger();
     private final Set<String> mSeenUris = new HashSet<>();
     private final Map<String, String> mUriToEnrollmentId = new HashMap<>();
     protected DebugReportApi mDebugReportApi;
@@ -129,26 +128,24 @@ public abstract class E2EMockTest extends E2ETest {
             PrivacyParamsProvider privacyParamsProvider,
             String name) {
         super(actions, expectedOutput, name);
-        mClickVerifier = Mockito.mock(ClickVerifier.class);
-        mFlags = FlagsFactory.getFlagsForTest();
+        mClickVerifier = mock(ClickVerifier.class);
+        mFlags = mock(Flags.class);
         mE2EMockStaticRule = new E2EMockStatic.E2EMockStaticRule(privacyParamsProvider);
-        mMeasurementDataDeleter = Mockito.spy(new MeasurementDataDeleter(sDatastoreManager));
+        mMeasurementDataDeleter = spy(new MeasurementDataDeleter(sDatastoreManager));
 
         mAsyncSourceFetcher =
-                Mockito.spy(
+                spy(
                         new AsyncSourceFetcher(
-                                sEnrollmentDao,
-                                FlagsFactory.getFlagsForTest(),
-                                AdServicesLoggerImpl.getInstance()));
+                                sEnrollmentDao, mFlags, AdServicesLoggerImpl.getInstance()));
         mAsyncTriggerFetcher =
-                Mockito.spy(
+                spy(
                         new AsyncTriggerFetcher(
-                                sEnrollmentDao,
-                                FlagsFactory.getFlagsForTest(),
-                                AdServicesLoggerImpl.getInstance()));
+                                sEnrollmentDao, mFlags, AdServicesLoggerImpl.getInstance()));
         mDebugReportApi = new DebugReportApi(sContext);
 
         when(mClickVerifier.isInputEventVerifiable(any(), anyLong())).thenReturn(true);
+        when(mFlags.getMeasurementEnableXNA()).thenReturn(true);
+        when(mFlags.getWebContextClientAppAllowList()).thenReturn(AllowLists.ALLOW_ALL);
     }
 
     @Override
@@ -553,8 +550,7 @@ public abstract class E2EMockTest extends E2ETest {
 
     private String getEnrollmentId(String uri) {
         String authority = Uri.parse(uri).getAuthority();
-        return mUriToEnrollmentId.computeIfAbsent(authority, k ->
-                "enrollment-id-" + mEnrollmentCount.incrementAndGet());
+        return mUriToEnrollmentId.computeIfAbsent(authority, k -> "enrollment-id-" + authority);
     }
 
     private static byte[] decode(String value) {

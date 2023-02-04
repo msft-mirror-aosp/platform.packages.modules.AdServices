@@ -97,6 +97,7 @@ public final class PhFlags implements Flags {
             "measurement_enforce_foreground_status_delete_registrations";
     static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS =
             "measurement_enforce_foreground_status_get_status";
+    static final String KEY_MEASUREMENT_ENABLE_XNA = "measurement_enable_xna";
 
     // FLEDGE Custom Audience keys
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = "fledge_custom_audience_max_count";
@@ -662,6 +663,15 @@ public final class PhFlags implements Flags {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_IS_CLICK_VERIFIED_BY_INPUT_EVENT,
                 /* defaultValue */ MEASUREMENT_IS_CLICK_VERIFIED_BY_INPUT_EVENT);
+    }
+
+    @Override
+    public boolean getMeasurementEnableXNA() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_ENABLE_XNA,
+                /* defaultValue */ MEASUREMENT_ENABLE_XNA);
     }
 
     @Override
@@ -2033,6 +2043,7 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER
                         + " = "
                         + getEnforceForegroundStatusForMeasurementRegisterWebTrigger());
+        writer.println("\t" + KEY_MEASUREMENT_ENABLE_XNA + " = " + getMeasurementEnableXNA());
         writer.println(
                 "\t"
                         + KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST
