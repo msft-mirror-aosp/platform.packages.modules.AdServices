@@ -735,6 +735,15 @@ public interface Flags extends Dumpable {
         return DEFAULT_CONSENT_SOURCE_OF_TRUTH;
     }
 
+    /* Blocked topics source of truth intended to be used by default */
+    @ConsentSourceOfTruth int DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH = PPAPI_AND_SYSTEM_SERVER;
+
+    /** Returns the blocked topics source of truth currently used for PPAPI */
+    @ConsentSourceOfTruth
+    default int getBlockedTopicsSourceOfTruth() {
+        return DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
+    }
+
     // Group of All Killswitches
 
     /**

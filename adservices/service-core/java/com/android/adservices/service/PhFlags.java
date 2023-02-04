@@ -304,6 +304,7 @@ public final class PhFlags implements Flags {
 
     // Source of truth to get consent for PPAPI
     static final String KEY_CONSENT_SOURCE_OF_TRUTH = "consent_source_of_truth";
+    static final String KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH = "blocked_topics_source_of_truth";
 
     // App/SDK AllowList/DenyList keys that have access to the web registration APIs
     static final String KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST = "web_context_client_allow_list";
@@ -1768,6 +1769,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public int getBlockedTopicsSourceOfTruth() {
+        return DeviceConfig.getInt(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH,
+                /* defaultValue */ DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH);
+    }
+
+    @Override
     public long getMaxResponseBasedRegistrationPayloadSizeBytes() {
         return DeviceConfig.getLong(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -2288,6 +2297,13 @@ public final class PhFlags implements Flags {
                         + KEY_FOREGROUND_STATUS_LEVEL
                         + " = "
                         + getForegroundStatuslLevelForValidation());
+        writer.println("==== AdServices Consent Dump STATUS ====");
+        writer.println("\t" + KEY_CONSENT_SOURCE_OF_TRUTH + " = " + getConsentSourceOfTruth());
+        writer.println(
+                "\t"
+                        + KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH
+                        + " = "
+                        + getBlockedTopicsSourceOfTruth());
     }
 
     @Override

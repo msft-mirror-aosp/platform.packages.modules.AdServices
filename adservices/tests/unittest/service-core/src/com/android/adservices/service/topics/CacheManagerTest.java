@@ -18,10 +18,13 @@ package com.android.adservices.service.topics;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import android.app.adservices.AdServicesManager;
+import android.app.adservices.topics.TopicParcel;
 import android.content.Context;
 import android.util.Pair;
 
@@ -68,6 +71,7 @@ public final class CacheManagerTest {
 
     @Mock Flags mMockFlags;
     @Mock AdServicesLogger mLogger;
+    @Mock AdServicesManager mMockAdServicesManager;
 
     @Before
     public void setup() {
@@ -86,7 +90,10 @@ public final class CacheManagerTest {
 
         DbHelper dbHelper = DbTestUtil.getDbHelperForTest();
         mTopicsDao = new TopicsDao(dbHelper);
-        mCacheManager = new CacheManager(mTopicsDao, mMockFlags, mLogger);
+        BlockedTopicsManager blockedTopicsManager =
+                new BlockedTopicsManager(
+                        mTopicsDao, mMockAdServicesManager, Flags.PPAPI_AND_SYSTEM_SERVER);
+        mCacheManager = new CacheManager(mTopicsDao, mMockFlags, mLogger, blockedTopicsManager);
     }
 
     @Test
@@ -331,6 +338,12 @@ public final class CacheManagerTest {
         // epochId == 3 does not have any topics. This could happen if the epoch computation failed
         // or the device was offline and no epoch computation was done.
 
+        // Mock IPC calls
+        TopicParcel topicParcel2 = BlockedTopicsManager.convertTopicToTopicParcel(topic2);
+        TopicParcel topicParcel4 = BlockedTopicsManager.convertTopicToTopicParcel(topic4);
+        doReturn(List.of(topicParcel2, topicParcel4))
+                .when(mMockAdServicesManager)
+                .retrieveAllBlockedTopics();
         // block topic 2 and 4
         mTopicsDao.recordBlockedTopic(topic2);
         mTopicsDao.recordBlockedTopic(topic4);
@@ -447,6 +460,8 @@ public final class CacheManagerTest {
                                 .setDuplicateTopicCount(0)
                                 .setTopicIdsCount(0)
                                 .build());
+        // Verify IPC calls
+        verify(mMockAdServicesManager).retrieveAllBlockedTopics();
     }
 
     @Test
@@ -490,6 +505,9 @@ public final class CacheManagerTest {
 
         mTopicsDao.persistReturnedAppTopicsMap(/* epochId */ 3L, returnedAppSdkTopicsMap3);
 
+        // Mock IPC calls
+        TopicParcel topicParcel2 = BlockedTopicsManager.convertTopicToTopicParcel(topic2);
+        doReturn(List.of(topicParcel2)).when(mMockAdServicesManager).retrieveAllBlockedTopics();
         // block topic 2.
         mTopicsDao.recordBlockedTopic(topic2);
 
@@ -533,6 +551,9 @@ public final class CacheManagerTest {
         assertThat(argument.getAllValues().get(2).getFilteredBlockedTopicCount()).isEqualTo(1);
         assertThat(argument.getAllValues().get(2).getDuplicateTopicCount()).isEqualTo(1);
         assertThat(argument.getAllValues().get(2).getTopicIdsCount()).isEqualTo(1);
+
+        // Verify IPC calls
+        verify(mMockAdServicesManager).retrieveAllBlockedTopics();
     }
 
     @Test
@@ -751,8 +772,6 @@ public final class CacheManagerTest {
     @Test
     public void testDump() {
         // Trigger the dump to verify no crash
-        CacheManager cacheManager = new CacheManager(mTopicsDao, mMockFlags, mLogger);
-
         PrintWriter printWriter = new PrintWriter(new Writer() {
             @Override
             public void write(char[] cbuf, int off, int len) throws IOException {
@@ -770,7 +789,7 @@ public final class CacheManagerTest {
             }
         });
         String[] args = new String[]{};
-        cacheManager.dump(printWriter, args);
+        mCacheManager.dump(printWriter, args);
     }
 
     @Test
@@ -907,6 +926,9 @@ public final class CacheManagerTest {
 
         mTopicsDao.persistReturnedAppTopicsMap(/* epochId */ 3L, returnedAppSdkTopicsMap3);
 
+        // Mock IPC calls
+        TopicParcel topicParcel2 = BlockedTopicsManager.convertTopicToTopicParcel(topic2);
+        doReturn(List.of(topicParcel2)).when(mMockAdServicesManager).retrieveAllBlockedTopics();
         // Block Topics
         mTopicsDao.recordBlockedTopic(topic2);
 
@@ -916,6 +938,9 @@ public final class CacheManagerTest {
 
         assertThat(mCacheManager.getKnownTopicsWithConsent(currentEpochId))
                 .containsExactly(topic1, topic4);
+
+        // Verify IPC calls
+        verify(mMockAdServicesManager).retrieveAllBlockedTopics();
     }
 
     @Test
@@ -954,6 +979,13 @@ public final class CacheManagerTest {
 
         mTopicsDao.persistReturnedAppTopicsMap(/* epochId */ 3L, returnedAppSdkTopicsMap3);
 
+        // Mock IPC calls
+        TopicParcel topicParcel1 = BlockedTopicsManager.convertTopicToTopicParcel(topic1);
+        TopicParcel topicParcel2 = BlockedTopicsManager.convertTopicToTopicParcel(topic2);
+        TopicParcel topicParcel4 = BlockedTopicsManager.convertTopicToTopicParcel(topic4);
+        doReturn(List.of(topicParcel1, topicParcel2, topicParcel4))
+                .when(mMockAdServicesManager)
+                .retrieveAllBlockedTopics();
         // Block Topics
         mTopicsDao.recordBlockedTopic(topic1);
         mTopicsDao.recordBlockedTopic(topic2);
@@ -965,6 +997,9 @@ public final class CacheManagerTest {
 
         assertThat(mCacheManager.getKnownTopicsWithConsent(currentEpochId))
                 .isEqualTo(Collections.emptyList());
+
+        // Verify IPC calls
+        verify(mMockAdServicesManager).retrieveAllBlockedTopics();
     }
 
     @Test
