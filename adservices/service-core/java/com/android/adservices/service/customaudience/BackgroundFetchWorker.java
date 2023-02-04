@@ -222,10 +222,10 @@ public class BackgroundFetchWorker {
             resultCode = AdServicesLoggerUtil.getResultCodeFromException(e);
             throw e;
         } finally {
+            mStopWorkLatch.countDown();
+            mWorkInProgress = false;
             // Close the background fetch execution logger.
             mBackgroundFetchExecutionLogger.close(numOfEligibleToUpdateCAs, resultCode);
-            mWorkInProgress = false;
-            mStopWorkLatch.countDown();
         }
     }
 
