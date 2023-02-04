@@ -27,6 +27,8 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.AttributionConfig;
 import com.android.adservices.service.measurement.EventReport;
@@ -70,8 +72,16 @@ class AttributionJobHandler {
     private static final String API_VERSION = "0.1";
     private final DatastoreManager mDatastoreManager;
 
+    private final Flags mFlags;
+
     AttributionJobHandler(DatastoreManager datastoreManager) {
         mDatastoreManager = datastoreManager;
+        mFlags = FlagsFactory.getFlags();
+    }
+
+    AttributionJobHandler(DatastoreManager datastoreManager, Flags flags) {
+        mDatastoreManager = datastoreManager;
+        mFlags = flags;
     }
 
     /**
@@ -241,7 +251,7 @@ class AttributionJobHandler {
     private Optional<Source> selectSourceToAttribute(
             Trigger trigger, IMeasurementDao measurementDao) throws DatastoreException {
         List<Source> matchingSources;
-        if (trigger.getAttributionConfig() == null) {
+        if (!mFlags.getMeasurementEnableXNA() || trigger.getAttributionConfig() == null) {
             matchingSources = measurementDao.getMatchingActiveSources(trigger);
         } else {
             // XNA attribution is possible

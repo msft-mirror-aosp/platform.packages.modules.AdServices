@@ -311,13 +311,13 @@ public class AsyncSourceFetcher {
                 }
                 result.setAggregateSource(json.getString(SourceHeaderContract.AGGREGATION_KEYS));
             }
-            if (!json.isNull(SourceHeaderContract.SHARED_AGGREGATION_KEYS)) {
+            if (mFlags.getMeasurementEnableXNA()
+                    && !json.isNull(SourceHeaderContract.SHARED_AGGREGATION_KEYS)) {
                 // Parsed as JSONArray for validation
                 JSONArray sharedAggregationKeys =
                         json.getJSONArray(SourceHeaderContract.SHARED_AGGREGATION_KEYS);
                 result.setSharedAggregationKeys(sharedAggregationKeys.toString());
             }
-
             sources.add(result.build());
             return true;
         } catch (JSONException | NumberFormatException e) {
