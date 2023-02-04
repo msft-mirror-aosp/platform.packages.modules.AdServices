@@ -106,6 +106,7 @@ public abstract class E2ETest {
         // Keys used to compare actual with expected output
         List<String> STRINGS = ImmutableList.of(
                 "attribution_destination",
+                "scheduled_report_time",
                 "source_event_id",
                 "trigger_data",
                 "source_type");
