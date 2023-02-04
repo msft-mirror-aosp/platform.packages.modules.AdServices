@@ -16,16 +16,6 @@
 
 package com.android.adservices.service.customaudience;
 
-import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
-
-import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.START_ELAPSED_TIMESTAMP;
-import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.STOP_ELAPSED_TIMESTAMP;
-import static com.android.adservices.service.stats.AdServicesLoggerUtil.UNSET;
-import static com.android.adservices.service.stats.BackgroundFetchExecutionLoggerTest.BACKGROUND_FETCH_START_TIMESTAMP;
-
-import static com.google.common.truth.Truth.assertThat;
-
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.any;
@@ -36,8 +26,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
-import static org.mockito.Mockito.when;
 
 import android.adservices.common.CommonFixture;
 import android.annotation.NonNull;
@@ -55,17 +43,10 @@ import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetc
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.adservices.service.stats.AdServicesLoggerUtil;
-import com.android.adservices.service.stats.BackgroundFetchExecutionLogger;
-import com.android.adservices.service.stats.BackgroundFetchProcessReportedStats;
-import com.android.adservices.service.stats.Clock;
 
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
@@ -98,17 +79,10 @@ public class BackgroundFetchWorkerTest {
 
     @Mock private PackageManager mPackageManagerMock;
     @Mock private EnrollmentDao mEnrollmentDaoMock;
-    @Mock private Clock mClockMock;
-    @Mock private AdServicesLogger mAdServicesLoggerMock;
-
-    @Captor
-    private ArgumentCaptor<BackgroundFetchProcessReportedStats>
-            mBackgroundFetchProcessReportedStatsArgumentCaptor;
 
     private CustomAudienceDao mCustomAudienceDaoSpy;
     private BackgroundFetchRunner mBackgroundFetchRunnerSpy;
     private BackgroundFetchWorker mBackgroundFetchWorker;
-    private BackgroundFetchExecutionLogger mBackgroundFetchExecutionLogger;
 
     @Before
     public void setup() {
@@ -117,9 +91,7 @@ public class BackgroundFetchWorkerTest {
                         Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
                                 .build()
                                 .customAudienceDao());
-        when(mClockMock.elapsedRealtime()).thenReturn(START_ELAPSED_TIMESTAMP);
-        mBackgroundFetchExecutionLogger =
-                new BackgroundFetchExecutionLogger(mClockMock, mAdServicesLoggerMock);
+
         mBackgroundFetchRunnerSpy =
                 Mockito.spy(
                         new BackgroundFetchRunner(
@@ -129,11 +101,7 @@ public class BackgroundFetchWorkerTest {
                                 mFlags));
 
         mBackgroundFetchWorker =
-                new BackgroundFetchWorker(
-                        mCustomAudienceDaoSpy,
-                        mFlags,
-                        mBackgroundFetchRunnerSpy,
-                        mBackgroundFetchExecutionLogger);
+                new BackgroundFetchWorker(mCustomAudienceDaoSpy, mFlags, mBackgroundFetchRunnerSpy);
     }
 
     @Test
@@ -142,58 +110,36 @@ public class BackgroundFetchWorkerTest {
                 NullPointerException.class,
                 () ->
                         new BackgroundFetchWorker(
-                                null,
-                                FlagsFactory.getFlagsForTest(),
-                                mBackgroundFetchRunnerSpy,
-                                mBackgroundFetchExecutionLogger));
+                                null, FlagsFactory.getFlagsForTest(), mBackgroundFetchRunnerSpy));
 
         assertThrows(
                 NullPointerException.class,
                 () ->
                         new BackgroundFetchWorker(
-                                mCustomAudienceDaoSpy,
-                                null,
-                                mBackgroundFetchRunnerSpy,
-                                mBackgroundFetchExecutionLogger));
+                                mCustomAudienceDaoSpy, null, mBackgroundFetchRunnerSpy));
 
         assertThrows(
                 NullPointerException.class,
                 () ->
                         new BackgroundFetchWorker(
-                                mCustomAudienceDaoSpy,
-                                FlagsFactory.getFlagsForTest(),
-                                null,
-                                mBackgroundFetchExecutionLogger));
-        assertThrows(
-                NullPointerException.class,
-                () ->
-                        new BackgroundFetchWorker(
-                                mCustomAudienceDaoSpy,
-                                FlagsFactory.getFlagsForTest(),
-                                mBackgroundFetchRunnerSpy,
-                                null));
-        verifyZeroInteractions(mAdServicesLoggerMock);
+                                mCustomAudienceDaoSpy, FlagsFactory.getFlagsForTest(), null));
     }
 
     @Test
     public void testRunBackgroundFetchNullInputThrows() {
         assertThrows(
                 NullPointerException.class, () -> mBackgroundFetchWorker.runBackgroundFetch(null));
-        verifyZeroInteractions(mAdServicesLoggerMock);
     }
 
     @Test
     public void testRunBackgroundFetchThrowsTimeout() {
         // Time out before the job even started
         Instant jobStartTime = CommonFixture.FIXED_NOW.minusMillis(24L * 60L * 60L * 1000L);
-        when(mClockMock.elapsedRealtime())
-                .thenReturn(BACKGROUND_FETCH_START_TIMESTAMP, STOP_ELAPSED_TIMESTAMP);
         assertThrows(
                 TimeoutException.class,
                 () -> mBackgroundFetchWorker.runBackgroundFetch(jobStartTime));
 
         verify(mBackgroundFetchRunnerSpy, never()).updateCustomAudience(any(), any());
-        verifyBackgroundFetchTimeout(UNSET, STATUS_TIMEOUT);
     }
 
     @Test
@@ -235,10 +181,8 @@ public class BackgroundFetchWorkerTest {
                 new BackgroundFetchWorker(
                         mCustomAudienceDaoSpy,
                         flagsWithSmallTimeout,
-                        backgroundFetchRunnerWithSleep,
-                        mBackgroundFetchExecutionLogger);
-        when(mClockMock.elapsedRealtime())
-                .thenReturn(BACKGROUND_FETCH_START_TIMESTAMP, STOP_ELAPSED_TIMESTAMP);
+                        backgroundFetchRunnerWithSleep);
+
         // Mock a custom audience eligible for update
         DBCustomAudienceBackgroundFetchData fetchData =
                 DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(
@@ -248,14 +192,11 @@ public class BackgroundFetchWorkerTest {
         doReturn(Arrays.asList(fetchData))
                 .when(mCustomAudienceDaoSpy)
                 .getActiveEligibleCustomAudienceBackgroundFetchData(any(), anyLong());
-        when(mClockMock.elapsedRealtime())
-                .thenReturn(BACKGROUND_FETCH_START_TIMESTAMP, STOP_ELAPSED_TIMESTAMP);
+
         // Time out while updating custom audiences
-        Throwable throwable =
-                assertThrows(
-                        TimeoutException.class,
-                        () -> backgroundFetchWorkerThatTimesOut.runBackgroundFetch(Instant.now()));
-        verifyBackgroundFetchTimeout(1, AdServicesLoggerUtil.getResultCodeFromException(throwable));
+        assertThrows(
+                TimeoutException.class,
+                () -> backgroundFetchWorkerThatTimesOut.runBackgroundFetch(Instant.now()));
     }
 
     @Test
@@ -266,8 +207,7 @@ public class BackgroundFetchWorkerTest {
                         .getActiveEligibleCustomAudienceBackgroundFetchData(
                                 CommonFixture.FIXED_NOW, 1)
                         .isEmpty());
-        when(mClockMock.elapsedRealtime())
-                .thenReturn(BACKGROUND_FETCH_START_TIMESTAMP, STOP_ELAPSED_TIMESTAMP);
+
         mBackgroundFetchWorker.runBackgroundFetch(CommonFixture.FIXED_NOW);
 
         verify(mBackgroundFetchRunnerSpy).deleteExpiredCustomAudiences(any());
@@ -277,7 +217,6 @@ public class BackgroundFetchWorkerTest {
         verify(mBackgroundFetchRunnerSpy).deleteDisallowedBuyerCustomAudiences();
         verify(mCustomAudienceDaoSpy).deleteAllDisallowedBuyerCustomAudienceData(any(), any());
         verify(mBackgroundFetchRunnerSpy, never()).updateCustomAudience(any(), any());
-        verifyBackgroundFetchNothingToUpdate(STATUS_SUCCESS);
     }
 
     @Test
@@ -293,8 +232,7 @@ public class BackgroundFetchWorkerTest {
                 .when(mCustomAudienceDaoSpy)
                 .getActiveEligibleCustomAudienceBackgroundFetchData(any(), anyLong());
         doNothing().when(mBackgroundFetchRunnerSpy).updateCustomAudience(any(), any());
-        when(mClockMock.elapsedRealtime())
-                .thenReturn(BACKGROUND_FETCH_START_TIMESTAMP, STOP_ELAPSED_TIMESTAMP);
+
         mBackgroundFetchWorker.runBackgroundFetch(CommonFixture.FIXED_NOW);
 
         verify(mBackgroundFetchRunnerSpy).deleteExpiredCustomAudiences(any());
@@ -304,7 +242,6 @@ public class BackgroundFetchWorkerTest {
         verify(mBackgroundFetchRunnerSpy).deleteDisallowedBuyerCustomAudiences();
         verify(mCustomAudienceDaoSpy).deleteAllDisallowedBuyerCustomAudienceData(any(), any());
         verify(mBackgroundFetchRunnerSpy).updateCustomAudience(any(), any());
-        verifyBackgroundFetchSuccess(1);
     }
 
     @Test
@@ -326,8 +263,7 @@ public class BackgroundFetchWorkerTest {
                 .when(mCustomAudienceDaoSpy)
                 .getActiveEligibleCustomAudienceBackgroundFetchData(any(), anyLong());
         doNothing().when(mBackgroundFetchRunnerSpy).updateCustomAudience(any(), any());
-        when(mClockMock.elapsedRealtime())
-                .thenReturn(BACKGROUND_FETCH_START_TIMESTAMP, STOP_ELAPSED_TIMESTAMP);
+
         mBackgroundFetchWorker.runBackgroundFetch(CommonFixture.FIXED_NOW);
 
         verify(mBackgroundFetchRunnerSpy).deleteExpiredCustomAudiences(any());
@@ -338,7 +274,6 @@ public class BackgroundFetchWorkerTest {
         verify(mCustomAudienceDaoSpy).deleteAllDisallowedBuyerCustomAudienceData(any(), any());
         verify(mBackgroundFetchRunnerSpy, times(numEligibleCustomAudiences))
                 .updateCustomAudience(any(), any());
-        verifyBackgroundFetchSuccess(numEligibleCustomAudiences);
     }
 
     @Test
@@ -368,8 +303,7 @@ public class BackgroundFetchWorkerTest {
                         })
                 .when(mBackgroundFetchRunnerSpy)
                 .updateCustomAudience(any(), any());
-        when(mClockMock.elapsedRealtime())
-                .thenReturn(BACKGROUND_FETCH_START_TIMESTAMP, STOP_ELAPSED_TIMESTAMP);
+
         CountDownLatch bgfWorkStoppedLatch = new CountDownLatch(1);
         mExecutorService.execute(
                 () -> {
@@ -450,49 +384,6 @@ public class BackgroundFetchWorkerTest {
         mBackgroundFetchWorker.stopWork();
         // stopWork() should wait for full stoppage before returning, so the bgfWorkStoppedLatch
         // should have already counted down
-        LogUtil.v("bgfWorkStoppedLatch.getCount() %d", bgfWorkStoppedLatch.getCount());
         assertTrue(bgfWorkStoppedLatch.await(0, TimeUnit.MILLISECONDS));
-    }
-
-    private void verifyBackgroundFetchSuccess(int numOfEligibleToUpdateCAs) {
-        verify(mAdServicesLoggerMock)
-                .logBackgroundFetchProcessReportedStats(
-                        mBackgroundFetchProcessReportedStatsArgumentCaptor.capture());
-        BackgroundFetchProcessReportedStats backgroundFetchProcessReportedStats =
-                mBackgroundFetchProcessReportedStatsArgumentCaptor.getValue();
-
-        assertThat(backgroundFetchProcessReportedStats.getResultCode()).isEqualTo(STATUS_SUCCESS);
-        assertThat(backgroundFetchProcessReportedStats.getNumOfEligibleToUpdateCas())
-                .isEqualTo(numOfEligibleToUpdateCAs);
-        assertThat(backgroundFetchProcessReportedStats.getLatencyInMillis())
-                .isEqualTo((int) (STOP_ELAPSED_TIMESTAMP - BACKGROUND_FETCH_START_TIMESTAMP));
-    }
-
-    private void verifyBackgroundFetchNothingToUpdate(int resultCode) {
-        verify(mAdServicesLoggerMock)
-                .logBackgroundFetchProcessReportedStats(
-                        mBackgroundFetchProcessReportedStatsArgumentCaptor.capture());
-        BackgroundFetchProcessReportedStats backgroundFetchProcessReportedStats =
-                mBackgroundFetchProcessReportedStatsArgumentCaptor.getValue();
-
-        assertThat(backgroundFetchProcessReportedStats.getResultCode()).isEqualTo(resultCode);
-        assertThat(backgroundFetchProcessReportedStats.getNumOfEligibleToUpdateCas()).isEqualTo(0);
-        assertThat(backgroundFetchProcessReportedStats.getLatencyInMillis())
-                .isEqualTo((int) (STOP_ELAPSED_TIMESTAMP - BACKGROUND_FETCH_START_TIMESTAMP));
-    }
-
-    private void verifyBackgroundFetchTimeout(int numOfEligibleToUpdateCAs, int resultCode) {
-        assertThat(resultCode).isEqualTo(STATUS_TIMEOUT);
-        verify(mAdServicesLoggerMock)
-                .logBackgroundFetchProcessReportedStats(
-                        mBackgroundFetchProcessReportedStatsArgumentCaptor.capture());
-        BackgroundFetchProcessReportedStats backgroundFetchProcessReportedStats =
-                mBackgroundFetchProcessReportedStatsArgumentCaptor.getValue();
-
-        assertThat(backgroundFetchProcessReportedStats.getResultCode()).isEqualTo(STATUS_TIMEOUT);
-        assertThat(backgroundFetchProcessReportedStats.getNumOfEligibleToUpdateCas())
-                .isEqualTo(numOfEligibleToUpdateCAs);
-        assertThat(backgroundFetchProcessReportedStats.getLatencyInMillis())
-                .isEqualTo((int) (STOP_ELAPSED_TIMESTAMP - BACKGROUND_FETCH_START_TIMESTAMP));
     }
 }
