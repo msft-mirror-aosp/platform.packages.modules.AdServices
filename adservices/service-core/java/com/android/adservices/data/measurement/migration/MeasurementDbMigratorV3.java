@@ -179,6 +179,7 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
         db.execSQL(MeasurementTables.CREATE_TABLE_DEBUG_REPORT_LATEST);
 
         alterEventReportTable(db);
+        alterTriggerTable(db);
         alterAggregateReportTable(db);
         alterAttributionTable(db);
 
@@ -220,6 +221,9 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
                 MeasurementTables.EventReportContract.TABLE,
                 EVENT_REPORT_CONTRACT_BACKUP,
                 MeasurementTables.CREATE_TABLE_EVENT_REPORT_LATEST);
+    }
+
+    private static void alterTriggerTable(SQLiteDatabase db) {
         MigrationHelpers.addTextColumnIfAbsent(
                 db,
                 MeasurementTables.TriggerContract.TABLE,
@@ -437,7 +441,7 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
             return updateEventTriggers(new JSONArray(eventTriggers));
         } catch (JSONException e) {
             LogUtil.e(e, "MeasurementDbMigratorV3: failed to parse event triggers.");
-            return null;
+            return new JSONArray().toString();
         }
     }
 

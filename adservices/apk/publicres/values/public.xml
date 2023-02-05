@@ -669,4 +669,10 @@
     <public type="string" name="topic10444" id="0x7f017d74" />
     <public type="string" name="topic10445" id="0x7f017d73" />
     <public type="string" name="topic10446" id="0x7f017d72" />
+    <public type="string" name="ic_placeholder_icon_for_empty_topics_list_description" id="0x7f017d71" />
+    <public type="string" name="ic_consent_notification_ga_image_description" id="0x7f017d70" />
+    <public type="string" name="ic_placeholder_icon_for_empty_apps_list_description" id="0x7f017d6f" />
+    <public type="string" name="ic_main_view_ga_image_description" id="0x7f017d6e" />
+    <public type="string" name="settingsUI_topics_subtitle_plural" id="0x7f017d6d" />
+    <public type="string" name="settingsUI_apps_subtitle_plural" id="0x7f017d6c" />
 </resources>

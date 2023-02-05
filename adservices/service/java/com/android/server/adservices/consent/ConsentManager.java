@@ -20,6 +20,7 @@ import android.app.adservices.consent.ConsentParcel;
 
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.adservices.LogUtil;
+import com.android.server.adservices.common.BooleanFileDatastore;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,6 +34,8 @@ import java.util.Objects;
 public final class ConsentManager {
     public static final String ERROR_MESSAGE_DATASTORE_EXCEPTION_WHILE_GET_CONTENT =
             "getConsent method failed. Revoked consent is returned as fallback.";
+
+    public static final String VERSION_KEY = "android.app.adservices.consent.VERSION";
 
     @VisibleForTesting
     static final String NOTIFICATION_DISPLAYED_ONCE = "NOTIFICATION-DISPLAYED-ONCE";
@@ -83,7 +86,7 @@ public final class ConsentManager {
         // Create the DataStore and initialize it.
         BooleanFileDatastore datastore =
                 new BooleanFileDatastore(
-                        consentDataStoreDir, STORAGE_XML_IDENTIFIER, STORAGE_VERSION);
+                        consentDataStoreDir, STORAGE_XML_IDENTIFIER, STORAGE_VERSION, VERSION_KEY);
         datastore.initialize();
         // TODO(b/259607624): implement a method in the datastore which would support
         // this exact scenario - if the value is null, return default value provided

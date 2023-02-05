@@ -183,6 +183,7 @@ public class ConsentNotificationTriggerTest {
             verify(mConsentManager).disable(any(Context.class), eq(AdServicesApiType.FLEDGE));
             verify(mConsentManager).disable(any(Context.class), eq(AdServicesApiType.MEASUREMENTS));
             verify(mConsentManager).recordGaUxNotificationDisplayed();
+            verify(mConsentManager).recordNotificationDisplayed();
             verifyNoMoreInteractions(mConsentManager);
 
             assertThat(mNotificationManager.getActiveNotifications()).hasLength(1);
@@ -303,6 +304,7 @@ public class ConsentNotificationTriggerTest {
             verify(mConsentManager).enable(any(Context.class), eq(AdServicesApiType.FLEDGE));
             verify(mConsentManager).enable(any(Context.class), eq(AdServicesApiType.MEASUREMENTS));
             verify(mConsentManager).recordGaUxNotificationDisplayed();
+            verify(mConsentManager).recordNotificationDisplayed();
             verifyNoMoreInteractions(mConsentManager);
 
             assertThat(mNotificationManager.getActiveNotifications()).hasLength(1);

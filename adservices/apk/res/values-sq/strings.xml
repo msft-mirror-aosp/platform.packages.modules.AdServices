@@ -133,10 +133,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Versioni beta i Android për privatësinë e reklamave ofron veçori të reja që aplikacionet mund t\'i përdorin për të të shfaqur reklama që mund të të pëlqejnë. Këto teknologji nuk përdorin identifikuesit e pajisjes.\n\nAndroid mund të përllogarisë llojet e reklamave që mund të të interesojnë dhe t\'i ruajë këta interesa përkohësisht në pajisjen tënde. Kjo i lejon aplikacionet që të të shfaqin reklama të përshtatshme, pa e monitoruar aktivitetin tënd nëpër sajtet e uebit dhe aplikacionet nga zhvilluesit e tjerë."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Nuk ke asnjë interes të bllokuar"</string>
-    <!-- no translation found for settingsUI_no_blocked_topics_ga_text (377459829879121256) -->
-    <skip />
-    <!-- no translation found for settingsUI_view_blocked_topics_title (3705333677440361392) -->
-    <skip />
+    <string name="settingsUI_no_blocked_topics_ga_text" msgid="377459829879121256">"Asnjë temë e bllokuar"</string>
+    <string name="settingsUI_view_blocked_topics_title" msgid="3705333677440361392">"Shiko temat e bllokuara"</string>
     <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Interesat u rivendosën"</string>
     <string name="settingsUI_topics_are_reset_ga" msgid="5250296990870048195">"Temat u rivendosën"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Aplikacionet mund t\'i përllogarisin interesat e tu dhe t\'i ruajnë ata përkohësisht me Android. Më vonë, një aplikacion tjetër mund të të shfaqë një reklamë bazuar në këta interesa.\n\nNëse e bllokon një aplikacion, ai nuk do të përllogarisë më interesa. Ai nuk do të shtohet më në këtë listë aplikacionesh, përveçse nëse e zhbllokon ti. Interesat e përllogaritur tashmë nga aplikacioni do të fshihen, por mund të shikosh përsëri disa reklama në lidhje me to."</string>
@@ -148,8 +146,7 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Versioni beta i Android për privatësinë e reklamave ofron veçori të reja që aplikacionet mund t\'i përdorin për të të shfaqur reklama që mund të të pëlqejnë. Këto teknologji nuk përdorin identifikuesit e pajisjes.\n\nAplikacionet mund të përllogarisin llojet e reklamave që mund të të interesojnë dhe t\'i ruajnë këta interesa përkohësisht në pajisjen tënde. Kjo i lejon aplikacionet që të të shfaqin reklama të përshtatshme, pa e monitoruar aktivitetin tënd nëpër sajtet e uebit dhe aplikacionet nga zhvilluesit e tjerë."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Nuk ke asnjë aplikacion të bllokuar"</string>
-    <!-- no translation found for settingsUI_no_blocked_apps_ga_text (7488680173653861943) -->
-    <skip />
+    <string name="settingsUI_no_blocked_apps_ga_text" msgid="7488680173653861943">"Asnjë aplikacion i bllokuar"</string>
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"Lejo matjen e reklamave"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"Aplikacionet dhe reklamuesit mund të kërkojnë informacione nga Android që i ndihmojnë të matin performancën e reklamave të tyre.\n\nTë dhënat e matjeve të reklamave fshihen rregullisht nga pajisja jote."</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"Rivendos të dhënat e matjes"</string>
@@ -160,28 +157,20 @@
     <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Nëse ndryshon mendje ose dëshiron të mësosh më shumë rreth versionit beta të Android për privatësinë e reklamave, shko te cilësimet e tua të privatësisë"</string>
     <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Çaktivizo"</string>
     <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Të bllokohet <xliff:g id="TOPIC">%1$s</xliff:g>?"</string>
-    <!-- no translation found for settingsUI_dialog_block_topic_message (2581824495438333677) -->
-    <skip />
+    <string name="settingsUI_dialog_block_topic_message" msgid="2581824495438333677">"Kjo temë do të bllokohet dhe nuk do të shtohet përsëri në listën tënde, përveçse nëse ti e shton përsëri. Mund të shikosh përsëri disa reklama në lidhje me të."</string>
     <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Blloko"</string>
     <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"<xliff:g id="TOPIC">%1$s</xliff:g> është e zhbllokuar"</string>
-    <!-- no translation found for settingsUI_dialog_unblock_topic_message (1090743551997420666) -->
-    <skip />
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="1090743551997420666">"Android mund ta shtojë këtë temë përsëri te lista jote, por mund të mos shfaqet menjëherë"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"Në rregull"</string>
-    <!-- no translation found for settingsUI_dialog_reset_topic_title (8025836207966712435) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (4243744527757134000) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_topic_title" msgid="8025836207966712435">"Të rivendosen të gjitha temat e reklamave?"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="4243744527757134000">"Lista jote do të pastrohet dhe do të shtohen tema të reja në vijim. Mund të shikosh përsëri disa reklama në lidhje me temat që i ke rivendosur."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Rivendos"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Të bllokohet <xliff:g id="APP">%1$s</xliff:g>?"</string>
-    <!-- no translation found for settingsUI_dialog_block_app_message (758788973278770119) -->
-    <skip />
+    <string name="settingsUI_dialog_block_app_message" msgid="758788973278770119">"Ky aplikacion nuk do të sugjerojë reklama dhe nuk do të shtohet përsëri në listën tënde, përveçse nëse e zhbllokon ti. Mund të shikosh përsëri disa reklama në lidhje me të."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> është i zhbllokuar"</string>
-    <!-- no translation found for settingsUI_dialog_unblock_app_message (5758218424845642060) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_app_title (5177572712117150557) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_app_message (7845329616145691006) -->
-    <skip />
+    <string name="settingsUI_dialog_unblock_app_message" msgid="5758218424845642060">"Ky aplikacion mund të sugjerojë reklama për ty përsëri, por mund të mos shfaqet menjëherë në listën tënde. Mund të duhet pak kohë përpara se të shikosh reklama të ngjashme."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"Të rivendosen reklamat e sugjeruara nga aplikacionet?"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Të dhënat për sugjerimin e reklamave nga aplikacionet në listën tënde do të fshihen dhe aplikacionet do të sugjerojnë reklama të reja në vazhdim. Mund të shikosh përsëri disa reklama në lidhje me të."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Të dhënat e aplikacionit u rivendosën"</string>
     <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"Të rivendosen të gjitha temat?"</string>
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"Të rivendosen reklamat e sugjeruara nga aplikacionet?"</string>
@@ -200,8 +189,7 @@
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Temat e interesit bazohen në aplikacionet që ke përdorur së fundi dhe përdoren nga aplikacionet për të të shfaqur reklama të personalizuara.\n\nMund t\'i bllokosh temat që nuk dëshiron të ndahen me aplikacionet. Gjithashtu, Android i fshin rregullisht në mënyrë automatike temat."</string>
     <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"Lejo temat e reklamave"</string>
     <string name="settingsUI_blocked_topics_ga_title" msgid="7163366621282449273">"Temat e reklamave që ke bllokuar"</string>
-    <!-- no translation found for settingsUI_reset_topics_ga_title (5365554894399951300) -->
-    <skip />
+    <string name="settingsUI_reset_topics_ga_title" msgid="5365554894399951300">"Rivendos të gjitha temat e reklamave"</string>
     <string name="settingsU_topics_view_footer" msgid="4769146330248953561">"Android shënon temat e interesit bazuar në aplikacionet që ke përdorur në javët e fundit.\n\nMë vonë, një aplikacion që ti përdor mund t\'i kërkojë Android temat e tua për të personalizuar reklamat që shikon ti. Android ndan deri në 3 tema ndërkohë që mbron identitetin tënd dhe informacionet në lidhje me përdorimin e aplikacioneve.\n\nAndroid i fshin rregullisht në mënyrë automatike temat. Teksa ti vazhdon të përdorësh aplikacionet, një temë mund të shfaqet përsëri në listë. Ose mund t\'i bllokosh temat që nuk dëshiron që Android t\'i ndajë me aplikacionet.\n\nNë aplikacionet e tua, një reklamë mund të jetë e personalizuar në varësi të këtij cilësimi, cilësimit të reklamave të sugjeruara nga aplikacionet, cilësimeve të tua për ID-në e reklamimit dhe nëse aplikacioni që ti po përdor i personalizon reklamat."</string>
     <string name="settingsUI_apps_switch_title" msgid="1308209012769248890">"Lejo reklamat e sugjeruara nga aplikacionet"</string>
     <string name="settingsUI_apps_view_ga_subtitle" msgid="1911743837387384160">"Aplikacionet që ti përdor mund të përcaktojnë se çfarë të pëlqen dhe më pas sugjerojnë reklama në aplikacione të tjera.\n\nMund t\'i bllokosh aplikacionet për ofrimin e sugjerimeve. Android gjithashtu fshin automatikisht dhe rregullisht të dhëna të sugjeruara nga aplikacionet."</string>

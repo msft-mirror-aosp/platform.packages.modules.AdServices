@@ -43,6 +43,7 @@ import org.junit.runner.RunWith;
 public class SettingsGaUiAutomatorTest {
     private static final String PRIVACY_SANDBOX_TEST_PACKAGE = "android.adservices.ui.SETTINGS";
     private static final int LAUNCH_TIMEOUT = 5000;
+    public static final int PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT = 1000;
     private static UiDevice sDevice;
 
     @Before
@@ -84,8 +85,10 @@ public class SettingsGaUiAutomatorTest {
         scrollToAndClick(R.string.settingsUI_measurement_view_title);
 
         // verify have entered to measurement page
-        UiObject resetButton = getElement(R.string.settingsUI_measurement_view_reset_title);
-        assertThat(resetButton.exists()).isTrue();
+        UiObject measurementSwitch = getElement(R.string.settingsUI_measurement_switch_title);
+        // needed as the new page is displayed (this can take time to propagate to the UiAutomator)
+        measurementSwitch.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        assertThat(measurementSwitch.exists()).isTrue();
 
         sDevice.pressBack();
         // verify back to the main page
@@ -141,12 +144,6 @@ public class SettingsGaUiAutomatorTest {
                 sDevice.findObject(new UiSelector().className("android.widget.Switch"));
         if (topicsToggle.isChecked()) {
             topicsToggle.click();
-            UiObject dialogTitle = getElement(R.string.settingsUI_dialog_topics_opt_out_title);
-            UiObject positiveText = getElement(R.string.settingsUI_dialog_opt_out_positive_text);
-            assertThat(dialogTitle.exists()).isTrue();
-            assertThat(positiveText.exists()).isTrue();
-            // click positive button that turn off the toggle
-            positiveText.click();
         }
         assertThat(topicsToggle.isChecked()).isFalse();
         sDevice.pressBack();
@@ -161,11 +158,6 @@ public class SettingsGaUiAutomatorTest {
                 sDevice.findObject(new UiSelector().className("android.widget.Switch"));
         if (appsToggle.isChecked()) {
             appsToggle.click();
-            UiObject dialogTitle = getElement(R.string.settingsUI_dialog_apps_opt_out_title);
-            UiObject positiveText = getElement(R.string.settingsUI_dialog_opt_out_positive_text);
-            assertThat(dialogTitle.exists()).isTrue();
-            assertThat(positiveText.exists()).isTrue();
-            positiveText.click();
         }
         assertThat(appsToggle.isChecked()).isFalse();
         sDevice.pressBack();
@@ -179,11 +171,6 @@ public class SettingsGaUiAutomatorTest {
                 sDevice.findObject(new UiSelector().className("android.widget.Switch"));
         if (measurementToggle.isChecked()) {
             measurementToggle.click();
-            UiObject dialogTitle = getElement(R.string.settingsUI_dialog_measurement_opt_out_title);
-            UiObject positiveText = getElement(R.string.settingsUI_dialog_opt_out_positive_text);
-            assertThat(dialogTitle.exists()).isTrue();
-            assertThat(positiveText.exists()).isTrue();
-            positiveText.click();
         }
         assertThat(measurementToggle.isChecked()).isFalse();
         sDevice.pressBack();

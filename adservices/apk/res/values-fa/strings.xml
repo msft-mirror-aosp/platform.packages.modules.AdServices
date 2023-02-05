@@ -66,7 +66,7 @@
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"‏«جعبه ایمنی حریم خصوصی Android» ویژگی‌های جدیدی را ارائه می‌کند که برنامه‌ها می‌توانند بااستفاده از آن‌ها آگهی‌هایی به شما نشان دهند که شاید بپسندید. این فناوری‌ها از شناسه‌های دستگاه استفاده نمی‌کنند.\n\nAndroid و برنامه‌های شما می‌توانند انواع آگهی‌هایی را که ممکن است به آن‌ها علاقه داشته باشید ارزیابی کنند و این علایق را به‌طور موقت در دستگاهتان ذخیره کنند. این ویژگی به برنامه‌ها امکان می‌دهد بدون ردیابی فعالیت شما در وب‌سایت‌ها و برنامه‌های توسعه‌دهندگان دیگر، آگهی‌هایی را که ممکن است بپسندید به شما نشان دهند."</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"شخصی‌سازی آگهی با «جعبه ایمنی حریم خصوصی»"</string>
     <string name="notificationUI_how_it_works_expanded_text3" msgid="603165966360369018">"‏•  علایق ارزیابی‌شده توسط Android"</string>
-    <string name="notificationUI_how_it_works_expanded_text4" msgid="3910573920883580609">"‏Android به‌طور دوره‌ای علایق اصلی شما را براساس برنامه‌هایی که استفاده می‌کنید ارزیابی می‌کند؛ به‌عنوان مثال «ورزش» یا «سفر».\n\nبعداً، برنامه‌ها می‌توانند به Android درخواست دهند که از این علایق برای نشان دادن آگهی‌های مرتبط‌تر به شما استفاده کنند.\n\nمی‌توانید فهرست علایق فعلی را در تنظیمات حریم خصوصی خود ببینید و هر موردی را که نمی‌پسندید مسدود کنید."</string>
+    <string name="notificationUI_how_it_works_expanded_text4" msgid="3910573920883580609">"‏Android به‌طور دوره‌ای موضوع‌های اصلی موردعلاقه‌تان را براساس برنامه‌هایی که استفاده می‌کنید ارزیابی می‌کند؛ به‌عنوان مثال «ورزش» یا «سفر».\n\nبعداً، برنامه‌ها می‌توانند به Android درخواست دهند که از این موضوع‌ها برای نشان دادن آگهی‌های مرتبط‌تر به شما استفاده کنند.\n\nمی‌توانید فهرست موضوع‌های فعلی را در تنظیمات حریم خصوصی خود ببینید و هر موردی را که نمی‌پسندید مسدود کنید."</string>
     <string name="notificationUI_how_it_works_expanded_text5" msgid="7257714040472055781">"•  علایق ارزیابی‌شده توسط برنامه‌ها"</string>
     <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"‏برنامه‌ها می‌توانند علایق شما را ارزیابی کنند و آن‌ها را به‌طور موقت در Android ذخیره کنند. برای مثال، برنامه‌ای که از آن برای خرید کفش دو استفاده می‌کنید ممکن است علاقه شما را به‌عنوان «دوی ماراتون» ارزیابی کند.\n\nبعداً، براساس این علاقه، برنامه دیگری می‌تواند آگهی مربوط به دوی ماراتن به شما نشان دهد.\n\nمی‌توانید فهرست برنامه‌هایی را که علایق شما را ذخیره کرده‌اند در تنظیمات حریم خصوصی مدیریت کنید."</string>
     <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"ویژگی‌های جدید حریم خصوصی آگهی"</string>
@@ -123,21 +123,19 @@
     <string name="settingsUI_apps_title" msgid="2772289096915264175">"برنامه‌هایی که علایق را ارزیابی می‌کنند"</string>
     <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"سنجش آگهی"</string>
     <string name="settingsUI_main_view_info_text9" msgid="5431131706102562540">"‏برنامه‌ها می‌توانند از «جعبه ایمنی حریم خصوصی» برای سنجش اثربخشی آگهی‌هایشان استفاده کنند. برای انجام این کار، تبلیغ‌کنندگان می‌توانند داده‌های مربوط به تعاملات شما بین آگهی‌ها و برنامه‌هایشان را به‌طور موقت در Android ذخیره کنند. مقدار داده‌ای که آن‌ها می‌توانند ذخیره کنند محدود است و این داده‌ها به‌طور منظم حذف خواهند شد.\n\nهرزمان خواستید با خاموش کردن «جعبه ایمنی حریم خصوصی» می‌توانید این داده‌ها را حذف کنید."</string>
-    <string name="settingsUI_topics_view_subtitle" msgid="6608135144119617292">"‏Android به‌طور دوره‌ای علایق اصلی شما را براساس برنامه‌هایی که استفاده می‌کنید ارزیابی می‌کند. برنامه‌ها می‌توانند به Android درخواست بدهند که از این علایق برای نشان دادن آگهی‌های مرتبط‌تر به شما استفاده کنند.\n\nاگر علاقه‌ای را مسدود کنید، تا زمانی‌که آن را رفع انسداد نکنید دوباره به فهرست اضافه نخواهد شد. ممکن است همچنان برخی‌از آگهی‌های مرتبط را مشاهده کنید."</string>
+    <string name="settingsUI_topics_view_subtitle" msgid="6608135144119617292">"‏Android به‌طور دوره‌ای موضوع‌های اصلی موردعلاقه‌تان را براساس برنامه‌هایی که استفاده می‌کنید ارزیابی می‌کند. برنامه‌ها می‌توانند به Android درخواست بدهند که از این موضوع‌ها برای نشان دادن آگهی‌های مرتبط‌تر به شما استفاده کنند.\n\nاگر موضوعی را مسدود کنید، تا زمانی‌که آن را رفع انسداد نکنید دوباره به فهرست اضافه نخواهد شد. ممکن است همچنان برخی‌از آگهی‌های مرتبط را مشاهده کنید."</string>
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"مسدود کردن"</string>
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"لغو انسداد"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"علایقی که مسدود کرده‌اید"</string>
-    <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"بازنشاندن همه علایق"</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"در‌حال‌حاضر هیچ علاقه‌ای برای نمایش وجود ندارد"</string>
+    <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"بازنشاندن همه موضوع‌های موردعلاقه"</string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"در‌حال‌حاضر هیچ موضوع موردعلاقه‌ای برای نمایش وجود ندارد"</string>
     <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"درحال‌حاضر هیچ موضوعی برای نمایش وجود ندارد"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"جعبه ایمنی حریم خصوصی"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"‏نسخه بتای حریم خصوصی آگهی‌های Android ویژگی‌های جدیدی را ارائه می‌کند که برنامه‌ها بااستفاده از آن‌ها می‌توانند آگهی‌هایی به شما نشان دهند که شاید بپسندید. این فناوری‌ها از شناسه‌های دستگاه استفاده نمی‌کنند.\n\nAndroid می‌تواند انواع آگهی‌هایی را که ممکن است به آن‌ها علاقه داشته باشید ارزیابی کند و این علایق را به‌طور موقت در دستگاهتان ذخیره کند. این ویژگی به برنامه‌ها امکان می‌دهد بدون ردیابی فعالیت شما در وب‌سایت‌ها و برنامه‌های توسعه‌دهندگان دیگر، آگهی‌های مرتبط به شما نشان دهند."</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"علاقه مسدودشده‌ای ندارید"</string>
-    <!-- no translation found for settingsUI_no_blocked_topics_ga_text (377459829879121256) -->
-    <skip />
-    <!-- no translation found for settingsUI_view_blocked_topics_title (3705333677440361392) -->
-    <skip />
-    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"علایق بازنشانی شد"</string>
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"موضوع موردعلاقه‌ای که مسدود شده باشد ندارید"</string>
+    <string name="settingsUI_no_blocked_topics_ga_text" msgid="377459829879121256">"موضوعی مسدود نشده است"</string>
+    <string name="settingsUI_view_blocked_topics_title" msgid="3705333677440361392">"مشاهده موضوع‌های مسدودشده"</string>
+    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"موضوع‌های موردعلاقه بازنشانی شد"</string>
     <string name="settingsUI_topics_are_reset_ga" msgid="5250296990870048195">"موضوع‌ها بازنشانی شدند"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"‏برنامه‌ها می‌توانند علایق شما را ارزیابی کنند و آن‌ها را به‌طور موقت در Android ذخیره کنند. بعداً، برنامه دیگری می‌تواند براساس این علایق به شما آگهی نشان دهد.\n\nاگر برنامه‌ای را مسدود کنید، این برنامه دیگر علایق را ارزیابی نخواهد کرد. تا زمانی‌که آن را لغو انسداد نکنید دیگر به این فهرست برنامه اضافه نخواهد شد. علایقی که برنامه قبلاً ارزیابی کرده است حذف خواهد شد، اما ممکن است همچنان آگهی‌هایی مرتبط با آن‌ها ببینید."</string>
     <string name="settingsUI_blocked_apps_title" msgid="1260257485713408637">"برنامه‌هایی که مسدود کرده‌اید"</string>
@@ -148,8 +146,7 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"جعبه ایمنی حریم خصوصی"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"‏نسخه بتای حریم خصوصی آگهی‌های Android ویژگی‌های جدیدی را ارائه می‌کند که برنامه‌ها بااستفاده از آن‌ها می‌توانند آگهی‌هایی به شما نشان دهند که شاید بپسندید. این فناوری‌ها از شناسه‌های دستگاه استفاده نمی‌کنند.\n\nبرنامه‌ها می‌توانند انواع آگهی‌هایی را که ممکن است به آن‌ها علاقه داشته باشید ارزیابی کنند و این علایق را به‌طور موقت در دستگاهتان ذخیره کنند. این ویژگی به برنامه‌ها امکان می‌دهد بدون ردیابی فعالیت شما در وب‌سایت‌ها و برنامه‌های توسعه‌دهندگان دیگر، آگهی‌های مرتبط به شما نشان دهند."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"هیچ برنامه مسدودشده‌ای ندارید"</string>
-    <!-- no translation found for settingsUI_no_blocked_apps_ga_text (7488680173653861943) -->
-    <skip />
+    <string name="settingsUI_no_blocked_apps_ga_text" msgid="7488680173653861943">"برنامه‌ای مسدود نشده است"</string>
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"مجاز کردن سنجش آگهی"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"‏برنامه‌ها و تبلیغ‌کنندگان می‌توانند از Android اطلاعات درخواست کنند. این اطلاعات به آن‌ها کمک می‌کند عملکرد آگهی‌هایشان را بسنجند.\n\nداده‌های سنجش آگهی مرتباً از دستگاهتان حذف می‌شود."</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"بازنشانی داده‌های سنجش"</string>
@@ -160,28 +157,20 @@
     <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"‏اگر نظرتان عوض شد یا خواستید درباره نسخه بتای حریم خصوصی آگهی‌های Android اطلاعات بیشتری کسب کنید، به تنظیمات حریم خصوصی‌تان بروید"</string>
     <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"خاموش کردن"</string>
     <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"<xliff:g id="TOPIC">%1$s</xliff:g> مسدود شود؟"</string>
-    <!-- no translation found for settingsUI_dialog_block_topic_message (2581824495438333677) -->
-    <skip />
+    <string name="settingsUI_dialog_block_topic_message" msgid="2581824495438333677">"این موضوع مسدود خواهد شد و دیگر به فهرستتان اضافه نخواهد شد، مگراینکه آن را دوباره اضافه کنید. ممکن است همچنان تعدادی آگهی مرتبط ببینید."</string>
     <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"مسدود کردن"</string>
-    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"<xliff:g id="TOPIC">%1$s</xliff:g> لغو انسداد شد"</string>
-    <!-- no translation found for settingsUI_dialog_unblock_topic_message (1090743551997420666) -->
-    <skip />
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"«<xliff:g id="TOPIC">%1$s</xliff:g>» لغو انسداد شد"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="1090743551997420666">"‏Android ممکن است این موضوع را دوباره به فهرستتان اضافه کند، اما شاید فوراً نمایش داده نشود"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"تأیید"</string>
-    <!-- no translation found for settingsUI_dialog_reset_topic_title (8025836207966712435) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (4243744527757134000) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_topic_title" msgid="8025836207966712435">"همه موضوع‌های آگهی بازنشانی شود؟"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="4243744527757134000">"فهرستتان پاک خواهد شد و ازاین‌پس موضوع‌های جدیدی اضافه خواهد شد. ممکن است همچنان تعدادی آگهی مرتبط با موضوع‌هایی که بازنشانی کرده‌اید ببینید."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"بازنشانی"</string>
-    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g> مسدود شود؟"</string>
-    <!-- no translation found for settingsUI_dialog_block_app_message (758788973278770119) -->
-    <skip />
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"«<xliff:g id="APP">%1$s</xliff:g>» مسدود شود؟"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="758788973278770119">"این برنامه دیگر آگهی پیشنهاد نخواهد داد و دوباره به فهرستتان اضافه نخواهد شد، مگراینکه آن را رفع انسداد کنید. ممکن است همچنان تعدادی آگهی مرتبط ببینید."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> لغو انسداد شد"</string>
-    <!-- no translation found for settingsUI_dialog_unblock_app_message (5758218424845642060) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_app_title (5177572712117150557) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_app_message (7845329616145691006) -->
-    <skip />
+    <string name="settingsUI_dialog_unblock_app_message" msgid="5758218424845642060">"این برنامه می‌تواند دوباره به شما آگهی پیشنهاد دهد، اما ممکن است فوراً در فهرستتان نمایش داده نشود. ممکن است مدتی طول بکشد تا آگهی‌های مرتبط را ببینید."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"آگهی‌های پیشنهادشده توسط برنامه‌ها بازنشانی شود؟"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"داده‌های پیشنهاد آگهی مربوط به برنامه‌های فهرستتان حذف خواهد شد و برنامه‌ها ازاین‌پس آگهی‌های جدیدی پیشنهاد خواهند داد. ممکن است همچنان تعدادی آگهی مرتبط ببینید."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"داده‌های برنامه بازنشانی شد"</string>
     <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"همه موضوع‌ها بازنشانی شود؟"</string>
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"آگهی‌های پیشنهادشده توسط برنامه‌ها بازنشانی شود؟"</string>
@@ -200,8 +189,7 @@
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"‏موضوع‌های موردعلاقه براساس برنامه‌هایی که اخیراً از آن‌ها استفاده کرده‌اید تعیین می‌شود و برنامه‌ها برای نمایش آگهی‌های شخصی‌سازی‌شده از این اطلاعات استفاده می‌کنند.\n\nمی‌توانید موضوع‌هایی را که نمی‌خواهید با برنامه‌ها هم‌رسانی شود مسدود کنید. Android نیز مرتباً موضوع‌ها را به‌طور خودکار حذف می‌کند."</string>
     <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"مجاز کردن موضوع‌های آگهی"</string>
     <string name="settingsUI_blocked_topics_ga_title" msgid="7163366621282449273">"موضوع‌های آگهی‌ای که مسدود کرده‌اید"</string>
-    <!-- no translation found for settingsUI_reset_topics_ga_title (5365554894399951300) -->
-    <skip />
+    <string name="settingsUI_reset_topics_ga_title" msgid="5365554894399951300">"بازنشانی همه موضوع‌های آگهی"</string>
     <string name="settingsU_topics_view_footer" msgid="4769146330248953561">"‏Android موضوع‌های موردعلاقه‌تان را براساس برنامه‌هایی که در چند هفته گذشته استفاده کرده‌اید مدنظر می‌گیرد.\n\nبعداً، یکی از برنامه‌هایی که استفاده می‌کنید می‌تواند برای شخصی کردن آگهی‌هایی که می‌بینید موضوع‌های شما را از Android درخواست کند. Android ضمن محافظت از هویت و اطلاعات مربوط به استفاده شما از برنامه، حداکثر ۳ موضوع را هم‌رسانی می‌کند.\n\nAndroid مرتباً موضوع‌ها را به‌طور خودکار حذف می‌کند. با ادامه استفاده از برنامه، ممکن است موضوعی دوباره در فهرست ظاهر شود. یا می‌توانید موضوع‌هایی را که نمی‌خواهید Android با برنامه‌ها هم‌رسانی کند مسدود کند.\n\nدر برنامه‌های شما، آگهی‌هایی که می‌بینید ممکن است شخصی‌سازی شوند، که این می‌تواند براساس این تنظیم، تنظیم آگهی‌های پیشنهادی برنامه، تنظیمات شناسه تبلیغاتی شما، و اینکه آیا برنامه مورداستفاده‌تان آگهی‌ها را شخصی می‌کند یا نه باشد."</string>
     <string name="settingsUI_apps_switch_title" msgid="1308209012769248890">"مجاز کردن آگهی‌های پیشنهادی برنامه"</string>
     <string name="settingsUI_apps_view_ga_subtitle" msgid="1911743837387384160">"‏برنامه‌هایی که استفاده می‌کنید می‌توانند آنچه را دوست دارید تشخیص دهند و سپس در برنامه‌های دیگر آگهی پیشنهاد دهند.\n\nهمچنین می‌توانید برنامه‌ها را مسدود کنید تا پیشنهاد ندهند. Android نیز مرتباً داده‌های پیشنهادی برنامه‌ها را به‌طور خودکار حذف می‌کند."</string>

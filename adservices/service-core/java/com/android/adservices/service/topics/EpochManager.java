@@ -35,6 +35,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.topics.classifier.Classifier;
 import com.android.adservices.service.topics.classifier.ClassifierManager;
+import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
 
@@ -94,6 +95,9 @@ public class EpochManager implements Dumpable {
     @VisibleForTesting
     public static final String PADDED_TOP_TOPICS_STRING = "no_contributors_due_to_padding!";
 
+    private static final Object SINGLETON_LOCK = new Object();
+
+    @GuardedBy("SINGLETON_LOCK")
     private static EpochManager sSingleton;
 
     private final TopicsDao mTopicsDao;
@@ -123,7 +127,7 @@ public class EpochManager implements Dumpable {
     /** Returns an instance of the EpochManager given a context. */
     @NonNull
     public static EpochManager getInstance(@NonNull Context context) {
-        synchronized (EpochManager.class) {
+        synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
                 sSingleton =
                         new EpochManager(

@@ -38,6 +38,7 @@ import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.service.topics.TopicsWorker;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.internal.util.Preconditions;
 
 import com.google.common.collect.ImmutableList;
 
@@ -78,6 +79,8 @@ public class ConsentManager {
     private final ExecutorService mExecutor;
     private final AdServicesManager mAdServicesManager;
     private final int mConsentSourceOfTruth;
+
+    private static final Object LOCK = new Object();
 
     ConsentManager(
             @NonNull Context context,
@@ -122,7 +125,7 @@ public class ConsentManager {
         Objects.requireNonNull(context);
 
         if (sConsentManager == null) {
-            synchronized (ConsentManager.class) {
+            synchronized (LOCK) {
                 // Execute one-time consent migration if needed.
                 int consentSourceOfTruth = FlagsFactory.getFlags().getConsentSourceOfTruth();
                 BooleanFileDatastore datastore = createAndInitializeDataStore(context);
@@ -278,7 +281,7 @@ public class ConsentManager {
             return AdServicesApiConsent.GIVEN;
         }
 
-        synchronized (ConsentManager.class) {
+        synchronized (LOCK) {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
@@ -318,7 +321,7 @@ public class ConsentManager {
             return AdServicesApiConsent.GIVEN;
         }
 
-        synchronized (ConsentManager.class) {
+        synchronized (LOCK) {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
@@ -403,7 +406,7 @@ public class ConsentManager {
      *     consent revoked
      */
     public ImmutableList<App> getKnownAppsWithConsent() {
-        synchronized (ConsentManager.class) {
+        synchronized (LOCK) {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
@@ -443,7 +446,7 @@ public class ConsentManager {
      *     revoked
      */
     public ImmutableList<App> getAppsWithRevokedConsent() {
-        synchronized (ConsentManager.class) {
+        synchronized (LOCK) {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
@@ -487,7 +490,7 @@ public class ConsentManager {
      * @throws IOException if the operation fails
      */
     public void revokeConsentForApp(@NonNull App app) throws IOException {
-        synchronized (ConsentManager.class) {
+        synchronized (LOCK) {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
@@ -524,7 +527,7 @@ public class ConsentManager {
      * @throws IOException if the operation fails
      */
     public void restoreConsentForApp(@NonNull App app) throws IOException {
-        synchronized (ConsentManager.class) {
+        synchronized (LOCK) {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
@@ -560,7 +563,7 @@ public class ConsentManager {
      * @throws IOException if the operation fails
      */
     public void resetAppsAndBlockedApps() throws IOException {
-        synchronized (ConsentManager.class) {
+        synchronized (LOCK) {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
@@ -591,7 +594,7 @@ public class ConsentManager {
      * @throws IOException if the operation fails
      */
     public void resetApps() throws IOException {
-        synchronized (ConsentManager.class) {
+        synchronized (LOCK) {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
@@ -642,7 +645,7 @@ public class ConsentManager {
             return true;
         }
 
-        synchronized (ConsentManager.class) {
+        synchronized (LOCK) {
             switch (mConsentSourceOfTruth) {
                 case Flags.PPAPI_ONLY:
                     try {
@@ -693,7 +696,7 @@ public class ConsentManager {
             return true;
         }
 
-        synchronized (ConsentManager.class) {
+        synchronized (LOCK) {
             switch (mConsentSourceOfTruth) {
                 case Flags.PPAPI_ONLY:
                     try {
@@ -732,7 +735,7 @@ public class ConsentManager {
      * @param packageUid the package uid that had been uninstalled.
      */
     public void clearConsentForUninstalledApp(String packageName, int packageUid) {
-        synchronized (ConsentManager.class) {
+        synchronized (LOCK) {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
@@ -776,6 +779,42 @@ public class ConsentManager {
         }
     }
 
+    /**
+     * Clear consent data after an app was uninstalled, but the package Uid is unavailable. This
+     * could happen because the INTERACT_ACROSS_USERS_FULL permission is not available on Android
+     * versions prior to T.
+     *
+     * <p><strong>This method should only be used for R/S back-compat scenarios.</strong>
+     *
+     * @param packageName the package name that had been uninstalled.
+     */
+    public void clearConsentForUninstalledApp(@NonNull String packageName) {
+        Objects.requireNonNull(packageName);
+        Preconditions.checkStringNotEmpty(packageName, "Package name should not be empty");
+
+        synchronized (ConsentManager.class) {
+            try {
+                switch (mConsentSourceOfTruth) {
+                    case Flags.PPAPI_ONLY:
+                        try {
+                            mAppConsentDao.clearConsentForUninstalledApp(packageName);
+                        } catch (IOException exception) {
+                            LogUtil.e(
+                                    exception,
+                                    "Clear consent for uninstalled app %s failed due to"
+                                            + " IOException",
+                                    packageName);
+                        }
+                        break;
+                    default:
+                        LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                }
+            } catch (RuntimeException e) {
+                LogUtil.e(e, "Error clear consent for uninstalled app %s.", packageName);
+            }
+        }
+    }
+
     /** Wipes out all the data gathered by Measurement API. */
     public void resetMeasurement() {
         UiStatsLogger.logResetMeasurement(mContext);
@@ -796,7 +835,7 @@ public class ConsentManager {
      * system server if consent source of truth is SYSTEM_SERVER_ONLY or dual sources.
      */
     public void recordNotificationDisplayed() {
-        synchronized (ConsentManager.class) {
+        synchronized (LOCK) {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
@@ -828,7 +867,7 @@ public class ConsentManager {
      * @return true if Consent Notification was displayed, otherwise false.
      */
     public Boolean wasNotificationDisplayed() {
-        synchronized (ConsentManager.class) {
+        synchronized (LOCK) {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
@@ -857,7 +896,7 @@ public class ConsentManager {
      * system server if consent source of truth is SYSTEM_SERVER_ONLY or dual sources.
      */
     public void recordGaUxNotificationDisplayed() {
-        synchronized (ConsentManager.class) {
+        synchronized (LOCK) {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
@@ -889,7 +928,7 @@ public class ConsentManager {
      * @return true if GA UX Consent Notification was displayed, otherwise false.
      */
     public Boolean wasGaUxNotificationDisplayed() {
-        synchronized (ConsentManager.class) {
+        synchronized (LOCK) {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
@@ -917,7 +956,7 @@ public class ConsentManager {
      * system server if consent source of truth is SYSTEM_SERVER_ONLY or dual sources.
      */
     public void recordTopicsConsentPageDisplayed() {
-        synchronized (ConsentManager.class) {
+        synchronized (LOCK) {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
@@ -949,7 +988,7 @@ public class ConsentManager {
      * @return true if topics consent page was displayed, otherwise false.
      */
     public Boolean wasTopicsConsentPageDisplayed() {
-        synchronized (ConsentManager.class) {
+        synchronized (LOCK) {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
@@ -978,7 +1017,7 @@ public class ConsentManager {
      * system server if consent source of truth is SYSTEM_SERVER_ONLY or dual sources.
      */
     public void recordFledgeAndMsmtConsentPageDisplayed() {
-        synchronized (ConsentManager.class) {
+        synchronized (LOCK) {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
@@ -1013,7 +1052,7 @@ public class ConsentManager {
      * @return true if fledge and msmt consent page was displayed, otherwise false.
      */
     public Boolean wasFledgeAndMsmtConsentPageDisplayed() {
-        synchronized (ConsentManager.class) {
+        synchronized (LOCK) {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
@@ -1278,7 +1317,7 @@ public class ConsentManager {
     // To write to PPAPI if consent source of truth is PPAPI_ONLY or dual sources.
     // To write to system server if consent source of truth is SYSTEM_SERVER_ONLY or dual sources.
     private void setConsentToSourceOfTruth(boolean isGiven) {
-        synchronized (ConsentManager.class) {
+        synchronized (LOCK) {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
@@ -1289,10 +1328,8 @@ public class ConsentManager {
                         break;
                     case Flags.PPAPI_AND_SYSTEM_SERVER:
                         // Ensure data is consistent in PPAPI and system server.
-                        synchronized (ConsentManager.class) {
-                            setConsentToPpApi(isGiven);
-                            setConsentToSystemServer(mAdServicesManager, isGiven);
-                        }
+                        setConsentToPpApi(isGiven);
+                        setConsentToSystemServer(mAdServicesManager, isGiven);
                         break;
                     default:
                         throw new RuntimeException(
@@ -1305,7 +1342,7 @@ public class ConsentManager {
     }
 
     private void setPerApiConsentToSourceOfTruth(boolean isGiven, AdServicesApiType apiType) {
-        synchronized (ConsentManager.class) {
+        synchronized (LOCK) {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
