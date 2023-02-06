@@ -68,15 +68,9 @@ public class SourceTest {
     public void testEqualsPass() throws JSONException {
         assertEquals(SourceFixture.getValidSourceBuilder().build(),
                 SourceFixture.getValidSourceBuilder().build());
-        JSONArray aggregateSource = new JSONArray();
-        JSONObject jsonObject1 = new JSONObject();
-        jsonObject1.put("id", "campaignCounts");
-        jsonObject1.put("key_piece", "0x159");
-        JSONObject jsonObject2 = new JSONObject();
-        jsonObject2.put("id", "geoValue");
-        jsonObject2.put("key_piece", "0x5");
-        aggregateSource.put(jsonObject1);
-        aggregateSource.put(jsonObject2);
+        JSONObject aggregateSource = new JSONObject();
+        aggregateSource.put("campaignCounts", "0x159");
+        aggregateSource.put("geoValue", "0x5");
 
         JSONObject filterMap = new JSONObject();
         filterMap.put(
@@ -267,17 +261,11 @@ public class SourceTest {
                         .setAggregatableAttributionSource(
                                 new AggregatableAttributionSource.Builder().build())
                         .build());
-        JSONArray aggregateSource1 = new JSONArray();
-        JSONObject jsonObject1 = new JSONObject();
-        jsonObject1.put("id", "campaignCounts");
-        jsonObject1.put("key_piece", "0x159");
-        aggregateSource1.put(jsonObject1);
+        JSONObject aggregateSource1 = new JSONObject();
+        aggregateSource1.put("campaignCounts", "0x159");
 
-        JSONArray aggregateSource2 = new JSONArray();
-        JSONObject jsonObject2 = new JSONObject();
-        jsonObject2.put("id", "geoValue");
-        jsonObject2.put("key_piece", "0x5");
-        aggregateSource2.put(jsonObject2);
+        JSONObject aggregateSource2 = new JSONObject();
+        aggregateSource2.put("geoValue", "0x5");
 
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder()
