@@ -326,6 +326,9 @@ public final class PhFlags implements Flags {
 
     static final String KEY_GA_UX_FEATURE_ENABLED = "ga_ux_enabled";
 
+    // Back-compat keys
+    static final String KEY_COMPAT_LOGGING_KILL_SWITCH = "compat_logging_kill_switch";
+
     // Maximum possible percentage for percentage variables
     static final int MAX_PERCENTAGE = 100;
 
@@ -2315,6 +2318,9 @@ public final class PhFlags implements Flags {
                         + KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH
                         + " = "
                         + getBlockedTopicsSourceOfTruth());
+        writer.println("==== Back-Compat PH Flags Dump STATUS ====");
+        writer.println(
+                "\t" + KEY_COMPAT_LOGGING_KILL_SWITCH + " = " + getCompatLoggingKillSwitch());
     }
 
     @Override
@@ -2333,5 +2339,14 @@ public final class PhFlags implements Flags {
         }
         String[] blocklistList = blocklistFlag.split(",");
         return ImmutableList.copyOf(blocklistList);
+    }
+
+    @Override
+    public boolean getCompatLoggingKillSwitch() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_COMPAT_LOGGING_KILL_SWITCH,
+                /* defaultValue */ COMPAT_LOGGING_KILL_SWITCH);
     }
 }
