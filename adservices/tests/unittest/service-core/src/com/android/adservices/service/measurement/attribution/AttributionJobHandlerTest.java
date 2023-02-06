@@ -41,6 +41,7 @@ import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.AttributionConfig;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
@@ -105,11 +106,15 @@ public class AttributionJobHandlerTest {
 
     DatastoreManager mDatastoreManager;
 
+    AttributionJobHandler mHandler;
+
     @Mock
     IMeasurementDao mMeasurementDao;
 
     @Mock
     ITransaction mTransaction;
+
+    @Mock Flags mFlags;
 
     class FakeDatastoreManager extends DatastoreManager {
 
@@ -127,6 +132,8 @@ public class AttributionJobHandlerTest {
     @Before
     public void before() {
         mDatastoreManager = new FakeDatastoreManager();
+        mHandler = new AttributionJobHandler(mDatastoreManager, mFlags);
+        when(mFlags.getMeasurementEnableXNA()).thenReturn(false);
     }
 
     @Test
@@ -137,8 +144,7 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
         when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
-        attributionService.performPendingAttributions();
+        mHandler.performPendingAttributions();
         verify(mMeasurementDao).getTrigger(trigger.getId());
         verify(mMeasurementDao, never()).updateTriggerStatus(any(), anyInt());
         verify(mMeasurementDao, never()).insertEventReport(any());
@@ -153,8 +159,7 @@ public class AttributionJobHandlerTest {
                 .thenReturn(Collections.singletonList(trigger.getId()));
         when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(new ArrayList<>());
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
-        attributionService.performPendingAttributions();
+        mHandler.performPendingAttributions();
         verify(mMeasurementDao)
                 .updateTriggerStatus(
                         eq(Collections.singletonList(trigger.getId())), eq(Trigger.Status.IGNORED));
@@ -195,8 +200,7 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
-        attributionService.performPendingAttributions();
+        mHandler.performPendingAttributions();
         verify(mMeasurementDao)
                 .updateTriggerStatus(
                         eq(Collections.singletonList(trigger.getId())), eq(Trigger.Status.IGNORED));
@@ -234,8 +238,7 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
-        attributionService.performPendingAttributions();
+        mHandler.performPendingAttributions();
         verify(mMeasurementDao)
                 .updateTriggerStatus(
                         eq(Collections.singletonList(trigger.getId())), eq(Trigger.Status.IGNORED));
@@ -279,8 +282,8 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getMatchingActiveSources(trigger1)).thenReturn(matchingSourceList);
         when(mMeasurementDao.getMatchingActiveSources(trigger2)).thenReturn(matchingSourceList);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
-        assertTrue(attributionService.performPendingAttributions());
+
+        assertTrue(mHandler.performPendingAttributions());
         // Verify trigger status updates.
         verify(mMeasurementDao).updateTriggerStatus(
                 eq(Collections.singletonList(trigger1.getId())), eq(Trigger.Status.ATTRIBUTED));
@@ -339,8 +342,7 @@ public class AttributionJobHandlerTest {
         matchingSourceList.add(source2);
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
-        attributionService.performPendingAttributions();
+        mHandler.performPendingAttributions();
         trigger.setStatus(Trigger.Status.ATTRIBUTED);
         verify(mMeasurementDao)
                 .updateSourceStatus(eq(List.of(source1.getId())), eq(Source.Status.IGNORED));
@@ -367,8 +369,7 @@ public class AttributionJobHandlerTest {
         matchingSourceList.add(source);
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(105L);
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
-        attributionService.performPendingAttributions();
+        mHandler.performPendingAttributions();
         verify(mMeasurementDao).getAttributionsPerRateLimitWindow(source, trigger);
         verify(mMeasurementDao)
                 .updateTriggerStatus(
@@ -392,8 +393,7 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
         when(mMeasurementDao.countDistinctEnrollmentsPerPublisherXDestinationInAttribution(
                 any(), any(), any(), anyLong(), anyLong())).thenReturn(10);
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
-        attributionService.performPendingAttributions();
+        mHandler.performPendingAttributions();
         verify(mMeasurementDao)
                 .countDistinctEnrollmentsPerPublisherXDestinationInAttribution(
                         any(), any(), any(), anyLong(), anyLong());
@@ -431,8 +431,7 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
         when(mMeasurementDao.getSourceEventReports(source)).thenReturn(matchingReports);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
-        attributionService.performPendingAttributions();
+        mHandler.performPendingAttributions();
         verify(mMeasurementDao)
                 .updateTriggerStatus(
                         eq(Collections.singletonList(trigger.getId())), eq(Trigger.Status.IGNORED));
@@ -483,8 +482,7 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
         when(mMeasurementDao.getSourceEventReports(source)).thenReturn(matchingReports);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
-        attributionService.performPendingAttributions();
+        mHandler.performPendingAttributions();
         verify(mMeasurementDao)
                 .updateTriggerStatus(
                         eq(Collections.singletonList(trigger.getId())), eq(Trigger.Status.IGNORED));
@@ -507,8 +505,7 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
         when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
-        attributionService.performPendingAttributions();
+        mHandler.performPendingAttributions();
         verify(mMeasurementDao)
                 .updateTriggerStatus(
                         eq(Collections.singletonList(trigger.getId())),
@@ -564,8 +561,7 @@ public class AttributionJobHandlerTest {
         matchingSourceList.add(source2);
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
-        attributionService.performPendingAttributions();
+        mHandler.performPendingAttributions();
         trigger.setStatus(Trigger.Status.ATTRIBUTED);
         verify(mMeasurementDao)
                 .updateSourceStatus(eq(List.of(source1.getId())), eq(Source.Status.IGNORED));
@@ -638,8 +634,7 @@ public class AttributionJobHandlerTest {
         when(source.getAppDestination()).thenReturn(APP_DESTINATION);
         when(source.getPublisherType()).thenReturn(EventSurfaceType.APP);
         when(source.getPublisher()).thenReturn(PUBLISHER);
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
-        attributionService.performPendingAttributions();
+        mHandler.performPendingAttributions();
         verify(mMeasurementDao).deleteEventReport(eventReport1);
         verify(mMeasurementDao)
                 .updateTriggerStatus(
@@ -672,8 +667,7 @@ public class AttributionJobHandlerTest {
         doThrow(new DatastoreException("Simulating failure"))
                 .when(mMeasurementDao)
                 .updateSourceEventReportDedupKeys(any());
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
-        attributionService.performPendingAttributions();
+        mHandler.performPendingAttributions();
         verify(mMeasurementDao).getTrigger(anyString());
         verify(mMeasurementDao).getMatchingActiveSources(any());
         verify(mMeasurementDao).getAttributionsPerRateLimitWindow(any(), any());
@@ -730,8 +724,8 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getMatchingActiveSources(trigger1)).thenReturn(matchingSourceList1);
         when(mMeasurementDao.getMatchingActiveSources(trigger2)).thenReturn(matchingSourceList2);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
-        assertTrue(attributionService.performPendingAttributions());
+
+        assertTrue(mHandler.performPendingAttributions());
         // Verify trigger status updates.
         verify(mMeasurementDao, times(2)).updateTriggerStatus(any(), eq(Trigger.Status.ATTRIBUTED));
         // Verify source dedup key updates.
@@ -803,8 +797,7 @@ public class AttributionJobHandlerTest {
         matchingSourceList.add(source1);
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
-        attributionService.performPendingAttributions();
+        mHandler.performPendingAttributions();
         trigger.setStatus(Trigger.Status.ATTRIBUTED);
         verify(mMeasurementDao)
                 .updateSourceStatus(eq(List.of(source2.getId())), eq(Source.Status.IGNORED));
@@ -872,9 +865,9 @@ public class AttributionJobHandlerTest {
         matchingSourceList.add(source1);
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
+
         // Execution
-        attributionService.performPendingAttributions();
+        mHandler.performPendingAttributions();
         trigger.setStatus(Trigger.Status.ATTRIBUTED);
 
         // Assertion
@@ -921,8 +914,7 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
         when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
-        attributionService.performPendingAttributions();
+        mHandler.performPendingAttributions();
         verify(mMeasurementDao)
                 .updateTriggerStatus(
                         eq(Collections.singletonList(trigger.getId())), eq(Trigger.Status.IGNORED));
@@ -958,8 +950,7 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
         when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
-        attributionService.performPendingAttributions();
+        mHandler.performPendingAttributions();
         verify(mMeasurementDao)
                 .updateTriggerStatus(
                         eq(Collections.singletonList(trigger.getId())), eq(Trigger.Status.IGNORED));
@@ -1040,8 +1031,7 @@ public class AttributionJobHandlerTest {
         matchingSourceList.add(source);
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
-        attributionService.performPendingAttributions();
+        mHandler.performPendingAttributions();
         ArgumentCaptor<Source> sourceArg = ArgumentCaptor.forClass(Source.class);
         verify(mMeasurementDao).updateSourceAggregateContributions(sourceArg.capture());
         ArgumentCaptor<AggregateReport> aggregateReportCaptor =
@@ -1089,8 +1079,7 @@ public class AttributionJobHandlerTest {
         matchingSourceList.add(source);
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
-        attributionService.performPendingAttributions();
+        mHandler.performPendingAttributions();
         verify(mMeasurementDao, never()).updateSourceAggregateContributions(any());
         verify(mMeasurementDao, never()).insertAggregateReport(any());
     }
@@ -1134,10 +1123,9 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
         when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
 
         // Execution
-        attributionService.performPendingAttributions();
+        mHandler.performPendingAttributions();
 
         // Assertions
         verify(mMeasurementDao)
@@ -1188,10 +1176,9 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
         when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
 
         // Execution
-        attributionService.performPendingAttributions();
+        mHandler.performPendingAttributions();
 
         // Assertions
         verify(mMeasurementDao)
@@ -1242,10 +1229,9 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
         when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
 
         // Execution
-        attributionService.performPendingAttributions();
+        mHandler.performPendingAttributions();
 
         // Assertions
         verify(mMeasurementDao)
@@ -1296,10 +1282,9 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
         when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
 
         // Execution
-        attributionService.performPendingAttributions();
+        mHandler.performPendingAttributions();
 
         // Assertions
         verify(mMeasurementDao)
@@ -1350,10 +1335,9 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
         when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
 
         // Execution
-        attributionService.performPendingAttributions();
+        mHandler.performPendingAttributions();
 
         // Assertions
         verify(mMeasurementDao)
@@ -1409,10 +1393,9 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
         when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
 
         // Execution
-        attributionService.performPendingAttributions();
+        mHandler.performPendingAttributions();
 
         // Assertions
         verify(mMeasurementDao)
@@ -1468,10 +1451,9 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
         when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
 
         // Execution
-        attributionService.performPendingAttributions();
+        mHandler.performPendingAttributions();
 
         // Assertions
         verify(mMeasurementDao)
@@ -1527,10 +1509,9 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
         when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
 
         // Execution
-        attributionService.performPendingAttributions();
+        mHandler.performPendingAttributions();
 
         // Assertions
         verify(mMeasurementDao)
@@ -1588,10 +1569,9 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
         when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
 
         // Execution
-        attributionService.performPendingAttributions();
+        mHandler.performPendingAttributions();
 
         // Assertions
         verify(mMeasurementDao)
@@ -1649,10 +1629,9 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
         when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
 
         // Execution
-        attributionService.performPendingAttributions();
+        mHandler.performPendingAttributions();
 
         // Assertions
         verify(mMeasurementDao)
@@ -1710,10 +1689,9 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
         when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
 
         // Execution
-        attributionService.performPendingAttributions();
+        mHandler.performPendingAttributions();
 
         // Assertions
         verify(mMeasurementDao)
@@ -1769,10 +1747,9 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
         when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
 
         // Execution
-        attributionService.performPendingAttributions();
+        mHandler.performPendingAttributions();
 
         // Assertions
         verify(mMeasurementDao)
@@ -1858,10 +1835,9 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
         when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
 
         // Execution
-        attributionService.performPendingAttributions();
+        mHandler.performPendingAttributions();
 
         // Assertions
         verify(mMeasurementDao)
@@ -1941,10 +1917,9 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
         when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
 
         // Execution
-        attributionService.performPendingAttributions();
+        mHandler.performPendingAttributions();
 
         // Assertions
         verify(mMeasurementDao)
@@ -2026,10 +2001,9 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
         when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
 
         // Execution
-        attributionService.performPendingAttributions();
+        mHandler.performPendingAttributions();
 
         // Assertions
         verify(mMeasurementDao)
@@ -2109,10 +2083,9 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
         when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
 
         // Execution
-        attributionService.performPendingAttributions();
+        mHandler.performPendingAttributions();
 
         // Assertions
         verify(mMeasurementDao)
@@ -2195,10 +2168,9 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
         when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
 
         // Execution
-        attributionService.performPendingAttributions();
+        mHandler.performPendingAttributions();
 
         // Assertions
         verify(mMeasurementDao)
@@ -2264,10 +2236,9 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
         when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
 
         // Execution
-        attributionService.performPendingAttributions();
+        mHandler.performPendingAttributions();
 
         // Assertions
         verify(mMeasurementDao)
@@ -2331,10 +2302,9 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
         when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
 
         // Execution
-        attributionService.performPendingAttributions();
+        mHandler.performPendingAttributions();
 
         // Assertions
         verify(mMeasurementDao)
@@ -2401,10 +2371,9 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getNumEventReportsPerDestination(
                         trigger.getAttributionDestination(), trigger.getDestinationType()))
                 .thenReturn(numEventReportPerDestination);
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
 
         // Execution
-        attributionService.performPendingAttributions();
+        mHandler.performPendingAttributions();
 
         // Assertions
         verify(mMeasurementDao)
@@ -2471,10 +2440,9 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getNumEventReportsPerDestination(
                         trigger.getAttributionDestination(), trigger.getDestinationType()))
                 .thenReturn(numEventReportPerDestination);
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
 
         // Execution
-        attributionService.performPendingAttributions();
+        mHandler.performPendingAttributions();
 
         // Assertion
         verify(mMeasurementDao)
@@ -2541,10 +2509,9 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getNumEventReportsPerDestination(
                         trigger.getAttributionDestination(), trigger.getDestinationType()))
                 .thenReturn(numEventReportPerDestination);
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
 
         // Execution
-        attributionService.performPendingAttributions();
+        mHandler.performPendingAttributions();
 
         // Assertion
         verify(mMeasurementDao)
@@ -2610,10 +2577,9 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getNumEventReportsPerDestination(
                         trigger.getAttributionDestination(), trigger.getDestinationType()))
                 .thenReturn(numEventReportPerDestination);
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
 
         // Execution
-        attributionService.performPendingAttributions();
+        mHandler.performPendingAttributions();
 
         // Assertion
         verify(mMeasurementDao)
@@ -2693,10 +2659,10 @@ public class AttributionJobHandlerTest {
                 .thenReturn(matchingSourceList);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
         when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
+        when(mFlags.getMeasurementEnableXNA()).thenReturn(true);
 
         // Execution
-        boolean result = attributionService.performPendingAttributions();
+        boolean result = mHandler.performPendingAttributions();
 
         // Assertion
         assertTrue(result);
@@ -2784,10 +2750,10 @@ public class AttributionJobHandlerTest {
                 .thenReturn(matchingSourceList);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
         when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
-        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
+        when(mFlags.getMeasurementEnableXNA()).thenReturn(true);
 
         // Execution
-        boolean result = attributionService.performPendingAttributions();
+        boolean result = mHandler.performPendingAttributions();
 
         // Assertion
         assertTrue(result);
@@ -2799,6 +2765,96 @@ public class AttributionJobHandlerTest {
         verify(mMeasurementDao, never()).insertEventReport(any());
         verify(mMeasurementDao).insertAttribution(any());
         verify(mMeasurementDao)
+                .updateSourceStatus(
+                        eq(
+                                Arrays.asList(
+                                        triggerEnrollmentSource1.getId(),
+                                        triggerEnrollmentSource2.getId())),
+                        eq(Source.Status.IGNORED));
+        verify(mTransaction, times(2)).begin();
+        verify(mTransaction, times(2)).end();
+    }
+
+    @Test
+    public void performAttributions_xnaDisabled_derivedSourceIgnored() throws DatastoreException {
+        // Setup
+        String adtechEnrollment = "AdTech1-Ads";
+        AttributionConfig attributionConfig =
+                new AttributionConfig.Builder()
+                        .setExpiry(604800L)
+                        .setSourceAdtech(adtechEnrollment)
+                        .setSourcePriorityRange(new Pair<>(1L, 1000L))
+                        .setSourceFilters(null)
+                        .setPriority(50L)
+                        .setExpiry(604800L)
+                        .setFilterData(null)
+                        .build();
+        Trigger trigger =
+                getXnaTriggerBuilder()
+                        .setFilters(null)
+                        .setNotFilters(null)
+                        .setAttributionConfig(
+                                new JSONArray(
+                                                Collections.singletonList(
+                                                        attributionConfig.serializeAsJson()))
+                                        .toString())
+                        .build();
+
+        String aggregatableSource = SourceFixture.ValidSourceParams.buildAggregateSource();
+        // Its derived source will be winner due to install attribution and higher priority
+        Source xnaSource =
+                createXnaSourceBuilder()
+                        .setEnrollmentId(adtechEnrollment)
+                        // Priority changes to 50 for derived source
+                        .setPriority(1L)
+                        .setAggregateSource(aggregatableSource)
+                        .setFilterData(null)
+                        .setSharedAggregationKeys(
+                                new JSONArray(Arrays.asList("campaignCounts", "geoValue"))
+                                        .toString())
+                        .build();
+        Source triggerEnrollmentSource1 =
+                createXnaSourceBuilder()
+                        .setEnrollmentId(trigger.getEnrollmentId())
+                        .setPriority(2L)
+                        .setFilterData(null)
+                        .setAggregateSource(aggregatableSource)
+                        .build();
+
+        Source triggerEnrollmentSource2 =
+                createXnaSourceBuilder()
+                        .setEnrollmentId(trigger.getEnrollmentId())
+                        .setPriority(2L)
+                        .setFilterData(null)
+                        .setAggregateSource(aggregatableSource)
+                        .setInstallAttributed(false)
+                        .build();
+
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        List<Source> matchingSourceList = new ArrayList<>();
+        matchingSourceList.add(xnaSource);
+        matchingSourceList.add(triggerEnrollmentSource1);
+        matchingSourceList.add(triggerEnrollmentSource2);
+        when(mMeasurementDao.fetchTriggerMatchingSourcesForXna(any(), any()))
+                .thenReturn(matchingSourceList);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
+        when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
+        when(mFlags.getMeasurementEnableXNA()).thenReturn(false);
+
+        // Execution
+        boolean result = mHandler.performPendingAttributions();
+
+        // Assertion
+        assertTrue(result);
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())), eq(Trigger.Status.IGNORED));
+        verify(mMeasurementDao, never()).insertAggregateReport(any());
+        verify(mMeasurementDao, never()).insertEventReport(any());
+        verify(mMeasurementDao, never()).insertAttribution(any());
+        verify(mMeasurementDao, never())
                 .updateSourceStatus(
                         eq(
                                 Arrays.asList(

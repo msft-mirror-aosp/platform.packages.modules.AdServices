@@ -22,6 +22,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.never;
@@ -32,6 +33,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.adservices.topics.GetTopicsResult;
+import android.app.adservices.AdServicesManager;
+import android.app.adservices.topics.TopicParcel;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
@@ -65,6 +68,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /** Unit test for {@link com.android.adservices.service.topics.TopicsWorker}. */
 public class TopicsWorkerTest {
@@ -81,6 +85,7 @@ public class TopicsWorkerTest {
     @Mock private EpochManager mMockEpochManager;
     @Mock private Flags mMockFlags;
     @Mock AdServicesLogger mLogger;
+    @Mock AdServicesManager mMockAdServicesManager;
 
     @Before
     public void setup() {
@@ -98,10 +103,13 @@ public class TopicsWorkerTest {
         DbTestUtil.deleteTable(TopicsTables.TopicContributorsContract.TABLE);
 
         mTopicsDao = new TopicsDao(mDbHelper);
-        mCacheManager = new CacheManager(mTopicsDao, mMockFlags, mLogger);
+        mBlockedTopicsManager =
+                new BlockedTopicsManager(
+                        mTopicsDao, mMockAdServicesManager, Flags.PPAPI_AND_SYSTEM_SERVER);
+        mCacheManager = new CacheManager(mTopicsDao, mMockFlags, mLogger, mBlockedTopicsManager);
         AppUpdateManager appUpdateManager =
                 new AppUpdateManager(mDbHelper, mTopicsDao, new Random(), mMockFlags);
-        mBlockedTopicsManager = new BlockedTopicsManager(mTopicsDao);
+
         mTopicsWorker =
                 new TopicsWorker(
                         mMockEpochManager,
@@ -407,6 +415,10 @@ public class TopicsWorkerTest {
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
         Topic blockedTopic1 =
                 Topic.create(/* topic */ 1, /* taxonomyVersion */ 3L, /* modelVersion */ 6L);
+
+        // Mock IPC calls
+        TopicParcel topicParcel1 = BlockedTopicsManager.convertTopicToTopicParcel(blockedTopic1);
+        doReturn(List.of(topicParcel1)).when(mMockAdServicesManager).retrieveAllBlockedTopics();
         mTopicsDao.recordBlockedTopic(blockedTopic1);
 
         mTopicsWorker.loadCache();
@@ -419,6 +431,9 @@ public class TopicsWorkerTest {
         // out of 3 existing topics, 2 of them are not blocked.
         assertThat(knownTopicsWithConsent).hasSize(2);
         assertThat(knownTopicsWithConsent).containsExactly(topic2, topic3);
+
+        // Verify IPC calls
+        verify(mMockAdServicesManager).retrieveAllBlockedTopics();
     }
 
     @Test
@@ -439,6 +454,13 @@ public class TopicsWorkerTest {
         }
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(lastEpoch);
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
+
+        List<TopicParcel> topicParcels =
+                Arrays.stream(topics)
+                        .map(BlockedTopicsManager::convertTopicToTopicParcel)
+                        .collect(Collectors.toList());
+        // Mock IPC calls
+        doReturn(topicParcels).when(mMockAdServicesManager).retrieveAllBlockedTopics();
         // block all topics
         mTopicsDao.recordBlockedTopic(topic1);
         mTopicsDao.recordBlockedTopic(topic2);
@@ -448,6 +470,9 @@ public class TopicsWorkerTest {
         ImmutableList<Topic> knownTopicsWithConsent = mTopicsWorker.getKnownTopicsWithConsent();
 
         assertThat(knownTopicsWithConsent).isEmpty();
+
+        // Verify IPC calls
+        verify(mMockAdServicesManager).retrieveAllBlockedTopics();
     }
 
     @Test
@@ -458,6 +483,14 @@ public class TopicsWorkerTest {
                 Topic.create(/* topic */ 2, /* taxonomyVersion */ 2L, /* modelVersion */ 5L);
         Topic blockedTopic3 =
                 Topic.create(/* topic */ 3, /* taxonomyVersion */ 3L, /* modelVersion */ 6L);
+
+        // Mock IPC calls
+        TopicParcel topicParcel1 = BlockedTopicsManager.convertTopicToTopicParcel(blockedTopic1);
+        TopicParcel topicParcel2 = BlockedTopicsManager.convertTopicToTopicParcel(blockedTopic2);
+        TopicParcel topicParcel3 = BlockedTopicsManager.convertTopicToTopicParcel(blockedTopic3);
+        doReturn(List.of(topicParcel1, topicParcel2, topicParcel3))
+                .when(mMockAdServicesManager)
+                .retrieveAllBlockedTopics();
         // block all blockedTopics
         mTopicsDao.recordBlockedTopic(blockedTopic1);
         mTopicsDao.recordBlockedTopic(blockedTopic2);
@@ -477,6 +510,9 @@ public class TopicsWorkerTest {
         assertThat(topicsWithRevokedConsent).hasSize(3);
         assertThat(topicsWithRevokedConsent)
                 .containsExactly(blockedTopic1, blockedTopic2, blockedTopic3);
+
+        // Verify IPC calls
+        verify(mMockAdServicesManager).retrieveAllBlockedTopics();
     }
 
     @Test
@@ -498,15 +534,25 @@ public class TopicsWorkerTest {
         }
 
         mTopicsWorker.loadCache();
+
+        // Mock IPC calls
+        doReturn(List.of()).when(mMockAdServicesManager).retrieveAllBlockedTopics();
         ImmutableList<Topic> topicsWithRevokedConsent = mTopicsWorker.getTopicsWithRevokedConsent();
 
         assertThat(topicsWithRevokedConsent).isEmpty();
+        // Verify IPC calls
+        verify(mMockAdServicesManager).retrieveAllBlockedTopics();
     }
 
     @Test
     public void testRevokeConsent() {
         Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion */ 1L, /* modelVersion */ 4L);
         mTopicsWorker.loadCache();
+
+        // Mock IPC calls
+        TopicParcel topicParcel1 = BlockedTopicsManager.convertTopicToTopicParcel(topic1);
+        doNothing().when(mMockAdServicesManager).recordBlockedTopic(List.of(topicParcel1));
+        doReturn(List.of(topicParcel1)).when(mMockAdServicesManager).retrieveAllBlockedTopics();
         mTopicsWorker.revokeConsentForTopic(topic1);
 
         ImmutableList<Topic> topicsWithRevokedConsent = mTopicsWorker.getTopicsWithRevokedConsent();
@@ -514,7 +560,10 @@ public class TopicsWorkerTest {
         assertThat(topicsWithRevokedConsent).hasSize(1);
         assertThat(topicsWithRevokedConsent).containsExactly(topic1);
 
-        // TODO(b/234214293): add checks on getTopics method.
+        // Verify IPC calls
+        verify(mMockAdServicesManager).recordBlockedTopic(List.of(topicParcel1));
+        // revokeConsentForTopic() + loadCache()
+        verify(mMockAdServicesManager, times(2)).retrieveAllBlockedTopics();
     }
 
     @Test
@@ -522,6 +571,10 @@ public class TopicsWorkerTest {
         Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion */ 1L, /* modelVersion */ 4L);
         mTopicsWorker.loadCache();
 
+        // Mock IPC calls
+        TopicParcel topicParcel1 = BlockedTopicsManager.convertTopicToTopicParcel(topic1);
+        doNothing().when(mMockAdServicesManager).recordBlockedTopic(List.of(topicParcel1));
+        doReturn(List.of(topicParcel1)).when(mMockAdServicesManager).retrieveAllBlockedTopics();
         // Revoke consent for topic1
         mTopicsWorker.revokeConsentForTopic(topic1);
         ImmutableList<Topic> topicsWithRevokedConsent = mTopicsWorker.getTopicsWithRevokedConsent();
@@ -529,13 +582,24 @@ public class TopicsWorkerTest {
         assertThat(topicsWithRevokedConsent).hasSize(1);
         assertThat(topicsWithRevokedConsent).containsExactly(topic1);
 
+        // Verify IPC calls
+        verify(mMockAdServicesManager).recordBlockedTopic(List.of(topicParcel1));
+        // revokeConsentForTopic() + loadCache()
+        verify(mMockAdServicesManager, times(2)).retrieveAllBlockedTopics();
+
+        // Mock IPC calls
+        doNothing().when(mMockAdServicesManager).removeBlockedTopic(topicParcel1);
+        doReturn(List.of()).when(mMockAdServicesManager).retrieveAllBlockedTopics();
         // Restore consent for topic1
         mTopicsWorker.restoreConsentForTopic(topic1);
         topicsWithRevokedConsent = mTopicsWorker.getTopicsWithRevokedConsent();
 
         assertThat(topicsWithRevokedConsent).isEmpty();
 
-        // TODO(b/234214293): add checks on getTopics method.
+        // Verify IPC calls
+        verify(mMockAdServicesManager).removeBlockedTopic(topicParcel1);
+        // revokeConsentForTopic() + loadCache() + restoreConsentForTopic()
+        verify(mMockAdServicesManager, times(3)).retrieveAllBlockedTopics();
     }
 
     @Test
@@ -562,6 +626,10 @@ public class TopicsWorkerTest {
             returnedAppSdkTopicsMap.put(Pair.create(app, /* sdk */ ""), currentTopic);
             mTopicsDao.persistReturnedAppTopicsMap(numEpoch, returnedAppSdkTopicsMap);
         }
+
+        // Mock IPC calls
+        TopicParcel topicParcel1 = BlockedTopicsManager.convertTopicToTopicParcel(topic1);
+        doReturn(List.of(topicParcel1)).when(mMockAdServicesManager).retrieveAllBlockedTopics();
         mTopicsDao.recordBlockedTopic(topic1);
 
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(epochId);
@@ -617,6 +685,10 @@ public class TopicsWorkerTest {
 
         assertThat(mTopicsWorker.getTopics(app, sdk)).isEqualTo(emptyGetTopicsResult);
         assertThat(mTopicsWorker.getTopics(app, /* sdk */ "")).isEqualTo(emptyGetTopicsResult);
+
+        // Verify IPC calls
+        // 1 loadCache() + 2 clearAllTopicsData()
+        verify(mMockAdServicesManager, times(3)).retrieveAllBlockedTopics();
     }
 
     @Test

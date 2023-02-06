@@ -189,8 +189,9 @@ public class AsyncTriggerFetcher {
                     LogUtil.e(e, "Parsing trigger debug key failed");
                 }
             }
-            if (!json.isNull(TriggerHeaderContract.X_NETWORK_KEY_MAPPING)) {
-                if (!isValidAdtechBitMapping(
+            if (mFlags.getMeasurementEnableXNA()
+                    && !json.isNull(TriggerHeaderContract.X_NETWORK_KEY_MAPPING)) {
+                if (!isValidXNetworkKeyMapping(
                         json.getJSONObject(TriggerHeaderContract.X_NETWORK_KEY_MAPPING))) {
                     LogUtil.d("parseTrigger: adtech bit mapping is invalid.");
                 } else {
@@ -198,15 +199,14 @@ public class AsyncTriggerFetcher {
                             json.getString(TriggerHeaderContract.X_NETWORK_KEY_MAPPING));
                 }
             }
-
-            if (isXnaAllowedForTriggerRegistrant(registrant, registrationType)
+            if (mFlags.getMeasurementEnableXNA()
+                    && isXnaAllowedForTriggerRegistrant(registrant, registrationType)
                     && !json.isNull(TriggerHeaderContract.ATTRIBUTION_CONFIG)) {
                 String attributionConfigsString =
                         extractValidAttributionConfigs(
                                 json.getJSONArray(TriggerHeaderContract.ATTRIBUTION_CONFIG));
                 result.setAttributionConfig(attributionConfigsString);
             }
-
             triggers.add(result.build());
             return true;
         } catch (JSONException e) {
@@ -536,7 +536,7 @@ public class AsyncTriggerFetcher {
         return validAttributionConfigsArray.toString();
     }
 
-    private boolean isValidAdtechBitMapping(JSONObject adTechBitMapping) throws JSONException {
+    private boolean isValidXNetworkKeyMapping(JSONObject adTechBitMapping) throws JSONException {
         // TODO: Might need to add logic for keys' and values' lengths.
         Iterator<String> keys = adTechBitMapping.keys();
         while (keys.hasNext()) {

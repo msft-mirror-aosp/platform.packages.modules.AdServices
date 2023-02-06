@@ -285,7 +285,7 @@ public class Trigger {
     }
 
     /**
-     * Returns field attribution config JSONArray as String. example: [{ "source_adtech":
+     * Returns field attribution config JSONArray as String. example: [{ "source_network":
      * "AdTech1-Ads", "source_priority_range": { “start”: 100, “end”: 1000 }, "source_filters": {
      * "campaign_type": ["install"], "source_type": ["navigation"], }, "priority": "99", "expiry":
      * "604800", "filter_data":{ "campaign_type": ["install"], } }]
