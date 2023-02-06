@@ -38,6 +38,8 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 
 /** Util class for AdServicesLogger */
 public class AdServicesLoggerUtil {
+    /** enum type value for any field in a telemetry atom that should be unset. */
+    public static final int FIELD_UNSET = -1;
 
     /** @return the resultCode corresponding to the type of exception to be used in logging. */
     public static int getResultCodeFromException(Throwable t) {
