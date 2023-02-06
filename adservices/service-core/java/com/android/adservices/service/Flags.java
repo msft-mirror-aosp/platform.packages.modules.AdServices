@@ -1609,4 +1609,12 @@ public interface Flags extends Dumpable {
     default ImmutableList<String> getEnrollmentBlocklist() {
         return ImmutableList.of();
     }
+
+    /** Kill switch to guard backward-compatible logging. */
+    boolean COMPAT_LOGGING_KILL_SWITCH = true;
+
+    /** Returns whether backward-compatible logging should be enabled. */
+    default boolean getCompatLoggingKillSwitch() {
+        return COMPAT_LOGGING_KILL_SWITCH;
+    }
 }
