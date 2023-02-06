@@ -1081,6 +1081,24 @@ public interface Flags extends Dumpable {
                 || MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH;
     }
 
+    /**
+     * Measurement Rollback Kill Switch. The default value is false which means the rollback
+     * handling on measurement service start is enabled. This flag is used for emergency turning off
+     * measurement rollback data deletion handling.
+     */
+    boolean MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for Measurement rollback deletion handling. The rollback
+     * deletion handling will be disabled if the Global Kill Switch, Measurement Kill Switch or the
+     * Measurement rollback deletion Kill Switch value is true.
+     */
+    default boolean getMeasurementRollbackDeletionKillSwitch() {
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH;
+    }
+
     // ADID Killswitch.
     /**
      * AdId API Kill Switch. The default value is false which means the AdId API is enabled. This
