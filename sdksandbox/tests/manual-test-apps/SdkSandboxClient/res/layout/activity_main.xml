@@ -67,6 +67,13 @@
                 android:layout_width="wrap_content"
                 style="?android:attr/buttonBarButtonStyle"
                 android:text="@string/sync_keys" />
+
+        <Button
+            android:id="@+id/start_activity"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            style="?android:attr/buttonBarButtonStyle"
+            android:text="@string/start_activity" />
     </LinearLayout>
 
     <SurfaceView

@@ -19,6 +19,7 @@ package android.app.sdksandbox.sdkprovider;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assume.assumeTrue;
 
 import android.app.sdksandbox.ISdkToServiceCallback;
 import android.app.sdksandbox.SandboxedSdk;
@@ -28,6 +29,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.os.Binder;
+import android.os.IBinder;
 import android.os.RemoteException;
 import android.provider.DeviceConfig;
 
@@ -36,6 +38,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.compatibility.common.util.DeviceConfigStateManager;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.dx.mockito.inline.extended.StaticMockitoSession;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Before;
@@ -169,5 +172,40 @@ public class SdkSandboxControllerUnitTest {
                 mContext.getSharedPreferences(
                         SdkSandboxController.CLIENT_SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE);
         assertThat(sp).isSameInstanceAs(spFromOriginalContext);
+    }
+
+    @Test
+    public void testRegisterSdkSandboxActivityHandler() {
+        SdkSandboxController controller = new SdkSandboxController(mContext);
+        controller.initialize(mSandboxedSdkContext);
+
+        assumeTrue(SdkLevel.isAtLeastU());
+
+        SdkSandboxActivityHandler handler = activity -> {};
+
+        IBinder token1 = controller.registerSdkSandboxActivityHandler(handler);
+        IBinder token2 = controller.registerSdkSandboxActivityHandler(handler);
+        assertThat(token2).isEqualTo(token1);
+
+        // cleaning
+        controller.unregisterSdkSandboxActivityHandler(handler);
+    }
+
+    @Test
+    public void testUnregisterSdkSandboxActivityHandler() {
+        SdkSandboxController controller = new SdkSandboxController(mContext);
+        controller.initialize(mSandboxedSdkContext);
+
+        assumeTrue(SdkLevel.isAtLeastU());
+
+        SdkSandboxActivityHandler handler = activity -> {};
+
+        IBinder token1 = controller.registerSdkSandboxActivityHandler(handler);
+        assertThat(token1).isNotNull();
+
+        controller.unregisterSdkSandboxActivityHandler(handler);
+
+        IBinder token2 = controller.registerSdkSandboxActivityHandler(handler);
+        assertThat(token2).isNotEqualTo(token1);
     }
 }
