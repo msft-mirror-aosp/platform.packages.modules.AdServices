@@ -20,6 +20,7 @@ import android.annotation.NonNull;
 
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
+import com.android.server.adservices.common.BooleanFileDatastore;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -39,6 +40,8 @@ public class AppConsentManager {
     @VisibleForTesting public static final String DATASTORE_NAME = "adservices.appconsent.xml";
 
     @VisibleForTesting static final String DATASTORE_KEY_SEPARATOR = "  ";
+
+    @VisibleForTesting static final String VERSION_KEY = "android.app.adservices.consent.VERSION";
 
     @VisibleForTesting
     static final String BASE_DIR_MUST_BE_PROVIDED_ERROR_MESSAGE = "Base dir must be provided.";
@@ -71,7 +74,8 @@ public class AppConsentManager {
                         baseDir, userIdentifier);
 
         BooleanFileDatastore datastore =
-                new BooleanFileDatastore(consentDataStoreDir, DATASTORE_NAME, DATASTORE_VERSION);
+                new BooleanFileDatastore(
+                        consentDataStoreDir, DATASTORE_NAME, DATASTORE_VERSION, VERSION_KEY);
         datastore.initialize();
 
         return new AppConsentManager(datastore);

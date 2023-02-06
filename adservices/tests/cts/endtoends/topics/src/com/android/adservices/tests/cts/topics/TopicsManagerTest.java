@@ -49,8 +49,10 @@ public class TopicsManagerTest {
 
     // Override the Epoch Job Period to this value to speed up the epoch computation.
     private static final long TEST_EPOCH_JOB_PERIOD_MS = 3000;
-    // Expected asset versions.
-    private static final long EXPECTED_ASSET_VERSION = 3L;
+    // Expected model versions.
+    private static final long EXPECTED_MODEL_VERSION = 3L;
+    // Expected taxonomy version.
+    private static final long EXPECTED_TAXONOMY_VERSION = 2L;
 
     // Default Epoch Period.
     private static final long TOPICS_EPOCH_JOB_PERIOD_MS = 7 * 86_400_000; // 7 days.
@@ -149,10 +151,10 @@ public class TopicsManagerTest {
         // If old assets are being picked up, repo sync, build and install the new apex again.
         assertWithMessage(INCORRECT_MODEL_VERSION_MESSAGE)
                 .that(topic.getModelVersion())
-                .isEqualTo(EXPECTED_ASSET_VERSION);
+                .isEqualTo(EXPECTED_MODEL_VERSION);
         assertWithMessage(INCORRECT_TAXONOMY_VERSION_MESSAGE)
                 .that(topic.getTaxonomyVersion())
-                .isEqualTo(EXPECTED_ASSET_VERSION);
+                .isEqualTo(EXPECTED_TAXONOMY_VERSION);
 
         // topic is one of the 5 classification topics of the Test App.
         assertThat(topic.getTopicId()).isIn(Arrays.asList(10147, 10253, 10175, 10254, 10333));
@@ -213,10 +215,10 @@ public class TopicsManagerTest {
         // If old assets are being picked up, repo sync, build and install the new apex again.
         assertWithMessage(INCORRECT_MODEL_VERSION_MESSAGE)
                 .that(topic.getModelVersion())
-                .isEqualTo(EXPECTED_ASSET_VERSION);
+                .isEqualTo(EXPECTED_MODEL_VERSION);
         assertWithMessage(INCORRECT_TAXONOMY_VERSION_MESSAGE)
                 .that(topic.getTaxonomyVersion())
-                .isEqualTo(EXPECTED_ASSET_VERSION);
+                .isEqualTo(EXPECTED_TAXONOMY_VERSION);
 
         // Top 5 classifications for empty string with v3 model are [10230, 10228, 10253, 10232,
         // 10140]. This is computed by running the model on the device for empty string.

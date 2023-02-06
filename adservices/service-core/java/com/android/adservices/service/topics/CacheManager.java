@@ -29,6 +29,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.GetTopicsReportedStats;
+import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
@@ -57,11 +58,15 @@ import javax.annotation.concurrent.ThreadSafe;
 public class CacheManager implements Dumpable {
     // The verbose level for dumpsys usage
     private static final int VERBOSE = 1;
+    private static final Object SINGLETON_LOCK = new Object();
+
+    @GuardedBy("SINGLETON_LOCK")
     private static CacheManager sSingleton;
     // Lock for Read and Write on the cached topics map.
     // This allows concurrent reads but exclusive update to the cache.
     private final ReadWriteLock mReadWriteLock = new ReentrantReadWriteLock();
     private final TopicsDao mTopicsDao;
+    private final BlockedTopicsManager mBlockedTopicsManager;
     private final Flags mFlags;
     // Map<EpochId, Map<Pair<App, Sdk>, Topic>
     private Map<Long, Map<Pair<String, String>, Topic>> mCachedTopics = new HashMap<>();
@@ -73,22 +78,28 @@ public class CacheManager implements Dumpable {
     private final AdServicesLogger mLogger;
 
     @VisibleForTesting
-    CacheManager(TopicsDao topicsDao, Flags flags, AdServicesLogger logger) {
+    CacheManager(
+            TopicsDao topicsDao,
+            Flags flags,
+            AdServicesLogger logger,
+            BlockedTopicsManager blockedTopicsManager) {
         mTopicsDao = topicsDao;
         mFlags = flags;
         mLogger = logger;
+        mBlockedTopicsManager = blockedTopicsManager;
     }
 
     /** Returns an instance of the CacheManager given a context. */
     @NonNull
     public static CacheManager getInstance(Context context) {
-        synchronized (CacheManager.class) {
+        synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
                 sSingleton =
                         new CacheManager(
                                 TopicsDao.getInstance(context),
                                 FlagsFactory.getFlags(),
-                                AdServicesLoggerImpl.getInstance());
+                                AdServicesLoggerImpl.getInstance(),
+                                BlockedTopicsManager.getInstance(context));
             }
             return sSingleton;
         }
@@ -109,7 +120,7 @@ public class CacheManager implements Dumpable {
                 mTopicsDao.retrieveReturnedTopics(currentEpochId, lookbackEpochs + 1);
         // HashSet<BlockedTopic>
         HashSet<Topic> blockedTopicsCacheFromDb =
-                new HashSet<>(mTopicsDao.retrieveAllBlockedTopics());
+                new HashSet<>(mBlockedTopicsManager.retrieveAllBlockedTopics());
         HashSet<Integer> blockedTopicIdsFromDb =
                 blockedTopicsCacheFromDb.stream()
                         .map(Topic::getTopic)

@@ -81,7 +81,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:src="@drawable/ic_consent_notification_ga_image" />
+                    android:src="@drawable/ic_consent_notification_ga_image"
+                    android:contentDescription="@string/ic_consent_notification_ga_image_description"/>
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

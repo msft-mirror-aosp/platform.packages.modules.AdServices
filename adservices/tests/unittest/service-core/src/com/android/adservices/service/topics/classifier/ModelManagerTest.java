@@ -487,9 +487,9 @@ public class ModelManagerTest {
                 .containsExactly("taxonomy_type", "taxonomy_version", "build_id", "updated_date");
 
         // The property "version_info" should have attribution "taxonomy_version"
-        // and its value should be "3".
+        // and its value should be "2".
         assertThat(mProductionClassifierAssetsMetadata.get("version_info").get("taxonomy_version"))
-                .isEqualTo("3");
+                .isEqualTo("2");
 
         // The property "version_info" should have attribution "build_id"
         // and its value should be "1388". This is used for comparing the model version with MDD
@@ -512,7 +512,7 @@ public class ModelManagerTest {
         // The asset "labels_topics" should have attribution "asset_version" and its value should be
         // "2"
         assertThat(mProductionClassifierAssetsMetadata.get("labels_topics").get("asset_version"))
-                .isEqualTo("3");
+                .isEqualTo("2");
 
         // The asset "labels_topics" should have attribution "path" and its value should be
         // "assets/classifier/labels_topics.txt"
@@ -568,9 +568,9 @@ public class ModelManagerTest {
                 .containsExactly("taxonomy_type", "taxonomy_version", "build_id", "updated_date");
 
         // The property "version_info" should have attribution "taxonomy_version"
-        // and its value should be "3".
+        // and its value should be "2".
         assertThat(mProductionClassifierAssetsMetadata.get("version_info").get("taxonomy_version"))
-                .isEqualTo("3");
+                .isEqualTo("2");
 
         // The property "version_info" should have attribution "build_id"
         // and its value should be "1388". This is used for comparing the model version with MDD
@@ -593,7 +593,7 @@ public class ModelManagerTest {
         // The asset "labels_topics" should have attribution "asset_version" and its value should be
         // "2"
         assertThat(mProductionClassifierAssetsMetadata.get("labels_topics").get("asset_version"))
-                .isEqualTo("3");
+                .isEqualTo("2");
 
         // The asset "labels_topics" should have attribution "path" and its value should be
         // "assets/classifier/labels_topics.txt"

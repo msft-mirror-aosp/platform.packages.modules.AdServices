@@ -16,10 +16,13 @@
 
 package android.adservices.common;
 
-import static org.junit.Assert.assertNull;
+import static com.google.common.truth.Truth.assertThat;
 
+import android.app.sdksandbox.SandboxedSdkContext;
+import android.content.Context;
 import android.test.mock.MockContext;
 
+import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
 import org.junit.Test;
@@ -28,10 +31,28 @@ import org.junit.Test;
 @SmallTest
 public final class SandboxedSdkContextUtilsTest {
     @Test
-    public void testGetAsSandboxedSdkContext() {
-        assertNull(SandboxedSdkContextUtils.getAsSandboxedSdkContext(null));
-        assertNull(SandboxedSdkContextUtils.getAsSandboxedSdkContext(new MockContext()));
+    public void testGetAsSandboxedSdkContext_inputIsNotSandboxedSdkContext() {
+        assertThat(SandboxedSdkContextUtils.getAsSandboxedSdkContext(null)).isNull();
+        assertThat(SandboxedSdkContextUtils.getAsSandboxedSdkContext(new MockContext())).isNull();
 
-        // TODO(b/266693584): add test to validate SandboxedSdkContext handling.
+        final Context realContext = ApplicationProvider.getApplicationContext();
+        assertThat(SandboxedSdkContextUtils.getAsSandboxedSdkContext(realContext)).isNull();
+    }
+
+    @Test
+    public void testGetAsSandboxedSdkContext_inputIsSandboxedSdkContext() {
+        Context context = ApplicationProvider.getApplicationContext();
+        Context sandboxedSdkContext =
+                new SandboxedSdkContext(
+                        /* baseContext = */ context,
+                        /* classLoader = */ context.getClassLoader(),
+                        /* clientPackageName = */ context.getPackageName(),
+                        /* info = */ context.getApplicationInfo(),
+                        /* sdkName = */ "sdkName",
+                        /* sdkCeDataDir = */ null,
+                        /* sdkDeDataDir = */ null,
+                        /* isCustomizedSdkContextEnabled = */ false);
+        assertThat(SandboxedSdkContextUtils.getAsSandboxedSdkContext(sandboxedSdkContext))
+                .isSameInstanceAs(sandboxedSdkContext);
     }
 }

@@ -97,6 +97,7 @@ public final class PhFlags implements Flags {
             "measurement_enforce_foreground_status_delete_registrations";
     static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS =
             "measurement_enforce_foreground_status_get_status";
+    static final String KEY_MEASUREMENT_ENABLE_XNA = "measurement_enable_xna";
 
     // FLEDGE Custom Audience keys
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = "fledge_custom_audience_max_count";
@@ -304,6 +305,7 @@ public final class PhFlags implements Flags {
 
     // Source of truth to get consent for PPAPI
     static final String KEY_CONSENT_SOURCE_OF_TRUTH = "consent_source_of_truth";
+    static final String KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH = "blocked_topics_source_of_truth";
 
     // App/SDK AllowList/DenyList keys that have access to the web registration APIs
     static final String KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST = "web_context_client_allow_list";
@@ -338,7 +340,7 @@ public final class PhFlags implements Flags {
     static final String KEY_ENABLE_TOPIC_CONTRIBUTORS_CHECK = "enable_topic_contributors_check";
 
     // Database Schema Version Flags
-    static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_5 = "enable_database_schema_version_5";
+    static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_7 = "enable_database_schema_version_7";
 
     // Enrollment flags.
     static final String KEY_ENROLLMENT_BLOCKLIST_IDS = "enrollment_blocklist_ids";
@@ -661,6 +663,15 @@ public final class PhFlags implements Flags {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_IS_CLICK_VERIFIED_BY_INPUT_EVENT,
                 /* defaultValue */ MEASUREMENT_IS_CLICK_VERIFIED_BY_INPUT_EVENT);
+    }
+
+    @Override
+    public boolean getMeasurementEnableXNA() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_ENABLE_XNA,
+                /* defaultValue */ MEASUREMENT_ENABLE_XNA);
     }
 
     @Override
@@ -1768,6 +1779,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public int getBlockedTopicsSourceOfTruth() {
+        return DeviceConfig.getInt(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH,
+                /* defaultValue */ DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH);
+    }
+
+    @Override
     public long getMaxResponseBasedRegistrationPayloadSizeBytes() {
         return DeviceConfig.getLong(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -1822,8 +1841,8 @@ public final class PhFlags implements Flags {
     public boolean getEnableDatabaseSchemaVersion5() {
         return DeviceConfig.getBoolean(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_ENABLE_DATABASE_SCHEMA_VERSION_5,
-                /* defaultValue */ ENABLE_DATABASE_SCHEMA_VERSION_5);
+                /* flagName */ KEY_ENABLE_DATABASE_SCHEMA_VERSION_7,
+                /* defaultValue */ ENABLE_DATABASE_SCHEMA_VERSION_7);
     }
 
     @Override
@@ -2024,6 +2043,7 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER
                         + " = "
                         + getEnforceForegroundStatusForMeasurementRegisterWebTrigger());
+        writer.println("\t" + KEY_MEASUREMENT_ENABLE_XNA + " = " + getMeasurementEnableXNA());
         writer.println(
                 "\t"
                         + KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST
@@ -2288,6 +2308,13 @@ public final class PhFlags implements Flags {
                         + KEY_FOREGROUND_STATUS_LEVEL
                         + " = "
                         + getForegroundStatuslLevelForValidation());
+        writer.println("==== AdServices Consent Dump STATUS ====");
+        writer.println("\t" + KEY_CONSENT_SOURCE_OF_TRUTH + " = " + getConsentSourceOfTruth());
+        writer.println(
+                "\t"
+                        + KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH
+                        + " = "
+                        + getBlockedTopicsSourceOfTruth());
     }
 
     @Override

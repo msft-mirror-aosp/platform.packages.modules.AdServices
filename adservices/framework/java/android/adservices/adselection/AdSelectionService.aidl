@@ -27,6 +27,8 @@ import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
 import android.adservices.adselection.SetAppInstallAdvertisersCallback;
 import android.adservices.adselection.SetAppInstallAdvertisersInput;
+import android.adservices.adselection.UpdateAdCounterHistogramCallback;
+import android.adservices.adselection.UpdateAdCounterHistogramInput;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.CallerMetadata;
 import android.net.Uri;
@@ -36,6 +38,7 @@ import android.net.Uri;
  * to orchestrate the on-device execution of
  * 1. Ad selection.
  * 2. Impression reporting.
+ * 3. Ad event counting
  *
  * @hide
  */
@@ -138,6 +141,13 @@ interface AdSelectionService {
      * {@hide}
      */
     void reportImpression(in ReportImpressionInput request, in ReportImpressionCallback callback);
+
+    /**
+     * Updates the counter histograms for the ad event counters associated with a FLEDGE-selected
+     * ad.
+     */
+    void updateAdCounterHistogram(in UpdateAdCounterHistogramInput inputParams,
+            in UpdateAdCounterHistogramCallback callback);
 
     /**
      * This method is intended to be called before {@code runAdSelection}
