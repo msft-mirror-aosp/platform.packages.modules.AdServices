@@ -183,7 +183,11 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"As apps que usa também podem determinar os seus gostos com base na forma como as usa."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"As apps que usa podem pedir informações ao Android para as ajudar a medir o desempenho dos respetivos anúncios. O Android permite que as apps recolham tipos de dados limitados."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Ativado/<xliff:g id="TOPICS_COUNT">%1$d</xliff:g> tópicos"</string>
+    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
+    <skip />
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Ativado/<xliff:g id="APPS_COUNT">%1$d</xliff:g> apps"</string>
+    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
+    <skip />
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"Ativado"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Desativado"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Os tópicos de interesse baseiam-se nas apps que usou recentemente e são usados pelas apps para lhe mostrar anúncios personalizados.\n\nPode bloquear os tópicos que não quer partilhar com as apps. O Android também apaga automaticamente os tópicos com regularidade."</string>
@@ -196,6 +200,14 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Apps que bloqueou"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Repor dados sugeridos por apps"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"As apps que usa memorizam habitualmente conteúdo que lhe interessa para personalizar a sua experiência. As apps também podem armazenar informações no Android sobre os seus tópicos.\n\nPor exemplo, se usar uma app de preparação para maratonas, a app pode decidir que tem interesse em ténis de corrida. Mais tarde, se usar uma app diferente, essa app pode mostrar-lhe um anúncio de ténis de corrida sugerido pela primeira app.\n\nO Android apaga automaticamente os tópicos e dados sugeridos por apps com regularidade. Se voltar a usar uma app, esta pode reaparecer na lista. Em alternativa, pode impedir que uma app lhe sugira anúncios.\n\nNas suas apps, um anúncio que vê pode ser personalizado consoante esta definição, a definição de tópicos de anúncios, as definições do seu ID de publicidade e se a app que usa personaliza anúncios."</string>
+    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
+    <skip />
+    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
+    <skip />
+    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
+    <skip />
+    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"Artes e entretenimento"</string>
     <string name="topic10002" msgid="1226367977754287428">"Representação e teatro"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime e manga"</string>

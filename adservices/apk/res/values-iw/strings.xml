@@ -187,7 +187,11 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"אפליקציות שבהן השתמשת יכולות להעריך מה מעניין אותך על סמך אופן השימוש שלך בהן."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"‏האפליקציות שבהן השתמשת יכולות לשלוח ל-Android בקשה לקבלת מידע שיעזור להן למדוד את ביצועי המודעות שלהן. אפליקציות ב-Android מורשות לאסוף סוגים מסוימים של נתונים."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"מופעלת / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> נושאים"</string>
+    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
+    <skip />
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"מופעלת / <xliff:g id="APPS_COUNT">%1$d</xliff:g> אפליקציות"</string>
+    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
+    <skip />
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"מופעלת"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"מושבתת"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"‏הנושאים שמעניינים אותך מבוססים על אפליקציות שבהן השתמשת לאחרונה. האפליקציות משתמשות בנושאים האלה כדי להציג לך מודעות בהתאמה אישית.\n\nניתן לחסום נושאים כדי שלא ישותפו עם האפליקציות. בנוסף נושאים נמחקים אוטומטית מ-Android באופן קבוע."</string>
@@ -196,10 +200,18 @@
     <string name="settingsUI_reset_topics_ga_title" msgid="5365554894399951300">"איפוס כל נושאי המודעות"</string>
     <string name="settingsU_topics_view_footer" msgid="4769146330248953561">"‏Android עורך רשימה של נושאים שמעניינים אותך על סמך האפליקציות שהשתמשת בהן בשבועות האחרונים.\n\nלאחר מכן, אפליקציה שהשתמשת בה יכולה לשלוח ל-Android בקשה לקבלת מידע על הנושאים האלה כדי להתאים אישית את המודעות שמוצגות לך. Android משתף עד 3 נושאים ומגן על הזהות שלך ועל הנתונים לגבי השימוש שלך באפליקציות.\n\nנושאים נמחקים אוטומטית מ-Android באופן קבוע. אם המשכת להשתמש באפליקציות, אחד הנושאים עשוי להופיע ברשימה מחדש. ניתן גם לחסום נושאים כדי שלא ישותפו בין Android לאפליקציות.\n\nיכול להיות שיוצגו מודעות מותאמות אישית באפליקציות שלך בהתאם להגדרה הזו, להגדרה של המודעות שאפליקציות מציעות, להגדרות של מזהי הפרסום ולשאלה אם באפליקציה שבה השתמשת מוצגות מודעות בהתאמה אישית."</string>
     <string name="settingsUI_apps_switch_title" msgid="1308209012769248890">"מתן הרשאה למודעות שהאפליקציות מציעות"</string>
-    <string name="settingsUI_apps_view_ga_subtitle" msgid="1911743837387384160">"‏האפליקציות שבהן השתמשת יכולות להעריך מה מעניין אותך ואז להציע לך מודעות באפליקציות אחרות.\n\nניתן לחסום את האפשרות של אפליקציות מסוימות להציע לך מודעות. בנוסף, הנתונים שקשורים למודעות שאפליקציות מציעות נמחקים אוטומטית מ-Android באופן קבוע."</string>
+    <string name="settingsUI_apps_view_ga_subtitle" msgid="1911743837387384160">"‏האפליקציות שבהן השתמשת יכולות להעריך מה מעניין אותך ואז להציע לך מודעות באפליקציות אחרות.\n\nניתן לחסום את האפשרות של אפליקציות מסוימות להציע לך מודעות. בנוסף, נתונים שקשורים למודעות שאפליקציות מציעות נמחקים אוטומטית מ-Android באופן קבוע."</string>
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"אפליקציות שחסמת"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"איפוס הנתונים שקשורים להצעות מאפליקציות"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"‏האפליקציות שלך עורכות רישום של הדברים שמעניינים אותך כדי להתאים לך אישית את חוויית השימוש. האפליקציות גם יכולות לאחסן מידע ב-Android לגבי הנושאים האלה.\n\nלדוגמה, אפליקציה שבה השתמשת כדי להתאמן לריצת מרתון עשויה להעריך שיש לך עניין בנעלי ריצה. לאחר מכן, בזמן השימוש באפליקציה אחרת, אותה אפליקציה עשויה להציג לך מודעה לנעלי ריצה שהוצעה על ידי האפליקציה הראשונה.\n\nהנתונים שקשורים למודעות שאפליקציות מציעות נמחקים אוטומטית מ-Android באופן קבוע. אפליקציה שבה נעשה שימוש שוב עשויה להופיע ברשימה מחדש. ניתן גם לחסום את האפשרות של האפליקציות להציע לך מודעות.\n\nיכול להיות שיוצגו מודעות מותאמות אישית באפליקציות שלך בהתאם להגדרה הזו, להגדרה של נושאי מודעות, להגדרות של מזהי פרסום ולשאלה אם האפליקציה שבה השתמשת מציגה מודעות בהתאמה אישית."</string>
+    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
+    <skip />
+    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
+    <skip />
+    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
+    <skip />
+    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"אומנות ובידור"</string>
     <string name="topic10002" msgid="1226367977754287428">"משחק ותיאטרון"</string>
     <string name="topic10003" msgid="6949890838957814881">"אנימה ומנגה"</string>
