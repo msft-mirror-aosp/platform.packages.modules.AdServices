@@ -256,6 +256,8 @@ public final class PhFlags implements Flags {
             "measurement_receiver_delete_packages_kill_switch";
     static final String KEY_MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH =
             "measurement_job_registration_job_queue_kill_switch";
+    static final String KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH =
+            "measurement_rollback_deletion_kill_switch";
     static final String KEY_TOPICS_KILL_SWITCH = "topics_kill_switch";
     static final String KEY_MDD_BACKGROUND_TASK_KILL_SWITCH = "mdd_background_task_kill_switch";
     static final String KEY_MDD_LOGGER_KILL_SWITCH = "mdd_logger_kill_switch";
@@ -1327,6 +1329,19 @@ public final class PhFlags implements Flags {
                                 defaultValue));
     }
 
+    @Override
+    public boolean getMeasurementRollbackDeletionKillSwitch() {
+        final boolean defaultValue = MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                /* flagName */ KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH,
+                                defaultValue));
+    }
+
     // ADID Killswitches
     @Override
     public boolean getAdIdKillSwitch() {
@@ -2047,6 +2062,11 @@ public final class PhFlags implements Flags {
                         + " = "
                         + getEnforceForegroundStatusForMeasurementRegisterWebTrigger());
         writer.println("\t" + KEY_MEASUREMENT_ENABLE_XNA + " = " + getMeasurementEnableXNA());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH
+                        + " = "
+                        + getMeasurementRollbackDeletionKillSwitch());
         writer.println(
                 "\t"
                         + KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST
