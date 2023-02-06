@@ -87,7 +87,7 @@
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"試試新的廣告隱私權功能"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"廣告主題讓你更能掌控自己看到的廣告"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"查看詳細資料"</string>
-    <string name="notificationUI_header_ga_title_eu" msgid="4461095539795574989">"強化 Android 上的廣告隱私防護"</string>
+    <string name="notificationUI_header_ga_title_eu" msgid="4461095539795574989">"強化 Android 上的廣告隱私權防護"</string>
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android 即將推出新的隱私權功能，讓你進一步掌控看到的廣告。"</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"廣告主題可協助應用程式顯示相關廣告，同時保護你的身分資料和應用程式使用資訊。Android 會根據你最近使用的應用程式，記錄你感興趣的主題。你使用的應用程式可在之後要求 Android 提供相關主題資訊，以便向你顯示個人化廣告。"</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"你可以在裝置設定中查看廣告主題，並封鎖不想與應用程式分享的主題。此外，Android 會定期自動刪除廣告主題。"</string>
@@ -133,10 +133,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android 廣告隱私權 Beta 版提供全新功能，可讓應用程式用來向你顯示可能喜歡的廣告。這些技術並未使用裝置 ID。\n\nAndroid 可以推測你可能感興趣的廣告類別，並在裝置上暫時儲存你的興趣喜好。這樣一來，應用程式不必追蹤你在其他開發商的網站和應用程式內的活動，也能向你顯示貼近需求的廣告。"</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"你沒有封鎖任何興趣喜好"</string>
-    <!-- no translation found for settingsUI_no_blocked_topics_ga_text (377459829879121256) -->
-    <skip />
-    <!-- no translation found for settingsUI_view_blocked_topics_title (3705333677440361392) -->
-    <skip />
+    <string name="settingsUI_no_blocked_topics_ga_text" msgid="377459829879121256">"未封鎖任何主題"</string>
+    <string name="settingsUI_view_blocked_topics_title" msgid="3705333677440361392">"查看封鎖的主題"</string>
     <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"已重新設定興趣喜好"</string>
     <string name="settingsUI_topics_are_reset_ga" msgid="5250296990870048195">"已重設主題"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"應用程式可以推測你的興趣喜好，並暫時儲存在 Android 系統中。之後，其他應用程式可以根據這些興趣喜好向你顯示廣告。\n\n如果你封鎖某個應用程式，該應用程式就不會再推測興趣喜好。除非你解除封鎖，否則該應用程式不會再加入這份應用程式清單。系統將刪除這個應用程式已推測出的興趣喜好，不過你可能還是會看到某些相關的廣告。"</string>
@@ -148,8 +146,7 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android 廣告隱私權 Beta 版提供全新功能，可讓應用程式用來向你顯示可能喜歡的廣告。這些技術並未使用裝置 ID。\n\n應用程式可以推測你可能感興趣的廣告類別，並在裝置上暫時儲存你的興趣喜好。這樣一來，應用程式不必追蹤你在其他開發商的網站和應用程式內的活動，也能向你顯示貼近需求的廣告。"</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"你沒有封鎖任何應用程式"</string>
-    <!-- no translation found for settingsUI_no_blocked_apps_ga_text (7488680173653861943) -->
-    <skip />
+    <string name="settingsUI_no_blocked_apps_ga_text" msgid="7488680173653861943">"未封鎖任何應用程式"</string>
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"允許廣告評估"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"應用程式和廣告客戶可要求 Android 提供相關資訊，以便評估所顯示廣告的成效。\n\n廣告評估資料會定期從你的裝置中刪除。"</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"重設評估資料"</string>
@@ -160,28 +157,20 @@
     <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"如果你改變心意，或想進一步瞭解 Android 的廣告隱私權 Beta 版計畫，請前往隱私權設定"</string>
     <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"關閉"</string>
     <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"要封鎖「<xliff:g id="TOPIC">%1$s</xliff:g>」嗎？"</string>
-    <!-- no translation found for settingsUI_dialog_block_topic_message (2581824495438333677) -->
-    <skip />
+    <string name="settingsUI_dialog_block_topic_message" msgid="2581824495438333677">"除非您自行加回，否則系統會封鎖這個主題，而且不會再次加入清單。請注意，您可能還是會看到一些相關廣告。"</string>
     <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"封鎖"</string>
     <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"已解除封鎖「<xliff:g id="TOPIC">%1$s</xliff:g>」"</string>
-    <!-- no translation found for settingsUI_dialog_unblock_topic_message (1090743551997420666) -->
-    <skip />
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="1090743551997420666">"Android 可能會再次將這個主題加入清單，但需要一點時間才會顯示在清單中"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"確定"</string>
-    <!-- no translation found for settingsUI_dialog_reset_topic_title (8025836207966712435) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (4243744527757134000) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_topic_title" msgid="8025836207966712435">"要重設所有廣告主題嗎？"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="4243744527757134000">"系統將清空清單，並在之後加入新主題。請注意，系統可能仍會根據您之前設定的主題顯示一些相關廣告。"</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"重設"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"要封鎖「<xliff:g id="APP">%1$s</xliff:g>」嗎？"</string>
-    <!-- no translation found for settingsUI_dialog_block_app_message (758788973278770119) -->
-    <skip />
+    <string name="settingsUI_dialog_block_app_message" msgid="758788973278770119">"除非您解除封鎖，否則這個應用程式不會建議廣告，並且系統不會將這個應用程式再次加入清單。請注意，您可能還是會看到一些相關廣告。"</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"已解除封鎖「<xliff:g id="APP">%1$s</xliff:g>」"</string>
-    <!-- no translation found for settingsUI_dialog_unblock_app_message (5758218424845642060) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_app_title (5177572712117150557) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_app_message (7845329616145691006) -->
-    <skip />
+    <string name="settingsUI_dialog_unblock_app_message" msgid="5758218424845642060">"這個應用程式可以再次建議廣告，但或許不會立即顯示在清單中。相關廣告可能要一段時間後才會顯示。"</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"要重設應用程式建議的廣告嗎？"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"系統將刪除清單上來自應用程式的廣告建議資料，應用程式之後會建議新的廣告。請注意，您可能還是會看到一些相關廣告。"</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"已重設應用程式資料"</string>
     <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"要重設所有主題嗎？"</string>
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"要重設應用程式建議的廣告嗎？"</string>
@@ -194,20 +183,31 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"你使用的應用程式也能根據你的使用方式，判斷你喜愛的主題。"</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"你使用的應用程式可要求 Android 提供相關資訊，以便評估所顯示廣告的成效。Android 允許應用程式收集少數幾種資料。"</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"已啟用/<xliff:g id="TOPICS_COUNT">%1$d</xliff:g> 個主題"</string>
+    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
+    <skip />
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"已啟用/<xliff:g id="APPS_COUNT">%1$d</xliff:g> 個應用程式"</string>
+    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
+    <skip />
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"已啟用"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"已停用"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"感興趣主題的判斷依據是你最近使用的應用程式。應用程式會使用這項資訊向你顯示個人化廣告。\n\n你可以封鎖不想與應用程式分享的主題。此外，Android 會定期自動刪除這些主題。"</string>
     <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"允許廣告主題"</string>
-    <string name="settingsUI_blocked_topics_ga_title" msgid="7163366621282449273">"您封鎖的廣告主題"</string>
-    <!-- no translation found for settingsUI_reset_topics_ga_title (5365554894399951300) -->
-    <skip />
-    <string name="settingsU_topics_view_footer" msgid="4769146330248953561">"Android 會根據你最近幾週使用的應用程式記錄喜好的主題。\n\n這些應用程式之後就能要求 Android 提供這項資訊，向你顯示個人化廣告。Android 最多會分享 3 個主題，同時保護你的身分和應用程式使用情況資訊。\n\nAndroid 會定期自動刪除主題，但如果你繼續使用應用程式，就可能會在清單中再次看到先前已自動刪除的主題。或者，你可以封鎖不希望 Android 與應用程式分享的主題。\n\n你可能會在應用程式中看到個人化廣告，實際情況取決於這項設定、應用程式建議廣告設定、廣告 ID 設定，以及你使用的應用程式是否會顯示個人化廣告。"</string>
+    <string name="settingsUI_blocked_topics_ga_title" msgid="7163366621282449273">"你封鎖的廣告主題"</string>
+    <string name="settingsUI_reset_topics_ga_title" msgid="5365554894399951300">"重設所有廣告主題"</string>
+    <string name="settingsU_topics_view_footer" msgid="4769146330248953561">"Android 會根據你最近幾週使用的應用程式記錄喜好的主題。\n\n這些應用程式之後就能要求 Android 提供這項資訊，向你顯示個人化廣告。Android 最多會分享 3 個主題，同時保護你的身分和應用程式使用情況資訊。\n\nAndroid 會定期自動刪除主題，但如果你繼續使用應用程式，就可能會在清單中再次看到先前已自動刪除的主題。你也可以封鎖不希望 Android 與應用程式分享的主題。\n\n你可能會在應用程式中看到個人化廣告，實際情況取決於這項設定、應用程式建議廣告設定、廣告 ID 設定，以及你使用的應用程式是否會顯示個人化廣告。"</string>
     <string name="settingsUI_apps_switch_title" msgid="1308209012769248890">"允許應用程式建議的廣告"</string>
     <string name="settingsUI_apps_view_ga_subtitle" msgid="1911743837387384160">"你使用的應用程式可以判斷你喜愛的主題，進而為其他應用程式建議廣告。\n\n你可以封鎖不希望建議廣告的應用程式。此外，Android 會定期自動刪除應用程式建議的資料。"</string>
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"你封鎖的應用程式"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"重設應用程式建議的資料"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"你使用的應用程式往往會記住你感興趣的主題，以便提供個人化的使用體驗。此外，應用程式也可將主題相關資訊儲存在 Android。\n\n舉例來說，如果你使用有關馬拉松訓練的應用程式，該應用程式可能會判斷你對跑鞋感興趣。假如你之後使用其他應用程式，當中可能會顯示馬拉松訓練應用程式建議的跑鞋廣告。\n\nAndroid 會定期自動刪除應用程式建議的資料。你日後再度使用的應用程式可能會重新顯示在清單中。你也可以透過封鎖的方式禁止應用程式建議廣告。\n\n你可能會在應用程式中看到個人化廣告，這類廣告的顯示依據如下：這項設定、廣告主題設定、廣告 ID 設定，以及你使用的應用程式是否會顯示個人化廣告。"</string>
+    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
+    <skip />
+    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
+    <skip />
+    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
+    <skip />
+    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"藝術與娛樂"</string>
     <string name="topic10002" msgid="1226367977754287428">"表演與戲劇"</string>
     <string name="topic10003" msgid="6949890838957814881">"動漫與日本漫畫"</string>
