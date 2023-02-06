@@ -202,7 +202,11 @@ public class BlockedTopicsManager {
             @ConsentParcel.ConsentApiType int blockedTopicsSourceOfTruth) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(topicsDao);
-        Objects.requireNonNull(adServicesManager);
+
+        if (blockedTopicsSourceOfTruth != Flags.PPAPI_ONLY) {
+            Objects.requireNonNull(adServicesManager);
+        }
+
 
         switch (blockedTopicsSourceOfTruth) {
             case Flags.PPAPI_ONLY:
