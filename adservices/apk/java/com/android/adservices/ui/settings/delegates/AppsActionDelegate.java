@@ -68,12 +68,7 @@ public class AppsActionDelegate extends BaseActionDelegate {
                                 mAppsViewModel.setAppsConsent(true);
                                 break;
                             case SWITCH_OFF_APPS:
-                                if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
-                                    DialogManager.showAppsOptOutDialog(
-                                            mAppsActivity, mAppsViewModel);
-                                } else {
-                                    mAppsViewModel.setAppsConsent(false);
-                                }
+                                mAppsViewModel.setAppsConsent(false);
                                 break;
                             case BLOCK_APP:
                                 logUIAction(ActionEnum.BLOCK_APP_SELECTED);

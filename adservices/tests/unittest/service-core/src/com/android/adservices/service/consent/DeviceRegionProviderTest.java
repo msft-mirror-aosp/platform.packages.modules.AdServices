@@ -63,4 +63,31 @@ public class DeviceRegionProviderTest {
 
         assertThat(DeviceRegionProvider.isEuDevice(mContext)).isFalse();
     }
+
+    @Test
+    public void noSimCardInstalledTest() {
+        doReturn("").when(mTelephonyManager).getSimCountryIso();
+        doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
+        doReturn(mPackageManager).when(mContext).getPackageManager();
+        doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
+
+        assertThat(DeviceRegionProvider.isEuDevice(mContext)).isTrue();
+    }
+
+    @Test
+    public void telephonyManagerDoesntExistTest() {
+        doReturn(false).when(mPackageManager).hasSystemFeature(anyString());
+        doReturn(mPackageManager).when(mContext).getPackageManager();
+
+        assertThat(DeviceRegionProvider.isEuDevice(mContext)).isTrue();
+    }
+
+    @Test
+    public void telephonyManagerNotAccessibleTest() {
+        doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
+        doReturn(mPackageManager).when(mContext).getPackageManager();
+        doReturn(null).when(mContext).getSystemService(TelephonyManager.class);
+
+        assertThat(DeviceRegionProvider.isEuDevice(mContext)).isTrue();
+    }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.server.adservices.consent;
+package com.android.server.adservices.common;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -39,6 +39,7 @@ public class BooleanFileDatastoreTest {
     private static final String FILENAME = "BooleanFileDatastoreTest.xml";
     private static final int DATASTORE_VERSION = 1;
     private static final String TEST_KEY = "key";
+    private static final String TEST_VERSION_KEY = "version_key";
 
     private BooleanFileDatastore mDatastore;
 
@@ -48,7 +49,8 @@ public class BooleanFileDatastoreTest {
                 new BooleanFileDatastore(
                         APPLICATION_CONTEXT.getFilesDir().getAbsolutePath(),
                         FILENAME,
-                        DATASTORE_VERSION);
+                        DATASTORE_VERSION,
+                        TEST_VERSION_KEY);
         mDatastore.initialize();
     }
 
@@ -111,6 +113,27 @@ public class BooleanFileDatastoreTest {
                 () -> {
                     mDatastore.remove("");
                 });
+    }
+
+    @Test
+    public void testWriteAndGetVersion() throws IOException {
+        // Write value
+        boolean insertedValue = false;
+        mDatastore.put(TEST_KEY, insertedValue);
+
+        // Re-initialize datastore (reads from the file again)
+        mDatastore.initialize();
+
+        int readValue = mDatastore.getPreviousStoredVersion();
+        assertNotNull(readValue);
+        assertEquals(DATASTORE_VERSION, readValue);
+    }
+
+    @Test
+    public void testGetVersionWithNoPreviousWrite() {
+        int readValue = mDatastore.getPreviousStoredVersion();
+        assertNotNull(readValue);
+        assertEquals(BooleanFileDatastore.NO_PREVIOUS_VERSION, readValue);
     }
 
     @Test

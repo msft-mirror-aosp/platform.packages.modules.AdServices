@@ -72,18 +72,25 @@ public class DeviceRegionProvider {
         Objects.requireNonNull(context);
         if (context.getPackageManager().hasSystemFeature(FEATURE_TELEPHONY)) {
             TelephonyManager telephonyManager = context.getSystemService(TelephonyManager.class);
-            if (telephonyManager == null) return false;
+            // if there is no telephony manager accessible, we fallback to EU device
+            if (telephonyManager == null) return true;
 
             String simCountryIso = telephonyManager.getSimCountryIso();
 
-            if (simCountryIso.isEmpty()
-                    || !EU_ALPHA2_CODES.contains(simCountryIso.toUpperCase(Locale.ENGLISH))) {
-                return false;
+            // if there is no sim card installed, we fallback to EU device
+            if (simCountryIso.isEmpty()) {
+                return true;
             }
 
-            return true;
+            // if simCountryIso detects the user's country as one of EEA countries
+            // we treat this device as EU device, otherwise ROW device
+            if (EU_ALPHA2_CODES.contains(simCountryIso.toUpperCase(Locale.ENGLISH))) {
+                return true;
+            }
+
+            return false;
         }
-        // if there telephony feature, we fallback to non-EU device
-        return false;
+        // if there is no telephony feature, we fallback to EU device
+        return true;
     }
 }

@@ -16,6 +16,7 @@
 package com.android.adservices.ui.settings.delegates;
 
 import android.content.Intent;
+import android.icu.text.MessageFormat;
 import android.view.View;
 import android.widget.TextView;
 
@@ -32,6 +33,10 @@ import com.android.adservices.ui.settings.activities.TopicsActivity;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragment;
 import com.android.adservices.ui.settings.viewmodels.MainViewModel;
 import com.android.settingslib.widget.MainSwitchBar;
+
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 
 /**
  * Delegate class that helps AdServices Settings fragments to respond to all view model/user events.
@@ -218,11 +223,9 @@ public class MainActionDelegate extends BaseActionDelegate {
         topicsSubtitle.setVisibility(View.VISIBLE);
         if (mMainViewModel.getTopicsConsentFromConsentManager()) {
             topicsSubtitle.setText(
-                    mAdServicesSettingsMainActivity
-                            .getResources()
-                            .getString(
-                                    R.string.settingsUI_topics_subtitle,
-                                    mMainViewModel.getCountOfTopics()));
+                    getQuantityString(
+                            mMainViewModel.getCountOfTopics(),
+                            R.string.settingsUI_topics_subtitle_plural));
         } else {
             topicsSubtitle.setText(R.string.settingsUI_subtitle_consent_off);
         }
@@ -239,13 +242,29 @@ public class MainActionDelegate extends BaseActionDelegate {
         appsSubtitle.setVisibility(View.VISIBLE);
         if (mMainViewModel.getAppsConsentFromConsentManager()) {
             appsSubtitle.setText(
-                    mAdServicesSettingsMainActivity
-                            .getResources()
-                            .getString(
-                                    R.string.settingsUI_apps_subtitle,
-                                    mMainViewModel.getCountOfApps()));
+                    getQuantityString(
+                            mMainViewModel.getCountOfApps(),
+                            R.string.settingsUI_apps_subtitle_plural));
         } else {
             appsSubtitle.setText(R.string.settingsUI_subtitle_consent_off);
         }
+    }
+
+    /**
+     * An alternative getQuantity method of Android <plurals> using
+     * Locale.getDefault(Locale.Category.FORMAT)
+     *
+     * @param count the count that determines the format
+     * @param stringId the id of the quantity string
+     * @return String in format (plural or singular) according to the count
+     */
+    private String getQuantityString(int count, int stringId) {
+        MessageFormat msgFormat =
+                new MessageFormat(
+                        mAdServicesSettingsMainActivity.getResources().getString(stringId),
+                        Locale.getDefault(Locale.Category.FORMAT));
+        Map<String, Object> arguments = new HashMap<>();
+        arguments.put("count", count);
+        return msgFormat.format(arguments);
     }
 }

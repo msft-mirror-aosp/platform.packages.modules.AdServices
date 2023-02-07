@@ -16,10 +16,12 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__FLEDGE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
@@ -37,6 +39,8 @@ import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
 import android.adservices.adselection.SetAppInstallAdvertisersCallback;
 import android.adservices.adselection.SetAppInstallAdvertisersInput;
+import android.adservices.adselection.UpdateAdCounterHistogramCallback;
+import android.adservices.adselection.UpdateAdCounterHistogramInput;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CallerMetadata;
@@ -404,6 +408,35 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         // TODO(b/265469079): Add Backend, and move logging/callback to backend
         mAdServicesLogger.logFledgeApiCallStats(apiName, STATUS_SUCCESS, 0);
         callback.onSuccess();
+    }
+
+    @Override
+    public void updateAdCounterHistogram(
+            @NonNull UpdateAdCounterHistogramInput inputParams,
+            @NonNull UpdateAdCounterHistogramCallback callback) {
+        int apiName = AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN;
+
+        // Caller permissions must be checked in the binder thread, before anything else
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
+
+        try {
+            Objects.requireNonNull(inputParams);
+            Objects.requireNonNull(callback);
+        } catch (NullPointerException exception) {
+            mAdServicesLogger.logFledgeApiCallStats(apiName, STATUS_INVALID_ARGUMENT, 0);
+            // Rethrow because we want to fail fast
+            throw exception;
+        }
+
+        // TODO(b/221876461): Implement service
+        int status = STATUS_SUCCESS;
+        try {
+            callback.onSuccess();
+        } catch (RemoteException exception) {
+            status = STATUS_INTERNAL_ERROR;
+        } finally {
+            mAdServicesLogger.logFledgeApiCallStats(apiName, status, 0);
+        }
     }
 
     @Override
