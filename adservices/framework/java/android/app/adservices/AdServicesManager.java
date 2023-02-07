@@ -348,4 +348,16 @@ public final class AdServicesManager {
             throw e.rethrowFromSystemServer();
         }
     }
+
+    /**
+     * Checks whether the AdServices module needs to handle data reconciliation after a rollback.
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public boolean needsToHandleRollbackReconciliation(@DeletionApiType int deletionType) {
+        try {
+            return mService.needsToHandleRollbackReconciliation(deletionType);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
 }
