@@ -34,4 +34,11 @@ public class StubSdkToServiceLink extends ISdkToServiceCallback.Stub {
         list.add(sandboxedSdk);
         return list;
     }
+
+    @Override
+    public void logLatenciesFromSandbox(
+            int latencyFromSystemServerToSandboxMillis,
+            int latencySandboxMillis,
+            int method,
+            boolean success) {}
 }
