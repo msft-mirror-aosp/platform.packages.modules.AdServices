@@ -30,6 +30,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import android.Manifest;
+import android.app.adservices.AdServicesManager;
 import android.app.adservices.consent.ConsentParcel;
 import android.app.adservices.topics.TopicParcel;
 import android.content.BroadcastReceiver;
@@ -37,6 +38,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
@@ -83,6 +85,7 @@ public class AdServicesManagerServiceTest {
     @Mock private PackageManager mMockPackageManager;
 
     private static final String PPAPI_PACKAGE_NAME = "com.google.android.adservices.api";
+    private static final String ADSERVICES_APEX_PACKAGE_NAME = "com.google.android.adservices";
     private static final String PACKAGE_NAME = "com.package.example";
     private static final String PACKAGE_CHANGED_BROADCAST =
             "com.android.adservices.PACKAGE_CHANGED";
@@ -95,6 +98,7 @@ public class AdServicesManagerServiceTest {
     private static final Context PPAPI_CONTEXT = ApplicationProvider.getApplicationContext();
     private static final String BASE_DIR = PPAPI_CONTEXT.getFilesDir().getAbsolutePath();
     private final TopicsDbHelper mDBHelper = TopicsDbTestUtil.getDbHelperForTest();
+    private static final int TEST_MODULE_VERSION = 339990000;
 
     @Before
     public void setup() {
@@ -214,6 +218,49 @@ public class AdServicesManagerServiceTest {
                         any(IntentFilter.class),
                         any(String.class),
                         any(Handler.class));
+    }
+
+    @Test
+    public void testAdServicesSystemService_enabled_setAdServicesApexVersion() {
+        // First enable the flag.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED,
+                Boolean.toString(Boolean.TRUE),
+                /* makeDefault */ false);
+
+        setupMockInstalledPackages();
+
+        // This will trigger the lookup of the AdServices version.
+        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager, mTopicsDao);
+
+        ArgumentCaptor<PackageManager.PackageInfoFlags> argumentPackageInfoFlags =
+                ArgumentCaptor.forClass(PackageManager.PackageInfoFlags.class);
+
+        Mockito.verify(mSpyContext, Mockito.times(1)).getPackageManager();
+
+        Mockito.verify(mMockPackageManager, Mockito.times(1))
+                .getInstalledPackages(argumentPackageInfoFlags.capture());
+
+        assertThat(argumentPackageInfoFlags.getAllValues().get(0).getValue())
+                .isEqualTo(PackageManager.MATCH_APEX);
+
+        assertThat(mService.getAdServicesApexVersion()).isEqualTo(TEST_MODULE_VERSION);
+    }
+
+    @Test
+    public void testAdServicesSystemService_disabled_setAdServicesApexVersion() {
+        // Disable the flag.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED,
+                Boolean.toString(Boolean.FALSE),
+                /* makeDefault */ false);
+
+        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager, mTopicsDao);
+
+        // The flag is disabled so there is no call to the packageManager
+        Mockito.verify(mSpyContext, Mockito.times(0)).getPackageManager();
     }
 
     @Test
@@ -706,6 +753,29 @@ public class AdServicesManagerServiceTest {
         assertThat(mService.retrieveAllBlockedTopics()).isEmpty();
     }
 
+    @Test
+    public void testRecordMeasurementDeletionOccurred() throws IOException {
+        AdServicesManagerService service =
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager, mTopicsDao));
+        // Since unit test cannot execute an IPC call currently, disable the permission check.
+        disableEnforceAdServicesManagerPermission(service);
+
+        // Mock the setting of the AdServices module version in the system server.
+        setAdServicesModuleVersion(service, TEST_MODULE_VERSION);
+
+        // First, the has measurement deletion occurred is false.
+        assertThat(service.hasAdServicesDeletionOccurred(AdServicesManager.MEASUREMENT_DELETION))
+                .isFalse();
+        service.recordAdServicesDeletionOccurred(AdServicesManager.MEASUREMENT_DELETION);
+        assertThat(service.hasAdServicesDeletionOccurred(AdServicesManager.MEASUREMENT_DELETION))
+                .isTrue();
+    }
+
+    // Mock the call to get the AdServices module version from the PackageManager.
+    private void setAdServicesModuleVersion(AdServicesManagerService service, int version) {
+        doReturn(version).when(service).getAdServicesApexVersion();
+    }
+
     // Since unit test cannot execute an IPC call, disable the permission check.
     private void disableEnforceAdServicesManagerPermission(AdServicesManagerService service) {
         doNothing().when(service).enforceAdServicesManagerPermission();
@@ -724,5 +794,16 @@ public class AdServicesManagerServiceTest {
                         any(PackageManager.ResolveInfoFlags.class),
                         any(UserHandle.class)))
                 .thenReturn(resolveInfoList);
+    }
+
+    private void setupMockInstalledPackages() {
+        PackageInfo packageInfo = Mockito.spy(PackageInfo.class);
+        packageInfo.packageName = ADSERVICES_APEX_PACKAGE_NAME;
+        packageInfo.isApex = true;
+        doReturn((long) TEST_MODULE_VERSION).when(packageInfo).getLongVersionCode();
+        ArrayList<PackageInfo> packageInfoList = new ArrayList<>();
+        packageInfoList.add(packageInfo);
+        when(mMockPackageManager.getInstalledPackages(any(PackageManager.PackageInfoFlags.class)))
+                .thenReturn(packageInfoList);
     }
 }

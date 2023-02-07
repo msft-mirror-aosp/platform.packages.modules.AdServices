@@ -183,7 +183,11 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Jūsų naudojamos programos taip pat gali nustatyti, ką mėgstate, pagal tai, kaip jas naudojate."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Naudojamos programos gali prašyti „Android“ informacijos, kad galėtų lengviau įvertinti savo skelbimų našumą. „Android“ leidžia programoms rinkti tam tikrų tipų duomenis."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Įjungta / temų: <xliff:g id="TOPICS_COUNT">%1$d</xliff:g>"</string>
+    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
+    <skip />
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Įjungta / programų: <xliff:g id="APPS_COUNT">%1$d</xliff:g>"</string>
+    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
+    <skip />
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"Įjungta"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Išjungta"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Dominančios temos priklauso nuo neseniai naudotų programų, ir programos jas naudoja, kad galėtų jums rodyti suasmenintus skelbimus.\n\nGalite užblokuoti temas, kurių nenorite bendrinti su programomis. „Android“ taip pat reguliariai automatiškai ištrina temas."</string>
@@ -196,6 +200,14 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Jūsų užblokuotos programos"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Iš naujo nustatyti programų siūlomus duomenis"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Naudojamose programose dažnai įsimenami jus dominantys dalykai, kad būtų galima suasmeninti jums teikiamas funkcijas. Be to, programos gali saugoti informaciją sistemoje „Android“ apie jūsų temas.\n\nPvz., jei naudojate maratono mokymo programą, programa gali nuspręsti, kad jus domina bėgimo bateliai. Vėliau, naudojant kitą programą, ši programa gali rodyti bėgimo batelių skelbimą, pasiūlytą pirmosios programos.\n\n„Android“ reguliariai automatiškai ištrina programų siūlomus duomenis. Vėl naudojama programa gali būti iš naujo rodoma sąraše. Arba galite neleisti programai siūlyti jums skelbimų.\n\nProgramose rodomas skelbimas gali būti suasmenintas, atsižvelgiant į šį nustatymą, skelbimų temų, reklamavimo ID ir naudojamos programos skelbimų suasmeninimo nustatymus."</string>
+    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
+    <skip />
+    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
+    <skip />
+    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
+    <skip />
+    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"Menas ir pramogos"</string>
     <string name="topic10002" msgid="1226367977754287428">"Vaidyba ir teatras"</string>
     <string name="topic10003" msgid="6949890838957814881">"Animė ir manga"</string>

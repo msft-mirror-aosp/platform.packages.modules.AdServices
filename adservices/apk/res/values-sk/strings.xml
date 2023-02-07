@@ -183,7 +183,11 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Aplikácie, ktoré používate, môžu na základe vášho spôsobu ich používania odhadnúť, čo sa vám páči."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Aplikácie, ktoré používate, môžu Android požiadať o informácie, ktoré im pomôžu merať výkonnosť ich reklám. Android umožňuje aplikáciám zhromažďovať obmedzené typy údajov."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Zapnuté / počet tém: <xliff:g id="TOPICS_COUNT">%1$d</xliff:g>"</string>
+    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
+    <skip />
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Zapnuté / počet aplikácií: <xliff:g id="APPS_COUNT">%1$d</xliff:g>"</string>
+    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
+    <skip />
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"Zapnuté"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Vypnuté"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Témy záujmu sú založené na aplikáciách, ktoré ste nedávno použili, a aplikácie pomocou nich zobrazujú prispôsobené reklamy.\n\nTémy, ktoré sa nemajú zdieľať s aplikáciami, môžete zablokovať. Android pravidelne témy automaticky odstraňuje."</string>
@@ -196,6 +200,14 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Aplikácie, ktoré ste zablokovali"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Resetovať údaje navrhované aplikáciami"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Aplikácie, ktoré používate, si bežne pamätajú témy, o ktoré sa zaujímate, aby vám mohli prispôsobovať prostredie. Okrem toho môžu aplikácie ukladať informácie o vašich témach pomocou Androidu.\n\nAk napríklad používate aplikáciu zameranú na tréning maratónu, táto aplikácia môže usúdiť, že máte záujem o kúpu bežeckej obuvi. Ak neskôr použijete inú aplikáciu, môže vám na základe návrhu predchádzajúcej aplikácie zobraziť reklamu na bežeckú obuv.\n\nÚdaje navrhované aplikáciami Android pravidelne automaticky odstraňuje. Aplikácia, ktorú použijete znova, sa môže v zozname opäť zobraziť. Prípadne môžete určitej aplikácii zakázať navrhovať vám reklamy.\n\nReklamy zobrazované aplikáciami môžu byť prispôsobené v závislosti od tohto nastavenia, nastavenia tém reklám, vašich nastavení reklamného identifikátora a podľa toho, či aplikácia, ktorú používate, prispôsobuje reklamy."</string>
+    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
+    <skip />
+    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
+    <skip />
+    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
+    <skip />
+    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"Umenie a zábava"</string>
     <string name="topic10002" msgid="1226367977754287428">"Herectvo a divadlo"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime a manga"</string>

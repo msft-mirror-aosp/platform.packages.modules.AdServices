@@ -107,7 +107,7 @@
     <string name="notificationUI_fledge_measurement_introduction_text2" msgid="601600895880486962">"•  Reklamy sugerowane przez aplikacje chronią Twoją tożsamość i informacje o korzystaniu z aplikacji, a jednocześnie umożliwiają wyświetlanie w aplikacjach trafnych reklam. Na podstawie Twojej aktywności używana aplikacja może zaproponować powiązane reklamy, które zobaczysz w innych aplikacjach. Listę aplikacji i możliwość zablokowania tych, których sugestii nie chcesz uwzględniać, znajdziesz w ustawieniach prywatności."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"•  W przypadku pomiaru skuteczności reklam pewne typy danych są udostępniane przez aplikacje w celu mierzenia skuteczności ich reklam (np. pora dnia, kiedy reklama została wyświetlona)."</string>
     <string name="notificationUI_fledge_measurement_control_ga_text_eu" msgid="2346851728118443500">"Więcej informacji o reklamach na podstawie sugestii aplikacji oraz pomiarze skuteczności reklam"</string>
-    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text0" msgid="2456923104551938349">"Reklamy na podstawie sugestii aplikacji"</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text0" msgid="2456923104551938349">"Reklamy sugerowane przez aplikację"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text1" msgid="5606895535548790900">"•  Jakich danych używamy"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text2" msgid="6309052819494439288">"Twoja aktywność w aplikacji, której używasz na tym urządzeniu."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text3" msgid="5347980571056638783">"•  Jak aplikacje używają tych danych"</string>
@@ -176,14 +176,18 @@
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"Zresetować reklamy sugerowane przez aplikacje?"</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Prywatność w reklamach"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Tematy reklam"</string>
-    <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Reklamy na podstawie sugestii aplikacji"</string>
+    <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Reklamy sugerowane przez aplikację"</string>
     <!-- no translation found for settingsUI_measurement_ga_title (2255921375701745943) -->
     <skip />
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android określa interesujące Cię tematy na podstawie ostatnio używanych przez Ciebie aplikacji oraz częstotliwości korzystania z nich."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Aplikacje, których używasz, mogą też określać, co Ci się podoba, na podstawie sposobu, w jaki z nich korzystasz."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Używane przez Ciebie aplikacje mogą prosić Androida o informacje, które pomogą im zmierzyć skuteczność prezentowanych reklam. Android pozwala aplikacjom gromadzić tylko niektóre typy danych."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Włączone / Tematy: <xliff:g id="TOPICS_COUNT">%1$d</xliff:g>"</string>
+    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
+    <skip />
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Włączone / Aplikacje: <xliff:g id="APPS_COUNT">%1$d</xliff:g>"</string>
+    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
+    <skip />
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"Włączony"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Wyłączony"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Interesujące Cię tematy są określane na podstawie ostatnio używanych aplikacji i wykorzystywane do wyświetlania w aplikacjach spersonalizowanych reklam.\n\nMożesz zablokować tematy, których nie chcesz udostępniać aplikacjom. Android również regularnie automatycznie usuwa tematy."</string>
@@ -196,6 +200,14 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Zablokowane aplikacje"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Zresetuj dane dotyczące sugestii aplikacji"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Aplikacje często zapamiętują, co Cię interesuje, aby móc personalizować Twoje wrażenia. Aplikacje mogą też przechowywać w Androidzie informacje na temat dotyczących Cię tematów.\n\nJeśli np. używasz aplikacji poświęconej trenowaniu przed maratonem, może ona uznać, że zainteresują Cię buty do biegania. Później w innej aplikacji możesz zobaczyć reklamę butów zaproponowanych przez pierwszą aplikację.\n\nAndroid regularnie automatycznie usuwa dane dotyczące propozycji reklam. Aplikacja, której użyjesz ponownie, może znów pojawić się na liście. Możesz też zablokować możliwość sugerowania reklam przez wybrane aplikacje.\n\nTo, czy w aplikacjach zobaczysz personalizowane reklamy, będzie zależało od tego ustawienia, ustawienia tematów reklam, ustawień Twojego identyfikatora wyświetlania reklam, a także obsługi personalizacji reklam przez aplikacje, których używasz"</string>
+    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
+    <skip />
+    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
+    <skip />
+    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
+    <skip />
+    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"Sztuka i rozrywka"</string>
     <string name="topic10002" msgid="1226367977754287428">"Aktorstwo i teatr"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime i manga"</string>

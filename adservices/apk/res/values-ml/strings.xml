@@ -183,7 +183,11 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"നിങ്ങൾ ഉപയോഗിക്കുന്ന ആപ്പുകൾക്ക് നിങ്ങൾ അവ ഉപയോഗിക്കുന്ന വിധം അടിസ്ഥാനമാക്കി നിങ്ങളുടെ താൽപ്പര്യങ്ങൾ നിർണ്ണയിക്കാനും കഴിയും."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"നിങ്ങൾ ഉപയോഗിക്കുന്ന ആപ്പുകൾക്ക്, അവരുടെ പരസ്യങ്ങളുടെ പ്രകടനം അളക്കാൻ സഹായിക്കുന്നതിന് Android-നോട് വിവരങ്ങൾ ആവശ്യപ്പെടാം. പരിമിതമായ ഡാറ്റാ തരങ്ങൾ ശേഖരിക്കാൻ ആപ്പുകളെ Android അനുവദിക്കുന്നു."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"ഓണാണ് / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> വിഷയങ്ങൾ"</string>
+    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
+    <skip />
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"ഓണാണ് / <xliff:g id="APPS_COUNT">%1$d</xliff:g> ആപ്പുകൾ"</string>
+    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
+    <skip />
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"ഓണാണ്"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"ഓഫാണ്"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"നിങ്ങൾ സമീപകാലത്ത് ഉപയോഗിച്ച ആപ്പുകളെ അടിസ്ഥാനമാക്കിയാണ് താൽപ്പര്യമുള്ള വിഷയങ്ങൾ നിർണ്ണയിക്കുന്നത്, ഇവ നിങ്ങൾക്ക് വ്യക്തിപരമാക്കിയ പരസ്യങ്ങൾ കാണിക്കുന്നതിന് ആപ്പുകൾ ഉപയോഗിക്കുന്നു.\n\nആപ്പുകളുമായി പങ്കിടാൻ താൽപ്പര്യമില്ലാത്ത വിഷയങ്ങൾ നിങ്ങൾക്ക് ബ്ലോക്ക് ചെയ്യാം. Android-ഉം പതിവായി വിഷയങ്ങൾ സ്വയമേവ ഇല്ലാതാക്കുന്നു."</string>
@@ -196,6 +200,14 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"നിങ്ങൾ ബ്ലോക്ക് ചെയ്ത ആപ്പുകൾ"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"ആപ്പ് നിർദ്ദേശിച്ച ഡാറ്റ റീസെറ്റ് ചെയ്യുക"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"അനുഭവം വ്യക്തിപരമാക്കുന്നതിന്, നിങ്ങൾ ഉപയോഗിക്കുന്ന ആപ്പുകൾ നിങ്ങൾക്ക് താൽപ്പര്യമുള്ള വിഷയങ്ങൾ ഓർമ്മിച്ചുവെക്കുന്നത് സാധാരണമാണ്. ആപ്പുകൾക്ക് Android-ലും നിങ്ങൾക്ക് താൽപ്പര്യമുള്ള വിഷയങ്ങളെ കുറിച്ചുള്ള വിവരങ്ങൾ സംഭരിക്കാം.\n\nഉദാഹരണത്തിന്, മാരത്തൺ ട്രെയിനിംഗുകളെ കുറിച്ചുള്ള ഒരു ആപ്പ് നിങ്ങൾ ഉപയോഗിക്കുന്നുണ്ടെങ്കിൽ നിങ്ങൾക്ക് റണ്ണിംഗ് ഷൂകളിൽ താൽപ്പര്യം ഉണ്ടെന്ന് ആ ആപ്പ് നിർണ്ണയിച്ചേക്കാം. പിന്നീട് നിങ്ങൾ മറ്റൊരു ആപ്പ് ഉപയോഗിക്കുമ്പോൾ, ആദ്യത്തെ ആപ്പ് നിർദ്ദേശിച്ചതനുസരിച്ച് റണ്ണിംഗ് ഷൂകൾക്കുള്ള പരസ്യം ആ ആപ്പിന് കാണിക്കാനാകും.\n\nആപ്പുകൾ നിർദ്ദേശിക്കുന്ന ഡാറ്റ Android പതിവായി സ്വയമേവ ഇല്ലാതാക്കുന്നു. നിങ്ങൾ വീണ്ടും ഉപയോഗിക്കുന്ന ഒരു ആപ്പ്, ലിസ്‌റ്റിൽ പിന്നീടും ദൃശ്യമായേക്കാം. അല്ലെങ്കിൽ പരസ്യങ്ങൾ നിർദ്ദേശിക്കുന്നതിൽ നിന്ന് ഒരു ആപ്പിനെ നിങ്ങൾക്ക് ബ്ലോക്ക് ചെയ്യാം.\n\nഈ ക്രമീകരണം, പരസ്യ വിഷയ ക്രമീകരണം, നിങ്ങളുടെ പരസ്യം ചെയ്യൽ ഐഡി ക്രമീകരണം, നിങ്ങൾ ഉപയോഗിക്കുന്ന ആപ്പ് പരസ്യങ്ങൾ വ്യക്തിപരമാക്കുന്നുണ്ടോ എന്നീ ഘടകങ്ങളെ അടിസ്ഥാനമാക്കിയായിരിക്കാം നിങ്ങളുടെ ആപ്പുകളിൽ കാണുന്ന പരസ്യം വ്യക്തിപരമാക്കുന്നത്."</string>
+    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
+    <skip />
+    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
+    <skip />
+    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
+    <skip />
+    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"കലയും വിനോദവും"</string>
     <string name="topic10002" msgid="1226367977754287428">"അഭിനയവും തീയറ്ററും"</string>
     <string name="topic10003" msgid="6949890838957814881">"ആനിമേയും മാങ്കയും"</string>

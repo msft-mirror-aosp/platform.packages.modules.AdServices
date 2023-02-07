@@ -113,7 +113,7 @@
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text3" msgid="5347980571056638783">"•  Cómo usan las aplicaciones estos datos"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text4" msgid="4738335469671465639">"Las aplicaciones pueden almacenar información sobre cosas que te gustan en Android. Por ejemplo, si usas una aplicación sobre entrenamiento para maratones, la aplicación podría determinar que te interesan las zapatillas de deporte. Después, si usas una aplicación diferente, esta podría mostrarte un anuncio de zapatillas de deporte sugerido por la primera aplicación."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text5" msgid="8737925570089314631">"•  Cómo puedes gestionar tus datos"</string>
-    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android elimina automáticamente los datos sugeridos por aplicaciones con regularidad. Si usas una aplicación de nuevo, puede que vuelva a aparecer en la lista."</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android elimina automáticamente y con regularidad los datos sugeridos por aplicaciones. Si usas una aplicación de nuevo, puede que vuelva a aparecer en la lista."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"También puedes indicar que las aplicaciones no te sugieran anuncios, restablecer todos los datos de sugerencias de anuncios o desactivar los anuncios sugeridos por aplicaciones cuando quieras en la configuración de privacidad."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"Las aplicaciones que usas le pueden pedir a Android información que les ayude a medir el rendimiento de sus anuncios. Android protege tu privacidad limitando la información que las aplicaciones pueden compartir entre ellas."</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Privacy Sandbox"</string>
@@ -183,7 +183,11 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Las aplicaciones que usas también pueden determinar lo que te gusta en función de cómo las usas."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Las aplicaciones que usas le pueden pedir información a Android para medir el rendimiento de sus anuncios. Android permite que la aplicaciones recojan tipos de datos limitados."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Activado: <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> temas"</string>
+    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
+    <skip />
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Activado: <xliff:g id="APPS_COUNT">%1$d</xliff:g> aplicaciones"</string>
+    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
+    <skip />
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"Activado"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Desactivado"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Los temas de interés se basan en las aplicaciones que has usado recientemente, y las aplicaciones los usan para mostrarte anuncios personalizados.\n\nPuedes bloquear los temas que no quieras compartir con aplicaciones. Android también elimina temas regularmente de forma automática."</string>
@@ -196,6 +200,14 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Aplicaciones que has bloqueado"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Borrar datos sugeridos por aplicaciones"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Es habitual que las aplicaciones que usas recuerden cosas que te interesan para personalizar tu experiencia. Las aplicaciones también pueden almacenar información sobre tus temas en Android.\n\nPor ejemplo, si usas una aplicación sobre entrenamiento para maratones, la aplicación podría determinar que te interesan las zapatillas de deporte. Después, si usas una aplicación diferente, esta podría mostrarte un anuncio de zapatillas de deporte sugerido por la primera aplicación.\n\nAndroid elimina automáticamente datos sugeridos por aplicaciones con regularidad. Si usas una aplicación de nuevo, puede reaparecer en la lista. También puedes indicar que no quieres que una aplicación te sugiera anuncios.\n\nEn tus aplicaciones, un anuncio puede estar personalizado dependiendo de este ajuste, del ajuste de temas de anuncios, del ajuste de tu ID de publicidad y de si la aplicación que usas personaliza anuncios."</string>
+    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
+    <skip />
+    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
+    <skip />
+    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
+    <skip />
+    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"Arte y entretenimiento"</string>
     <string name="topic10002" msgid="1226367977754287428">"Actuación y teatro"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime y manga"</string>

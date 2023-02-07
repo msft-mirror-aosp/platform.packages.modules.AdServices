@@ -27,6 +27,7 @@ import static com.android.adservices.service.Flags.CLASSIFIER_DESCRIPTION_MAX_WO
 import static com.android.adservices.service.Flags.CLASSIFIER_FORCE_USE_BUNDLED_FILES;
 import static com.android.adservices.service.Flags.CLASSIFIER_NUMBER_OF_TOP_LABELS;
 import static com.android.adservices.service.Flags.CLASSIFIER_THRESHOLD;
+import static com.android.adservices.service.Flags.COMPAT_LOGGING_KILL_SWITCH;
 import static com.android.adservices.service.Flags.DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.Flags.DEFAULT_CLASSIFIER_TYPE;
 import static com.android.adservices.service.Flags.DEFAULT_CONSENT_SOURCE_OF_TRUTH;
@@ -161,6 +162,7 @@ import static com.android.adservices.service.PhFlags.KEY_CLASSIFIER_FORCE_USE_BU
 import static com.android.adservices.service.PhFlags.KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS;
 import static com.android.adservices.service.PhFlags.KEY_CLASSIFIER_THRESHOLD;
 import static com.android.adservices.service.PhFlags.KEY_CLASSIFIER_TYPE;
+import static com.android.adservices.service.PhFlags.KEY_COMPAT_LOGGING_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_CONSENT_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.PhFlags.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.adservices.service.PhFlags.KEY_DISABLE_MEASUREMENT_ENROLLMENT_CHECK;
@@ -3793,6 +3795,23 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getUiOtaStringsManifestFileUrl()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testCompatLoggingKillSwitch() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getCompatLoggingKillSwitch())
+                .isEqualTo(COMPAT_LOGGING_KILL_SWITCH);
+
+        boolean phOverridingValue = false;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_COMPAT_LOGGING_KILL_SWITCH,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getCompatLoggingKillSwitch()).isEqualTo(phOverridingValue);
     }
     // CHECKSTYLE:ON IndentationCheck
 }
