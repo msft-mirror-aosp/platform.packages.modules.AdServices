@@ -49,7 +49,6 @@ import javax.annotation.concurrent.ThreadSafe;
 class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
 
     private static final String TAG = "SdkSandboxManager";
-    private static final String SANDBOX_PROCESS_NAME_SUFFIX = "_sdk_sandbox";
 
     private final Object mLock = new Object();
 
@@ -91,8 +90,7 @@ class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
             sdkSandboxConnection = new SdkSandboxConnection(serviceConnection);
 
             final String callingPackageName = callingInfo.getPackageName();
-            String sandboxProcessName = getProcessName(callingPackageName)
-                    + SANDBOX_PROCESS_NAME_SUFFIX;
+            String sandboxProcessName = toSandboxProcessName(callingPackageName);
             try {
                 boolean bound;
                 if (SdkLevel.isAtLeastU()) {
@@ -238,6 +236,12 @@ class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
                 return connection.getStatus();
             }
         }
+    }
+
+    @Override
+    @NonNull
+    public String toSandboxProcessName(@NonNull String packageName) {
+        return getProcessName(packageName) + SANDBOX_PROCESS_NAME_SUFFIX;
     }
 
     @Nullable

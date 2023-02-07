@@ -1,4 +1,4 @@
-// Copyright (C) 2021 The Android Open Source Project
+// Copyright (C) 2022 The Android Open Source Project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,22 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package {
-    default_applicable_licenses: ["Android-Apache-2.0"],
-}
+package android.app.sdksandbox.interfaces;
 
-android_test_helper_app {
-    name: "SdkSandboxClient",
-    defaults: ["platform_app_defaults"],
-    platform_apis: true,
-    srcs: ["src/**/sdksandboxclient/*.java"],
-    static_libs: [
-        "SdkInterfaces",
-        "modules-utils-build",
-    ],
-    resource_dirs: ["res"],
-    manifest: "AndroidManifest_Client.xml",
-    test_suites: ["general-tests"],
-    min_sdk_version: "33",
-    target_sdk_version: "33",
+import android.os.IBinder;
+
+interface IActivityStarter {
+    void startActivity(IBinder token);
 }
