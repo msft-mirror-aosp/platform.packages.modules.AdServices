@@ -196,7 +196,7 @@ public class DbHelperTest {
 
     private void assertMeasurementSchema(SQLiteDatabase db) {
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_source", 31));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_trigger", 18));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_trigger", 19));
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_async_registration_contract", 18));
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_event_report", 17));
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_attribution", 10));

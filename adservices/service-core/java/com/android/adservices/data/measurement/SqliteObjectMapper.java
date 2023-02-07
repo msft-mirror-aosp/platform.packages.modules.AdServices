@@ -201,6 +201,10 @@ public class SqliteObjectMapper {
                 builder::setAggregateTriggerData);
         setTextColumn(cursor, MeasurementTables.TriggerContract.AGGREGATE_VALUES,
                 builder::setAggregateValues);
+        setTextColumn(
+                cursor,
+                MeasurementTables.TriggerContract.AGGREGATABLE_DEDUPLICATION_KEYS,
+                builder::setAggregateDeduplicationKeys);
         setTextColumn(cursor, MeasurementTables.TriggerContract.FILTERS, builder::setFilters);
         setTextColumn(cursor, MeasurementTables.TriggerContract.NOT_FILTERS,
                 builder::setNotFilters);
