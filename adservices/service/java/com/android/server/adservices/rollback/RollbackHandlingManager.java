@@ -113,6 +113,13 @@ public final class RollbackHandlingManager {
         }
     }
 
+    /** Returns the previous version number saved in the datastore file. */
+    public int getPreviousStoredVersion(@AdServicesManager.DeletionApiType int deletionType)
+            throws IOException {
+        BooleanFileDatastore datastore = getOrCreateBooleanFileDatastore(deletionType);
+        return datastore.getPreviousStoredVersion();
+    }
+
     /**
      * Deletes the previously stored information about whether a deletion of AdServices data
      * occurred.
