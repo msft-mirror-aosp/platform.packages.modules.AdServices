@@ -26,6 +26,7 @@ android_test_helper_app {
     static_libs: [
         "SdkSandbox-java-lib",
         "CtsSdkProviderApi",
+        "truth-prebuilt",
     ],
     resource_dirs: ["res"],
     min_sdk_version: "33",

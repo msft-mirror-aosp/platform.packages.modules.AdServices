@@ -132,6 +132,8 @@ public final class AsyncSourceFetcherTest {
             new WebSourceParams.Builder(REGISTRATION_URI_2).setDebugKeyAllowed(false).build();
     private static final Context sContext =
             InstrumentationRegistry.getInstrumentation().getContext();
+    private static final String SHARED_AGGREGATION_KEYS =
+            "[\"GoogleCampaignCounts\",\"GoogleGeo\"]";
 
     AsyncSourceFetcher mFetcher;
 
@@ -155,6 +157,7 @@ public final class AsyncSourceFetcherTest {
         // For convenience, return the same enrollment-ID since we're using many arbitrary
         // registration URIs and not yet enforcing uniqueness of enrollment.
         when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(any())).thenReturn(ENROLLMENT);
+        when(mFlags.getMeasurementEnableXNA()).thenReturn(false);
     }
 
     @After
@@ -188,8 +191,11 @@ public final class AsyncSourceFetcherTest {
                                                 + "\",\n"
                                                 + "  \"debug_key\": \""
                                                 + DEBUG_KEY
-                                                + "\"\n"
+                                                + "\","
+                                                + "\"shared_aggregation_keys\": "
+                                                + SHARED_AGGREGATION_KEYS
                                                 + "}\n")));
+        when(mFlags.getMeasurementEnableXNA()).thenReturn(true);
 
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
@@ -209,13 +215,14 @@ public final class AsyncSourceFetcherTest {
                 result.getExpiryTime());
         assertEquals(DEFAULT_EVENT_ID, result.getEventId());
         assertEquals(DEBUG_KEY, result.getDebugKey());
+        assertEquals(SHARED_AGGREGATION_KEYS, result.getSharedAggregationKeys());
         verify(mLogger)
                 .logMeasurementRegistrationsResponseSize(
                         eq(
                                 new MeasurementRegistrationResponseStats.Builder(
                                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS,
                                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__SOURCE,
-                                                190)
+                                                253)
                                         .setAdTechDomain(null)
                                         .build()));
         verify(mUrlConnection).setRequestMethod("POST");
@@ -525,11 +532,281 @@ public final class AsyncSourceFetcherTest {
         assertEquals(DEFAULT_DESTINATION, result.getAppDestination().toString());
         assertEquals(DEFAULT_EVENT_ID, result.getEventId());
         assertEquals(0, result.getPriority());
-        assertEquals(
+        long expiry =
                 result.getEventTime()
                         + TimeUnit.SECONDS.toMillis(
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
-                result.getExpiryTime());
+                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+        assertEquals(expiry, result.getExpiryTime());
+        assertEquals(expiry, result.getEventReportWindow());
+        assertEquals(expiry, result.getAggregatableReportWindow());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void sourceRequest_expiry_tooEarly_setToMin() throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\"" + DEFAULT_DESTINATION + "\","
+                                        + "\"source_event_id\":\"" + DEFAULT_EVENT_ID + "\","
+                                        + "\"expiry\":\"86399\""
+                                        + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestination().toString());
+        assertEquals(DEFAULT_EVENT_ID, result.getEventId());
+        assertEquals(0, result.getPriority());
+        long expiry = result.getEventTime() + TimeUnit.DAYS.toMillis(1);
+        assertEquals(expiry, result.getExpiryTime());
+        assertEquals(expiry, result.getEventReportWindow());
+        assertEquals(expiry, result.getAggregatableReportWindow());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void sourceRequest_expiry_tooLate_setToMax() throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\"" + DEFAULT_DESTINATION + "\","
+                                        + "\"source_event_id\":\"" + DEFAULT_EVENT_ID + "\","
+                                        + "\"expiry\":\"2592001\""
+                                        + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestination().toString());
+        assertEquals(DEFAULT_EVENT_ID, result.getEventId());
+        assertEquals(0, result.getPriority());
+        long expiry =
+                result.getEventTime()
+                        + TimeUnit.SECONDS.toMillis(
+                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+        assertEquals(expiry, result.getExpiryTime());
+        assertEquals(expiry, result.getEventReportWindow());
+        assertEquals(expiry, result.getAggregatableReportWindow());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void sourceRequest_reportWindows_defaultToExpiry() throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\"" + DEFAULT_DESTINATION + "\","
+                                        + "\"source_event_id\":\"" + DEFAULT_EVENT_ID + "\","
+                                        + "\"expiry\":\"172800\""
+                                        + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestination().toString());
+        assertEquals(DEFAULT_EVENT_ID, result.getEventId());
+        assertEquals(0, result.getPriority());
+        long expiry = result.getEventTime() + TimeUnit.DAYS.toMillis(2);
+        assertEquals(expiry, result.getExpiryTime());
+        assertEquals(expiry, result.getEventReportWindow());
+        assertEquals(expiry, result.getAggregatableReportWindow());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void sourceRequest_reportWindows_lessThanExpiry_setAsIs() throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\"" + DEFAULT_DESTINATION + "\","
+                                        + "\"source_event_id\":\"" + DEFAULT_EVENT_ID + "\","
+                                        + "\"expiry\":\"172800\","
+                                        + "\"event_report_window\":\"86400\","
+                                        + "\"aggregatable_report_window\":\"86400\""
+                                        + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestination().toString());
+        assertEquals(DEFAULT_EVENT_ID, result.getEventId());
+        assertEquals(0, result.getPriority());
+        assertEquals(result.getEventTime() + TimeUnit.DAYS.toMillis(2), result.getExpiryTime());
+        assertEquals(
+                result.getEventTime() + TimeUnit.DAYS.toMillis(1),
+                result.getEventReportWindow());
+        assertEquals(
+                result.getEventTime() + TimeUnit.DAYS.toMillis(1),
+                result.getAggregatableReportWindow());
+    }
+
+    @Test
+    public void sourceRequest_reportWindows_lessThanExpiry_tooEarly_setToMin() throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\"" + DEFAULT_DESTINATION + "\","
+                                        + "\"source_event_id\":\"" + DEFAULT_EVENT_ID + "\","
+                                        + "\"expiry\":\"172800\","
+                                        + "\"event_report_window\":\"2000\","
+                                        + "\"aggregatable_report_window\":\"1728\""
+                                        + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestination().toString());
+        assertEquals(DEFAULT_EVENT_ID, result.getEventId());
+        assertEquals(0, result.getPriority());
+        assertEquals(result.getEventTime() + TimeUnit.DAYS.toMillis(2), result.getExpiryTime());
+        assertEquals(
+                result.getEventTime() + TimeUnit.DAYS.toMillis(1),
+                result.getEventReportWindow());
+        assertEquals(
+                result.getEventTime() + TimeUnit.DAYS.toMillis(1),
+                result.getAggregatableReportWindow());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void sourceRequest_reportWindows_greaterThanExpiry_setToExpiry() throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\"" + DEFAULT_DESTINATION + "\","
+                                        + "\"source_event_id\":\"" + DEFAULT_EVENT_ID + "\","
+                                        + "\"expiry\":\"172800\","
+                                        + "\"event_report_window\":\"172801\","
+                                        + "\"aggregatable_report_window\":\"172801\""
+                                        + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestination().toString());
+        assertEquals(DEFAULT_EVENT_ID, result.getEventId());
+        assertEquals(0, result.getPriority());
+        assertEquals(result.getEventTime() + TimeUnit.DAYS.toMillis(2), result.getExpiryTime());
+        assertEquals(
+                result.getEventTime() + TimeUnit.DAYS.toMillis(2),
+                result.getEventReportWindow());
+        assertEquals(
+                result.getEventTime() + TimeUnit.DAYS.toMillis(2),
+                result.getAggregatableReportWindow());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void sourceRequest_reportWindows_greaterThanExpiry_tooLate_setToExpiry()
+            throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\"" + DEFAULT_DESTINATION + "\","
+                                        + "\"source_event_id\":\"" + DEFAULT_EVENT_ID + "\","
+                                        + "\"expiry\":\"172800\","
+                                        + "\"event_report_window\":\"2592001\","
+                                        + "\"aggregatable_report_window\":\"2592001\""
+                                        + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestination().toString());
+        assertEquals(DEFAULT_EVENT_ID, result.getEventId());
+        assertEquals(0, result.getPriority());
+        assertEquals(result.getEventTime() + TimeUnit.DAYS.toMillis(2), result.getExpiryTime());
+        assertEquals(
+                result.getEventTime() + TimeUnit.DAYS.toMillis(2),
+                result.getEventReportWindow());
+        assertEquals(
+                result.getEventTime() + TimeUnit.DAYS.toMillis(2),
+                result.getAggregatableReportWindow());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -615,6 +892,60 @@ public final class AsyncSourceFetcherTest {
         assertTrue(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void fetchSource_xnaDisabled_nullSharedAggregationKeys() throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "  \"destination\": \""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\n"
+                                                + "  \"priority\": \""
+                                                + DEFAULT_PRIORITY
+                                                + "\",\n"
+                                                + "  \"expiry\": \""
+                                                + DEFAULT_EXPIRY
+                                                + "\",\n"
+                                                + "  \"source_event_id\": \""
+                                                + DEFAULT_EVENT_ID
+                                                + "\",\n"
+                                                + "  \"debug_key\": \""
+                                                + DEBUG_KEY
+                                                + "\","
+                                                + "\"shared_aggregation_keys\": "
+                                                + SHARED_AGGREGATION_KEYS
+                                                + "}\n")));
+        when(mFlags.getMeasurementEnableXNA()).thenReturn(false);
+
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestination().toString());
+        assertEquals(DEFAULT_PRIORITY, result.getPriority());
+        assertEquals(
+                result.getEventTime() + TimeUnit.SECONDS.toMillis(DEFAULT_EXPIRY),
+                result.getExpiryTime());
+        assertEquals(DEFAULT_EVENT_ID, result.getEventId());
+        assertEquals(DEBUG_KEY, result.getDebugKey());
+        assertNull(result.getSharedAggregationKeys());
     }
 
     @Test
@@ -858,6 +1189,7 @@ public final class AsyncSourceFetcherTest {
                 result.getExpiryTime());
         verify(mUrlConnection).setRequestMethod("POST");
     }
+
     @Test
     public void testBasicSourceRequestWithExpiryLessThan2Days() throws Exception {
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
@@ -898,6 +1230,7 @@ public final class AsyncSourceFetcherTest {
                 result.getExpiryTime());
         verify(mUrlConnection).setRequestMethod("POST");
     }
+
     @Test
     public void testBasicSourceRequestWithExpiryMoreThan30Days() throws Exception {
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
@@ -1186,6 +1519,7 @@ public final class AsyncSourceFetcherTest {
         assertFalse(fetch.isPresent());
         verify(mUrlConnection).setRequestMethod("POST");
     }
+
     @Test
     public void testFailedParsingButValidRedirect_returnFailure() throws Exception {
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
@@ -1223,6 +1557,7 @@ public final class AsyncSourceFetcherTest {
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
     }
+
     @Test
     public void testRedirectDifferentDestination_keepAllReturnSuccess() throws Exception {
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
@@ -1497,7 +1832,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(new UnsignedLong(987654321L), result.getEventId());
         assertEquals(
                 "{\"product\":[\"1234\",\"2345\"],\"ctid\":[\"id\"]}",
-                result.getFilterData());
+                result.getFilterDataString());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -1673,6 +2008,7 @@ public final class AsyncSourceFetcherTest {
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
     }
+
     @Test
     public void testMissingHeaderButWithRedirect() throws Exception {
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
@@ -1780,6 +2116,7 @@ public final class AsyncSourceFetcherTest {
         assertFalse(fetch.isPresent());
         verify(mUrlConnection).setRequestMethod("POST");
     }
+
     @Test
     public void testSourceRequestWithAggregateSource_tooManyKeys() throws Exception {
         StringBuilder tooManyKeys = new StringBuilder("{");
@@ -1813,6 +2150,7 @@ public final class AsyncSourceFetcherTest {
         verify(mUrlConnection).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
     }
+
     @Test
     public void testSourceRequestWithAggregateSource_keyIsNotAnObject() throws Exception {
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
@@ -1905,6 +2243,7 @@ public final class AsyncSourceFetcherTest {
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
     }
+
     @Test
     public void testSourceRequestWithAggregateSource_invalidKeyPiece_tooLong() throws Exception {
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
@@ -1936,6 +2275,7 @@ public final class AsyncSourceFetcherTest {
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
     }
+
     @Test
     public void fetchWebSources_basic_success() throws IOException {
         // Setup
@@ -1976,12 +2316,277 @@ public final class AsyncSourceFetcherTest {
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
         assertEquals(Uri.parse(DEFAULT_DESTINATION), result.getAppDestination());
         assertEquals(EVENT_ID_1, result.getEventId());
-        assertEquals(
+        long expiry =
                 result.getEventTime()
                         + TimeUnit.SECONDS.toMillis(
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
-                result.getExpiryTime());
+                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+        assertEquals(expiry, result.getExpiryTime());
+        assertEquals(expiry, result.getEventReportWindow());
+        assertEquals(expiry, result.getAggregatableReportWindow());
         verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void fetchWebSource_expiry_tooEarly_setToMin() throws IOException {
+        // Setup
+        WebSourceRegistrationRequest request =
+                buildWebSourceRegistrationRequest(
+                        Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\"" + DEFAULT_DESTINATION + "\","
+                                        + "\"source_event_id\":\"" + EVENT_ID_1 + "\","
+                                        + "\"expiry\":\"2000\""
+                                        + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        long expiry = result.getEventTime() + TimeUnit.DAYS.toMillis(1);
+        assertEquals(expiry, result.getExpiryTime());
+        assertEquals(expiry, result.getEventReportWindow());
+        assertEquals(expiry, result.getAggregatableReportWindow());
+    }
+
+    @Test
+    public void fetchWebSource_expiry_tooLate_setToMax() throws IOException {
+        // Setup
+        WebSourceRegistrationRequest request =
+                buildWebSourceRegistrationRequest(
+                        Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\"" + DEFAULT_DESTINATION + "\","
+                                        + "\"source_event_id\":\"" + EVENT_ID_1 + "\","
+                                        + "\"expiry\":\"2592001\""
+                                        + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        long expiry =
+                result.getEventTime()
+                        + TimeUnit.SECONDS.toMillis(
+                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+        assertEquals(expiry, result.getExpiryTime());
+        assertEquals(expiry, result.getEventReportWindow());
+        assertEquals(expiry, result.getAggregatableReportWindow());
+    }
+
+    @Test
+    public void fetchWebSource_reportWindows_defaultToExpiry() throws IOException {
+        // Setup
+        WebSourceRegistrationRequest request =
+                buildWebSourceRegistrationRequest(
+                        Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\"" + DEFAULT_DESTINATION + "\","
+                                        + "\"source_event_id\":\"" + EVENT_ID_1 + "\","
+                                        + "\"expiry\":\"172800\""
+                                        + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        long expiry = result.getEventTime() + TimeUnit.DAYS.toMillis(2);
+        assertEquals(expiry, result.getExpiryTime());
+        assertEquals(expiry, result.getEventReportWindow());
+        assertEquals(expiry, result.getAggregatableReportWindow());
+    }
+
+    @Test
+    public void fetchWebSource_reportWindows_lessThanExpiry_setAsIs() throws IOException {
+        // Setup
+        WebSourceRegistrationRequest request =
+                buildWebSourceRegistrationRequest(
+                        Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\"" + DEFAULT_DESTINATION + "\","
+                                        + "\"source_event_id\":\"" + EVENT_ID_1 + "\","
+                                        + "\"expiry\":\"172800\","
+                                        + "\"event_report_window\":\"86400\","
+                                        + "\"aggregatable_report_window\":\"86400\""
+                                        + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertEquals(result.getEventTime() + TimeUnit.DAYS.toMillis(2), result.getExpiryTime());
+        assertEquals(
+                result.getEventTime() + TimeUnit.DAYS.toMillis(1),
+                result.getEventReportWindow());
+        assertEquals(
+                result.getEventTime() + TimeUnit.DAYS.toMillis(1),
+                result.getAggregatableReportWindow());
+    }
+
+    @Test
+    public void fetchWebSource_reportWindows_lessThanExpiry_tooEarly_setToMin() throws IOException {
+        // Setup
+        WebSourceRegistrationRequest request =
+                buildWebSourceRegistrationRequest(
+                        Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\"" + DEFAULT_DESTINATION + "\","
+                                        + "\"source_event_id\":\"" + EVENT_ID_1 + "\","
+                                        + "\"expiry\":\"172800\","
+                                        + "\"event_report_window\":\"2000\","
+                                        + "\"aggregatable_report_window\":\"1728\""
+                                        + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertEquals(result.getEventTime() + TimeUnit.DAYS.toMillis(2), result.getExpiryTime());
+        assertEquals(
+                result.getEventTime() + TimeUnit.DAYS.toMillis(1),
+                result.getEventReportWindow());
+        assertEquals(
+                result.getEventTime() + TimeUnit.DAYS.toMillis(1),
+                result.getAggregatableReportWindow());
+    }
+
+    @Test
+    public void fetchWebSource_reportWindows_greaterThanExpiry_setToExpiry() throws IOException {
+        // Setup
+        WebSourceRegistrationRequest request =
+                buildWebSourceRegistrationRequest(
+                        Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\"" + DEFAULT_DESTINATION + "\","
+                                        + "\"source_event_id\":\"" + EVENT_ID_1 + "\","
+                                        + "\"expiry\":\"172800\","
+                                        + "\"event_report_window\":\"172801\","
+                                        + "\"aggregatable_report_window\":\"172801\""
+                                        + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        long expiry = result.getEventTime() + TimeUnit.DAYS.toMillis(2);
+        assertEquals(expiry, result.getExpiryTime());
+        assertEquals(expiry, result.getEventReportWindow());
+        assertEquals(expiry, result.getAggregatableReportWindow());
+    }
+
+    @Test
+    public void fetchWebSource_reportWindows_greaterThanExpiry_tooLate_setToExpiry()
+            throws IOException {
+        // Setup
+        WebSourceRegistrationRequest request =
+                buildWebSourceRegistrationRequest(
+                        Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\"" + DEFAULT_DESTINATION + "\","
+                                        + "\"source_event_id\":\"" + EVENT_ID_1 + "\","
+                                        + "\"expiry\":\"172800\","
+                                        + "\"event_report_window\":\"2592001\","
+                                        + "\"aggregatable_report_window\":\"2592001\""
+                                        + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        long expiry = result.getEventTime() + TimeUnit.DAYS.toMillis(2);
+        assertEquals(expiry, result.getExpiryTime());
+        assertEquals(expiry, result.getEventReportWindow());
+        assertEquals(expiry, result.getAggregatableReportWindow());
     }
 
     @Test
@@ -2074,9 +2679,10 @@ public final class AsyncSourceFetcherTest {
                 result.getEventTime() + TimeUnit.SECONDS.toMillis(
                         MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                 result.getExpiryTime());
-        assertNull(result.getFilterData());
+        assertNull(result.getFilterDataString());
         assertNull(result.getAggregateSource());
     }
+
     @Test
     public void fetchWebSources_oneSuccessAndOneFailure_resultsIntoOneSourceFetched()
             throws IOException {
@@ -2162,7 +2768,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(0, asyncRedirect.getRedirects().size());
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
         assertEquals(OS_DESTINATION, result.getAppDestination());
-        assertEquals(filterData, result.getFilterData());
+        assertEquals(filterData, result.getFilterDataString());
         assertEquals(new UnsignedLong(987654321L), result.getEventId());
         assertEquals(
                 result.getEventTime() + TimeUnit.SECONDS.toMillis(456789L),
@@ -2170,6 +2776,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(new JSONObject(aggregateSource).toString(), result.getAggregateSource());
         verify(mUrlConnection).setRequestMethod("POST");
     }
+
     @Test
     public void fetchWebSources_withRedirects_ignoresRedirects() throws IOException, JSONException {
         // Setup
@@ -2219,7 +2826,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(0, asyncRedirect.getRedirects().size());
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
         assertEquals(Uri.parse(DEFAULT_DESTINATION), result.getAppDestination());
-        assertEquals(filterData, result.getFilterData());
+        assertEquals(filterData, result.getFilterDataString());
         assertEquals(new UnsignedLong(987654321L), result.getEventId());
         assertEquals(
                 result.getEventTime() + TimeUnit.SECONDS.toMillis(456789L),
@@ -2228,6 +2835,7 @@ public final class AsyncSourceFetcherTest {
         verify(mUrlConnection).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
     }
+
     @Test
     public void fetchWebSources_appDestinationDoNotMatch_failsDropsSource() throws IOException {
         // Setup
@@ -2270,6 +2878,7 @@ public final class AsyncSourceFetcherTest {
         verify(mUrlConnection).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
     }
+
     @Test
     public void fetchWebSources_webDestinationDoNotMatch_failsDropsSource() throws IOException {
         // Setup
@@ -2314,6 +2923,7 @@ public final class AsyncSourceFetcherTest {
         verify(mUrlConnection).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
     }
+
     @Test
     public void fetchWebSources_osAndWebDestinationMatch_recordSourceSuccess() throws IOException {
         // Setup
@@ -2356,7 +2966,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(0, asyncRedirect.getRedirects().size());
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
         assertEquals(OS_DESTINATION, result.getAppDestination());
-        assertNull(result.getFilterData());
+        assertNull(result.getFilterDataString());
         assertEquals(new UnsignedLong(987654321L), result.getEventId());
         assertEquals(
                 result.getEventTime() + TimeUnit.SECONDS.toMillis(456789L),
@@ -2408,7 +3018,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(0, asyncRedirect.getRedirects().size());
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
         assertEquals(OS_DESTINATION, result.getAppDestination());
-        assertNull(result.getFilterData());
+        assertNull(result.getFilterDataString());
         assertEquals(new UnsignedLong(987654321L), result.getEventId());
         assertEquals(
                 result.getEventTime() + TimeUnit.SECONDS.toMillis(456789L),
@@ -2416,6 +3026,7 @@ public final class AsyncSourceFetcherTest {
         assertNull(result.getAggregateSource());
         verify(mUrlConnection).setRequestMethod("POST");
     }
+
     @Test
     public void fetchWebSources_extractsDestinationBaseUri() throws IOException {
         // Setup
@@ -2456,7 +3067,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(0, asyncRedirect.getRedirects().size());
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
         assertEquals(OS_DESTINATION, result.getAppDestination());
-        assertNull(result.getFilterData());
+        assertNull(result.getFilterDataString());
         assertEquals(new UnsignedLong(987654321L), result.getEventId());
         assertEquals(
                 result.getEventTime() + TimeUnit.SECONDS.toMillis(456789L),
@@ -2464,6 +3075,7 @@ public final class AsyncSourceFetcherTest {
         assertNull(result.getAggregateSource());
         verify(mUrlConnection).setRequestMethod("POST");
     }
+
     @Test
     public void fetchWebSources_missingDestinations_dropsSource() throws Exception {
         // Setup
@@ -2495,6 +3107,7 @@ public final class AsyncSourceFetcherTest {
         assertFalse(fetch.isPresent());
         verify(mUrlConnection).setRequestMethod("POST");
     }
+
     @Test
     public void fetchWebSources_withDestinationUriNotHavingScheme_attachesAppScheme()
             throws IOException {
@@ -2532,7 +3145,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(0, asyncRedirect.getRedirects().size());
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
         assertEquals(Uri.parse(DEFAULT_DESTINATION), result.getAppDestination());
-        assertNull(result.getFilterData());
+        assertNull(result.getFilterDataString());
         assertEquals(EVENT_ID_1, result.getEventId());
         assertEquals(
                 result.getEventTime() + TimeUnit.SECONDS.toMillis(
@@ -2541,6 +3154,7 @@ public final class AsyncSourceFetcherTest {
         assertNull(result.getAggregateSource());
         verify(mUrlConnection).setRequestMethod("POST");
     }
+
     @Test
     public void fetchWebSources_withDestinationUriHavingHttpsScheme_dropsSource()
             throws IOException {
@@ -2577,6 +3191,7 @@ public final class AsyncSourceFetcherTest {
         assertFalse(fetch.isPresent());
         verify(mUrlConnection).setRequestMethod("POST");
     }
+
     @Test
     public void basicSourceRequest_headersMoreThanMaxResponseSize_emitsMetricsWithAdTechDomain()
             throws Exception {

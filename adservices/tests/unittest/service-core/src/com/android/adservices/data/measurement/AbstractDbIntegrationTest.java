@@ -309,6 +309,10 @@ public abstract class AbstractDbIntegrationTest {
         values.put(MeasurementTables.SourceContract.STATUS, source.getStatus());
         values.put(MeasurementTables.SourceContract.EVENT_TIME, source.getEventTime());
         values.put(MeasurementTables.SourceContract.EXPIRY_TIME, source.getExpiryTime());
+        values.put(MeasurementTables.SourceContract.EVENT_REPORT_WINDOW,
+                source.getEventReportWindow());
+        values.put(MeasurementTables.SourceContract.AGGREGATABLE_REPORT_WINDOW,
+                source.getAggregatableReportWindow());
         values.put(MeasurementTables.SourceContract.PRIORITY, source.getPriority());
         values.put(MeasurementTables.SourceContract.REGISTRANT, source.getRegistrant().toString());
         values.put(MeasurementTables.SourceContract.INSTALL_ATTRIBUTION_WINDOW,
@@ -321,7 +325,14 @@ public abstract class AbstractDbIntegrationTest {
         values.put(
                 MeasurementTables.SourceContract.AGGREGATE_CONTRIBUTIONS,
                 source.getAggregateContributions());
-        values.put(MeasurementTables.SourceContract.FILTER_DATA, source.getFilterData());
+        values.put(MeasurementTables.SourceContract.FILTER_DATA, source.getFilterDataString());
+        values.put(MeasurementTables.SourceContract.DEBUG_REPORTING, source.isDebugReporting());
+        values.put(MeasurementTables.SourceContract.INSTALL_TIME, source.getInstallTime());
+        values.put(MeasurementTables.SourceContract.REGISTRATION_ID, source.getRegistrationId());
+        values.put(
+                MeasurementTables.SourceContract.SHARED_AGGREGATION_KEYS,
+                source.getSharedAggregationKeys());
+
         long row = db.insert(MeasurementTables.SourceContract.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("Source insertion failed");
@@ -349,6 +360,12 @@ public abstract class AbstractDbIntegrationTest {
                 trigger.getRegistrant().toString());
         values.put(MeasurementTables.TriggerContract.FILTERS, trigger.getFilters());
         values.put(MeasurementTables.TriggerContract.NOT_FILTERS, trigger.getNotFilters());
+        values.put(
+                MeasurementTables.TriggerContract.ATTRIBUTION_CONFIG,
+                trigger.getAttributionConfig());
+        values.put(
+                MeasurementTables.TriggerContract.X_NETWORK_KEY_MAPPING,
+                trigger.getAdtechKeyMapping());
         long row = db.insert(MeasurementTables.TriggerContract.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("Trigger insertion failed");

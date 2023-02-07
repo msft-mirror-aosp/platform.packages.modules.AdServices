@@ -24,6 +24,7 @@ import android.util.Dumpable;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.data.adselection.DBRegisteredAdInteraction;
 import com.android.adservices.service.adselection.AdOutcomeSelectorImpl;
 import com.android.adservices.service.common.cache.FledgeHttpCache;
 
@@ -259,6 +260,13 @@ public interface Flags extends Dumpable {
         return MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED;
     }
 
+    /** Returns whether a click is verified by Input Event. */
+    boolean MEASUREMENT_IS_CLICK_VERIFIED_BY_INPUT_EVENT = false;
+
+    default boolean getMeasurementIsClickVerifiedByInputEvent() {
+        return MEASUREMENT_IS_CLICK_VERIFIED_BY_INPUT_EVENT;
+    }
+
     /** Returns the DB size limit for measurement. */
     default long getMeasurementDbSizeLimit() {
         return MEASUREMENT_DB_SIZE_LIMIT;
@@ -272,6 +280,13 @@ public interface Flags extends Dumpable {
     /** Measurement manifest file url. */
     default String getMeasurementManifestFileUrl() {
         return MEASUREMENT_MANIFEST_FILE_URL;
+    }
+
+    boolean MEASUREMENT_ENABLE_XNA = false;
+
+    /** Returns whether XNA should be used for eligible sources. */
+    default boolean getMeasurementEnableXNA() {
+        return MEASUREMENT_ENABLE_XNA;
     }
 
     long FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = 4000L;
@@ -576,9 +591,8 @@ public interface Flags extends Dumpable {
     }
 
     /**
-     * Returns the maximum number of {@link
-     * com.android.adservices.data.adselection.DBRegisteredAdEvent} that an ad-tech can register in
-     * one call to {@code reportImpression}.
+     * Returns the maximum number of {@link DBRegisteredAdInteraction} that an ad-tech can register
+     * in one call to {@code reportImpression}.
      */
     default long getReportImpressionMaxEventUriEntriesCount() {
         return FLEDGE_REPORT_IMPRESSION_MAX_EVENT_URI_ENTRIES_COUNT;
@@ -726,6 +740,15 @@ public interface Flags extends Dumpable {
     @ConsentSourceOfTruth
     default int getConsentSourceOfTruth() {
         return DEFAULT_CONSENT_SOURCE_OF_TRUTH;
+    }
+
+    /* Blocked topics source of truth intended to be used by default */
+    @ConsentSourceOfTruth int DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH = PPAPI_AND_SYSTEM_SERVER;
+
+    /** Returns the blocked topics source of truth currently used for PPAPI */
+    @ConsentSourceOfTruth
+    default int getBlockedTopicsSourceOfTruth() {
+        return DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
     }
 
     // Group of All Killswitches
@@ -1473,13 +1496,36 @@ public interface Flags extends Dumpable {
         return MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES;
     }
 
+    /** Ui OTA strings group name, used for MDD download. */
+    String UI_OTA_STRINGS_GROUP_NAME = "ui-ota-strings";
+
+    /** UI OTA strings group name. */
+    default String getUiOtaStringsGroupName() {
+        return UI_OTA_STRINGS_GROUP_NAME;
+    }
+
     /** Ui OTA strings manifest file url, used for MDD download. */
-    String UI_OTA_STRINGS_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-ui-ota-strings/1341/95580b00edbd8cbf62bfa0df9ebd79fba1e5b7ca";
+    String UI_OTA_STRINGS_MANIFEST_FILE_URL = "";
 
     /** UI OTA strings manifest file url. */
     default String getUiOtaStringsManifestFileUrl() {
         return UI_OTA_STRINGS_MANIFEST_FILE_URL;
+    }
+
+    /** Ui OTA strings feature flag. */
+    boolean UI_OTA_STRINGS_FEATURE_ENABLED = false;
+
+    /** Returns if UI OTA strings feature is enabled. */
+    default boolean getUiOtaStringsFeatureEnabled() {
+        return UI_OTA_STRINGS_FEATURE_ENABLED;
+    }
+
+    /** Deadline for downloading UI OTA strings. */
+    long UI_OTA_STRINGS_DOWNLOAD_DEADLINE = 86700000; /* 1 day */
+
+    /** Returns the deadline for downloading UI OTA strings. */
+    default long getUiOtaStringsDownloadDeadline() {
+        return UI_OTA_STRINGS_DOWNLOAD_DEADLINE;
     }
 
     /** UI Dialogs feature enabled. */
@@ -1546,12 +1592,12 @@ public interface Flags extends Dumpable {
         return ENABLE_TOPIC_CONTRIBUTORS_CHECK;
     }
 
-    /** Whether to enable database schema version 5 */
-    boolean ENABLE_DATABASE_SCHEMA_VERSION_5 = false;
+    /** Whether to enable database schema version 7 */
+    boolean ENABLE_DATABASE_SCHEMA_VERSION_7 = false;
 
-    /** @return if to enable database schema version 5. */
+    /** @return if to enable database schema version 7 TODO (b/265160386): rename to ...Version7. */
     default boolean getEnableDatabaseSchemaVersion5() {
-        return ENABLE_DATABASE_SCHEMA_VERSION_5;
+        return ENABLE_DATABASE_SCHEMA_VERSION_7;
     }
 
     /** Returns true if the given enrollmentId is blocked from using PP-API. */
@@ -1562,5 +1608,13 @@ public interface Flags extends Dumpable {
     /** Returns a list of enrollmentId blocked from using PP-API. */
     default ImmutableList<String> getEnrollmentBlocklist() {
         return ImmutableList.of();
+    }
+
+    /** Kill switch to guard backward-compatible logging. */
+    boolean COMPAT_LOGGING_KILL_SWITCH = true;
+
+    /** Returns whether backward-compatible logging should be enabled. */
+    default boolean getCompatLoggingKillSwitch() {
+        return COMPAT_LOGGING_KILL_SWITCH;
     }
 }

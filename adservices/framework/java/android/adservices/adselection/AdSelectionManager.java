@@ -16,11 +16,13 @@
 
 package android.adservices.adselection;
 
+import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_APP_INSTALL;
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE;
 
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CallerMetadata;
 import android.adservices.common.FledgeErrorResponse;
+import android.adservices.common.SandboxedSdkContextUtils;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
@@ -325,12 +327,153 @@ public class AdSelectionManager {
             receiver.onError(new IllegalStateException("Failure of AdSelection service.", e));
         }
     }
+    /**
+     * Gives the provided list of adtechs the ability to do app install filtering on the calling
+     * app.
+     *
+     * <p>The input {@code request} is provided by the Ads SDK and the {@code request} object is
+     * transferred via a Binder call. For this reason, the total size of these objects is bound to
+     * the Android IPC limitations. Failures to transfer the {@code advertisers} will throws an
+     * {@link TransactionTooLargeException}.
+     *
+     * <p>The output is passed by the receiver, which either returns an empty {@link Object} for a
+     * successful run, or an {@link Exception} includes the type of the exception thrown and the
+     * corresponding error message.
+     *
+     * <p>If the {@link IllegalArgumentException} is thrown, it is caused by invalid input argument
+     * the API received.
+     *
+     * <p>If the {@link IllegalStateException} is thrown with error message "Failure of AdSelection
+     * services.", it is caused by an internal failure of the ad selection service.
+     *
+     * <p>If the {@link LimitExceededException} is thrown, it is caused when the calling package
+     * exceeds the allowed rate limits and is throttled.
+     *
+     * <p>If the {@link SecurityException} is thrown, it is caused when the caller is not authorized
+     * or permission is not requested.
+     *
+     * @hide
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_APP_INSTALL)
+    public void setAppInstallAdvertisers(
+            @NonNull SetAppInstallAdvertisersRequest request,
+            @NonNull Executor executor,
+            @NonNull OutcomeReceiver<Object, Exception> receiver) {
+        Objects.requireNonNull(request);
+        Objects.requireNonNull(executor);
+        Objects.requireNonNull(receiver);
+
+        try {
+            final AdSelectionService service = getService();
+            service.setAppInstallAdvertisers(
+                    new SetAppInstallAdvertisersInput.Builder()
+                            .setAdvertisers(request.getAdvertisers())
+                            .setCallerPackageName(getCallerPackageName())
+                            .build(),
+                    new SetAppInstallAdvertisersCallback.Stub() {
+                        @Override
+                        public void onSuccess() {
+                            executor.execute(() -> receiver.onResult(new Object()));
+                        }
+
+                        @Override
+                        public void onFailure(FledgeErrorResponse failureParcel) {
+                            executor.execute(
+                                    () -> {
+                                        receiver.onError(
+                                                AdServicesStatusUtils.asException(failureParcel));
+                                    });
+                        }
+                    });
+        } catch (NullPointerException e) {
+            LogUtil.e(e, "Unable to find the AdSelection service.");
+            receiver.onError(
+                    new IllegalStateException("Unable to find the AdSelection service.", e));
+        } catch (RemoteException e) {
+            LogUtil.e(e, "Exception");
+            receiver.onError(new IllegalStateException("Failure of AdSelection service.", e));
+        }
+    }
+
+    /**
+     * Updates the counter histograms for an ad.
+     *
+     * <p>The counter histograms are used in ad selection to inform frequency cap filtering on
+     * candidate ads, where ads whose frequency caps are met or exceeded are removed from the
+     * bidding process during ad selection.
+     *
+     * <p>Counter histograms can only be updated for ads specified by the given {@code
+     * adSelectionId} returned by a recent call to FLEDGE ad selection from the same caller app.
+     *
+     * <p>A {@link SecurityException} is returned via the {@code outcomeReceiver} if:
+     *
+     * <ol>
+     *   <li>the app has not declared the correct permissions in its manifest, or
+     *   <li>the app or entity identified by the {@code callerAdTechIdentifier} are not authorized
+     *       to use the API.
+     * </ol>
+     *
+     * An {@link IllegalStateException} is returned via the {@code outcomeReceiver} if the call does
+     * not come from an app with a foreground activity.
+     *
+     * <p>A {@link LimitExceededException} is returned via the {@code outcomeReceiver} if the call
+     * exceeds the calling app's API throttle.
+     *
+     * <p>In all other failure cases, the {@code outcomeReceiver} will return an empty {@link
+     * Object}. Note that to protect user privacy, internal errors will not be sent back via an
+     * exception.
+     *
+     * @hide
+     */
+    // TODO(b/221876775): Unhide for frequency cap API review
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
+    public void updateAdCounterHistogram(
+            @NonNull UpdateAdCounterHistogramRequest updateAdCounterHistogramRequest,
+            @NonNull @CallbackExecutor Executor executor,
+            @NonNull OutcomeReceiver<Object, Exception> outcomeReceiver) {
+        Objects.requireNonNull(updateAdCounterHistogramRequest, "Request must not be null");
+        Objects.requireNonNull(executor, "Executor must not be null");
+        Objects.requireNonNull(outcomeReceiver, "Outcome receiver must not be null");
+
+        try {
+            final AdSelectionService service = Objects.requireNonNull(getService());
+            service.updateAdCounterHistogram(
+                    new UpdateAdCounterHistogramInput.Builder()
+                            .setAdEventType(updateAdCounterHistogramRequest.getAdEventType())
+                            .setAdSelectionId(updateAdCounterHistogramRequest.getAdSelectionId())
+                            .setCallerAdTech(updateAdCounterHistogramRequest.getCallerAdTech())
+                            .setCallerPackageName(getCallerPackageName())
+                            .build(),
+                    new UpdateAdCounterHistogramCallback.Stub() {
+                        @Override
+                        public void onSuccess() {
+                            executor.execute(() -> outcomeReceiver.onResult(new Object()));
+                        }
+
+                        @Override
+                        public void onFailure(FledgeErrorResponse failureParcel) {
+                            executor.execute(
+                                    () -> {
+                                        outcomeReceiver.onError(
+                                                AdServicesStatusUtils.asException(failureParcel));
+                                    });
+                        }
+                    });
+        } catch (NullPointerException e) {
+            LogUtil.e(e, "Unable to find the AdSelection service");
+            outcomeReceiver.onError(
+                    new IllegalStateException("Unable to find the AdSelection service", e));
+        } catch (RemoteException e) {
+            LogUtil.e(e, "Remote exception encountered while updating ad counter histogram");
+            outcomeReceiver.onError(new IllegalStateException("Failure of AdSelection service", e));
+        }
+    }
 
     private String getCallerPackageName() {
-        if (mContext instanceof SandboxedSdkContext) {
-            return ((SandboxedSdkContext) mContext).getClientPackageName();
-        } else {
-            return mContext.getPackageName();
-        }
+        SandboxedSdkContext sandboxedSdkContext =
+                SandboxedSdkContextUtils.getAsSandboxedSdkContext(mContext);
+        return sandboxedSdkContext == null
+                ? mContext.getPackageName()
+                : sandboxedSdkContext.getClientPackageName();
     }
 }

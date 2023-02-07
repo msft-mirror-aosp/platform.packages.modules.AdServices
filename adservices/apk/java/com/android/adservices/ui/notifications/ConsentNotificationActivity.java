@@ -22,6 +22,7 @@ import androidx.fragment.app.FragmentActivity;
 
 import com.android.adservices.api.R;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.ui.OTAResourcesManager;
 
 /**
  * Android application activity for controlling settings related to PP (Privacy Preserving) APIs.
@@ -31,6 +32,9 @@ public class ConsentNotificationActivity extends FragmentActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()) {
+            OTAResourcesManager.applyOTAResources(getApplicationContext(), true);
+        }
         setContentView(
                 FlagsFactory.getFlags().getGaUxFeatureEnabled()
                         ? R.layout.consent_notification_ga_activity

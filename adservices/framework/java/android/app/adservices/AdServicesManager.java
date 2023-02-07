@@ -18,16 +18,22 @@ package android.app.adservices;
 
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_MANAGER;
 
+import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
 import android.app.adservices.consent.ConsentParcel;
+import android.app.adservices.topics.TopicParcel;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.content.Context;
 import android.os.IBinder;
 import android.os.RemoteException;
 
+import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -37,8 +43,19 @@ import java.util.Objects;
  * @hide
  */
 public final class AdServicesManager {
+    @GuardedBy("SINGLETON_LOCK")
     private static AdServicesManager sSingleton;
+
     private final IAdServicesManager mService;
+    private static final Object SINGLETON_LOCK = new Object();
+
+    @IntDef(value = {MEASUREMENT_DELETION})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface DeletionApiType {}
+
+    public static final int MEASUREMENT_DELETION = 0;
+
+    // TODO(b/267789077): Create bit for other APIs.
 
     @VisibleForTesting
     public AdServicesManager(@NonNull IAdServicesManager iAdServicesManager) {
@@ -48,7 +65,7 @@ public final class AdServicesManager {
 
     /** Get the singleton of AdServicesManager */
     public static AdServicesManager getInstance(@NonNull Context context) {
-        synchronized (AdServicesManager.class) {
+        synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
                 // TODO(b/262282035): Fix this work around in U+.
                 // Get the AdServicesManagerService's Binder from the SdkSandboxManager.
@@ -104,6 +121,229 @@ public final class AdServicesManager {
     public boolean wasNotificationDisplayed() {
         try {
             return mService.wasNotificationDisplayed();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Saves information to the storage that notification was displayed for the first time to the
+     * user.
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void recordGaUxNotificationDisplayed() {
+        try {
+            mService.recordGaUxNotificationDisplayed();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Returns information whether Consent GA UX Notification was displayed or not.
+     *
+     * @return true if Consent GA UX Notification was displayed, otherwise false.
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public boolean wasGaUxNotificationDisplayed() {
+        try {
+            return mService.wasGaUxNotificationDisplayed();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Saves information to the storage that topics consent page was displayed for the first time to
+     * the user.
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void recordTopicsConsentPageDisplayed() {
+        try {
+            mService.recordTopicsConsentPageDisplayed();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Record a blocked topic.
+     *
+     * @param blockedTopicParcels the blocked topic to record
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void recordBlockedTopic(@NonNull List<TopicParcel> blockedTopicParcels) {
+        try {
+            mService.recordBlockedTopic(blockedTopicParcels);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Remove a blocked topic.
+     *
+     * @param blockedTopicParcel the blocked topic to remove
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void removeBlockedTopic(@NonNull TopicParcel blockedTopicParcel) {
+        try {
+            mService.removeBlockedTopic(blockedTopicParcel);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Get all blocked topics.
+     *
+     * @return a {@code List} of all blocked topics.
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public List<TopicParcel> retrieveAllBlockedTopics() {
+        try {
+            return mService.retrieveAllBlockedTopics();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Returns information whether topics Consent page was displayed or not.
+     *
+     * @return true if topics consent page was displayed, otherwise false.
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public boolean wasTopicsConsentPageDisplayed() {
+        try {
+            return mService.wasTopicsConsentPageDisplayed();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Saves information to the storage that fledge and msmt consent page was displayed for the
+     * first time to the user.
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void recordFledgeAndMsmtConsentPageDisplayed() {
+        try {
+            mService.recordFledgeAndMsmtConsentPageDisplayed();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Returns information whether fledge and msmt Consent page was displayed or not.
+     *
+     * @return true if fledge and msmt consent page was displayed, otherwise false.
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public boolean wasFledgeAndMsmtConsentPageDisplayed() {
+        try {
+            return mService.wasFledgeAndMsmtConsentPageDisplayed();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Returns the list of apps with consent. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public List<String> getKnownAppsWithConsent(List<String> installedPackages) {
+        try {
+            return mService.getKnownAppsWithConsent(installedPackages);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Returns the list of apps with revoked consent. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public List<String> getAppsWithRevokedConsent(List<String> installedPackages) {
+        try {
+            return mService.getAppsWithRevokedConsent(installedPackages);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Set user consent for an app */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void setConsentForApp(String packageName, int packageUid, boolean isConsentRevoked) {
+        try {
+            mService.setConsentForApp(packageName, packageUid, isConsentRevoked);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Reset all apps and blocked apps. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void clearKnownAppsWithConsent() {
+        try {
+            mService.clearKnownAppsWithConsent();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Reset all apps consent. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void clearAllAppConsentData() {
+        try {
+            mService.clearAllAppConsentData();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Get if user consent is revoked for a given app.
+     *
+     * @return {@code true} if the user consent was revoked.
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public boolean isConsentRevokedForApp(String packageName, int packageUid) {
+        try {
+            return mService.isConsentRevokedForApp(packageName, packageUid);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Set user consent if the app first time request access and/or return consent value for the
+     * app.
+     *
+     * @return {@code true} if user consent was given.
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public boolean setConsentForAppIfNew(
+            String packageName, int packageUid, boolean isConsentRevoked) {
+        try {
+            return mService.setConsentForAppIfNew(packageName, packageUid, isConsentRevoked);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Clear the app consent entry for uninstalled app. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void clearConsentForUninstalledApp(String packageName, int packageUid) {
+        try {
+            mService.clearConsentForUninstalledApp(packageName, packageUid);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Saves information to the storage that a deletion of measurement data occurred. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void recordAdServicesDeletionOccurred(@DeletionApiType int deletionType) {
+        try {
+            mService.recordAdServicesDeletionOccurred(deletionType);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
