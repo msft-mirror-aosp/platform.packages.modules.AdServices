@@ -37,8 +37,8 @@ import static com.android.adservices.service.Flags.DISABLE_TOPICS_ENROLLMENT_CHE
 import static com.android.adservices.service.Flags.DOWNLOADER_CONNECTION_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DOWNLOADER_MAX_DOWNLOAD_THREADS;
 import static com.android.adservices.service.Flags.DOWNLOADER_READ_TIMEOUT_MS;
-import static com.android.adservices.service.Flags.ENABLE_DATABASE_SCHEMA_VERSION_7;
 import static com.android.adservices.service.Flags.ENABLE_TOPIC_CONTRIBUTORS_CHECK;
+import static com.android.adservices.service.Flags.ENABLE_TOPIC_MIGRATION;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDES;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION;
@@ -3676,8 +3676,8 @@ public class PhFlagsTest {
 
     @Test
     public void testGetEnableDatabaseSchemaVersion7() {
-        assertThat(FlagsFactory.getFlags().getEnableDatabaseSchemaVersion5())
-                .isEqualTo(ENABLE_DATABASE_SCHEMA_VERSION_7);
+        assertThat(FlagsFactory.getFlags().getEnableTopicMigration())
+                .isEqualTo(ENABLE_TOPIC_MIGRATION);
 
         final boolean phOverridingValue = true;
         DeviceConfig.setProperty(
@@ -3687,7 +3687,7 @@ public class PhFlagsTest {
                 /* makeDefault */ false);
 
         Flags phFlags = FlagsFactory.getFlags();
-        assertThat(phFlags.getEnableDatabaseSchemaVersion5()).isEqualTo(phOverridingValue);
+        assertThat(phFlags.getEnableTopicMigration()).isEqualTo(phOverridingValue);
     }
 
     @Test

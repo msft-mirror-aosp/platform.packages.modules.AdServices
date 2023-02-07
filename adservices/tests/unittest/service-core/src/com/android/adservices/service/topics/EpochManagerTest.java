@@ -389,7 +389,7 @@ public final class EpochManagerTest {
         // Mock the flag to make test result deterministic
         when(mMockFlag.getNumberOfEpochsToKeepInHistory())
                 .thenReturn(epochLookBackNumberForGarbageCollection);
-        when(mMockFlag.getEnableDatabaseSchemaVersion5()).thenReturn(true);
+        when(mMockFlag.getEnableTopicMigration()).thenReturn(true);
         when(mMockFlag.getEnableTopicContributorsCheck()).thenReturn(false);
 
         EpochManager epochManager =
