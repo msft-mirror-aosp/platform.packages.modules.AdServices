@@ -18,6 +18,7 @@ package android.app.adservices;
 
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_MANAGER;
 
+import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
 import android.app.adservices.consent.ConsentParcel;
@@ -30,6 +31,8 @@ import android.os.RemoteException;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.List;
 import java.util.Objects;
 
@@ -45,6 +48,14 @@ public final class AdServicesManager {
 
     private final IAdServicesManager mService;
     private static final Object SINGLETON_LOCK = new Object();
+
+    @IntDef(value = {MEASUREMENT_DELETION})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface DeletionApiType {}
+
+    public static final int MEASUREMENT_DELETION = 0;
+
+    // TODO(b/267789077): Create bit for other APIs.
 
     @VisibleForTesting
     public AdServicesManager(@NonNull IAdServicesManager iAdServicesManager) {
@@ -323,6 +334,16 @@ public final class AdServicesManager {
     public void clearConsentForUninstalledApp(String packageName, int packageUid) {
         try {
             mService.clearConsentForUninstalledApp(packageName, packageUid);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Saves information to the storage that a deletion of measurement data occurred. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void recordAdServicesDeletionOccurred(@DeletionApiType int deletionType) {
+        try {
+            mService.recordAdServicesDeletionOccurred(deletionType);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
