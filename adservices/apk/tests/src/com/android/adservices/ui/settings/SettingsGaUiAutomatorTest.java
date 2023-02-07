@@ -73,12 +73,15 @@ public class SettingsGaUiAutomatorTest {
         // no main switch any more
         UiObject mainSwitch =
                 sDevice.findObject(new UiSelector().className("android.widget.Switch"));
+        mainSwitch.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(mainSwitch.exists()).isFalse();
 
         // make sure we are on the main settings page
         UiObject appButton = getElement(R.string.settingsUI_apps_ga_title);
+        appButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(appButton.exists()).isTrue();
         UiObject topicsButton = getElement(R.string.settingsUI_topics_ga_title);
+        topicsButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(topicsButton.exists()).isTrue();
 
         // click measurement page
@@ -92,6 +95,7 @@ public class SettingsGaUiAutomatorTest {
 
         sDevice.pressBack();
         // verify back to the main page
+        appButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(appButton.exists()).isTrue();
     }
 
@@ -115,6 +119,7 @@ public class SettingsGaUiAutomatorTest {
                                                         getString(
                                                                 R.string
                                                                         .settingsUI_measurement_view_reset_title))));
+        resetButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(resetButton.exists()).isTrue();
 
         // click reset again
@@ -128,145 +133,125 @@ public class SettingsGaUiAutomatorTest {
                                                         getString(
                                                                 R.string
                                                                         .settingsUI_measurement_view_reset_title))));
+        resetButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(resetButton.exists()).isTrue();
     }
 
     @Test
-    public void togglesTestWithDialogs() throws UiObjectNotFoundException {
+    public void topicsToggleTest() throws UiObjectNotFoundException {
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
-        ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled true");
 
         launchApp();
-        // 1) revoke Topics if given
+        // 1) disable Topics API is enabled
         scrollToAndClick(R.string.settingsUI_topics_ga_title);
+        sDevice.waitForIdle();
 
         UiObject topicsToggle =
                 sDevice.findObject(new UiSelector().className("android.widget.Switch"));
+        topicsToggle.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         if (topicsToggle.isChecked()) {
             topicsToggle.click();
         }
         assertThat(topicsToggle.isChecked()).isFalse();
         sDevice.pressBack();
-        ShellUtils.runShellCommand("am force-stop com.google.android.adservices.api");
 
-        launchApp();
-
-        // 2) revoke Fledge if given
-        scrollToAndClick(R.string.settingsUI_apps_ga_title);
-
-        UiObject appsToggle =
-                sDevice.findObject(new UiSelector().className("android.widget.Switch"));
-        if (appsToggle.isChecked()) {
-            appsToggle.click();
-        }
-        assertThat(appsToggle.isChecked()).isFalse();
-        sDevice.pressBack();
-        ShellUtils.runShellCommand("am force-stop com.google.android.adservices.api");
-
-        launchApp();
-        // 3) revoke Measurement if given
-        scrollToAndClick(R.string.settingsUI_measurement_view_title);
-
-        UiObject measurementToggle =
-                sDevice.findObject(new UiSelector().className("android.widget.Switch"));
-        if (measurementToggle.isChecked()) {
-            measurementToggle.click();
-        }
-        assertThat(measurementToggle.isChecked()).isFalse();
-        sDevice.pressBack();
-        ShellUtils.runShellCommand("am force-stop com.google.android.adservices.api");
-
-        launchApp();
-        // 4) set consent to given for measurement
-        scrollToAndClick(R.string.settingsUI_measurement_view_title);
-        measurementToggle = sDevice.findObject(new UiSelector().className("android.widget.Switch"));
-        assertThat(measurementToggle.isChecked()).isFalse();
-        measurementToggle.click();
-        assertThat(measurementToggle.isChecked()).isTrue();
-        sDevice.pressBack();
-        ShellUtils.runShellCommand("am force-stop com.google.android.adservices.api");
-
-        launchApp();
-        // 5) check revoked consent for Topics
+        // 2) enable Topics API
         scrollToAndClick(R.string.settingsUI_topics_ga_title);
-        topicsToggle = sDevice.findObject(new UiSelector().className("android.widget.Switch"));
-        assertThat(topicsToggle.isChecked()).isFalse();
-        sDevice.pressBack();
-        ShellUtils.runShellCommand("am force-stop com.google.android.adservices.api");
+        sDevice.waitForIdle();
 
-        launchApp();
-        // 6) check revoked consent for Fledge
-        scrollToAndClick(R.string.settingsUI_apps_ga_title);
-        appsToggle = sDevice.findObject(new UiSelector().className("android.widget.Switch"));
-        assertThat(appsToggle.isChecked()).isFalse();
+        topicsToggle = sDevice.findObject(new UiSelector().className("android.widget.Switch"));
+        topicsToggle.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        assertThat(topicsToggle.isChecked()).isFalse();
+        topicsToggle.click();
+        assertThat(topicsToggle.isChecked()).isTrue();
+        sDevice.pressBack();
+
+        // 3) check if Topics API is enabled
+        scrollToAndClick(R.string.settingsUI_topics_ga_title);
+        sDevice.waitForIdle();
+
+        topicsToggle = sDevice.findObject(new UiSelector().className("android.widget.Switch"));
+        topicsToggle.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        assertThat(topicsToggle.isChecked()).isTrue();
+        sDevice.pressBack();
     }
 
     @Test
-    public void togglesTestWithoutDialogs() throws UiObjectNotFoundException {
+    public void fledgeToggleTest() throws UiObjectNotFoundException {
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
-        ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled false");
-        launchApp();
-        // 1) revoke Topics if given
-        scrollToAndClick(R.string.settingsUI_topics_ga_title);
-        UiObject topicsToggle =
-                sDevice.findObject(new UiSelector().className("android.widget.Switch"));
-        if (topicsToggle.isChecked()) {
-            topicsToggle.click();
-        }
-        assertThat(topicsToggle.isChecked()).isFalse();
-        sDevice.pressBack();
-
-        ShellUtils.runShellCommand("am force-stop com.google.android.adservices.api");
 
         launchApp();
-        // 2) revoke Fledge if given
+        // 1) disable Fledge API is enabled
         scrollToAndClick(R.string.settingsUI_apps_ga_title);
+        sDevice.waitForIdle();
 
-        UiObject appsToggle =
+        UiObject fledgeToggle =
                 sDevice.findObject(new UiSelector().className("android.widget.Switch"));
-        if (appsToggle.isChecked()) {
-            appsToggle.click();
+        fledgeToggle.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        if (fledgeToggle.isChecked()) {
+            fledgeToggle.click();
         }
-        assertThat(appsToggle.isChecked()).isFalse();
+        assertThat(fledgeToggle.isChecked()).isFalse();
         sDevice.pressBack();
-        ShellUtils.runShellCommand("am force-stop com.google.android.adservices.api");
+
+        // 2) enable Fledge API
+        scrollToAndClick(R.string.settingsUI_apps_ga_title);
+        sDevice.waitForIdle();
+
+        fledgeToggle = sDevice.findObject(new UiSelector().className("android.widget.Switch"));
+        fledgeToggle.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        assertThat(fledgeToggle.isChecked()).isFalse();
+        fledgeToggle.click();
+        assertThat(fledgeToggle.isChecked()).isTrue();
+        sDevice.pressBack();
+
+        // 3) check if Fledge API is enabled
+        scrollToAndClick(R.string.settingsUI_apps_ga_title);
+        sDevice.waitForIdle();
+
+        fledgeToggle = sDevice.findObject(new UiSelector().className("android.widget.Switch"));
+        fledgeToggle.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        assertThat(fledgeToggle.isChecked()).isTrue();
+        sDevice.pressBack();
+    }
+
+    @Test
+    public void measurementToggleTest() throws UiObjectNotFoundException {
+        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
 
         launchApp();
-        // 3) revoke Msmt if given
+        // 1) disable Measurement API is enabled
         scrollToAndClick(R.string.settingsUI_measurement_view_title);
+        sDevice.waitForIdle();
 
         UiObject measurementToggle =
                 sDevice.findObject(new UiSelector().className("android.widget.Switch"));
+        measurementToggle.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         if (measurementToggle.isChecked()) {
             measurementToggle.click();
         }
         assertThat(measurementToggle.isChecked()).isFalse();
         sDevice.pressBack();
-        ShellUtils.runShellCommand("am force-stop com.google.android.adservices.api");
 
-        launchApp();
-        // 4) set consent to given for measurement
+        // 2) enable Measurement API
         scrollToAndClick(R.string.settingsUI_measurement_view_title);
+        sDevice.waitForIdle();
+
         measurementToggle = sDevice.findObject(new UiSelector().className("android.widget.Switch"));
+        measurementToggle.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(measurementToggle.isChecked()).isFalse();
         measurementToggle.click();
         assertThat(measurementToggle.isChecked()).isTrue();
         sDevice.pressBack();
-        ShellUtils.runShellCommand("am force-stop com.google.android.adservices.api");
 
-        launchApp();
-        // 5) check revoked consent for Topics
-        scrollToAndClick(R.string.settingsUI_topics_ga_title);
-        topicsToggle = sDevice.findObject(new UiSelector().className("android.widget.Switch"));
-        assertThat(topicsToggle.isChecked()).isFalse();
+        // 3) check if Measurement API is enabled
+        scrollToAndClick(R.string.settingsUI_measurement_view_title);
+        sDevice.waitForIdle();
+
+        measurementToggle = sDevice.findObject(new UiSelector().className("android.widget.Switch"));
+        measurementToggle.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        assertThat(measurementToggle.isChecked()).isTrue();
         sDevice.pressBack();
-        ShellUtils.runShellCommand("am force-stop com.google.android.adservices.api");
-
-        launchApp();
-        // 6) check revoked consent for Fledge
-        scrollToAndClick(R.string.settingsUI_apps_ga_title);
-        appsToggle = sDevice.findObject(new UiSelector().className("android.widget.Switch"));
-        assertThat(appsToggle.isChecked()).isFalse();
     }
 
     @Test
@@ -302,24 +287,29 @@ public class SettingsGaUiAutomatorTest {
         UiScrollable scrollView =
                 new UiScrollable(
                         new UiSelector().scrollable(true).className("android.widget.ScrollView"));
-        UiObject thisSubtitle = sDevice.findObject(new UiSelector().resourceIdMatches(regexResId));
-        scrollView.scrollIntoView(thisSubtitle);
-        if (thisSubtitle.getText().equals("Off")) {
+        UiObject subtitle = sDevice.findObject(new UiSelector().resourceIdMatches(regexResId));
+        subtitle.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        scrollView.scrollIntoView(subtitle);
+        if (subtitle.getText().equals("Off")) {
             scrollToAndClick(stringIdOfTitle);
-            UiObject thisToggle =
+            UiObject toggle =
                     sDevice.findObject(new UiSelector().className("android.widget.Switch"));
-            assertThat(thisToggle.isChecked()).isFalse();
-            thisToggle.click();
+            toggle.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+            assertThat(toggle.isChecked()).isFalse();
+            toggle.click();
             sDevice.pressBack();
-            assertThat(thisSubtitle.getText().equals("Off")).isFalse();
+            toggle.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+            assertThat(subtitle.getText().equals("Off")).isFalse();
         } else {
             scrollToAndClick(stringIdOfTitle);
-            UiObject thisToggle =
+            UiObject toggle =
                     sDevice.findObject(new UiSelector().className("android.widget.Switch"));
-            assertThat(thisToggle.isChecked()).isTrue();
-            thisToggle.click();
+            toggle.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+            assertThat(toggle.isChecked()).isTrue();
+            toggle.click();
             sDevice.pressBack();
-            assertThat(thisSubtitle.getText().equals("Off")).isTrue();
+            toggle.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+            assertThat(subtitle.getText().equals("Off")).isTrue();
         }
     }
 

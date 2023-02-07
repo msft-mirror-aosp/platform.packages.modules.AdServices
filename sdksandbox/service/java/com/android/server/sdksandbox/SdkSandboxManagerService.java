@@ -18,6 +18,7 @@ package com.android.server.sdksandbox;
 
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND;
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE;
+import static android.app.sdksandbox.SdkSandboxManager.ACTION_START_SANDBOXED_ACTIVITY;
 import static android.app.sdksandbox.SdkSandboxManager.EXTRA_SANDBOXED_ACTIVITY_HANDLER;
 import static android.app.sdksandbox.SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR;
 import static android.app.sdksandbox.SdkSandboxManager.LOAD_SDK_SDK_SANDBOX_DISABLED;
@@ -29,6 +30,7 @@ import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_AP
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__UNLOAD_SDK;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX;
 import static com.android.server.sdksandbox.SdkSandboxStorageManager.StorageDirInfo;
+import static com.android.server.wm.ActivityInterceptorCallback.MAINLINE_SDK_SANDBOX_ORDER_ID;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
@@ -53,6 +55,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ProviderInfo;
@@ -88,6 +91,8 @@ import com.android.server.LocalManagerRegistry;
 import com.android.server.SystemService;
 import com.android.server.am.ActivityManagerLocal;
 import com.android.server.pm.PackageManagerLocal;
+import com.android.server.wm.ActivityInterceptorCallback;
+import com.android.server.wm.ActivityInterceptorCallbackRegistry;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
@@ -270,6 +275,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         mSdkSandboxSettingsListener = new SdkSandboxSettingsListener(mContext);
         mSdkSandboxSettingsListener.registerObserver();
         mSdkSandboxPulledAtoms.initialize(mContext);
+
+        if (SdkLevel.isAtLeastU()) {
+            registerSandboxActivityInterceptor();
+        }
     }
 
     private void registerBroadcastReceivers() {
@@ -334,6 +343,37 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX,
                 callingUid);
         return sandboxedSdks;
+    }
+
+    private void registerSandboxActivityInterceptor() {
+        final ActivityInterceptorCallback mActivityInterceptorCallback =
+                info -> {
+                    Intent intent = info.getIntent();
+                    // Only intercept starting sandbox activity
+                    if (intent == null
+                            || intent.getAction() == null
+                            || !intent.getAction().equals(ACTION_START_SANDBOXED_ACTIVITY)) {
+                        return null;
+                    }
+
+                    final String sandboxProcessName =
+                            this.mInjector
+                                    .getSdkSandboxServiceProvider()
+                                    .toSandboxProcessName(info.getCallingPackage());
+                    final int sandboxUid = Process.toSdkSandboxUid(info.getCallingUid());
+
+                    // Update process name and uid to match sandbox process for the calling app.
+                    ActivityInfo activityInfo = info.getActivityInfo();
+                    activityInfo.applicationInfo.uid = sandboxUid;
+                    activityInfo.processName = sandboxProcessName;
+
+                    return new ActivityInterceptorCallback.ActivityInterceptResult(
+                            info.getIntent(), info.getCheckedOptions(), true);
+                };
+        ActivityInterceptorCallbackRegistry registry =
+                ActivityInterceptorCallbackRegistry.getInstance();
+        registry.registerActivityInterceptorCallback(
+                MAINLINE_SDK_SANDBOX_ORDER_ID, mActivityInterceptorCallback);
     }
 
     private ArrayList<LoadSdkSession> getLoadedSdksForApp(CallingInfo callingInfo) {

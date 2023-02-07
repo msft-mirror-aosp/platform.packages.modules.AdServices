@@ -50,6 +50,9 @@ public interface SdkSandboxServiceProvider {
     // Indicates that the sandbox process is up and running.
     int CREATED = 3;
 
+    /** Fixed suffix which get appended to app process name to create its sandbox process name. */
+    String SANDBOX_PROCESS_NAME_SUFFIX = "_sdk_sandbox";
+
     /**
      * Bind to and establish a connection with SdkSandbox service.
      *
@@ -112,4 +115,12 @@ public interface SdkSandboxServiceProvider {
     /** Dump debug information for adb shell dumpsys */
     default void dump(PrintWriter writer) {
     }
+
+    /**
+     * Returns sandbox process name for the passed app package name.
+     *
+     * @param packageName app package name.
+     */
+    @NonNull
+    String toSandboxProcessName(@NonNull String packageName);
 }
