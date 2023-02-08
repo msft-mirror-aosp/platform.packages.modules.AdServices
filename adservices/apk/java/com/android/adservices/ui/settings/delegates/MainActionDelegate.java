@@ -125,18 +125,17 @@ public class MainActionDelegate extends BaseActionDelegate {
             mAdServicesSettingsMainActivity.setTitle(R.string.settingsUI_main_view_ga_title);
             setLayoutVisibility(betaLayout, View.GONE);
             setLayoutVisibility(gaUxLayout, View.VISIBLE);
-
-            configureMeasurementButton(fragment);
         } else {
             mAdServicesSettingsMainActivity.setTitle(R.string.settingsUI_main_view_title);
             setLayoutVisibility(betaLayout, View.VISIBLE);
             setLayoutVisibility(gaUxLayout, View.GONE);
-
-            configureConsentSwitch(fragment);
         }
 
+        configureConsentSwitch(fragment);
+        configureMeasurementButton(fragment);
         configureTopicsButton(fragment);
         configureAppsButton(fragment);
+        configureSubtitles(fragment);
     }
 
     private void setLayoutVisibility(int[] layoutList, int visibility) {
@@ -149,6 +148,13 @@ public class MainActionDelegate extends BaseActionDelegate {
         MainSwitchBar mainSwitchBar =
                 mAdServicesSettingsMainActivity.findViewById(R.id.main_switch_bar);
 
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            mainSwitchBar.setVisibility(View.GONE);
+            return;
+        } else {
+            mainSwitchBar.setVisibility(View.VISIBLE);
+        }
+
         mMainViewModel.getConsent().observe(fragment, mainSwitchBar::setChecked);
 
         mainSwitchBar.setOnClickListener(
@@ -156,28 +162,39 @@ public class MainActionDelegate extends BaseActionDelegate {
     }
 
     private void configureTopicsButton(AdServicesSettingsMainFragment fragment) {
+        TextView topicsPreferenceTitle =
+                fragment.requireView().findViewById(R.id.topics_preference_title);
         if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
-            TextView topicsPreferenceTitle =
-                    fragment.requireView().findViewById(R.id.topics_preference_title);
             topicsPreferenceTitle.setText(R.string.settingsUI_topics_ga_title);
+        } else {
+            topicsPreferenceTitle.setText(R.string.settingsUI_topics_title);
         }
+
         View topicsButton = fragment.requireView().findViewById(R.id.topics_preference);
         topicsButton.setOnClickListener(preference -> mMainViewModel.topicsButtonClickHandler());
     }
 
     private void configureAppsButton(AdServicesSettingsMainFragment fragment) {
+        TextView appsPreferenceTitle =
+                fragment.requireView().findViewById(R.id.apps_preference_title);
         if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
-            TextView appsPreferenceTitle =
-                    fragment.requireView().findViewById(R.id.apps_preference_title);
             appsPreferenceTitle.setText(R.string.settingsUI_apps_ga_title);
+        } else {
+            appsPreferenceTitle.setText(R.string.settingsUI_apps_title);
         }
+
         View appsButton = fragment.requireView().findViewById(R.id.apps_preference);
         appsButton.setOnClickListener(preference -> mMainViewModel.appsButtonClickHandler());
     }
 
     private void configureMeasurementButton(AdServicesSettingsMainFragment fragment) {
         View measurementButton = fragment.requireView().findViewById(R.id.measurement_preference);
-        measurementButton.setVisibility(View.VISIBLE);
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            measurementButton.setVisibility(View.VISIBLE);
+        } else {
+            measurementButton.setVisibility(View.GONE);
+            return;
+        }
         measurementButton.setOnClickListener(
                 preference -> mMainViewModel.measurementClickHandler());
     }
@@ -204,6 +221,13 @@ public class MainActionDelegate extends BaseActionDelegate {
     private void configureMeasurementSubtitle(AdServicesSettingsMainFragment fragment) {
         TextView measurementSubtitle =
                 fragment.requireView().findViewById(R.id.measurement_preference_subtitle);
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            measurementSubtitle.setVisibility(View.VISIBLE);
+        } else {
+            measurementSubtitle.setVisibility(View.GONE);
+            return;
+        }
+
         if (mMainViewModel.getMeasurementConsentFromConsentManager()) {
             measurementSubtitle.setText(R.string.settingsUI_subtitle_consent_on);
         } else {
@@ -220,7 +244,12 @@ public class MainActionDelegate extends BaseActionDelegate {
     private void configureTopicsSubtitle(AdServicesSettingsMainFragment fragment) {
         TextView topicsSubtitle =
                 fragment.requireView().findViewById(R.id.topics_preference_subtitle);
-        topicsSubtitle.setVisibility(View.VISIBLE);
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            topicsSubtitle.setVisibility(View.VISIBLE);
+        } else {
+            topicsSubtitle.setVisibility(View.GONE);
+            return;
+        }
         if (mMainViewModel.getTopicsConsentFromConsentManager()) {
             topicsSubtitle.setText(
                     getQuantityString(
@@ -239,7 +268,13 @@ public class MainActionDelegate extends BaseActionDelegate {
      */
     private void configureAppsSubtitle(AdServicesSettingsMainFragment fragment) {
         TextView appsSubtitle = fragment.requireView().findViewById(R.id.apps_preference_subtitle);
-        appsSubtitle.setVisibility(View.VISIBLE);
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            appsSubtitle.setVisibility(View.VISIBLE);
+        } else {
+            appsSubtitle.setVisibility(View.GONE);
+            return;
+        }
+
         if (mMainViewModel.getAppsConsentFromConsentManager()) {
             appsSubtitle.setText(
                     getQuantityString(
