@@ -38,6 +38,7 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Class for handling event level reporting.
@@ -172,6 +173,10 @@ public class EventReportingJobHandler {
                 .setReportId(eventReport.getId())
                 .setSourceEventId(eventReport.getSourceEventId())
                 .setAttributionDestination(eventReport.getAttributionDestination().toString())
+                .setScheduledReportTime(
+                        String.valueOf(
+                                TimeUnit.MILLISECONDS.toSeconds(
+                                        eventReport.getReportTime())))
                 .setTriggerData(eventReport.getTriggerData())
                 .setSourceType(eventReport.getSourceType().getValue())
                 .setRandomizedTriggerRate(eventReport.getRandomizedTriggerRate())

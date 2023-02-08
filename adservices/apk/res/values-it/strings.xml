@@ -154,7 +154,7 @@
     <string name="settingsUI_measurement_are_reset" msgid="4375330550418573499">"I dati relativi alla valutazione degli annunci sono stati reimpostati"</string>
     <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Annulla"</string>
     <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Vuoi disattivare Privacy Sandbox?"</string>
-    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Se cambi idea o se vuoi scoprire di più sul programma Privacy annunci di Android (beta), vai alle impostazioni della privacy"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Se cambi idea o se vuoi saperne di più sulla privacy per gli annunci di Android (beta), vai alle impostazioni della privacy"</string>
     <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Disattiva"</string>
     <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Vuoi bloccare <xliff:g id="TOPIC">%1$s</xliff:g>?"</string>
     <string name="settingsUI_dialog_block_topic_message" msgid="2581824495438333677">"Questo argomento verrà bloccato e non verrà aggiunto nuovamente all\'elenco finché non lo aggiungerai di nuovo. Potresti comunque vedere alcuni annunci correlati."</string>
@@ -183,7 +183,11 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Le app che usi possono anche stabilire i tuoi interessi in base a come le utilizzi."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Le app che usi possono chiedere ad Android informazioni che le aiutino a valutare il rendimento dei loro annunci. Android consente alle app di raccogliere tipi di dati limitati."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"On/<xliff:g id="TOPICS_COUNT">%1$d</xliff:g> argomenti"</string>
+    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
+    <skip />
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"On/<xliff:g id="APPS_COUNT">%1$d</xliff:g> app"</string>
+    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
+    <skip />
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"On"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Off"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Gli argomenti di interesse sono basati sulle app che hai usato di recente e vengono utilizzati dalle app per mostrarti annunci personalizzati.\n\nPuoi bloccare gli argomenti che non vuoi vengano condivisi con le app. Inoltre, Android elimina gli argomenti automaticamente e a intervalli regolari."</string>
@@ -196,6 +200,14 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"App che hai bloccato"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Reimposta dati suggeriti dalle app"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"È comune che le app che usi ricordino ciò che ti interessa per personalizzare la tua esperienza. Le app possono anche archiviare informazioni con Android sui tuoi argomenti.\n\nAd esempio, se usi un\'app relativa all\'allenamento per le maratone, l\'app potrebbe decidere che ti interessano le scarpe da corsa. Se in un secondo momento usi un\'altra app, quest\'ultima può mostrarti un annuncio relativo a scarpe da corsa suggerito dalla prima app.\n\nAndroid elimina automaticamente e regolarmente i dati suggeriti dalle app. Se usi di nuovo un\'app, questa potrebbe essere visualizzata di nuovo nell\'elenco. In alternativa, puoi impedire a un\'app di suggerire annunci per te.\n\nUn annuncio che vedi nelle tue app potrebbe essere personalizzato in base a questa impostazione, all\'impostazione relativa agli argomenti degli annunci, alle impostazioni relative al tuo ID pubblicità e a seconda che l\'app in uso personalizzi o meno gli annunci."</string>
+    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
+    <skip />
+    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
+    <skip />
+    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
+    <skip />
+    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"Arte e spettacoli"</string>
     <string name="topic10002" msgid="1226367977754287428">"Recitazione e teatro"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime e manga"</string>

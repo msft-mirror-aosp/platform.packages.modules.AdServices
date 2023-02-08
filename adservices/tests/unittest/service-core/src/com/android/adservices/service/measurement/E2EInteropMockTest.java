@@ -38,14 +38,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * End-to-end test from source and trigger registration to attribution reporting, using mocked HTTP
  * requests.
  *
  * Tests in assets/msmt_interop_tests/ directory were copied from
- * https://source.chromium.org/chromium/chromium/src/+/main:content/test/data/attribution_reporting/interop/
- * on October 15, 2022
+ * https://github.com/chromium/chromium/tree/main/content/test/data/attribution_reporting/interop
+ * commit 8ff1e4f84ea36f339d440252ab36559263cf540c
  */
 @RunWith(Parameterized.class)
 public class E2EInteropMockTest extends E2EMockTest {
@@ -70,12 +71,11 @@ public class E2EInteropMockTest extends E2EMockTest {
     public E2EInteropMockTest(Collection<Action> actions, ReportObjects expectedOutput,
             PrivacyParamsProvider privacyParamsProvider, String name) throws DatastoreException {
         super(actions, expectedOutput, privacyParamsProvider, name);
-        mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager);
+        mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager, mFlags);
         mMeasurementImpl =
                 TestObjectProvider.getMeasurementImpl(
                         sDatastoreManager,
                         mClickVerifier,
-                        mFlags,
                         mMeasurementDataDeleter,
                         sEnrollmentDao);
         mAsyncRegistrationQueueRunner =
@@ -160,6 +160,7 @@ public class E2EInteropMockTest extends E2EMockTest {
         }
         List<Source> sourceWrapper = new ArrayList<>();
         mAsyncSourceFetcher.parseSource(
+                UUID.randomUUID().toString(),
                 Uri.parse(publisher),
                 enrollmentId,
                 /* appDestination */ null,

@@ -282,6 +282,13 @@ public interface Flags extends Dumpable {
         return MEASUREMENT_MANIFEST_FILE_URL;
     }
 
+    boolean MEASUREMENT_ENABLE_XNA = false;
+
+    /** Returns whether XNA should be used for eligible sources. */
+    default boolean getMeasurementEnableXNA() {
+        return MEASUREMENT_ENABLE_XNA;
+    }
+
     long FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = 4000L;
     long FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT = 1000L;
     long FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT = 1000L;
@@ -733,6 +740,15 @@ public interface Flags extends Dumpable {
     @ConsentSourceOfTruth
     default int getConsentSourceOfTruth() {
         return DEFAULT_CONSENT_SOURCE_OF_TRUTH;
+    }
+
+    /* Blocked topics source of truth intended to be used by default */
+    @ConsentSourceOfTruth int DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH = PPAPI_AND_SYSTEM_SERVER;
+
+    /** Returns the blocked topics source of truth currently used for PPAPI */
+    @ConsentSourceOfTruth
+    default int getBlockedTopicsSourceOfTruth() {
+        return DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
     }
 
     // Group of All Killswitches
@@ -1576,12 +1592,12 @@ public interface Flags extends Dumpable {
         return ENABLE_TOPIC_CONTRIBUTORS_CHECK;
     }
 
-    /** Whether to enable database schema version 5 */
-    boolean ENABLE_DATABASE_SCHEMA_VERSION_5 = false;
+    /** Whether to enable database schema version 7 */
+    boolean ENABLE_TOPIC_MIGRATION = false;
 
-    /** @return if to enable database schema version 5. */
-    default boolean getEnableDatabaseSchemaVersion5() {
-        return ENABLE_DATABASE_SCHEMA_VERSION_5;
+    /** @return if to enable database schema version 7 */
+    default boolean getEnableTopicMigration() {
+        return ENABLE_TOPIC_MIGRATION;
     }
 
     /** Returns true if the given enrollmentId is blocked from using PP-API. */
@@ -1592,5 +1608,13 @@ public interface Flags extends Dumpable {
     /** Returns a list of enrollmentId blocked from using PP-API. */
     default ImmutableList<String> getEnrollmentBlocklist() {
         return ImmutableList.of();
+    }
+
+    /** Kill switch to guard backward-compatible logging. */
+    boolean COMPAT_LOGGING_KILL_SWITCH = true;
+
+    /** Returns whether backward-compatible logging should be enabled. */
+    default boolean getCompatLoggingKillSwitch() {
+        return COMPAT_LOGGING_KILL_SWITCH;
     }
 }

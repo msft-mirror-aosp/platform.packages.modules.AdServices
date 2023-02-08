@@ -183,7 +183,11 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Las apps que usas también pueden determinar lo que te gusta en función de cómo las utilizas."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Las apps que uses pueden solicitarle información a Android para medir el rendimiento de sus anuncios. Android permite que las apps recopilen algunos tipos de datos."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Activado/<xliff:g id="TOPICS_COUNT">%1$d</xliff:g> temas"</string>
+    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
+    <skip />
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Activado/<xliff:g id="APPS_COUNT">%1$d</xliff:g> apps"</string>
+    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
+    <skip />
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"Activada"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Desactivado"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Tus temas de interés se basan en las apps que usaste recientemente, y estas los usan para mostrarte anuncios personalizados.\n\nPuedes bloquear los temas que no quieras compartir con apps. Android también borra temas regularmente de forma automática."</string>
@@ -196,6 +200,14 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Apps que bloqueaste"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Restablecer los datos sugeridos por apps"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Con frecuencia, las apps que usas recuerdan el contenido que te interesa para personalizar tu experiencia. Las apps también pueden usar Android para almacenar información sobre tus temas.\n\nPor ejemplo, si usas una app sobre entrenamiento para maratones, la app podría inferir que te interesan las zapatillas deportivas. Más adelante, si usas una app diferente, esta podría mostrarte un anuncio de zapatillas deportivas sugerido por la primera app.\n\nAndroid borra los datos sugeridos por apps regularmente de forma automática. Las apps que vuelvas a usar podrían volver a aparecer en la lista. Si quieres que esto no suceda, bloquea una app para que deje de sugerirte anuncios.\n\nEs posible que en tus apps se muestren anuncios personalizados dependiendo de los parámetros de configuración de anuncios personalizados, de tu ID de publicidad y de los temas de anuncios, y de si la app que usas personaliza anuncios."</string>
+    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
+    <skip />
+    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
+    <skip />
+    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
+    <skip />
+    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"Arte y entretenimiento"</string>
     <string name="topic10002" msgid="1226367977754287428">"Actuación y teatro"</string>
     <string name="topic10003" msgid="6949890838957814881">"Animé y manga"</string>

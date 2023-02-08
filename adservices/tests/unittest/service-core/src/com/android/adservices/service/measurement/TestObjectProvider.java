@@ -56,14 +56,13 @@ class TestObjectProvider {
     }
 
     static AttributionJobHandlerWrapper getAttributionJobHandler(
-            DatastoreManager datastoreManager) {
-        return new AttributionJobHandlerWrapper(datastoreManager);
+            DatastoreManager datastoreManager, Flags flags) {
+        return new AttributionJobHandlerWrapper(datastoreManager, flags);
     }
 
     static MeasurementImpl getMeasurementImpl(
             DatastoreManager datastoreManager,
             ClickVerifier clickVerifier,
-            Flags flags,
             MeasurementDataDeleter measurementDataDeleter,
             EnrollmentDao enrollmentDao) {
         return spy(
