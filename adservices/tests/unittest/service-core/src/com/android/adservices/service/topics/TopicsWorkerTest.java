@@ -668,12 +668,19 @@ public class TopicsWorkerTest {
         assertThat(getTopicsResultAppSdk1.getTopics())
                 .containsExactlyElementsIn(expectedGetTopicsResult.getTopics());
 
+        // Mock AdServicesManager.clearAllBlockedTopics
+        doNothing().when(mMockAdServicesManager).clearAllBlockedTopics();
         // Clear all data in database belonging to app except blocked topics table
         mTopicsWorker.clearAllTopicsData(tableExclusionList);
         assertThat(mTopicsDao.retrieveAllBlockedTopics()).isNotEmpty();
+        // Verify AdServicesManager.clearAllBlockedTopics is not invoked because tableExclusionList
+        // contains blocked topics table
+        verify(mMockAdServicesManager, never()).clearAllBlockedTopics();
 
         mTopicsWorker.clearAllTopicsData(new ArrayList<>());
         assertThat(mTopicsDao.retrieveAllBlockedTopics()).isEmpty();
+        // Verify AdServicesManager.clearAllBlockedTopics is invoked
+        verify(mMockAdServicesManager, times(1)).clearAllBlockedTopics();
 
         GetTopicsResult emptyGetTopicsResult =
                 new GetTopicsResult.Builder()
@@ -699,18 +706,24 @@ public class TopicsWorkerTest {
         Map<Integer, Set<String>> topicContributorsMap = Map.of(topicId, Set.of(app));
         mTopicsDao.persistTopicContributors(epochId, topicContributorsMap);
 
+        // Mock AdServicesManager.clearAllBlockedTopics
+        doNothing().when(mMockAdServicesManager).clearAllBlockedTopics();
         // To test feature flag is off
         doReturn(false).when(mMockEpochManager).supportsTopicContributorFeature();
         mTopicsWorker.clearAllTopicsData(/* tables to exclude */ new ArrayList<>());
         // TopicContributors table should remain the same
         assertThat(mTopicsDao.retrieveTopicToContributorsMap(epochId))
                 .isEqualTo(topicContributorsMap);
+        // Verify AdServicesManager.clearAllBlockedTopics is invoked
+        verify(mMockAdServicesManager).clearAllBlockedTopics();
 
         // To test feature flag is on
         doReturn(true).when(mMockEpochManager).supportsTopicContributorFeature();
         mTopicsWorker.clearAllTopicsData(/* tables to exclude */ new ArrayList<>());
         // TopicContributors table be cleared.
         assertThat(mTopicsDao.retrieveTopicToContributorsMap(epochId)).isEmpty();
+        // Verify AdServicesManager.clearAllBlockedTopics is invoked
+        verify(mMockAdServicesManager, times(2)).clearAllBlockedTopics();
     }
 
     @Test
