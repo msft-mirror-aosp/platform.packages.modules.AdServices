@@ -113,6 +113,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private final ActivityManager mActivityManager;
     private final Handler mHandler;
+    private final Handler mBackgroundHandler;
     private final SdkSandboxStorageManager mSdkSandboxStorageManager;
     private final SdkSandboxServiceProvider mServiceProvider;
 
@@ -232,6 +233,14 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         HandlerThread handlerThread = new HandlerThread("SdkSandboxManagerServiceHandler");
         handlerThread.start();
         mHandler = new Handler(handlerThread.getLooper());
+
+        // Start a background handler thread.
+        HandlerThread backgroundHandlerThread =
+                new HandlerThread(
+                        "SdkSandboxManagerServiceHandler", Process.THREAD_PRIORITY_BACKGROUND);
+        backgroundHandlerThread.start();
+        mBackgroundHandler = new Handler(backgroundHandlerThread.getLooper());
+
         registerBroadcastReceivers();
 
         mAdServicesPackageName = resolveAdServicesPackage();
@@ -1029,7 +1038,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             // Once bound service has been set, sync manager is notified.
             notifySyncManagerSandboxStarted(mCallingInfo);
 
-            mHandler.post(
+            mBackgroundHandler.post(
                     () -> {
                         computeSdkStorage(mCallingInfo, mService);
                     });
@@ -1608,6 +1617,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
      * be used as a part of {@link SdkSandboxController}. The Controller can then can call APIs on
      * the link object to get data from the manager service.
      */
+    // TODO(b/268043836): Move SdkToServiceLink out of SdkSandboxManagerService
     private class SdkToServiceLink extends ISdkToServiceCallback.Stub {
 
         /**
@@ -1649,6 +1659,35 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 }
             }
             return sandboxedSdks;
+        }
+
+        @Override
+        public void logLatenciesFromSandbox(
+                int latencyFromSystemServerToSandboxMillis,
+                int latencySandboxMillis,
+                int method,
+                boolean success) {
+            final int appUid = Process.getAppUidForSdkSandboxUid(Binder.getCallingUid());
+            /**
+             * In case system server is not involved and the API call is just concerned with sandbox
+             * process, there will be no call to system server, and we will not log that information
+             */
+            if (latencyFromSystemServerToSandboxMillis != -1) {
+                SdkSandboxStatsLog.write(
+                        SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                        method,
+                        latencyFromSystemServerToSandboxMillis,
+                        success,
+                        SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_SANDBOX,
+                        appUid);
+            }
+            SdkSandboxStatsLog.write(
+                    SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                    method,
+                    latencySandboxMillis,
+                    /*success=*/ true,
+                    SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SANDBOX,
+                    appUid);
         }
     }
 

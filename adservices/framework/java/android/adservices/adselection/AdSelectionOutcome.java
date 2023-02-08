@@ -43,6 +43,9 @@ public class AdSelectionOutcome {
     @NonNull public static final AdSelectionOutcome NO_OUTCOME = new AdSelectionOutcome();
 
     /** @hide */
+    public static final String UNSET_AD_SELECTION_ID_MESSAGE = "Ad selection ID must be set";
+
+    /** @hide */
     public static final int UNSET_AD_SELECTION_ID = 0;
 
     private final long mAdSelectionId;
@@ -131,7 +134,7 @@ public class AdSelectionOutcome {
             Objects.requireNonNull(mRenderUri);
 
             Preconditions.checkArgument(
-                    mAdSelectionId != UNSET_AD_SELECTION_ID, "AdSelectionId has not been set!");
+                    mAdSelectionId != UNSET_AD_SELECTION_ID, UNSET_AD_SELECTION_ID_MESSAGE);
 
             return new AdSelectionOutcome(mAdSelectionId, mRenderUri);
         }

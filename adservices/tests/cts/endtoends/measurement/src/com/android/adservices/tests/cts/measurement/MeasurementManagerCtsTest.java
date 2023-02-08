@@ -40,12 +40,14 @@ import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.runner.AndroidJUnit4;
 
+import com.android.adservices.common.AdservicesCtsHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -85,6 +87,9 @@ public class MeasurementManagerCtsTest {
 
     @Before
     public void setup() {
+        // Skip the test if it runs on unsupported platforms.
+        Assume.assumeTrue(AdservicesCtsHelper.isDeviceSupported());
+
         // To grant access to all pp api app
         allowAllPackageNamesAccessMeasurementApis();
 

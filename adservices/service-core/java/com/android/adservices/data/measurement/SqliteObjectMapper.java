@@ -163,6 +163,16 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.SourceContract.AR_DEBUG_PERMISSION,
                 builder::setArDebugPermission);
+        setTextColumn(
+                cursor,
+                MeasurementTables.SourceContract.SHARED_AGGREGATION_KEYS,
+                builder::setSharedAggregationKeys);
+        setTextColumn(
+                cursor,
+                MeasurementTables.SourceContract.REGISTRATION_ID,
+                builder::setRegistrationId);
+        setLongColumn(
+                cursor, MeasurementTables.SourceContract.INSTALL_TIME, builder::setInstallTime);
         return builder.build();
     }
 
@@ -191,6 +201,10 @@ public class SqliteObjectMapper {
                 builder::setAggregateTriggerData);
         setTextColumn(cursor, MeasurementTables.TriggerContract.AGGREGATE_VALUES,
                 builder::setAggregateValues);
+        setTextColumn(
+                cursor,
+                MeasurementTables.TriggerContract.AGGREGATABLE_DEDUPLICATION_KEYS,
+                builder::setAggregateDeduplicationKeys);
         setTextColumn(cursor, MeasurementTables.TriggerContract.FILTERS, builder::setFilters);
         setTextColumn(cursor, MeasurementTables.TriggerContract.NOT_FILTERS,
                 builder::setNotFilters);
@@ -208,6 +222,14 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.TriggerContract.AR_DEBUG_PERMISSION,
                 builder::setArDebugPermission);
+        setTextColumn(
+                cursor,
+                MeasurementTables.TriggerContract.ATTRIBUTION_CONFIG,
+                builder::setAttributionConfig);
+        setTextColumn(
+                cursor,
+                MeasurementTables.TriggerContract.X_NETWORK_KEY_MAPPING,
+                builder::setAdtechBitMapping);
         return builder.build();
     }
 
@@ -348,6 +370,10 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.AsyncRegistrationContract.AD_ID_PERMISSION,
                 builder::setAdIdPermission);
+        setTextColumn(
+                cursor,
+                MeasurementTables.AsyncRegistrationContract.REGISTRATION_ID,
+                builder::setRegistrationId);
         return builder.build();
     }
 

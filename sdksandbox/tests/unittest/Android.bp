@@ -26,6 +26,7 @@ java_defaults {
     ],
     static_libs: [
         "androidx.test.runner",
+        "compatibility-device-util-axt-minus-dexmaker",
         "mockito-target-extended-minus-junit4",
         "truth-prebuilt",
         "SdkSandboxTestUtils",
