@@ -20,6 +20,7 @@ import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_
 import android.adservices.common.AdServicesPermissions;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
+import android.app.adservices.AdServicesManager;
 import android.app.adservices.IAdServicesManager;
 import android.app.adservices.consent.ConsentParcel;
 import android.app.adservices.topics.TopicParcel;
@@ -27,6 +28,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.os.Binder;
@@ -84,6 +86,8 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     private HandlerThread mHandlerThread;
     private Handler mHandler;
 
+    private int mAdServicesModuleVersion;
+
     // This will be triggered when there is a flag change.
     private final DeviceConfig.OnPropertiesChangedListener mOnFlagsChangedListener =
             properties -> {
@@ -91,6 +95,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
                     return;
                 }
                 registerReceivers();
+                setAdServicesApexVersion();
             };
 
     private final UserInstanceManager mUserInstanceManager;
@@ -108,6 +113,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
                 mOnFlagsChangedListener);
 
         registerReceivers();
+        setAdServicesApexVersion();
     }
 
     /** @hide */
@@ -562,6 +568,60 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         }
     }
 
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void recordAdServicesDeletionOccurred(
+            @AdServicesManager.DeletionApiType int deletionType) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        try {
+            LogUtil.v(
+                    "recordAdServicesDeletionOccurred() for user identifier %d, api type %d",
+                    userIdentifier, deletionType);
+            mUserInstanceManager
+                    .getOrCreateUserRollbackHandlingManagerInstance(
+                            userIdentifier, getAdServicesApexVersion())
+                    .recordAdServicesDataDeletion(deletionType);
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to persist the deletion status.");
+        }
+    }
+
+    @VisibleForTesting
+    boolean hasAdServicesDeletionOccurred(@AdServicesManager.DeletionApiType int deletionType) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        try {
+            LogUtil.v(
+                    "hasAdServicesDeletionOccurred() for user identifier %d, api type %d",
+                    userIdentifier, deletionType);
+            return mUserInstanceManager
+                    .getOrCreateUserRollbackHandlingManagerInstance(
+                            userIdentifier, getAdServicesApexVersion())
+                    .wasAdServicesDataDeleted(deletionType);
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to retrieve the deletion status.");
+            return false;
+        }
+    }
+
+    @VisibleForTesting
+    void resetMeasurementDeletionOccurred(@AdServicesManager.DeletionApiType int deletionType) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        try {
+            LogUtil.v("resetMeasurementDeletionOccurred() for user identifier %d", userIdentifier);
+            mUserInstanceManager
+                    .getOrCreateUserRollbackHandlingManagerInstance(
+                            userIdentifier, getAdServicesApexVersion())
+                    .resetAdServicesDataDeletion(deletionType);
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to remove the measurement deletion status.");
+        }
+    }
+
     @VisibleForTesting
     void registerReceivers() {
         // There could be race condition between registerReceivers call
@@ -599,6 +659,39 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
             registerPackagedChangedBroadcastReceiversLocked();
             registerUserActionBroadcastReceiverLocked();
         }
+    }
+
+    @VisibleForTesting
+    /**
+     * Stores the AdServices module version locally. Users other than the main user do not have the
+     * permission to get the version through the PackageManager, so we have to get the version when
+     * the AdServices system service starts.
+     */
+    void setAdServicesApexVersion() {
+        synchronized (AdServicesManagerService.class) {
+            if (!FlagsFactory.getFlags().getAdServicesSystemServiceEnabled()) {
+                LogUtil.d("AdServicesSystemServiceEnabled is FALSE.");
+                return;
+            }
+
+            PackageManager packageManager = mContext.getPackageManager();
+
+            List<PackageInfo> installedPackages =
+                    packageManager.getInstalledPackages(
+                            PackageManager.PackageInfoFlags.of(PackageManager.MATCH_APEX));
+
+            installedPackages.forEach(
+                    packageInfo -> {
+                        if (packageInfo.packageName.contains("adservices") && packageInfo.isApex) {
+                            mAdServicesModuleVersion = (int) packageInfo.getLongVersionCode();
+                        }
+                    });
+        }
+    }
+
+    @VisibleForTesting
+    int getAdServicesApexVersion() {
+        return mAdServicesModuleVersion;
     }
 
     /**

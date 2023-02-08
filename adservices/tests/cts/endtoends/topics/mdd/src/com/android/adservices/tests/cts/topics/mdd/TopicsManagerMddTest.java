@@ -81,6 +81,8 @@ public class TopicsManagerMddTest {
     private static final String ADSERVICES_PACKAGE_NAME =
             AdservicesCtsHelper.getAdServicesPackageName(sContext, TAG);
 
+    private String mDefaultMddManifestFileUrl;
+
     @Before
     public void setup() throws Exception {
         // Skip the test if it runs on unsupported platforms.
@@ -97,14 +99,18 @@ public class TopicsManagerMddTest {
         // We need to turn off random topic so that we can verify the returned topic.
         overridePercentageForRandomTopic(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
 
+        // Store current default value before override.
+        mDefaultMddManifestFileUrl = getDefaultMddManifestFileUrl();
         // Override manifest URL for Mdd.
-        overrideMddManifestFileURL(TEST_MDD_MANIFEST_FILE_URL);
+        overrideMddManifestFileUrl(TEST_MDD_MANIFEST_FILE_URL);
     }
 
     @After
     public void teardown() {
         overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
         overridePercentageForRandomTopic(TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+        // Reset Mdd manifest file url to the default value.
+        overrideMddManifestFileUrl(mDefaultMddManifestFileUrl);
     }
 
     @Test
@@ -182,8 +188,13 @@ public class TopicsManagerMddTest {
         ShellUtils.runShellCommand("am force-stop" + " " + ADSERVICES_PACKAGE_NAME);
     }
 
+    private String getDefaultMddManifestFileUrl() {
+        return ShellUtils.runShellCommand(
+                "device_config get adservices mdd_topics_classifier_manifest_file_url");
+    }
+
     // Override the flag to set manifest url for Mdd.
-    private void overrideMddManifestFileURL(String val) {
+    private void overrideMddManifestFileUrl(String val) {
         ShellUtils.runShellCommand(
                 "device_config put adservices mdd_topics_classifier_manifest_file_url " + val);
     }

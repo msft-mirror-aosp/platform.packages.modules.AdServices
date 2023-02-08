@@ -32,6 +32,7 @@ import com.android.server.adservices.data.topics.TopicsDao;
 import com.android.server.adservices.data.topics.TopicsDbHelper;
 import com.android.server.adservices.data.topics.TopicsDbTestUtil;
 import com.android.server.adservices.data.topics.TopicsTables;
+import com.android.server.adservices.rollback.RollbackHandlingManager;
 
 import org.junit.After;
 import org.junit.Before;
@@ -50,6 +51,8 @@ public class UserInstanceManagerTest {
     private TopicsDao mTopicsDao;
 
     private UserInstanceManager mUserInstanceManager;
+
+    private static final int TEST_MODULE_VERSION = 339990000;
 
     @Before
     public void setup() throws IOException {
@@ -80,6 +83,14 @@ public class UserInstanceManagerTest {
         AppConsentManager appConsentManager1 =
                 mUserInstanceManager.getOrCreateUserAppConsentManagerInstance(1);
 
+        RollbackHandlingManager rollbackHandlingManager0 =
+                mUserInstanceManager.getOrCreateUserRollbackHandlingManagerInstance(
+                        0, TEST_MODULE_VERSION);
+
+        RollbackHandlingManager rollbackHandlingManager1 =
+                mUserInstanceManager.getOrCreateUserRollbackHandlingManagerInstance(
+                        1, TEST_MODULE_VERSION);
+
         // One instance per user.
         assertThat(
                         mUserInstanceManager.getOrCreateUserConsentManagerInstance(
@@ -87,6 +98,10 @@ public class UserInstanceManagerTest {
                 .isNotSameInstanceAs(consentManager1);
         assertThat(mUserInstanceManager.getOrCreateUserAppConsentManagerInstance(0))
                 .isNotSameInstanceAs(appConsentManager1);
+        assertThat(
+                        mUserInstanceManager.getOrCreateUserRollbackHandlingManagerInstance(
+                                0, TEST_MODULE_VERSION))
+                .isNotSameInstanceAs(rollbackHandlingManager1);
 
         // Creating instance once per user.
         assertThat(
@@ -101,6 +116,15 @@ public class UserInstanceManagerTest {
                 .isSameInstanceAs(appConsentManager0);
         assertThat(mUserInstanceManager.getOrCreateUserAppConsentManagerInstance(1))
                 .isSameInstanceAs(appConsentManager1);
+
+        assertThat(
+                        mUserInstanceManager.getOrCreateUserRollbackHandlingManagerInstance(
+                                0, TEST_MODULE_VERSION))
+                .isSameInstanceAs(rollbackHandlingManager0);
+        assertThat(
+                        mUserInstanceManager.getOrCreateUserRollbackHandlingManagerInstance(
+                                1, TEST_MODULE_VERSION))
+                .isSameInstanceAs(rollbackHandlingManager1);
     }
 
     @Test

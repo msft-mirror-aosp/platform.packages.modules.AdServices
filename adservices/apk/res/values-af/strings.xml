@@ -133,10 +133,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android se privaatheidbeta bied nuwe kenmerke wat programme kan gebruik om vir jou advertensies te wys waarvan jy dalk sal hou. Hierdie tegnologieë gebruik nie toestelidentifiseerders nie.\n\nAndroid kan die soorte advertensies skat waarin jy dalk belang sal stel, en stoor hierdie belangstellings tydelik op jou toestel. Dit maak dit vir programme moontlik om vir jou relevante advertesies te wys sonder om jou aktiwiteit op webwerwe en programme van ander ontwikkelaars na te spoor."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Jy het geen geblokkeerde belangstellings nie"</string>
-    <!-- no translation found for settingsUI_no_blocked_topics_ga_text (377459829879121256) -->
-    <skip />
-    <!-- no translation found for settingsUI_view_blocked_topics_title (3705333677440361392) -->
-    <skip />
+    <string name="settingsUI_no_blocked_topics_ga_text" msgid="377459829879121256">"Geen geblokkeerde onderwerpe nie"</string>
+    <string name="settingsUI_view_blocked_topics_title" msgid="3705333677440361392">"Bekyk geblokkeerde onderwerpe"</string>
     <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Belangstellings is teruggestel"</string>
     <string name="settingsUI_topics_are_reset_ga" msgid="5250296990870048195">"Onderwerpe is teruggestel"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Programme kan jou belangstellings skat en hulle tydelik met Android stoor. ’n Ander program kan later vir jou ’n advertensie wys wat op hierdie belangstellings gegrond is.\n\nAs jy ’n program blokkeer, sal dit nie meer enige belangstellings skat nie. Dit sal nie weer by hierdie lys programme gevoeg word nie, tensy jy dit deblokkeer. Belangstellings wat reeds deur die program geskat is, sal uitgevee word, maar jy sal steeds verwante advertensies sien."</string>
@@ -148,8 +146,7 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android se privaatheidbeta bied nuwe kenmerke wat programme kan gebruik om vir jou advertensies te wys waarvan jy dalk sal hou. Hierdie tegnologieë gebruik nie toestelidentifiseerders nie.\n\nProgramme kan die soorte advertensies skat waarin jy dalk belang sal stel, en stoor hierdie belangstellings tydelik op jou toestel. Dit maak dit vir programme moontlik om vir jou relevante advertesies te wys sonder om jou aktiwiteit op webwerwe en programme van ander ontwikkelaars na te spoor."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Jy het geen geblokkeerde programme nie"</string>
-    <!-- no translation found for settingsUI_no_blocked_apps_ga_text (7488680173653861943) -->
-    <skip />
+    <string name="settingsUI_no_blocked_apps_ga_text" msgid="7488680173653861943">"Geen geblokkeerde apps nie"</string>
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"Laat advertensiemeting toe"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"Apps en adverteerders kan Android vir inligting vra wat hulle help om die werkverrigting van hul advertensies te meet.\n\nAdvertensiemetingdata word gereeld outomaties van jou toestel af uitgevee."</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"Stel metingdata terug"</string>
@@ -160,28 +157,20 @@
     <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Gaan na jou privaatheidinstellings as jy van plan verander of meer oor Android se advertensieprivaatheidbeta te wete wil kom."</string>
     <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Skakel af"</string>
     <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Blokkeer <xliff:g id="TOPIC">%1$s</xliff:g>?"</string>
-    <!-- no translation found for settingsUI_dialog_block_topic_message (2581824495438333677) -->
-    <skip />
+    <string name="settingsUI_dialog_block_topic_message" msgid="2581824495438333677">"Hierdie onderwerp sal geblokkeer word en sal nie weer by jou lys gevoeg word nie, tensy jy dit self weer byvoeg. Jy kan steeds ’n paar verwante advertensies sien."</string>
     <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Blokkeer"</string>
     <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"<xliff:g id="TOPIC">%1$s</xliff:g> is gedeblokkeer"</string>
-    <!-- no translation found for settingsUI_dialog_unblock_topic_message (1090743551997420666) -->
-    <skip />
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="1090743551997420666">"Android kan hierdie onderwerp weer by jou lys voeg, maar dit sal dalk nie dadelik verskyn nie"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
-    <!-- no translation found for settingsUI_dialog_reset_topic_title (8025836207966712435) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (4243744527757134000) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_topic_title" msgid="8025836207966712435">"Stel alle onderwerpe terug?"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="4243744527757134000">"Jou lys sal uitgevee word en nuwe onderwerpe sal van nou af bygevoeg word. Jy kan steeds sommige advertensies sien wat verband hou met onderwerpe wat jy teruggestel het."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Stel terug"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Blokkeer <xliff:g id="APP">%1$s</xliff:g>?"</string>
-    <!-- no translation found for settingsUI_dialog_block_app_message (758788973278770119) -->
-    <skip />
+    <string name="settingsUI_dialog_block_app_message" msgid="758788973278770119">"Hierdie app stel nie advertensies voor nie en sal nie weer by jou lys gevoeg word nie, tensy jy dit deblokkeer. Jy kan steeds ’n paar verwante advertensies sien."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> is gedeblokkeer"</string>
-    <!-- no translation found for settingsUI_dialog_unblock_app_message (5758218424845642060) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_app_title (5177572712117150557) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_app_message (7845329616145691006) -->
-    <skip />
+    <string name="settingsUI_dialog_unblock_app_message" msgid="5758218424845642060">"Hierdie app kan weer advertensies vir jou voorstel, maar dit sal dalk nie dadelik op jou lys verskyn nie. Dit kan ’n rukkie duur voordat jy verwante advertensies sien."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"Stel alle advertensies wat deur apps voorgestel is, terug?"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Advertensievoorsteldata vanaf die apps op jou lys sal uitgevee word en die apps sal van nou af nuwe advertensies voorstel. Jy kan steeds ’n paar verwante advertensies sien."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Appdata is teruggestel"</string>
     <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"Stel alle onderwerpe terug?"</string>
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"Stel alle advertensies wat deur apps voorgestel is, terug?"</string>
@@ -194,20 +183,31 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Apps wat jy gebruik, kan ook bepaal waarvan jy hou gegrond op hoe jy hulle gebruik."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Apps wat jy gebruik, kan Android vir inligting vra om hulle te help om die werkverrigting van hul advertensies te meet. Android laat apps toe om beperkte soorte data in te samel."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Aan / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> onderwerpe"</string>
+    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
+    <skip />
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Aan / <xliff:g id="APPS_COUNT">%1$d</xliff:g> apps"</string>
+    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
+    <skip />
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"Aan"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Af"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Onderwerpe waarin jy belangstel, is gegrond op die apps wat jy onlangs gebruik het en word deur apps gebruik om vir jou gepersonaliseerde advertensies te wys.\n\nJy kan onderwerpe blokkeer wat jy nie wil hê met apps gedeel moet word nie. Android vee onderwerpe ook gereeld uit."</string>
     <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"Laat advertensie-onderwerpe toe"</string>
     <string name="settingsUI_blocked_topics_ga_title" msgid="7163366621282449273">"Advertensie-onderwerpe wat jy geblokkeer het"</string>
-    <!-- no translation found for settingsUI_reset_topics_ga_title (5365554894399951300) -->
-    <skip />
+    <string name="settingsUI_reset_topics_ga_title" msgid="5365554894399951300">"Stel alle advertensie-onderwerpe terug"</string>
     <string name="settingsU_topics_view_footer" msgid="4769146330248953561">"Android neem kennis van onderwerpe waarin jy belangstel gegrond op die apps wat jy in die afgelope paar weke gebruik het.\n\n’n App wat jy gebruik, kan later vir Android vra wat jou onderwerpe is om die advertensies wat jy sien, te personaliseer. Android deel tot 3 onderwerpe terwyl dit jou identiteit en inligting oor jou appgebruik beskerm.\n\nAndroid vee onderwerpe gereeld outomaties uit. ’n Onderwerp kan dalk weer op die lys verskyn soos jy aanhou om apps te gebruik. Of jy kan onderwerpe blokkeer wat jy nie wil hê Android met apps moet deel nie.\n\n’n Advertensie wat jy in jou apps sien, kan dalk gepersonaliseer word na gelang van hierdie instelling, die appvoorgestelde advertensie-instelling, jou reklame-ID-instellings, en óf die app wat jy gebruik, advertensies personaliseer."</string>
     <string name="settingsUI_apps_switch_title" msgid="1308209012769248890">"Laat appvoorgestelde advertensies toe"</string>
     <string name="settingsUI_apps_view_ga_subtitle" msgid="1911743837387384160">"Apps wat jy gebruik, kan bepaal waarvan jy hou en dan advertensies in ander apps voorstel.\n\nJy kan apps keer om voorstelle te maak. Android vee appvoorgestelde data ook gereeld outomaties uit."</string>
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Apps wat jy geblokkeer het"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Stel appvoorgestelde data terug"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Dit is algemeen dat apps wat jy gebruik dinge onthou waarin jy belangstel, sodat hulle jou ervaring kan personaliseer. Apps kan ook inligting oor jou onderwerpe by Android berg.\n\nAs jy byvoorbeeld ’n app oor marathonvoorbereiding gebruik, kan die app besluit dat jy in hardloopskoene belangstel. As jy later ’n ander app gebruik, kan daardie app vir jou ’n advertensie vir hardloopskoene wys wat deur die eerste app voorgestel is.\n\nAndroid vee appvoorgestelde data gereeld outomaties uit. ’n App wat jy weer gebruik, kan dalk weer op die lys verskyn. Of jy kan ’n app keer om vir jou advertensies voor te stel.\n\n’n Advertensie wat jy in jou apps sien, kan dalk gepersonaliseer word na gelang van hierdie instelling, die advertensie-onderwerpinstelling, jou reklame-ID-instellings, en óf die app wat jy gebruik, advertensies personaliseer."</string>
+    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
+    <skip />
+    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
+    <skip />
+    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
+    <skip />
+    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"Kuns en vermaak"</string>
     <string name="topic10002" msgid="1226367977754287428">"Toneelspel en teater"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime en Manga"</string>
