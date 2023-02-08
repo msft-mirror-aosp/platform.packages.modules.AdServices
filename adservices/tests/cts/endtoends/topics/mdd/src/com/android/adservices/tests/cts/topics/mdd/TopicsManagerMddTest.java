@@ -69,7 +69,7 @@ public class TopicsManagerMddTest {
     // http://google3/wireless/android/adservices/mdd/topics_classifier/cts_test_1/
     // These assets are have asset version set to 0 for verification in tests.
     private static final String TEST_MDD_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-topics-classifier/1400/5c9d9c7bcae479d465f2a25e0267f86acf697b84";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-topics-classifier/1489/165d2bb9043b11893187dfe808c3398bc4f11c48";
 
     // Use 0 percent for random topic in the test so that we can verify the returned topic.
     private static final int TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC = 0;
