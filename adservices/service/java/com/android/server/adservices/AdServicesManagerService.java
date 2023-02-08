@@ -86,7 +86,6 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     private static final String PACKAGE_DATA_CLEARED = "package_data_cleared";
 
     private final Context mContext;
-    private final TopicsDao mTopicsDao;
 
     private BroadcastReceiver mSystemServicePackageChangedReceiver;
     private BroadcastReceiver mSystemServiceUserActionReceiver;
@@ -113,11 +112,9 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     private final UserInstanceManager mUserInstanceManager;
 
     @VisibleForTesting
-    AdServicesManagerService(
-            Context context, UserInstanceManager userInstanceManager, TopicsDao topicsDao) {
+    AdServicesManagerService(Context context, UserInstanceManager userInstanceManager) {
         mContext = context;
         mUserInstanceManager = userInstanceManager;
-        mTopicsDao = topicsDao;
 
         DeviceConfig.addOnPropertiesChangedListener(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -139,9 +136,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
             TopicsDao topicsDao = TopicsDao.getInstance(context);
             mService =
                     new AdServicesManagerService(
-                            context,
-                            new UserInstanceManager(topicsDao, ADSERVICES_BASE_DIR),
-                            topicsDao);
+                            context, new UserInstanceManager(topicsDao, ADSERVICES_BASE_DIR));
         }
 
         /** @hide */
@@ -270,10 +265,22 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         enforceAdServicesManagerPermission();
 
         final int userIdentifier = getUserIdentifierFromBinderCallingUid();
-        LogUtil.v("removeBlockedTopic() for User Identifier %d", userIdentifier);
         return mUserInstanceManager
                 .getOrCreateUserBlockedTopicsManagerInstance(userIdentifier)
                 .retrieveAllBlockedTopics();
+    }
+
+    /** Clear all Blocked Topics */
+    @Override
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void clearAllBlockedTopics() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("clearAllBlockedTopics() for User Identifier %d", userIdentifier);
+        mUserInstanceManager
+                .getOrCreateUserBlockedTopicsManagerInstance(userIdentifier)
+                .clearAllBlockedTopics();
     }
 
     @Override
