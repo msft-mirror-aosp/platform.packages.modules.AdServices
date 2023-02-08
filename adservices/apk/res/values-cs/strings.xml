@@ -114,7 +114,7 @@
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text4" msgid="4738335469671465639">"Aplikace mohou v Androidu ukládat informace o věcech, které se vám líbí. Pokud například používáte aplikaci k tréninku na maraton, tato aplikace může určit, že vás zajímají běžecké boty. Když později použijete jinou aplikaci, může vám zobrazit reklamu na běžecké boty, kterou navrhla první aplikace."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text5" msgid="8737925570089314631">"•  Jak svá data můžete spravovat"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android data navrhovaná aplikacemi pravidelně automaticky maže. Aplikace, kterou znovu použijete, se v seznamu může opět objevit."</string>
-    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"V nastavení ochrany soukromí také můžete aplikaci z navrhování reklam kdykoliv zablokovat, resetovat všechna data používaná k navrhování reklam nebo reklamy navrhované aplikacemi vypnout."</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"V nastavení ochrany soukromí také můžete aplikaci kdykoli zakázat, aby vám navrhovala reklamy, resetovat všechna data používaná k navrhování reklam nebo reklamy navrhované aplikacemi vypnout."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"Aplikace, které používáte, mohou Android požádat o informace k měření výkonu reklam. Android chrání vaše soukromí tím, že omezuje informace, které mohou aplikace mezi sebou sdílet."</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Privacy Sandbox"</string>
     <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"Zapojte se do beta verze ochrany soukromí u reklam na Androidu"</string>
@@ -123,7 +123,7 @@
     <string name="settingsUI_apps_title" msgid="2772289096915264175">"Aplikace, které odhadují zájmy"</string>
     <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"Měření reklam"</string>
     <string name="settingsUI_main_view_info_text9" msgid="5431131706102562540">"Aplikace mohou pomocí Privacy Sandboxu měřit efektivitu svých reklam. Za tímto účelem mohou inzerenti do Androidu dočasně ukládat data o vašich interakcích mezi jejich reklamami a aplikacemi. Objem dat, která mohou ukládat, je omezen, a data budou pravidelně mazána.\n\nTato data můžete kdykoli smazat vypnutím Privacy Sandboxu."</string>
-    <string name="settingsUI_topics_view_subtitle" msgid="6608135144119617292">"Android vaše hlavní zájmy pravidelně odhaduje na základě toho, jaké aplikace používáte. Aplikace může systém Android o tyto zájmy požádat, aby je mohla využít k zobrazení relevantnějších reklam.\n\nPokud nějaký zájem zablokujete, už se na seznam nepřidá, leda byste ho odblokovali. Nadále se ale mohou zobrazovat související reklamy."</string>
+    <string name="settingsUI_topics_view_subtitle" msgid="6608135144119617292">"Na základě vámi používaných aplikací Android pravidelně odhaduje vaše hlavní zájmy. Aplikace může systém Android o tyto zájmy požádat, aby je mohla využít k zobrazení relevantnějších reklam.\n\nPokud nějaký zájem zablokujete, už se na seznam nepřidá, leda byste ho odblokovali. Nadále se ale mohou zobrazovat související reklamy."</string>
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"Blokovat"</string>
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Odblokovat"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Zájmy, které jste zablokovali"</string>
@@ -183,7 +183,11 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Aplikace mohou také určit, co se vám líbí, podle toho, jak je používáte."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Aplikace, které používáte, mohou Android požádat o informace, které jim pomohou měřit výkon reklam. Android aplikacím umožňuje shromažďovat omezené typy dat."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Zapnuto / počet témat: <xliff:g id="TOPICS_COUNT">%1$d</xliff:g>"</string>
+    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
+    <skip />
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Zapnuto / počet aplikací: <xliff:g id="APPS_COUNT">%1$d</xliff:g>"</string>
+    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
+    <skip />
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"Zapnuto"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Vypnuto"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Témata zájmu vycházejí z aplikací, které jste v poslední době používali, a aplikace je používají k zobrazování personalizovaných reklam.\n\nMůžete zablokovat témata, která s aplikacemi nechcete sdílet. Android také témata pravidelně automaticky maže."</string>
@@ -195,7 +199,15 @@
     <string name="settingsUI_apps_view_ga_subtitle" msgid="1911743837387384160">"Aplikace, které používáte, mohou určit, co se vám líbí, a navrhovat reklamy v jiných aplikacích.\n\nGenerování návrhů můžete aplikacím zablokovat. Android data navrhovaná aplikacemi také pravidelně automaticky maže."</string>
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Zablokované aplikace"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Resetovat data navrhovaná aplikacemi"</string>
-    <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Je běžné, že si používané aplikace pamatují, co vás zajímá, aby vám mohly přizpůsobit prostředí. Aplikace mohou v systému Android ukládat také informace o tématech, která vás zajímají.\n\nPokud například používáte aplikaci k tréninku na maraton, tato aplikace může určit, že vás zajímají běžecké boty. Když později použijete jinou aplikaci, může vám zobrazit reklamu na běžecké boty, kterou navrhla první aplikace.\n\nAndroid data navrhovaná aplikacemi pravidelně automaticky maže. Aplikace, kterou znovu použijete, se v seznamu může opět objevit. Aplikaci můžete z navrhování reklam také zablokovat.\n\nReklamy zobrazované v aplikacích mohou být personalizovány v závislosti na tomto nastavení, nastavení témat reklam, nastavení vašeho inzertního ID a na tom, zda aplikace personalizuje reklamy."</string>
+    <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Je běžné, že si aplikace, které používáte, pamatují věci, které vás zajímají, aby vám mohly přizpůsobit prostředí. Aplikace mohou také ukládat informace o vašich tématech v systému Android. \n\nPokud například používáte aplikaci k tréninku na maraton, aplikace může určit, že se zajímáte o běžecké boty. Když později použijete jinou aplikaci, může se vám v ní zobrazit reklama na běžecké boty navržená první aplikací.\n\nData navrhovaná aplikacemi systém Android pravidelně automaticky maže. Aplikace, kterou použijete znovu, se může v seznamu opět objevit. Můžete také zakázat, aby vám konkrétní aplikace navrhovala reklamy.\n\nReklamy zobrazované v aplikacích mohou být personalizovány v závislosti na tomto nastavení, nastavení témat reklam, nastavení vašeho inzertního ID a na tom, zda aplikace personalizuje reklamy."</string>
+    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
+    <skip />
+    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
+    <skip />
+    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
+    <skip />
+    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"Umění a zábava"</string>
     <string name="topic10002" msgid="1226367977754287428">"Herectví a divadlo"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime a manga"</string>
