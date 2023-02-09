@@ -40,6 +40,11 @@ interface IAdServicesManager {
      */
      void recordAdServicesDeletionOccurred(in int deletionType);
 
+     /**
+      * Checks whether the module needs to handle data reconciliation after a rollback.
+      */
+     boolean needsToHandleRollbackReconciliation(in int deletionType);
+
     /**
      * Saves information to the storage that notification was displayed for the first time to the
      * user.
