@@ -172,7 +172,8 @@ public class EventReportingJobHandler {
         return new EventReportPayload.Builder()
                 .setReportId(eventReport.getId())
                 .setSourceEventId(eventReport.getSourceEventId())
-                .setAttributionDestination(eventReport.getAttributionDestination().toString())
+                .setAttributionDestination(
+                        eventReport.getAttributionDestinations().get(0).toString())
                 .setScheduledReportTime(
                         String.valueOf(
                                 TimeUnit.MILLISECONDS.toSeconds(
