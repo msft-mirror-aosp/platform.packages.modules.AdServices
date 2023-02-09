@@ -27,6 +27,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
 import android.Manifest;
@@ -41,10 +42,13 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.content.pm.VersionedPackage;
+import android.content.rollback.RollbackManager;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.UserHandle;
 import android.provider.DeviceConfig;
+import android.util.ArrayMap;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -70,7 +74,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /** Tests for {@link AdServicesManagerService} */
 public class AdServicesManagerServiceTest {
@@ -83,6 +89,7 @@ public class AdServicesManagerServiceTest {
     private Context mSpyContext;
     private TopicsDao mTopicsDao;
     @Mock private PackageManager mMockPackageManager;
+    @Mock private RollbackManager mMockRollbackManager;
 
     private static final String PPAPI_PACKAGE_NAME = "com.google.android.adservices.api";
     private static final String ADSERVICES_APEX_PACKAGE_NAME = "com.google.android.adservices";
@@ -98,7 +105,9 @@ public class AdServicesManagerServiceTest {
     private static final Context PPAPI_CONTEXT = ApplicationProvider.getApplicationContext();
     private static final String BASE_DIR = PPAPI_CONTEXT.getFilesDir().getAbsolutePath();
     private final TopicsDbHelper mDBHelper = TopicsDbTestUtil.getDbHelperForTest();
-    private static final int TEST_MODULE_VERSION = 339990000;
+    private static final int TEST_ROLLED_BACK_FROM_MODULE_VERSION = 339990000;
+    private static final int TEST_ROLLED_BACK_TO_MODULE_VERSION = 330000000;
+    private static final int ROLLBACK_ID = 1768705420;
 
     @Before
     public void setup() {
@@ -118,6 +127,7 @@ public class AdServicesManagerServiceTest {
                 .adoptShellPermissionIdentity(Manifest.permission.INTERACT_ACROSS_USERS_FULL);
 
         doReturn(mMockPackageManager).when(mSpyContext).getPackageManager();
+        doReturn(mMockRollbackManager).when(mSpyContext).getSystemService(RollbackManager.class);
     }
 
     @After
@@ -245,7 +255,8 @@ public class AdServicesManagerServiceTest {
         assertThat(argumentPackageInfoFlags.getAllValues().get(0).getValue())
                 .isEqualTo(PackageManager.MATCH_APEX);
 
-        assertThat(mService.getAdServicesApexVersion()).isEqualTo(TEST_MODULE_VERSION);
+        assertThat(mService.getAdServicesApexVersion())
+                .isEqualTo(TEST_ROLLED_BACK_FROM_MODULE_VERSION);
     }
 
     @Test
@@ -761,7 +772,7 @@ public class AdServicesManagerServiceTest {
         disableEnforceAdServicesManagerPermission(service);
 
         // Mock the setting of the AdServices module version in the system server.
-        setAdServicesModuleVersion(service, TEST_MODULE_VERSION);
+        setAdServicesModuleVersion(service, TEST_ROLLED_BACK_FROM_MODULE_VERSION);
 
         // First, the has measurement deletion occurred is false.
         assertThat(service.hasAdServicesDeletionOccurred(AdServicesManager.MEASUREMENT_DELETION))
@@ -771,9 +782,153 @@ public class AdServicesManagerServiceTest {
                 .isTrue();
     }
 
+    @Test
+    public void testNeedsToHandleRollbackReconciliation_noRollback_returnsFalse() {
+        AdServicesManagerService service =
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager, mTopicsDao));
+
+        disableEnforceAdServicesManagerPermission(service);
+
+        // Set the rolled back from package to null, indicating there was not a rollback.
+        doReturn(Collections.emptyMap()).when(service).getAdServicesPackagesRolledBackFrom();
+
+        doReturn(true).when(service).hasAdServicesDeletionOccurred(Mockito.anyInt());
+
+        assertThat(
+                        service.needsToHandleRollbackReconciliation(
+                                AdServicesManager.MEASUREMENT_DELETION))
+                .isFalse();
+    }
+
+    @Test
+    public void testNeedsToHandleRollbackReconciliation_noDeletion_returnsFalse() {
+        AdServicesManagerService service =
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager, mTopicsDao));
+
+        disableEnforceAdServicesManagerPermission(service);
+
+        setAdServicesRolledBackFromVersionedPackage(
+                service, TEST_ROLLED_BACK_FROM_MODULE_VERSION, ROLLBACK_ID);
+        setAdServicesRolledBackToVersionedPackage(
+                service, TEST_ROLLED_BACK_TO_MODULE_VERSION, ROLLBACK_ID);
+
+        // Set the deletion bit to false.
+        doReturn(false).when(service).hasAdServicesDeletionOccurred(Mockito.anyInt());
+
+        doReturn(TEST_ROLLED_BACK_FROM_MODULE_VERSION)
+                .when(service)
+                .getPreviousStoredVersion(Mockito.anyInt());
+        setAdServicesModuleVersion(service, TEST_ROLLED_BACK_TO_MODULE_VERSION);
+
+        assertThat(
+                        service.needsToHandleRollbackReconciliation(
+                                AdServicesManager.MEASUREMENT_DELETION))
+                .isFalse();
+    }
+
+    @Test
+    public void testNeedsToHandleRollbackReconciliation_versionFromDoesNotEqual_returnsFalse() {
+        AdServicesManagerService service =
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager, mTopicsDao));
+
+        disableEnforceAdServicesManagerPermission(service);
+
+        setAdServicesRolledBackFromVersionedPackage(
+                service, TEST_ROLLED_BACK_FROM_MODULE_VERSION, ROLLBACK_ID);
+        setAdServicesRolledBackToVersionedPackage(
+                service, TEST_ROLLED_BACK_TO_MODULE_VERSION, ROLLBACK_ID);
+
+        // Set the deletion bit to false.
+        doReturn(true).when(service).hasAdServicesDeletionOccurred(Mockito.anyInt());
+
+        doReturn(TEST_ROLLED_BACK_FROM_MODULE_VERSION + 1)
+                .when(service)
+                .getPreviousStoredVersion(Mockito.anyInt());
+        setAdServicesModuleVersion(service, TEST_ROLLED_BACK_TO_MODULE_VERSION);
+
+        assertThat(
+                        service.needsToHandleRollbackReconciliation(
+                                AdServicesManager.MEASUREMENT_DELETION))
+                .isFalse();
+    }
+
+    @Test
+    public void testNeedsToHandleRollbackReconciliation_versionToDoesNotEqual_returnsFalse() {
+        AdServicesManagerService service =
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager, mTopicsDao));
+
+        disableEnforceAdServicesManagerPermission(service);
+
+        setAdServicesRolledBackFromVersionedPackage(
+                service, TEST_ROLLED_BACK_FROM_MODULE_VERSION, ROLLBACK_ID);
+        setAdServicesRolledBackToVersionedPackage(
+                service, TEST_ROLLED_BACK_TO_MODULE_VERSION, ROLLBACK_ID);
+
+        // Set the deletion bit to false.
+        doReturn(true).when(service).hasAdServicesDeletionOccurred(Mockito.anyInt());
+
+        doReturn(TEST_ROLLED_BACK_FROM_MODULE_VERSION)
+                .when(service)
+                .getPreviousStoredVersion(Mockito.anyInt());
+        setAdServicesModuleVersion(service, TEST_ROLLED_BACK_TO_MODULE_VERSION + 1);
+
+        assertThat(
+                        service.needsToHandleRollbackReconciliation(
+                                AdServicesManager.MEASUREMENT_DELETION))
+                .isFalse();
+    }
+
+    @Test
+    public void testNeedsToHandleRollbackReconciliation_returnsTrue() {
+        AdServicesManagerService service =
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager, mTopicsDao));
+
+        disableEnforceAdServicesManagerPermission(service);
+
+        setAdServicesRolledBackFromVersionedPackage(
+                service, TEST_ROLLED_BACK_FROM_MODULE_VERSION, ROLLBACK_ID);
+        setAdServicesRolledBackToVersionedPackage(
+                service, TEST_ROLLED_BACK_TO_MODULE_VERSION, ROLLBACK_ID);
+
+        // Set the deletion bit to false.
+        doReturn(true).when(service).hasAdServicesDeletionOccurred(Mockito.anyInt());
+
+        doReturn(TEST_ROLLED_BACK_FROM_MODULE_VERSION)
+                .when(service)
+                .getPreviousStoredVersion(Mockito.anyInt());
+        setAdServicesModuleVersion(service, TEST_ROLLED_BACK_TO_MODULE_VERSION);
+
+        assertThat(
+                        service.needsToHandleRollbackReconciliation(
+                                AdServicesManager.MEASUREMENT_DELETION))
+                .isTrue();
+        Mockito.verify(service, times(1))
+                .resetAdServicesDeletionOccurred(AdServicesManager.MEASUREMENT_DELETION);
+    }
+
     // Mock the call to get the AdServices module version from the PackageManager.
     private void setAdServicesModuleVersion(AdServicesManagerService service, int version) {
         doReturn(version).when(service).getAdServicesApexVersion();
+    }
+
+    // Mock the call to get the rolled back from versioned package.
+    private void setAdServicesRolledBackFromVersionedPackage(
+            AdServicesManagerService service, int version, int rollbackId) {
+        Map<Integer, VersionedPackage> packagesRolledBackFrom = new ArrayMap<>();
+        VersionedPackage versionedPackage =
+                new VersionedPackage(ADSERVICES_APEX_PACKAGE_NAME, version);
+        packagesRolledBackFrom.put(rollbackId, versionedPackage);
+        doReturn(packagesRolledBackFrom).when(service).getAdServicesPackagesRolledBackFrom();
+    }
+
+    // Mock the call to get the rolled back to versioned package.
+    private void setAdServicesRolledBackToVersionedPackage(
+            AdServicesManagerService service, int version, int rollbackId) {
+        Map<Integer, VersionedPackage> packagesRolledBackTo = new ArrayMap<>();
+        VersionedPackage versionedPackage =
+                new VersionedPackage(ADSERVICES_APEX_PACKAGE_NAME, version);
+        packagesRolledBackTo.put(rollbackId, versionedPackage);
+        doReturn(packagesRolledBackTo).when(service).getAdServicesPackagesRolledBackTo();
     }
 
     // Since unit test cannot execute an IPC call, disable the permission check.
@@ -800,7 +955,9 @@ public class AdServicesManagerServiceTest {
         PackageInfo packageInfo = Mockito.spy(PackageInfo.class);
         packageInfo.packageName = ADSERVICES_APEX_PACKAGE_NAME;
         packageInfo.isApex = true;
-        doReturn((long) TEST_MODULE_VERSION).when(packageInfo).getLongVersionCode();
+        doReturn((long) TEST_ROLLED_BACK_FROM_MODULE_VERSION)
+                .when(packageInfo)
+                .getLongVersionCode();
         ArrayList<PackageInfo> packageInfoList = new ArrayList<>();
         packageInfoList.add(packageInfo);
         when(mMockPackageManager.getInstalledPackages(any(PackageManager.PackageInfoFlags.class)))

@@ -32,6 +32,7 @@ import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.adservices.measurement.WebTriggerRegistrationRequestInternal;
 import android.annotation.NonNull;
 import android.annotation.WorkerThread;
+import android.app.adservices.AdServicesManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -57,6 +58,7 @@ import com.android.adservices.service.measurement.util.Web;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.net.URISyntaxException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -91,6 +93,7 @@ public final class MeasurementImpl {
         mFlags = FlagsFactory.getFlags();
         mMeasurementDataDeleter = new MeasurementDataDeleter(mDatastoreManager);
         mEnrollmentDao = new EnrollmentDao(context, DbHelper.getInstance(mContext));
+        deleteOnRollback();
     }
 
     @VisibleForTesting
@@ -258,6 +261,9 @@ public final class MeasurementImpl {
         mReadWriteLock.readLock().lock();
         try {
             boolean deleteResult = mMeasurementDataDeleter.delete(request);
+            if (deleteResult) {
+                markDeletionInSystemService();
+            }
             return deleteResult ? STATUS_SUCCESS : STATUS_INTERNAL_ERROR;
         } catch (NullPointerException | IllegalArgumentException e) {
             LogUtil.e(e, "Delete registration received invalid parameters");
@@ -298,6 +304,7 @@ public final class MeasurementImpl {
                 dao.deleteAppRecords(appUri);
                 dao.undoInstallAttribution(appUri);
             });
+            markDeletionInSystemService();
         } catch (NullPointerException | IllegalArgumentException e) {
             LogUtil.e(e, "Delete package records received invalid parameters");
         } finally {
@@ -318,6 +325,7 @@ public final class MeasurementImpl {
             LogUtil.v(
                     "All data is cleared for Measurement API except: %s",
                     tablesToExclude.toString());
+            markDeletionInSystemService();
         } finally {
             mReadWriteLock.writeLock().unlock();
         }
@@ -330,6 +338,7 @@ public final class MeasurementImpl {
         try {
             mDatastoreManager.runInTransaction(
                     (dao) -> dao.deleteAppRecordsNotPresent(installedApplicationsList));
+            markDeletionInSystemService();
         } finally {
             mReadWriteLock.writeLock().unlock();
         }
@@ -445,5 +454,48 @@ public final class MeasurementImpl {
 
     private interface AppVendorPackages {
         String PLAY_STORE = "com.android.vending";
+    }
+
+    /**
+     * Checks if the module was rollback and if there was a deletion in the version rolled back
+     * from. If there was, delete all measurement data to prioritize user privacy.
+     */
+    private void deleteOnRollback() {
+        if (FlagsFactory.getFlags().getMeasurementRollbackDeletionKillSwitch()) {
+            LogUtil.e("Rollback deletion is disabled. Not checking system server for rollback.");
+            return;
+        }
+
+        LogUtil.d("Checking rollback status.");
+        boolean needsToHandleRollbackReconciliation =
+                AdServicesManager.getInstance(mContext)
+                        .needsToHandleRollbackReconciliation(
+                                AdServicesManager.MEASUREMENT_DELETION);
+        if (needsToHandleRollbackReconciliation) {
+            LogUtil.d("Rollback and deletion detected, deleting all measurement data.");
+            mReadWriteLock.writeLock().lock();
+            try {
+                mDatastoreManager.runInTransaction(
+                        (dao) -> dao.deleteAllMeasurementData(Collections.emptyList()));
+            } finally {
+                mReadWriteLock.writeLock().unlock();
+            }
+        }
+    }
+
+    /**
+     * Stores a bit in the system server indicating that a deletion happened for the current
+     * AdServices module version. This information is used for deleting data after it has been
+     * restored by a module rollback.
+     */
+    public void markDeletionInSystemService() {
+        if (FlagsFactory.getFlags().getMeasurementRollbackDeletionKillSwitch()) {
+            LogUtil.e("Rollback deletion is disabled. Not storing status in system server.");
+            return;
+        }
+
+        LogUtil.d("Marking deletion in system server.");
+        AdServicesManager.getInstance(mContext)
+                .recordAdServicesDeletionOccurred(AdServicesManager.MEASUREMENT_DELETION);
     }
 }

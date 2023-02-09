@@ -78,7 +78,7 @@ public class BooleanFileDatastore {
         Objects.requireNonNull(parentPath);
         Objects.requireNonNull(filename);
         Preconditions.checkStringNotEmpty(filename, "Filename must not be empty");
-        Preconditions.checkArgumentPositive(datastoreVersion, "Version must be positive");
+        Preconditions.checkArgumentNonnegative(datastoreVersion, "Version must not be negative");
 
         mAtomicFile = new AtomicFile(new File(parentPath, filename));
         mDatastoreVersion = datastoreVersion;
@@ -141,7 +141,6 @@ public class BooleanFileDatastore {
 
             mPreviousStoredVersion = bundleRead.getInt(mVersionKey, NO_PREVIOUS_VERSION);
             bundleRead.remove(mVersionKey);
-
             mLocalMap.clear();
             for (String key : bundleRead.keySet()) {
                 mLocalMap.put(key, bundleRead.getBoolean(key));
