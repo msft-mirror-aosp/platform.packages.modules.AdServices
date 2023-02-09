@@ -35,7 +35,6 @@ import android.os.PersistableBundle;
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.consent.ConsentManager;
 
 import com.google.android.libraries.mobiledatadownload.tracing.PropagatedFutures;
 import com.google.common.annotations.VisibleForTesting;
@@ -102,12 +101,6 @@ public class MddJobService extends JobService {
     @Override
     public boolean onStartJob(@NonNull JobParameters params) {
         LogUtil.d("MddJobService.onStartJob");
-
-        if (ConsentManager.getInstance(this).wasGaUxNotificationDisplayed()
-                && !ConsentManager.getInstance(this).getConsent().isGiven()) {
-            LogUtil.e("User consent was revoked, skipping and cancelling MddJobService");
-            return skipAndCancelBackgroundJob(params);
-        }
 
         if (FlagsFactory.getFlags().getMddBackgroundTaskKillSwitch()) {
             LogUtil.e("MDD background task is disabled, skipping and cancelling MddJobService");
@@ -207,12 +200,6 @@ public class MddJobService extends JobService {
      * @param forceSchedule a flag to indicate whether to force rescheduling the job.
      */
     public static boolean scheduleIfNeeded(Context context, boolean forceSchedule) {
-        if (ConsentManager.getInstance(context).wasGaUxNotificationDisplayed()
-                && !ConsentManager.getInstance(context).getConsent().isGiven()) {
-            LogUtil.e("User consent was revoked, skip scheduling.");
-            return false;
-        }
-
         if (FlagsFactory.getFlags().getMddBackgroundTaskKillSwitch()) {
             LogUtil.e("Mdd background task is disabled, skip scheduling.");
             return false;

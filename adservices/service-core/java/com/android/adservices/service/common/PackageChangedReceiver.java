@@ -129,7 +129,9 @@ public class PackageChangedReceiver extends BroadcastReceiver {
 
         LogUtil.d("Package Data Cleared: " + packageUri);
         sBackgroundExecutor.execute(
-                () -> MeasurementImpl.getInstance(context).deletePackageRecords(packageUri));
+                () -> {
+                    MeasurementImpl.getInstance(context).deletePackageRecords(packageUri);
+                });
     }
 
     @VisibleForTesting

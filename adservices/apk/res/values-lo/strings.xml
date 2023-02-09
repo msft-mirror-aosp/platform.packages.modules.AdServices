@@ -183,11 +183,9 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"ນອກຈາກນັ້ນ, ແອັບທີ່ທ່ານໃຊ້ຍັງສາມາດລະບຸໄດ້ວ່າທ່ານມັກຫຍັງໂດຍອີງຕາມວິທີທີ່ທ່ານໃຊ້ແອັບ."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"ແອັບທີ່ທ່ານໃຊ້ສາມາດຂໍຂໍ້ມູນຈາກ Android ໄດ້ເພື່ອຊ່ວຍໃຫ້ແອັບວັດແທກປະສິດທິພາບໂຄສະນາຂອງພວກມັນ. Android ອະນຸຍາດໃຫ້ແອັບເກັບຮວບຮວມຂໍ້ມູນບາງປະເພດ."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"ເປີດ / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> ຫົວຂໍ້"</string>
-    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
-    <skip />
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{ເປີດ / # ຫົວ​ຂໍ້}other{ເປີດ / # ຫົວຂໍ້}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"ເປີດ / <xliff:g id="APPS_COUNT">%1$d</xliff:g> ແອັບ"</string>
-    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
-    <skip />
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{ເປີດ / # ແອັບ}other{ເປີດ / # ແອັບ}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"ເປີດ"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"ປິດ"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"ຫົວຂໍ້ທີ່ສົນໃຈຈະອີງຕາມແອັບທີ່ທ່ານໃຊ້ຫຼ້າສຸດ ແລະ ແອັບຈະໃຊ້ຂໍ້ມູນດັ່ງກ່າວເພື່ອສະແດງໂຄສະນາແບບປັບແຕ່ງສ່ວນຕົວໃຫ້ທ່ານ.\n\nທ່ານສາມາດບລັອກຫົວຂໍ້ທີ່ທ່ານບໍ່ຕ້ອງການແບ່ງປັນກັບແອັບໄດ້. ນອກຈາກນັ້ນ, Android ຍັງລຶບຫົວຂໍ້ໂດຍອັດຕະໂນມັດຢູ່ເປັນປະຈຳ."</string>
@@ -200,14 +198,10 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"ແອັບທີ່ທ່ານບລັອກ"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"ຣີເຊັດຂໍ້ມູນທີ່ແອັບແນະນຳ"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"ມັນເປັນສິ່ງປົກກະຕິທີ່ແອັບທີ່ທ່ານໃຊ້ຈະຈື່ສິ່ງທີ່ທ່ານສົນໃຈເພື່ອປັບແຕ່ງປະສົບການນຳໃຊ້ຂອງທ່ານໃຫ້ເປັນແບບສ່ວນຕົວ. ນອກຈາກນັ້ນ, ແອັບຍັງສາມາດຈັດເກັບຂໍ້ມູນກ່ຽວກັບຫົວຂໍ້ຂອງທ່ານກັບ Android ໄດ້ນຳ.\n\nຕົວຢ່າງ: ຫາກທ່ານໃຊ້ແອັບກ່ຽວກັບການຊ້ອມແລ່ນມາຣາທອນ, ແອັບດັ່ງກ່າວອາດເຂົ້າໃຈວ່າທ່ານສົນໃຈເກີບແລ່ນ. ຕໍ່ມາ, ຖ້າທ່ານໃຊ້ແອັບອື່ນ, ແອັບນັ້ນກໍອາດສະແດງໂຄສະນາເກີບແລ່ນທີ່ແນະນຳໂດຍແອັບທຳອິດໃຫ້ທ່ານເຫັນ.\n\nAndroid ຈະລຶບຂໍ້ມູນການແນະນຳແອັບໂດຍອັດຕະໂນມັດເປັນປະຈຳ. ແອັບທີ່ທ່ານໃຊ້ຄືນອາດກັບມາປາກົດຢູ່ໃນລາຍຊື່ອີກຄັ້ງ. ຫຼື ທ່ານສາມາດບລັອກແອັບບໍ່ໃຫ້ແນະນຳໂຄສະນາໃຫ້ທ່ານ.\n\nໃນແອັບຂອງທ່ານ, ໂຄສະນາທີ່ທ່ານເຫັນອາດຖືກປັບແຕ່ງສ່ວນຕົວໂດຍອີງຕາມການຕັ້ງຄ່ານີ້, ການຕັ້ງຄ່າຫົວຂໍ້ໂຄສະນາ, ການຕັ້ງຄ່າ Advertising ID ຂອງທ່ານ ແລະ ແອັບທີ່ທ່ານກຳລັງໃຊ້ປັບແຕ່ງໂຄສະນາໃຫ້ເປັນແບບສ່ວນຕົວຫຼືບໍ່."</string>
-    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
-    <skip />
-    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
-    <skip />
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"ການ​ອະ​ທິ​ບາຍປະ​ກອບ​ຮູບ​ສັນ​ຍາ​ລັກ​ເປັນ​ສີ​ສັນ​ແທນ​ໃຫ້​ຫົວ​ຂໍ້​ທີ່​ສົນ​ໃຈ​ເຊັ່ນ: ​ເພງ, ຂາວ ແລະ ກິ​ລາ"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"ການ​ອະ​ທິ​ບາຍ​ປະ​ກອບ​ຮູບເປັນ​ສີ​ສັນ​ຂອງ​ລັອກ​ຢູ່​ດ້ານ​ໃນ​ວົງ​ມົນ"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"ການ​ອະ​ທິ​ບາຍ​ປະ​ກອບ​ຮູບຂາວ​ດຳ​ນ້ອຍ​ຂອງ​ເກົ້າ​ຈ້ຳ​ປະ​ກອບ​ເປັນ​ຮູບ​ຈະ​ຕຸ​ລັດ"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"ການ​ອະ​ທິ​ບາຍ​ປະ​ກອບ​ຮູບຂາວ​ດຳ​ນ້ອຍ​ຂອງ​ຮູບ​ຮ່າງ​ງ່າຍໆ​ເຊັ່ນ: ຫົວ​ໃຈ, ຮູບ​ສາມ​ແຈ ແລະ ຮູບ​ຈະ​ຕຸ​ລັດ"</string>
     <string name="topic10001" msgid="1636806320891333775">"ສິນລະປະ ແລະ ການບັນເທີງ"</string>
     <string name="topic10002" msgid="1226367977754287428">"ການສະແດງ ແລະ ໂຮງຮູບເງົາ"</string>
     <string name="topic10003" msgid="6949890838957814881">"ອະນິເມະ ແລະ ມັງງະ"</string>
