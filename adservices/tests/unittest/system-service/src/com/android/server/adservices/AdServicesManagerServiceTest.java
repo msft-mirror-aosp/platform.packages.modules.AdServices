@@ -87,7 +87,6 @@ public class AdServicesManagerServiceTest {
     private AdServicesManagerService mService;
     private UserInstanceManager mUserInstanceManager;
     private Context mSpyContext;
-    private TopicsDao mTopicsDao;
     @Mock private PackageManager mMockPackageManager;
     @Mock private RollbackManager mMockRollbackManager;
 
@@ -116,11 +115,10 @@ public class AdServicesManagerServiceTest {
         Context context = InstrumentationRegistry.getInstrumentation().getContext();
         mSpyContext = Mockito.spy(context);
 
-        mTopicsDao = new TopicsDao(mDBHelper);
+        TopicsDao topicsDao = new TopicsDao(mDBHelper);
         mUserInstanceManager =
                 new UserInstanceManager(
-                        mTopicsDao,
-                        /* adservicesBaseDir */ context.getFilesDir().getAbsolutePath());
+                        topicsDao, /* adservicesBaseDir */ context.getFilesDir().getAbsolutePath());
 
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
@@ -149,7 +147,7 @@ public class AdServicesManagerServiceTest {
                 /* makeDefault */ false);
 
         // This will trigger the registration of the Receiver.
-        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager, mTopicsDao);
+        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
 
         ArgumentCaptor<BroadcastReceiver> argumentReceiver =
                 ArgumentCaptor.forClass(BroadcastReceiver.class);
@@ -219,7 +217,7 @@ public class AdServicesManagerServiceTest {
                 Boolean.toString(Boolean.FALSE),
                 /* makeDefault */ false);
 
-        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager, mTopicsDao);
+        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
 
         // The flag is disabled so there is no registerReceiverForAllUsers
         Mockito.verify(mSpyContext, Mockito.times(0))
@@ -242,7 +240,7 @@ public class AdServicesManagerServiceTest {
         setupMockInstalledPackages();
 
         // This will trigger the lookup of the AdServices version.
-        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager, mTopicsDao);
+        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
 
         ArgumentCaptor<PackageManager.PackageInfoFlags> argumentPackageInfoFlags =
                 ArgumentCaptor.forClass(PackageManager.PackageInfoFlags.class);
@@ -268,7 +266,7 @@ public class AdServicesManagerServiceTest {
                 Boolean.toString(Boolean.FALSE),
                 /* makeDefault */ false);
 
-        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager, mTopicsDao);
+        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
 
         // The flag is disabled so there is no call to the packageManager
         Mockito.verify(mSpyContext, Mockito.times(0)).getPackageManager();
@@ -276,7 +274,7 @@ public class AdServicesManagerServiceTest {
 
     @Test
     public void testSendBroadcastForPackageFullyRemoved() {
-        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager, mTopicsDao);
+        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
 
         Intent i = new Intent(Intent.ACTION_PACKAGE_FULLY_REMOVED);
         i.setData(Uri.parse("package:" + PACKAGE_NAME));
@@ -304,7 +302,7 @@ public class AdServicesManagerServiceTest {
 
     @Test
     public void testOnUserRemoved() throws IOException {
-        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager, mTopicsDao);
+        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
         int userId = 1;
         String consentDataStoreDir = BASE_DIR + "/" + userId;
         Path packageDir = Paths.get(consentDataStoreDir);
@@ -322,7 +320,7 @@ public class AdServicesManagerServiceTest {
 
     @Test
     public void testOnUserRemoved_userIdNotPresentInIntent() throws IOException {
-        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager, mTopicsDao);
+        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
         Intent intent = new Intent(Intent.ACTION_USER_REMOVED);
         // userId 1 is not present in the intent.
         int userId = 1;
@@ -336,7 +334,7 @@ public class AdServicesManagerServiceTest {
 
     @Test
     public void testOnUserRemoved_removeNonexistentUserId() throws IOException {
-        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager, mTopicsDao);
+        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
         Intent intent = new Intent(Intent.ACTION_USER_REMOVED);
         // userId 1 does not have consent directory.
         int userId = 1;
@@ -348,8 +346,33 @@ public class AdServicesManagerServiceTest {
     }
 
     @Test
+    public void testClearAllBlockedTopics() {
+        mService = spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+        disableEnforceAdServicesManagerPermission(mService);
+
+        final int topicId = 1;
+
+        TopicParcel topicParcel =
+                new TopicParcel.Builder()
+                        .setTopicId(topicId)
+                        .setTaxonomyVersion(TAXONOMY_VERSION)
+                        .setModelVersion(MODEL_VERSION)
+                        .build();
+        mService.recordBlockedTopic(List.of(topicParcel));
+
+        //  Verify the topic is recorded.
+        List<TopicParcel> resultTopicParcels = mService.retrieveAllBlockedTopics();
+        assertThat(resultTopicParcels).hasSize(1);
+        assertThat(resultTopicParcels.get(0)).isEqualTo(topicParcel);
+
+        // Verify the topic is  removed
+        mService.clearAllBlockedTopics();
+        assertThat(mService.retrieveAllBlockedTopics()).isEmpty();
+    }
+
+    @Test
     public void testSendBroadcastForPackageAdded() {
-        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager, mTopicsDao);
+        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
 
         Intent i = new Intent(Intent.ACTION_PACKAGE_ADDED);
         i.setData(Uri.parse("package:" + PACKAGE_NAME));
@@ -377,7 +400,7 @@ public class AdServicesManagerServiceTest {
 
     @Test
     public void testSendBroadcastForPackageDataCleared() {
-        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager, mTopicsDao);
+        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
 
         Intent i = new Intent(Intent.ACTION_PACKAGE_DATA_CLEARED);
         i.setData(Uri.parse("package:" + PACKAGE_NAME));
@@ -406,7 +429,7 @@ public class AdServicesManagerServiceTest {
     @Test
     public void testGetConsent_unSet() throws IOException {
         AdServicesManagerService service =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager, mTopicsDao));
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
         // Since unit test cannot execute an IPC call currently, disable the permission check.
         disableEnforceAdServicesManagerPermission(service);
 
@@ -420,7 +443,7 @@ public class AdServicesManagerServiceTest {
     @Test
     public void testGetAndSetConsent_null() throws IOException {
         AdServicesManagerService service =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager, mTopicsDao));
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
         // Since unit test cannot execute an IPC call currently, disable the permission check.
         disableEnforceAdServicesManagerPermission(service);
 
@@ -460,7 +483,7 @@ public class AdServicesManagerServiceTest {
     @Test
     public void testGetAndSetConsent_nonNull() {
         AdServicesManagerService service =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager, mTopicsDao));
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
         // Since unit test cannot execute an IPC call currently, disable the permission check.
         disableEnforceAdServicesManagerPermission(service);
 
@@ -489,13 +512,13 @@ public class AdServicesManagerServiceTest {
         assertThat(service.getConsent(ConsentParcel.MEASUREMENT).isIsGiven()).isTrue();
 
         // Verify that all the setConsent calls were persisted by creating a new instance of
-        // AdServicesManagerService and it has the same value as the above instance.
+        // AdServicesManagerService, and it has the same value as the above instance.
         // Note: In general, AdServicesManagerService instance is a singleton obtained via
-        // context.getSystemService(). However when the system server restarts, there will be
+        // context.getSystemService(). However, when the system server restarts, there will be
         // another singleton instance of AdServicesManagerService. This test here verifies that
         // the Consents are persisted correctly across restarts.
         AdServicesManagerService service2 =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager, mTopicsDao));
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
         // Since unit test cannot execute an IPC call currently, disable the permission check.
         disableEnforceAdServicesManagerPermission(service2);
 
@@ -508,7 +531,7 @@ public class AdServicesManagerServiceTest {
     @Test
     public void testRecordNotificationDisplayed() throws IOException {
         AdServicesManagerService service =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager, mTopicsDao));
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
         // Since unit test cannot execute an IPC call currently, disable the permission check.
         disableEnforceAdServicesManagerPermission(service);
 
@@ -521,7 +544,7 @@ public class AdServicesManagerServiceTest {
     @Test
     public void testEnforceAdServicesManagerPermission() {
         AdServicesManagerService service =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager, mTopicsDao));
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
 
         // Throw due to non-IPC call
         assertThrows(SecurityException.class, () -> service.getConsent(ConsentParcel.ALL_API));
@@ -530,7 +553,7 @@ public class AdServicesManagerServiceTest {
     @Test
     public void testRecordGaUxNotificationDisplayed() throws IOException {
         AdServicesManagerService service =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager, mTopicsDao));
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
         // Since unit test cannot execute an IPC call currently, disable the permission check.
         disableEnforceAdServicesManagerPermission(service);
 
@@ -543,7 +566,7 @@ public class AdServicesManagerServiceTest {
     @Test
     public void testRecordTopicsConsentPageDisplayed() throws IOException {
         AdServicesManagerService service =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager, mTopicsDao));
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
         // Since unit test cannot execute an IPC call currently, disable the permission check.
         disableEnforceAdServicesManagerPermission(service);
 
@@ -556,7 +579,7 @@ public class AdServicesManagerServiceTest {
     @Test
     public void testRecordFledgeConsentPageDisplayed() throws IOException {
         AdServicesManagerService service =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager, mTopicsDao));
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
         // Since unit test cannot execute an IPC call currently, disable the permission check.
         disableEnforceAdServicesManagerPermission(service);
 
@@ -568,7 +591,7 @@ public class AdServicesManagerServiceTest {
 
     @Test
     public void testSetAppConsent() {
-        mService = spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager, mTopicsDao));
+        mService = spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
         disableEnforceAdServicesManagerPermission(mService);
 
         mService.setConsentForApp(
@@ -627,7 +650,7 @@ public class AdServicesManagerServiceTest {
 
     @Test
     public void testClearAppConsent() {
-        mService = spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager, mTopicsDao));
+        mService = spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
         disableEnforceAdServicesManagerPermission(mService);
 
         mService.setConsentForApp(
@@ -720,7 +743,7 @@ public class AdServicesManagerServiceTest {
 
     @Test
     public void testRecordAndRetrieveBlockedTopic() {
-        mService = spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager, mTopicsDao));
+        mService = spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
         disableEnforceAdServicesManagerPermission(mService);
 
         final int topicId = 1;
@@ -741,7 +764,7 @@ public class AdServicesManagerServiceTest {
 
     @Test
     public void testRecordAndRemoveBlockedTopic() {
-        mService = spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager, mTopicsDao));
+        mService = spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
         disableEnforceAdServicesManagerPermission(mService);
 
         final int topicId = 1;
@@ -767,7 +790,7 @@ public class AdServicesManagerServiceTest {
     @Test
     public void testRecordMeasurementDeletionOccurred() throws IOException {
         AdServicesManagerService service =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager, mTopicsDao));
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
         // Since unit test cannot execute an IPC call currently, disable the permission check.
         disableEnforceAdServicesManagerPermission(service);
 
@@ -785,7 +808,7 @@ public class AdServicesManagerServiceTest {
     @Test
     public void testNeedsToHandleRollbackReconciliation_noRollback_returnsFalse() {
         AdServicesManagerService service =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager, mTopicsDao));
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
 
         disableEnforceAdServicesManagerPermission(service);
 
@@ -803,7 +826,7 @@ public class AdServicesManagerServiceTest {
     @Test
     public void testNeedsToHandleRollbackReconciliation_noDeletion_returnsFalse() {
         AdServicesManagerService service =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager, mTopicsDao));
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
 
         disableEnforceAdServicesManagerPermission(service);
 
@@ -829,7 +852,7 @@ public class AdServicesManagerServiceTest {
     @Test
     public void testNeedsToHandleRollbackReconciliation_versionFromDoesNotEqual_returnsFalse() {
         AdServicesManagerService service =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager, mTopicsDao));
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
 
         disableEnforceAdServicesManagerPermission(service);
 
@@ -855,7 +878,7 @@ public class AdServicesManagerServiceTest {
     @Test
     public void testNeedsToHandleRollbackReconciliation_versionToDoesNotEqual_returnsFalse() {
         AdServicesManagerService service =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager, mTopicsDao));
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
 
         disableEnforceAdServicesManagerPermission(service);
 
@@ -881,7 +904,7 @@ public class AdServicesManagerServiceTest {
     @Test
     public void testNeedsToHandleRollbackReconciliation_returnsTrue() {
         AdServicesManagerService service =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager, mTopicsDao));
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
 
         disableEnforceAdServicesManagerPermission(service);
 
