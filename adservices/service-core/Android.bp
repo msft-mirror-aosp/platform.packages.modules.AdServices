@@ -86,6 +86,7 @@ android_library {
         "androidx.javascriptengine_javascriptengine",
         "adservices-proto-lite",
         "adservices-grpclib-lite",
+        "modules-utils-build",
     ],
     apex_available: ["com.android.adservices"],
 }

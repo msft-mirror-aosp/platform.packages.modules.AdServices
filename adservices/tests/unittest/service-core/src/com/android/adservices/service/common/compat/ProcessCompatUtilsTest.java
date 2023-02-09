@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,29 +14,29 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.common;
+package com.android.adservices.service.common.compat;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import android.os.Process;
 
-import com.android.adservices.service.common.compat.ProcessCompatUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.MockitoSession;
 
-public class SdkRuntimeUtilTest {
-    MockitoSession mMockitoSession;
+public class ProcessCompatUtilsTest {
+    private MockitoSession mMockitoSession;
 
     @Before
     public void setUp() {
         mMockitoSession =
                 ExtendedMockito.mockitoSession()
                         .mockStatic(Process.class)
-                        .mockStatic(ProcessCompatUtils.class)
+                        .mockStatic(SdkLevel.class)
                         .initMocks(this)
                         .startMocking();
     }
@@ -47,18 +47,25 @@ public class SdkRuntimeUtilTest {
     }
 
     @Test
-    public void testCallingUidIsNotSdkSandbox_returnParameterUid() {
-        int uid = 400;
-        ExtendedMockito.doReturn(false).when(() -> ProcessCompatUtils.isSdkSandboxUid(uid));
-        assertThat(SdkRuntimeUtil.getCallingAppUid(uid)).isEqualTo(uid);
+    public void testIsSdkSandboxUid_onSMinus_notSdkSandboxUid() {
+        int uid = 100;
+        ExtendedMockito.doReturn(false).when(SdkLevel::isAtLeastT);
+        assertThat(ProcessCompatUtils.isSdkSandboxUid(uid)).isFalse();
     }
 
     @Test
-    public void testCallingUidIsSdkSandbox_returnAppUid() {
-        int sdkUid = 400;
-        int appUid = 200;
-        ExtendedMockito.doReturn(true).when(() -> ProcessCompatUtils.isSdkSandboxUid(sdkUid));
-        ExtendedMockito.doReturn(appUid).when(() -> Process.getAppUidForSdkSandboxUid(sdkUid));
-        assertThat(SdkRuntimeUtil.getCallingAppUid(sdkUid)).isEqualTo(appUid);
+    public void testIsSdkSandboxUid_onT_sdkSandboxUId() {
+        int uid = 100;
+        ExtendedMockito.doReturn(true).when(SdkLevel::isAtLeastT);
+        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(uid));
+        assertThat(ProcessCompatUtils.isSdkSandboxUid(uid)).isTrue();
+    }
+
+    @Test
+    public void testIsSdkSandboxUid_onT_notSdkSandboxUId() {
+        int uid = 100;
+        ExtendedMockito.doReturn(true).when(SdkLevel::isAtLeastT);
+        ExtendedMockito.doReturn(false).when(() -> Process.isSdkSandboxUid(uid));
+        assertThat(ProcessCompatUtils.isSdkSandboxUid(uid)).isFalse();
     }
 }
