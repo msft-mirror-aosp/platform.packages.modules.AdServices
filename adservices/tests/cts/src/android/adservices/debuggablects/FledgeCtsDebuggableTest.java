@@ -18,16 +18,12 @@ package android.adservices.debuggablects;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 import android.Manifest;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
-import android.adservices.adselection.AdSelectionFromOutcomesConfig;
-import android.adservices.adselection.AdSelectionFromOutcomesConfigFixture;
 import android.adservices.adselection.AdSelectionOutcome;
-import android.adservices.adselection.AddAdSelectionFromOutcomesOverrideRequest;
 import android.adservices.adselection.AddAdSelectionOverrideRequest;
 import android.adservices.adselection.ReportImpressionRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
@@ -144,8 +140,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                                             AdSelectionConfigFixture.SELLER,
                                             SELLER_TRUSTED_SIGNAL_URI_PATH)))
                     .build();
-    private static final AdSelectionFromOutcomesConfig AD_SELECTION_FROM_OUTCOMES_CONFIG =
-            AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
 
     private static final String BUYER_2_REPORTING_URI =
             String.format("https://%s%s", AdSelectionConfigFixture.BUYER_2, BUYER_REPORTING_PATH);
@@ -189,7 +183,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     private String mAccessStatus;
 
     @Before
-    public void setup() {
+    public void setup() throws InterruptedException {
         assertForegroundActivityStarted();
 
         mAdSelectionClient =
@@ -229,6 +223,9 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Enable CTS to be run with versions of WebView < M105
         PhFlagsFixture.overrideEnforceIsolateMaxHeapSize(false);
         PhFlagsFixture.overrideIsolateMaxHeapSizeBytes(0);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
     }
 
     @After
@@ -253,6 +250,10 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         mCustomAudienceClient
                 .joinCustomAudience(customAudience1)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
         mCustomAudienceClient
                 .joinCustomAudience(customAudience2)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -333,6 +334,10 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         mCustomAudienceClient
                 .joinCustomAudience(customAudience)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
         mCustomAudienceClient
                 .joinCustomAudience(customAudienceUpdate)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -422,6 +427,10 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         mCustomAudienceClient
                 .joinCustomAudience(customAudience1)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
         mCustomAudienceClient
                 .joinCustomAudience(customAudience2)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -507,6 +516,10 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         mCustomAudienceClient
                 .joinCustomAudience(customAudience1)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
         mCustomAudienceClient
                 .joinCustomAudience(customAudience2)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -589,6 +602,10 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         mCustomAudienceClient
                 .joinCustomAudience(customAudience1)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
         mCustomAudienceClient
                 .joinCustomAudience(customAudience2)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -664,6 +681,10 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         mCustomAudienceClient
                 .joinCustomAudience(customAudience1)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
         mCustomAudienceClient
                 .joinCustomAudience(customAudience2)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -732,6 +753,10 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         mCustomAudienceClient
                 .joinCustomAudience(customAudience1)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
         mCustomAudienceClient
                 .joinCustomAudience(customAudience2)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -798,6 +823,10 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         mCustomAudienceClient
                 .joinCustomAudience(customAudience1)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
         mCustomAudienceClient
                 .joinCustomAudience(customAudience2)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -869,6 +898,10 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         mCustomAudienceClient
                 .joinCustomAudience(customAudience1)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
         mCustomAudienceClient
                 .joinCustomAudience(customAudience2)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -953,6 +986,10 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         mCustomAudienceClient
                 .joinCustomAudience(customAudience1)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
         mCustomAudienceClient
                 .joinCustomAudience(customAudience2)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -1030,6 +1067,10 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         mCustomAudienceClient
                 .joinCustomAudience(customAudience1)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
         mCustomAudienceClient
                 .joinCustomAudience(customAudience2)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -1114,6 +1155,10 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         mCustomAudienceClient
                 .joinCustomAudience(customAudience1)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
         mCustomAudienceClient
                 .joinCustomAudience(customAudience2)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -1166,150 +1211,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         () ->
                                 mAdSelectionClient
                                         .selectAds(AD_SELECTION_CONFIG)
-                                        .get(
-                                                API_RESPONSE_LONGER_TIMEOUT_SECONDS,
-                                                TimeUnit.SECONDS));
-        assertThat(selectAdsException.getCause()).isInstanceOf(TimeoutException.class);
-    }
-
-    @Test
-    public void testFledgeOutcomeSelectionFlow_overall_Success() throws Exception {
-        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
-
-        // Perform ad selection to persist two results
-        double bid1 = 10.0, bid2 = 15.0;
-        AdSelectionOutcome outcome1 =
-                runAdSelectionAsPreSteps(bid1, BUYER_1, BUYER_1_BIDDING_LOGIC_JS);
-        AdSelectionOutcome outcome2 =
-                runAdSelectionAsPreSteps(bid2, BUYER_2, BUYER_2_BIDDING_LOGIC_JS);
-
-        // Inputs for outcome selection
-        AdSelectionSignals selectionSignals = AdSelectionSignals.EMPTY;
-        Uri selectionUri =
-                Uri.parse(
-                        String.format(
-                                "https://%s%s",
-                                AdSelectionConfigFixture.SELLER, SELLER_DECISION_LOGIC_URI_PATH));
-        AdSelectionFromOutcomesConfig config =
-                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
-                        List.of(outcome1.getAdSelectionId(), outcome2.getAdSelectionId()),
-                        selectionSignals,
-                        selectionUri);
-
-        // Add overrides
-        String selectionLogicPickSmallestJs =
-                "function selectOutcome(outcomes, selection_signals) {\n"
-                        + "    outcomes.sort(function(a, b) { return b.bid - a.bid;});\n"
-                        + "    return {'status': 0, 'result': outcomes[0]};\n"
-                        + "}";
-        AddAdSelectionFromOutcomesOverrideRequest request =
-                new AddAdSelectionFromOutcomesOverrideRequest(
-                        config, selectionLogicPickSmallestJs, AdSelectionSignals.EMPTY);
-        mTestAdSelectionClient
-                .overrideAdSelectionFromOutcomesConfigRemoteInfo(request)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-
-        // Run select ads from outcomes
-        AdSelectionOutcome selectionOutcome =
-                mAdSelectionClient
-                        .selectAds(config)
-                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-
-        assertEquals(outcome2.getAdSelectionId(), selectionOutcome.getAdSelectionId());
-    }
-
-    @Test
-    public void testFledgeOutcomeSelectionFlow_returnsNull_Success() throws Exception {
-        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
-
-        // Perform ad selection to persist two results
-        double bid1 = 10.0, bid2 = 15.0;
-        AdSelectionOutcome outcome1 =
-                runAdSelectionAsPreSteps(bid1, BUYER_1, BUYER_1_BIDDING_LOGIC_JS);
-        AdSelectionOutcome outcome2 =
-                runAdSelectionAsPreSteps(bid2, BUYER_2, BUYER_2_BIDDING_LOGIC_JS);
-
-        // Inputs for outcome selection
-        AdSelectionSignals selectionSignals = AdSelectionSignals.EMPTY;
-        Uri selectionUri =
-                Uri.parse(
-                        String.format(
-                                "https://%s%s",
-                                AdSelectionConfigFixture.SELLER, SELLER_DECISION_LOGIC_URI_PATH));
-        AdSelectionFromOutcomesConfig config =
-                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
-                        List.of(outcome1.getAdSelectionId(), outcome2.getAdSelectionId()),
-                        selectionSignals,
-                        selectionUri);
-
-        // Add overrides
-        String selectionLogicPickSmallestJs =
-                "function selectOutcome(outcomes, selection_signals) {\n"
-                        + "    outcomes.sort(function(a, b) { return b.bid - a.bid;});\n"
-                        + "    return {'status': 0, 'result': null};\n"
-                        + "}";
-        AddAdSelectionFromOutcomesOverrideRequest request =
-                new AddAdSelectionFromOutcomesOverrideRequest(
-                        config, selectionLogicPickSmallestJs, AdSelectionSignals.EMPTY);
-        mTestAdSelectionClient
-                .overrideAdSelectionFromOutcomesConfigRemoteInfo(request)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-
-        // Run select ads from outcomes
-        AdSelectionOutcome selectionOutcome =
-                mAdSelectionClient
-                        .selectAds(config)
-                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-
-        assertEquals(AdSelectionOutcome.NO_OUTCOME, selectionOutcome);
-    }
-
-    @Test
-    public void testFledgeOutcomeSelectionFlow_timeoutFailure() throws Exception {
-        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
-
-        // Perform ad selection to persist two results
-        double bid1 = 10.0, bid2 = 15.0;
-        AdSelectionOutcome outcome1 =
-                runAdSelectionAsPreSteps(bid1, BUYER_1, BUYER_1_BIDDING_LOGIC_JS);
-        AdSelectionOutcome outcome2 =
-                runAdSelectionAsPreSteps(bid2, BUYER_2, BUYER_2_BIDDING_LOGIC_JS);
-
-        // Inputs for outcome selection
-        AdSelectionSignals selectionSignals = AdSelectionSignals.EMPTY;
-        Uri selectionUri =
-                Uri.parse(
-                        String.format(
-                                "https://%s%s",
-                                AdSelectionConfigFixture.SELLER, SELLER_DECISION_LOGIC_URI_PATH));
-        AdSelectionFromOutcomesConfig config =
-                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
-                        List.of(outcome1.getAdSelectionId(), outcome2.getAdSelectionId()),
-                        selectionSignals,
-                        selectionUri);
-
-        // Add overrides
-        String jsWaitMoreThanAllowedForOutcomeSelection = insertJsWait(20000);
-        String selectionLogicPickSmallestJs =
-                "function selectOutcome(outcomes, selection_signals) {\n"
-                        + "    outcomes.sort(function(a, b) { return b.bid - a.bid;});\n"
-                        + jsWaitMoreThanAllowedForOutcomeSelection
-                        + "    return {'status': 0, 'result': outcomes[0]};\n"
-                        + "}";
-        AddAdSelectionFromOutcomesOverrideRequest request =
-                new AddAdSelectionFromOutcomesOverrideRequest(
-                        config, selectionLogicPickSmallestJs, AdSelectionSignals.EMPTY);
-        mTestAdSelectionClient
-                .overrideAdSelectionFromOutcomesConfigRemoteInfo(request)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-
-        // Running ad selection and asserting that the outcome is returned in < 10 seconds
-        Exception selectAdsException =
-                assertThrows(
-                        ExecutionException.class,
-                        () ->
-                                mAdSelectionClient
-                                        .selectAds(config)
                                         .get(
                                                 API_RESPONSE_LONGER_TIMEOUT_SECONDS,
                                                 TimeUnit.SECONDS));

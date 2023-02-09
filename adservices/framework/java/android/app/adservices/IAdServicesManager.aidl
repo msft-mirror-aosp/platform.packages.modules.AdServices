@@ -93,6 +93,11 @@ interface IAdServicesManager {
     List<TopicParcel> retrieveAllBlockedTopics();
 
     /**
+     * Clear all blocked topics.
+     */
+    void clearAllBlockedTopics();
+
+    /**
      * Returns information whether topics consent page was displayed or not.
      *
      * @return true if topics consent page was displayed, otherwise false.
