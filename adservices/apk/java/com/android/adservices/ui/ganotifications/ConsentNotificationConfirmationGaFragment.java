@@ -46,7 +46,7 @@ public class ConsentNotificationConfirmationGaFragment extends Fragment {
     @Override
     public View onCreateView(
             @NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        UiStatsLogger.logGaConfirmationPageDisplayed(getContext());
+        UiStatsLogger.logConfirmationPageDisplayed(getContext());
         ConsentManager.getInstance(requireContext())
                 .enable(requireContext(), AdServicesApiType.FLEDGE);
         ConsentManager.getInstance(requireContext())
