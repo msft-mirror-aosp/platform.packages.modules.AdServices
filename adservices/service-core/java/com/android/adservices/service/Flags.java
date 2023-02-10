@@ -1189,6 +1189,17 @@ public interface Flags extends Dumpable {
         return getGlobalKillSwitch() || FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
     }
 
+    /**
+     * Enable Back Compat feature flag. The default value is false which means that all back compat
+     * related features are disabled by default. This flag would be enabled for R/S during rollout.
+     */
+    boolean ENABLE_BACK_COMPAT = false;
+
+    /** @return value of enable Back Compat */
+    default boolean getEnableBackCompat() {
+        return ENABLE_BACK_COMPAT;
+    }
+
     /*
      * The allow-list for PP APIs. This list has the list of app package names that we allow
      * using PP APIs.
