@@ -191,8 +191,11 @@ public class ConsentNotificationJobService extends JobService {
         if (mConsentManager == null) {
             setConsentManager(ConsentManager.getInstance(this));
         }
-        boolean isEuNotification =
-                !params.getExtras().getBoolean(ADID_ENABLE_STATUS, false) || isEuDevice(this);
+
+        boolean defaultAdIdState = params.getExtras().getBoolean(ADID_ENABLE_STATUS, false);
+        mConsentManager.recordDefaultAdIdState(defaultAdIdState);
+        boolean isEuNotification = !defaultAdIdState || isEuDevice(this);
+        mConsentManager.recordDefaultConsent(!isEuNotification);
         boolean reConsentStatus = params.getExtras().getBoolean(RE_CONSENT_STATUS, false);
 
         AdServicesExecutors.getBackgroundExecutor()

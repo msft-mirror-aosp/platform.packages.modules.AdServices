@@ -25,6 +25,8 @@ public class UIStats {
     private int mCode;
     private int mRegion;
     private int mAction;
+    private int mDefaultConsent;
+    private int mAdIdState;
 
     public UIStats() {}
 
@@ -36,7 +38,9 @@ public class UIStats {
         UIStats uiStats = (UIStats) obj;
         return mCode == uiStats.getCode()
                 && mRegion == uiStats.getRegion()
-                && mAction == uiStats.getAction();
+                && mAction == uiStats.getAction()
+                && mDefaultConsent == uiStats.getDefaultConsent()
+                && mAdIdState == uiStats.getAdIdState();
     }
 
     @Override
@@ -59,6 +63,32 @@ public class UIStats {
         return mAction;
     }
 
+    @NonNull
+    public int getDefaultConsent() {
+        return mDefaultConsent;
+    }
+
+    @NonNull
+    public int getAdIdState() {
+        return mAdIdState;
+    }
+
+    public void setRegion(int region) {
+        mRegion = region;
+    }
+
+    public void setAction(int action) {
+        mAction = action;
+    }
+
+    public void setDefaultConsent(int defaultConsent) {
+        mDefaultConsent = defaultConsent;
+    }
+
+    public void setAdIdState(int adIdState) {
+        mAdIdState = adIdState;
+    }
+
     @Override
     public String toString() {
         return "UIStats{"
@@ -68,6 +98,10 @@ public class UIStats {
                 + mRegion
                 + ", mAction="
                 + mAction
+                + ", mDefaultConsent="
+                + mDefaultConsent
+                + ", mAdIdState="
+                + mAdIdState
                 + '}';
     }
 
@@ -94,6 +128,16 @@ public class UIStats {
         /** See {@link UIStats#getAction()} . */
         public @NonNull UIStats.Builder setAction(int action) {
             mBuilding.mAction = action;
+            return this;
+        }
+        /** See {@link UIStats#getAction()} . */
+        public @NonNull UIStats.Builder setDefaultConsent(int defaultConsent) {
+            mBuilding.mDefaultConsent = defaultConsent;
+            return this;
+        }
+        /** See {@link UIStats#getAction()} . */
+        public @NonNull UIStats.Builder setAdIdState(int adIdState) {
+            mBuilding.mAdIdState = adIdState;
             return this;
         }
 
