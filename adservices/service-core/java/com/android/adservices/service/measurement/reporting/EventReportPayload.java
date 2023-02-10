@@ -31,6 +31,7 @@ import org.json.JSONObject;
 public final class EventReportPayload {
 
     private String mAttributionDestination;
+    private String mScheduledReportTime;
     private UnsignedLong mSourceEventId;
     @NonNull private UnsignedLong mTriggerData;
     private String mReportId;
@@ -43,6 +44,7 @@ public final class EventReportPayload {
 
     private EventReportPayload(EventReportPayload other) {
         mAttributionDestination = other.mAttributionDestination;
+        mScheduledReportTime = other.mScheduledReportTime;
         mSourceEventId = other.mSourceEventId;
         mTriggerData = other.mTriggerData;
         mReportId = other.mReportId;
@@ -59,6 +61,7 @@ public final class EventReportPayload {
         JSONObject eventPayloadJson = new JSONObject();
 
         eventPayloadJson.put("attribution_destination", mAttributionDestination);
+        eventPayloadJson.put("scheduled_report_time", mScheduledReportTime);
         eventPayloadJson.put("source_event_id", mSourceEventId.toString());
         eventPayloadJson.put("trigger_data", mTriggerData.toString());
         eventPayloadJson.put("report_id", mReportId);
@@ -89,6 +92,14 @@ public final class EventReportPayload {
          */
         public @NonNull Builder setAttributionDestination(@NonNull String attributionDestination) {
             mBuilding.mAttributionDestination = attributionDestination;
+            return this;
+        }
+
+        /**
+         * The scheduled report time in seconds.
+         */
+        public @NonNull Builder setScheduledReportTime(String scheduledReportTime) {
+            mBuilding.mScheduledReportTime = scheduledReportTime;
             return this;
         }
 

@@ -181,7 +181,7 @@ public class NotificationActivityUiAutomatorTest {
         UiObject leftControlButton =
                 getElement(R.string.notificationUI_left_control_button_text_eu);
         UiObject rightControlButton =
-                getElement(R.string.notificationUI_right_control_button_text_eu);
+                getElement(R.string.notificationUI_right_control_button_ga_text_eu);
         UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
 
         verifyControlsAndMoreButtonAreDisplayed(leftControlButton, rightControlButton, moreButton);
@@ -215,7 +215,7 @@ public class NotificationActivityUiAutomatorTest {
         UiObject leftControlButton =
                 getElement(R.string.notificationUI_left_control_button_text_eu);
         UiObject rightControlButton =
-                getElement(R.string.notificationUI_right_control_button_text_eu);
+                getElement(R.string.notificationUI_right_control_button_ga_text_eu);
         UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
 
         verifyControlsAndMoreButtonAreDisplayed(leftControlButton, rightControlButton, moreButton);
@@ -241,7 +241,7 @@ public class NotificationActivityUiAutomatorTest {
         UiObject leftControlButton =
                 getElement(R.string.notificationUI_left_control_button_text_eu);
         UiObject rightControlButton =
-                getElement(R.string.notificationUI_right_control_button_text_eu);
+                getElement(R.string.notificationUI_right_control_button_ga_text_eu);
         UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
 
         verifyControlsAndMoreButtonAreDisplayed(leftControlButton, rightControlButton, moreButton);

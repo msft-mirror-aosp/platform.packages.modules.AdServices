@@ -59,8 +59,8 @@ public class DebugReportApi {
             body.put(
                     BODY_ATTRIBUTION_DESTINATION,
                     source.getPublisherType() == EventSurfaceType.APP
-                            ? source.getAppDestination().toString()
-                            : source.getWebDestination().toString());
+                            ? source.getAppDestinations().get(0).toString()
+                            : source.getWebDestinations().get(0).toString());
             body.put(
                     BODY_SOURCE_SITE,
                     BaseUriExtractor.getBaseUri(source.getPublisher()).toString());
@@ -79,8 +79,8 @@ public class DebugReportApi {
             body.put(
                     BODY_ATTRIBUTION_DESTINATION,
                     source.getPublisherType() == EventSurfaceType.APP
-                            ? source.getAppDestination().toString()
-                            : source.getWebDestination().toString());
+                            ? source.getAppDestinations().get(0).toString()
+                            : source.getWebDestinations().get(0).toString());
             body.put(
                     BODY_SOURCE_SITE,
                     BaseUriExtractor.getBaseUri(source.getPublisher()).toString());

@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import android.Manifest;
 import android.app.NotificationManager;
@@ -37,6 +38,8 @@ import android.os.Environment;
 import android.provider.MediaStore;
 
 import androidx.test.platform.app.InstrumentationRegistry;
+
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -138,6 +141,7 @@ public class SdkSandboxRestrictionsTest {
     /** Tests that the sandbox cannot send broadcasts. */
     @Test
     public void testSendBroadcastRestrictions_withoutAction() {
+        assumeTrue(SdkLevel.isAtLeastU());
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         Intent intent = new Intent();
 

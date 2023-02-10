@@ -29,6 +29,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -151,6 +152,59 @@ public class BlockedTopicsManagerTest {
         verify(mMockIAdServicesManager).removeBlockedTopic(TOPIC_PARCEL);
         // Also verify PPAPI has removed this topic
         assertThat(mTopicsDao.retrieveAllBlockedTopics()).isEmpty();
+    }
+
+    @Test
+    public void testClearAllBlockedTopicsInSystemServiceIfNeeded_PpApiOnly()
+            throws RemoteException {
+        int blockedTopicsSourceOfTruth = Flags.PPAPI_ONLY;
+
+        // Block a topic
+        BlockedTopicsManager blockedTopicsManager =
+                getSpiedBlockedTopicsManager(blockedTopicsSourceOfTruth);
+        blockedTopicsManager.blockTopic(TOPIC);
+
+        // Verify the topic is blocked
+        List<Topic> expectedBlockedTopics = blockedTopicsManager.retrieveAllBlockedTopics();
+        assertThat(expectedBlockedTopics).hasSize(1);
+        assertThat(expectedBlockedTopics.get(0)).isEqualTo(TOPIC);
+
+        // Verify the topic in PPAPI is not unblocked
+        blockedTopicsManager.clearAllBlockedTopicsInSystemServiceIfNeeded();
+        expectedBlockedTopics = blockedTopicsManager.retrieveAllBlockedTopics();
+        assertThat(expectedBlockedTopics).hasSize(1);
+        assertThat(expectedBlockedTopics.get(0)).isEqualTo(TOPIC);
+
+        // Verify clearAllBlockedTopics() is not invoked
+        verify(mMockIAdServicesManager, never()).clearAllBlockedTopics();
+    }
+
+    @Test
+    public void testClearAllBlockedTopicsInSystemServiceIfNeeded_SystemServerOnly()
+            throws RemoteException {
+        int blockedTopicsSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
+
+        BlockedTopicsManager blockedTopicsManager =
+                getSpiedBlockedTopicsManager(blockedTopicsSourceOfTruth);
+
+        blockedTopicsManager.clearAllBlockedTopicsInSystemServiceIfNeeded();
+
+        // Verify clearAllBlockedTopics() is invoked
+        verify(mMockIAdServicesManager).clearAllBlockedTopics();
+    }
+
+    @Test
+    public void testClearAllBlockedTopicsInSystemServiceIfNeeded_PpApiAndSystemServer()
+            throws RemoteException {
+        int blockedTopicsSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
+
+        BlockedTopicsManager blockedTopicsManager =
+                getSpiedBlockedTopicsManager(blockedTopicsSourceOfTruth);
+
+        blockedTopicsManager.clearAllBlockedTopicsInSystemServiceIfNeeded();
+
+        // Verify clearAllBlockedTopics() is invoked
+        verify(mMockIAdServicesManager).clearAllBlockedTopics();
     }
 
     @Test
@@ -328,6 +382,7 @@ public class BlockedTopicsManagerTest {
         doNothing().when(mMockIAdServicesManager).recordBlockedTopic(List.of(TOPIC_PARCEL));
         doNothing().when(mMockIAdServicesManager).removeBlockedTopic(TOPIC_PARCEL);
         doReturn(List.of(TOPIC_PARCEL)).when(mMockIAdServicesManager).retrieveAllBlockedTopics();
+        doNothing().when(mMockIAdServicesManager).clearAllBlockedTopics();
 
         return blockedTopicsManager;
     }

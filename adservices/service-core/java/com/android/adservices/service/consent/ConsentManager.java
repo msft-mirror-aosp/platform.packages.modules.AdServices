@@ -92,7 +92,7 @@ public class ConsentManager {
             @NonNull AdServicesManager adServicesManager,
             @NonNull BooleanFileDatastore booleanFileDatastore,
             @NonNull Flags flags,
-            @ConsentParcel.ConsentApiType int consentSourceOfTruth) {
+            @Flags.ConsentSourceOfTruth int consentSourceOfTruth) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(topicsWorker);
         Objects.requireNonNull(appConsentDao);
@@ -1119,7 +1119,7 @@ public class ConsentManager {
             @NonNull Context context,
             @NonNull BooleanFileDatastore datastore,
             @NonNull AdServicesManager adServicesManager,
-            @ConsentParcel.ConsentApiType int consentSourceOfTruth) {
+            @Flags.ConsentSourceOfTruth int consentSourceOfTruth) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(datastore);
         Objects.requireNonNull(adServicesManager);
