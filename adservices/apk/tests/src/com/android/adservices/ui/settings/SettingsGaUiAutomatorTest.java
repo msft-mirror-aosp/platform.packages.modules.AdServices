@@ -66,6 +66,106 @@ public class SettingsGaUiAutomatorTest {
     }
 
     @Test
+    public void mainPageGaUxFlagEnableToDisableFlipTest() throws UiObjectNotFoundException {
+        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
+
+        launchApp();
+        // beta switch shouldn't exist
+        UiObject mainSwitch =
+                sDevice.findObject(new UiSelector().className("android.widget.Switch"));
+        mainSwitch.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        assertThat(mainSwitch.exists()).isFalse();
+
+        // make sure all the GA elements are there
+        scrollTo(R.string.settingsUI_topics_ga_title);
+        UiObject topicsButton = getElement(R.string.settingsUI_topics_ga_title);
+        topicsButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        assertThat(topicsButton.exists()).isTrue();
+
+        scrollTo(R.string.settingsUI_apps_ga_title);
+        UiObject appButton = getElement(R.string.settingsUI_apps_ga_title);
+        appButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        assertThat(appButton.exists()).isTrue();
+
+        scrollTo(R.string.settingsUI_measurement_view_title);
+        UiObject measurementButton = getElement(R.string.settingsUI_measurement_view_title);
+        appButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        assertThat(measurementButton.exists()).isTrue();
+
+        sDevice.pressHome();
+        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled false");
+
+        launchApp();
+        // beta switch should exist
+        mainSwitch = sDevice.findObject(new UiSelector().className("android.widget.Switch"));
+        mainSwitch.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        assertThat(mainSwitch.exists()).isTrue();
+
+        // make sure all the GA elements are gone
+        topicsButton = getElement(R.string.settingsUI_topics_ga_title);
+        topicsButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        assertThat(topicsButton.exists()).isFalse();
+
+        appButton = getElement(R.string.settingsUI_apps_ga_title);
+        appButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        assertThat(appButton.exists()).isFalse();
+
+        measurementButton = getElement(R.string.settingsUI_measurement_view_title);
+        measurementButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        assertThat(measurementButton.exists()).isFalse();
+    }
+
+    @Test
+    public void mainPageGaUxFlagDisableToEnableFlipTest() throws UiObjectNotFoundException {
+        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled false");
+
+        launchApp();
+        // beta switch should exist
+        UiObject mainSwitch =
+                sDevice.findObject(new UiSelector().className("android.widget.Switch"));
+        mainSwitch.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        assertThat(mainSwitch.exists()).isTrue();
+
+        // make sure all the elements are there
+        UiObject topicsButton = getElement(R.string.settingsUI_topics_ga_title);
+        topicsButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        assertThat(topicsButton.exists()).isFalse();
+
+        UiObject appButton = getElement(R.string.settingsUI_apps_ga_title);
+        appButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        assertThat(appButton.exists()).isFalse();
+
+        UiObject measurementButton = getElement(R.string.settingsUI_measurement_view_title);
+        measurementButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        assertThat(measurementButton.exists()).isFalse();
+
+        sDevice.pressHome();
+        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
+
+        launchApp();
+        // beta switch shouldn't exist
+        mainSwitch = sDevice.findObject(new UiSelector().className("android.widget.Switch"));
+        mainSwitch.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        assertThat(mainSwitch.exists()).isFalse();
+
+        // make sure all the elements are there
+        scrollTo(R.string.settingsUI_topics_ga_title);
+        topicsButton = getElement(R.string.settingsUI_topics_ga_title);
+        topicsButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        assertThat(topicsButton.exists()).isTrue();
+
+        scrollTo(R.string.settingsUI_apps_ga_title);
+        appButton = getElement(R.string.settingsUI_apps_ga_title);
+        appButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        assertThat(appButton.exists()).isTrue();
+
+        scrollTo(R.string.settingsUI_measurement_view_title);
+        measurementButton = getElement(R.string.settingsUI_measurement_view_title);
+        appButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        assertThat(measurementButton.exists()).isTrue();
+    }
+
+    @Test
     public void settingsRemoveMainToggleAndMeasurementEntryTest() throws UiObjectNotFoundException {
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
 
@@ -313,6 +413,10 @@ public class SettingsGaUiAutomatorTest {
         }
     }
 
+    private UiObject getElementById(int resId) {
+        return sDevice.findObject(new UiSelector().resourceId(String.valueOf(resId)));
+    }
+
     private UiObject getElement(int resId) {
         return sDevice.findObject(new UiSelector().text(getString(resId)));
     }
@@ -322,6 +426,11 @@ public class SettingsGaUiAutomatorTest {
     }
 
     private void scrollToAndClick(int resId) throws UiObjectNotFoundException {
+        UiObject element = scrollTo(resId);
+        element.click();
+    }
+
+    private UiObject scrollTo(int resId) throws UiObjectNotFoundException {
         UiScrollable scrollView =
                 new UiScrollable(
                         new UiSelector().scrollable(true).className("android.widget.ScrollView"));
@@ -329,7 +438,7 @@ public class SettingsGaUiAutomatorTest {
                 sDevice.findObject(
                         new UiSelector().childSelector(new UiSelector().text(getString(resId))));
         scrollView.scrollIntoView(element);
-        element.click();
+        return element;
     }
 
     private void launchApp() {

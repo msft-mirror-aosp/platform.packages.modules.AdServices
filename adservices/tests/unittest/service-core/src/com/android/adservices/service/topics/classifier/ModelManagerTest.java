@@ -492,10 +492,10 @@ public class ModelManagerTest {
                 .isEqualTo("2");
 
         // The property "version_info" should have attribution "build_id"
-        // and its value should be "1388". This is used for comparing the model version with MDD
+        // and its value should be "1467". This is used for comparing the model version with MDD
         // downloaded model.
         assertThat(mProductionClassifierAssetsMetadata.get("version_info").get("build_id"))
-                .isEqualTo("1388");
+                .isEqualTo("1467");
 
         // The property "version_info" should have attribution "taxonomy_type"
         // and its value should be "chrome_and_mobile_taxonomy".
@@ -573,10 +573,10 @@ public class ModelManagerTest {
                 .isEqualTo("2");
 
         // The property "version_info" should have attribution "build_id"
-        // and its value should be "1388". This is used for comparing the model version with MDD
+        // and its value should be "1467". This is used for comparing the model version with MDD
         // downloaded model.
         assertThat(mProductionClassifierAssetsMetadata.get("version_info").get("build_id"))
-                .isEqualTo("1388");
+                .isEqualTo("1467");
 
         // The property "version_info" should have attribution "taxonomy_type"
         // and its value should be "chrome_and_mobile_taxonomy".

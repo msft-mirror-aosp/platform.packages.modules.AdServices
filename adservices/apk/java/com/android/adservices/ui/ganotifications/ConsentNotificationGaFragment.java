@@ -200,7 +200,7 @@ public class ConsentNotificationGaFragment extends Fragment {
                 mLeftControlButton.setVisibility(View.VISIBLE);
                 mRightControlButton.setText(
                         mIsEUDevice
-                                ? R.string.notificationUI_right_control_button_text_eu
+                                ? R.string.notificationUI_right_control_button_ga_text_eu
                                 : R.string.notificationUI_right_control_button_text);
             } else {
                 mLeftControlButton.setVisibility(View.INVISIBLE);

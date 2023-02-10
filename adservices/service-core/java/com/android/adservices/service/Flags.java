@@ -1611,11 +1611,11 @@ public interface Flags extends Dumpable {
     }
 
     /** Whether to enable database schema version 7 */
-    boolean ENABLE_DATABASE_SCHEMA_VERSION_7 = false;
+    boolean ENABLE_TOPIC_MIGRATION = false;
 
-    /** @return if to enable database schema version 7 TODO (b/265160386): rename to ...Version7. */
-    default boolean getEnableDatabaseSchemaVersion5() {
-        return ENABLE_DATABASE_SCHEMA_VERSION_7;
+    /** @return if to enable database schema version 7 */
+    default boolean getEnableTopicMigration() {
+        return ENABLE_TOPIC_MIGRATION;
     }
 
     /** Returns true if the given enrollmentId is blocked from using PP-API. */
