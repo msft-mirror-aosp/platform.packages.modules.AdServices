@@ -183,11 +183,9 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Aplikace mohou také určit, co se vám líbí, podle toho, jak je používáte."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Aplikace, které používáte, mohou Android požádat o informace, které jim pomohou měřit výkon reklam. Android aplikacím umožňuje shromažďovat omezené typy dat."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Zapnuto / počet témat: <xliff:g id="TOPICS_COUNT">%1$d</xliff:g>"</string>
-    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
-    <skip />
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Zapnuto / # téma}few{Zapnuto / # témata}many{Zapnuto / # tématu}other{Zapnuto / # témat}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Zapnuto / počet aplikací: <xliff:g id="APPS_COUNT">%1$d</xliff:g>"</string>
-    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
-    <skip />
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{Zapnuto / # aplikace}few{Zapnuto / # aplikace}many{Zapnuto / # aplikace}other{Zapnuto / # aplikací}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"Zapnuto"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Vypnuto"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Témata zájmu vycházejí z aplikací, které jste v poslední době používali, a aplikace je používají k zobrazování personalizovaných reklam.\n\nMůžete zablokovat témata, která s aplikacemi nechcete sdílet. Android také témata pravidelně automaticky maže."</string>
@@ -200,14 +198,10 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Zablokované aplikace"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Resetovat data navrhovaná aplikacemi"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Je běžné, že si aplikace, které používáte, pamatují věci, které vás zajímají, aby vám mohly přizpůsobit prostředí. Aplikace mohou také ukládat informace o vašich tématech v systému Android. \n\nPokud například používáte aplikaci k tréninku na maraton, aplikace může určit, že se zajímáte o běžecké boty. Když později použijete jinou aplikaci, může se vám v ní zobrazit reklama na běžecké boty navržená první aplikací.\n\nData navrhovaná aplikacemi systém Android pravidelně automaticky maže. Aplikace, kterou použijete znovu, se může v seznamu opět objevit. Můžete také zakázat, aby vám konkrétní aplikace navrhovala reklamy.\n\nReklamy zobrazované v aplikacích mohou být personalizovány v závislosti na tomto nastavení, nastavení témat reklam, nastavení vašeho inzertního ID a na tom, zda aplikace personalizuje reklamy."</string>
-    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
-    <skip />
-    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
-    <skip />
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Barevná ilustrace symbolů představujících zájmy jako hudba, zprávy a sport"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Barevná ilustrace zámku v kruhu"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Malá černobílá ilustrace čtverce z devíti teček"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"Malá černobílá ilustrace jednoduchých tvarů jako srdce, trojúhelník a čtverec"</string>
     <string name="topic10001" msgid="1636806320891333775">"Umění a zábava"</string>
     <string name="topic10002" msgid="1226367977754287428">"Herectví a divadlo"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime a manga"</string>
