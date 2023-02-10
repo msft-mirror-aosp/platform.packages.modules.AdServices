@@ -208,6 +208,16 @@ public final class AdServicesManager {
         }
     }
 
+    /** Clear all Blocked Topics */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void clearAllBlockedTopics() {
+        try {
+            mService.clearAllBlockedTopics();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
     /**
      * Returns information whether topics Consent page was displayed or not.
      *

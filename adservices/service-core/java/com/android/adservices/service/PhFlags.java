@@ -1856,11 +1856,11 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getEnableDatabaseSchemaVersion5() {
+    public boolean getEnableTopicMigration() {
         return DeviceConfig.getBoolean(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_ENABLE_DATABASE_SCHEMA_VERSION_7,
-                /* defaultValue */ ENABLE_DATABASE_SCHEMA_VERSION_7);
+                /* defaultValue */ ENABLE_TOPIC_MIGRATION);
     }
 
     @Override

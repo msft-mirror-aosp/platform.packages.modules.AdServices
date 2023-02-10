@@ -45,8 +45,8 @@ import java.util.UUID;
  * requests.
  *
  * Tests in assets/msmt_interop_tests/ directory were copied from
- * https://source.chromium.org/chromium/chromium/src/+/main:content/test/data/attribution_reporting/interop/
- * on October 15, 2022
+ * https://github.com/chromium/chromium/tree/main/content/test/data/attribution_reporting/interop
+ * commit 8ff1e4f84ea36f339d440252ab36559263cf540c
  */
 @RunWith(Parameterized.class)
 public class E2EInteropMockTest extends E2EMockTest {

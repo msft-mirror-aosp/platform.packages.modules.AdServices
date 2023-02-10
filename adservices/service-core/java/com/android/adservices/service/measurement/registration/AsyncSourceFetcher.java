@@ -228,7 +228,7 @@ public class AsyncSourceFetcher {
         }
 
         if (appUri != null) {
-            result.setAppDestination(getBaseUri(appUri));
+            result.setAppDestinations(List.of(getBaseUri(appUri)));
         }
 
         if (shouldValidateDestinationWebSource
@@ -245,12 +245,12 @@ public class AsyncSourceFetcher {
                 LogUtil.d("Unable to extract top private domain and scheme from web destination.");
                 return false;
             } else {
-                result.setWebDestination(topPrivateDomainAndScheme.get());
+                result.setWebDestinations(List.of(topPrivateDomainAndScheme.get()));
             }
         }
-        if (shouldOverrideDestinationAppSource && !isWebSource) {
-            result.setAppDestination(appDestinationFromRequest);
-            result.setWebDestination(webDestinationFromRequest);
+        if (shouldOverrideDestinationAppSource && !isWebSource
+                && appDestinationFromRequest != null) {
+            result.setAppDestinations(List.of(appDestinationFromRequest));
         }
         return true;
     }
