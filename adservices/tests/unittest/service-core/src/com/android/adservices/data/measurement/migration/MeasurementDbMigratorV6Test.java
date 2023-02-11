@@ -102,7 +102,7 @@ public class MeasurementDbMigratorV6Test extends AbstractMeasurementDbMigratorTe
         assertTrue(
                 doesTableExistAndColumnCountMatch(db, MeasurementTables.SourceContract.TABLE, 31));
         assertTrue(
-                doesTableExistAndColumnCountMatch(db, MeasurementTables.TriggerContract.TABLE, 18));
+                doesTableExistAndColumnCountMatch(db, MeasurementTables.TriggerContract.TABLE, 19));
         assertTrue(
                 doesTableExistAndColumnCountMatch(
                         db, MeasurementTables.XnaIgnoredSourcesContract.TABLE, 2));
@@ -149,7 +149,7 @@ public class MeasurementDbMigratorV6Test extends AbstractMeasurementDbMigratorTe
         assertTrue(
                 doesTableExistAndColumnCountMatch(db, MeasurementTables.SourceContract.TABLE, 31));
         assertTrue(
-                doesTableExistAndColumnCountMatch(db, MeasurementTables.TriggerContract.TABLE, 18));
+                doesTableExistAndColumnCountMatch(db, MeasurementTables.TriggerContract.TABLE, 19));
         assertTrue(
                 doesTableExistAndColumnCountMatch(
                         db, MeasurementTables.XnaIgnoredSourcesContract.TABLE, 2));

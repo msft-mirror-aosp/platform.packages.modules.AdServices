@@ -155,8 +155,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     @GuardedBy("mLock")
     private final UidImportanceListener mUidImportanceListener = new UidImportanceListener();
 
-    private final SdkSandboxManagerLocal mLocalManager;
-
     private final String mAdServicesPackageName;
 
     private Injector mInjector;
@@ -181,6 +179,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     static class Injector {
         private final Context mContext;
+        private SdkSandboxManagerLocal mLocalManager;
 
         Injector(Context context) {
             mContext = context;
@@ -209,6 +208,22 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         SdkSandboxPulledAtoms getSdkSandboxPulledAtoms() {
             return new SdkSandboxPulledAtoms();
         }
+
+        PackageManagerLocal getPackageManagerLocal() {
+            return LocalManagerRegistry.getManager(PackageManagerLocal.class);
+        }
+
+        SdkSandboxStorageManager getSdkSandboxStorageManager() {
+            return new SdkSandboxStorageManager(mContext, mLocalManager, getPackageManagerLocal());
+        }
+
+        void setLocalManager(SdkSandboxManagerLocal localManager) {
+            mLocalManager = localManager;
+        }
+
+        SdkSandboxManagerLocal getLocalManager() {
+            return mLocalManager;
+        }
     }
 
     SdkSandboxManagerService(Context context) {
@@ -219,15 +234,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     SdkSandboxManagerService(Context context, Injector injector) {
         mContext = context;
         mInjector = injector;
+        mInjector.setLocalManager(new LocalImpl());
         mServiceProvider = mInjector.getSdkSandboxServiceProvider();
         mActivityManager = mContext.getSystemService(ActivityManager.class);
-        mLocalManager = new LocalImpl();
         mSdkSandboxPulledAtoms = mInjector.getSdkSandboxPulledAtoms();
-
         PackageManagerLocal packageManagerLocal =
                 LocalManagerRegistry.getManager(PackageManagerLocal.class);
-        mSdkSandboxStorageManager =
-                new SdkSandboxStorageManager(mContext, mLocalManager, packageManagerLocal);
+        mSdkSandboxStorageManager = mInjector.getSdkSandboxStorageManager();
 
         // Start the handler thread.
         HandlerThread handlerThread = new HandlerThread("SdkSandboxManagerServiceHandler");
@@ -1478,7 +1491,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
     }
 
-    private List<String> getListOfStoragePaths(List<StorageDirInfo> storageDirInfos) {
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    List<String> getListOfStoragePaths(List<StorageDirInfo> storageDirInfos) {
         final List<String> paths = new ArrayList<>();
 
         for (int i = 0; i < storageDirInfos.size(); i++) {
@@ -1617,6 +1631,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
      * be used as a part of {@link SdkSandboxController}. The Controller can then can call APIs on
      * the link object to get data from the manager service.
      */
+    // TODO(b/268043836): Move SdkToServiceLink out of SdkSandboxManagerService
     private class SdkToServiceLink extends ISdkToServiceCallback.Stub {
 
         /**
@@ -1659,11 +1674,40 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
             return sandboxedSdks;
         }
+
+        @Override
+        public void logLatenciesFromSandbox(
+                int latencyFromSystemServerToSandboxMillis,
+                int latencySandboxMillis,
+                int method,
+                boolean success) {
+            final int appUid = Process.getAppUidForSdkSandboxUid(Binder.getCallingUid());
+            /**
+             * In case system server is not involved and the API call is just concerned with sandbox
+             * process, there will be no call to system server, and we will not log that information
+             */
+            if (latencyFromSystemServerToSandboxMillis != -1) {
+                SdkSandboxStatsLog.write(
+                        SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                        method,
+                        latencyFromSystemServerToSandboxMillis,
+                        success,
+                        SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_SANDBOX,
+                        appUid);
+            }
+            SdkSandboxStatsLog.write(
+                    SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                    method,
+                    latencySandboxMillis,
+                    /*success=*/ true,
+                    SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SANDBOX,
+                    appUid);
+        }
     }
 
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
     SdkSandboxManagerLocal getLocalManager() {
-        return mLocalManager;
+        return mInjector.getLocalManager();
     }
 
     private void notifyInstrumentationStarted(CallingInfo callingInfo) {

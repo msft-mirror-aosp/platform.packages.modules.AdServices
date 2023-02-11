@@ -30,6 +30,7 @@ import org.junit.runners.Parameterized;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Tests for {@link MeasurementDao} app deletion that affect the database, and
@@ -53,7 +54,7 @@ public class DeleteExpiredDynamicIntegrationTest extends AbstractDbIntegrationTe
         Source source =
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
-                        .setAppDestination(Uri.parse("android-app://com.example.app/aD"))
+                        .setAppDestinations(List.of(Uri.parse("android-app://com.example.app/aD")))
                         .setPublisher(Uri.parse("https://example.test/aS"))
                         .setId("non-expired")
                         .setEventId(new UnsignedLong(2L))

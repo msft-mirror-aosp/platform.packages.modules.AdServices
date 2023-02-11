@@ -1081,6 +1081,24 @@ public interface Flags extends Dumpable {
                 || MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH;
     }
 
+    /**
+     * Measurement Rollback Kill Switch. The default value is false which means the rollback
+     * handling on measurement service start is enabled. This flag is used for emergency turning off
+     * measurement rollback data deletion handling.
+     */
+    boolean MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for Measurement rollback deletion handling. The rollback
+     * deletion handling will be disabled if the Global Kill Switch, Measurement Kill Switch or the
+     * Measurement rollback deletion Kill Switch value is true.
+     */
+    default boolean getMeasurementRollbackDeletionKillSwitch() {
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH;
+    }
+
     // ADID Killswitch.
     /**
      * AdId API Kill Switch. The default value is false which means the AdId API is enabled. This
@@ -1169,6 +1187,17 @@ public interface Flags extends Dumpable {
     default boolean getFledgeCustomAudienceServiceKillSwitch() {
         // Check for global kill switch first, as it should override all other kill switches
         return getGlobalKillSwitch() || FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
+    }
+
+    /**
+     * Enable Back Compat feature flag. The default value is false which means that all back compat
+     * related features are disabled by default. This flag would be enabled for R/S during rollout.
+     */
+    boolean ENABLE_BACK_COMPAT = false;
+
+    /** @return value of enable Back Compat */
+    default boolean getEnableBackCompat() {
+        return ENABLE_BACK_COMPAT;
     }
 
     /*
@@ -1593,11 +1622,11 @@ public interface Flags extends Dumpable {
     }
 
     /** Whether to enable database schema version 7 */
-    boolean ENABLE_DATABASE_SCHEMA_VERSION_7 = false;
+    boolean ENABLE_TOPIC_MIGRATION = false;
 
-    /** @return if to enable database schema version 7 TODO (b/265160386): rename to ...Version7. */
-    default boolean getEnableDatabaseSchemaVersion5() {
-        return ENABLE_DATABASE_SCHEMA_VERSION_7;
+    /** @return if to enable database schema version 7 */
+    default boolean getEnableTopicMigration() {
+        return ENABLE_TOPIC_MIGRATION;
     }
 
     /** Returns true if the given enrollmentId is blocked from using PP-API. */
@@ -1608,5 +1637,13 @@ public interface Flags extends Dumpable {
     /** Returns a list of enrollmentId blocked from using PP-API. */
     default ImmutableList<String> getEnrollmentBlocklist() {
         return ImmutableList.of();
+    }
+
+    /** Kill switch to guard backward-compatible logging. */
+    boolean COMPAT_LOGGING_KILL_SWITCH = true;
+
+    /** Returns whether backward-compatible logging should be enabled. */
+    default boolean getCompatLoggingKillSwitch() {
+        return COMPAT_LOGGING_KILL_SWITCH;
     }
 }
