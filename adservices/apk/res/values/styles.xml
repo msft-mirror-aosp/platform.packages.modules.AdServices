@@ -33,7 +33,7 @@
         <item name="android:theme">@style/RoundedCornerThemeOverlay</item>
         <item name="android:textSize">16sp</item>
         <item name="android:fontFamily">@*android:string/config_bodyFontFamilyMedium</item>
-        <item name="android:layout_marginStart">12dp</item>
+        <item name="android:layout_marginStart">24dp</item>
         <item name="android:layout_marginEnd">24dp</item>
         <item name="android:backgroundTint">@color/settingslib_state_on_color</item>
         <item name="android:colorControlHighlight">@color/ripple_material_inverse</item>

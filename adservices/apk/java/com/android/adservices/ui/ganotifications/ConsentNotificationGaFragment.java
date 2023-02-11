@@ -55,7 +55,7 @@ public class ConsentNotificationGaFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
-        UiStatsLogger.logGaLandingPageDisplayed(getContext());
+        UiStatsLogger.logLandingPageDisplayed(getContext());
         setupListeners(savedInstanceState);
     }
 
