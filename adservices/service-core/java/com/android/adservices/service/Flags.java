@@ -1449,6 +1449,65 @@ public interface Flags extends Dumpable {
         return UI_DIALOGS_FEATURE_ENABLED;
     }
 
+    String UI_EEA_COUNTRIES =
+            "AT," // Austria
+                    + "BE," // Belgium
+                    + "BG," // Bulgaria
+                    + "HR," // Croatia
+                    + "CY," // Republic of Cyprus
+                    + "CZ," // Czech Republic
+                    + "DK," // Denmark
+                    + "EE," // Estonia
+                    + "FI," // Finland
+                    + "FR," // France
+                    + "DE," // Germany
+                    + "GR," // Greece
+                    + "HU," // Hungary
+                    + "IE," // Ireland
+                    + "IT," // Italy
+                    + "LV," // Latvia
+                    + "LT," // Lithuania
+                    + "LU," // Luxembourg
+                    + "MT," // Malta
+                    + "NL," // Netherlands
+                    + "PL," // Poland
+                    + "PT," // Portugal
+                    + "RO," // Romania
+                    + "SK," // Slovakia
+                    + "SI," // Slovenia
+                    + "ES," // Spain
+                    + "SE," // Sweden
+                    + "IS," // Iceland
+                    + "LI," // Liechtenstein
+                    + "NO," // Norway
+                    + "CH," // Switzerland
+                    + "GB," // Great Britain
+                    + "GI," // Gibraltar
+                    + "GP," // Guadeloupe
+                    + "GG," // Guernsey
+                    + "JE," // Jersey
+                    + "VA," // Vatican City
+                    + "AX," // Åland Islands
+                    + "IC," // Canary Islands
+                    + "EA," // Ceuta & Melilla
+                    + "GF," // French Guiana
+                    + "PF," // French Polynesia
+                    + "TF," // French Southern Territories
+                    + "MQ," // Martinique
+                    + "YT," // Mayotte
+                    + "NC," // New Caledonia
+                    + "RE," // Réunion
+                    + "BL," // St. Barthélemy
+                    + "MF," // St. Martin
+                    + "PM," // St. Pierre & Miquelon
+                    + "SJ," // Svalbard & Jan Mayen
+                    + "WF"; // Wallis & Futuna
+
+    /** Returns the list of EEA countries in a String separated by comma */
+    default String getUiEeaCountries() {
+        return UI_EEA_COUNTRIES;
+    }
+
     /**
      * GA UX enabled. It contains features that have to be enabled at the same time:
      *
