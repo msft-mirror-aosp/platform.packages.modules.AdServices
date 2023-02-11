@@ -208,7 +208,7 @@ public final class AsyncSourceFetcherTest {
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(DEFAULT_DESTINATION, result.getAppDestination().toString());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestinations().get(0).toString());
         assertEquals(DEFAULT_PRIORITY, result.getPriority());
         assertEquals(
                 result.getEventTime() + TimeUnit.SECONDS.toMillis(DEFAULT_EXPIRY),
@@ -299,7 +299,7 @@ public final class AsyncSourceFetcherTest {
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals("android-app://com.myapps", result.getAppDestination().toString());
+        assertEquals("android-app://com.myapps", result.getAppDestinations().get(0).toString());
         assertEquals(123, result.getPriority());
         assertEquals(
                 result.getEventTime() + TimeUnit.SECONDS.toMillis(456789), result.getExpiryTime());
@@ -340,7 +340,7 @@ public final class AsyncSourceFetcherTest {
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals("android-app://com.myapps", result.getAppDestination().toString());
+        assertEquals("android-app://com.myapps", result.getAppDestinations().get(0).toString());
         assertEquals(123, result.getPriority());
         assertEquals(
                 result.getEventTime() + TimeUnit.SECONDS.toMillis(456789), result.getExpiryTime());
@@ -387,7 +387,7 @@ public final class AsyncSourceFetcherTest {
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals("android-app://com.myapps", result.getAppDestination().toString());
+        assertEquals("android-app://com.myapps", result.getAppDestinations().get(0).toString());
         assertEquals(123, result.getPriority());
         assertEquals(
                 result.getEventTime() + TimeUnit.SECONDS.toMillis(456789), result.getExpiryTime());
@@ -529,7 +529,7 @@ public final class AsyncSourceFetcherTest {
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(DEFAULT_DESTINATION, result.getAppDestination().toString());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestinations().get(0).toString());
         assertEquals(DEFAULT_EVENT_ID, result.getEventId());
         assertEquals(0, result.getPriority());
         long expiry =
@@ -567,7 +567,7 @@ public final class AsyncSourceFetcherTest {
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(DEFAULT_DESTINATION, result.getAppDestination().toString());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestinations().get(0).toString());
         assertEquals(DEFAULT_EVENT_ID, result.getEventId());
         assertEquals(0, result.getPriority());
         long expiry = result.getEventTime() + TimeUnit.DAYS.toMillis(1);
@@ -602,7 +602,7 @@ public final class AsyncSourceFetcherTest {
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(DEFAULT_DESTINATION, result.getAppDestination().toString());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestinations().get(0).toString());
         assertEquals(DEFAULT_EVENT_ID, result.getEventId());
         assertEquals(0, result.getPriority());
         long expiry =
@@ -640,7 +640,7 @@ public final class AsyncSourceFetcherTest {
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(DEFAULT_DESTINATION, result.getAppDestination().toString());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestinations().get(0).toString());
         assertEquals(DEFAULT_EVENT_ID, result.getEventId());
         assertEquals(0, result.getPriority());
         long expiry = result.getEventTime() + TimeUnit.DAYS.toMillis(2);
@@ -677,7 +677,7 @@ public final class AsyncSourceFetcherTest {
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(DEFAULT_DESTINATION, result.getAppDestination().toString());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestinations().get(0).toString());
         assertEquals(DEFAULT_EVENT_ID, result.getEventId());
         assertEquals(0, result.getPriority());
         assertEquals(result.getEventTime() + TimeUnit.DAYS.toMillis(2), result.getExpiryTime());
@@ -716,7 +716,7 @@ public final class AsyncSourceFetcherTest {
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(DEFAULT_DESTINATION, result.getAppDestination().toString());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestinations().get(0).toString());
         assertEquals(DEFAULT_EVENT_ID, result.getEventId());
         assertEquals(0, result.getPriority());
         assertEquals(result.getEventTime() + TimeUnit.DAYS.toMillis(2), result.getExpiryTime());
@@ -756,7 +756,7 @@ public final class AsyncSourceFetcherTest {
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(DEFAULT_DESTINATION, result.getAppDestination().toString());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestinations().get(0).toString());
         assertEquals(DEFAULT_EVENT_ID, result.getEventId());
         assertEquals(0, result.getPriority());
         assertEquals(result.getEventTime() + TimeUnit.DAYS.toMillis(2), result.getExpiryTime());
@@ -797,7 +797,7 @@ public final class AsyncSourceFetcherTest {
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(DEFAULT_DESTINATION, result.getAppDestination().toString());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestinations().get(0).toString());
         assertEquals(DEFAULT_EVENT_ID, result.getEventId());
         assertEquals(0, result.getPriority());
         assertEquals(result.getEventTime() + TimeUnit.DAYS.toMillis(2), result.getExpiryTime());
@@ -938,7 +938,7 @@ public final class AsyncSourceFetcherTest {
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(DEFAULT_DESTINATION, result.getAppDestination().toString());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestinations().get(0).toString());
         assertEquals(DEFAULT_PRIORITY, result.getPriority());
         assertEquals(
                 result.getEventTime() + TimeUnit.SECONDS.toMillis(DEFAULT_EXPIRY),
@@ -974,7 +974,7 @@ public final class AsyncSourceFetcherTest {
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(DEFAULT_DESTINATION, result.getAppDestination().toString());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestinations().get(0).toString());
         assertEquals(0, result.getPriority());
         assertEquals(new UnsignedLong(-1L), result.getEventId());
         assertEquals(
@@ -1014,7 +1014,7 @@ public final class AsyncSourceFetcherTest {
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(DEFAULT_DESTINATION, result.getAppDestination().toString());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestinations().get(0).toString());
         assertEquals(DEFAULT_EVENT_ID, result.getEventId());
         assertEquals(0, result.getPriority());
         assertNull(result.getDebugKey());
@@ -1056,7 +1056,7 @@ public final class AsyncSourceFetcherTest {
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(DEFAULT_DESTINATION, result.getAppDestination().toString());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestinations().get(0).toString());
         assertEquals(DEFAULT_EVENT_ID, result.getEventId());
         assertEquals(0, result.getPriority());
         assertNull(result.getDebugKey());
@@ -1097,7 +1097,7 @@ public final class AsyncSourceFetcherTest {
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(DEFAULT_DESTINATION, result.getAppDestination().toString());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestinations().get(0).toString());
         assertEquals(DEFAULT_EVENT_ID, result.getEventId());
         assertEquals(0, result.getPriority());
         assertNull(result.getDebugKey());
@@ -1138,7 +1138,7 @@ public final class AsyncSourceFetcherTest {
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(DEFAULT_DESTINATION, result.getAppDestination().toString());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestinations().get(0).toString());
         assertEquals(DEFAULT_EVENT_ID, result.getEventId());
         assertEquals(0, result.getPriority());
         assertEquals(new UnsignedLong(-1L), result.getDebugKey());
@@ -1179,7 +1179,7 @@ public final class AsyncSourceFetcherTest {
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals("android-app://com.myapps", result.getAppDestination().toString());
+        assertEquals("android-app://com.myapps", result.getAppDestinations().get(0).toString());
         assertEquals(new UnsignedLong(123L), result.getEventId());
         assertEquals(0, result.getPriority());
         assertEquals(
@@ -1220,7 +1220,7 @@ public final class AsyncSourceFetcherTest {
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(DEFAULT_DESTINATION, result.getAppDestination().toString());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestinations().get(0).toString());
         assertEquals(DEFAULT_EVENT_ID, result.getEventId());
         assertEquals(0, result.getPriority());
         assertEquals(
@@ -1261,7 +1261,7 @@ public final class AsyncSourceFetcherTest {
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(DEFAULT_DESTINATION, result.getAppDestination().toString());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestinations().get(0).toString());
         assertEquals(DEFAULT_EVENT_ID, result.getEventId());
         assertEquals(0, result.getPriority());
         assertEquals(
@@ -1301,7 +1301,7 @@ public final class AsyncSourceFetcherTest {
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(DEFAULT_DESTINATION, result.getAppDestination().toString());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestinations().get(0).toString());
         assertEquals(DEFAULT_EVENT_ID, result.getEventId());
         assertTrue(result.isDebugReporting());
         assertEquals(
@@ -1341,7 +1341,7 @@ public final class AsyncSourceFetcherTest {
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(DEFAULT_DESTINATION, result.getAppDestination().toString());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestinations().get(0).toString());
         assertEquals(DEFAULT_EVENT_ID, result.getEventId());
         assertFalse(result.isDebugReporting());
         assertEquals(
@@ -1381,7 +1381,7 @@ public final class AsyncSourceFetcherTest {
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(DEFAULT_DESTINATION, result.getAppDestination().toString());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestinations().get(0).toString());
         assertEquals(DEFAULT_EVENT_ID, result.getEventId());
         assertFalse(result.isDebugReporting());
         assertEquals(
@@ -1421,7 +1421,7 @@ public final class AsyncSourceFetcherTest {
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(DEFAULT_DESTINATION, result.getAppDestination().toString());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestinations().get(0).toString());
         assertEquals(DEFAULT_EVENT_ID, result.getEventId());
         assertFalse(result.isDebugReporting());
         assertEquals(
@@ -1460,7 +1460,7 @@ public final class AsyncSourceFetcherTest {
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(DEFAULT_DESTINATION, result.getAppDestination().toString());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestinations().get(0).toString());
         assertEquals(DEFAULT_EVENT_ID, result.getEventId());
         assertFalse(result.isDebugReporting());
         assertEquals(
@@ -1614,7 +1614,7 @@ public final class AsyncSourceFetcherTest {
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(DEFAULT_DESTINATION, result.getAppDestination().toString());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestinations().get(0).toString());
         assertEquals(DEFAULT_EVENT_ID, result.getEventId());
         assertEquals(DEFAULT_PRIORITY, result.getPriority());
         assertEquals(
@@ -1825,7 +1825,7 @@ public final class AsyncSourceFetcherTest {
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals("android-app://com.myapps", result.getAppDestination().toString());
+        assertEquals("android-app://com.myapps", result.getAppDestinations().get(0).toString());
         assertEquals(123, result.getPriority());
         assertEquals(
                 result.getEventTime() + TimeUnit.SECONDS.toMillis(456789), result.getExpiryTime());
@@ -2314,7 +2314,7 @@ public final class AsyncSourceFetcherTest {
         Source result = fetch.get();
         assertEquals(0, asyncRedirect.getRedirects().size());
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(Uri.parse(DEFAULT_DESTINATION), result.getAppDestination());
+        assertEquals(Uri.parse(DEFAULT_DESTINATION), result.getAppDestinations().get(0));
         assertEquals(EVENT_ID_1, result.getEventId());
         long expiry =
                 result.getEventTime()
@@ -2627,7 +2627,7 @@ public final class AsyncSourceFetcherTest {
         Source result = fetch.get();
         assertEquals(0, asyncRedirect.getRedirects().size());
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(Uri.parse(DEFAULT_DESTINATION), result.getAppDestination());
+        assertEquals(Uri.parse(DEFAULT_DESTINATION), result.getAppDestinations().get(0));
         assertEquals(EVENT_ID_1, result.getEventId());
         assertEquals(
                 result.getEventTime() + TimeUnit.SECONDS.toMillis(
@@ -2673,7 +2673,7 @@ public final class AsyncSourceFetcherTest {
         Source result = fetch.get();
         assertEquals(0, asyncRedirect.getRedirects().size());
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(Uri.parse(DEFAULT_DESTINATION), result.getAppDestination());
+        assertEquals(Uri.parse(DEFAULT_DESTINATION), result.getAppDestinations().get(0));
         assertEquals(EVENT_ID_1, result.getEventId());
         assertEquals(
                 result.getEventTime() + TimeUnit.SECONDS.toMillis(
@@ -2767,7 +2767,7 @@ public final class AsyncSourceFetcherTest {
         Source result = fetch.get();
         assertEquals(0, asyncRedirect.getRedirects().size());
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(OS_DESTINATION, result.getAppDestination());
+        assertEquals(OS_DESTINATION, result.getAppDestinations().get(0));
         assertEquals(filterData, result.getFilterDataString());
         assertEquals(new UnsignedLong(987654321L), result.getEventId());
         assertEquals(
@@ -2825,7 +2825,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(AsyncRegistration.RedirectType.NONE, asyncRedirect.getRedirectType());
         assertEquals(0, asyncRedirect.getRedirects().size());
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(Uri.parse(DEFAULT_DESTINATION), result.getAppDestination());
+        assertEquals(Uri.parse(DEFAULT_DESTINATION), result.getAppDestinations().get(0));
         assertEquals(filterData, result.getFilterDataString());
         assertEquals(new UnsignedLong(987654321L), result.getEventId());
         assertEquals(
@@ -2965,7 +2965,7 @@ public final class AsyncSourceFetcherTest {
         Source result = fetch.get();
         assertEquals(0, asyncRedirect.getRedirects().size());
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(OS_DESTINATION, result.getAppDestination());
+        assertEquals(OS_DESTINATION, result.getAppDestinations().get(0));
         assertNull(result.getFilterDataString());
         assertEquals(new UnsignedLong(987654321L), result.getEventId());
         assertEquals(
@@ -3017,7 +3017,7 @@ public final class AsyncSourceFetcherTest {
         Source result = fetch.get();
         assertEquals(0, asyncRedirect.getRedirects().size());
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(OS_DESTINATION, result.getAppDestination());
+        assertEquals(OS_DESTINATION, result.getAppDestinations().get(0));
         assertNull(result.getFilterDataString());
         assertEquals(new UnsignedLong(987654321L), result.getEventId());
         assertEquals(
@@ -3066,7 +3066,7 @@ public final class AsyncSourceFetcherTest {
         Source result = fetch.get();
         assertEquals(0, asyncRedirect.getRedirects().size());
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(OS_DESTINATION, result.getAppDestination());
+        assertEquals(OS_DESTINATION, result.getAppDestinations().get(0));
         assertNull(result.getFilterDataString());
         assertEquals(new UnsignedLong(987654321L), result.getEventId());
         assertEquals(
@@ -3144,7 +3144,7 @@ public final class AsyncSourceFetcherTest {
         Source result = fetch.get();
         assertEquals(0, asyncRedirect.getRedirects().size());
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(Uri.parse(DEFAULT_DESTINATION), result.getAppDestination());
+        assertEquals(Uri.parse(DEFAULT_DESTINATION), result.getAppDestinations().get(0));
         assertNull(result.getFilterDataString());
         assertEquals(EVENT_ID_1, result.getEventId());
         assertEquals(
@@ -3423,7 +3423,7 @@ public final class AsyncSourceFetcherTest {
 
     private static void assertDefaultSourceRegistration(Source result) {
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(DEFAULT_DESTINATION, result.getAppDestination().toString());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestinations().get(0).toString());
         assertEquals(DEFAULT_EVENT_ID, result.getEventId());
         assertEquals(DEFAULT_PRIORITY, result.getPriority());
         assertEquals(

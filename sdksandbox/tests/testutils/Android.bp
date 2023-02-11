@@ -25,6 +25,7 @@ java_library {
         "framework-sdksandbox.impl",
     ],
     static_libs: [
+        "service-sdksandbox.impl",
         "truth-prebuilt",
         "androidx.test.ext.junit",
         "SdkSandbox-java-lib",

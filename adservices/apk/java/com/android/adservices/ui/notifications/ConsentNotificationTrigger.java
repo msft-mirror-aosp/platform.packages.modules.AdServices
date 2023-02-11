@@ -56,10 +56,9 @@ public class ConsentNotificationTrigger {
         if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()) {
             OTAResourcesManager.applyOTAResources(context.getApplicationContext(), true);
         }
+
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
-
         ConsentManager consentManager = ConsentManager.getInstance(context);
-
         if (!notificationManager.areNotificationsEnabled()) {
             recordNotificationDisplayed(gaUxFeatureEnabled, consentManager);
             UiStatsLogger.logNotificationDisabled(context);
@@ -111,10 +110,18 @@ public class ConsentNotificationTrigger {
             // ROW: all APIs are by default enabled
             // TODO(b/260266623): change consent state to UNDEFINED
             if (isEuDevice) {
+                consentManager.recordTopicsDefaultConsent(false);
+                consentManager.recordFledgeDefaultConsent(false);
+                consentManager.recordMeasurementDefaultConsent(false);
+
                 consentManager.disable(context, AdServicesApiType.TOPICS);
                 consentManager.disable(context, AdServicesApiType.FLEDGE);
                 consentManager.disable(context, AdServicesApiType.MEASUREMENTS);
             } else {
+                consentManager.recordTopicsDefaultConsent(true);
+                consentManager.recordFledgeDefaultConsent(true);
+                consentManager.recordMeasurementDefaultConsent(true);
+
                 consentManager.enable(context, AdServicesApiType.TOPICS);
                 consentManager.enable(context, AdServicesApiType.FLEDGE);
                 consentManager.enable(context, AdServicesApiType.MEASUREMENTS);

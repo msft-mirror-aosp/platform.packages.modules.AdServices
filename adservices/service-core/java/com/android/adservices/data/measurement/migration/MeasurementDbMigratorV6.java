@@ -119,6 +119,13 @@ public class MeasurementDbMigratorV6 extends AbstractMeasurementDbMigrator {
             MeasurementTables.TriggerContract.EVENT_TRIGGERS,
             new JSONArray().toString());
 
+    private static final String[] ALTER_TRIGGER_STATEMENTS_V6 = {
+        String.format(
+                "ALTER TABLE %1$s ADD %2$s TEXT",
+                MeasurementTables.TriggerContract.TABLE,
+                MeasurementTables.TriggerContract.AGGREGATABLE_DEDUPLICATION_KEYS)
+    };
+
     public MeasurementDbMigratorV6() {
         super(6);
     }
@@ -202,6 +209,9 @@ public class MeasurementDbMigratorV6 extends AbstractMeasurementDbMigrator {
                         MeasurementTables.TriggerContract.TABLE,
                         MeasurementTables.TriggerContract.X_NETWORK_KEY_MAPPING)) {
             for (String sql : ALTER_STATEMENTS_XNA_TRIGGER) {
+                db.execSQL(sql);
+            }
+            for (String sql : ALTER_TRIGGER_STATEMENTS_V6) {
                 db.execSQL(sql);
             }
         }

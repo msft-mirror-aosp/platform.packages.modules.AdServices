@@ -256,6 +256,8 @@ public final class PhFlags implements Flags {
             "measurement_receiver_delete_packages_kill_switch";
     static final String KEY_MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH =
             "measurement_job_registration_job_queue_kill_switch";
+    static final String KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH =
+            "measurement_rollback_deletion_kill_switch";
     static final String KEY_TOPICS_KILL_SWITCH = "topics_kill_switch";
     static final String KEY_MDD_BACKGROUND_TASK_KILL_SWITCH = "mdd_background_task_kill_switch";
     static final String KEY_MDD_LOGGER_KILL_SWITCH = "mdd_logger_kill_switch";
@@ -325,6 +327,11 @@ public final class PhFlags implements Flags {
     static final String KEY_UI_DIALOGS_FEATURE_ENABLED = "ui_dialogs_feature_enabled";
 
     static final String KEY_GA_UX_FEATURE_ENABLED = "ga_ux_enabled";
+
+    // Back-compat keys
+    static final String KEY_COMPAT_LOGGING_KILL_SWITCH = "compat_logging_kill_switch";
+
+    static final String KEY_ENABLE_BACK_COMPAT = "enable_back_compat";
 
     // Maximum possible percentage for percentage variables
     static final int MAX_PERCENTAGE = 100;
@@ -1324,6 +1331,19 @@ public final class PhFlags implements Flags {
                                 defaultValue));
     }
 
+    @Override
+    public boolean getMeasurementRollbackDeletionKillSwitch() {
+        final boolean defaultValue = MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                /* flagName */ KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH,
+                                defaultValue));
+    }
+
     // ADID Killswitches
     @Override
     public boolean getAdIdKillSwitch() {
@@ -1838,11 +1858,11 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getEnableDatabaseSchemaVersion5() {
+    public boolean getEnableTopicMigration() {
         return DeviceConfig.getBoolean(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_ENABLE_DATABASE_SCHEMA_VERSION_7,
-                /* defaultValue */ ENABLE_DATABASE_SCHEMA_VERSION_7);
+                /* defaultValue */ ENABLE_TOPIC_MIGRATION);
     }
 
     @Override
@@ -2044,6 +2064,11 @@ public final class PhFlags implements Flags {
                         + " = "
                         + getEnforceForegroundStatusForMeasurementRegisterWebTrigger());
         writer.println("\t" + KEY_MEASUREMENT_ENABLE_XNA + " = " + getMeasurementEnableXNA());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH
+                        + " = "
+                        + getMeasurementRollbackDeletionKillSwitch());
         writer.println(
                 "\t"
                         + KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST
@@ -2315,6 +2340,11 @@ public final class PhFlags implements Flags {
                         + KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH
                         + " = "
                         + getBlockedTopicsSourceOfTruth());
+        writer.println("==== Back-Compat PH Flags Dump STATUS ====");
+        writer.println(
+                "\t" + KEY_COMPAT_LOGGING_KILL_SWITCH + " = " + getCompatLoggingKillSwitch());
+        writer.println("==== Enable Back-Compat PH Flags Dump STATUS ====");
+        writer.println("\t" + KEY_ENABLE_BACK_COMPAT + " = " + getEnableBackCompat());
     }
 
     @Override
@@ -2333,5 +2363,23 @@ public final class PhFlags implements Flags {
         }
         String[] blocklistList = blocklistFlag.split(",");
         return ImmutableList.copyOf(blocklistList);
+    }
+
+    @Override
+    public boolean getCompatLoggingKillSwitch() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_COMPAT_LOGGING_KILL_SWITCH,
+                /* defaultValue */ COMPAT_LOGGING_KILL_SWITCH);
+    }
+
+    @Override
+    public boolean getEnableBackCompat() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ENABLE_BACK_COMPAT,
+                /* defaultValue */ ENABLE_BACK_COMPAT);
     }
 }

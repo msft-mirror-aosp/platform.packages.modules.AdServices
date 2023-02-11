@@ -17,26 +17,14 @@
 package com.android.adservices.service.measurement;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
-import com.android.adservices.LogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 
-import com.google.common.base.Charsets;
-
-import org.json.JSONObject;
-
-import java.io.BufferedOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 /**
  * Utility class related to network related activities
@@ -68,91 +56,5 @@ public class MeasurementHttpClient {
         urlConnection.setRequestProperty("User-Agent", "");
 
         return urlConnection;
-    }
-
-    /**
-     * Rest call execution, if an error is encountered before performing the network call or an
-     * {@link IOException} is thrown, an empty {@link Optional} will be returned.
-     */
-    @NonNull
-    public Optional<MeasurementHttpResponse> call(
-            @NonNull String endpoint,
-            @NonNull HttpMethod httpMethod,
-            @Nullable Map<String, String> headers,
-            @Nullable JSONObject payload,
-            boolean followRedirects) {
-        if (endpoint == null || httpMethod == null) {
-            LogUtil.d("Endpoint or http method is empty");
-            return Optional.empty();
-        }
-
-        final URL url;
-        try {
-            url = new URL(endpoint);
-        } catch (MalformedURLException e) {
-            LogUtil.e(e, "Malformed registration target URL");
-            return Optional.empty();
-        }
-
-        final HttpURLConnection urlConnection;
-        try {
-            urlConnection = (HttpURLConnection) setup(url);
-        } catch (IOException e) {
-            LogUtil.e(e, "Failed to open target URL");
-            return Optional.empty();
-        }
-
-        try {
-
-            urlConnection.setRequestMethod(httpMethod.name());
-
-            if (headers != null && !headers.isEmpty()) {
-                for (Map.Entry<String, String> entry : headers.entrySet()) {
-                    urlConnection.setRequestProperty(entry.getKey(), entry.getValue());
-                }
-            }
-
-            if (payload != null) {
-                urlConnection.setDoOutput(true);
-                try (BufferedOutputStream out =
-                        new BufferedOutputStream(urlConnection.getOutputStream())) {
-                    out.write(payload.toString().getBytes());
-                    out.flush();
-                }
-            }
-
-            urlConnection.setInstanceFollowRedirects(followRedirects);
-
-            int responseCode = urlConnection.getResponseCode();
-            if (responseCode / 100 == 2) {
-                return Optional.of(
-                        new MeasurementHttpResponse.Builder()
-                                .setPayload(convert(urlConnection.getInputStream()))
-                                .setHeaders(urlConnection.getHeaderFields())
-                                .setStatusCode(responseCode)
-                                .build());
-            } else {
-                return Optional.of(
-                        new MeasurementHttpResponse.Builder()
-                                .setPayload(convert(urlConnection.getErrorStream()))
-                                .setHeaders(urlConnection.getHeaderFields())
-                                .setStatusCode(responseCode)
-                                .build());
-            }
-        } catch (IOException e) {
-            LogUtil.e(e, "Failed to get registration response");
-            return Optional.empty();
-        } finally {
-            if (urlConnection != null) {
-                urlConnection.disconnect();
-            }
-        }
-    }
-
-    private String convert(@NonNull InputStream in) throws IOException {
-        if (in == null) {
-            return null;
-        }
-        return new String(in.readAllBytes(), Charsets.UTF_8);
     }
 }
