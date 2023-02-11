@@ -183,11 +183,9 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"აპებს, რომლებსაც იყენებთ, ასევე შეუძლიათ განსაზღვრონ, რა მოგწონთ იმის მიხედვით, თუ როგორ იყენებთ მათ."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"თქვენ მიერ გამოყენებულ აპებს შეუძლიათ სთხოვონ Android-ს ინფორმაცია, რაც მათ რეკლამების ეფექტურობის განსაზღვრაში დაეხმარება. Android საშუალებას აძლევს აპებს, შეაგროვონ შეზღუდული ტიპის მონაცემები."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"ჩართულია / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> თემა"</string>
-    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
-    <skip />
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{ჩართულია / # თემა}other{ჩართულია / # თემა}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"ჩართულია / <xliff:g id="APPS_COUNT">%1$d</xliff:g> აპი"</string>
-    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
-    <skip />
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{ჩართულია / # აპი}other{ჩართულია / # აპი}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"ჩართვა"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"გამორთვა"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"თქვენთვის საინტერესო თემები ეფუძნება თქვენ მიერ ახლახან გამოყენებულ აპებს და აპები მას პერსონალიზებული რეკლამების თქვენთვის საჩვენებლად იყენებენ.\n\nშეგიძლიათ დაბლოკოთ თემები, რომელთა აპებთან გაზიარებაც არ გსურთ. Android ასევე ავტომატურად მუდმივად შლის თემებს."</string>
@@ -200,14 +198,10 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"თქვენ მიერ დაბლოკილი აპები"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"აპის მიერ შეთავაზებული მონაცემების გადაყენება"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"როგორც წესი, თქვენ მიერ გამოყენებული აპები იმახსოვრებენ თქვენთვის საინტერესო თემებს, თქვენთვის პერსონალიზებული რეკლამების შემოსათავაზებლად. Android-ის მეშვეობით, აპებს, ასევე, შეუძლიათ შეინახონ ინფორმაცია თქვენთვის საინტერესო თემების შესახებ.\n\nმაგალითად, თუ იყენებთ აპს მარათონისთვის ვარჯიშის შესახებ, აპმა შეიძლება დაასკვნას, რომ დაინტერესებული ხართ სარბენი სპორტული ფეხსაცმელებით. მოგვიანებით, თუ სხვა აპს გამოიყენებთ, მან შეიძლება გაჩვენოთ პირველი აპის მიერ შეთავაზებული სარბენი სპორტული ფეხსაცმლის რეკლამა.\n\nAndroid ავტომატურად მუდმივად შლის აპების მიერ შემოთავაზებულ მონაცემებს. თქვენ მიერ გამოყენებული აპი შეიძლება ისევ გამოჩნდეს სიაში. ასევე, შეგიძლიათ აპს დაუბლოკოთ თქვენთვის რეკლამების შემოთავაზების შესაძლებლობა.\n\nთქვენს აპებში რეკლამა, რომელსაც გაჩვენებთ, შესაძლოა, პერსონალიზებული იყოს, ამ პარამეტრის, აპის შეთავაზებული რეკლამების პარამეტრის, თქვენი რეკლამის ID-სა და იმის მიხედვით, თუ რამდენად ახდენს რეკლამების პერსონალიზებას თქვენ მიერ გამოყენებული აპი."</string>
-    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
-    <skip />
-    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
-    <skip />
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"სიმბოლოების ფერადი ილუსტრაცია, რომელიც წარმოადგენს ისეთ საინტერესო თემებს, როგორიცაა მუსიკა, ახალი ამბები და სპორტი"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"წრის შიგნით საკეტის ფერადი ილუსტრაცია"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"ცხრა წერტილის მცირე შავ-თეთრი ილუსტრაცია, რომელიც კვადრატს ქმნის"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"მარტივი ფიგურების მცირე შავ-თეთრი ილუსტრაცია, როგორიცაა გული, სამკუთხედი და კვადრატი"</string>
     <string name="topic10001" msgid="1636806320891333775">"ხელოვნება და გართობა"</string>
     <string name="topic10002" msgid="1226367977754287428">"სამსახიობო ოსტატობა და თეატრი"</string>
     <string name="topic10003" msgid="6949890838957814881">"ანიმე და მანგა"</string>

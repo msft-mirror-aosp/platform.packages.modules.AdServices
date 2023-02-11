@@ -183,11 +183,9 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Shuningdek, ilovalar ham ularning ishlatilishi asosida qiziqishlarni aniqlashi mumkin."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Siz foydalanadigan ilovalar oʻz reklamalari unumdorligini oʻlchashda yordam berish uchun Androiddan maʼlumot soʻrashi mumkin. Android ilovalarga cheklangan turdagi maʼlumotlarni toʻplashga ruxsat beradi."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Yoniq / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> ta mavzu"</string>
-    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
-    <skip />
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{# ta mavzu yoniq}other{# ta mavzu yoniq}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Yoniq / <xliff:g id="APPS_COUNT">%1$d</xliff:g> ta ilova"</string>
-    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
-    <skip />
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{# ta ilovada yoniq}other{# ta ilovada yoniq}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"Yoniq"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Oʻchiq"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Qiziqarli mavzular yaqinda foydalangan ilovalaringizga asoslanadi va ilovalar tomonidan sizga moslashtirilgan reklamalar koʻrsatish uchun foydalaniladi.\n\nIlovalarga ulashilmaydigan mavzularni bloklashingiz mumkin. Android muntazam ravishda mavzularni avtomatik ravishda oʻchirib tashlaydi."</string>
@@ -200,14 +198,10 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Bloklangan ilovalar"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Ilovalar taklif qiladigan maʼlumotlarni tiklash"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Odatda, siz foydalanadigan ilovalar sizga mos kontentni taklif qilish uchun sizni qiziqtirgan mavzularni eslab qoladi. Qiziqishlaringiz haqidagi maʼlumotlar Androidda ham saqlanishi mumkin.\n\nMasalan, siz marafon mashqlari ilovasidan foydalangan boʻlsangiz, u sizni yugurish poyafzaliga qiziqadi deb hisoblashi mumkin. Keyinroq boshqa ilovani ochsangiz, u birinchi ilova tomonidan taklif qilingan poyafzal reklamalarini koʻrsatishi mumkin.\n\nAndroid ilovalar tomonidan taklif qilingan maʼlumotlarni muntazam ravishda oʻchirib turadi. Ilovadan foydalanishda davom etsangiz, uning maʼlumotlari yana roʻyxatga kiritilishi mumkin. Yoki ilova sizga reklama taklif qilishini bloklashingiz mumkin. .\n\nIlovalarda chiqadigan reklamalar moslashtirilgan boʻlishi mumkin. Ushbu sozlama, shuningdek, reklama mavzulari, reklama identifikatori va siz foydalanayotgan ilova sozlamalari asosida koʻrsatiladi."</string>
-    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
-    <skip />
-    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
-    <skip />
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Musiqa, yangiliklar va sport kabi mavzularni aks ettiruvchi belgilarning rangli tasvir"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Doira ichidagi qulfning rangli tasviri"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Kvadrat shaklidagi toʻqqizta nuqtadan iborat oq va qora rangli kichik tasvir"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"Yurak, uchburchak va kvadrat shaklidagi oq va qora rangli kichik tasvir"</string>
     <string name="topic10001" msgid="1636806320891333775">"Sanʼat va hordiq"</string>
     <string name="topic10002" msgid="1226367977754287428">"Aktyorlik va teatr"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime va manga"</string>
