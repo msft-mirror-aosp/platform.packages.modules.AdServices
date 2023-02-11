@@ -546,8 +546,11 @@ public interface Flags {
 
     long FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS = 2000;
 
-    // TODO(b/263055427): Replace with a more realistic number after getting input from ad-techs
-    long FLEDGE_REPORT_IMPRESSION_MAX_EVENT_URI_ENTRIES_COUNT = 100;
+    // RegisterAdBeacon  Constants
+    long FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_TOTAL_COUNT = 1000; // Num entries
+    long FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_PER_AD_TECH_COUNT = 10; // Num entries
+    long FLEDGE_REPORT_IMPRESSION_REGISTERED_AD_BEACONS_MAX_INTERACTION_KEY_SIZE_B =
+            20 * 2; // Num characters * 2 bytes per char in UTF-8
 
     /** Returns the timeout constant in milliseconds that limits the bidding per CA */
     default long getAdSelectionBiddingTimeoutPerCaMs() {
@@ -605,11 +608,26 @@ public interface Flags {
     }
 
     /**
+     * Returns the maximum number of {@link DBRegisteredAdInteraction} that can be in the {@code
+     * registered_ad_interactions} database at any one time.
+     */
+    default long getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount() {
+        return FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_TOTAL_COUNT;
+    }
+
+    /**
      * Returns the maximum number of {@link DBRegisteredAdInteraction} that an ad-tech can register
      * in one call to {@code reportImpression}.
      */
-    default long getReportImpressionMaxEventUriEntriesCount() {
-        return FLEDGE_REPORT_IMPRESSION_MAX_EVENT_URI_ENTRIES_COUNT;
+    default long getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount() {
+        return FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_PER_AD_TECH_COUNT;
+    }
+
+    /**
+     * Returns the maximum size in bytes of {@link DBRegisteredAdInteraction#getInteractionKey()}
+     */
+    default long getFledgeReportImpressionRegisteredAdBeaconsMaxInteractionKeySizeB() {
+        return FLEDGE_REPORT_IMPRESSION_REGISTERED_AD_BEACONS_MAX_INTERACTION_KEY_SIZE_B;
     }
 
     // 24 hours in seconds
@@ -1343,6 +1361,12 @@ public interface Flags {
      */
     float TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND = 1;
 
+    /**
+     * PP API Rate Limit for Fledge Report Interaction API. This is the max allowed QPS for one SDK
+     * to one the Report Interaction API. Negative Value means skipping the rate limiting checking.
+     */
+    float FLEDGE_REPORT_INTERACTION_REQUEST_PERMITS_PER_SECOND = 1;
+
     /** Returns the Sdk Request Permits Per Second. */
     default float getSdkRequestPermitsPerSecond() {
         return SDK_REQUEST_PERMITS_PER_SECOND;
@@ -1376,6 +1400,11 @@ public interface Flags {
     /** Returns the Measurement Register Web Source Request Permits Per Second. */
     default float getMeasurementRegisterWebSourceRequestPermitsPerSecond() {
         return MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the Fledge Report Interaction API Request Permits Per Second. */
+    default float getFledgeReportInteractionRequestPermitsPerSecond() {
+        return FLEDGE_REPORT_INTERACTION_REQUEST_PERMITS_PER_SECOND;
     }
 
     // Flags for ad tech enrollment enforcement
