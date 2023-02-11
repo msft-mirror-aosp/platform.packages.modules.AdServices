@@ -71,17 +71,17 @@
     <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"Programos gali nustatyti jūsų pomėgius ir laikinai juos išsaugoti sistemoje „Android“. Pavyzdžiui, programa, kurią naudodami įsigijote bėgimo batelius, gali nustatyti, kad jūsų pomėgis yra bėgti maratoną.\n\nVėliau pagal šį pomėgį kita programa gali parodyti su maratonu susijusį skelbimą.\n\nPrivatumo nustatymuose galite tvarkyti programų, kuriose yra išsaugotų pomėgių, sąrašą."</string>
     <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"Naujos su skelbimais susijusio privatumo funkcijos"</string>
     <string name="notificationUI_notification_ga_content" msgid="3483979694272908942">"Naudojant skelbimų temas ir naujus valdiklius suteikiama daugiau norimų matyti skelbimų pasirinkimo galimybių"</string>
-    <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"„Android“ pažymi jus dominančias temas pagal neseniai naudotas programas. Be to, pagal naudojamas programas galima nustatyti, kas jums patinka. Vėliau programos gali prašyti šios informacijos, kad galėtų rodyti jums suasmenintus skelbimus. Galite pasirinkti, kurios temos ir programos naudojamos rodant jums skelbimus."</string>
-    <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"Kad būtų galima įvertinti skelbimo našumą, tarp programų bendrinami ribotų tipų duomenys."</string>
+    <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"„Android“ nustato dominančias temas pagal jūsų neseniai naudotas programas. Be to, pagal naudojamas programas galima nustatyti, kas jums patinka. Vėliau programos gali prašyti šios informacijos, kad galėtų jums rodyti suasmenintus skelbimus. Galite pasirinkti, kokios temos ir programos naudojamos skelbimams rodyti."</string>
+    <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"Siekiant įvertinti skelbimo našumą, tarp programų bendrinami ribotų tipų duomenys."</string>
     <string name="notificationUI_ga_container1_control_text" msgid="2711321174550177509">"Daugiau apie skelbimus sistemoje „Android“"</string>
     <string name="notificationUI_how_it_works_row_subtitle1" msgid="8685034725335826096">"Daugiau naudingų skelbimų"</string>
     <string name="notificationUI_how_it_works_row_body1" msgid="5865369599951938718">"Programos gali prašyti „Android“ informacijos, kad galėtų suasmeninti jums rodomus skelbimus."</string>
     <string name="notificationUI_how_it_works_row_body2" msgid="6601773212442110369">"•  „Android“ pažymi jus dominančias temas pagal neseniai naudotas programas."</string>
-    <string name="notificationUI_how_it_works_row_body3" msgid="3692457397642529055">"•  Jūsų naudojamos programos taip pat gali nustatyti, ką mėgstate, pagal tai, kaip jas naudojate. Pavyzdžiui, jei naudojate programą, kurioje prekiaujama ilgų nuotolių bėgimo bateliais, programa gali nuspręsti, kad jus domina maratono bėgimas."</string>
-    <string name="notificationUI_how_it_works_row_body4" msgid="8731138074016839243">"Vėliau naudojamoje programoje gali būti prašoma šios informacijos: skelbimų temų arba naudojamų programų siūlomų skelbimų."</string>
+    <string name="notificationUI_how_it_works_row_body3" msgid="3692457397642529055">"•  Jūsų naudojamos programos taip pat gali nustatyti, kas jums patinka, pagal tai, kaip jas naudojate. Pavyzdžiui, jei naudojate programą, kurioje parduodami ilgo nuotolio bėgimo bateliai, ji gali nuspręsti, kad jus domina bėgimo maratonai."</string>
+    <string name="notificationUI_how_it_works_row_body4" msgid="8731138074016839243">"Vėliau naudojam programa gali prašyti šios informacijos: skelbimų temų arba naudojamų programų asiūlomų skelbimų."</string>
     <string name="notificationUI_how_it_works_row_body5" msgid="4524382869577899661">"„Android“ reguliariai automatiškai ištrina temas ir programų siūlomus duomenis. Taip pat galite blokuoti konkrečias temas ir programas, jei nenorite, kad jos rodytų pasiūlymus."</string>
     <string name="notificationUI_how_it_works_subtitle2" msgid="2203542887026049927">"Skelbimo našumo vertinimas"</string>
-    <string name="notificationUI_how_it_works_row_body6" msgid="5368364880910986588">"Naudojamos programos gali prašyti „Android“ informacijos, kad galėtų lengviau įvertinti savo skelbimų našumą. „Android“ leidžia programoms rinkti tam tikrų tipų duomenis, pvz., dienos laiką, kada skelbimas buvo jums rodomas."</string>
+    <string name="notificationUI_how_it_works_row_body6" msgid="5368364880910986588">"Naudojamos programos gali prašyti „Android“ informacijos, padedančios įvertinti savo skelbimų našumą. „Android“ leidžia programoms rinkti tam tikrų tipų duomenis, pvz., dienos laiką, kada skelbimas buvo jums rodomas."</string>
     <!-- no translation found for notificationUI_how_it_works_row_body7 (8158317350415462142) -->
     <skip />
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"Išbandykite naujas su skelbimais susijusio privatumo funkcijas"</string>
@@ -89,23 +89,23 @@
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"Žr. išsamią informaciją"</string>
     <string name="notificationUI_header_ga_title_eu" msgid="4461095539795574989">"Patobulintas su skelbimais susijęs privatumas sistemoje „Android“"</string>
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"„Android“ pristato naujas privatumo funkcijas, suteikiančias daugiau norimų matyti skelbimų pasirinkimo galimybių."</string>
-    <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"Skelbimų temos padeda programoms rodyti jums atitinkamus skelbimus, apsaugant jūsų tapatybę ir informaciją apie programų naudojimą. „Android“ gali pažymėti jus dominančias temas pagal neseniai naudotas programas. Vėliau programa, kurią naudojate, gali prašyti „Android“ atitinkamų temų, kad galėtų suasmeninti jums rodomus skelbimus."</string>
-    <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"Galite peržiūrėti skelbimų temas įrenginio nustatymuose ir užblokuoti tas, kurių nenorite bendrinti su programomis. Be to, „Android“ reguliariai automatiškai ištrina skelbimų temas."</string>
+    <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"Skelbimų temos suteikia programoms galimybę rodyti jums atitinkamus skelbimus, apsaugant jūsų tapatybę ir informaciją apie programų naudojimą. „Android“ gali nustatyti dominančias temas pagal jūsų neseniai naudotas programas. Vėliau programa, kurią naudojate, gali prašyti „Android“ informacijos apie aktualias temas, kad galėtų suasmeninti jums rodomus skelbimus."</string>
+    <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"Galite peržiūrėti skelbimų temas įrenginio nustatymuose ir užblokuoti tas, kurių nenorite bendrinti su programomis. „Android“ taip pat reguliariai automatiškai ištrina skelbimų temas."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"Privatumo nustatymuose bet kada galite pakeisti nustatymą."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"Daugiau apie skelbimų temas"</string>
     <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"Sužinokite daugiau, kaip „Android“ apsaugo jūsų duomenis, peržiūrėję privatumo politiką."</string>
     <string name="notificationUI_right_control_button_ga_text_eu" msgid="2022252072760042013">"Taip, sutinku"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  Kokie duomenys naudojami"</string>
-    <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"Skelbimų temos priklauso nuo neseniai šiame įrenginyje naudotų programų ir nuo to, kaip dažnai jas naudojate."</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"Skelbimų temos yra pagrįstos neseniai šiame įrenginyje naudotomis programomis ir tuo, kaip dažnai jas naudojate."</string>
     <string name="notificationUI_how_it_works_topics_expanded_text5" msgid="5976468008939416198">"•  Kaip naudojame šiuos duomenis"</string>
-    <string name="notificationUI_how_it_works_topics_expanded_text6" msgid="6318275524155409408">"„Android“ pažymi jus dominančias temas jums naudojant programas. Temų etiketės nustatomos iš anksto ir apima tokias temas kaip menas ir pramogos, apsipirkimas ir sportas. Vėliau naudojama programa gali paprašyti „Android“ kelių jūsų temų (bet ne duomenų apie jūsų programų naudojimą ar tapatybę), kad galėtų suasmeninti jums rodomus skelbimus."</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text6" msgid="6318275524155409408">"„Android“ nustato dominančias temas jums naudojant programas. Temų etiketės nustatomos iš anksto ir apima tokias temas kaip menas ir pramogos, apsipirkimas ir sportas. Vėliau naudojama programa gali paprašyti „Android“ informacijos apie kelias temas (bet ne duomenų apie jūsų programų naudojimą ar tapatybę), kad galėtų suasmeninti jums rodomus skelbimus."</string>
     <string name="notificationUI_how_it_works_topics_expanded_text7" msgid="4275126336833782389">"•  Kaip galite tvarkyti savo duomenis"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"„Android“ reguliariai automatiškai ištrina temas. Ir toliau naudojant programas, tema gali būti vėl įtraukta į sąrašą. Be to, privatumo nustatymuose bet kada galite užblokuoti konkrečias temas, jei nenorite, kad „Android“ jas bendrintų su programomis, ir išjungti skelbimų temas."</string>
     <string name="notificationUI_you_can_change_in_privacy_settings" msgid="4781410091509838647">"Pakeitimus galite atlikti privatumo nustatymuose."</string>
     <string name="notificationUI_fledge_measurement_title" msgid="5279119450359078459">"Kitos funkcijos, užtikrinančios skelbimų privatumą"</string>
     <string name="notificationUI_fledge_measurement_introduction_text1" msgid="6943787406043534689">"„Android“ pristato naujų metodų, kaip apriboti programoms teikiamą informaciją apie jus, rodant suasmenintus skelbimus."</string>
     <string name="notificationUI_fledge_measurement_introduction_text2" msgid="601600895880486962">"•  Programų siūlomi skelbimai padeda apsaugoti jūsų tapatybę ir informaciją apie jūsų programų naudojimą, leisdami programoms rodyti jums atitinkamus skelbimus. Atsižvelgdama į jūsų veiklą, naudojama programa gali siūlyti susijusius skelbimus kitose programose. Galite peržiūrėti programų sąrašą ir blokuoti jas, kad neteiktų pasiūlymų, apsilankę privatumo nustatymuose."</string>
-    <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"•  Naudojant skelbimų vertinimo funkciją, tam tikrų tipų duomenys bendrinami su programomis, kad būtų galima įvertinti jų skelbimų našumą, pvz., dienos laiką, kada skelbimas buvo jums rodomas."</string>
+    <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"•  Naudojant skelbimų vertinimo funkciją, tam tikrų tipų duomenys bendrinami su programomis, kad būtų galima įvertinti jų skelbimų našumą, pvz., paros laiką, kada skelbimas buvo jums rodomas."</string>
     <string name="notificationUI_fledge_measurement_control_ga_text_eu" msgid="2346851728118443500">"Daugiau apie programų siūlomus skelbimus ir skelbimų įvertinimą"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text0" msgid="2456923104551938349">"Programų siūlomi skelbimai"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text1" msgid="5606895535548790900">"•  Kokie duomenys naudojami"</string>
@@ -183,11 +183,9 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Jūsų naudojamos programos taip pat gali nustatyti, ką mėgstate, pagal tai, kaip jas naudojate."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Naudojamos programos gali prašyti „Android“ informacijos, kad galėtų lengviau įvertinti savo skelbimų našumą. „Android“ leidžia programoms rinkti tam tikrų tipų duomenis."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Įjungta / temų: <xliff:g id="TOPICS_COUNT">%1$d</xliff:g>"</string>
-    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
-    <skip />
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Įjungta / # tema}one{Įjungta / # tema}few{Įjungta / # temos}many{Įjungta / # temos}other{Įjungta / # temų}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Įjungta / programų: <xliff:g id="APPS_COUNT">%1$d</xliff:g>"</string>
-    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
-    <skip />
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{Įjungta / # programa}one{Įjungta / # programa}few{Įjungta / # programos}many{Įjungta / # programos}other{Įjungta / # programų}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"Įjungta"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Išjungta"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Dominančios temos priklauso nuo neseniai naudotų programų, ir programos jas naudoja, kad galėtų jums rodyti suasmenintus skelbimus.\n\nGalite užblokuoti temas, kurių nenorite bendrinti su programomis. „Android“ taip pat reguliariai automatiškai ištrina temas."</string>
@@ -200,14 +198,10 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Jūsų užblokuotos programos"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Iš naujo nustatyti programų siūlomus duomenis"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Naudojamose programose dažnai įsimenami jus dominantys dalykai, kad būtų galima suasmeninti jums teikiamas funkcijas. Be to, programos gali saugoti informaciją sistemoje „Android“ apie jūsų temas.\n\nPvz., jei naudojate maratono mokymo programą, programa gali nuspręsti, kad jus domina bėgimo bateliai. Vėliau, naudojant kitą programą, ši programa gali rodyti bėgimo batelių skelbimą, pasiūlytą pirmosios programos.\n\n„Android“ reguliariai automatiškai ištrina programų siūlomus duomenis. Vėl naudojama programa gali būti iš naujo rodoma sąraše. Arba galite neleisti programai siūlyti jums skelbimų.\n\nProgramose rodomas skelbimas gali būti suasmenintas, atsižvelgiant į šį nustatymą, skelbimų temų, reklamavimo ID ir naudojamos programos skelbimų suasmeninimo nustatymus."</string>
-    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
-    <skip />
-    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
-    <skip />
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Spalvota simbolių, vaizduojančių dominančias temas, pvz., muziką, naujienas ir sportą, iliustracija"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Spalvota užrakto apskritimo viduryje iliustracija"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Nedidelė nespalvota devynių taškų, sudarančių kvadratą, iliustracija"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"Nedidelė nespalvota paprastų formų, pvz., širdies, trikampio ir kvadrato, iliustracija"</string>
     <string name="topic10001" msgid="1636806320891333775">"Menas ir pramogos"</string>
     <string name="topic10002" msgid="1226367977754287428">"Vaidyba ir teatras"</string>
     <string name="topic10003" msgid="6949890838957814881">"Animė ir manga"</string>
