@@ -326,6 +326,8 @@ public final class PhFlags implements Flags {
 
     static final String KEY_UI_DIALOGS_FEATURE_ENABLED = "ui_dialogs_feature_enabled";
 
+    static final String KEY_UI_EEA_COUNTRIES = "ui_eea_countries";
+
     static final String KEY_GA_UX_FEATURE_ENABLED = "ga_ux_enabled";
 
     // Back-compat keys
@@ -1831,6 +1833,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public String getUiEeaCountries() {
+        String uiEeaCountries =
+                DeviceConfig.getString(
+                        DeviceConfig.NAMESPACE_ADSERVICES, KEY_UI_EEA_COUNTRIES, UI_EEA_COUNTRIES);
+        return uiEeaCountries;
+    }
+
+    @Override
     public boolean getGaUxFeatureEnabled() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return SystemProperties.getBoolean(
@@ -2316,6 +2326,7 @@ public final class PhFlags implements Flags {
         writer.println("==== AdServices PH Flags Dump UI Related Flags ====");
         writer.println(
                 "\t" + KEY_UI_DIALOGS_FEATURE_ENABLED + " = " + getUIDialogsFeatureEnabled());
+        writer.println("\t" + KEY_UI_EEA_COUNTRIES + " = " + getUiEeaCountries());
         writer.println(
                 "\t"
                         + KEY_UI_OTA_STRINGS_FEATURE_ENABLED
