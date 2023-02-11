@@ -850,8 +850,8 @@ public class AttributionJobHandlerTest {
                         .setAttributionDestination(trigger.getAttributionDestination())
                         .setDebugCleartextPayload(
                                 "{\"operation\":\"histogram\","
-                                    + "\"data\":[{\"bucket\":2693,\"value\":1644},{\"bucket\":1369,"
-                                    + "\"value\":32768}]}")
+                                    + "\"data\":[{\"bucket\":\"2693\",\"value\":1644},"
+                                    + "{\"bucket\":\"1369\",\"value\":32768}]}")
                         .setEnrollmentId(source.getEnrollmentId())
                         .setPublisher(source.getRegistrant())
                         .setSourceId(source.getId())
