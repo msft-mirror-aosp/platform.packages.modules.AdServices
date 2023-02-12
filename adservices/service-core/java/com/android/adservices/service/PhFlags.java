@@ -331,6 +331,8 @@ public final class PhFlags implements Flags {
     // Back-compat keys
     static final String KEY_COMPAT_LOGGING_KILL_SWITCH = "compat_logging_kill_switch";
 
+    static final String KEY_ENABLE_BACK_COMPAT = "enable_back_compat";
+
     // Maximum possible percentage for percentage variables
     static final int MAX_PERCENTAGE = 100;
 
@@ -2341,6 +2343,8 @@ public final class PhFlags implements Flags {
         writer.println("==== Back-Compat PH Flags Dump STATUS ====");
         writer.println(
                 "\t" + KEY_COMPAT_LOGGING_KILL_SWITCH + " = " + getCompatLoggingKillSwitch());
+        writer.println("==== Enable Back-Compat PH Flags Dump STATUS ====");
+        writer.println("\t" + KEY_ENABLE_BACK_COMPAT + " = " + getEnableBackCompat());
     }
 
     @Override
@@ -2368,5 +2372,14 @@ public final class PhFlags implements Flags {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_COMPAT_LOGGING_KILL_SWITCH,
                 /* defaultValue */ COMPAT_LOGGING_KILL_SWITCH);
+    }
+
+    @Override
+    public boolean getEnableBackCompat() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ENABLE_BACK_COMPAT,
+                /* defaultValue */ ENABLE_BACK_COMPAT);
     }
 }
