@@ -120,6 +120,7 @@ public final class MeasurementTables {
         String EVENT_TRIGGERS = "event_triggers";
         String AGGREGATE_TRIGGER_DATA = "aggregate_trigger_data";
         String AGGREGATE_VALUES = "aggregate_values";
+        String AGGREGATABLE_DEDUPLICATION_KEYS = "aggregatable_deduplication_keys";
         String FILTERS = "filters";
         String NOT_FILTERS = "not_filters";
         String DEBUG_KEY = "debug_key";
@@ -456,6 +457,8 @@ public final class MeasurementTables {
                     + TriggerContract.AGGREGATE_TRIGGER_DATA
                     + " TEXT, "
                     + TriggerContract.AGGREGATE_VALUES
+                    + " TEXT, "
+                    + TriggerContract.AGGREGATABLE_DEDUPLICATION_KEYS
                     + " TEXT, "
                     + TriggerContract.FILTERS
                     + " TEXT, "

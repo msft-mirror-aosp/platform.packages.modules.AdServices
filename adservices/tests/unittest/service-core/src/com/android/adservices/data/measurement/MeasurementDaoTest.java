@@ -172,8 +172,8 @@ public class MeasurementDaoTest {
             assertNotNull(source);
             assertNotNull(source.getId());
             assertEquals(validSource.getPublisher(), source.getPublisher());
-            assertEquals(validSource.getAppDestination(), source.getAppDestination());
-            assertEquals(validSource.getWebDestination(), source.getWebDestination());
+            assertEquals(validSource.getAppDestinations(), source.getAppDestinations());
+            assertEquals(validSource.getWebDestinations(), source.getWebDestinations());
             assertEquals(validSource.getEnrollmentId(), source.getEnrollmentId());
             assertEquals(validSource.getRegistrant(), source.getRegistrant());
             assertEquals(validSource.getEventTime(), source.getEventTime());
@@ -1989,7 +1989,7 @@ public class MeasurementDaoTest {
                                     MeasurementTables.EventReportContract.ID, eventReport.getId());
                             values.put(
                                     MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
-                                    eventReport.getAttributionDestination().toString());
+                                    eventReport.getAttributionDestinations().get(0).toString());
                             db.insert(MeasurementTables.EventReportContract.TABLE, null, values);
                         });
 
@@ -2083,7 +2083,7 @@ public class MeasurementDaoTest {
                         .setId("1")
                         .setSourceEventId(new UnsignedLong(3L))
                         .setEnrollmentId("1")
-                        .setAttributionDestination(sourceList.get(0).getAppDestination())
+                        .setAttributionDestinations(sourceList.get(0).getAppDestinations())
                         .setSourceType(sourceList.get(0).getSourceType())
                         .setSourceId("1")
                         .setTriggerId("101")
@@ -2093,8 +2093,7 @@ public class MeasurementDaoTest {
                         .setId("7")
                         .setSourceEventId(new UnsignedLong(3L))
                         .setEnrollmentId("1")
-                        .setAttributionDestination(sourceList.get(0).getAppDestination())
-                        .setAttributionDestination(APP_DESTINATION)
+                        .setAttributionDestinations(List.of(APP_DESTINATION))
                         .setSourceType(sourceList.get(0).getSourceType())
                         .setSourceId("1")
                         .setTriggerId("102")
@@ -2107,7 +2106,7 @@ public class MeasurementDaoTest {
                         .setId("3")
                         .setSourceEventId(new UnsignedLong(4L))
                         .setEnrollmentId("1")
-                        .setAttributionDestination(sourceList.get(1).getAppDestination())
+                        .setAttributionDestinations(sourceList.get(1).getAppDestinations())
                         .setSourceType(sourceList.get(1).getSourceType())
                         .setSourceId("2")
                         .setTriggerId("201")
@@ -2117,7 +2116,7 @@ public class MeasurementDaoTest {
                         .setId("8")
                         .setSourceEventId(new UnsignedLong(4L))
                         .setEnrollmentId("1")
-                        .setAttributionDestination(sourceList.get(1).getAppDestination())
+                        .setAttributionDestinations(sourceList.get(1).getAppDestinations())
                         .setSourceType(sourceList.get(1).getSourceType())
                         .setSourceId("2")
                         .setTriggerId("202")
@@ -2131,7 +2130,7 @@ public class MeasurementDaoTest {
                         .setSourceEventId(new UnsignedLong(5L))
                         .setEnrollmentId("1")
                         .setSourceType(Source.SourceType.EVENT)
-                        .setAttributionDestination(APP_DESTINATION)
+                        .setAttributionDestinations(List.of(APP_DESTINATION))
                         .setSourceId("15")
                         .setTriggerId("1001")
                         .build());
@@ -2141,7 +2140,7 @@ public class MeasurementDaoTest {
                         .setSourceEventId(new UnsignedLong(6L))
                         .setEnrollmentId("1")
                         .setSourceType(Source.SourceType.EVENT)
-                        .setAttributionDestination(APP_DESTINATION)
+                        .setAttributionDestinations(List.of(APP_DESTINATION))
                         .setSourceId("16")
                         .setTriggerId("1001")
                         .build());
@@ -2151,7 +2150,7 @@ public class MeasurementDaoTest {
                         .setSourceEventId(new UnsignedLong(1L))
                         .setEnrollmentId("1")
                         .setSourceType(Source.SourceType.EVENT)
-                        .setAttributionDestination(APP_DESTINATION)
+                        .setAttributionDestinations(List.of(APP_DESTINATION))
                         .setSourceId("15")
                         .setTriggerId("1001")
                         .build());
@@ -2161,7 +2160,7 @@ public class MeasurementDaoTest {
                         .setSourceEventId(new UnsignedLong(2L))
                         .setEnrollmentId("1")
                         .setSourceType(Source.SourceType.EVENT)
-                        .setAttributionDestination(APP_DESTINATION)
+                        .setAttributionDestinations(List.of(APP_DESTINATION))
                         .setSourceId("20")
                         .setTriggerId("1001")
                         .build());
@@ -2239,7 +2238,7 @@ public class MeasurementDaoTest {
                         .setId("1")
                         .setSourceEventId(new UnsignedLong(1L))
                         .setEnrollmentId("1")
-                        .setAttributionDestination(sourceList.get(0).getAppDestination())
+                        .setAttributionDestinations(sourceList.get(0).getAppDestinations())
                         .setSourceType(sourceList.get(0).getSourceType())
                         .setSourceId("1")
                         .setTriggerId("101")
@@ -2249,8 +2248,7 @@ public class MeasurementDaoTest {
                         .setId("2")
                         .setSourceEventId(new UnsignedLong(1L))
                         .setEnrollmentId("1")
-                        .setAttributionDestination(sourceList.get(0).getAppDestination())
-                        .setAttributionDestination(APP_DESTINATION)
+                        .setAttributionDestinations(List.of(APP_DESTINATION))
                         .setSourceType(sourceList.get(0).getSourceType())
                         .setSourceId("1")
                         .setTriggerId("102")
@@ -2263,7 +2261,7 @@ public class MeasurementDaoTest {
                         .setId("3")
                         .setSourceEventId(new UnsignedLong(2L))
                         .setEnrollmentId("1")
-                        .setAttributionDestination(sourceList.get(1).getAppDestination())
+                        .setAttributionDestinations(sourceList.get(1).getAppDestinations())
                         .setSourceType(sourceList.get(1).getSourceType())
                         .setSourceId("2")
                         .setTriggerId("101")
@@ -2273,7 +2271,7 @@ public class MeasurementDaoTest {
                         .setId("4")
                         .setSourceEventId(new UnsignedLong(2L))
                         .setEnrollmentId("1")
-                        .setAttributionDestination(sourceList.get(1).getAppDestination())
+                        .setAttributionDestinations(sourceList.get(1).getAppDestinations())
                         .setSourceType(sourceList.get(1).getSourceType())
                         .setSourceId("2")
                         .setTriggerId("102")
@@ -2287,7 +2285,7 @@ public class MeasurementDaoTest {
                         .setSourceEventId(new UnsignedLong(2L))
                         .setEnrollmentId("2")
                         .setSourceType(Source.SourceType.EVENT)
-                        .setAttributionDestination(APP_DESTINATION)
+                        .setAttributionDestinations(List.of(APP_DESTINATION))
                         .setSourceId("3")
                         .setTriggerId("101")
                         .build());
@@ -2297,7 +2295,7 @@ public class MeasurementDaoTest {
                         .setSourceEventId(new UnsignedLong(2L))
                         .setEnrollmentId("2")
                         .setSourceType(Source.SourceType.EVENT)
-                        .setAttributionDestination(APP_DESTINATION)
+                        .setAttributionDestinations(List.of(APP_DESTINATION))
                         .setSourceId("3")
                         .setTriggerId("102")
                         .build());
@@ -2387,7 +2385,7 @@ public class MeasurementDaoTest {
                         .setId("1")
                         .setEventTime(10)
                         .setExpiryTime(20)
-                        .setAppDestination(appDestination)
+                        .setAppDestinations(List.of(appDestination))
                         .setEnrollmentId(enrollmentId)
                         .build();
         Source sApp2 =
@@ -2395,7 +2393,7 @@ public class MeasurementDaoTest {
                         .setId("2")
                         .setEventTime(10)
                         .setExpiryTime(50)
-                        .setAppDestination(appDestination)
+                        .setAppDestinations(List.of(appDestination))
                         .setEnrollmentId(enrollmentId)
                         .build();
         Source sApp3 =
@@ -2403,7 +2401,7 @@ public class MeasurementDaoTest {
                         .setId("3")
                         .setEventTime(20)
                         .setExpiryTime(50)
-                        .setAppDestination(appDestination)
+                        .setAppDestinations(List.of(appDestination))
                         .setEnrollmentId(enrollmentId)
                         .build();
         Source sApp4 =
@@ -2411,7 +2409,7 @@ public class MeasurementDaoTest {
                         .setId("4")
                         .setEventTime(30)
                         .setExpiryTime(50)
-                        .setAppDestination(appDestination)
+                        .setAppDestinations(List.of(appDestination))
                         .setEnrollmentId(enrollmentId)
                         .build();
         Source sWeb5 =
@@ -2419,7 +2417,7 @@ public class MeasurementDaoTest {
                         .setId("5")
                         .setEventTime(10)
                         .setExpiryTime(20)
-                        .setWebDestination(webDestination)
+                        .setWebDestinations(List.of(webDestination))
                         .setEnrollmentId(enrollmentId)
                         .build();
         Source sWeb6 =
@@ -2427,7 +2425,7 @@ public class MeasurementDaoTest {
                         .setId("6")
                         .setEventTime(10)
                         .setExpiryTime(50)
-                        .setWebDestination(webDestination)
+                        .setWebDestinations(List.of(webDestination))
                         .setEnrollmentId(enrollmentId)
                         .build();
         Source sAppWeb7 =
@@ -2435,8 +2433,8 @@ public class MeasurementDaoTest {
                         .setId("7")
                         .setEventTime(10)
                         .setExpiryTime(20)
-                        .setAppDestination(appDestination)
-                        .setWebDestination(webDestination)
+                        .setAppDestinations(List.of(appDestination))
+                        .setWebDestinations(List.of(webDestination))
                         .setEnrollmentId(enrollmentId)
                         .build();
 
@@ -2576,11 +2574,13 @@ public class MeasurementDaoTest {
         values.put(SourceContract.EVENT_TIME, source.getEventTime());
         values.put(SourceContract.EXPIRY_TIME, source.getExpiryTime());
         values.put(SourceContract.ENROLLMENT_ID, source.getEnrollmentId());
-        if (source.getAppDestination() != null) {
-            values.put(SourceContract.APP_DESTINATION, source.getAppDestination().toString());
+        if (source.getAppDestinations() != null) {
+            values.put(SourceContract.APP_DESTINATION,
+                    source.getAppDestinations().get(0).toString());
         }
-        if (source.getWebDestination() != null) {
-            values.put(SourceContract.WEB_DESTINATION, source.getWebDestination().toString());
+        if (source.getWebDestinations() != null) {
+            values.put(SourceContract.WEB_DESTINATION,
+                    source.getWebDestinations().get(0).toString());
         }
         values.put(SourceContract.PUBLISHER, source.getPublisher().toString());
         values.put(SourceContract.REGISTRANT, source.getRegistrant().toString());
@@ -2820,8 +2820,8 @@ public class MeasurementDaoTest {
         Attribution attribution =
                 new Attribution.Builder()
                         .setEnrollmentId(source.getEnrollmentId())
-                        .setDestinationOrigin(source.getWebDestination().toString())
-                        .setDestinationSite(source.getAppDestination().toString())
+                        .setDestinationOrigin(source.getWebDestinations().get(0).toString())
+                        .setDestinationSite(source.getAppDestinations().get(0).toString())
                         .setSourceOrigin(source.getPublisher().toString())
                         .setSourceSite(source.getPublisher().toString())
                         .setRegistrant(source.getRegistrant().toString())
@@ -2856,8 +2856,8 @@ public class MeasurementDaoTest {
         Attribution attribution =
                 new Attribution.Builder()
                         .setEnrollmentId(source.getEnrollmentId())
-                        .setDestinationOrigin(source.getWebDestination().toString())
-                        .setDestinationSite(source.getAppDestination().toString())
+                        .setDestinationOrigin(source.getWebDestinations().get(0).toString())
+                        .setDestinationSite(source.getAppDestinations().get(0).toString())
                         .setSourceOrigin(source.getPublisher().toString())
                         .setSourceSite(source.getPublisher().toString())
                         .setRegistrant(source.getRegistrant().toString())
@@ -2893,8 +2893,8 @@ public class MeasurementDaoTest {
         Attribution attribution =
                 new Attribution.Builder()
                         .setEnrollmentId(source.getEnrollmentId())
-                        .setDestinationOrigin(source.getWebDestination().toString())
-                        .setDestinationSite(source.getAppDestination().toString())
+                        .setDestinationOrigin(source.getWebDestinations().get(0).toString())
+                        .setDestinationSite(source.getAppDestinations().get(0).toString())
                         .setSourceOrigin(source.getPublisher().toString())
                         .setSourceSite(source.getPublisher().toString())
                         .setRegistrant(source.getRegistrant().toString())
@@ -2962,7 +2962,8 @@ public class MeasurementDaoTest {
                 new Source.Builder()
                         .setId("1")
                         .setEventId(new UnsignedLong(1L))
-                        .setAppDestination(Uri.parse("android-app://installed-app-destination"))
+                        .setAppDestinations(List.of(
+                                Uri.parse("android-app://installed-app-destination")))
                         .setEnrollmentId("enrollment-id")
                         .setRegistrant(Uri.parse("android-app://installed-registrant"))
                         .setPublisher(Uri.parse("android-app://installed-registrant"))
@@ -2973,7 +2974,8 @@ public class MeasurementDaoTest {
                 new Source.Builder()
                         .setId("2")
                         .setEventId(new UnsignedLong(2L))
-                        .setAppDestination(Uri.parse("android-app://installed-app-destination"))
+                        .setAppDestinations(List.of(
+                                Uri.parse("android-app://installed-app-destination")))
                         .setEnrollmentId("enrollment-id")
                         .setRegistrant(Uri.parse("android-app://not-installed-registrant"))
                         .setPublisher(Uri.parse("android-app://not-installed-registrant"))
@@ -2985,7 +2987,8 @@ public class MeasurementDaoTest {
                 new Source.Builder()
                         .setId("3")
                         .setEventId(new UnsignedLong(3L))
-                        .setAppDestination(Uri.parse("android-app://not-installed-app-destination"))
+                        .setAppDestinations(List.of(
+                                Uri.parse("android-app://not-installed-app-destination")))
                         .setEnrollmentId("enrollment-id")
                         .setRegistrant(Uri.parse("android-app://installed-registrant"))
                         .setPublisher(Uri.parse("android-app://installed-registrant"))
@@ -2998,7 +3001,8 @@ public class MeasurementDaoTest {
                 new Source.Builder()
                         .setId("4")
                         .setEventId(new UnsignedLong(4L))
-                        .setAppDestination(Uri.parse("android-app://not-installed-app-destination"))
+                        .setAppDestinations(List.of(
+                                Uri.parse("android-app://not-installed-app-destination")))
                         .setEnrollmentId("enrollment-id")
                         .setRegistrant(Uri.parse("android-app://installed-registrant"))
                         .setPublisher(Uri.parse("android-app://installed-registrant"))
@@ -3011,7 +3015,8 @@ public class MeasurementDaoTest {
                 new Source.Builder()
                         .setId("5")
                         .setEventId(new UnsignedLong(5L))
-                        .setAppDestination(Uri.parse("android-app://installed-app-destination"))
+                        .setAppDestinations(List.of(
+                                Uri.parse("android-app://installed-app-destination")))
                         .setEnrollmentId("enrollment-id")
                         .setRegistrant(Uri.parse("android-app://installed-registrant"))
                         .setPublisher(Uri.parse("android-app://installed-registrant"))
@@ -3023,8 +3028,8 @@ public class MeasurementDaoTest {
                     ContentValues values = new ContentValues();
                     values.put(SourceContract.ID, source.getId());
                     values.put(SourceContract.EVENT_ID, source.getEventId().toString());
-                    values.put(
-                            SourceContract.APP_DESTINATION, source.getAppDestination().toString());
+                    values.put(SourceContract.APP_DESTINATION,
+                            source.getAppDestinations().get(0).toString());
                     values.put(SourceContract.ENROLLMENT_ID, source.getEnrollmentId());
                     values.put(SourceContract.REGISTRANT, source.getRegistrant().toString());
                     values.put(SourceContract.PUBLISHER, source.getPublisher().toString());
@@ -3139,15 +3144,15 @@ public class MeasurementDaoTest {
         eventReportList.add(
                 new EventReport.Builder()
                         .setId("1")
-                        .setAttributionDestination(
-                                Uri.parse("android-app://installed-attribution-destination"))
+                        .setAttributionDestinations(List.of(
+                                Uri.parse("android-app://installed-attribution-destination")))
                         .build());
         // Event report attribution destination is not installed, record will be deleted.
         eventReportList.add(
                 new EventReport.Builder()
                         .setId("2")
-                        .setAttributionDestination(
-                                Uri.parse("android-app://not-installed-attribution-destination"))
+                        .setAttributionDestinations(List.of(
+                                Uri.parse("android-app://not-installed-attribution-destination")))
                         .build());
         eventReportList.forEach(
                 eventReport -> {
@@ -3155,7 +3160,7 @@ public class MeasurementDaoTest {
                     values.put(EventReportContract.ID, eventReport.getId());
                     values.put(
                             EventReportContract.ATTRIBUTION_DESTINATION,
-                            eventReport.getAttributionDestination().toString());
+                            eventReport.getAttributionDestinations().get(0).toString());
                     db.insert(EventReportContract.TABLE, /* nullColumnHack */ null, values);
                 });
 
@@ -3368,7 +3373,7 @@ public class MeasurementDaoTest {
                 new Source.Builder() // deleted
                         .setId("1")
                         .setEventId(new UnsignedLong(1L))
-                        .setAppDestination(Uri.parse("android-app://app-destination-1"))
+                        .setAppDestinations(List.of(Uri.parse("android-app://app-destination-1")))
                         .setEnrollmentId("enrollment-id")
                         .setRegistrant(Uri.parse("android-app://uninstalled-app"))
                         .setPublisher(Uri.parse("android-app://uninstalled-app"))
@@ -3377,7 +3382,7 @@ public class MeasurementDaoTest {
                 new Source.Builder()
                         .setId("2")
                         .setEventId(new UnsignedLong(2L))
-                        .setAppDestination(Uri.parse("android-app://app-destination-2"))
+                        .setAppDestinations(List.of(Uri.parse("android-app://app-destination-2")))
                         .setEnrollmentId("enrollment-id")
                         .setRegistrant(Uri.parse("android-app://installed-app"))
                         .setPublisher(Uri.parse("android-app://installed-app"))
@@ -3397,7 +3402,8 @@ public class MeasurementDaoTest {
                 new EventReport.Builder()
                         .setId("1") // deleted
                         .setSourceEventId(new UnsignedLong(1L))
-                        .setAttributionDestination(Uri.parse("android-app://app-destination-1"))
+                        .setAttributionDestinations(List.of(
+                                Uri.parse("android-app://app-destination-1")))
                         .setEnrollmentId("enrollment-id")
                         .setTriggerData(new UnsignedLong(5L))
                         .setSourceId(sourceList.get(0).getId())
@@ -3408,7 +3414,8 @@ public class MeasurementDaoTest {
                 new EventReport.Builder()
                         .setId("2")
                         .setSourceEventId(new UnsignedLong(2L))
-                        .setAttributionDestination(Uri.parse("android-app://app-destination-2"))
+                        .setAttributionDestinations(List.of(
+                                Uri.parse("android-app://app-destination-2")))
                         .setEnrollmentId("enrollment-id")
                         .setTriggerData(new UnsignedLong(5L))
                         .setSourceId(sourceList.get(1).getId())
@@ -3461,7 +3468,7 @@ public class MeasurementDaoTest {
                 new Source.Builder()
                         .setId("1")
                         .setEventId(new UnsignedLong(1L))
-                        .setAppDestination(Uri.parse("android-app://app-destination-1"))
+                        .setAppDestinations(List.of(Uri.parse("android-app://app-destination-1")))
                         .setEnrollmentId("enrollment-id")
                         .setRegistrant(Uri.parse("android-app://installed-app" + limit))
                         .setPublisher(Uri.parse("android-app://installed-app" + limit))
@@ -3470,7 +3477,7 @@ public class MeasurementDaoTest {
                 new Source.Builder()
                         .setId("2")
                         .setEventId(new UnsignedLong(1L))
-                        .setAppDestination(Uri.parse("android-app://app-destination-1"))
+                        .setAppDestinations(List.of(Uri.parse("android-app://app-destination-1")))
                         .setEnrollmentId("enrollment-id")
                         .setRegistrant(Uri.parse("android-app://installed-app" + (limit + 1)))
                         .setPublisher(Uri.parse("android-app://installed-app" + (limit + 1)))
@@ -3480,8 +3487,8 @@ public class MeasurementDaoTest {
                     ContentValues values = new ContentValues();
                     values.put(SourceContract.ID, source.getId());
                     values.put(SourceContract.EVENT_ID, source.getEventId().toString());
-                    values.put(
-                            SourceContract.APP_DESTINATION, source.getAppDestination().toString());
+                    values.put(SourceContract.APP_DESTINATION,
+                            source.getAppDestinations().get(0).toString());
                     values.put(SourceContract.ENROLLMENT_ID, source.getEnrollmentId());
                     values.put(SourceContract.REGISTRANT, source.getRegistrant().toString());
                     values.put(SourceContract.PUBLISHER, source.getPublisher().toString());
@@ -3606,12 +3613,12 @@ public class MeasurementDaoTest {
                             .setRegistrant(SourceFixture.ValidSourceParams.REGISTRANT)
                             .setStatus(sourceStatus);
             if (hasAppDestination) {
-                sourceBuilder.setAppDestination(
-                        Uri.parse("android-app://app-destination-" + String.valueOf(i)));
+                sourceBuilder.setAppDestinations(List.of(
+                        Uri.parse("android-app://app-destination-" + String.valueOf(i))));
             }
             if (hasWebDestination) {
-                sourceBuilder.setWebDestination(
-                        Uri.parse("https://web-destination-" + String.valueOf(i) + ".com"));
+                sourceBuilder.setWebDestinations(List.of(
+                        Uri.parse("https://web-destination-" + String.valueOf(i) + ".com")));
             }
             sources.add(sourceBuilder.build());
         }
@@ -3655,8 +3662,8 @@ public class MeasurementDaoTest {
                             .setPublisher(publisher)
                             .setRegistrant(SourceFixture.ValidSourceParams.REGISTRANT)
                             .setStatus(sourceStatus)
-                            .setAppDestination(appDestination)
-                            .setWebDestination(webDestination)
+                            .setAppDestinations(getNullableUriList(appDestination))
+                            .setWebDestinations(getNullableUriList(webDestination))
                             .setEnrollmentId("enrollment-id-" + i);
             sources.add(sourceBuilder.build());
         }
@@ -3739,9 +3746,9 @@ public class MeasurementDaoTest {
         values.put(SourceContract.PUBLISHER, source.getPublisher().toString());
         values.put(SourceContract.PUBLISHER_TYPE, source.getPublisherType());
         values.put(
-                SourceContract.APP_DESTINATION, getNullableUriString(source.getAppDestination()));
+                SourceContract.APP_DESTINATION, getNullableUriString(source.getAppDestinations()));
         values.put(
-                SourceContract.WEB_DESTINATION, getNullableUriString(source.getWebDestination()));
+                SourceContract.WEB_DESTINATION, getNullableUriString(source.getWebDestinations()));
         values.put(SourceContract.ENROLLMENT_ID, source.getEnrollmentId());
         values.put(SourceContract.EVENT_TIME, source.getEventTime());
         values.put(SourceContract.EXPIRY_TIME, source.getExpiryTime());
@@ -3759,8 +3766,8 @@ public class MeasurementDaoTest {
         assertNotEquals("Source insertion failed", -1, row);
     }
 
-    private static String getNullableUriString(Uri uri) {
-        return Optional.ofNullable(uri).map(Uri::toString).orElse(null);
+    private static String getNullableUriString(List<Uri> uriList) {
+        return Optional.ofNullable(uriList).map(uris -> uris.get(0).toString()).orElse(null);
     }
 
     /** Test that the AsyncRegistration is inserted correctly. */
@@ -4654,19 +4661,19 @@ public class MeasurementDaoTest {
                 createSourceBuilder()
                         .setId("s1")
                         .setEnrollmentId(mmpMatchingEnrollmentId)
-                        .setAppDestination(matchingDestination)
+                        .setAppDestinations(List.of(matchingDestination))
                         .build();
         Source s2MmpDiffDestination =
                 createSourceBuilder()
                         .setId("s2")
                         .setEnrollmentId(mmpMatchingEnrollmentId)
-                        .setAppDestination(nonMatchingDestination)
+                        .setAppDestinations(List.of(nonMatchingDestination))
                         .build();
         Source s3MmpExpired =
                 createSourceBuilder()
                         .setId("s3")
                         .setEnrollmentId(mmpMatchingEnrollmentId)
-                        .setAppDestination(nonMatchingDestination)
+                        .setAppDestinations(List.of(nonMatchingDestination))
                         // expired before trigger time
                         .setExpiryTime(trigger.getTriggerTime() - TimeUnit.DAYS.toMillis(1))
                         .build();
@@ -4674,68 +4681,68 @@ public class MeasurementDaoTest {
                 createSourceBuilder()
                         .setId("s4")
                         .setEnrollmentId(mmpNonMatchingEnrollmentId)
-                        .setAppDestination(matchingDestination)
+                        .setAppDestinations(List.of(matchingDestination))
                         .build();
         Source s5MmpMatching =
                 createSourceBuilder()
                         .setId("s5")
                         .setEnrollmentId(mmpMatchingEnrollmentId)
-                        .setAppDestination(matchingDestination)
+                        .setAppDestinations(List.of(matchingDestination))
                         .build();
         Source s6San1Matching =
                 createSourceBuilder()
                         .setId("s6")
                         .setEnrollmentId(san1MatchingEnrollmentId)
-                        .setAppDestination(matchingDestination)
+                        .setAppDestinations(List.of(matchingDestination))
                         .setSharedAggregationKeys(SHARED_AGGREGATE_KEYS)
                         .build();
         Source s7San1DiffDestination =
                 createSourceBuilder()
                         .setId("s7")
                         .setEnrollmentId(san1MatchingEnrollmentId)
-                        .setAppDestination(nonMatchingDestination)
+                        .setAppDestinations(List.of(nonMatchingDestination))
                         .setSharedAggregationKeys(SHARED_AGGREGATE_KEYS)
                         .build();
         Source s8San2Matching =
                 createSourceBuilder()
                         .setId("s8")
                         .setEnrollmentId(san2MatchingEnrollmentId)
-                        .setAppDestination(matchingDestination)
+                        .setAppDestinations(List.of(matchingDestination))
                         .setSharedAggregationKeys(SHARED_AGGREGATE_KEYS)
                         .build();
         Source s9San3XnaIgnored =
                 createSourceBuilder()
                         .setId("s9")
                         .setEnrollmentId(san3MatchingEnrollmentId)
-                        .setAppDestination(matchingDestination)
+                        .setAppDestinations(List.of(matchingDestination))
                         .setSharedAggregationKeys(SHARED_AGGREGATE_KEYS)
                         .build();
         Source s10San3Matching =
                 createSourceBuilder()
                         .setId("s10")
                         .setEnrollmentId(san3MatchingEnrollmentId)
-                        .setAppDestination(matchingDestination)
+                        .setAppDestinations(List.of(matchingDestination))
                         .setSharedAggregationKeys(SHARED_AGGREGATE_KEYS)
                         .build();
         Source s11San4EnrollmentNonMatching =
                 createSourceBuilder()
                         .setId("s11")
                         .setEnrollmentId(san4NonMatchingEnrollmentId)
-                        .setAppDestination(matchingDestination)
+                        .setAppDestinations(List.of(matchingDestination))
                         .setSharedAggregationKeys(SHARED_AGGREGATE_KEYS)
                         .build();
         Source s12San1NullSharedAggregationKeys =
                 createSourceBuilder()
                         .setId("s12")
                         .setEnrollmentId(san1MatchingEnrollmentId)
-                        .setAppDestination(matchingDestination)
+                        .setAppDestinations(List.of(matchingDestination))
                         .setSharedAggregationKeys(null)
                         .build();
         Source s13San1Expired =
                 createSourceBuilder()
                         .setId("s13")
                         .setEnrollmentId(san1MatchingEnrollmentId)
-                        .setAppDestination(matchingDestination)
+                        .setAppDestinations(List.of(matchingDestination))
                         // expired before trigger time
                         .setExpiryTime(trigger.getTriggerTime() - TimeUnit.DAYS.toMillis(1))
                         .build();
@@ -4744,14 +4751,14 @@ public class MeasurementDaoTest {
                 createSourceBuilder()
                         .setId("s14")
                         .setEnrollmentId(san5MatchingEnrollmentId)
-                        .setAppDestination(matchingDestination)
+                        .setAppDestinations(List.of(matchingDestination))
                         .setRegistrationId(registrationIdForTriggerAndOtherRegistration)
                         .build();
         Source s15MmpMatching =
                 createSourceBuilder()
                         .setId("s15")
                         .setEnrollmentId(mmpMatchingEnrollmentId)
-                        .setAppDestination(matchingDestination)
+                        .setAppDestinations(List.of(matchingDestination))
                         .setRegistrationId(registrationIdForTriggerAndOtherRegistration)
                         .build();
         List<Source> sources =
@@ -4862,8 +4869,8 @@ public class MeasurementDaoTest {
         return new Source.Builder()
                 .setEventId(SourceFixture.ValidSourceParams.SOURCE_EVENT_ID)
                 .setPublisher(SourceFixture.ValidSourceParams.PUBLISHER)
-                .setAppDestination(SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
-                .setWebDestination(SourceFixture.ValidSourceParams.WEB_DESTINATION)
+                .setAppDestinations(SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
+                .setWebDestinations(SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
                 .setEnrollmentId(SourceFixture.ValidSourceParams.ENROLLMENT_ID)
                 .setRegistrant(SourceFixture.ValidSourceParams.REGISTRANT)
                 .setEventTime(SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME)
@@ -5095,7 +5102,7 @@ public class MeasurementDaoTest {
                 .setEnrollmentId(enrollmentId)
                 .setExpiryTime(currentTime + TimeUnit.DAYS.toMillis(30))
                 .setInstallAttributionWindow(TimeUnit.DAYS.toMillis(expiredIAWindow ? 0 : 30))
-                .setAppDestination(INSTALLED_PACKAGE)
+                .setAppDestinations(List.of(INSTALLED_PACKAGE))
                 .setEventTime(
                         currentTime
                                 - TimeUnit.DAYS.toMillis(
@@ -5114,7 +5121,7 @@ public class MeasurementDaoTest {
     private EventReport generateMockEventReport(String attributionDestination, int id) {
         return new EventReport.Builder()
                 .setId(String.valueOf(id))
-                .setAttributionDestination(Uri.parse(attributionDestination))
+                .setAttributionDestinations(List.of(Uri.parse(attributionDestination)))
                 .build();
     }
 
@@ -5240,5 +5247,9 @@ public class MeasurementDaoTest {
             builder.setRegistrant(cursor.getString(index));
         }
         return builder.build();
+    }
+
+    private static List<Uri> getNullableUriList(Uri uri) {
+        return uri == null ? null : List.of(uri);
     }
 }

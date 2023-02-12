@@ -16,6 +16,7 @@
 
 package com.android.adservices.service;
 
+import static com.android.adservices.service.Flags.SDK_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.PhFlags.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDE;
 import static com.android.adservices.service.PhFlags.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION;
 import static com.android.adservices.service.PhFlags.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION;
@@ -44,6 +45,9 @@ import android.provider.DeviceConfig;
  * Manifest.permission.WRITE_DEVICE_CONFIG);}
  */
 public class PhFlagsFixture {
+    public static final long DEFAULT_API_RATE_LIMIT_SLEEP_MS =
+            (long) (1000 / SDK_REQUEST_PERMITS_PER_SECOND) + 10L;
+
     public static void configureFledgeBackgroundFetchEligibleUpdateBaseIntervalS(
             final long phOverridingValue) {
         DeviceConfig.setProperty(

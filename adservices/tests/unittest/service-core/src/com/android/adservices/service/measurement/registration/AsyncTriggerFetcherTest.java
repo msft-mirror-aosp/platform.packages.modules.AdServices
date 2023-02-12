@@ -234,6 +234,27 @@ public final class AsyncTriggerFetcherTest {
                                 436)
                         .setAdTechDomain(null)
                         .build();
+        String wrappedFilters =
+                "[{\n"
+                        + "  \"category_1\": [\"filter\"],\n"
+                        + "  \"category_2\": [\"filter\"] \n"
+                        + " }]";
+        String wrappedNotFilters =
+                "[{\n"
+                        + "  \"category_1\": [\"filter\"],\n"
+                        + "  \"category_2\": [\"filter\"] \n"
+                        + "}]";
+        String expectedAggregateDedupKeys =
+                "[{\"deduplication_key\": \""
+                        + DEDUP_KEY
+                        + "\",\n"
+                        + "\"filters\": "
+                        + wrappedFilters
+                        + ","
+                        + "\"not_filters\":"
+                        + wrappedNotFilters
+                        + "}"
+                        + "]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
@@ -266,7 +287,7 @@ public final class AsyncTriggerFetcherTest {
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
         assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.getEventTriggers());
         assertEquals(
-                new JSONArray(AGGREGATE_DEDUPLICATION_KEYS_1).toString(),
+                new JSONArray(expectedAggregateDedupKeys).toString(),
                 result.getAggregateDeduplicationKeys());
         verify(mUrlConnection).setRequestMethod("POST");
         verify(mLogger).logMeasurementRegistrationsResponseSize(eq(expectedStats));
