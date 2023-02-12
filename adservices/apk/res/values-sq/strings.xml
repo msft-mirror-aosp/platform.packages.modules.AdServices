@@ -183,11 +183,9 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Aplikacionet që ti përdor mund të përcaktojnë gjithashtu se çfarë të pëlqen bazuar në mënyrën se si i përdor."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Aplikacionet që ti përdor mund t\'i kërkojnë informacione Android për t\'i ndihmuar të matin performancën e reklamave të tyre. Android i lejon aplikacionet të mbledhin lloje të kufizuara të dhënash."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Aktivizuar/<xliff:g id="TOPICS_COUNT">%1$d</xliff:g> tema"</string>
-    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
-    <skip />
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Aktive/# temë}other{Aktive/# tema}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Aktivizuar/<xliff:g id="APPS_COUNT">%1$d</xliff:g> aplikacione"</string>
-    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
-    <skip />
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{Aktiv/# aplikacion}other{Aktive/#aplikacione}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"Aktive"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Çaktivizuar"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Temat e interesit bazohen në aplikacionet që ke përdorur së fundi dhe përdoren nga aplikacionet për të të shfaqur reklama të personalizuara.\n\nMund t\'i bllokosh temat që nuk dëshiron të ndahen me aplikacionet. Gjithashtu, Android i fshin rregullisht në mënyrë automatike temat."</string>
@@ -200,14 +198,10 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Aplikacionet që ke bllokuar"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Rivendos të dhënat e sugjeruara nga aplikacionet"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Zakonisht aplikacionet që ti përdor kujtojnë gjërat që të interesojnë për të personalizuar përvojën tënde. Gjithashtu, aplikacionet mund të ruajnë informacione me Android rreth temave të tua.\n\nPër shembull, nëse ti përdor një aplikacion për trajnim për maratonë, aplikacioni mund të vendosë që të interesojnë atlete vrapimi. Më vonë, nëse përdor një aplikacion tjetër, ai aplikacion mund të të shfaqë një reklamë për atlete vrapimi me sugjerim të aplikacionit të parë.\n\nAndroid fshin automatikisht të dhëna të sugjeruara nga aplikacionet rregullisht. Një aplikacion që ti e përdor sërish mund të rishfaqet në listë. Ose mund të bllokosh një aplikacion që mos të të sugjerojë reklama.\n\nNë aplikacionet e tua, një reklamë mund të jetë e personalizuar në varësi të këtij cilësimi, cilësimit të temave të reklamave, cilësimeve të tua për ID-në e reklamimit dhe nëse aplikacioni që ti po përdor i personalizon reklamat."</string>
-    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
-    <skip />
-    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
-    <skip />
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Ilustrim me ngjyra i simboleve që përfaqësojnë tema interesi, si p.sh. muzika, lajmet dhe sportet"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Ilustrim me ngjyra i një kyçi brenda një rrethi"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Ilustrim i vogël bardh e zi i nëntë pikave që formojnë një katror"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"Ilustrim i vogël bardh e zi i formave të thjeshta, si p.sh. një zemër, trekëndësh dhe katror"</string>
     <string name="topic10001" msgid="1636806320891333775">"Arte dhe argëtim"</string>
     <string name="topic10002" msgid="1226367977754287428">"Aktrim dhe teatër"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime dhe manga"</string>

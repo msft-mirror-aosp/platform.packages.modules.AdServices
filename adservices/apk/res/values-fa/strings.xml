@@ -156,7 +156,7 @@
     <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"«جعبه ایمنی حریم خصوصی» خاموش شود؟"</string>
     <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"‏اگر نظرتان عوض شد یا خواستید درباره نسخه بتای حریم خصوصی آگهی‌های Android اطلاعات بیشتری کسب کنید، به تنظیمات حریم خصوصی‌تان بروید"</string>
     <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"خاموش کردن"</string>
-    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"<xliff:g id="TOPIC">%1$s</xliff:g> مسدود شود؟"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"‫«<xliff:g id="TOPIC">%1$s</xliff:g>» مسدود شود؟"</string>
     <string name="settingsUI_dialog_block_topic_message" msgid="2581824495438333677">"این موضوع مسدود خواهد شد و دیگر به فهرستتان اضافه نخواهد شد، مگراینکه آن را دوباره اضافه کنید. ممکن است همچنان تعدادی آگهی مرتبط ببینید."</string>
     <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"مسدود کردن"</string>
     <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"«<xliff:g id="TOPIC">%1$s</xliff:g>» لغو انسداد شد"</string>
@@ -165,7 +165,7 @@
     <string name="settingsUI_dialog_reset_topic_title" msgid="8025836207966712435">"همه موضوع‌های آگهی بازنشانی شود؟"</string>
     <string name="settingsUI_dialog_reset_topic_message" msgid="4243744527757134000">"فهرستتان پاک خواهد شد و ازاین‌پس موضوع‌های جدیدی اضافه خواهد شد. ممکن است همچنان تعدادی آگهی مرتبط با موضوع‌هایی که بازنشانی کرده‌اید ببینید."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"بازنشانی"</string>
-    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"«<xliff:g id="APP">%1$s</xliff:g>» مسدود شود؟"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"‫«<xliff:g id="APP">%1$s</xliff:g>» مسدود شود؟"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="758788973278770119">"این برنامه دیگر آگهی پیشنهاد نخواهد داد و دوباره به فهرستتان اضافه نخواهد شد، مگراینکه آن را رفع انسداد کنید. ممکن است همچنان تعدادی آگهی مرتبط ببینید."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> لغو انسداد شد"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="5758218424845642060">"این برنامه می‌تواند دوباره به شما آگهی پیشنهاد دهد، اما ممکن است فوراً در فهرستتان نمایش داده نشود. ممکن است مدتی طول بکشد تا آگهی‌های مرتبط را ببینید."</string>
