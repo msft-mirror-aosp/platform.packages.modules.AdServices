@@ -16,30 +16,23 @@ package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
-java_library {
-    name: "SdkSandboxTestUtils",
+android_app {
+    name: "com.example.adservices.samples.ui.consenttestapp",
+    certificate: "platform",
+    defaults: ["platform_app_defaults"],
     srcs: [
-        "src/**/testutils/*.java",
-    ],
-    libs: [
-        "framework-sdksandbox.impl",
+       "java/**/*.java",
     ],
     static_libs: [
-        "service-sdksandbox.impl",
-        "truth-prebuilt",
-        "androidx.test.ext.junit",
-        "SdkSandbox-java-lib",
+        "adservices-clients",
+        "adservices-test-fixtures",
+        "androidx.appcompat_appcompat",
+        "androidx-constraintlayout_constraintlayout",
+        "com.google.android.material_material",
+        "androidx.concurrent_concurrent-futures",
     ],
-    visibility: [
-        // TODO(b/222118402): adjust once code is moved
-        "//packages/modules/AdServices:__subpackages__",
-    ],
-}
-
-java_library_host {
-    name: "SdkSandboxHostTestUtils",
-    srcs: [
-        "src/**/hosttestutils/*.java",
-    ],
-    libs: ["tradefed"],
+    resource_dirs: ["res"],
+    platform_apis: true,
+    min_sdk_version: "33",
+    target_sdk_version: "33",
 }
