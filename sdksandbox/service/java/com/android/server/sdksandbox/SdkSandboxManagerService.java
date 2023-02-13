@@ -76,6 +76,7 @@ import android.webkit.WebViewUpdateService;
 import com.android.adservices.AdServicesCommon;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.modules.utils.BackgroundThread;
 import com.android.sdksandbox.IComputeSdkStorageCallback;
 import com.android.sdksandbox.IRequestSurfacePackageFromSdkCallback;
 import com.android.sdksandbox.ISdkSandboxDisabledCallback;
@@ -113,7 +114,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private final ActivityManager mActivityManager;
     private final Handler mHandler;
-    private final Handler mBackgroundHandler;
     private final SdkSandboxStorageManager mSdkSandboxStorageManager;
     private final SdkSandboxServiceProvider mServiceProvider;
 
@@ -252,7 +252,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 new HandlerThread(
                         "SdkSandboxManagerServiceHandler", Process.THREAD_PRIORITY_BACKGROUND);
         backgroundHandlerThread.start();
-        mBackgroundHandler = new Handler(backgroundHandlerThread.getLooper());
 
         registerBroadcastReceivers();
 
@@ -1051,10 +1050,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             // Once bound service has been set, sync manager is notified.
             notifySyncManagerSandboxStarted(mCallingInfo);
 
-            mBackgroundHandler.post(
-                    () -> {
-                        computeSdkStorage(mCallingInfo, mService);
-                    });
+            BackgroundThread.getExecutor()
+                    .execute(
+                            () -> {
+                                computeSdkStorage(mCallingInfo, mService);
+                            });
 
             final int timeToLoadSandbox =
                     (int) (mInjector.getCurrentTime() - mStartTimeForLoadingSandbox);
