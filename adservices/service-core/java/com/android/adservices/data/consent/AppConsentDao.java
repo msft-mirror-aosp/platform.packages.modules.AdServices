@@ -23,6 +23,7 @@ import androidx.annotation.NonNull;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.common.BooleanFileDatastore;
+import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -317,8 +318,7 @@ public class AppConsentDao {
         Objects.requireNonNull(packageName);
 
         try {
-            return mPackageManager.getPackageUid(
-                    packageName, PackageManager.PackageInfoFlags.of(0L));
+            return PackageManagerCompatUtils.getPackageUid(mPackageManager, packageName, 0);
         } catch (PackageManager.NameNotFoundException exception) {
             LogUtil.e(exception, "Package name not found");
             throw new IllegalArgumentException(exception);
@@ -328,9 +328,7 @@ public class AppConsentDao {
     /** Returns the list of packages installed on the device of the user. */
     @NonNull
     public Set<String> getInstalledPackages() {
-        return mPackageManager
-                .getInstalledApplications(PackageManager.ApplicationInfoFlags.of(0L))
-                .stream()
+        return PackageManagerCompatUtils.getInstalledApplications(mPackageManager, 0).stream()
                 .map(applicationInfo -> applicationInfo.packageName)
                 .collect(Collectors.toSet());
     }

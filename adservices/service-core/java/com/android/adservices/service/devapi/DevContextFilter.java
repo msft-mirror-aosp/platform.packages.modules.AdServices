@@ -27,6 +27,7 @@ import android.provider.Settings;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.common.SdkRuntimeUtil;
+import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
@@ -123,9 +124,8 @@ public class DevContextFilter {
     public boolean isDebuggable(String callingAppPackage) {
         try {
             ApplicationInfo applicationInfo =
-                    mPackageManager.getApplicationInfo(
-                            callingAppPackage, PackageManager.ApplicationInfoFlags.of(0));
-
+                    PackageManagerCompatUtils.getApplicationInfo(
+                            mPackageManager, callingAppPackage, 0);
             return (applicationInfo.flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
 
         } catch (PackageManager.NameNotFoundException e) {
