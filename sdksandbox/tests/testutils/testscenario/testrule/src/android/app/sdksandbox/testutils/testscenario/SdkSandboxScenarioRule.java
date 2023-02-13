@@ -118,53 +118,57 @@ public class SdkSandboxScenarioRule implements TestRule {
                             InstrumentationRegistry.getInstrumentation().getContext();
                     SdkSandboxManager sdkSandboxManager =
                             context.getSystemService(SdkSandboxManager.class);
-                    final SandboxedSdk sdk = getLoadedSdk(sdkSandboxManager);
-                    assertThat(scenario.getState()).isEqualTo(Lifecycle.State.RESUMED);
-                    setView(scenario, sdkSandboxManager);
-                    mTestExecutor = ISdkSandboxTestExecutor.Stub.asInterface(sdk.getInterface());
 
-                    Throwable testFailure =
-                            tryDoWhen(
-                                    ENABLE_LIFE_CYCLE_ANNOTATIONS,
-                                    () -> {
-                                        final List<String> beforeMethods =
-                                                mTestExecutor.retrieveAnnotatedMethods(
-                                                        Before.class.getCanonicalName());
-                                        for (final String before : beforeMethods) {
-                                            runSdkMethod(before, new Bundle());
-                                        }
-                                    });
+                    try {
+                        final SandboxedSdk sdk = getLoadedSdk(sdkSandboxManager);
+                        assertThat(scenario.getState()).isEqualTo(Lifecycle.State.RESUMED);
+                        setView(scenario, sdkSandboxManager);
+                        mTestExecutor =
+                                ISdkSandboxTestExecutor.Stub.asInterface(sdk.getInterface());
 
-                    // If the before methods failed, we should not run our tests.
-                    if (testFailure == null) {
-                        testFailure =
+                        Throwable testFailure =
                                 tryDoWhen(
-                                        ENABLE_ALWAYS,
+                                        ENABLE_LIFE_CYCLE_ANNOTATIONS,
                                         () -> {
-                                            base.evaluate();
+                                            final List<String> beforeMethods =
+                                                    mTestExecutor.retrieveAnnotatedMethods(
+                                                            Before.class.getCanonicalName());
+                                            for (final String before : beforeMethods) {
+                                                runSdkMethod(before, new Bundle());
+                                            }
                                         });
-                    }
 
-                    // Even if "before methods" or tests fail, we are still expected to
-                    // run "after methods" for clean up.
-                    Throwable afterFailure =
-                            tryDoWhen(
-                                    ENABLE_LIFE_CYCLE_ANNOTATIONS,
-                                    () -> {
-                                        final List<String> afterMethods =
-                                                mTestExecutor.retrieveAnnotatedMethods(
-                                                        After.class.getCanonicalName());
-                                        for (final String after : afterMethods) {
-                                            runSdkMethod(after, new Bundle());
-                                        }
-                                    });
+                        // If the before methods failed, we should not run our tests.
+                        if (testFailure == null) {
+                            testFailure =
+                                    tryDoWhen(
+                                            ENABLE_ALWAYS,
+                                            () -> {
+                                                base.evaluate();
+                                            });
+                        }
 
-                    sdkSandboxManager.unloadSdk(mSdkName);
+                        // Even if "before methods" or tests fail, we are still expected to
+                        // run "after methods" for clean up.
+                        Throwable afterFailure =
+                                tryDoWhen(
+                                        ENABLE_LIFE_CYCLE_ANNOTATIONS,
+                                        () -> {
+                                            final List<String> afterMethods =
+                                                    mTestExecutor.retrieveAnnotatedMethods(
+                                                            After.class.getCanonicalName());
+                                            for (final String after : afterMethods) {
+                                                runSdkMethod(after, new Bundle());
+                                            }
+                                        });
 
-                    if (testFailure != null) {
-                        throw testFailure;
-                    } else if (afterFailure != null) {
-                        throw afterFailure;
+                        if (testFailure != null) {
+                            throw testFailure;
+                        } else if (afterFailure != null) {
+                            throw afterFailure;
+                        }
+                    } finally {
+                        sdkSandboxManager.unloadSdk(mSdkName);
                     }
                 }
             }
