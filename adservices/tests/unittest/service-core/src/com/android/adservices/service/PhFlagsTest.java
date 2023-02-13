@@ -3867,7 +3867,7 @@ public class PhFlagsTest {
         assertThat(FlagsFactory.getFlags().getCompatLoggingKillSwitch())
                 .isEqualTo(COMPAT_LOGGING_KILL_SWITCH);
 
-        boolean phOverridingValue = false;
+        boolean phOverridingValue = true;
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_COMPAT_LOGGING_KILL_SWITCH,
