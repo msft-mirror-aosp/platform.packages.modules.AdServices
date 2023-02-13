@@ -49,6 +49,7 @@ import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
@@ -347,8 +348,8 @@ public final class MeasurementImpl {
     private List<Uri> getCurrentInstalledApplicationsList(Context context) {
         PackageManager packageManager = context.getPackageManager();
         List<ApplicationInfo> applicationInfoList =
-                packageManager.getInstalledApplications(
-                        PackageManager.ApplicationInfoFlags.of(PackageManager.GET_META_DATA));
+                PackageManagerCompatUtils.getInstalledApplications(
+                        packageManager, PackageManager.GET_META_DATA);
         return applicationInfoList.stream()
                 .map(applicationInfo -> Uri.parse("android-app://" + applicationInfo.packageName))
                 .collect(Collectors.toList());
