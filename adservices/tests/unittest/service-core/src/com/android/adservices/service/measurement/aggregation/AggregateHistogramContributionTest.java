@@ -80,6 +80,25 @@ public final class AggregateHistogramContributionTest {
     }
 
     @Test
+    public void storesBucketAsStringInJson() throws JSONException {
+        String largeIntegerStr = "334864848949865686038563574111108070905";
+        AggregateHistogramContribution contribution =
+                new AggregateHistogramContribution.Builder()
+                        .setKey(new BigInteger(largeIntegerStr))
+                        .setValue(1)
+                        .build();
+        JSONObject jsonObj = contribution.toJSONObject();
+        // Convert the JSONObject to string and use the JSON parser to confirm the large integer is
+        // correctly set in a string, rather than a value in scientific notation, which can happen
+        // with a large integer type.
+        String jsonStr = jsonObj.toString();
+        JSONObject parsedJson = new JSONObject(jsonStr);
+        assertEquals(
+                largeIntegerStr,
+                parsedJson.getString(AggregateHistogramContribution.BUCKET));
+    }
+
+    @Test
     public void fromJsonObject_createsAggregateHistogramContribution() throws JSONException {
         // Setup
         JSONObject jsonObject = new JSONObject();
