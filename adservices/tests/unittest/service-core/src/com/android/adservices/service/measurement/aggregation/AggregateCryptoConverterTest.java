@@ -51,8 +51,8 @@ public class AggregateCryptoConverterTest {
     private static final String DEFAULT_PAYLOAD =
             "{\"operation\":\"histogram\", "
                     + "\"data\": ["
-                    + "{\"bucket\": 1, \"value\":2},"
-                    + "{\"bucket\": 3, \"value\":4}"
+                    + "{\"bucket\": \"1\", \"value\":2},"
+                    + "{\"bucket\": \"3\", \"value\":4}"
                     + "]}";
 
     @Test
@@ -89,7 +89,7 @@ public class AggregateCryptoConverterTest {
                     AggregateCryptoFixture.getPublicKeyBase64(),
                     "{{\"operation\":\"histogram\", "
                             + "\"data\": [{"
-                            + "\"bucket\": 1, \"value\":2"
+                            + "\"bucket\": \"1\", \"value\":2"
                             + "}]}",
                     null);
             fail();
@@ -105,7 +105,7 @@ public class AggregateCryptoConverterTest {
                     AggregateCryptoFixture.getPublicKeyBase64(),
                     "{{\"ops\":\"histogram\", "
                             + "\"data\": [{"
-                            + "\"bucket\": 1, \"value\":2"
+                            + "\"bucket\": \"1\", \"value\":2"
                             + "}]}",
                     null);
             fail();
@@ -121,7 +121,7 @@ public class AggregateCryptoConverterTest {
                     AggregateCryptoFixture.getPublicKeyBase64(),
                     "{{\"operation\":\"histogram\", "
                             + "\"info\": [{"
-                            + "\"bucket\": 1, \"value\":2"
+                            + "\"bucket\": \"1\", \"value\":2"
                             + "}]}",
                     null);
             fail();
@@ -137,7 +137,7 @@ public class AggregateCryptoConverterTest {
                     AggregateCryptoFixture.getPublicKeyBase64(),
                     "{{\"operation\":\"histogram\", "
                             + "\"data\": [{"
-                            + "\"bucket\": 1, \"v\":2"
+                            + "\"bucket\": \"1\", \"v\":2"
                             + "}]}",
                     null);
             fail();
@@ -175,7 +175,7 @@ public class AggregateCryptoConverterTest {
             AggregateCryptoConverter.encode(
                     "{{\"operation\":\"histogram\", "
                             + "\"data\": [{"
-                            + "\"bucket\": 1, \"value\":2"
+                            + "\"bucket\": \"1\", \"value\":2"
                             + "}]}");
             fail();
         } catch (CryptoException e) {
@@ -189,7 +189,7 @@ public class AggregateCryptoConverterTest {
             AggregateCryptoConverter.encode(
                     "{{\"ops\":\"histogram\", "
                             + "\"data\": [{"
-                            + "\"bucket\": 1, \"value\":2"
+                            + "\"bucket\": \"1\", \"value\":2"
                             + "}]}");
             fail();
         } catch (CryptoException e) {
@@ -203,7 +203,7 @@ public class AggregateCryptoConverterTest {
             AggregateCryptoConverter.encode(
                     "{{\"operation\":\"histogram\", "
                             + "\"info\": [{"
-                            + "\"bucket\": 1, \"value\":2"
+                            + "\"bucket\": \"1\", \"value\":2"
                             + "}]}");
             fail();
         } catch (CryptoException e) {
@@ -217,7 +217,7 @@ public class AggregateCryptoConverterTest {
             AggregateCryptoConverter.encode(
                     "{{\"operation\":\"histogram\", "
                             + "\"data\": [{"
-                            + "\"bucket\": 1, \"v\":2"
+                            + "\"bucket\": \"1\", \"v\":2"
                             + "}]}");
             fail();
         } catch (CryptoException e) {
