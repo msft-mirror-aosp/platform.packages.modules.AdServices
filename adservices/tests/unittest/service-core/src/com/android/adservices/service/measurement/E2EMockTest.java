@@ -488,6 +488,7 @@ public abstract class E2EMockTest extends E2ETest {
                 Object value =
                         "0x"
                                 + new BigInteger(
+                                                1,
                                                 ((ByteString) m.get(new UnicodeString("bucket")))
                                                         .getBytes())
                                         .toString(16);
@@ -497,6 +498,7 @@ public abstract class E2EMockTest extends E2ETest {
                                 .put(
                                         AggregateHistogramKeys.VALUE,
                                         new BigInteger(
+                                                        1,
                                                         ((ByteString)
                                                                         m.get(
                                                                                 new UnicodeString(
