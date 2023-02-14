@@ -80,6 +80,14 @@ public interface Flags extends Dumpable {
         return TOPICS_NUMBER_OF_RANDOM_TOPICS;
     }
 
+    /** Global blocked Topics. Default value is empty list. */
+    ImmutableList<Integer> TOPICS_GLOBAL_BLOCKED_TOPIC_IDS = ImmutableList.of();
+
+    /** Returns a list of global blocked topics. */
+    default ImmutableList<Integer> getGlobalBlockedTopicIds() {
+        return TOPICS_GLOBAL_BLOCKED_TOPIC_IDS;
+    }
+
     /** How many epochs to look back when deciding if a caller has observed a topic before. */
     int TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS = 3;
 
