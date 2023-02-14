@@ -181,8 +181,8 @@ public class AdSelectionEntryDaoTest {
                     .build();
 
     // Event registering constants
-    private static final int BUYER_DESTINATION = ReportInteractionInput.DESTINATION_SELLER;
-    private static final int SELLER_DESTINATION = ReportInteractionInput.DESTINATION_BUYER;
+    private static final int BUYER_DESTINATION = ReportInteractionInput.FLAG_DESTINATION_SELLER;
+    private static final int SELLER_DESTINATION = ReportInteractionInput.FLAG_DESTINATION_BUYER;
 
     private static final String CLICK_EVENT = "click";
     private static final String HOVER_EVENT = "hover";

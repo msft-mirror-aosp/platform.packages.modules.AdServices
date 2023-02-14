@@ -29,7 +29,7 @@ public class DBRegisteredAdInteractionTest {
     public static final String INTERACTION_KEY_CLICK = "CLICK";
 
     @ReportInteractionInput.Destination
-    public static final int DESTINATION_SELLER = ReportInteractionInput.DESTINATION_SELLER;
+    public static final int DESTINATION_SELLER = ReportInteractionInput.FLAG_DESTINATION_SELLER;
 
     private static final String BASE_URI = "https://www.seller.com/";
     public static final Uri EVENT_REPORTING_URI = Uri.parse(BASE_URI + INTERACTION_KEY_CLICK);

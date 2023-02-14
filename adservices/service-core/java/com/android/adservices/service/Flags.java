@@ -1381,6 +1381,7 @@ public interface Flags extends Dumpable {
     boolean ENFORCE_FOREGROUND_STATUS_APPSETID = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION = true;
+    boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_INTERACTION = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDES = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE = true;
     boolean ENFORCE_FOREGROUND_STATUS_TOPICS = true;
@@ -1399,6 +1400,14 @@ public interface Flags extends Dumpable {
      */
     default boolean getEnforceForegroundStatusForFledgeReportImpression() {
         return ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION;
+    }
+
+    /**
+     * @return true if FLEDGE reportInteraction API should require that the calling API is running
+     *     in foreground.
+     */
+    default boolean getEnforceForegroundStatusForFledgeReportInteraction() {
+        return ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_INTERACTION;
     }
 
     /**
