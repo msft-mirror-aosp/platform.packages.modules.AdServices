@@ -183,11 +183,9 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Forrit sem þú notar geta einnig áætlað hvað höfðar til þín út frá því hvernig þú notar þau."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Forrit sem þú notar geta beðið Android um upplýsingar til að hjálpa þeim að mæla árangur auglýsinga sinna. Android gerir forritum kleift að safna tilteknum gerðum gagna"</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Kveikt / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> umfjöllunarefni"</string>
-    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
-    <skip />
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Kveikt / # umfjöllunarefni}one{Kveikt / # umfjöllunarefni}other{Kveikt / # umfjöllunarefni}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Kveikt / <xliff:g id="APPS_COUNT">%1$d</xliff:g> forrit"</string>
-    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
-    <skip />
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{Kveikt / # forrit}one{Kveikt / # forrit}other{Kveikt / # forrit}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"Kveikt"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Slökkt"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Áhugasvið umfjöllunarefna byggjast á forritunum sem þú hefur notað nýlega og forrit nota þau til að birta þér sérsniðnar auglýsingar.\n\nÞú getur sett umfjöllunarefni sem þú vilt ekki deila með forritum á bannlista. Android eyðir einnig umfjöllunarefnum reglulega sjálfkrafa."</string>
@@ -200,14 +198,10 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Forrit sem þú hefur sett á bannlista"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Endurstilla gögn um tillögur frá forritum"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Algengt er að forritin sem nú notar muni áhugasvið þín til að sérsníða upplifun þína. Forrit geta einnig vistað upplýsingar um umfjöllunarefnin þín hjá Android.\n\nEf þú notar til dæmis forrit um maraþonþjálfun gæti forritið áætlað að þú hafir áhuga á hlaupaskóm. Ef þú notar annað forrit seinna getur viðkomandi forrit sýnt þér auglýsingu fyrir hlaupaskó í samræmi við tillögu frá fyrsta forritinu.\n\nAndroid eyðir forritstillögugögnum reglulega sjálfkrafa. Forrit sem þú notar aftur gæti birst aftur á listanum Þú getur einnig lokað á að forrit stingi upp á auglýsingum fyrir þig.\n\nSérsniðnar auglýsingar kunna að birtast í forritum en það fer eftir þessari stillingu, stillingu fyrir umfjöllunarefni auglýsinga, stillingum auglýsingakennis og því hvort forritið sem þú ert að nota sérsníði auglýsingar."</string>
-    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
-    <skip />
-    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
-    <skip />
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Litrík myndskreyting af táknum fyrir áhugasvið á borð við tónlist, fréttir og íþróttir"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Litrík myndskreyting af lás innan hrings"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Lítil svarthvít myndskreyting af níu punktum sem mynda ferning"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"Lítil svarthvít myndskreyting af einföldum formum á borð við hjarta, þríhyrning og ferning"</string>
     <string name="topic10001" msgid="1636806320891333775">"Listir og afþreying"</string>
     <string name="topic10002" msgid="1226367977754287428">"Leiklist og leikhús"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime og manga"</string>

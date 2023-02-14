@@ -183,11 +183,9 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"እንዲሁም የሚጠቀሟቸው መተግበሪያዎች እርስዎ እነሱን በሚጠቀሙበት መንገድ መሰረት ምን እንደሚወዱ መወሰን ይችላሉ።"</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"እርስዎ የሚጠቀሙባቸው መተግበሪያዎች የማስታወቂያዎቻቸውን አፈጻጸም ለመለካት እንዲያግዛቸው መረጃ Androidን መጠየቅ ይችላሉ። Android መተግበሪያዎች የተገደቡ የውሂብ ዓይነቶችን እንዲሰበስቡ ያደርጋል።"</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"በርቷል / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> ርዕሶች"</string>
-    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
-    <skip />
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{በማሳየት ላይ / # ርዕስ}one{በማሳየት ላይ / # ርዕስ}other{በማሳየት ላይ / # ርዕሶች}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"በርቷል / <xliff:g id="APPS_COUNT">%1$d</xliff:g> መተግበሪያዎች"</string>
-    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
-    <skip />
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{በማሳየት ላይ / # መተግበሪያ}one{በማሳየት ላይ / # መተግበሪያ}other{በማሳየት ላይ / # መተግበሪያዎች}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"በርቷል"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"ጠፍቷል"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"የዝንባሌ ርዕሶች በቅርቡ የተጠቀሟቸው መተግበሪያዎች ላይ የተመሰረቱ ናቸው እና ለእርስዎ ግላዊነትን የተላበሱ ማስታወቂያዎች ለማሳየት በመተግበሪያዎች ጥቅም ላይ ይውላሉ።\n\nከመተግበሪያዎች ጋር እንዲጋሩ የማይፈልጓቸውን ርዕሶች ማገድ ይችላሉ። እንዲሁም Android ርዕሶችን በመደበኛነት በራስ ሰር ይሰርዛል።"</string>
@@ -200,14 +198,10 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"እርስዎ ያገዷቸው መተግበሪያዎች"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"በመተግበሪያ የተጠቆመ ውሂብን ዳግም አስጀምር"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"ተሞክሮዎን ግላዊነት ለማላበስ እርስዎ የሚጠቀሟቸው መተግበሪያዎች የእርስዎ ዝንባሌን ማስታወሳቸው የተለመደ ነው። እንዲሁም መተግበሪያዎች ስለርዕሶችዎ በAndroid መረጃን ማከማቸት ይችላሉ።\n\nለምሳሌ ስለማራቶን ስልጠና አንድን መተግበሪያ ከተጠቀሙ መተግበሪያው እርስዎ በሩጫ ጫማዎች ላይ ዝንባሌ እንዳለዎት ሊወስን ይችላል። በኋላ ላይ የተለየ መተግበሪያ የሚጠቀሙ ከሆነ ያ መተግበሪያ በመጀመሪያው መተግበሪያ በአስተያየት የተጠቆሙ የሩጫ ጫማዎች ማስታወቂያ ሊያሳይዎት ይችላል።\n\nAndroid በመተግበሪያ አስተያየት የተደረገ ውሂብን በመደበኛነት በራስ ሰር ይሰርዛል። በድጋሚ የሚጠቀሙት መተግበሪያ በዝርዝሩ ላይ ዳግም ሊታይ ይችላል። ወይም መተግበሪያ ለእርስዎ ማስታወቂያን በአስተያየት ከመጠቆም ማገድ ይችላሉ።\n\nበመተግበሪያዎችዎ ውስጥ በዚህ ቅንብር፣ በማስታወቂያ ርዕሶቹ ቅንብር፣ በእርስዎ የማስታወቂያ መታወቂያ ቅንብሮች እና የሚጠቀሙት መተግበሪያ ማስታወቂያዎችን ግላዊነት በሚያላብስበት መንገድ መሰረት የሚያዩት ማስታወቂያ ግላዊነትን የተላበሰ ሊሆን ይችላል።"</string>
-    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
-    <skip />
-    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
-    <skip />
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"እንደ ሙዚቃ፣ ዜና እና ስፖርት ያሉ የዝንባሌ ርዕሶችን የሚወክሉ በቀለም የተሞሉ የሥዕላዊ ማብራሪያ ምልክቶች"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"በክበብ ውስጥ ያለ በቀለም የተሞላ ቁልፍ ሥዕላዊ ማብራሪያ"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"ኩብ የሚፈጥሩ የዘጠኝ ነጥቦች ትንሽ ጥቁር እና ነጭ ሥዕላዊ ማብራሪያ"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"እንደ ልብ፣ ሦስት ማዕዘን እና ኩብ ያሉ የቀላል ቅርጾች ትንሽ ጥቁር እና ነጭ ሥዕላዊ ማብራሪያ"</string>
     <string name="topic10001" msgid="1636806320891333775">"ሥነ ጥበባት እና መዝናኛ"</string>
     <string name="topic10002" msgid="1226367977754287428">"ትወና እና ቲያትር"</string>
     <string name="topic10003" msgid="6949890838957814881">"አኒሜ እና ማንጋ"</string>

@@ -183,11 +183,9 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Matutukoy din ng mga ginagamit mong app kung ano ang gusto mo batay sa kung paano mo ginagamit ang mga iyon."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Puwedeng humiling ng impormasyon sa Android ang mga ginagamit mong app para masukat ng mga ito ang performance ng mga ad ng mga ito. Pinapayagan ng Android ang mga app na mangolekta ng limitadong uri ng data."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Naka-on / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> (na) paksa"</string>
-    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
-    <skip />
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Naka-on / # paksa}one{Naka-on / # paksa}other{Naka-on / # na paksa}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Naka-on / <xliff:g id="APPS_COUNT">%1$d</xliff:g> (na) app"</string>
-    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
-    <skip />
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{Naka-on / # app}one{Naka-on / # app}other{Naka-on / # na app}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"Naka-on"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Naka-off"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Nakabatay ang mga paksa ng interes sa mga app na ginamit mo kamakailan, at ginagamit ito ng mga app para magpakita sa iyo ng mga naka-personalize na ad.\n\nPuwede mong i-block ang mga paksang hindi mo gustong ibahagi sa mga app. Regular ding awtomatikong nagde-delete ang Android ng mga paksa."</string>
@@ -200,14 +198,10 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Mga app na na-block mo"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"I-reset ang data na iminumungkahi ng app"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Karaniwang tinatandaan ng mga ginagamit mong app ang mga bagay kung saan ka interesado para ma-personalize ang iyong karanasan. Puwede ring mag-store ang mga app ng impormasyon tungkol sa iyong mga paksa sa Android.\n\nHalimbawa, kung gumagamit ka ng app tungkol sa pagsasanay para sa marathon, posibleng tukuyin ng app na interesado ka sa running shoes. Sa ibang pagkakataon, kung gagamit ka ng ibang app, puwedeng magpakita ang app na iyon sa iyo ng ad para sa running shoes batay sa mungkahi ng naunang app.\n\nRegular na awtomatikong dine-delete ng Android ang data na iminumungkahi ng app. Posibleng lumabas ulit sa listahan ang isang app na ginamit mo ulit. O kaya, puwede kang mag-block ng app sa pagmumungkahi ng mga ad para sa iyo.\n\nSa iyong mga app, posibleng naka-personalize ang ad na nakikita mo, depende sa setting na ito, sa setting ng mga paksa ng ad, sa mga setting mo para sa advertising ID, at kung nagpe-personalize ng mga ad ang ginagamit mong app."</string>
-    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
-    <skip />
-    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
-    <skip />
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Makulay na paglalarawan ng mga simbolong kumakatawan sa mga paksang kaiinteresan gaya ng musika, balita, at sports"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Makulay na paglalarawan ng lock sa loob ng bilog"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Maliit na black and white na paglalarawan ng siyam na tuldok na bumubuo ng kuwadrado"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"Maliit na black and white na paglalarawan ng mga simpleng hugis gaya ng puso, tatsulok, at kuwadrado"</string>
     <string name="topic10001" msgid="1636806320891333775">"Sining at Entertainment"</string>
     <string name="topic10002" msgid="1226367977754287428">"Pag-arte at Teatro"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime at Manga"</string>

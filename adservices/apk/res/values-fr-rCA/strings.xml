@@ -183,11 +183,9 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Les applications que vous utilisez peuvent également déterminer ce qui vous intéresse en fonction de la façon dont vous les utilisez."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Les applications que vous utilisez peuvent demander des renseignements à Android afin de pouvoir mesurer la performance de leurs annonces. Android permet aux applications de collecter des types limités de données."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Activé pour <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> sujets"</string>
-    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
-    <skip />
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Activé pour # sujet}one{Activé pour # sujet}many{Activé pour # de sujets}other{Activé pour # sujets}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Activé pour <xliff:g id="APPS_COUNT">%1$d</xliff:g> applications"</string>
-    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
-    <skip />
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{Activé pour # application}one{Activé pour # application}many{Activé pour # d\'applications}other{Activé pour # applications}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"Activé"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Désactivé"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Les sujets d\'intérêt sont basés sur les applications que vous avez utilisées récemment et sont utilisés par les applications pour vous montrer des annonces personnalisées.\n\nVous pouvez bloquer les sujets que vous ne voulez pas partager avec des applications. De plus, Android supprime automatiquement et régulièrement les sujets."</string>
@@ -200,14 +198,10 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Applications que vous avez bloquées"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Réinitialiser les données suggérées par les applications"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Il est courant que les applications que vous utilisez mémorisent les sujets qui vous intéressent afin de personnaliser votre expérience. Les applications peuvent également stocker des renseignements sur Android concernant ces sujets.\n\nPar exemple, si vous utilisez une application portant sur l\'entraînement au marathon, l\'application peut déterminer que vous êtes intéressé par des chaussures de course. Par la suite, si vous utilisez une autre application, celle-ci peut vous montrer une annonce pour des chaussures de course suggérée par la première application.\n\nAndroid supprime automatiquement et régulièrement les données suggérées par les applications. Une application que vous utilisez de nouveau peut réapparaître dans la liste. Vous pouvez également bloquer une application pour l\'empêcher de vous suggérer des annonces.\n\nDans vos applications, une annonce que vous voyez peut être personnalisée en fonction de ce paramètre, du paramètre des sujets d\'annonces, de vos paramètres d\'identifiant publicitaire, et si l\'application que vous utilisez personnalise les annonces."</string>
-    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
-    <skip />
-    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
-    <skip />
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Illustration colorée de symboles représentant des sujets d\'intérêt tels que la musique, les actualités et les sports"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Illustration colorée d\'un cadenas à l\'intérieur d\'un cercle"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Petite illustration en noir et blanc de neuf points formant un carré"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"Petite illustration en noir et blanc de formes simples comme un cœur, un triangle et un carré"</string>
     <string name="topic10001" msgid="1636806320891333775">"Arts et divertissements"</string>
     <string name="topic10002" msgid="1226367977754287428">"Théâtre"</string>
     <string name="topic10003" msgid="6949890838957814881">"Films d\'animation et mangas"</string>
