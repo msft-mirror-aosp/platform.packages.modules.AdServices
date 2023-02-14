@@ -33,6 +33,8 @@ import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.common.util.concurrent.FutureCallback;
+
 import java.time.Clock;
 import java.time.Instant;
 import java.util.concurrent.ExecutionException;
@@ -73,30 +75,41 @@ public class BackgroundFetchJobService extends JobService {
         Instant jobStartTime = Clock.systemUTC().instant();
         LogUtil.d("Starting FLEDGE background fetch job at %s", jobStartTime.toString());
 
-        AdServicesExecutors.getBackgroundExecutor()
-                .execute(
-                        () -> {
-                            try {
-                                BackgroundFetchWorker.getInstance(this)
-                                        .runBackgroundFetch(jobStartTime);
-                            } catch (InterruptedException exception) {
-                                LogUtil.e(
-                                        exception,
-                                        "FLEDGE background fetch interrupted while waiting for"
-                                                + " custom audience updates");
-                            } catch (ExecutionException exception) {
-                                LogUtil.e(
-                                        exception,
-                                        "FLEDGE background fetch failed due to internal error");
-                            } catch (TimeoutException exception) {
-                                LogUtil.e(exception, "FLEDGE background fetch timeout exceeded");
-                            }
-
+        BackgroundFetchWorker.getInstance(this)
+                .runBackgroundFetch()
+                .addCallback(
+                        new FutureCallback<Void>() {
                             // Never manually reschedule the background fetch job, since it is
                             // already scheduled periodically and should try again multiple times
                             // per day
-                            jobFinished(params, false);
-                        });
+                            @Override
+                            public void onSuccess(Void result) {
+                                jobFinished(params, false);
+                            }
+
+                            @Override
+                            public void onFailure(Throwable t) {
+                                if (t instanceof InterruptedException) {
+                                    LogUtil.e(
+                                            t,
+                                            "FLEDGE background fetch interrupted while waiting for"
+                                                    + " custom audience updates");
+                                } else if (t instanceof ExecutionException) {
+                                    LogUtil.e(
+                                            t,
+                                            "FLEDGE background fetch failed due to internal error");
+                                } else if (t instanceof TimeoutException) {
+                                    LogUtil.e(t, "FLEDGE background fetch timeout exceeded");
+                                } else {
+                                    LogUtil.e(
+                                            t,
+                                            "FLEDGE background fetch failed due to unexpected"
+                                                    + " error");
+                                }
+                                jobFinished(params, false);
+                            }
+                        },
+                        AdServicesExecutors.getLightWeightExecutor());
 
         return true;
     }
