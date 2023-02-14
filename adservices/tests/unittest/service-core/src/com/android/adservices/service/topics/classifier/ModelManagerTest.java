@@ -533,9 +533,9 @@ public class ModelManagerTest {
                 .isEqualTo("assets/classifier/topic_id_to_name.csv");
 
         // The asset "precomputed_app_list" should have attribution "checksum" and
-        // its value should be "8749598423bb8baca59e0da508739d544e40f230e7edcdb92438e9e76f75e830"
+        // its value should be "6901c8be98bc1350ca46c1763868ce13e52225ddbf5ef6fd5126015dc991852b"
         assertThat(mProductionClassifierAssetsMetadata.get("precomputed_app_list").get("checksum"))
-                .isEqualTo("8749598423bb8baca59e0da508739d544e40f230e7edcdb92438e9e76f75e830");
+                .isEqualTo("6901c8be98bc1350ca46c1763868ce13e52225ddbf5ef6fd5126015dc991852b");
     }
 
     @Test
@@ -614,9 +614,9 @@ public class ModelManagerTest {
                 .isEqualTo("assets/classifier/topic_id_to_name.csv");
 
         // The asset "precomputed_app_list" should have attribution "checksum" and
-        // its value should be "8749598423bb8baca59e0da508739d544e40f230e7edcdb92438e9e76f75e830"
+        // its value should be "6901c8be98bc1350ca46c1763868ce13e52225ddbf5ef6fd5126015dc991852b"
         assertThat(mProductionClassifierAssetsMetadata.get("precomputed_app_list").get("checksum"))
-                .isEqualTo("8749598423bb8baca59e0da508739d544e40f230e7edcdb92438e9e76f75e830");
+                .isEqualTo("6901c8be98bc1350ca46c1763868ce13e52225ddbf5ef6fd5126015dc991852b");
     }
 
     @Test
