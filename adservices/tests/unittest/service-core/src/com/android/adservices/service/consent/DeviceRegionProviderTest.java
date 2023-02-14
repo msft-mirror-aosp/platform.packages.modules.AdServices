@@ -114,6 +114,7 @@ public class DeviceRegionProviderTest {
 
     @Test
     public void isGbDeviceTrue() {
+        doReturn(Flags.IS_EEA_DEVICE).when(mMockFlags).isEeaDevice();
         doReturn("gb").when(mTelephonyManager).getSimCountryIso();
         doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
         doReturn(mPackageManager).when(mContext).getPackageManager();
@@ -124,6 +125,7 @@ public class DeviceRegionProviderTest {
 
     @Test
     public void isChDeviceTrue() {
+        doReturn(Flags.IS_EEA_DEVICE).when(mMockFlags).isEeaDevice();
         doReturn("ch").when(mTelephonyManager).getSimCountryIso();
         doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
         doReturn(mPackageManager).when(mContext).getPackageManager();
@@ -134,6 +136,7 @@ public class DeviceRegionProviderTest {
 
     @Test
     public void isEuDeviceTrue() {
+        doReturn(Flags.IS_EEA_DEVICE).when(mMockFlags).isEeaDevice();
         doReturn("pl").when(mTelephonyManager).getSimCountryIso();
         doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
         doReturn(mPackageManager).when(mContext).getPackageManager();
@@ -144,6 +147,7 @@ public class DeviceRegionProviderTest {
 
     @Test
     public void isEuDeviceFalse() {
+        doReturn(Flags.IS_EEA_DEVICE).when(mMockFlags).isEeaDevice();
         doReturn("us").when(mTelephonyManager).getSimCountryIso();
         doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
         doReturn(mPackageManager).when(mContext).getPackageManager();
@@ -154,6 +158,7 @@ public class DeviceRegionProviderTest {
 
     @Test
     public void noSimCardInstalledTest() {
+        doReturn(Flags.IS_EEA_DEVICE).when(mMockFlags).isEeaDevice();
         doReturn("").when(mTelephonyManager).getSimCountryIso();
         doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
         doReturn(mPackageManager).when(mContext).getPackageManager();
@@ -175,6 +180,84 @@ public class DeviceRegionProviderTest {
         doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
         doReturn(mPackageManager).when(mContext).getPackageManager();
         doReturn(null).when(mContext).getSystemService(TelephonyManager.class);
+
+        assertThat(DeviceRegionProvider.isEuDevice(mContext, mMockFlags)).isTrue();
+    }
+
+    @Test
+    public void deviceRegionFlagOnTest_isEeaDeviceNoSim() {
+        doReturn(true).when(mMockFlags).isEeaDeviceFeatureEnabled();
+        doReturn(true).when(mMockFlags).isEeaDevice();
+
+        doReturn("").when(mTelephonyManager).getSimCountryIso();
+        doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
+        doReturn(mPackageManager).when(mContext).getPackageManager();
+        doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
+
+        assertThat(DeviceRegionProvider.isEuDevice(mContext, mMockFlags)).isTrue();
+    }
+
+    @Test
+    public void deviceRegionFlagOnTest_isEeaDeviceUsSim() {
+        doReturn(true).when(mMockFlags).isEeaDeviceFeatureEnabled();
+        doReturn(true).when(mMockFlags).isEeaDevice();
+
+        doReturn("us").when(mTelephonyManager).getSimCountryIso();
+        doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
+        doReturn(mPackageManager).when(mContext).getPackageManager();
+        doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
+
+        assertThat(DeviceRegionProvider.isEuDevice(mContext, mMockFlags)).isTrue();
+    }
+
+    @Test
+    public void deviceRegionFlagOnTest_isEeaDeviceGbSim() {
+        doReturn(true).when(mMockFlags).isEeaDeviceFeatureEnabled();
+        doReturn(true).when(mMockFlags).isEeaDevice();
+
+        doReturn("us").when(mTelephonyManager).getSimCountryIso();
+        doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
+        doReturn(mPackageManager).when(mContext).getPackageManager();
+        doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
+
+        assertThat(DeviceRegionProvider.isEuDevice(mContext, mMockFlags)).isTrue();
+    }
+
+    @Test
+    public void deviceRegionFlagOnTest_notEeaDeviceUsSim() {
+        doReturn(true).when(mMockFlags).isEeaDeviceFeatureEnabled();
+        doReturn(false).when(mMockFlags).isEeaDevice();
+
+        doReturn("us").when(mTelephonyManager).getSimCountryIso();
+        doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
+        doReturn(mPackageManager).when(mContext).getPackageManager();
+        doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
+
+        assertThat(DeviceRegionProvider.isEuDevice(mContext, mMockFlags)).isFalse();
+    }
+
+    @Test
+    public void deviceRegionFlagOnTest_notEeaDeviceChSim() {
+        doReturn(true).when(mMockFlags).isEeaDeviceFeatureEnabled();
+        doReturn(false).when(mMockFlags).isEeaDevice();
+
+        doReturn("ch").when(mTelephonyManager).getSimCountryIso();
+        doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
+        doReturn(mPackageManager).when(mContext).getPackageManager();
+        doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
+
+        assertThat(DeviceRegionProvider.isEuDevice(mContext, mMockFlags)).isFalse();
+    }
+
+    @Test
+    public void deviceRegionFlagOnTest_gbFlagNoSim() {
+        doReturn(true).when(mMockFlags).isEeaDeviceFeatureEnabled();
+        doReturn(true).when(mMockFlags).isEeaDevice();
+
+        doReturn("").when(mTelephonyManager).getSimCountryIso();
+        doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
+        doReturn(mPackageManager).when(mContext).getPackageManager();
+        doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
 
         assertThat(DeviceRegionProvider.isEuDevice(mContext, mMockFlags)).isTrue();
     }

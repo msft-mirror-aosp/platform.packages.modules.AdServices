@@ -47,16 +47,21 @@ public class DeviceRegionProvider {
             // if there is no telephony manager accessible, we fall back to EU device
             if (telephonyManager == null) return true;
 
-            String simCountryIso = telephonyManager.getSimCountryIso();
+            // we use PH to determine whether device is in the EEA region.
+            if (FlagsFactory.getFlags().isEeaDeviceFeatureEnabled()) {
+                return FlagsFactory.getFlags().isEeaDevice();
+            }
 
+            // and fall back to sim card locations if the feature is not yet enabled.
             // if there is no sim card installed, we fall back to EU device
-            if (simCountryIso.isEmpty()) {
+            String deviceCountryIso = telephonyManager.getSimCountryIso();
+            if (deviceCountryIso.isEmpty()) {
                 return true;
             }
 
             // if simCountryIso detects the user's country as one of EEA countries
             // we treat this device as EU device, otherwise ROW device
-            if (getUiEeaCountriesSet().contains(simCountryIso.toUpperCase(Locale.ENGLISH))) {
+            if (getUiEeaCountriesSet().contains(deviceCountryIso.toUpperCase(Locale.ENGLISH))) {
                 return true;
             }
 
@@ -77,22 +82,28 @@ public class DeviceRegionProvider {
             // if there is no telephony manager accessible, we fall back to EU device
             if (telephonyManager == null) return true;
 
-            String simCountryIso = telephonyManager.getSimCountryIso();
+            // we use PH to determine whether device is in the EEA region.
+            if (flags.isEeaDeviceFeatureEnabled()) {
+                return flags.isEeaDevice();
+            }
 
+            // and fall back to sim card locations if the feature is not yet enabled.
             // if there is no sim card installed, we fall back to EU device
-            if (simCountryIso.isEmpty()) {
+            String deviceCountryIso = telephonyManager.getSimCountryIso();
+            if (deviceCountryIso.isEmpty()) {
                 return true;
             }
 
             // if simCountryIso detects the user's country as one of EEA countries
             // we treat this device as EU device, otherwise ROW device
-            if (getUiEeaCountriesSet(flags).contains(simCountryIso.toUpperCase(Locale.ENGLISH))) {
+            if (getUiEeaCountriesSet(flags)
+                    .contains(deviceCountryIso.toUpperCase(Locale.ENGLISH))) {
                 return true;
             }
 
             return false;
         }
-        // if there is no telephony feature, we fallback to EU device
+        // if there is no telephony feature, we fall back to EU device
         return true;
     }
 
@@ -116,7 +127,7 @@ public class DeviceRegionProvider {
         }
     }
 
-    /** Checks whether a EEA countries string is valid. */
+    /** Checks whether an EEA countries string is valid. */
     public static boolean isValidEeaCountriesString(String str) {
         if (str == null || TextUtils.isEmpty(str)) {
             return false;
