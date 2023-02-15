@@ -180,9 +180,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     static class Injector {
         private final Context mContext;
         private SdkSandboxManagerLocal mLocalManager;
+        private final SdkSandboxServiceProvider mServiceProvider;
 
         Injector(Context context) {
             mContext = context;
+            mServiceProvider = new SdkSandboxServiceProviderImpl(mContext);
         }
 
         private static final boolean IS_EMULATOR =
@@ -202,7 +204,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
 
         SdkSandboxServiceProvider getSdkSandboxServiceProvider() {
-            return new SdkSandboxServiceProviderImpl(mContext);
+            return mServiceProvider;
         }
 
         SdkSandboxPulledAtoms getSdkSandboxPulledAtoms() {
