@@ -99,6 +99,7 @@ import org.mockito.stubbing.Answer;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -162,7 +163,13 @@ public class TopicsServiceImplTest {
                 new BlockedTopicsManager(
                         mTopicsDao, mMockAdServicesManager, Flags.PPAPI_AND_SYSTEM_SERVER);
         CacheManager cacheManager =
-                new CacheManager(mTopicsDao, mMockFlags, mLogger, mBlockedTopicsManager);
+                new CacheManager(
+                        mTopicsDao,
+                        mMockFlags,
+                        mLogger,
+                        mBlockedTopicsManager,
+                        new GlobalBlockedTopicsManager(
+                                /* globalBlockedTopicsManager = */ new HashSet<>()));
 
         AppUpdateManager appUpdateManager =
                 new AppUpdateManager(dbHelper, mTopicsDao, new Random(), mMockFlags);

@@ -31,6 +31,9 @@ import com.android.internal.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /** Flags Implementation that delegates to DeviceConfig. */
 // TODO(b/228037065): Add validation logics for Feature flags read from PH.
@@ -52,6 +55,7 @@ public final class PhFlags implements Flags {
     static final String KEY_TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS = "topics_number_of_lookback_epochs";
     static final String KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY =
             "topics_number_of_epochs_to_keep_in_history";
+    static final String KEY_GLOBAL_BLOCKED_TOPIC_IDS = "topics_global_blocked_topic_ids";
 
     // Topics classifier keys
     static final String KEY_CLASSIFIER_TYPE = "classifier_type";
@@ -1975,6 +1979,7 @@ public final class PhFlags implements Flags {
                         + KEY_TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS
                         + " = "
                         + getTopicsNumberOfLookBackEpochs());
+        writer.println("\t" + KEY_GLOBAL_BLOCKED_TOPIC_IDS + " = " + getGlobalBlockedTopicIds());
 
         writer.println("==== AdServices PH Flags Dump Topics Classifier related flags ====");
         writer.println(
@@ -2407,5 +2412,37 @@ public final class PhFlags implements Flags {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_ENABLE_BACK_COMPAT,
                 /* defaultValue */ ENABLE_BACK_COMPAT);
+    }
+
+    @Override
+    public ImmutableList<Integer> getGlobalBlockedTopicIds() {
+        String defaultGlobalBlockedTopicIds =
+                TOPICS_GLOBAL_BLOCKED_TOPIC_IDS.stream()
+                        .map(String::valueOf)
+                        .collect(Collectors.joining(","));
+
+        String globalBlockedTopicIds =
+                DeviceConfig.getString(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        KEY_GLOBAL_BLOCKED_TOPIC_IDS,
+                        defaultGlobalBlockedTopicIds);
+        if (TextUtils.isEmpty(globalBlockedTopicIds)) {
+            return ImmutableList.of();
+        }
+        globalBlockedTopicIds = globalBlockedTopicIds.trim();
+        String[] globalBlockedTopicIdsList = globalBlockedTopicIds.split(",");
+
+        List<Integer> globalBlockedTopicIdsIntList = new ArrayList<>();
+
+        for (String blockedTopicId : globalBlockedTopicIdsList) {
+            try {
+                int topicIdInteger = Integer.parseInt(blockedTopicId.trim());
+                globalBlockedTopicIdsIntList.add(topicIdInteger);
+            } catch (NumberFormatException e) {
+                LogUtil.e("Parsing global blocked topic ids failed for " + globalBlockedTopicIds);
+                return TOPICS_GLOBAL_BLOCKED_TOPIC_IDS;
+            }
+        }
+        return ImmutableList.copyOf(globalBlockedTopicIdsIntList);
     }
 }
