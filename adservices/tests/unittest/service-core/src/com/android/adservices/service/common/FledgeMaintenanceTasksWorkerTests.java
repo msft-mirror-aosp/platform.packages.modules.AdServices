@@ -54,7 +54,7 @@ public class FledgeMaintenanceTasksWorkerTests {
     private static final long AD_SELECTION_ID_2 = 23456L;
 
     private static final String CLICK_EVENT = "click";
-    private static final int SELLER_DESTINATION = ReportInteractionInput.DESTINATION_SELLER;
+    private static final int SELLER_DESTINATION = ReportInteractionInput.FLAG_DESTINATION_SELLER;
     private static final Uri SELLER_CLICK_URI = Uri.parse("https://www.seller.com/" + CLICK_EVENT);
 
     private static final DBAdSelection DB_AD_SELECTION =
