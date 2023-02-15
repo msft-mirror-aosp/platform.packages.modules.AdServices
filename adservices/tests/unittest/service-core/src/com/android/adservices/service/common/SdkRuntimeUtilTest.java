@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.os.Process;
 
+import com.android.adservices.service.common.compat.ProcessCompatUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
@@ -35,6 +36,7 @@ public class SdkRuntimeUtilTest {
         mMockitoSession =
                 ExtendedMockito.mockitoSession()
                         .mockStatic(Process.class)
+                        .mockStatic(ProcessCompatUtils.class)
                         .initMocks(this)
                         .startMocking();
     }
@@ -47,7 +49,7 @@ public class SdkRuntimeUtilTest {
     @Test
     public void testCallingUidIsNotSdkSandbox_returnParameterUid() {
         int uid = 400;
-        ExtendedMockito.doReturn(false).when(() -> Process.isSdkSandboxUid(uid));
+        ExtendedMockito.doReturn(false).when(() -> ProcessCompatUtils.isSdkSandboxUid(uid));
         assertThat(SdkRuntimeUtil.getCallingAppUid(uid)).isEqualTo(uid);
     }
 
@@ -55,7 +57,7 @@ public class SdkRuntimeUtilTest {
     public void testCallingUidIsSdkSandbox_returnAppUid() {
         int sdkUid = 400;
         int appUid = 200;
-        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(sdkUid));
+        ExtendedMockito.doReturn(true).when(() -> ProcessCompatUtils.isSdkSandboxUid(sdkUid));
         ExtendedMockito.doReturn(appUid).when(() -> Process.getAppUidForSdkSandboxUid(sdkUid));
         assertThat(SdkRuntimeUtil.getCallingAppUid(sdkUid)).isEqualTo(appUid);
     }

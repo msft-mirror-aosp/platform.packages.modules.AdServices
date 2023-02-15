@@ -183,7 +183,9 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Apps you use can also determine what you like based on how you use them."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Apps you use can ask Android for information to help them measure the performance of their ads. Android lets apps collect limited types of data."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"On / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> topics"</string>
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{On / # topic}other{On / # topics}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"On / <xliff:g id="APPS_COUNT">%1$d</xliff:g> apps"</string>
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{On / # app}other{On / # apps}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"On"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Off"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Topics of interest are based on the apps you’ve used recently, and are used by apps to show you personalized ads.\n\nYou can block topics you don’t want shared with apps. Android also auto-deletes topics regularly."</string>
@@ -196,6 +198,10 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Apps you blocked"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Reset app-suggested data"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"It’s common for apps you use to remember things you’re interested in to personalize your experience. Apps can also store information with Android about your topics.\n\nFor example, if you use an app about marathon training, the app might decide that you’re interested in running shoes. Later, if you use a different app, that app can show you an ad for running shoes suggested by the first app.\n\nAndroid auto-deletes app-suggested data regularly. An app you use again might reappear on the list. Or you can block an app from suggesting ads for you.\n\nIn your apps, an ad you see may be personalized, depending on this setting, the ad topics setting, your advertising ID settings, and whether the app you’re using personalizes ads."</string>
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Colorful illustration of symbols representing topics of interest like music, news, and sports"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Colorful illustration of a lock inside a circle"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Small black and white illustration of nine dots forming a square"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"Small black and white illustration of simple shapes like a heart, triangle, and square"</string>
     <string name="topic10001" msgid="1636806320891333775">"Arts &amp; Entertainment"</string>
     <string name="topic10002" msgid="1226367977754287428">"Acting &amp; Theater"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime &amp; Manga"</string>

@@ -54,6 +54,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
         "payload": {
           "attribution_destination": "android-app://example.2d1.test",
+          "scheduled_report_time": "801731600",
           "source_event_id": "1",
           "trigger_data": "1",
           "source_type": "event",

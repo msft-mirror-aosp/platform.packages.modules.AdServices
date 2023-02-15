@@ -27,15 +27,17 @@ import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.TrustedBiddingData;
 import android.adservices.test.scenario.adservices.utils.MockWebServerRule;
 import android.adservices.test.scenario.adservices.utils.MockWebServerRuleFactory;
+import android.adservices.test.scenario.adservices.utils.SelectAdsFlagRule;
 import android.content.Context;
 import android.net.Uri;
+import android.platform.test.rule.CleanPackageRule;
+import android.platform.test.rule.KillAppsRule;
 import android.platform.test.scenario.annotation.Scenario;
 import android.provider.DeviceConfig;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.compatibility.common.util.ShellUtils;
 
 import com.google.mockwebserver.Dispatcher;
 import com.google.mockwebserver.MockResponse;
@@ -44,6 +46,7 @@ import com.google.mockwebserver.RecordedRequest;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
+import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
@@ -61,15 +64,7 @@ import java.util.concurrent.Executors;
 @RunWith(JUnit4.class)
 public class AbstractPerfTest {
 
-    // The number of ms to sleep after killing the adservices process so it has time to recover
-    public static final long SLEEP_MS_AFTER_KILL = 2000L;
-    // Command to kill the adservices process
-    public static final String KILL_ADSERVICES_CMD =
-            "su 0 killall -9 com.google.android.adservices.api";
-    // Command prevent activity manager from backing off on restarting the adservices process
-    public static final String DISABLE_ADSERVICES_BACKOFF_CMD =
-            "am service-restart-backoff disable com.google.android.adservices.api";
-
+    private static final String PPAPI_PACKAGE = "com.google.android.adservices.api";
     public static final Duration CUSTOM_AUDIENCE_EXPIRE_IN = Duration.ofDays(1);
     public static final Instant VALID_ACTIVATION_TIME = Instant.now();
     public static final Instant VALID_EXPIRATION_TIME =
@@ -164,10 +159,15 @@ public class AbstractPerfTest {
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
     protected Dispatcher mDefaultDispatcher;
 
+    // Per-test method rules, run in the given order.
+    @Rule
+    public RuleChain rules =
+            RuleChain.outerRule(new KillAppsRule(PPAPI_PACKAGE))
+                    .around(new CleanPackageRule(PPAPI_PACKAGE))
+                    .around(new SelectAdsFlagRule());
+
     @BeforeClass
     public static void setupBeforeClass() {
-        // Disable backoff since we will be killing the process between tests
-        ShellUtils.runShellCommand(DISABLE_ADSERVICES_BACKOFF_CMD);
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
@@ -177,10 +177,6 @@ public class AbstractPerfTest {
                 "fledge_js_isolate_enforce_max_heap_size",
                 "false",
                 true);
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES, "disable_fledge_enrollment_check", "true", true);
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES, "ppapi_app_allow_list", "*", true);
     }
 
     public static Uri getUri(String name, String path) {
@@ -189,8 +185,6 @@ public class AbstractPerfTest {
 
     @Before
     public void setup() throws InterruptedException {
-        ShellUtils.runShellCommand(KILL_ADSERVICES_CMD);
-        Thread.sleep(SLEEP_MS_AFTER_KILL);
         mDefaultDispatcher =
                 new Dispatcher() {
                     @Override
@@ -210,16 +204,6 @@ public class AbstractPerfTest {
                         return new MockResponse().setResponseCode(404);
                     }
                 };
-    }
-
-    protected void addDelayToAvoidThrottle() throws InterruptedException {
-        addDelayToAvoidThrottle(DELAY_TO_AVOID_THROTTLE_MS);
-    }
-
-    protected void addDelayToAvoidThrottle(int delayValueMs) throws InterruptedException {
-        if (delayValueMs > 0) {
-            Thread.sleep(delayValueMs);
-        }
     }
 
     protected CustomAudience createCustomAudience(
@@ -298,5 +282,9 @@ public class AbstractPerfTest {
     // TODO(b/244530379) Make compatible with multiple buyers
     protected Uri getValidTrustedBiddingUriByBuyer(AdTechIdentifier buyer) {
         return mMockWebServerRule.uriForPath(VALID_TRUSTED_BIDDING_URI_PATH);
+    }
+
+    protected void addDelayToAvoidThrottle() throws InterruptedException {
+        Thread.sleep(DELAY_TO_AVOID_THROTTLE_MS);
     }
 }

@@ -31,6 +31,9 @@ import com.android.internal.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /** Flags Implementation that delegates to DeviceConfig. */
 // TODO(b/228037065): Add validation logics for Feature flags read from PH.
@@ -52,6 +55,7 @@ public final class PhFlags implements Flags {
     static final String KEY_TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS = "topics_number_of_lookback_epochs";
     static final String KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY =
             "topics_number_of_epochs_to_keep_in_history";
+    static final String KEY_GLOBAL_BLOCKED_TOPIC_IDS = "topics_global_blocked_topic_ids";
 
     // Topics classifier keys
     static final String KEY_CLASSIFIER_TYPE = "classifier_type";
@@ -193,6 +197,8 @@ public final class PhFlags implements Flags {
             "fledge_ad_selection_enforce_foreground_status_run_ad_selection";
     static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION =
             "fledge_ad_selection_enforce_foreground_status_report_impression";
+    static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_INTERACTION =
+            "fledge_ad_selection_enforce_foreground_status_report_interaction";
     static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDE =
             "fledge_ad_selection_enforce_foreground_status_ad_selection_override";
     static final String KEY_FOREGROUND_STATUS_LEVEL = "foreground_validation_status_level";
@@ -256,6 +262,8 @@ public final class PhFlags implements Flags {
             "measurement_receiver_delete_packages_kill_switch";
     static final String KEY_MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH =
             "measurement_job_registration_job_queue_kill_switch";
+    static final String KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH =
+            "measurement_rollback_deletion_kill_switch";
     static final String KEY_TOPICS_KILL_SWITCH = "topics_kill_switch";
     static final String KEY_MDD_BACKGROUND_TASK_KILL_SWITCH = "mdd_background_task_kill_switch";
     static final String KEY_MDD_LOGGER_KILL_SWITCH = "mdd_logger_kill_switch";
@@ -324,7 +332,14 @@ public final class PhFlags implements Flags {
 
     static final String KEY_UI_DIALOGS_FEATURE_ENABLED = "ui_dialogs_feature_enabled";
 
+    static final String KEY_UI_EEA_COUNTRIES = "ui_eea_countries";
+
     static final String KEY_GA_UX_FEATURE_ENABLED = "ga_ux_enabled";
+
+    // Back-compat keys
+    static final String KEY_COMPAT_LOGGING_KILL_SWITCH = "compat_logging_kill_switch";
+
+    static final String KEY_ENABLE_BACK_COMPAT = "enable_back_compat";
 
     // Maximum possible percentage for percentage variables
     static final int MAX_PERCENTAGE = 100;
@@ -1324,6 +1339,19 @@ public final class PhFlags implements Flags {
                                 defaultValue));
     }
 
+    @Override
+    public boolean getMeasurementRollbackDeletionKillSwitch() {
+        final boolean defaultValue = MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                /* flagName */ KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH,
+                                defaultValue));
+    }
+
     // ADID Killswitches
     @Override
     public boolean getAdIdKillSwitch() {
@@ -1660,6 +1688,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getEnforceForegroundStatusForFledgeReportInteraction() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_INTERACTION,
+                /* defaultValue */ ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_INTERACTION);
+    }
+
+    @Override
     public int getForegroundStatuslLevelForValidation() {
         return DeviceConfig.getInt(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -1811,6 +1847,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public String getUiEeaCountries() {
+        String uiEeaCountries =
+                DeviceConfig.getString(
+                        DeviceConfig.NAMESPACE_ADSERVICES, KEY_UI_EEA_COUNTRIES, UI_EEA_COUNTRIES);
+        return uiEeaCountries;
+    }
+
+    @Override
     public boolean getGaUxFeatureEnabled() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return SystemProperties.getBoolean(
@@ -1838,11 +1882,11 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getEnableDatabaseSchemaVersion5() {
+    public boolean getEnableTopicMigration() {
         return DeviceConfig.getBoolean(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_ENABLE_DATABASE_SCHEMA_VERSION_7,
-                /* defaultValue */ ENABLE_DATABASE_SCHEMA_VERSION_7);
+                /* defaultValue */ ENABLE_TOPIC_MIGRATION);
     }
 
     @Override
@@ -1935,6 +1979,7 @@ public final class PhFlags implements Flags {
                         + KEY_TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS
                         + " = "
                         + getTopicsNumberOfLookBackEpochs());
+        writer.println("\t" + KEY_GLOBAL_BLOCKED_TOPIC_IDS + " = " + getGlobalBlockedTopicIds());
 
         writer.println("==== AdServices PH Flags Dump Topics Classifier related flags ====");
         writer.println(
@@ -2044,6 +2089,11 @@ public final class PhFlags implements Flags {
                         + " = "
                         + getEnforceForegroundStatusForMeasurementRegisterWebTrigger());
         writer.println("\t" + KEY_MEASUREMENT_ENABLE_XNA + " = " + getMeasurementEnableXNA());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH
+                        + " = "
+                        + getMeasurementRollbackDeletionKillSwitch());
         writer.println(
                 "\t"
                         + KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST
@@ -2253,6 +2303,11 @@ public final class PhFlags implements Flags {
                         + getEnforceForegroundStatusForFledgeReportImpression());
         writer.println(
                 "\t"
+                        + KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_INTERACTION
+                        + " = "
+                        + getEnforceForegroundStatusForFledgeReportInteraction());
+        writer.println(
+                "\t"
                         + KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION
                         + " = "
                         + getEnforceForegroundStatusForFledgeRunAdSelection());
@@ -2291,6 +2346,7 @@ public final class PhFlags implements Flags {
         writer.println("==== AdServices PH Flags Dump UI Related Flags ====");
         writer.println(
                 "\t" + KEY_UI_DIALOGS_FEATURE_ENABLED + " = " + getUIDialogsFeatureEnabled());
+        writer.println("\t" + KEY_UI_EEA_COUNTRIES + " = " + getUiEeaCountries());
         writer.println(
                 "\t"
                         + KEY_UI_OTA_STRINGS_FEATURE_ENABLED
@@ -2315,6 +2371,11 @@ public final class PhFlags implements Flags {
                         + KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH
                         + " = "
                         + getBlockedTopicsSourceOfTruth());
+        writer.println("==== Back-Compat PH Flags Dump STATUS ====");
+        writer.println(
+                "\t" + KEY_COMPAT_LOGGING_KILL_SWITCH + " = " + getCompatLoggingKillSwitch());
+        writer.println("==== Enable Back-Compat PH Flags Dump STATUS ====");
+        writer.println("\t" + KEY_ENABLE_BACK_COMPAT + " = " + getEnableBackCompat());
     }
 
     @Override
@@ -2333,5 +2394,55 @@ public final class PhFlags implements Flags {
         }
         String[] blocklistList = blocklistFlag.split(",");
         return ImmutableList.copyOf(blocklistList);
+    }
+
+    @Override
+    public boolean getCompatLoggingKillSwitch() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_COMPAT_LOGGING_KILL_SWITCH,
+                /* defaultValue */ COMPAT_LOGGING_KILL_SWITCH);
+    }
+
+    @Override
+    public boolean getEnableBackCompat() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ENABLE_BACK_COMPAT,
+                /* defaultValue */ ENABLE_BACK_COMPAT);
+    }
+
+    @Override
+    public ImmutableList<Integer> getGlobalBlockedTopicIds() {
+        String defaultGlobalBlockedTopicIds =
+                TOPICS_GLOBAL_BLOCKED_TOPIC_IDS.stream()
+                        .map(String::valueOf)
+                        .collect(Collectors.joining(","));
+
+        String globalBlockedTopicIds =
+                DeviceConfig.getString(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        KEY_GLOBAL_BLOCKED_TOPIC_IDS,
+                        defaultGlobalBlockedTopicIds);
+        if (TextUtils.isEmpty(globalBlockedTopicIds)) {
+            return ImmutableList.of();
+        }
+        globalBlockedTopicIds = globalBlockedTopicIds.trim();
+        String[] globalBlockedTopicIdsList = globalBlockedTopicIds.split(",");
+
+        List<Integer> globalBlockedTopicIdsIntList = new ArrayList<>();
+
+        for (String blockedTopicId : globalBlockedTopicIdsList) {
+            try {
+                int topicIdInteger = Integer.parseInt(blockedTopicId.trim());
+                globalBlockedTopicIdsIntList.add(topicIdInteger);
+            } catch (NumberFormatException e) {
+                LogUtil.e("Parsing global blocked topic ids failed for " + globalBlockedTopicIds);
+                return TOPICS_GLOBAL_BLOCKED_TOPIC_IDS;
+            }
+        }
+        return ImmutableList.copyOf(globalBlockedTopicIdsIntList);
     }
 }

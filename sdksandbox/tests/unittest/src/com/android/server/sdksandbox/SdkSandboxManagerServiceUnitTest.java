@@ -28,6 +28,8 @@ import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_AP
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_SANDBOX;
 import static com.android.server.wm.ActivityInterceptorCallback.MAINLINE_SDK_SANDBOX_ORDER_ID;
 
+import com.android.sdksandbox.IComputeSdkStorageCallback;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
@@ -45,9 +47,11 @@ import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.SharedPreferencesUpdate;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallbackBinder;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallbackBinder;
+import android.app.sdksandbox.testutils.FakeSdkSandboxManagerLocal;
 import android.app.sdksandbox.testutils.FakeSdkSandboxProcessDeathCallbackBinder;
 import android.app.sdksandbox.testutils.FakeSdkSandboxService;
 import android.app.sdksandbox.testutils.FakeSharedPreferencesSyncCallback;
+import android.app.sdksandbox.testutils.SdkSandboxStorageManagerUtility;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -65,6 +69,7 @@ import android.os.ParcelFileDescriptor;
 import android.os.Process;
 import android.os.RemoteException;
 import android.os.ServiceManager;
+import android.os.UserHandle;
 import android.provider.DeviceConfig;
 import android.util.ArrayMap;
 
@@ -86,6 +91,7 @@ import com.android.server.pm.PackageManagerLocal;
 import com.android.server.wm.ActivityInterceptorCallback;
 import com.android.server.wm.ActivityInterceptorCallbackRegistry;
 
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -98,6 +104,7 @@ import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -118,14 +125,17 @@ public class SdkSandboxManagerServiceUnitTest {
     private ActivityManagerLocal mAmLocal;
     private ArgumentCaptor<ActivityInterceptorCallback> mInterceptorCallbackArgumentCaptor =
             ArgumentCaptor.forClass(ActivityInterceptorCallback.class);
+    private SdkSandboxStorageManagerUtility mSdkSandboxStorageManagerUtility;
 
     private static FakeSdkSandboxProvider sProvider;
     private static SdkSandboxPulledAtoms sSdkSandboxPulledAtoms;
 
-    private static SdkSandboxManagerLocal sSdkSandboxManagerLocal;
     private static SdkSandboxManagerService.SdkSandboxSettingsListener sSdkSandboxSettingsListener;
 
     private static final String CLIENT_PACKAGE_NAME = "com.android.client";
+
+    private static SdkSandboxStorageManager sSdkSandboxStorageManager;
+    private static SdkSandboxManagerLocal sSdkSandboxManagerLocal;
     private static final String SDK_NAME = "com.android.codeprovider";
     private static final String SDK_PROVIDER_PACKAGE = "com.android.codeprovider_1";
     private static final String SDK_PROVIDER_RESOURCES_SDK_NAME =
@@ -188,6 +198,7 @@ public class SdkSandboxManagerServiceUnitTest {
         }
 
         Context context = InstrumentationRegistry.getInstrumentation().getContext();
+        String testDir = context.getDir("test_dir", Context.MODE_PRIVATE).getPath();
         mSpyContext = Mockito.spy(context);
         ActivityManager am = context.getSystemService(ActivityManager.class);
         mAmSpy = Mockito.spy(Objects.requireNonNull(am));
@@ -212,16 +223,19 @@ public class SdkSandboxManagerServiceUnitTest {
         sProvider = new FakeSdkSandboxProvider(mSdkSandboxService);
 
         // Populate LocalManagerRegistry
-        mPmLocal = Mockito.mock(PackageManagerLocal.class);
-        ExtendedMockito.doReturn(mPmLocal)
-                .when(() -> LocalManagerRegistry.getManager(PackageManagerLocal.class));
         mAmLocal = Mockito.mock(ActivityManagerLocal.class);
         ExtendedMockito.doReturn(mAmLocal)
                 .when(() -> LocalManagerRegistry.getManager(ActivityManagerLocal.class));
+        mPmLocal = Mockito.spy(PackageManagerLocal.class);
 
         sSdkSandboxPulledAtoms = Mockito.spy(new SdkSandboxPulledAtoms());
+        sSdkSandboxStorageManager =
+                new SdkSandboxStorageManager(
+                        mSpyContext, new FakeSdkSandboxManagerLocal(), mPmLocal, testDir);
+        mSdkSandboxStorageManagerUtility =
+                new SdkSandboxStorageManagerUtility(sSdkSandboxStorageManager);
 
-        mInjector = Mockito.spy(new InjectorForTest(mSpyContext));
+        mInjector = Mockito.spy(new InjectorForTest(mSpyContext, sSdkSandboxStorageManager));
 
         mService = new SdkSandboxManagerService(mSpyContext, mInjector);
         mService.forceEnableSandbox();
@@ -929,6 +943,12 @@ public class SdkSandboxManagerServiceUnitTest {
         assertThrows(
                 SecurityException.class,
                 () -> sSdkSandboxManagerLocal.enforceAllowedToSendBroadcast(disallowedIntent));
+    }
+
+    /** Tests that no broadcast can be sent from the sdk sandbox. */
+    @Test
+    public void testCanSendBroadcast() {
+        assertThat(sSdkSandboxManagerLocal.canSendBroadcast(new Intent())).isFalse();
     }
 
     /** Tests that only allowed activities may be started from the sdk sandbox. */
@@ -2580,15 +2600,36 @@ public class SdkSandboxManagerServiceUnitTest {
                         Mockito.any(SandboxLatencyInfo.class));
     }
 
-    // TODO(b/267155761): Add tests to check correct methods with parameters are called.
     @Test
     public void testLoadSdk_computeSdkStorage() throws Exception {
+        final int callingUid = Process.myUid();
+        final CallingInfo callingInfo = new CallingInfo(callingUid, TEST_PACKAGE);
+
+        mSdkSandboxStorageManagerUtility.createSdkStorageForTest(
+                UserHandle.getUserId(callingUid),
+                TEST_PACKAGE,
+                Arrays.asList("sdk1", "sdk2"),
+                Arrays.asList(
+                        SdkSandboxStorageManager.SubDirectories.SHARED_DIR,
+                        SdkSandboxStorageManager.SubDirectories.SANDBOX_DIR));
+
         loadSdk(SDK_NAME);
         // Assume sdk storage information calculated and sent
         mSdkSandboxService.sendStorageInfoToSystemServer();
 
+        final List<SdkSandboxStorageManager.StorageDirInfo> internalStorageDirInfo =
+                sSdkSandboxStorageManager.getInternalStorageDirInfo(callingInfo);
+        final List<SdkSandboxStorageManager.StorageDirInfo> sdkStorageDirInfo =
+                sSdkSandboxStorageManager.getSdkStorageDirInfo(callingInfo);
+
         Mockito.verify(sSdkSandboxPulledAtoms, Mockito.timeout(5000))
                 .logStorage(mClientAppUid, /*sharedStorage=*/ 0, /*sdkStorage=*/ 0);
+
+        Mockito.verify(mSdkSandboxService, Mockito.times(1))
+                .computeSdkStorage(
+                        Mockito.eq(mService.getListOfStoragePaths(internalStorageDirInfo)),
+                        Mockito.eq(mService.getListOfStoragePaths(sdkStorageDirInfo)),
+                        Mockito.any(IComputeSdkStorageCallback.class));
     }
 
     @Test
@@ -2759,8 +2800,15 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     public static class InjectorForTest extends SdkSandboxManagerService.Injector {
-        InjectorForTest(Context context) {
+        private SdkSandboxStorageManager mSdkSandboxStorageManager = null;
+
+        InjectorForTest(Context context, SdkSandboxStorageManager sdkSandboxStorageManager) {
             super(context);
+            mSdkSandboxStorageManager = sdkSandboxStorageManager;
+        }
+
+        public InjectorForTest(Context spyContext) {
+            super(spyContext);
         }
 
         @Override
@@ -2776,6 +2824,11 @@ public class SdkSandboxManagerServiceUnitTest {
         @Override
         public SdkSandboxPulledAtoms getSdkSandboxPulledAtoms() {
             return sSdkSandboxPulledAtoms;
+        }
+
+        @Override
+        public SdkSandboxStorageManager getSdkSandboxStorageManager() {
+            return mSdkSandboxStorageManager;
         }
     }
 }

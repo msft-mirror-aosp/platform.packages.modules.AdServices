@@ -47,11 +47,20 @@ public interface SdkSandboxManagerLocal {
     /**
      * Enforces that the sdk sandbox process is allowed to broadcast a given intent.
      *
+     * @deprecated Use {@link SdkSandboxManagerLocal#canSendBroadcast(Intent)} instead.
      * @param intent the intent to check.
      * @throws SecurityException if the intent is not allowed to be broadcast.
      */
+    @Deprecated
     void enforceAllowedToSendBroadcast(@NonNull Intent intent);
 
+    /**
+     * Whether the sdk sandbox process is allowed to broadcast a given intent.
+     *
+     * @param intent the intent to check.
+     * @return true if the intent is allowed to be broadcast, otherwise false
+     */
+    boolean canSendBroadcast(@NonNull Intent intent);
 
     /**
      * Enforces that the sdk sandbox process is allowed to start an activity with a given intent.
