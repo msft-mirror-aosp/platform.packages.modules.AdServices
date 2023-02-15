@@ -401,4 +401,61 @@ public class TestAdSelectionManager {
             outcomeReceiver.onError(new IllegalStateException("Failure of AdSelection service", e));
         }
     }
+
+    /**
+     * Removes an override for event histogram data, which is used in frequency cap filtering during
+     * ad selection.
+     *
+     * <p>This method is intended to be used for end-to-end testing. This API is enabled only for
+     * apps in debug mode with developer options enabled.
+     *
+     * <p>The given {@code outcomeReceiver} either returns an empty {@link Object} if successful or
+     * an {@link Exception} which indicates the error.
+     *
+     * @throws IllegalStateException if this API is not enabled for the caller
+     * @hide
+     */
+    // TODO(b/221876775): Unhide for frequency cap API review
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
+    public void removeAdCounterHistogramOverride(
+            @NonNull RemoveAdCounterHistogramOverrideRequest removeRequest,
+            @NonNull @CallbackExecutor Executor executor,
+            @NonNull OutcomeReceiver<Object, Exception> outcomeReceiver) {
+        Objects.requireNonNull(removeRequest, "Request must not be null");
+        Objects.requireNonNull(executor, "Executor must not be null");
+        Objects.requireNonNull(outcomeReceiver, "Outcome receiver must not be null");
+
+        try {
+            final AdSelectionService service =
+                    Objects.requireNonNull(mAdSelectionManager.getService());
+            service.removeAdCounterHistogramOverride(
+                    new RemoveAdCounterHistogramOverrideInput.Builder()
+                            .setAdEventType(removeRequest.getAdEventType())
+                            .setAdCounterKey(removeRequest.getAdCounterKey())
+                            .setBuyer(removeRequest.getBuyer())
+                            .build(),
+                    new AdSelectionOverrideCallback.Stub() {
+                        @Override
+                        public void onSuccess() {
+                            executor.execute(() -> outcomeReceiver.onResult(new Object()));
+                        }
+
+                        @Override
+                        public void onFailure(FledgeErrorResponse failureParcel) {
+                            executor.execute(
+                                    () ->
+                                            outcomeReceiver.onError(
+                                                    AdServicesStatusUtils.asException(
+                                                            failureParcel)));
+                        }
+                    });
+        } catch (NullPointerException e) {
+            LogUtil.e(e, "Unable to find the AdSelection service");
+            outcomeReceiver.onError(
+                    new IllegalStateException("Unable to find the AdSelection service", e));
+        } catch (RemoteException e) {
+            LogUtil.e(e, "Remote exception encountered while updating ad counter histogram");
+            outcomeReceiver.onError(new IllegalStateException("Failure of AdSelection service", e));
+        }
+    }
 }
