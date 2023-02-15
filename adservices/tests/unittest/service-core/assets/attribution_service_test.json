@@ -4106,7 +4106,7 @@
             "scheduledReportTime": 8640000002,
             "enrollmentId": "enrollment-id-3",
             "status": 0,
-            "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32678}]}",
+            "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":\"1369\",\"value\":32678}]}",
             "apiVersion": "0.1",
             "sourceId": "S1",
             "triggerId": "T1"

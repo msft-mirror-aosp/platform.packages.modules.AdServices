@@ -111,7 +111,11 @@ public class ConsentNotificationJobServiceTest {
         doNothing().when(consentManager).recordNotificationDisplayed();
         mConsentNotificationJobService.setConsentManager(consentManager);
         doReturn(consentManager).when(() -> ConsentManager.getInstance(any(Context.class)));
-        doReturn(true).when(() -> ConsentNotificationJobService.isEuDevice(any(Context.class)));
+        doReturn(true)
+                .when(
+                        () ->
+                                ConsentNotificationJobService.isEuDevice(
+                                        any(Context.class), any(Flags.class)));
         when(mMockJobParameters.getExtras()).thenReturn(mPersistableBundle);
         when(mPersistableBundle.getBoolean(anyString(), anyBoolean())).thenReturn(true);
         doReturn(mAdservicesSyncUtil).when(AdServicesSyncUtil::getInstance);
