@@ -16,8 +16,8 @@
 
 package com.android.adservices.service.adselection;
 
-import static android.adservices.adselection.ReportInteractionInput.DESTINATION_BUYER;
-import static android.adservices.adselection.ReportInteractionInput.DESTINATION_SELLER;
+import static android.adservices.adselection.ReportInteractionInput.FLAG_DESTINATION_BUYER;
+import static android.adservices.adselection.ReportInteractionInput.FLAG_DESTINATION_SELLER;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
 
@@ -591,7 +591,7 @@ public class ImpressionReporter {
                                     sellerReportingResult.getInteractionReportingUris(),
                                     sellerValidator,
                                     ctx.mDBAdSelectionEntry.getAdSelectionId(),
-                                    DESTINATION_SELLER);
+                                    FLAG_DESTINATION_SELLER);
                             return Pair.create(sellerReportingResult, ctx);
                         }));
     }
@@ -627,7 +627,7 @@ public class ImpressionReporter {
                                             .getInteractionReportingUris(),
                                     buyerValidator,
                                     ctx.mDBAdSelectionEntry.getAdSelectionId(),
-                                    DESTINATION_BUYER);
+                                    FLAG_DESTINATION_BUYER);
                             return Pair.create(
                                     new ReportingUris(
                                             reportingResults.mBuyerReportingResult
