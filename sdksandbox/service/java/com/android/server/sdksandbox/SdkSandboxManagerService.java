@@ -2005,15 +2005,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     throw new SecurityException(
                             "Intent "
                                     + intent.getAction()
-                                    + " may not be broadcast from an SDK sandbox uid.");
-                }
-
-                if (intent.getPackage() != null || intent.getComponent() != null) {
-                    throw new SecurityException(
-                            "Intent "
-                                    + intent.getAction()
-                                    + " broadcast from an SDK sandbox uid may not specify a"
-                                    + " package name or component.");
+                                    + " may not be started from an SDK sandbox uid.");
                 }
             }
         }
