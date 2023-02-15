@@ -18,6 +18,7 @@ package com.android.adservices;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -116,9 +117,11 @@ public final class AdServicesParcelableUtil {
         tempBundle.setClassLoader(valueClass.getClassLoader());
         Map<K, V> resultMap = new HashMap<>();
         for (String key : tempBundle.keySet()) {
-            resultMap.put(
-                    stringToKeyConverter.convertFromString(key),
-                    tempBundle.getParcelable(key, valueClass));
+            V value =
+                    Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU
+                            ? tempBundle.getParcelable(key)
+                            : tempBundle.getParcelable(key, valueClass);
+            resultMap.put(stringToKeyConverter.convertFromString(key), value);
         }
 
         return resultMap;

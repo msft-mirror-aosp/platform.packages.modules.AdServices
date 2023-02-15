@@ -20,7 +20,6 @@ import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREG
 
 import android.annotation.IntDef;
 import android.annotation.NonNull;
-import android.util.Dumpable;
 
 import androidx.annotation.Nullable;
 
@@ -39,7 +38,7 @@ import java.util.concurrent.TimeUnit;
  * AdServices Feature Flags interface. This Flags interface hold the default values of Ad Services
  * Flags.
  */
-public interface Flags extends Dumpable {
+public interface Flags {
     /** Topics Epoch Job Period. */
     long TOPICS_EPOCH_JOB_PERIOD_MS = 7 * 86_400_000; // 7 days.
 

@@ -18,6 +18,7 @@ package android.adservices.measurement;
 
 import android.annotation.NonNull;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -55,8 +56,14 @@ public final class WebTriggerRegistrationRequest implements Parcelable {
     private WebTriggerRegistrationRequest(Parcel in) {
         Objects.requireNonNull(in);
         ArrayList<WebTriggerParams> webTriggerParams = new ArrayList<>();
-        in.readList(
-                webTriggerParams, WebTriggerParams.class.getClassLoader(), WebTriggerParams.class);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            in.readList(webTriggerParams, WebTriggerParams.class.getClassLoader());
+        } else {
+            in.readList(
+                    webTriggerParams,
+                    WebTriggerParams.class.getClassLoader(),
+                    WebTriggerParams.class);
+        }
         mWebTriggerParams = webTriggerParams;
         mDestination = Uri.CREATOR.createFromParcel(in);
     }
