@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -51,6 +52,7 @@ import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
 
@@ -776,8 +778,15 @@ public class TopicsWorkerTest {
         appInfo1.packageName = app1;
         ApplicationInfo appInfo3 = new ApplicationInfo();
         appInfo3.packageName = app3;
-        when(mockPackageManager.getInstalledApplications(Mockito.any()))
-                .thenReturn(List.of(appInfo1, appInfo3));
+
+        if (SdkLevel.isAtLeastT()) {
+            when(mockPackageManager.getInstalledApplications(
+                            any(PackageManager.ApplicationInfoFlags.class)))
+                    .thenReturn(List.of(appInfo1, appInfo3));
+        } else {
+            when(mockPackageManager.getInstalledApplications(anyInt()))
+                    .thenReturn(List.of(appInfo1, appInfo3));
+        }
 
         // As selectAssignedTopicFromTopTopics() randomly assigns a top topic, pass in a Mocked
         // Random object to make the result deterministic.
@@ -867,7 +876,13 @@ public class TopicsWorkerTest {
 
         // Both reconciling uninstalled apps and installed apps call these mocked functions
         verify(mContext, times(2)).getPackageManager();
-        verify(mockPackageManager, times(2)).getInstalledApplications(Mockito.any());
+
+        PackageManager verifier = verify(mockPackageManager, times(2));
+        if (SdkLevel.isAtLeastT()) {
+            verifier.getInstalledApplications(any(PackageManager.ApplicationInfoFlags.class));
+        } else {
+            verifier.getInstalledApplications(anyInt());
+        }
 
         // App1 should get topics 1, 2, 3
         GetTopicsResult expectedGetTopicsResult1 =
