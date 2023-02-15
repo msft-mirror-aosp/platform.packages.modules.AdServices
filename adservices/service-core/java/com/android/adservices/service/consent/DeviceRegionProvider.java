@@ -93,7 +93,7 @@ public class DeviceRegionProvider {
             return false;
         }
         // if there telephony feature, we fallback to non-EU device
-        return false;
+        return true;
     }
 
     private static Set<String> getUiEeaCountriesSet(Flags flags) {
