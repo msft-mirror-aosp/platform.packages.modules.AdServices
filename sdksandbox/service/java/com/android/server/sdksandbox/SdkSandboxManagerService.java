@@ -81,8 +81,8 @@ import android.webkit.WebViewUpdateService;
 import com.android.adservices.AdServicesCommon;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
-import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.BackgroundThread;
+import com.android.modules.utils.build.SdkLevel;
 import com.android.sdksandbox.IComputeSdkStorageCallback;
 import com.android.sdksandbox.IRequestSurfacePackageFromSdkCallback;
 import com.android.sdksandbox.ISdkSandboxDisabledCallback;
@@ -1985,10 +1985,17 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         @Override
         public void enforceAllowedToSendBroadcast(@NonNull Intent intent) {
-            throw new SecurityException(
-                    "Intent "
-                            + intent.getAction()
-                            + " may not be broadcast from an SDK sandbox uid");
+            if (!canSendBroadcast(intent)) {
+                throw new SecurityException(
+                        "Intent "
+                                + intent.getAction()
+                                + " may not be broadcast from an SDK sandbox uid");
+            }
+        }
+
+        @Override
+        public boolean canSendBroadcast(@NonNull Intent intent) {
+            return false;
         }
 
         @Override
