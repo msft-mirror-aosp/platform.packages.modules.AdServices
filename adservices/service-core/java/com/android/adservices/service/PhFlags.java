@@ -193,6 +193,8 @@ public final class PhFlags implements Flags {
             "fledge_ad_selection_enforce_foreground_status_run_ad_selection";
     static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION =
             "fledge_ad_selection_enforce_foreground_status_report_impression";
+    static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_INTERACTION =
+            "fledge_ad_selection_enforce_foreground_status_report_interaction";
     static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDE =
             "fledge_ad_selection_enforce_foreground_status_ad_selection_override";
     static final String KEY_FOREGROUND_STATUS_LEVEL = "foreground_validation_status_level";
@@ -325,6 +327,8 @@ public final class PhFlags implements Flags {
     static final String KEY_UI_OTA_STRINGS_DOWNLOAD_DEADLINE = "ui_ota_strings_download_deadline";
 
     static final String KEY_UI_DIALOGS_FEATURE_ENABLED = "ui_dialogs_feature_enabled";
+
+    static final String KEY_UI_EEA_COUNTRIES = "ui_eea_countries";
 
     static final String KEY_GA_UX_FEATURE_ENABLED = "ga_ux_enabled";
 
@@ -1680,6 +1684,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getEnforceForegroundStatusForFledgeReportInteraction() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_INTERACTION,
+                /* defaultValue */ ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_INTERACTION);
+    }
+
+    @Override
     public int getForegroundStatuslLevelForValidation() {
         return DeviceConfig.getInt(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -1828,6 +1840,14 @@ public final class PhFlags implements Flags {
                         DeviceConfig.NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_UI_DIALOGS_FEATURE_ENABLED,
                         /* defaultValue */ UI_DIALOGS_FEATURE_ENABLED));
+    }
+
+    @Override
+    public String getUiEeaCountries() {
+        String uiEeaCountries =
+                DeviceConfig.getString(
+                        DeviceConfig.NAMESPACE_ADSERVICES, KEY_UI_EEA_COUNTRIES, UI_EEA_COUNTRIES);
+        return uiEeaCountries;
     }
 
     @Override
@@ -2278,6 +2298,11 @@ public final class PhFlags implements Flags {
                         + getEnforceForegroundStatusForFledgeReportImpression());
         writer.println(
                 "\t"
+                        + KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_INTERACTION
+                        + " = "
+                        + getEnforceForegroundStatusForFledgeReportInteraction());
+        writer.println(
+                "\t"
                         + KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION
                         + " = "
                         + getEnforceForegroundStatusForFledgeRunAdSelection());
@@ -2316,6 +2341,7 @@ public final class PhFlags implements Flags {
         writer.println("==== AdServices PH Flags Dump UI Related Flags ====");
         writer.println(
                 "\t" + KEY_UI_DIALOGS_FEATURE_ENABLED + " = " + getUIDialogsFeatureEnabled());
+        writer.println("\t" + KEY_UI_EEA_COUNTRIES + " = " + getUiEeaCountries());
         writer.println(
                 "\t"
                         + KEY_UI_OTA_STRINGS_FEATURE_ENABLED
