@@ -945,6 +945,12 @@ public class SdkSandboxManagerServiceUnitTest {
                 () -> sSdkSandboxManagerLocal.enforceAllowedToSendBroadcast(disallowedIntent));
     }
 
+    /** Tests that no broadcast can be sent from the sdk sandbox. */
+    @Test
+    public void testCanSendBroadcast() {
+        assertThat(sSdkSandboxManagerLocal.canSendBroadcast(new Intent())).isFalse();
+    }
+
     /** Tests that only allowed activities may be started from the sdk sandbox. */
     @Test
     public void testEnforceAllowedToStartActivity() {

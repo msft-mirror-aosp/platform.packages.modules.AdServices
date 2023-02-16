@@ -64,6 +64,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -106,7 +107,14 @@ public class TopicsWorkerTest {
         mBlockedTopicsManager =
                 new BlockedTopicsManager(
                         mTopicsDao, mMockAdServicesManager, Flags.PPAPI_AND_SYSTEM_SERVER);
-        mCacheManager = new CacheManager(mTopicsDao, mMockFlags, mLogger, mBlockedTopicsManager);
+        mCacheManager =
+                new CacheManager(
+                        mTopicsDao,
+                        mMockFlags,
+                        mLogger,
+                        mBlockedTopicsManager,
+                        new GlobalBlockedTopicsManager(
+                                /* globalBlockedTopicsManager = */ new HashSet<>()));
         AppUpdateManager appUpdateManager =
                 new AppUpdateManager(mDbHelper, mTopicsDao, new Random(), mMockFlags);
 
