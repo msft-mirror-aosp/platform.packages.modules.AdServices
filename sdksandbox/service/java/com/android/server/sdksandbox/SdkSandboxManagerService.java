@@ -37,6 +37,7 @@ import android.annotation.Nullable;
 import android.annotation.RequiresPermission;
 import android.annotation.WorkerThread;
 import android.app.ActivityManager;
+import android.app.sdksandbox.AppOwnedSdkSandboxInterface;
 import android.app.sdksandbox.ILoadSdkCallback;
 import android.app.sdksandbox.IRequestSurfacePackageCallback;
 import android.app.sdksandbox.ISdkSandboxManager;
@@ -139,6 +140,15 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     @GuardedBy("mLock")
     private final ArrayMap<CallingInfo, ArrayMap<String, LoadSdkSession>> mLoadSdkSessions =
             new ArrayMap<>();
+
+    /**
+     * For each app, keep a mapping from {@link AppOwnedSdkSandboxInterface} name to its
+     * corresponding {@link AppOwnedSdkSandboxInterface}. This contains all
+     * AppOwnedSdkSandboxInterfaces that are registered.
+     */
+    @GuardedBy("mLock")
+    private final ArrayMap<CallingInfo, ArrayMap<String, AppOwnedSdkSandboxInterface>>
+            mHeldInterfaces = new ArrayMap<>();
 
     @GuardedBy("mLock")
     private final ArrayMap<CallingInfo, IBinder> mCallingInfosWithDeathRecipients =
@@ -389,6 +399,16 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 MAINLINE_SDK_SANDBOX_ORDER_ID, mActivityInterceptorCallback);
     }
 
+    private ArrayList<AppOwnedSdkSandboxInterface> getRegisteredAppOwnedSdkSandboxInterfacesForApp(
+            CallingInfo callingInfo) {
+        synchronized (mLock) {
+            if (!mHeldInterfaces.containsKey(callingInfo)) {
+                return new ArrayList<>();
+            }
+            return new ArrayList<>(mHeldInterfaces.get(callingInfo).values());
+        }
+    }
+
     private ArrayList<LoadSdkSession> getLoadedSdksForApp(CallingInfo callingInfo) {
         ArrayList<LoadSdkSession> loadedSdks = new ArrayList<>();
         synchronized (mLock) {
@@ -481,6 +501,44 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 /*success=*/ true,
                 SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX,
                 callingUid);
+    }
+
+    @Override
+    public List<AppOwnedSdkSandboxInterface> getAppOwnedSdkSandboxInterfaces(
+            String callingPackageName) {
+        final CallingInfo callingInfo = CallingInfo.fromBinder(mContext, callingPackageName);
+        return getRegisteredAppOwnedSdkSandboxInterfacesForApp(callingInfo);
+    }
+
+    @Override
+    public void registerAppOwnedSdkSandboxInterface(
+            String callingPackageName, AppOwnedSdkSandboxInterface appOwnedSdkSandboxInterface) {
+        final CallingInfo callingInfo = CallingInfo.fromBinder(mContext, callingPackageName);
+        synchronized (mLock) {
+            if (mHeldInterfaces.containsKey(callingInfo)) {
+                if (mHeldInterfaces
+                        .get(callingInfo)
+                        .containsKey(appOwnedSdkSandboxInterface.getName())) {
+                    throw new IllegalStateException(
+                            "Already registered interface of name "
+                                    + appOwnedSdkSandboxInterface.getName());
+                }
+            }
+            mHeldInterfaces.computeIfAbsent(callingInfo, k -> new ArrayMap<>());
+            mHeldInterfaces
+                    .get(callingInfo)
+                    .put(appOwnedSdkSandboxInterface.getName(), appOwnedSdkSandboxInterface);
+        }
+    }
+
+    @Override
+    public void unregisterAppOwnedSdkSandboxInterface(String callingPackageName, String name) {
+        final CallingInfo callingInfo = CallingInfo.fromBinder(mContext, callingPackageName);
+        synchronized (mLock) {
+            if (mHeldInterfaces.containsKey(callingInfo)) {
+                mHeldInterfaces.get(callingInfo).remove(name);
+            }
+        }
     }
 
     @Override
@@ -825,6 +883,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
             mSyncDataCallbacks.remove(callingInfo);
             mLoadSdkSessions.remove(callingInfo);
+            // TODO(b/270960437) : Need to write tests for mHeldInterfaces.remove after death
+            mHeldInterfaces.remove(callingInfo);
             stopSdkSandboxService(callingInfo, "Caller " + callingInfo + " has died");
             mServiceProvider.onAppDeath(callingInfo);
         }
@@ -1756,6 +1816,27 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
      */
     // TODO(b/268043836): Move SdkToServiceLink out of SdkSandboxManagerService
     private class SdkToServiceLink extends ISdkToServiceCallback.Stub {
+
+        /**
+         * Fetches a list of {@link AppOwnedSdkSandboxInterface} registered for an app
+         *
+         * <p>This provides the information on the interfaces that are currently registered in the
+         * app.
+         *
+         * @param clientPackageName of the client package
+         * @return empty list if callingInfo not found in map otherwise a list of {@link
+         *     AppOwnedSdkSandboxInterface}
+         */
+        @Override
+        public List<AppOwnedSdkSandboxInterface> getAppOwnedSdkSandboxInterfaces(
+                String clientPackageName) throws RemoteException {
+            int uid = Binder.getCallingUid();
+            if (Process.isSdkSandboxUid(uid)) {
+                uid = Process.getAppUidForSdkSandboxUid(uid);
+            }
+            CallingInfo callingInfo = new CallingInfo(uid, clientPackageName);
+            return getRegisteredAppOwnedSdkSandboxInterfacesForApp(callingInfo);
+        }
 
         /**
          * Fetches {@link SandboxedSdk} for all SDKs that are loaded in the sandbox.

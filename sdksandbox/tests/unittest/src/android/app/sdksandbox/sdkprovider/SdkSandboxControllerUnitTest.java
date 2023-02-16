@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assume.assumeTrue;
 
+import android.app.sdksandbox.AppOwnedSdkSandboxInterface;
 import android.app.sdksandbox.ISdkToServiceCallback;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkContext;
@@ -116,6 +117,29 @@ public class SdkSandboxControllerUnitTest {
         // Does not fail on initialising with same context
         controller.initialize(mContext);
         assertThat(controller).isNotNull();
+    }
+
+    @Test
+    public void testGetAppOwnedSdkSandboxInterfaces() throws RemoteException {
+        final SdkSandboxController controller =
+                mContext.getSystemService(SdkSandboxController.class);
+        controller.initialize(mSandboxedSdkContext);
+
+        // Mock singleton methods
+        final ISdkToServiceCallback serviceCallback = Mockito.mock(ISdkToServiceCallback.class);
+        ArrayList<AppOwnedSdkSandboxInterface> appOwnedInterfacesMock = new ArrayList<>();
+        appOwnedInterfacesMock.add(
+                new AppOwnedSdkSandboxInterface(
+                        "mockPackage", /*version=*/ 0, /*interfaceIBinder=*/ new Binder()));
+
+        Mockito.when(serviceCallback.getAppOwnedSdkSandboxInterfaces(Mockito.anyString()))
+                .thenReturn(appOwnedInterfacesMock);
+        Mockito.when(mSdkSandboxLocalSingleton.getSdkToServiceCallback())
+                .thenReturn(serviceCallback);
+        final List<AppOwnedSdkSandboxInterface> appOwnedSdkSandboxInterfaces =
+                controller.getAppOwnedSdkSandboxInterfaces();
+
+        assertThat(appOwnedSdkSandboxInterfaces).isEqualTo(appOwnedInterfacesMock);
     }
 
     @Test

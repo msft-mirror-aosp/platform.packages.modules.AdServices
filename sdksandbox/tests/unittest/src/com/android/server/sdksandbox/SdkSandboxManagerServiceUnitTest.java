@@ -39,6 +39,7 @@ import static org.mockito.ArgumentMatchers.eq;
 
 import android.Manifest;
 import android.app.ActivityManager;
+import android.app.sdksandbox.AppOwnedSdkSandboxInterface;
 import android.app.sdksandbox.ILoadSdkCallback;
 import android.app.sdksandbox.ISdkSandboxManager;
 import android.app.sdksandbox.ISharedPreferencesSyncCallback;
@@ -137,6 +138,7 @@ public class SdkSandboxManagerServiceUnitTest {
     private static SdkSandboxStorageManager sSdkSandboxStorageManager;
     private static SdkSandboxManagerLocal sSdkSandboxManagerLocal;
     private static final String SDK_NAME = "com.android.codeprovider";
+    private static final String APP_OWNED_SDK_SANDBOX_INTERFACE_NAME = "com.android.testinterface";
     private static final String SDK_PROVIDER_PACKAGE = "com.android.codeprovider_1";
     private static final String SDK_PROVIDER_RESOURCES_SDK_NAME =
             "com.android.codeproviderresources";
@@ -286,6 +288,60 @@ public class SdkSandboxManagerServiceUnitTest {
     @Test
     public void testSdkSandboxManagerIsRegistered() throws Exception {
         ServiceManager.getServiceOrThrow(SdkSandboxManager.SDK_SANDBOX_SERVICE);
+    }
+
+    @Test
+    public void testRegisterAndGetAppOwnedSdkSandboxInterfaceSuccess() throws Exception {
+        final IBinder iBinder = new Binder();
+
+        mService.registerAppOwnedSdkSandboxInterface(
+                TEST_PACKAGE,
+                new AppOwnedSdkSandboxInterface(
+                        APP_OWNED_SDK_SANDBOX_INTERFACE_NAME,
+                        /*version=*/ 0,
+                        /*interfaceIBinder=*/ iBinder));
+        final List<AppOwnedSdkSandboxInterface> appOwnedSdkSandboxInterfaceList =
+                mService.getAppOwnedSdkSandboxInterfaces(TEST_PACKAGE);
+
+        assertThat(appOwnedSdkSandboxInterfaceList).hasSize(1);
+        assertThat(appOwnedSdkSandboxInterfaceList.get(0).getName())
+                .isEqualTo(APP_OWNED_SDK_SANDBOX_INTERFACE_NAME);
+        assertThat(appOwnedSdkSandboxInterfaceList.get(0).getVersion()).isEqualTo(0);
+        assertThat(appOwnedSdkSandboxInterfaceList.get(0).getInterface()).isEqualTo(iBinder);
+    }
+
+    @Test
+    public void testRegisterAppOwnedSdkSandboxInterfaceAlreadyRegistered() throws Exception {
+        mService.registerAppOwnedSdkSandboxInterface(
+                TEST_PACKAGE,
+                new AppOwnedSdkSandboxInterface(
+                        APP_OWNED_SDK_SANDBOX_INTERFACE_NAME,
+                        /*version=*/ 0,
+                        /*interfaceIBinder=*/ new Binder()));
+
+        assertThrows(
+                IllegalStateException.class,
+                () ->
+                        mService.registerAppOwnedSdkSandboxInterface(
+                                TEST_PACKAGE,
+                                new AppOwnedSdkSandboxInterface(
+                                        APP_OWNED_SDK_SANDBOX_INTERFACE_NAME,
+                                        /*version=*/ 0,
+                                        /*interfaceIBinder=*/ new Binder())));
+    }
+
+    @Test
+    public void testUnregisterAppOwnedSdkSandboxInterface() throws Exception {
+        mService.registerAppOwnedSdkSandboxInterface(
+                TEST_PACKAGE,
+                new AppOwnedSdkSandboxInterface(
+                        APP_OWNED_SDK_SANDBOX_INTERFACE_NAME,
+                        /*version=*/ 0,
+                        /*interfaceIBinder=*/ new Binder()));
+        mService.unregisterAppOwnedSdkSandboxInterface(
+                TEST_PACKAGE, APP_OWNED_SDK_SANDBOX_INTERFACE_NAME);
+
+        assertThat(mService.getAppOwnedSdkSandboxInterfaces(TEST_PACKAGE)).hasSize(0);
     }
 
     @Test
