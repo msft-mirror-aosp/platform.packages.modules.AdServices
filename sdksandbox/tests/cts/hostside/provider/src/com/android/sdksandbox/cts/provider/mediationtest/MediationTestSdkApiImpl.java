@@ -16,6 +16,7 @@
 
 package com.android.sdksandbox.cts.provider.mediationtest;
 
+import android.app.sdksandbox.AppOwnedSdkSandboxInterface;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.sdkprovider.SdkSandboxController;
 import android.content.Context;
@@ -27,6 +28,12 @@ public class MediationTestSdkApiImpl extends IMediationTestSdkApi.Stub {
 
     public MediationTestSdkApiImpl(Context sdkContext) {
         mContext = sdkContext;
+    }
+
+    @Override
+    public List<AppOwnedSdkSandboxInterface> getAppOwnedSdkSandboxInterfaces() {
+        return mContext.getSystemService(SdkSandboxController.class)
+                .getAppOwnedSdkSandboxInterfaces();
     }
 
     @Override

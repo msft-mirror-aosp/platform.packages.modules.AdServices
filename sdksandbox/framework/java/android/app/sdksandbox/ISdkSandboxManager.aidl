@@ -19,6 +19,7 @@ package android.app.sdksandbox;
 import android.os.Bundle;
 import android.os.IBinder;
 
+import android.app.sdksandbox.AppOwnedSdkSandboxInterface;
 import android.app.sdksandbox.ILoadSdkCallback;
 import android.app.sdksandbox.IRequestSurfacePackageCallback;
 import android.app.sdksandbox.ISdkSandboxProcessDeathCallback;
@@ -37,10 +38,13 @@ interface ISdkSandboxManager {
 
     void addSdkSandboxProcessDeathCallback(in String callingPackageName, long timeAppCalledSystemServer, in ISdkSandboxProcessDeathCallback callback);
     void removeSdkSandboxProcessDeathCallback(in String callingPackageName, long timeAppCalledSystemServer, in ISdkSandboxProcessDeathCallback callback);
+    void registerAppOwnedSdkSandboxInterface(in String callingPackageName, in AppOwnedSdkSandboxInterface appOwnedSdkSandboxInterface);
+    void unregisterAppOwnedSdkSandboxInterface(in String callingPackageName, in String name);
     oneway void loadSdk(in String callingPackageName, in IBinder appProcessToken, in String sdkName, long timeAppCalledSystemServer, in Bundle params, in ILoadSdkCallback callback);
     void unloadSdk(in String callingPackageName, in String sdkName, long timeAppCalledSystemServer);
     // TODO(b/242031240): wrap the many input params in one parcelable object
     oneway void requestSurfacePackage(in String callingPackageName, in String sdkName, in IBinder hostToken, int displayId, int width, int height, long timeAppCalledSystemServer, in Bundle params, IRequestSurfacePackageCallback callback);
+    List<AppOwnedSdkSandboxInterface> getAppOwnedSdkSandboxInterfaces(in String callingPackageName);
     List<SandboxedSdk> getSandboxedSdks(in String callingPackageName, long timeAppCalledSystemServer);
     oneway void syncDataFromClient(in String callingPackageName, long timeAppCalledSystemServer, in SharedPreferencesUpdate update, in ISharedPreferencesSyncCallback callback);
     void stopSdkSandbox(in String callingPackageName);
