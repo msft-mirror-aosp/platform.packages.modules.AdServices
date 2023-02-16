@@ -62,6 +62,7 @@ import android.adservices.adselection.AdSelectionFromOutcomesInput;
 import android.adservices.adselection.AdSelectionOverrideCallback;
 import android.adservices.adselection.AdSelectionResponse;
 import android.adservices.adselection.CustomAudienceSignalsFixture;
+import android.adservices.adselection.RemoveAdCounterHistogramOverrideInput;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
 import android.adservices.adselection.SetAdCounterHistogramOverrideInput;
@@ -5517,6 +5518,112 @@ public class AdSelectionServiceImplTest {
                         eq(AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN), eq(STATUS_SUCCESS), eq(0));
     }
 
+    @Test
+    public void testRemoveAdCounterHistogramOverrideNullInputThrows() {
+        assertThrows(
+                NullPointerException.class,
+                () -> callRemoveAdCounterHistogramOverride(generateAdSelectionServiceImpl(), null));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN),
+                        eq(STATUS_INVALID_ARGUMENT),
+                        eq(0));
+    }
+
+    @Test
+    public void testRemoveAdCounterHistogramOverrideNullCallbackThrows()
+            throws InterruptedException {
+        AdSelectionServiceImpl adSelectionService = generateAdSelectionServiceImpl();
+        RemoveAdCounterHistogramOverrideInput inputParams =
+                new RemoveAdCounterHistogramOverrideInput.Builder()
+                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_CLICK)
+                        .setAdCounterKey(KeyedFrequencyCapFixture.KEY1)
+                        .setBuyer(CommonFixture.VALID_BUYER_1)
+                        .build();
+
+        // Wait for the logging call, which happens after the callback
+        CountDownLatch resultLatch = new CountDownLatch(1);
+        Answer<Void> countDownAnswer =
+                unused -> {
+                    resultLatch.countDown();
+                    return null;
+                };
+        doAnswer(countDownAnswer)
+                .when(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+
+        assertThrows(
+                NullPointerException.class,
+                () -> adSelectionService.removeAdCounterHistogramOverride(inputParams, null));
+        assertTrue(
+                "Timed out waiting for removeAdCounterHistogramOverride call to complete",
+                resultLatch.await(5, TimeUnit.SECONDS));
+
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN),
+                        eq(STATUS_INVALID_ARGUMENT),
+                        eq(0));
+    }
+
+    @Test
+    public void testRemoveAdCounterHistogramOverrideCallbackErrorReported()
+            throws InterruptedException {
+        AdSelectionServiceImpl adSelectionService = generateAdSelectionServiceImpl();
+        RemoveAdCounterHistogramOverrideInput inputParams =
+                new RemoveAdCounterHistogramOverrideInput.Builder()
+                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_CLICK)
+                        .setAdCounterKey(KeyedFrequencyCapFixture.KEY1)
+                        .setBuyer(CommonFixture.VALID_BUYER_1)
+                        .build();
+
+        // Counted down in 1) callback and 2) logApiCall
+        CountDownLatch resultLatch = new CountDownLatch(2);
+        AdSelectionOverrideTestCallback callback =
+                new AdSelectionOverrideTestErrorCallback(resultLatch);
+
+        // Wait for the logging call, which happens after the callback
+        Answer<Void> countDownAnswer =
+                unused -> {
+                    resultLatch.countDown();
+                    return null;
+                };
+        doAnswer(countDownAnswer)
+                .when(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+
+        adSelectionService.removeAdCounterHistogramOverride(inputParams, callback);
+        assertTrue(
+                "Timed out waiting for removeAdCounterHistogramOverride call to complete",
+                resultLatch.await(5, TimeUnit.SECONDS));
+
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN),
+                        eq(STATUS_INTERNAL_ERROR),
+                        eq(0));
+    }
+
+    @Test
+    public void testRemoveAdCounterHistogramOverrideSuccess() throws InterruptedException {
+        RemoveAdCounterHistogramOverrideInput inputParams =
+                new RemoveAdCounterHistogramOverrideInput.Builder()
+                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_CLICK)
+                        .setAdCounterKey(KeyedFrequencyCapFixture.KEY1)
+                        .setBuyer(CommonFixture.VALID_BUYER_1)
+                        .build();
+
+        AdSelectionOverrideTestCallback callback =
+                callRemoveAdCounterHistogramOverride(generateAdSelectionServiceImpl(), inputParams);
+        assertTrue(
+                "removeAdCounterHistogramOverride() callback should have been successful",
+                callback.mIsSuccess);
+
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN), eq(STATUS_SUCCESS), eq(0));
+    }
+
     private AdSelectionServiceImpl generateAdSelectionServiceImpl() {
         return new AdSelectionServiceImpl(
                 mAdSelectionEntryDao,
@@ -5825,6 +5932,31 @@ public class AdSelectionServiceImplTest {
         adSelectionService.setAdCounterHistogramOverride(inputParams, callback);
         assertTrue(
                 "Timed out waiting for setAdCounterHistogramOverride call to complete",
+                resultLatch.await(5, TimeUnit.SECONDS));
+        return callback;
+    }
+
+    private AdSelectionOverrideTestCallback callRemoveAdCounterHistogramOverride(
+            AdSelectionServiceImpl adSelectionService,
+            RemoveAdCounterHistogramOverrideInput inputParams)
+            throws InterruptedException {
+        // Counted down in 1) callback and 2) logApiCall
+        CountDownLatch resultLatch = new CountDownLatch(2);
+        AdSelectionOverrideTestCallback callback = new AdSelectionOverrideTestCallback(resultLatch);
+
+        // Wait for the logging call, which happens after the callback
+        Answer<Void> countDownAnswer =
+                unused -> {
+                    resultLatch.countDown();
+                    return null;
+                };
+        doAnswer(countDownAnswer)
+                .when(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+
+        adSelectionService.removeAdCounterHistogramOverride(inputParams, callback);
+        assertTrue(
+                "Timed out waiting for removeAdCounterHistogramOverride call to complete",
                 resultLatch.await(5, TimeUnit.SECONDS));
         return callback;
     }
