@@ -82,9 +82,11 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -310,6 +312,8 @@ public class TopicsServiceImplTest {
 
     @Test
     public void testEnforceForeground_backgroundCaller() throws InterruptedException {
+        Assume.assumeTrue(SdkLevel.isAtLeastT()); // R/S can't enforce foreground checks.
+
         final int uid = Process.myUid();
         // Mock AppImportanceFilter to throw WrongCallingApplicationStateException
         doThrow(new WrongCallingApplicationStateException())
@@ -328,6 +332,8 @@ public class TopicsServiceImplTest {
 
     @Test
     public void testEnforceForeground_sandboxCaller() throws Exception {
+        Assume.assumeTrue(SdkLevel.isAtLeastT()); // Only applicable for T+
+
         // Mock AppImportanceFilter to throw Exception when invoked. This is to verify getTopics()
         // doesn't throw if caller is via Sandbox.
         doThrow(new WrongCallingApplicationStateException())
@@ -407,6 +413,7 @@ public class TopicsServiceImplTest {
 
     @Test
     public void checkSdkNoPermission() throws InterruptedException {
+        Assume.assumeTrue(SdkLevel.isAtLeastT()); // Sdk Sandbox only exists in T+
         when(mPackageManager.checkPermission(ACCESS_ADSERVICES_TOPICS, SDK_PACKAGE_NAME))
                 .thenReturn(PackageManager.PERMISSION_DENIED);
         when(Binder.getCallingUidOrThrow()).thenReturn(SANDBOX_UID);
