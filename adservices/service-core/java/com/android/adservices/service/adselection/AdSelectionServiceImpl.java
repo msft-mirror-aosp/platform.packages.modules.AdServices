@@ -813,6 +813,32 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         }
     }
 
+    @Override
+    public void resetAllAdCounterHistogramOverrides(@NonNull AdSelectionOverrideCallback callback) {
+        int apiName = AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN;
+
+        // Caller permissions must be checked in the binder thread, before anything else
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
+
+        try {
+            Objects.requireNonNull(callback);
+        } catch (NullPointerException exception) {
+            mAdServicesLogger.logFledgeApiCallStats(apiName, STATUS_INVALID_ARGUMENT, 0);
+            // Rethrow because we want to fail fast
+            throw exception;
+        }
+
+        // TODO(b/265204820): Implement service
+        int status = STATUS_SUCCESS;
+        try {
+            callback.onSuccess();
+        } catch (RemoteException exception) {
+            status = STATUS_INTERNAL_ERROR;
+        } finally {
+            mAdServicesLogger.logFledgeApiCallStats(apiName, status, 0);
+        }
+    }
+
     /** Close down method to be invoked when the PPAPI process is shut down. */
     @SuppressWarnings("FutureReturnValueIgnored")
     public void destroy() {
