@@ -25,6 +25,7 @@ import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.AdSelectionOverrideCallback;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
+import android.adservices.adselection.SetAdCounterHistogramOverrideInput;
 import android.adservices.adselection.SetAppInstallAdvertisersCallback;
 import android.adservices.adselection.SetAppInstallAdvertisersInput;
 import android.adservices.adselection.UpdateAdCounterHistogramCallback;
@@ -230,5 +231,12 @@ interface AdSelectionService {
      * or if the calling application manifest is not setting Android:debuggable to true.
      */
     void resetAllAdSelectionFromOutcomesConfigRemoteOverrides(
+            in AdSelectionOverrideCallback callback);
+
+    /**
+     * Manually overrides the histogram to be used in ad selection with the specified event
+     * histogram.
+     */
+    void setAdCounterHistogramOverride(in SetAdCounterHistogramOverrideInput inputParams,
             in AdSelectionOverrideCallback callback);
 }
