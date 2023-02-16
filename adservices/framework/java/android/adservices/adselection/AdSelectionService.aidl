@@ -246,4 +246,10 @@ interface AdSelectionService {
      */
     void removeAdCounterHistogramOverride(in RemoveAdCounterHistogramOverrideInput inputParams,
             in AdSelectionOverrideCallback callback);
+
+    /**
+     * Removes all previously set histogram overrides used in ad selection which were set by the
+     * caller application.
+     */
+    void resetAllAdCounterHistogramOverrides(in AdSelectionOverrideCallback callback);
 }
