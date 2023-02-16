@@ -23,6 +23,7 @@ import android.adservices.adselection.AdSelectionFromOutcomesInput;
 import android.adservices.adselection.AdSelectionInput;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.AdSelectionOverrideCallback;
+import android.adservices.adselection.RemoveAdCounterHistogramOverrideInput;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
 import android.adservices.adselection.SetAdCounterHistogramOverrideInput;
@@ -238,5 +239,11 @@ interface AdSelectionService {
      * histogram.
      */
     void setAdCounterHistogramOverride(in SetAdCounterHistogramOverrideInput inputParams,
+            in AdSelectionOverrideCallback callback);
+
+    /**
+     * Removes a previously set histogram override used in ad selection.
+     */
+    void removeAdCounterHistogramOverride(in RemoveAdCounterHistogramOverrideInput inputParams,
             in AdSelectionOverrideCallback callback);
 }
