@@ -37,6 +37,7 @@ import android.adservices.adselection.AdSelectionOverrideCallback;
 import android.adservices.adselection.AdSelectionService;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
+import android.adservices.adselection.SetAdCounterHistogramOverrideInput;
 import android.adservices.adselection.SetAppInstallAdvertisersCallback;
 import android.adservices.adselection.SetAppInstallAdvertisersInput;
 import android.adservices.adselection.UpdateAdCounterHistogramCallback;
@@ -751,6 +752,35 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         callingUid);
 
         overrider.removeAllOverridesForAdSelectionFromOutcomes(callback);
+    }
+
+    @Override
+    public void setAdCounterHistogramOverride(
+            @NonNull SetAdCounterHistogramOverrideInput inputParams,
+            @NonNull AdSelectionOverrideCallback callback) {
+        int apiName = AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN;
+
+        // Caller permissions must be checked in the binder thread, before anything else
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
+
+        try {
+            Objects.requireNonNull(inputParams);
+            Objects.requireNonNull(callback);
+        } catch (NullPointerException exception) {
+            mAdServicesLogger.logFledgeApiCallStats(apiName, STATUS_INVALID_ARGUMENT, 0);
+            // Rethrow because we want to fail fast
+            throw exception;
+        }
+
+        // TODO(b/265204820): Implement service
+        int status = STATUS_SUCCESS;
+        try {
+            callback.onSuccess();
+        } catch (RemoteException exception) {
+            status = STATUS_INTERNAL_ERROR;
+        } finally {
+            mAdServicesLogger.logFledgeApiCallStats(apiName, status, 0);
+        }
     }
 
     /** Close down method to be invoked when the PPAPI process is shut down. */
