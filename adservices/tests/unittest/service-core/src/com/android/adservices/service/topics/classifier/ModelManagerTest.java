@@ -31,6 +31,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.build.SdkLevel;
 
 import com.google.android.libraries.mobiledatadownload.file.SynchronousFileStorage;
 import com.google.common.collect.ImmutableList;
@@ -48,6 +49,7 @@ import org.mockito.quality.Strictness;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -286,7 +288,8 @@ public class ModelManagerTest {
     @Test
     public void testRetrieveLabels_downloaded_emptyListReturnedOnException() throws IOException {
         // Mock a MDD FileGroup and FileStorage
-        when(mMockFileStorage.open(any(), any())).thenReturn(FileInputStream.nullInputStream());
+        InputStream inputStream = SdkLevel.isAtLeastT() ? FileInputStream.nullInputStream() : null;
+        when(mMockFileStorage.open(any(), any())).thenReturn(inputStream);
         mProductionModelManager =
                 new ModelManager(
                         sContext,
