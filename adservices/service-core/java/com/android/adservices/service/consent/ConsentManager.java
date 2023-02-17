@@ -98,8 +98,11 @@ public class ConsentManager {
         Objects.requireNonNull(appConsentDao);
         Objects.requireNonNull(measurementImpl);
         Objects.requireNonNull(customAudienceDao);
-        Objects.requireNonNull(adServicesManager);
         Objects.requireNonNull(booleanFileDatastore);
+
+        if (consentSourceOfTruth != Flags.PPAPI_ONLY) {
+            Objects.requireNonNull(adServicesManager);
+        }
 
         mContext = context;
         mAdServicesManager = adServicesManager;
@@ -1420,7 +1423,9 @@ public class ConsentManager {
             @Flags.ConsentSourceOfTruth int consentSourceOfTruth) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(datastore);
-        Objects.requireNonNull(adServicesManager);
+        if (consentSourceOfTruth != Flags.PPAPI_ONLY) {
+            Objects.requireNonNull(adServicesManager);
+        }
 
         switch (consentSourceOfTruth) {
             case Flags.PPAPI_ONLY:
