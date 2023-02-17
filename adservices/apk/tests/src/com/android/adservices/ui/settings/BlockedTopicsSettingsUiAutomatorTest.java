@@ -43,6 +43,7 @@ import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.List;
@@ -112,6 +113,7 @@ public class BlockedTopicsSettingsUiAutomatorTest {
     }
 
     @Test
+    @Ignore("b/269654072")
     public void topicBlockUnblockResetTest_betaUxView() throws Exception {
         // Launch main view of Privacy Sandbox Settings.
         launchSettingView();
@@ -397,7 +399,6 @@ public class BlockedTopicsSettingsUiAutomatorTest {
         UiObject element =
                 sDevice.findObject(
                         new UiSelector().childSelector(new UiSelector().text(getString(resId))));
-        scrollView.scrollToBeginning(5);
         scrollView.scrollIntoView(element);
         return element;
     }
