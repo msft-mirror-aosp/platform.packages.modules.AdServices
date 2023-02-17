@@ -22,6 +22,7 @@ import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.topics.GetTopicsResponse;
 import android.adservices.topics.Topic;
 import android.content.Context;
+import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
 
@@ -89,6 +90,10 @@ public class TopicContributorsTableEnableDisableTest {
 
         // Set initial state of TopicsContributorsTable as disabled
         enableTopicContributorsTable(false);
+        // TODO(b/263297331): Handle rollback support for R and S.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            overrideConsentSourceOfTruth(/* PPAPI_ONLY */ 1);
+        }
     }
 
     @After
@@ -96,6 +101,7 @@ public class TopicContributorsTableEnableDisableTest {
         overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
         overridePercentageForRandomTopic(TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
         overrideApiRateLimit(1);
+        overrideConsentSourceOfTruth(null);
     }
 
     @Test
@@ -197,5 +203,9 @@ public class TopicContributorsTableEnableDisableTest {
     public void killAdServices() {
         // adb shell am force-stop com.google.android.adservices.api
         ShellUtils.runShellCommand("am force-stop" + " " + ADSERVICES_PACKAGE_NAME);
+    }
+
+    private void overrideConsentSourceOfTruth(Integer value) {
+        ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth " + value);
     }
 }
