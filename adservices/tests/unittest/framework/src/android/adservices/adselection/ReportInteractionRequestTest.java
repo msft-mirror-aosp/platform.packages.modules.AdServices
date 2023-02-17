@@ -22,17 +22,13 @@ import static android.adservices.adselection.ReportInteractionRequest.FLAG_DESTI
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
-import android.adservices.common.CommonFixture;
-import android.os.Parcel;
-
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 
-public class ReportInteractionInputTest {
+public class ReportInteractionRequestTest {
     private static final long AD_SELECTION_ID = 1234L;
     private static final String INTERACTION_KEY = "click";
-    private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private String mInteractionData;
     private static final int DESTINATIONS = FLAG_DESTINATION_SELLER | FLAG_DESTINATION_BUYER;
 
@@ -43,27 +39,19 @@ public class ReportInteractionInputTest {
     }
 
     @Test
-    public void testWriteToParcel() throws Exception {
-        ReportInteractionInput input =
-                new ReportInteractionInput.Builder()
+    public void testBuildReportInteractionRequestSuccess() throws Exception {
+        ReportInteractionRequest request =
+                new ReportInteractionRequest.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setInteractionKey(INTERACTION_KEY)
                         .setInteractionData(mInteractionData)
-                        .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .setDestinations(DESTINATIONS)
                         .build();
 
-        Parcel p = Parcel.obtain();
-        input.writeToParcel(p, 0);
-        p.setDataPosition(0);
-
-        ReportInteractionInput fromParcel = ReportInteractionInput.CREATOR.createFromParcel(p);
-
-        assertEquals(AD_SELECTION_ID, fromParcel.getAdSelectionId());
-        assertEquals(INTERACTION_KEY, fromParcel.getInteractionKey());
-        assertEquals(mInteractionData, fromParcel.getInteractionData());
-        assertEquals(CALLER_PACKAGE_NAME, fromParcel.getCallerPackageName());
-        assertEquals(DESTINATIONS, fromParcel.getDestinations());
+        assertEquals(AD_SELECTION_ID, request.getAdSelectionId());
+        assertEquals(INTERACTION_KEY, request.getInteractionKey());
+        assertEquals(mInteractionData, request.getInteractionData());
+        assertEquals(DESTINATIONS, request.getDestinations());
     }
 
     @Test
@@ -71,52 +59,35 @@ public class ReportInteractionInputTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> {
-                    new ReportInteractionInput.Builder()
+                    new ReportInteractionRequest.Builder()
                             .setInteractionKey(INTERACTION_KEY)
                             .setInteractionData(mInteractionData)
-                            .setCallerPackageName(CALLER_PACKAGE_NAME)
                             .setDestinations(DESTINATIONS)
                             .build();
                 });
     }
 
     @Test
-    public void testFailsToBuildWithNullInteractionKey() {
+    public void testFailsToBuildWithUnsetInteractionKey() {
         assertThrows(
                 NullPointerException.class,
                 () -> {
-                    new ReportInteractionInput.Builder()
+                    new ReportInteractionRequest.Builder()
                             .setAdSelectionId(AD_SELECTION_ID)
                             .setInteractionData(mInteractionData)
-                            .setCallerPackageName(CALLER_PACKAGE_NAME)
                             .setDestinations(DESTINATIONS)
                             .build();
                 });
     }
 
     @Test
-    public void testFailsToBuildWithNullInteractionData() {
+    public void testFailsToBuildWithUnsetInteractionData() {
         assertThrows(
                 NullPointerException.class,
                 () -> {
-                    new ReportInteractionInput.Builder()
+                    new ReportInteractionRequest.Builder()
                             .setAdSelectionId(AD_SELECTION_ID)
                             .setInteractionKey(INTERACTION_KEY)
-                            .setCallerPackageName(CALLER_PACKAGE_NAME)
-                            .setDestinations(DESTINATIONS)
-                            .build();
-                });
-    }
-
-    @Test
-    public void testFailsToBuildWithUnsetCallerPackageName() {
-        assertThrows(
-                NullPointerException.class,
-                () -> {
-                    new ReportInteractionInput.Builder()
-                            .setAdSelectionId(AD_SELECTION_ID)
-                            .setInteractionKey(INTERACTION_KEY)
-                            .setInteractionData(mInteractionData)
                             .setDestinations(DESTINATIONS)
                             .build();
                 });
@@ -127,26 +98,11 @@ public class ReportInteractionInputTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> {
-                    new ReportInteractionInput.Builder()
+                    new ReportInteractionRequest.Builder()
                             .setAdSelectionId(AD_SELECTION_ID)
                             .setInteractionKey(INTERACTION_KEY)
                             .setInteractionData(mInteractionData)
-                            .setCallerPackageName(CALLER_PACKAGE_NAME)
                             .build();
                 });
-    }
-
-    @Test
-    public void testReportInteractionInputDescribeContents() {
-        ReportInteractionInput input =
-                new ReportInteractionInput.Builder()
-                        .setAdSelectionId(AD_SELECTION_ID)
-                        .setInteractionKey(INTERACTION_KEY)
-                        .setInteractionData(mInteractionData)
-                        .setDestinations(DESTINATIONS)
-                        .setCallerPackageName(CALLER_PACKAGE_NAME)
-                        .build();
-
-        assertEquals(input.describeContents(), 0);
     }
 }
