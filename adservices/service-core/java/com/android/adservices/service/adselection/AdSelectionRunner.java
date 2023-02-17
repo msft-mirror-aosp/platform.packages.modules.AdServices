@@ -30,8 +30,11 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
 import android.net.Uri;
+import android.os.Build;
 import android.os.RemoteException;
 import android.os.Trace;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
@@ -77,6 +80,8 @@ import java.util.stream.Collectors;
  *
  * <p>Class takes in an executor on which it runs the AdSelection logic
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public abstract class AdSelectionRunner {
 
     @VisibleForTesting static final String AD_SELECTION_ERROR_PATTERN = "%s: %s";

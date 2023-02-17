@@ -24,6 +24,9 @@ import android.app.job.JobScheduler;
 import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -44,6 +47,8 @@ import java.util.concurrent.TimeoutException;
  * Background fetch for FLEDGE Custom Audience API, executing periodic garbage collection and custom
  * audience updates.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class BackgroundFetchJobService extends JobService {
     @Override
     public boolean onStartJob(JobParameters params) {
