@@ -18,6 +18,7 @@ package com.android.adservices.data.measurement;
 
 import android.adservices.measurement.DeletionRequest;
 import android.net.Uri;
+import android.util.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -60,6 +61,15 @@ public interface IMeasurementDao {
      * @return the requested Source
      */
     Source getSource(@NonNull String sourceId) throws DatastoreException;
+
+    /**
+     * Queries and returns the {@link Source}'s destinations.
+     *
+     * @param sourceId ID of the requested Source
+     * @return a Pair of lists of app destination and web destination Uris
+     */
+    Pair<List<Uri>, List<Uri>> getSourceDestinations(@NonNull String sourceId)
+            throws DatastoreException;
 
     /**
      * Queries and returns the {@link Trigger}.

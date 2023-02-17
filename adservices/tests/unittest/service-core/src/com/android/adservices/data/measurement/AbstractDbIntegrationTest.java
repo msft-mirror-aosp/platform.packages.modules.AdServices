@@ -131,6 +131,8 @@ public abstract class AbstractDbIntegrationTest {
                 areEqual(mOutput.mAttrRateLimitList, dbState.mAttrRateLimitList));
         Assert.assertTrue("Source mismatch",
                 areEqual(mOutput.mSourceList, dbState.mSourceList));
+        Assert.assertTrue("SourceDestination mismatch",
+                areEqual(mOutput.mSourceDestinationList, dbState.mSourceDestinationList));
         Assert.assertTrue("Trigger mismatch",
                 areEqual(mOutput.mTriggerList, dbState.mTriggerList));
     }
@@ -254,6 +256,7 @@ public abstract class AbstractDbIntegrationTest {
      */
     private static void emptyTables(SQLiteDatabase db) {
         db.delete(MeasurementTables.SourceContract.TABLE, null, null);
+        db.delete(MeasurementTables.SourceDestination.TABLE, null, null);
         db.delete(MeasurementTables.TriggerContract.TABLE, null, null);
         db.delete(MeasurementTables.EventReportContract.TABLE, null, null);
         db.delete(MeasurementTables.AttributionContract.TABLE, null, null);
@@ -267,6 +270,9 @@ public abstract class AbstractDbIntegrationTest {
     private static void seedTables(SQLiteDatabase db, DbState input) throws SQLiteException {
         for (Source source : input.mSourceList) {
             insertToDb(source, db);
+        }
+        for (SourceDestination sourceDest : input.mSourceDestinationList) {
+            insertToDb(sourceDest, db);
         }
         for (Trigger trigger : input.mTriggerList) {
             insertToDb(trigger, db);
@@ -299,16 +305,6 @@ public abstract class AbstractDbIntegrationTest {
                 source.getPublisher().toString());
         values.put(MeasurementTables.SourceContract.PUBLISHER_TYPE,
                 source.getPublisherType());
-        values.put(
-                MeasurementTables.SourceContract.APP_DESTINATION,
-                source.getAppDestinations() == null
-                ? null
-                : source.getAppDestinations().get(0).toString());
-        values.put(
-                MeasurementTables.SourceContract.WEB_DESTINATION,
-                source.getWebDestinations() == null
-                ? null
-                : source.getWebDestinations().get(0).toString());
         values.put(MeasurementTables.SourceContract.AGGREGATE_SOURCE, source.getAggregateSource());
         values.put(MeasurementTables.SourceContract.ENROLLMENT_ID, source.getEnrollmentId());
         values.put(MeasurementTables.SourceContract.STATUS, source.getStatus());
@@ -341,6 +337,22 @@ public abstract class AbstractDbIntegrationTest {
         long row = db.insert(MeasurementTables.SourceContract.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("Source insertion failed");
+        }
+    }
+
+    /**
+     * Inserts a SourceDestination into the given database.
+     */
+    public static void insertToDb(SourceDestination sourceDest, SQLiteDatabase db)
+            throws SQLiteException {
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.SourceDestination.SOURCE_ID, sourceDest.getSourceId());
+        values.put(MeasurementTables.SourceDestination.DESTINATION, sourceDest.getDestination());
+        values.put(MeasurementTables.SourceDestination.DESTINATION_TYPE,
+                sourceDest.getDestinationType());
+        long row = db.insert(MeasurementTables.SourceDestination.TABLE, null, values);
+        if (row == -1) {
+            throw new SQLiteException("SourceDestination insertion failed");
         }
     }
 

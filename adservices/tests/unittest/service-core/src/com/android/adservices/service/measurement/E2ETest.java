@@ -862,6 +862,7 @@ public abstract class E2ETest {
         List<String> tableNames =
                 ImmutableList.of(
                         "msmt_source",
+                        "msmt_source_destination",
                         "msmt_trigger",
                         "msmt_attribution",
                         "msmt_event_report",
