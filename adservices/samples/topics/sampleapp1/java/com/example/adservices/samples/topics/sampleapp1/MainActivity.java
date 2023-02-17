@@ -35,8 +35,8 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
-import java.io.StringWriter;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -108,7 +108,8 @@ public class MainActivity extends AppCompatActivity {
         return sb.toString();
     }
 
-    private void getTopics(String sdkName, boolean shouldRecordObservation){
+    @SuppressWarnings("NewApi")
+    private void getTopics(String sdkName, boolean shouldRecordObservation) {
       mAdvertisingTopicsClient =
               new AdvertisingTopicsClient.Builder()
                       .setContext(this)
