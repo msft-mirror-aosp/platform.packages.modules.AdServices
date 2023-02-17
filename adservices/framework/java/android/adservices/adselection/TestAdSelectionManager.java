@@ -219,9 +219,9 @@ public class TestAdSelectionManager {
         try {
             final AdSelectionService service = mAdSelectionManager.getService();
             service.overrideAdSelectionFromOutcomesConfigRemoteInfo(
-                    request.getAdSelectionConfig(),
-                    request.getSelectionLogicJs(),
-                    request.getSelectionSignals(),
+                    request.getAdSelectionFromOutcomesConfig(),
+                    request.getOutcomeSelectionLogicJs(),
+                    request.getOutcomeSelectionTrustedSignals(),
                     new AdSelectionOverrideCallback.Stub() {
                         @Override
                         public void onSuccess() {
