@@ -47,7 +47,6 @@ import android.util.Pair;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.data.DbHelper;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.AsyncRegistration;
@@ -149,7 +148,7 @@ public class MeasurementDaoTest {
 
     @After
     public void cleanup() {
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         for (String table : ALL_MSMT_TABLES) {
             db.delete(table, null, null);
         }
@@ -164,7 +163,7 @@ public class MeasurementDaoTest {
                 dao.insertSource(validSource));
 
         try (Cursor sourceCursor =
-                DbHelper.getInstance(sContext)
+                MeasurementDbHelper.getInstance(sContext)
                         .getReadableDatabase()
                         .query(SourceContract.TABLE, null, null, null, null, null, null)) {
             assertTrue(sourceCursor.moveToNext());
@@ -213,16 +212,17 @@ public class MeasurementDaoTest {
 
         final MockitoSession session =
                 ExtendedMockito.mockitoSession()
-                        .spyStatic(DbHelper.class)
+                        .spyStatic(MeasurementDbHelper.class)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
 
         try {
             // Mocking that the DB file has a size of 100 bytes
-            final DbHelper spyDbHelper = Mockito.spy(DbHelper.getInstance(sContext));
-            ExtendedMockito.doReturn(spyDbHelper)
-                    .when(() -> DbHelper.getInstance(ArgumentMatchers.any()));
-            ExtendedMockito.doReturn(dbSize).when(spyDbHelper).getDbFileSize();
+            final MeasurementDbHelper spyMeasurementDbHelper =
+                    Mockito.spy(MeasurementDbHelper.getInstance(sContext));
+            ExtendedMockito.doReturn(spyMeasurementDbHelper)
+                    .when(() -> MeasurementDbHelper.getInstance(ArgumentMatchers.any()));
+            ExtendedMockito.doReturn(dbSize).when(spyMeasurementDbHelper).getDbFileSize();
 
             // Mocking that the flags return a max limit size of 100 bytes
             Flags mockFlags = Mockito.mock(Flags.class);
@@ -233,7 +233,7 @@ public class MeasurementDaoTest {
                     .runInTransaction((dao) -> dao.insertSource(validSource));
 
             try (Cursor sourceCursor =
-                    DbHelper.getInstance(sContext)
+                    MeasurementDbHelper.getInstance(sContext)
                             .getReadableDatabase()
                             .query(SourceContract.TABLE, null, null, null, null, null, null)) {
                 assertFalse(sourceCursor.moveToNext());
@@ -250,7 +250,7 @@ public class MeasurementDaoTest {
                 dao.insertTrigger(validTrigger));
 
         try (Cursor triggerCursor =
-                DbHelper.getInstance(sContext)
+                MeasurementDbHelper.getInstance(sContext)
                         .getReadableDatabase()
                         .query(TriggerContract.TABLE, null, null, null, null, null, null)) {
             assertTrue(triggerCursor.moveToNext());
@@ -284,16 +284,17 @@ public class MeasurementDaoTest {
 
         final MockitoSession session =
                 ExtendedMockito.mockitoSession()
-                        .spyStatic(DbHelper.class)
+                        .spyStatic(MeasurementDbHelper.class)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
 
         try {
             // Mocking that the DB file has a size of 100 bytes
-            final DbHelper spyDbHelper = Mockito.spy(DbHelper.getInstance(sContext));
-            ExtendedMockito.doReturn(spyDbHelper)
-                    .when(() -> DbHelper.getInstance(ArgumentMatchers.any()));
-            ExtendedMockito.doReturn(dbSize).when(spyDbHelper).getDbFileSize();
+            final MeasurementDbHelper spyMeasurementDbHelper =
+                    Mockito.spy(MeasurementDbHelper.getInstance(sContext));
+            ExtendedMockito.doReturn(spyMeasurementDbHelper)
+                    .when(() -> MeasurementDbHelper.getInstance(ArgumentMatchers.any()));
+            ExtendedMockito.doReturn(dbSize).when(spyMeasurementDbHelper).getDbFileSize();
 
             // Mocking that the flags return a max limit size of 100 bytes
             Flags mockFlags = Mockito.mock(Flags.class);
@@ -304,7 +305,7 @@ public class MeasurementDaoTest {
                     .runInTransaction((dao) -> dao.insertTrigger(validTrigger));
 
             try (Cursor sourceCursor =
-                    DbHelper.getInstance(sContext)
+                    MeasurementDbHelper.getInstance(sContext)
                             .getReadableDatabase()
                             .query(TriggerContract.TABLE, null, null, null, null, null, null)) {
                 assertFalse(sourceCursor.moveToNext());
@@ -444,7 +445,7 @@ public class MeasurementDaoTest {
                 .runInTransaction((dao) -> dao.insertDebugReport(debugReport));
 
         try (Cursor cursor =
-                DbHelper.getInstance(sContext)
+                MeasurementDbHelper.getInstance(sContext)
                         .getReadableDatabase()
                         .query(
                                 MeasurementTables.DebugReportContract.TABLE,
@@ -1312,7 +1313,7 @@ public class MeasurementDaoTest {
                                     measurementDao.doInstallAttribution(
                                             INSTALLED_PACKAGE, currentTimestamp);
                                 }));
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         assertTrue(getInstallAttributionStatus("IA1", db));
         assertFalse(getInstallAttributionStatus("IA2", db));
         removeSources(Arrays.asList("IA1", "IA2"), db);
@@ -1336,7 +1337,7 @@ public class MeasurementDaoTest {
                                     measurementDao.doInstallAttribution(
                                             INSTALLED_PACKAGE, currentTimestamp);
                                 }));
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         assertFalse(getInstallAttributionStatus("IA1", db));
         assertTrue(getInstallAttributionStatus("IA2", db));
 
@@ -1363,7 +1364,7 @@ public class MeasurementDaoTest {
                                             INSTALLED_PACKAGE,
                                             currentTimestamp - TimeUnit.DAYS.toMillis(7));
                                 }));
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         assertTrue(getInstallAttributionStatus("IA1", db));
         assertFalse(getInstallAttributionStatus("IA2", db));
         removeSources(Arrays.asList("IA1", "IA2"), db);
@@ -1385,7 +1386,7 @@ public class MeasurementDaoTest {
                                 measurementDao ->
                                         measurementDao.doInstallAttribution(
                                                 INSTALLED_PACKAGE, currentTimestamp)));
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         assertFalse(getInstallAttributionStatus("IA1", db));
         assertFalse(getInstallAttributionStatus("IA2", db));
         removeSources(Arrays.asList("IA1", "IA2"), db);
@@ -1406,7 +1407,7 @@ public class MeasurementDaoTest {
                                             INSTALLED_PACKAGE,
                                             currentTimestamp - TimeUnit.DAYS.toMillis(7));
                                 }));
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         assertEquals(
                 currentTimestamp - TimeUnit.DAYS.toMillis(7),
                 getInstallAttributionInstallTime("IA1", db).longValue());
@@ -1430,7 +1431,7 @@ public class MeasurementDaoTest {
                                 measurementDao ->
                                         measurementDao.doInstallAttribution(
                                                 INSTALLED_PACKAGE, currentTimestamp)));
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         assertTrue(getInstallAttributionStatus("IA1", db));
         removeSources(Collections.singletonList("IA1"), db);
 
@@ -1523,7 +1524,7 @@ public class MeasurementDaoTest {
                                             INSTALLED_PACKAGE,
                                             currentTimestamp - TimeUnit.DAYS.toMillis(7));
                                 }));
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         assertTrue(getInstallAttributionStatus("IA2", db));
         assertTrue(getInstallAttributionStatus("IA4", db));
         assertTrue(getInstallAttributionStatus("IA5", db));
@@ -1623,14 +1624,14 @@ public class MeasurementDaoTest {
                             assertNotNull(measurementDao.getAggregateReport("AR34"));
                         });
 
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         assertEquals(2, DatabaseUtils.queryNumEntries(db, AttributionContract.TABLE));
     }
 
     @Test
     public void deleteSource_providedId_deletesMatchingXnaIgnoredSource() {
         // Setup
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
 
         Source s1 =
                 SourceFixture.getValidSourceBuilder()
@@ -1722,12 +1723,12 @@ public class MeasurementDaoTest {
                             assertNotNull(measurementDao.getAggregateReport("AR34"));
                         });
 
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         assertEquals(2, DatabaseUtils.queryNumEntries(db, AttributionContract.TABLE));
     }
 
     private void prepareDataForSourceAndTriggerDeletion() throws JSONException {
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         Source s1 =
                 SourceFixture.getValidSourceBuilder()
                         .setEventId(new UnsignedLong(1L))
@@ -1840,7 +1841,7 @@ public class MeasurementDaoTest {
                         .runInTransaction(
                                 measurementDao ->
                                         measurementDao.undoInstallAttribution(INSTALLED_PACKAGE)));
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         // Should set installAttributed = false for id=IA1
         assertFalse(getInstallAttributionStatus("IA1", db));
     }
@@ -1858,7 +1859,7 @@ public class MeasurementDaoTest {
                         .runInTransaction(
                                 measurementDao ->
                                         measurementDao.undoInstallAttribution(INSTALLED_PACKAGE)));
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         // Should set installTime = null for id=IA1
         assertNull(getInstallAttributionInstallTime("IA1", db));
     }
@@ -1891,7 +1892,7 @@ public class MeasurementDaoTest {
         List<AggregateReport> reportsWithAndroidAppDestination =
                 Arrays.asList(generateMockAggregateReport("android-app://destination-5.app", 9));
 
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         Objects.requireNonNull(db);
         Stream.of(
                         reportsWithPlainDestination,
@@ -1963,7 +1964,7 @@ public class MeasurementDaoTest {
         List<EventReport> reportsWithAndroidAppDestination =
                 Arrays.asList(generateMockEventReport("android-app://destination-5.app", 9));
 
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         Objects.requireNonNull(db);
         Stream.of(
                         reportsWithPlainDestination,
@@ -2155,7 +2156,7 @@ public class MeasurementDaoTest {
                         .setTriggerId("1001")
                         .build());
 
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         Objects.requireNonNull(db);
         sourceList.forEach(source -> insertSource(source, source.getId()));
         triggers.forEach(trigger -> AbstractDbIntegrationTest.insertToDb(trigger, db));
@@ -2290,7 +2291,7 @@ public class MeasurementDaoTest {
                         .setTriggerId("102")
                         .build());
 
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         Objects.requireNonNull(db);
         sourceList.forEach(source -> insertSource(source, source.getId()));
         triggers.forEach(trigger -> AbstractDbIntegrationTest.insertToDb(trigger, db));
@@ -2330,7 +2331,7 @@ public class MeasurementDaoTest {
 
     @Test
     public void testUpdateSourceStatus() {
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         Objects.requireNonNull(db);
 
         List<Source> sourceList = new ArrayList<>();
@@ -2364,7 +2365,7 @@ public class MeasurementDaoTest {
 
     @Test
     public void testGetMatchingActiveSources() {
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         Objects.requireNonNull(db);
         String enrollmentId = "enrollment-id";
         Uri appDestination = Uri.parse("android-app://com.example.abc");
@@ -2593,7 +2594,7 @@ public class MeasurementDaoTest {
         );
 
         try (Cursor cursor =
-                DbHelper.getInstance(sContext)
+                MeasurementDbHelper.getInstance(sContext)
                         .getReadableDatabase()
                         .query(
                                 MeasurementTables.AggregateEncryptionKey.TABLE,
@@ -2621,9 +2622,16 @@ public class MeasurementDaoTest {
                 dao.insertAggregateReport(validAggregateReport));
 
         try (Cursor cursor =
-                     DbHelper.getInstance(sContext).getReadableDatabase()
-                             .query(MeasurementTables.AggregateReport.TABLE,
-                                     null, null, null, null, null, null)) {
+                MeasurementDbHelper.getInstance(sContext)
+                        .getReadableDatabase()
+                        .query(
+                                MeasurementTables.AggregateReport.TABLE,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null)) {
             assertTrue(cursor.moveToNext());
             AggregateReport aggregateReport =
                     SqliteObjectMapper.constructAggregateReport(cursor);
@@ -2635,7 +2643,7 @@ public class MeasurementDaoTest {
 
     @Test
     public void testDeleteAllMeasurementDataWithEmptyList() {
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
 
         Source source = SourceFixture.getValidSourceBuilder().setId("S1").build();
         ContentValues sourceValue = new ContentValues();
@@ -2698,7 +2706,7 @@ public class MeasurementDaoTest {
 
     @Test
     public void testDeleteAllMeasurementDataWithNonEmptyList() {
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
 
         Source source = SourceFixture.getValidSourceBuilder().setId("S1").build();
         ContentValues sourceValue = new ContentValues();
@@ -2777,7 +2785,7 @@ public class MeasurementDaoTest {
     /** Test that the variable ALL_MSMT_TABLES actually has all the measurement related tables. */
     @Test
     public void testAllMsmtTables() {
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         Cursor cursor =
                 db.query(
                         "sqlite_master",
@@ -2922,7 +2930,7 @@ public class MeasurementDaoTest {
                                             Trigger trigger = new Trigger.Builder().build();
                                             dao.insertTrigger(trigger);
                                         }));
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         Objects.requireNonNull(db);
         // There should be no insertions
         assertEquals(
@@ -2944,7 +2952,7 @@ public class MeasurementDaoTest {
 
     @Test
     public void testDeleteAppRecordsNotPresentForSources() {
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
 
         List<Source> sourceList = new ArrayList<>();
         // Source registrant is still installed, record is not deleted.
@@ -3061,7 +3069,7 @@ public class MeasurementDaoTest {
 
     @Test
     public void testDeleteAppRecordsNotPresentForTriggers() {
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         List<Trigger> triggerList = new ArrayList<>();
         // Trigger registrant is still installed, record will not be deleted.
         triggerList.add(
@@ -3128,7 +3136,7 @@ public class MeasurementDaoTest {
 
     @Test
     public void testDeleteAppRecordsNotPresentForEventReports() {
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         List<EventReport> eventReportList = new ArrayList<>();
         // Event report attribution destination is still installed, record will not be deleted.
         eventReportList.add(
@@ -3188,7 +3196,7 @@ public class MeasurementDaoTest {
 
     @Test
     public void testDeleteAppRecordsNotPresentForAggregateReports() {
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         List<AggregateReport> aggregateReportList = new ArrayList<>();
         // Aggregate report attribution destination and publisher is still installed, record will
         // not be deleted.
@@ -3269,7 +3277,7 @@ public class MeasurementDaoTest {
 
     @Test
     public void testDeleteAppRecordsNotPresentForAttributions() {
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         List<Attribution> attributionList = new ArrayList<>();
         // Attribution has source site and destination site still installed, record will not be
         // deleted.
@@ -3356,7 +3364,7 @@ public class MeasurementDaoTest {
 
     @Test
     public void testDeleteAppRecordsNotPresentForEventReportsFromSources() {
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
 
         List<Source> sourceList = new ArrayList<>();
         sourceList.add(
@@ -3450,7 +3458,7 @@ public class MeasurementDaoTest {
 
     @Test
     public void testDeleteAppRecordsNotPresentForLargeAppList() {
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         List<Source> sourceList = new ArrayList<>();
 
         int limit = 5000;
@@ -3506,7 +3514,7 @@ public class MeasurementDaoTest {
 
     @Test
     public void testDeleteDebugReport() {
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         DebugReport debugReport = createDebugReport();
 
         ContentValues values = new ContentValues();
@@ -3536,7 +3544,7 @@ public class MeasurementDaoTest {
 
     @Test
     public void testGetDebugReportIds() {
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         DebugReport debugReport = createDebugReport();
 
         ContentValues values = new ContentValues();
@@ -3683,7 +3691,7 @@ public class MeasurementDaoTest {
     }
 
     private static void insertAttribution(Attribution attribution) {
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(AttributionContract.ID, UUID.randomUUID().toString());
         values.put(AttributionContract.SOURCE_SITE, attribution.getSourceSite());
@@ -3733,7 +3741,7 @@ public class MeasurementDaoTest {
 
     // This is needed because MeasurementDao::insertSource inserts a default value for status.
     private static void insertSource(Source source, String sourceId) {
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(SourceContract.ID, sourceId);
         if (source.getEventId() != null) {
@@ -3781,7 +3789,7 @@ public class MeasurementDaoTest {
                 .runInTransaction((dao) -> dao.insertAsyncRegistration(validAsyncRegistration));
 
         try (Cursor cursor =
-                DbHelper.getInstance(sContext)
+                MeasurementDbHelper.getInstance(sContext)
                         .getReadableDatabase()
                         .query(
                                 MeasurementTables.AsyncRegistrationContract.TABLE,
@@ -3914,14 +3922,14 @@ public class MeasurementDaoTest {
     /** Test that AsyncRegistration is deleted correctly. */
     @Test
     public void testDeleteAsyncRegistration() {
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         AsyncRegistration asyncRegistration = AsyncRegistrationFixture.getValidAsyncRegistration();
         String asyncRegistrationID = asyncRegistration.getId();
 
         DatastoreManagerFactory.getDatastoreManager(sContext)
                 .runInTransaction((dao) -> dao.insertAsyncRegistration(asyncRegistration));
         try (Cursor cursor =
-                DbHelper.getInstance(sContext)
+                MeasurementDbHelper.getInstance(sContext)
                         .getReadableDatabase()
                         .query(
                                 MeasurementTables.AsyncRegistrationContract.TABLE,
@@ -3983,7 +3991,7 @@ public class MeasurementDaoTest {
                         });
 
         try (Cursor cursor =
-                DbHelper.getInstance(sContext)
+                MeasurementDbHelper.getInstance(sContext)
                         .getReadableDatabase()
                         .query(
                                 MeasurementTables.AsyncRegistrationContract.TABLE,
@@ -4004,7 +4012,7 @@ public class MeasurementDaoTest {
     @Test
     public void getSource_fetchesMatchingSourceFromDb() {
         // Setup - insert 2 sources with different IDs
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         String sourceId1 = "source1";
         Source source1 = SourceFixture.getValidSourceBuilder().setId(sourceId1).build();
         insertInDb(db, source1);
@@ -4055,7 +4063,7 @@ public class MeasurementDaoTest {
                         createAggregateReportForSourceAndTrigger(sources.get(2), triggers.get(1)),
                         createAggregateReportForSourceAndTrigger(sources.get(2), triggers.get(2)));
 
-        SQLiteDatabase db = DbHelper.getInstance(sContext).getWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).getWritableDatabase();
         sources.forEach(source -> insertSource(source, source.getId()));
         triggers.forEach(trigger -> AbstractDbIntegrationTest.insertToDb(trigger, db));
         reports.forEach(
@@ -4147,7 +4155,7 @@ public class MeasurementDaoTest {
                         createEventReportForSourceAndTrigger(sources.get(2), triggers.get(1)),
                         createEventReportForSourceAndTrigger(sources.get(2), triggers.get(2)));
 
-        SQLiteDatabase db = DbHelper.getInstance(sContext).getWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).getWritableDatabase();
         sources.forEach(source -> insertSource(source, source.getId()));
         triggers.forEach(trigger -> AbstractDbIntegrationTest.insertToDb(trigger, db));
         reports.forEach(
@@ -4241,7 +4249,7 @@ public class MeasurementDaoTest {
                         .build();
         List<Source> sources = List.of(source1, source2, source3, source4, source5);
 
-        SQLiteDatabase db = DbHelper.getInstance(sContext).getWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).getWritableDatabase();
         sources.forEach(source -> insertInDb(db, source));
 
         // Execution
@@ -4427,7 +4435,7 @@ public class MeasurementDaoTest {
                         .build();
         List<Trigger> triggers = List.of(trigger1, trigger2, trigger3, trigger4, trigger5);
 
-        SQLiteDatabase db = DbHelper.getInstance(sContext).getWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).getWritableDatabase();
         triggers.forEach(
                 trigger -> {
                     ContentValues values = new ContentValues();
@@ -4589,7 +4597,7 @@ public class MeasurementDaoTest {
                 .runInTransaction((dao) -> dao.insertSource(validSource));
 
         try (Cursor cursor =
-                DbHelper.getInstance(sContext)
+                MeasurementDbHelper.getInstance(sContext)
                         .getReadableDatabase()
                         .query(
                                 MeasurementTables.SourceContract.TABLE,
@@ -4612,7 +4620,7 @@ public class MeasurementDaoTest {
 
         String sourceId = optionalSourceId.get();
         try (Cursor cursor =
-                DbHelper.getInstance(sContext)
+                MeasurementDbHelper.getInstance(sContext)
                         .getReadableDatabase()
                         .query(
                                 MeasurementTables.SourceContract.TABLE,
@@ -4778,7 +4786,7 @@ public class MeasurementDaoTest {
                         s13San1Expired,
                         s14San5RegIdClasesWithMmp,
                         s15MmpMatching);
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         Objects.requireNonNull(db);
         // Insert all sources to the DB
         sources.forEach(source -> insertSource(source, source.getId()));
@@ -4824,7 +4832,7 @@ public class MeasurementDaoTest {
     @Test
     public void insertIgnoredSourceForEnrollment_success() {
         // Setup
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
         // Need to insert sources before, to honor the foreign key constraint
         insertSource(createSourceBuilder().setId("s1").build(), "s1");
@@ -4935,7 +4943,7 @@ public class MeasurementDaoTest {
     }
 
     private void setupSourceAndTriggerData() {
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         List<Source> sourcesList = new ArrayList<>();
         sourcesList.add(
                 SourceFixture.getValidSourceBuilder()
@@ -5044,7 +5052,7 @@ public class MeasurementDaoTest {
     }
 
     private void addTriggersToDatabase(List<Trigger> triggersList) {
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
 
         for (Trigger trigger : triggersList) {
             ContentValues values = new ContentValues();
@@ -5057,7 +5065,7 @@ public class MeasurementDaoTest {
     }
 
     private void setupSourceDataForPublisherTypeWeb() {
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         List<Source> sourcesList = new ArrayList<>();
         sourcesList.add(
                 SourceFixture.getValidSourceBuilder()
