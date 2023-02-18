@@ -29,23 +29,27 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 
+import com.google.common.collect.ImmutableList;
+
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoSession;
 
-import java.util.ArrayList;
-
 public class PackageManagerCompatUtilsTest {
     private MockitoSession mMockitoSession;
 
     @Mock private PackageManager mPackageManagerMock;
+    @Mock private PackageInfo mPackageInfo;
+    @Mock private ApplicationInfo mApplicationInfo;
 
     @Before
     public void setUp() {
@@ -91,23 +95,25 @@ public class PackageManagerCompatUtilsTest {
     @Test
     public void testGetInstalledApplications_SMinus() {
         doReturn(false).when(SdkLevel::isAtLeastT);
-        doReturn(new ArrayList<>()).when(mPackageManagerMock).getInstalledApplications(anyInt());
+        doReturn(ImmutableList.of(mApplicationInfo))
+                .when(mPackageManagerMock)
+                .getInstalledApplications(anyInt());
 
         final int flags = PackageManager.MATCH_APEX;
-        PackageManagerCompatUtils.getInstalledApplications(mPackageManagerMock, flags);
+        assertThat(PackageManagerCompatUtils.getInstalledApplications(mPackageManagerMock, flags))
+                .isEqualTo(ImmutableList.of(mApplicationInfo));
         verify(mPackageManagerMock).getInstalledApplications(eq(flags));
-        verify(mPackageManagerMock, never())
-                .getInstalledApplications(any(PackageManager.ApplicationInfoFlags.class));
     }
 
     @Test
     public void testGetInstalledApplications_TPlus() {
-        doReturn(true).when(SdkLevel::isAtLeastT);
-        doReturn(new ArrayList<>())
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
+        doReturn(ImmutableList.of(mApplicationInfo))
                 .when(mPackageManagerMock)
                 .getInstalledApplications(any(PackageManager.ApplicationInfoFlags.class));
 
-        PackageManagerCompatUtils.getInstalledApplications(mPackageManagerMock, 0);
+        assertThat(PackageManagerCompatUtils.getInstalledApplications(mPackageManagerMock, 0))
+                .isEqualTo(ImmutableList.of(mApplicationInfo));
         verify(mPackageManagerMock, never()).getInstalledApplications(anyInt());
         verify(mPackageManagerMock)
                 .getInstalledApplications(any(PackageManager.ApplicationInfoFlags.class));
@@ -116,23 +122,25 @@ public class PackageManagerCompatUtilsTest {
     @Test
     public void testGetInstalledPackages_SMinus() {
         doReturn(false).when(SdkLevel::isAtLeastT);
-        doReturn(new ArrayList<>()).when(mPackageManagerMock).getInstalledPackages(anyInt());
+        doReturn(ImmutableList.of(mPackageInfo))
+                .when(mPackageManagerMock)
+                .getInstalledPackages(anyInt());
 
         final int flags = PackageManager.MATCH_APEX;
-        PackageManagerCompatUtils.getInstalledPackages(mPackageManagerMock, flags);
+        assertThat(PackageManagerCompatUtils.getInstalledPackages(mPackageManagerMock, flags))
+                .isEqualTo(ImmutableList.of(mPackageInfo));
         verify(mPackageManagerMock).getInstalledPackages(eq(flags));
-        verify(mPackageManagerMock, never())
-                .getInstalledPackages(any(PackageManager.PackageInfoFlags.class));
     }
 
     @Test
     public void testGetInstalledPackages_TPlus() {
-        doReturn(true).when(SdkLevel::isAtLeastT);
-        doReturn(new ArrayList<>())
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
+        doReturn(ImmutableList.of(mPackageInfo))
                 .when(mPackageManagerMock)
                 .getInstalledPackages(any(PackageManager.PackageInfoFlags.class));
 
-        PackageManagerCompatUtils.getInstalledPackages(mPackageManagerMock, 0);
+        assertThat(PackageManagerCompatUtils.getInstalledPackages(mPackageManagerMock, 0))
+                .isEqualTo(ImmutableList.of(mPackageInfo));
         verify(mPackageManagerMock, never()).getInstalledPackages(anyInt());
         verify(mPackageManagerMock)
                 .getInstalledPackages(any(PackageManager.PackageInfoFlags.class));
@@ -141,25 +149,27 @@ public class PackageManagerCompatUtilsTest {
     @Test
     public void testGetUidForPackage_SMinus() throws PackageManager.NameNotFoundException {
         doReturn(false).when(SdkLevel::isAtLeastT);
-        doReturn(100).when(mPackageManagerMock).getPackageUid(anyString(), anyInt());
+        final int packageUid = 100;
+        doReturn(packageUid).when(mPackageManagerMock).getPackageUid(anyString(), anyInt());
 
         final int flags = PackageManager.MATCH_APEX;
         final String packageName = "com.example.package";
-        PackageManagerCompatUtils.getPackageUid(mPackageManagerMock, packageName, flags);
+        assertThat(PackageManagerCompatUtils.getPackageUid(mPackageManagerMock, packageName, flags))
+                .isEqualTo(packageUid);
         verify(mPackageManagerMock).getPackageUid(eq(packageName), eq(flags));
-        verify(mPackageManagerMock, never())
-                .getPackageUid(anyString(), any(PackageManager.PackageInfoFlags.class));
     }
 
     @Test
     public void testGetUidForPackage_TPlus() throws PackageManager.NameNotFoundException {
-        doReturn(true).when(SdkLevel::isAtLeastT);
-        doReturn(100)
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
+        final int packageUid = 100;
+        doReturn(packageUid)
                 .when(mPackageManagerMock)
                 .getPackageUid(anyString(), any(PackageManager.PackageInfoFlags.class));
 
         final String packageName = "com.example.package";
-        PackageManagerCompatUtils.getPackageUid(mPackageManagerMock, packageName, 0);
+        assertThat(PackageManagerCompatUtils.getPackageUid(mPackageManagerMock, packageName, 0))
+                .isEqualTo(packageUid);
         verify(mPackageManagerMock, never()).getPackageUid(anyString(), anyInt());
         verify(mPackageManagerMock)
                 .getPackageUid(eq(packageName), any(PackageManager.PackageInfoFlags.class));
@@ -167,37 +177,32 @@ public class PackageManagerCompatUtilsTest {
 
     @Test
     public void testGetApplicationInfo_SMinus() throws PackageManager.NameNotFoundException {
-        final ApplicationInfo applicationInfo = new ApplicationInfo();
-
         doReturn(false).when(SdkLevel::isAtLeastT);
-        doReturn(applicationInfo)
+        doReturn(mApplicationInfo)
                 .when(mPackageManagerMock)
                 .getApplicationInfo(anyString(), anyInt());
 
         final int flags = PackageManager.MATCH_APEX;
         final String packageName = "com.example.package";
-        ApplicationInfo returned =
-                PackageManagerCompatUtils.getApplicationInfo(
-                        mPackageManagerMock, packageName, flags);
-        assertThat(returned).isSameInstanceAs(applicationInfo);
+        assertThat(
+                        PackageManagerCompatUtils.getApplicationInfo(
+                                mPackageManagerMock, packageName, flags))
+                .isEqualTo(mApplicationInfo);
         verify(mPackageManagerMock).getApplicationInfo(eq(packageName), eq(flags));
-        verify(mPackageManagerMock, never())
-                .getApplicationInfo(anyString(), any(PackageManager.ApplicationInfoFlags.class));
     }
 
     @Test
     public void testGetApplicationInfo_TPlus() throws PackageManager.NameNotFoundException {
-        final ApplicationInfo applicationInfo = new ApplicationInfo();
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
 
-        doReturn(true).when(SdkLevel::isAtLeastT);
-        doReturn(applicationInfo)
+        doReturn(mApplicationInfo)
                 .when(mPackageManagerMock)
                 .getApplicationInfo(anyString(), any(PackageManager.ApplicationInfoFlags.class));
 
         final String packageName = "com.example.package";
         ApplicationInfo info =
                 PackageManagerCompatUtils.getApplicationInfo(mPackageManagerMock, packageName, 0);
-        assertThat(info).isSameInstanceAs(applicationInfo);
+        assertThat(info).isEqualTo(mApplicationInfo);
         verify(mPackageManagerMock, never()).getApplicationInfo(anyString(), anyInt());
         verify(mPackageManagerMock)
                 .getApplicationInfo(
