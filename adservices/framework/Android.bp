@@ -25,6 +25,7 @@ filegroup {
     visibility: [
         "//frameworks/base",
         "//packages/modules/AdServices/adservices:__subpackages__",
+        "//packages/modules/ExtServices/apex:__subpackages__",
     ],
     path: "java",
 }
@@ -37,7 +38,7 @@ java_sdk_library {
         "framework-sdksandbox.impl"
     ],
     sdk_version: "module_current",
-    min_sdk_version: "Tiramisu",
+    min_sdk_version: "31",
     permitted_packages: [
         "com.android.adservices",
         "android.adservices",
@@ -45,9 +46,9 @@ java_sdk_library {
     ],
     defaults: ["framework-module-defaults"],
     impl_library_visibility: [
-        "//packages/modules/AdServices:__subpackages__"
+        "//packages/modules/AdServices:__subpackages__",
     ],
-    apex_available: ["com.android.adservices"],
+    apex_available: ["com.android.adservices", "com.android.extservices"],
 }
 
 java_library {
@@ -57,7 +58,19 @@ java_library {
         "modules-utils-preconditions",
         "framework-sdksandbox.impl"
     ],
-    sdk_version: "module_current",
-    min_sdk_version: "Tiramisu",
+    min_sdk_version: "31",
     defaults: ["framework-module-defaults"],
+}
+
+java_library {
+    name: "framework-adextservices",
+    static_libs: ["framework-adservices.impl"],
+    sdk_version: "module_current",
+    min_sdk_version: "31",
+    max_sdk_version: "32",
+    visibility: [
+        "//packages/modules/AdServices:__subpackages__",
+        "//packages/modules/ExtServices:__subpackages__",
+    ],
+    apex_available: ["com.android.extservices"],
 }

@@ -20,6 +20,7 @@ import static android.adservices.common.AdServicesStatusUtils.RATE_LIMIT_REACHED
 
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.content.Context;
 import android.os.LimitExceededException;
 
@@ -161,7 +162,8 @@ public class FledgeServiceFilter {
      * Applies the filtering operations to the context of a FLEDGE request. The specific filtering
      * operations are discussed in the comments below.
      *
-     * @param adTech the adTech associated with the request
+     * @param adTech the adTech associated with the request. This parameter is nullable, and the
+     *     enrollment check will not be applied if it is null.
      * @param callerPackageName caller package name to be validated
      * @param enforceForeground whether to enforce a foreground check
      * @throws FledgeAuthorizationFilter.CallerMismatchException if the {@code callerPackageName} is
@@ -177,18 +179,23 @@ public class FledgeServiceFilter {
      *     limits
      */
     public void filterRequest(
-            AdTechIdentifier adTech,
-            String callerPackageName,
+            @Nullable AdTechIdentifier adTech,
+            @NonNull String callerPackageName,
             boolean enforceForeground,
             int callerUid,
             int apiName,
-            Throttler.ApiKey apiKey) {
+            @NonNull Throttler.ApiKey apiKey) {
+        Objects.requireNonNull(callerPackageName);
+        Objects.requireNonNull(apiKey);
+
         assertCallerPackageName(callerPackageName, callerUid, apiName);
         assertCallerNotThrottled(callerPackageName, apiKey);
         if (enforceForeground) {
             assertForegroundCaller(callerUid, apiName);
         }
-        assertFledgeEnrollment(adTech, callerPackageName, apiName);
+        if (!Objects.isNull(adTech)) {
+            assertFledgeEnrollment(adTech, callerPackageName, apiName);
+        }
         assertAppInAllowList(callerPackageName, apiName);
         assertCallerHasUserConsent();
     }

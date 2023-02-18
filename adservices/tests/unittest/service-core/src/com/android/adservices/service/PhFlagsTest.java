@@ -43,6 +43,7 @@ import static com.android.adservices.service.Flags.ENABLE_TOPIC_MIGRATION;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDES;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION;
+import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_INTERACTION;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_TOPICS;
 import static com.android.adservices.service.Flags.ENFORCE_ISOLATE_MAX_HEAP_SIZE;
@@ -150,6 +151,7 @@ import static com.android.adservices.service.Flags.TOPICS_NUMBER_OF_LOOK_BACK_EP
 import static com.android.adservices.service.Flags.TOPICS_NUMBER_OF_RANDOM_TOPICS;
 import static com.android.adservices.service.Flags.TOPICS_NUMBER_OF_TOP_TOPICS;
 import static com.android.adservices.service.Flags.TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
+import static com.android.adservices.service.Flags.UI_EEA_COUNTRIES;
 import static com.android.adservices.service.Flags.UI_OTA_STRINGS_MANIFEST_FILE_URL;
 import static com.android.adservices.service.PhFlags.KEY_ADID_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_ADID_REQUEST_PERMITS_PER_SECOND;
@@ -222,6 +224,7 @@ import static com.android.adservices.service.PhFlags.KEY_FLEDGE_REPORT_IMPRESSIO
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_SELECT_ADS_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_FOREGROUND_STATUS_LEVEL;
 import static com.android.adservices.service.PhFlags.KEY_GA_UX_FEATURE_ENABLED;
+import static com.android.adservices.service.PhFlags.KEY_GLOBAL_BLOCKED_TOPIC_IDS;
 import static com.android.adservices.service.PhFlags.KEY_GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_ISOLATE_MAX_HEAP_SIZE_BYTES;
 import static com.android.adservices.service.PhFlags.KEY_MAINTENANCE_JOB_FLEX_MS;
@@ -281,6 +284,7 @@ import static com.android.adservices.service.PhFlags.KEY_TOPICS_NUMBER_OF_LOOK_B
 import static com.android.adservices.service.PhFlags.KEY_TOPICS_NUMBER_OF_RANDOM_TOPICS;
 import static com.android.adservices.service.PhFlags.KEY_TOPICS_NUMBER_OF_TOP_TOPICS;
 import static com.android.adservices.service.PhFlags.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
+import static com.android.adservices.service.PhFlags.KEY_UI_EEA_COUNTRIES;
 import static com.android.adservices.service.PhFlags.KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -293,6 +297,8 @@ import androidx.test.filters.SmallTest;
 
 import com.android.adservices.service.Flags.ClassifierType;
 import com.android.modules.utils.testing.TestableDeviceConfig;
+
+import com.google.common.collect.ImmutableList;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -1651,6 +1657,21 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getEnforceForegroundStatusForFledgeReportImpression())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetEnforceForegroundStatusForFledgeReportInteraction() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getEnforceForegroundStatusForFledgeReportInteraction())
+                .isEqualTo(ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_INTERACTION);
+
+        final boolean phOverridingValue = !ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_INTERACTION;
+
+        PhFlagsFixture.overrideForegroundStatusForFledgeReportInteraction(phOverridingValue);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getEnforceForegroundStatusForFledgeReportInteraction())
                 .isEqualTo(phOverridingValue);
     }
 
@@ -3828,6 +3849,39 @@ public class PhFlagsTest {
         assertThat(phFlags.getBlockedTopicsSourceOfTruth()).isEqualTo(phOverridingValue);
     }
 
+    @Test
+    public void testGetGlobalBlockedTopicIds() {
+        // Without any overriding, the list is empty
+        assertThat(FlagsFactory.getFlags().getGlobalBlockedTopicIds()).isEmpty();
+
+        Flags phFlags = FlagsFactory.getFlags();
+
+        // Valid values passed as part of the PhFlag
+        setGlobalBlockedTopicIds("10, 11, 12");
+        assertThat(phFlags.getGlobalBlockedTopicIds()).isEqualTo(ImmutableList.of(10, 11, 12));
+
+        setGlobalBlockedTopicIds(" 10, 11, 12");
+        assertThat(phFlags.getGlobalBlockedTopicIds()).isEqualTo(ImmutableList.of(10, 11, 12));
+
+        setGlobalBlockedTopicIds(" ");
+        assertThat(phFlags.getGlobalBlockedTopicIds()).isEqualTo(ImmutableList.of());
+
+        setGlobalBlockedTopicIds("");
+        assertThat(phFlags.getGlobalBlockedTopicIds()).isEqualTo(ImmutableList.of());
+
+        // Invalid values passed as part of PhFlag.
+        setGlobalBlockedTopicIds("1,a");
+        assertThat(FlagsFactory.getFlags().getGlobalBlockedTopicIds()).isEmpty();
+    }
+
+    private void setGlobalBlockedTopicIds(String blockedTopicIds) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_GLOBAL_BLOCKED_TOPIC_IDS,
+                blockedTopicIds,
+                /* makeDefault = */ false);
+    }
+
     private void disableGlobalKillSwitch() {
         // Override the global_kill_switch to test other flag values.
         DeviceConfig.setProperty(
@@ -3862,12 +3916,27 @@ public class PhFlagsTest {
     }
 
     @Test
+    public void testGetUiEeaCountries() {
+        assertThat(FlagsFactory.getFlags().getUiEeaCountries()).isEqualTo(UI_EEA_COUNTRIES);
+
+        final String phOverridingValue = "US,PL,GB";
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_UI_EEA_COUNTRIES,
+                phOverridingValue,
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getUiEeaCountries()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
     public void testCompatLoggingKillSwitch() {
         // Without any overriding, the value is the hard coded constant.
         assertThat(FlagsFactory.getFlags().getCompatLoggingKillSwitch())
                 .isEqualTo(COMPAT_LOGGING_KILL_SWITCH);
 
-        boolean phOverridingValue = false;
+        boolean phOverridingValue = true;
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_COMPAT_LOGGING_KILL_SWITCH,

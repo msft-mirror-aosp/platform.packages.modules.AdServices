@@ -16,7 +16,7 @@
 
 package com.android.adservices.data.adselection;
 
-import android.adservices.adselection.ReportInteractionInput;
+import android.adservices.adselection.ReportInteractionRequest;
 import android.net.Uri;
 
 import androidx.annotation.Nullable;
@@ -126,7 +126,7 @@ public interface AdSelectionEntryDao {
     boolean doesRegisteredAdInteractionExist(
             long adSelectionId,
             String interactionKey,
-            @ReportInteractionInput.Destination int destination);
+            @ReportInteractionRequest.Destination int destination);
 
     /**
      * Get the ad selection entry by its unique key ad_selection_id.
@@ -248,7 +248,7 @@ public interface AdSelectionEntryDao {
     Uri getRegisteredAdInteractionUri(
             long adSelectionId,
             String interactionKey,
-            @ReportInteractionInput.Destination int destination);
+            @ReportInteractionRequest.Destination int destination);
 
     /**
      * Clean up expired adSelection entries if it is older than the given timestamp. If

@@ -20,7 +20,6 @@ import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREG
 
 import android.annotation.IntDef;
 import android.annotation.NonNull;
-import android.util.Dumpable;
 
 import androidx.annotation.Nullable;
 
@@ -39,7 +38,7 @@ import java.util.concurrent.TimeUnit;
  * AdServices Feature Flags interface. This Flags interface hold the default values of Ad Services
  * Flags.
  */
-public interface Flags extends Dumpable {
+public interface Flags {
     /** Topics Epoch Job Period. */
     long TOPICS_EPOCH_JOB_PERIOD_MS = 7 * 86_400_000; // 7 days.
 
@@ -78,6 +77,14 @@ public interface Flags extends Dumpable {
     /** Returns the number of top topics. */
     default int getTopicsNumberOfRandomTopics() {
         return TOPICS_NUMBER_OF_RANDOM_TOPICS;
+    }
+
+    /** Global blocked Topics. Default value is empty list. */
+    ImmutableList<Integer> TOPICS_GLOBAL_BLOCKED_TOPIC_IDS = ImmutableList.of();
+
+    /** Returns a list of global blocked topics. */
+    default ImmutableList<Integer> getGlobalBlockedTopicIds() {
+        return TOPICS_GLOBAL_BLOCKED_TOPIC_IDS;
     }
 
     /** How many epochs to look back when deciding if a caller has observed a topic before. */
@@ -1381,6 +1388,7 @@ public interface Flags extends Dumpable {
     boolean ENFORCE_FOREGROUND_STATUS_APPSETID = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION = true;
+    boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_INTERACTION = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDES = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE = true;
     boolean ENFORCE_FOREGROUND_STATUS_TOPICS = true;
@@ -1399,6 +1407,14 @@ public interface Flags extends Dumpable {
      */
     default boolean getEnforceForegroundStatusForFledgeReportImpression() {
         return ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION;
+    }
+
+    /**
+     * @return true if FLEDGE reportInteraction API should require that the calling API is running
+     *     in foreground.
+     */
+    default boolean getEnforceForegroundStatusForFledgeReportInteraction() {
+        return ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_INTERACTION;
     }
 
     /**
@@ -1565,6 +1581,65 @@ public interface Flags extends Dumpable {
         return UI_DIALOGS_FEATURE_ENABLED;
     }
 
+    String UI_EEA_COUNTRIES =
+            "AT," // Austria
+                    + "BE," // Belgium
+                    + "BG," // Bulgaria
+                    + "HR," // Croatia
+                    + "CY," // Republic of Cyprus
+                    + "CZ," // Czech Republic
+                    + "DK," // Denmark
+                    + "EE," // Estonia
+                    + "FI," // Finland
+                    + "FR," // France
+                    + "DE," // Germany
+                    + "GR," // Greece
+                    + "HU," // Hungary
+                    + "IE," // Ireland
+                    + "IT," // Italy
+                    + "LV," // Latvia
+                    + "LT," // Lithuania
+                    + "LU," // Luxembourg
+                    + "MT," // Malta
+                    + "NL," // Netherlands
+                    + "PL," // Poland
+                    + "PT," // Portugal
+                    + "RO," // Romania
+                    + "SK," // Slovakia
+                    + "SI," // Slovenia
+                    + "ES," // Spain
+                    + "SE," // Sweden
+                    + "IS," // Iceland
+                    + "LI," // Liechtenstein
+                    + "NO," // Norway
+                    + "CH," // Switzerland
+                    + "GB," // Great Britain
+                    + "GI," // Gibraltar
+                    + "GP," // Guadeloupe
+                    + "GG," // Guernsey
+                    + "JE," // Jersey
+                    + "VA," // Vatican City
+                    + "AX," // Åland Islands
+                    + "IC," // Canary Islands
+                    + "EA," // Ceuta & Melilla
+                    + "GF," // French Guiana
+                    + "PF," // French Polynesia
+                    + "TF," // French Southern Territories
+                    + "MQ," // Martinique
+                    + "YT," // Mayotte
+                    + "NC," // New Caledonia
+                    + "RE," // Réunion
+                    + "BL," // St. Barthélemy
+                    + "MF," // St. Martin
+                    + "PM," // St. Pierre & Miquelon
+                    + "SJ," // Svalbard & Jan Mayen
+                    + "WF"; // Wallis & Futuna
+
+    /** Returns the list of EEA countries in a String separated by comma */
+    default String getUiEeaCountries() {
+        return UI_EEA_COUNTRIES;
+    }
+
     /**
      * GA UX enabled. It contains features that have to be enabled at the same time:
      *
@@ -1639,10 +1714,10 @@ public interface Flags extends Dumpable {
         return ImmutableList.of();
     }
 
-    /** Kill switch to guard backward-compatible logging. */
-    boolean COMPAT_LOGGING_KILL_SWITCH = true;
+    /** Kill switch to guard backward-compatible logging. See go/rbc-ww-logging */
+    boolean COMPAT_LOGGING_KILL_SWITCH = false;
 
-    /** Returns whether backward-compatible logging should be enabled. */
+    /** Returns true if backward-compatible logging should be disabled; false otherwise. */
     default boolean getCompatLoggingKillSwitch() {
         return COMPAT_LOGGING_KILL_SWITCH;
     }
