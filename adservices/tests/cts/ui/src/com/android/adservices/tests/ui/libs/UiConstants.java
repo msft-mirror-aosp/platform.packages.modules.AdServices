@@ -29,6 +29,9 @@ public class UiConstants {
 
     public static final int LAUNCH_TIMEOUT_MS = 10000; /* wait time for UI elements to launch */
 
+    /* wait time for Notification show up in Notification list */
+    public static final int NOTIFICATION_LIST_TIMEOUT_MS = 10000;
+
     public static final String SYSTEM_UI_NAME = "com.android.systemui";
 
     public static final String SYSTEM_UI_RESOURCE_ID =

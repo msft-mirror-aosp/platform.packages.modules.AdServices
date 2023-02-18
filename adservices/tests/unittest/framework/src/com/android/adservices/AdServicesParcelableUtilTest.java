@@ -20,17 +20,22 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
+import android.adservices.common.CommonFixture;
 import android.annotation.NonNull;
 import android.os.Parcel;
 import android.os.Parcelable;
 
 import androidx.test.filters.SmallTest;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.primitives.ImmutableLongArray;
 
 import org.junit.Test;
 
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Objects;
@@ -253,6 +258,69 @@ public class AdServicesParcelableUtilTest {
                 ImmutableSet.copyOf(AdServicesParcelableUtil.readStringSetFromParcel(targetParcel));
 
         assertThat(setFromParcel).containsExactlyElementsIn(originalSet);
+    }
+
+    @Test
+    public void testWriteInstantListToParcel_nullParcelThrows() {
+        assertThrows(
+                NullPointerException.class,
+                () -> AdServicesParcelableUtil.writeInstantListToParcel(null, new ArrayList<>()));
+    }
+
+    @Test
+    public void testWriteInstantListToParcel_nullListThrows() {
+        assertThrows(
+                NullPointerException.class,
+                () -> AdServicesParcelableUtil.writeInstantListToParcel(Parcel.obtain(), null));
+    }
+
+    @Test
+    public void testReadInstantListFromParcel_nullParcelThrows() {
+        assertThrows(
+                "Null Parcel should have thrown NPE",
+                NullPointerException.class,
+                () -> AdServicesParcelableUtil.readInstantListFromParcel(null));
+    }
+
+    @Test
+    public void testWriteInstantListToParcelThenRead_success() {
+        final ImmutableList<Instant> originalList =
+                ImmutableList.of(
+                        CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
+                        CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.plusMillis(500));
+        Parcel targetParcel = Parcel.obtain();
+
+        AdServicesParcelableUtil.writeInstantListToParcel(targetParcel, originalList);
+        targetParcel.setDataPosition(0);
+        final ImmutableList<Instant> listFromParcel =
+                ImmutableList.copyOf(
+                        AdServicesParcelableUtil.readInstantListFromParcel(targetParcel));
+
+        assertThat(listFromParcel).containsExactlyElementsIn(originalList);
+    }
+
+    @Test
+    public void testWriteInstantListToParcel_skipsErrors() {
+        final ImmutableList<Instant> originalList =
+                ImmutableList.of(
+                        CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
+                        Instant.MAX,
+                        CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.plusMillis(500));
+        final ImmutableLongArray expectedList =
+                ImmutableLongArray.of(
+                        CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.toEpochMilli(),
+                        CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.plusMillis(500).toEpochMilli());
+        Parcel targetParcel = Parcel.obtain();
+
+        AdServicesParcelableUtil.writeInstantListToParcel(targetParcel, originalList);
+        targetParcel.setDataPosition(0);
+
+        final int writtenArraySize = targetParcel.readInt();
+        assertThat(writtenArraySize).isEqualTo(expectedList.length());
+
+        final long[] writtenArray = new long[writtenArraySize];
+        targetParcel.readLongArray(writtenArray);
+        assertThat(writtenArray).asList().containsExactlyElementsIn(expectedList.asList());
     }
 
     public static class TestParcelable implements Parcelable {

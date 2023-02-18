@@ -18,13 +18,16 @@ package com.android.adservices;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -114,9 +117,11 @@ public final class AdServicesParcelableUtil {
         tempBundle.setClassLoader(valueClass.getClassLoader());
         Map<K, V> resultMap = new HashMap<>();
         for (String key : tempBundle.keySet()) {
-            resultMap.put(
-                    stringToKeyConverter.convertFromString(key),
-                    tempBundle.getParcelable(key, valueClass));
+            V value =
+                    Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU
+                            ? tempBundle.getParcelable(key)
+                            : tempBundle.getParcelable(key, valueClass);
+            resultMap.put(stringToKeyConverter.convertFromString(key), value);
         }
 
         return resultMap;
@@ -175,6 +180,81 @@ public final class AdServicesParcelableUtil {
         Objects.requireNonNull(sourceParcel);
 
         return new HashSet<>(Objects.requireNonNull(sourceParcel.createStringArrayList()));
+    }
+
+    /**
+     * Writes a {@link List} of {@link Instant} objects to a target {@link Parcel} as an array.
+     *
+     * <p>If an error is encountered while writing any element of the input {@code sourceList}, the
+     * element will be skipped.
+     *
+     * <p>Use to write a {@link List} which will be unparceled by {@link
+     * #readInstantListFromParcel(Parcel)} later.
+     */
+    public static void writeInstantListToParcel(
+            @NonNull Parcel targetParcel, @NonNull List<Instant> sourceList) {
+        Objects.requireNonNull(targetParcel);
+        Objects.requireNonNull(sourceList);
+
+        long[] tempArray = new long[sourceList.size()];
+        int actualArraySize = 0;
+
+        for (Instant instant : sourceList) {
+            long instantAsEpochMilli;
+            try {
+                instantAsEpochMilli = instant.toEpochMilli();
+            } catch (Exception exception) {
+                LogUtil.w(
+                        exception,
+                        "Error encountered while parceling Instant %s to long; skipping element",
+                        instant);
+                continue;
+            }
+            tempArray[actualArraySize++] = instantAsEpochMilli;
+        }
+
+        // Writing the tempArray as is may write undefined values, so compress into a smaller
+        // accurately-fit array
+        long[] writeArray = new long[actualArraySize];
+        System.arraycopy(tempArray, 0, writeArray, 0, actualArraySize);
+
+        targetParcel.writeInt(actualArraySize);
+        targetParcel.writeLongArray(writeArray);
+    }
+
+    /**
+     * Reads and returns a {@link List} of {@link Instant} objects from a source {@link Parcel}.
+     *
+     * <p>If an error is encountered while reading an element from the {@code sourceParcel}, the
+     * element will be skipped.
+     *
+     * <p>Use to read a {@link List} that was written by {@link #writeInstantListToParcel(Parcel,
+     * List)}.
+     */
+    public static List<Instant> readInstantListFromParcel(@NonNull Parcel sourceParcel) {
+        Objects.requireNonNull(sourceParcel);
+
+        final int listSize = sourceParcel.readInt();
+        long[] tempArray = new long[listSize];
+        ArrayList<Instant> targetList = new ArrayList<>(listSize);
+
+        sourceParcel.readLongArray(tempArray);
+        for (int ii = 0; ii < listSize; ii++) {
+            Instant instantFromMilli;
+            try {
+                instantFromMilli = Instant.ofEpochMilli(tempArray[ii]);
+            } catch (Exception exception) {
+                LogUtil.w(
+                        exception,
+                        "Error encountered while unparceling Instant from long %d; skipping"
+                                + " element",
+                        tempArray[ii]);
+                continue;
+            }
+            targetList.add(instantFromMilli);
+        }
+
+        return targetList;
     }
 
     /**
