@@ -33,8 +33,8 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 
-import java.io.StringWriter;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -69,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
         mHandler = new Handler();
     }
 
+    @SuppressWarnings("NewApi")
     private void registerGetTopicsButton() {
         mTopicsClientButton.setOnClickListener(
                 v -> {
