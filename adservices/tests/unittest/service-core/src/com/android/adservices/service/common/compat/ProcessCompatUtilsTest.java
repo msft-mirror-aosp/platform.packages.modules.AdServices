@@ -24,11 +24,14 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.MockitoSession;
 
 public class ProcessCompatUtilsTest {
+    private static final int UID = 100;
+
     private MockitoSession mMockitoSession;
 
     @Before
@@ -48,24 +51,21 @@ public class ProcessCompatUtilsTest {
 
     @Test
     public void testIsSdkSandboxUid_onSMinus_notSdkSandboxUid() {
-        int uid = 100;
         ExtendedMockito.doReturn(false).when(SdkLevel::isAtLeastT);
-        assertThat(ProcessCompatUtils.isSdkSandboxUid(uid)).isFalse();
+        assertThat(ProcessCompatUtils.isSdkSandboxUid(UID)).isFalse();
     }
 
     @Test
-    public void testIsSdkSandboxUid_onT_sdkSandboxUId() {
-        int uid = 100;
-        ExtendedMockito.doReturn(true).when(SdkLevel::isAtLeastT);
-        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(uid));
-        assertThat(ProcessCompatUtils.isSdkSandboxUid(uid)).isTrue();
+    public void testIsSdkSandboxUid_onTPlus_sdkSandboxUId() {
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
+        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(UID));
+        assertThat(ProcessCompatUtils.isSdkSandboxUid(UID)).isTrue();
     }
 
     @Test
-    public void testIsSdkSandboxUid_onT_notSdkSandboxUId() {
-        int uid = 100;
-        ExtendedMockito.doReturn(true).when(SdkLevel::isAtLeastT);
-        ExtendedMockito.doReturn(false).when(() -> Process.isSdkSandboxUid(uid));
-        assertThat(ProcessCompatUtils.isSdkSandboxUid(uid)).isFalse();
+    public void testIsSdkSandboxUid_onTPlus_notSdkSandboxUId() {
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
+        ExtendedMockito.doReturn(false).when(() -> Process.isSdkSandboxUid(UID));
+        assertThat(ProcessCompatUtils.isSdkSandboxUid(UID)).isFalse();
     }
 }
