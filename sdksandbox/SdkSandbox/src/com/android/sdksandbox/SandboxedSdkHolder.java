@@ -137,7 +137,7 @@ class SandboxedSdkHolder {
     }
 
     void unloadSdk() {
-        mSdk.beforeUnloadSdk();
+        mHandler.post(() -> mSdk.beforeUnloadSdk());
     }
 
     void dump(PrintWriter writer) {

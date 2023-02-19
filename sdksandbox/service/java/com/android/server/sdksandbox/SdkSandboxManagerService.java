@@ -76,6 +76,7 @@ import android.webkit.WebViewUpdateService;
 import com.android.adservices.AdServicesCommon;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.modules.utils.BackgroundThread;
 import com.android.sdksandbox.IComputeSdkStorageCallback;
 import com.android.sdksandbox.IRequestSurfacePackageFromSdkCallback;
 import com.android.sdksandbox.ISdkSandboxDisabledCallback;
@@ -113,7 +114,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private final ActivityManager mActivityManager;
     private final Handler mHandler;
-    private final Handler mBackgroundHandler;
     private final SdkSandboxStorageManager mSdkSandboxStorageManager;
     private final SdkSandboxServiceProvider mServiceProvider;
 
@@ -180,9 +180,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     static class Injector {
         private final Context mContext;
         private SdkSandboxManagerLocal mLocalManager;
+        private final SdkSandboxServiceProvider mServiceProvider;
 
         Injector(Context context) {
             mContext = context;
+            mServiceProvider = new SdkSandboxServiceProviderImpl(mContext);
         }
 
         private static final boolean IS_EMULATOR =
@@ -202,7 +204,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
 
         SdkSandboxServiceProvider getSdkSandboxServiceProvider() {
-            return new SdkSandboxServiceProviderImpl(mContext);
+            return mServiceProvider;
         }
 
         SdkSandboxPulledAtoms getSdkSandboxPulledAtoms() {
@@ -252,7 +254,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 new HandlerThread(
                         "SdkSandboxManagerServiceHandler", Process.THREAD_PRIORITY_BACKGROUND);
         backgroundHandlerThread.start();
-        mBackgroundHandler = new Handler(backgroundHandlerThread.getLooper());
 
         registerBroadcastReceivers();
 
@@ -1051,10 +1052,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             // Once bound service has been set, sync manager is notified.
             notifySyncManagerSandboxStarted(mCallingInfo);
 
-            mBackgroundHandler.post(
-                    () -> {
-                        computeSdkStorage(mCallingInfo, mService);
-                    });
+            BackgroundThread.getExecutor()
+                    .execute(
+                            () -> {
+                                computeSdkStorage(mCallingInfo, mService);
+                            });
 
             final int timeToLoadSandbox =
                     (int) (mInjector.getCurrentTime() - mStartTimeForLoadingSandbox);
@@ -1865,15 +1867,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     throw new SecurityException(
                             "Intent "
                                     + intent.getAction()
-                                    + " may not be broadcast from an SDK sandbox uid.");
-                }
-
-                if (intent.getPackage() != null || intent.getComponent() != null) {
-                    throw new SecurityException(
-                            "Intent "
-                                    + intent.getAction()
-                                    + " broadcast from an SDK sandbox uid may not specify a"
-                                    + " package name or component.");
+                                    + " may not be started from an SDK sandbox uid.");
                 }
             }
         }

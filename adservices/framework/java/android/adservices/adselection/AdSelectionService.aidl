@@ -23,12 +23,16 @@ import android.adservices.adselection.AdSelectionFromOutcomesInput;
 import android.adservices.adselection.AdSelectionInput;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.AdSelectionOverrideCallback;
+import android.adservices.adselection.RemoveAdCounterHistogramOverrideInput;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
+import android.adservices.adselection.SetAdCounterHistogramOverrideInput;
 import android.adservices.adselection.SetAppInstallAdvertisersCallback;
 import android.adservices.adselection.SetAppInstallAdvertisersInput;
 import android.adservices.adselection.UpdateAdCounterHistogramCallback;
 import android.adservices.adselection.UpdateAdCounterHistogramInput;
+import android.adservices.adselection.ReportInteractionCallback;
+import android.adservices.adselection.ReportInteractionInput;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.CallerMetadata;
 import android.net.Uri;
@@ -38,7 +42,8 @@ import android.net.Uri;
  * to orchestrate the on-device execution of
  * 1. Ad selection.
  * 2. Impression reporting.
- * 3. Ad event counting
+ * 3. Interaction reporting.
+ * 4. Ad event counting.
  *
  * @hide
  */
@@ -142,6 +147,14 @@ interface AdSelectionService {
      */
     void reportImpression(in ReportImpressionInput request, in ReportImpressionCallback callback);
 
+
+    /**
+     * Notifies PPAPI that there is a new interaction to report for the
+     * ad selected by the ad-selection run identified by {@code adSelectionId}.
+     */
+    void reportInteraction(in ReportInteractionInput inputParams,
+            in ReportInteractionCallback callback);
+
     /**
      * Updates the counter histograms for the ad event counters associated with a FLEDGE-selected
      * ad.
@@ -231,4 +244,23 @@ interface AdSelectionService {
      */
     void resetAllAdSelectionFromOutcomesConfigRemoteOverrides(
             in AdSelectionOverrideCallback callback);
+
+    /**
+     * Manually overrides the histogram to be used in ad selection with the specified event
+     * histogram.
+     */
+    void setAdCounterHistogramOverride(in SetAdCounterHistogramOverrideInput inputParams,
+            in AdSelectionOverrideCallback callback);
+
+    /**
+     * Removes a previously set histogram override used in ad selection.
+     */
+    void removeAdCounterHistogramOverride(in RemoveAdCounterHistogramOverrideInput inputParams,
+            in AdSelectionOverrideCallback callback);
+
+    /**
+     * Removes all previously set histogram overrides used in ad selection which were set by the
+     * caller application.
+     */
+    void resetAllAdCounterHistogramOverrides(in AdSelectionOverrideCallback callback);
 }
