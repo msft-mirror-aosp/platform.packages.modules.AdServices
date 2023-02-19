@@ -31,6 +31,8 @@ import android.adservices.adselection.SetAppInstallAdvertisersCallback;
 import android.adservices.adselection.SetAppInstallAdvertisersInput;
 import android.adservices.adselection.UpdateAdCounterHistogramCallback;
 import android.adservices.adselection.UpdateAdCounterHistogramInput;
+import android.adservices.adselection.ReportInteractionCallback;
+import android.adservices.adselection.ReportInteractionInput;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.CallerMetadata;
 import android.net.Uri;
@@ -40,7 +42,8 @@ import android.net.Uri;
  * to orchestrate the on-device execution of
  * 1. Ad selection.
  * 2. Impression reporting.
- * 3. Ad event counting
+ * 3. Interaction reporting.
+ * 4. Ad event counting.
  *
  * @hide
  */
@@ -143,6 +146,14 @@ interface AdSelectionService {
      * {@hide}
      */
     void reportImpression(in ReportImpressionInput request, in ReportImpressionCallback callback);
+
+
+    /**
+     * Notifies PPAPI that there is a new interaction to report for the
+     * ad selected by the ad-selection run identified by {@code adSelectionId}.
+     */
+    void reportInteraction(in ReportInteractionInput inputParams,
+            in ReportInteractionCallback callback);
 
     /**
      * Updates the counter histograms for the ad event counters associated with a FLEDGE-selected
