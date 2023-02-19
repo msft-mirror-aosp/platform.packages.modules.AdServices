@@ -41,7 +41,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoSession;
 
-public class StatsAdServicesLoggerTest {
+public class StatsdAdServicesLoggerTest {
     // Atom IDs
     private static final int TOPICS_REPORTED_ATOM_ID = 535;
     private static final int EPOCH_COMPUTATION_CLASSIFIER_ATOM_ID = 537;
