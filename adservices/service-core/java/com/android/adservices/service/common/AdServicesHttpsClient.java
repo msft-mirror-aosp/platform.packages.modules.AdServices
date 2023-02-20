@@ -475,7 +475,7 @@ public class AdServicesHttpsClient {
             }
         }
         into.close();
-        return into.toString(Charsets.UTF_8);
+        return into.toString("UTF-8");
     }
 
     private static class CloseableConnectionWrapper implements Closeable {

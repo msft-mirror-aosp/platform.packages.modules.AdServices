@@ -19,7 +19,6 @@ package android.adservices.adselection;
 import static android.adservices.adselection.AdSelectionOutcome.UNSET_AD_SELECTION_ID;
 import static android.adservices.adselection.AdSelectionOutcome.UNSET_AD_SELECTION_ID_MESSAGE;
 
-import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.os.Parcel;
@@ -27,8 +26,6 @@ import android.os.Parcelable;
 
 import com.android.internal.util.Preconditions;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 import java.util.Objects;
 
 /**
@@ -37,8 +34,6 @@ import java.util.Objects;
  * @hide
  */
 public class ReportInteractionInput implements Parcelable {
-    public static final int FLAG_DESTINATION_SELLER = 1 << 0;
-    public static final int FLAG_DESTINATION_BUYER = 1 << 1;
 
     private static final int UNSET_DESTINATIONS = 0;
     private static final String UNSET_DESTINATIONS_MESSAGE = "Destinations bitfield not set.";
@@ -140,14 +135,6 @@ public class ReportInteractionInput implements Parcelable {
     public int getDestinations() {
         return mDestinations;
     }
-
-    // TODO(b/261811605): Move this @IntDef to the external request object
-    @IntDef(
-            flag = true,
-            prefix = {"FLAG_DESTINATION_"},
-            value = {FLAG_DESTINATION_SELLER, FLAG_DESTINATION_BUYER})
-    @Retention(RetentionPolicy.SOURCE)
-    public @interface Destination {}
 
     /**
      * Builder for {@link ReportInteractionInput} objects.

@@ -18,7 +18,6 @@ package com.android.adservices.service.topics;
 
 import android.annotation.NonNull;
 import android.content.Context;
-import android.util.Dumpable;
 import android.util.Pair;
 
 import com.android.adservices.LogUtil;
@@ -55,7 +54,7 @@ import javax.annotation.concurrent.ThreadSafe;
  * <p>This class is thread safe.
  */
 @ThreadSafe
-public class CacheManager implements Dumpable {
+public class CacheManager {
     // The verbose level for dumpsys usage
     private static final int VERBOSE = 1;
     private static final Object SINGLETON_LOCK = new Object();
@@ -329,7 +328,6 @@ public class CacheManager implements Dumpable {
         }
     }
 
-    @Override
     public void dump(@NonNull PrintWriter writer, String[] args) {
         boolean isVerbose =
                 args != null

@@ -38,6 +38,8 @@ import android.adservices.adselection.AdSelectionService;
 import android.adservices.adselection.RemoveAdCounterHistogramOverrideInput;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
+import android.adservices.adselection.ReportInteractionCallback;
+import android.adservices.adselection.ReportInteractionInput;
 import android.adservices.adselection.SetAdCounterHistogramOverrideInput;
 import android.adservices.adselection.SetAppInstallAdvertisersCallback;
 import android.adservices.adselection.SetAppInstallAdvertisersInput;
@@ -386,6 +388,42 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mFledgeServiceFilter,
                         callingUid);
         reporter.reportImpression(requestParams, callback);
+    }
+
+    @Override
+    public void reportInteraction(
+            @NonNull ReportInteractionInput inputParams,
+            @NonNull ReportInteractionCallback callback) {
+        int apiName = AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
+
+        // Caller permissions must be checked in the binder thread, before anything else
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
+
+        try {
+            Objects.requireNonNull(inputParams);
+            Objects.requireNonNull(callback);
+        } catch (NullPointerException exception) {
+            mAdServicesLogger.logFledgeApiCallStats(apiName, STATUS_INVALID_ARGUMENT, 0);
+            // Rethrow because we want to fail fast
+            throw exception;
+        }
+
+        int callerUid = getCallingUid(apiName);
+
+        InteractionReporter interactionReporter =
+                new InteractionReporter(
+                        mContext,
+                        mAdSelectionEntryDao,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutor,
+                        mBackgroundExecutor,
+                        mAdServicesLogger,
+                        mFlags,
+                        mFledgeServiceFilter,
+                        callerUid,
+                        mFledgeAuthorizationFilter);
+
+        interactionReporter.reportInteraction(inputParams, callback);
     }
 
     @Override
