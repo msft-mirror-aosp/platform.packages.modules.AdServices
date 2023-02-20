@@ -20,11 +20,13 @@ import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_
 
 import android.annotation.IntDef;
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.annotation.RequiresPermission;
 import android.app.adservices.consent.ConsentParcel;
 import android.app.adservices.topics.TopicParcel;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.content.Context;
+import android.os.Build;
 import android.os.IBinder;
 import android.os.RemoteException;
 
@@ -63,10 +65,11 @@ public final class AdServicesManager {
         mService = iAdServicesManager;
     }
 
-    /** Get the singleton of AdServicesManager */
+    /** Get the singleton of AdServicesManager. Only used on T+ */
+    @Nullable
     public static AdServicesManager getInstance(@NonNull Context context) {
         synchronized (SINGLETON_LOCK) {
-            if (sSingleton == null) {
+            if (sSingleton == null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 // TODO(b/262282035): Fix this work around in U+.
                 // Get the AdServicesManagerService's Binder from the SdkSandboxManager.
                 // This is a workaround for b/262282035.

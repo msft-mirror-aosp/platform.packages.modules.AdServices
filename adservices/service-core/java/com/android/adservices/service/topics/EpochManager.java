@@ -20,7 +20,6 @@ import android.annotation.NonNull;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
-import android.util.Dumpable;
 import android.util.Pair;
 
 import androidx.annotation.Nullable;
@@ -50,7 +49,7 @@ import java.util.Random;
 import java.util.Set;
 
 /** A class to manage Epoch computation. */
-public class EpochManager implements Dumpable {
+public class EpochManager {
     // The tables to do garbage collection for old epochs
     // and its corresponding epoch_id column name.
     // Pair<Table Name, Column Name>
@@ -527,7 +526,6 @@ public class EpochManager implements Dumpable {
                 && mTopicsDao.supportsTopicContributorsTable();
     }
 
-    @Override
     public void dump(@NonNull PrintWriter writer, @Nullable String[] args) {
         writer.println("==== EpochManager Dump ====");
         long epochId = getCurrentEpochId();
