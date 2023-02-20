@@ -19,6 +19,7 @@ package com.android.adservices.service.devapi;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -33,6 +34,7 @@ import android.provider.Settings;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -43,9 +45,10 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
 
 public class DevContextFilterTest {
-    public static final int APP_UID = 100;
-    public static final String APP_PACKAGE = "com.test.myapp";
+    private static final int APP_UID = 100;
+    private static final String APP_PACKAGE = "com.test.myapp";
     private MockitoSession mStaticMockSession = null;
+
     @Mock private PackageManager mPackageManager;
     @Mock private AppPackageNameRetriever mAppPackageNameRetriever;
     @Mock private ContentResolver mContentResolver;
@@ -75,9 +78,7 @@ public class DevContextFilterTest {
             throws PackageManager.NameNotFoundException {
         enableDeveloperOptions();
         when(mAppPackageNameRetriever.getAppPackageNameForUid(APP_UID)).thenReturn(APP_PACKAGE);
-        when(mPackageManager.getApplicationInfo(
-                        eq(APP_PACKAGE), any(PackageManager.ApplicationInfoFlags.class)))
-                .thenReturn(aDebuggableAppInfo());
+        mockInstalledApplications(aDebuggableAppInfo());
 
         assertThat(mDevContextFilter.createDevContext(APP_UID))
                 .isEqualTo(
@@ -103,9 +104,7 @@ public class DevContextFilterTest {
         when(Build.isDebuggable()).thenReturn(true);
 
         when(mAppPackageNameRetriever.getAppPackageNameForUid(APP_UID)).thenReturn(APP_PACKAGE);
-        when(mPackageManager.getApplicationInfo(
-                        eq(APP_PACKAGE), any(PackageManager.ApplicationInfoFlags.class)))
-                .thenReturn(aDebuggableAppInfo());
+        mockInstalledApplications(aDebuggableAppInfo());
 
         assertThat(mDevContextFilter.createDevContext(APP_UID))
                 .isEqualTo(
@@ -120,10 +119,7 @@ public class DevContextFilterTest {
             throws PackageManager.NameNotFoundException {
         enableDeveloperOptions();
         when(mAppPackageNameRetriever.getAppPackageNameForUid(APP_UID)).thenReturn(APP_PACKAGE);
-        when(mPackageManager.getApplicationInfo(
-                        eq(APP_PACKAGE), any(PackageManager.ApplicationInfoFlags.class)))
-                .thenReturn(aNonDebuggableAppInfo());
-
+        mockInstalledApplications(aNonDebuggableAppInfo());
         assertThat(mDevContextFilter.createDevContext(APP_UID).getDevOptionsEnabled()).isFalse();
     }
 
@@ -175,5 +171,17 @@ public class DevContextFilterTest {
         // Adding some extra flag to verify the check is done correctly
         result.flags = ApplicationInfo.FLAG_DEBUGGABLE | ApplicationInfo.FLAG_INSTALLED;
         return result;
+    }
+
+    private void mockInstalledApplications(ApplicationInfo applicationInfo)
+            throws PackageManager.NameNotFoundException {
+        if (SdkLevel.isAtLeastT()) {
+            when(mPackageManager.getApplicationInfo(
+                            eq(APP_PACKAGE), any(PackageManager.ApplicationInfoFlags.class)))
+                    .thenReturn(applicationInfo);
+        } else {
+            when(mPackageManager.getApplicationInfo(eq(APP_PACKAGE), anyInt()))
+                    .thenReturn(applicationInfo);
+        }
     }
 }

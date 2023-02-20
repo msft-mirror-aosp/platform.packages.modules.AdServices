@@ -23,6 +23,7 @@ import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.topics.GetTopicsResponse;
 import android.adservices.topics.Topic;
 import android.content.Context;
+import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
 
@@ -103,12 +104,17 @@ public class TopicsManagerTest {
         overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
         // We need to turn off random topic so that we can verify the returned topic.
         overridePercentageForRandomTopic(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+        // TODO(b/263297331): Handle rollback support for R and S.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            overrideConsentSourceOfTruth(/* PPAPI_ONLY */ 1);
+        }
     }
 
     @After
     public void teardown() {
         overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
         overridePercentageForRandomTopic(TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+        overrideConsentSourceOfTruth(null);
     }
 
     @Test
@@ -269,4 +275,9 @@ public class TopicsManagerTest {
         ShellUtils.runShellCommand(
                 "cmd jobscheduler run -f" + " " + ADSERVICES_PACKAGE_NAME + " " + EPOCH_JOB_ID);
     }
+
+    private void overrideConsentSourceOfTruth(Integer value) {
+        ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth " + value);
+    }
 }
+
