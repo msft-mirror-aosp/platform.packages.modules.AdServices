@@ -183,11 +183,9 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Jūsu izmantotās lietotnes var arī noteikt, kas jums patīk, ņemot vērā to, kā jūs izmantojat šīs lietotnes."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Jūsu izmantotās lietotnes var pieprasīt informāciju no operētājsistēmas Android, lai varētu efektīvāk novērtēt reklāmu veiktspēju šajās lietotnēs. Android ļauj lietotnēm vākt tikai noteiktu veidu datus."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Ieslēgtas / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> tēma(-s)"</string>
-    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
-    <skip />
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Ieslēgti, # tēma}zero{Ieslēgti, # tēmu}one{Ieslēgti, # tēma}other{Ieslēgti, # tēmas}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Ieslēgtas / <xliff:g id="APPS_COUNT">%1$d</xliff:g> lietotne(-s)"</string>
-    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
-    <skip />
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{Ieslēgti, # lietotne}zero{Ieslēgti, # lietotņu}one{Ieslēgti, # lietotne}other{Ieslēgti, # lietotnes}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"Ieslēgta"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Izslēgts"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Interešu tēmu pamatā ir jūsu nesen izmantotās lietotnes, un lietotnes izmanto šīs tēmas, lai rādītu jums personalizētas reklāmas.\n\nVarat bloķēt tēmas, ko nevēlaties kopīgot ar lietotnēm. Operētājsistēmā Android tēmas regulāri tiek arī automātiski dzēstas."</string>
@@ -200,14 +198,10 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Jūsu bloķētās lietotnes"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Atiestatīt lietotņu ieteiktos datus"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Lietotnēs bieži vien tiek saglabāta informācija par lietotāju interesēm, lai personalizētu lietošanas iespējas. No lietotnēm iegūtā informācija par tēmām, kuras jūs interesē, var tikt glabāta arī operētājsistēmā Android.\n\nPiemēram, ja izmantojat lietotni, kas saistīta ar treniņiem maratonam, šajā lietotnē var tikt noteikts, ka jūs interesē skriešanas apavi. Vēlāk citā lietotnē jums var tikt parādīta skriešanas apavu reklāma, ko ieteikusi pirmā lietotne.\n\nOperētājsistēmā Android lietotņu ieteiktie dati regulāri tiek automātiski dzēsti. Ja atkārtoti izmantosiet lietotni, tā var tikt atkal parādīta sarakstā. Varat arī bloķēt konkrētu lietotni, lai tā nevarētu ieteikt jums rādāmās reklāmas.\n\nLietotnēs redzamās reklāmas var tikt personalizētas, ņemot vērā šo iestatījumu, reklāmu tēmu iestatījumu, jūsu reklamēšanas ID iestatījumus un to, vai attiecīgajā lietotnē tiek personalizētas reklāmas."</string>
-    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
-    <skip />
-    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
-    <skip />
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Krāsaina ilustrācija ar simboliem, kas apzīmē interešu tēmas, piemēram, mūziku, ziņas un sportu"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Krāsaina ilustrācija ar slēdzeni aplī"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Maza melnbalta ilustrācija ar deviņiem kvadrātā izkārtotiem punktiem"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"Maza melnbalta ilustrācija ar vienkāršām formām, piemēram, sirsniņu, trijstūri un kvadrātu"</string>
     <string name="topic10001" msgid="1636806320891333775">"Māksla un izklaide"</string>
     <string name="topic10002" msgid="1226367977754287428">"Aktiermāksla un teātris"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime un manga"</string>

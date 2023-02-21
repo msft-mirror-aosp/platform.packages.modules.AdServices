@@ -183,11 +183,9 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Halaber, erabiltzen dituzun aplikazioek gustuko dituzun gaiak zehatz ditzakete, aplikazioak erabiltzeko moduan oinarrituta."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Iragarkien errendimendua neurtzen laguntzen dien informazioa eska diezaiokete erabiltzen dituzun aplikazioek Android-i. Alabaina, Android-ek datu mota mugatuak biltzen uzten die aplikazioei."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Aktibatuta: <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> gai"</string>
-    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
-    <skip />
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Aktibatuta / # gai}other{Aktibatuta / # gai}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Aktibatuta: <xliff:g id="APPS_COUNT">%1$d</xliff:g> aplikazio"</string>
-    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
-    <skip />
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{Aktibatuta / # aplikazio}other{Aktibatuta / # aplikazio}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"Aktibatuta"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Desaktibatuta"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Berriki erabili dituzun aplikazioetan daude oinarrituta interesatzen zaizkizun gaiak, eta aplikazioek iragarki pertsonalizatuak erakusteko erabiltzen dituzte.\n\nAplikazioekin partekatzea nahi ez duzun gaiak blokea ditzakezu. Horrez gain, Android-ek erregulartasunez ezabatzen ditu automatikoki gaiak."</string>
@@ -200,14 +198,10 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Blokeatu dituzun aplikazioak"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Berrezarri aplikazioek iradokitako datuak"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Ohikoa da erabiltzen dituzun aplikazioek interesatzen zaizkizun gauzak gogoratzea, zerbitzuak pertsonalizatze aldera. Android-en laguntzarekin, aplikazioek zure gaiei buruzko informazioa ere gorde dezakete.\n\nEsaterako, maratoietarako prestatzeko aplikazio bat erabiltzen baduzu, agian aplikazioak korrika egiteko oinetakoak interesatzen zaizkizula erabakiko du. Horregatik, gero beste aplikazio bat erabiltzen duzunean, korrika egiteko oinetakoen iragarki bat agertuko zaizu, lehen aplikazioak iradoki duelako.\n\nAndroid-ek erregulartasunez ezabatzen ditu automatikoki aplikazioek iradokitako datuak. Aplikazioren bat berriro erabiliz gero, litekeena da berriz zerrendan agertzea. Bestela, iragarkiak iradokitzeko aukera blokea diezaiekezu aplikazioei.\n\nZure aplikazioetan, baliteke ikusten dituzun iragarkiak pertsonalizatuta egotea, hauen arabera: ezarpen hau, iragarkien gaien ezarpena, publizitate-identifikatzailearen ezarpenak eta darabilzun aplikazioak iragarkiak pertsonalizatzen dituen ala ez."</string>
-    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
-    <skip />
-    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
-    <skip />
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Gai interesgarrien (adibidez, musika, albisteak eta kirolak) ikurrak erakusten dituen irudi koloretsua"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Zirkulu batean giltzarrapo bat erakusten duen irudi koloretsua"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Karratu bat osatzen duten bederatzi punturen irudi zuri-beltza"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"Ikur sinpleak (bihotz bat, hiruki bat eta karratu bat) erakusten dituen irudi zuri-beltza"</string>
     <string name="topic10001" msgid="1636806320891333775">"Artea eta aisia"</string>
     <string name="topic10002" msgid="1226367977754287428">"Interpretazioa eta antzerkia"</string>
     <string name="topic10003" msgid="6949890838957814881">"Animea eta manga"</string>

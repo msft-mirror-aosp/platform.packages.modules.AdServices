@@ -183,11 +183,9 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Les applis peuvent aussi déterminer vos centres d\'intérêt suivant la façon dont vous les utilisez."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Les applis que vous utilisez peuvent interroger Android afin de mesurer les performances de leurs annonces. Android ne permet aux applis de collecter que certains types de données."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Activé/<xliff:g id="TOPICS_COUNT">%1$d</xliff:g> thèmes"</string>
-    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
-    <skip />
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Activé/# thème}one{Activé/# thème}many{Activé/# thèmes}other{Activé/# thèmes}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Activé / <xliff:g id="APPS_COUNT">%1$d</xliff:g> applis"</string>
-    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
-    <skip />
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{Activé/# appli}one{Activé/# appli}many{Activé/# applis}other{Activé/# applis}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"Activé"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Désactivé"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Les thèmes listés reposent sur les applis que vous avez récemment utilisées. Les applis s\'en servent pour vous présenter des annonces personnalisées.\n\nVous pouvez bloquer les thèmes que vous ne souhaitez pas partager avec les applis. Android supprime aussi régulièrement et automatiquement des thèmes."</string>
@@ -200,14 +198,10 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Applis que vous avez bloquées"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Réinitialiser les données suggérées par des applis"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Les applis que vous utilisez enregistrent souvent vos centres d\'intérêt afin de personnaliser votre expérience. Elles peuvent aussi stocker dans Android des informations concernant vos thèmes.\n\nPar exemple, si vous utilisez une appli dédiée à l\'entraînement au marathon, celle-ci peut conclure que vous êtes intéressé par les chaussures de course. Plus tard, si vous utilisez une autre appli, celle-ci peut vous montrer une annonce pour des chaussures de course, suggérée par la première appli.\n\nAndroid supprime régulièrement et automatiquement les données suggérées par les applis. Si vous réutilisez une appli, celle-ci peut réapparaître dans la liste. Vous pouvez aussi bloquer la capacité d\'une appli à suggérer des annonces pour vous.\n\nLes annonces affichées dans vos applis peuvent être personnalisées en fonction de cette option, de vos paramètres de thèmes d\'annonces et d\'identifiant publicitaire, et si l\'appli que vous utilisez personnalise les annonces."</string>
-    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
-    <skip />
-    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
-    <skip />
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Illustration colorée de symboles qui représentent des centres d\'intérêt comme la musique, l\'actualité et le sport"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Illustration colorée d\'un verrou dans un cercle"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Petite illustration en noir et blanc représentant neuf points qui forment un carré"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"Petite illustration en noir et blanc qui représente des formes simples comme un cœur, un triangle et un carré"</string>
     <string name="topic10001" msgid="1636806320891333775">"Arts et divertissements"</string>
     <string name="topic10002" msgid="1226367977754287428">"Art dramatique"</string>
     <string name="topic10003" msgid="6949890838957814881">"Films d\'animation et manga"</string>

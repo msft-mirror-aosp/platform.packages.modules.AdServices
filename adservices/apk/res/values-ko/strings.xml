@@ -183,31 +183,25 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"앱을 사용하면 앱에서 내가 앱을 사용하는 방식을 기반으로 내 관심분야를 파악할 수도 있습니다."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"사용하는 앱에서 광고 실적 측정에 도움이 되는 정보를 Android에 요구할 수 있습니다. Android는 제한된 유형의 데이터를 앱에서 수집하도록 허용합니다."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"사용/주제 <xliff:g id="TOPICS_COUNT">%1$d</xliff:g>개"</string>
-    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
-    <skip />
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{사용/주제 #개}other{사용/주제 #개}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"사용/앱 <xliff:g id="APPS_COUNT">%1$d</xliff:g>개"</string>
-    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
-    <skip />
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{사용/앱 #개}other{사용/앱 #개}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"사용"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"사용 안함"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"관심 주제는 내가 최근에 사용한 앱을 기반으로 하며 앱에서 내게 개인 맞춤 광고를 표시하기 위해 사용됩니다\n\n앱과 공유하길 원하지 않는 주제를 차단할 수 있습니다. 또한 Android에서는 주제를 정기적으로 자동 삭제합니다"</string>
     <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"광고 주제 허용"</string>
     <string name="settingsUI_blocked_topics_ga_title" msgid="7163366621282449273">"차단한 광고 주제"</string>
     <string name="settingsUI_reset_topics_ga_title" msgid="5365554894399951300">"모든 광고 주제 재설정"</string>
-    <string name="settingsU_topics_view_footer" msgid="4769146330248953561">"Android는 지난 몇 주 동안 사용한 앱을 기반으로 관심 주제를 파악합니다.\n\n나중에 내게 표시되는 광고를 맞춤설정하기 위해 내가 사용하는 앱에서 Android에 내 주제를 요청할 수 있습니다 Android는 최대 3개의 주제를 공유하며 이때 내 신원 및 앱 사용에 관한 정보는 보호합니다.\n\nAndroid에서는 주제를 정기적으로 자동 삭제합니다. 앱을 사용하다 보면 동일한 주제가 목록에 다시 표시될 수 있습니다. 또한 사용자는 Android가 앱에 공유하는 것을 원하지 않는 주제를 차단할 수도 있습니다.\n\n앱에서 이 설정, 앱 추천 광고 설정, 광고 ID 설정, 사용 중인 앱이 광고를 맞춤설정하는지에 따라 내게 표시되는 광고가 맞춤설정될 수 있습니다."</string>
+    <string name="settingsU_topics_view_footer" msgid="4769146330248953561">"Android는 지난 몇 주 동안 사용한 앱을 기반으로 관심 주제를 파악합니다.\n\n나중에 내게 표시되는 광고를 맞춤설정하기 위해 내가 사용하는 앱에서 Android에 내 주제를 요청할 수 있습니다. Android는 최대 3개의 주제를 공유하며 이때 내 신원 및 앱 사용에 관한 정보는 보호합니다.\n\nAndroid에서는 주제를 정기적으로 자동 삭제합니다. 앱을 사용하다 보면 동일한 주제가 목록에 다시 표시될 수 있습니다. 또한 사용자는 Android가 앱에 공유하는 것을 원하지 않는 주제를 차단할 수도 있습니다.\n\n앱에서 이 설정, 앱 추천 광고 설정, 광고 ID 설정, 사용 중인 앱이 광고를 맞춤설정하는지에 따라 내게 표시되는 광고가 맞춤설정될 수 있습니다."</string>
     <string name="settingsUI_apps_switch_title" msgid="1308209012769248890">"앱 추천 광고 허용"</string>
     <string name="settingsUI_apps_view_ga_subtitle" msgid="1911743837387384160">"앱을 사용하면 앱에서 내 관심분야를 파악한 후 다른 앱에 표시될 광고를 추천할 수 있습니다\n\n앱이 광고를 추천하지 못하도록 차단할 수 있습니다. Android에서는 앱 추천 데이터를 정기적으로 자동 삭제합니다"</string>
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"차단한 앱"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"앱 추천 데이터 재설정"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"일반적으로 앱에서는 사용 환경을 맞춤설정하기 위해 사용자가 관심을 갖는 항목을 기억합니다. 앱은 또한 Android에 요청해 사용자의 주제에 관한 정보를 저장할 수 있습니다.\n\n예를 들어 사용자가 마라톤 훈련에 관한 앱을 이용한다면 앱은 사용자가 러닝화에 관심이 있는 것으로 파악할 수 있습니다. 나중에 다른 앱을 사용할 때 이전 앱에서 추천한 러닝화에 관한 광고가 표시될 수 있습니다.\n\nAndroid는 앱 추천 데이터를 정기적으로 자동 삭제합니다. 앱을 다시 사용하면 목록에 이 앱이 다시 표시될 수 있습니다. 원하지 않으면 앱이 나에게 광고를 추천하지 않도록 차단할 수 있습니다.\n\n사용하는 앱에서 광고 추천 설정, 광고 주제 설정, 광고 ID 설정, 사용 중인 앱이 광고를 맞춤설정하는지에 따라 나에게 표시되는 광고가 맞춤설정될 수 있습니다."</string>
-    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
-    <skip />
-    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
-    <skip />
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"음악, 뉴스, 스포츠와 같은 관심분야를 나타내는 기호를 보여주는 컬러 그림"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"원 안에 자물쇠가 그려져 있는 컬러 그림"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"9개의 점이 사각형을 이루고 있는 작은 흑백 그림"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"하트, 삼각형, 사각형과 같은 단순한 도형이 그려져 있는 작은 흑백 그림"</string>
     <string name="topic10001" msgid="1636806320891333775">"예술 및 엔터테인먼트"</string>
     <string name="topic10002" msgid="1226367977754287428">"연기 및 연극"</string>
     <string name="topic10003" msgid="6949890838957814881">"일본 애니메이션 및 망가"</string>
