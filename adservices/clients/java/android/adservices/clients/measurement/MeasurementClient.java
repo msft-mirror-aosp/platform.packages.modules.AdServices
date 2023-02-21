@@ -44,7 +44,7 @@ public class MeasurementClient {
     private MeasurementClient(@NonNull Context context, @Nullable Executor executor) {
         mContext = context;
         mExecutor = executor;
-        mMeasurementManager = mContext.getSystemService(MeasurementManager.class);
+        mMeasurementManager = MeasurementManager.get(context);
     }
 
     /**
