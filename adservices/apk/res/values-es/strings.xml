@@ -85,7 +85,7 @@
     <!-- no translation found for notificationUI_how_it_works_row_body7 (8158317350415462142) -->
     <skip />
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"Prueba nuevas funciones de privacidad en la publicidad"</string>
-    <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"Los temas de anuncios te dan más opciones para elegir los anuncios que ves"</string>
+    <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"Los temas de anuncios te permiten indicar el tipo de anuncios que te gusta ver"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"Ver detalles"</string>
     <string name="notificationUI_header_ga_title_eu" msgid="4461095539795574989">"Privacidad mejorada en la publicidad en Android"</string>
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android va a lanzar nuevas funciones de privacidad para que puedas controlar mejor los anuncios que ves."</string>
@@ -183,11 +183,9 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Las aplicaciones que usas también pueden determinar lo que te gusta en función de cómo las usas."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Las aplicaciones que usas le pueden pedir información a Android para medir el rendimiento de sus anuncios. Android permite que la aplicaciones recojan tipos de datos limitados."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Activado: <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> temas"</string>
-    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
-    <skip />
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Activado: # tema}many{Activados: # temas}other{Activados: # temas}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Activado: <xliff:g id="APPS_COUNT">%1$d</xliff:g> aplicaciones"</string>
-    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
-    <skip />
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{Activada: # aplicación}many{Activadas: # aplicaciones}other{Activadas: # aplicaciones}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"Activado"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Desactivado"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Los temas de interés se basan en las aplicaciones que has usado recientemente, y las aplicaciones los usan para mostrarte anuncios personalizados.\n\nPuedes indicar los temas que no quieres compartir con aplicaciones. Android también elimina temas regularmente de forma automática."</string>
@@ -200,14 +198,10 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Aplicaciones que has bloqueado"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Borrar datos sugeridos por aplicaciones"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Es habitual que las aplicaciones que usas recuerden cosas que te interesan para personalizar tu experiencia. Las aplicaciones también pueden almacenar información sobre tus temas en Android.\n\nPor ejemplo, si usas una aplicación sobre entrenamiento para maratones, la aplicación podría determinar que te interesan las zapatillas de deporte. Después, si usas una aplicación diferente, esta podría mostrarte un anuncio de zapatillas de deporte sugerido por la primera aplicación.\n\nAndroid elimina automáticamente datos sugeridos por aplicaciones con regularidad. Si usas una aplicación de nuevo, puede reaparecer en la lista. También puedes indicar que no quieres que una aplicación te sugiera anuncios.\n\nEn tus aplicaciones, un anuncio puede estar personalizado dependiendo de este ajuste, del ajuste de temas de anuncios, del ajuste de tu ID de publicidad y de si la aplicación que usas personaliza anuncios."</string>
-    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
-    <skip />
-    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
-    <skip />
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Ilustración a color de símbolos que representan temas de interés, como música, noticias y deportes"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Ilustración a color de un candado dentro de un círculo"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Ilustración pequeña en blanco o negro de nueve puntos formando un cuadrado"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"Ilustración pequeña en blanco y negro de formas simples, como un corazón, un triángulo y un cuadrado"</string>
     <string name="topic10001" msgid="1636806320891333775">"Arte y entretenimiento"</string>
     <string name="topic10002" msgid="1226367977754287428">"Actuación y teatro"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime y manga"</string>

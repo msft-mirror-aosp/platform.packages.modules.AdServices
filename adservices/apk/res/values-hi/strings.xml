@@ -183,11 +183,9 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"ऐप्लिकेशन के इस्तेमाल के आधार पर वे आपकी पसंद का पता लगा सकते हैं."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"आपके डिवाइस पर इस्तेमाल किए जा रहे ऐप्लिकेशन, Android से ऐसी जानकारी मांग सकते हैं जो उन्हें अपने विज्ञापनों की परफ़ॉर्मेंस का आकलन करने में मदद करेगी. Android, ऐप्लिकेशन को कुछ ही तरह का डेटा इकट्ठा करने की अनुमति देता है."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"चालू हैं / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> विषय"</string>
-    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
-    <skip />
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{चालू है / # विषय}one{चालू है / # विषय}other{चालू हैं / # विषय}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"चालू हैं / <xliff:g id="APPS_COUNT">%1$d</xliff:g> ऐप्लिकेशन"</string>
-    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
-    <skip />
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{चालू है / # ऐप्लिकेशन}one{चालू है / # ऐप्लिकेशन}other{चालू हैं / # ऐप्लिकेशन}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"चालू है"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"बंद है"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"आपके पसंदीदा विषय इस आधार पर तय होते हैं कि आपने हाल ही में कौनसे ऐप्लिकेशन इस्तेमाल किए हैं. इन विषयों के हिसाब से, ऐप्लिकेशन आपकी दिलचस्पी के मुताबिक विज्ञापन दिखाते हैं.\n\nऐप्लिकेशन के साथ जिन विषयों की जानकारी शेयर नहीं करनी है उन्हें ब्लॉक किया जा सकता है. Android, विज्ञापनों के विषयों का डेटा समय-समय पर अपने-आप मिटाता रहता है."</string>
@@ -200,14 +198,10 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"ब्लॉक किए गए ऐप्लिकेशन"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"ऐप्लिकेशन की ओर से सुझाए गए विज्ञापनों का डेटा रीसेट करें"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"आपको मनमुताबिक अनुभव देने के लिए, ऐप्लिकेशन अक्सर आपकी पसंद के विषयों की जानकारी सेव करते हैं. ऐप्लिकेशन, Android की मदद से आपकी पसंद के विषयों की जानकारी सेव कर सकते हैं.\n\nजैसे, अगर आपने किसी ऐप्लिकेशन पर मैराथन की ट्रेनिंग के बारे में जानकारी ली है, तो वह ऐप्लिकेशन यह अनुमान लगा सकता है कि आपकी दिलचस्पी, दौड़ने के लिए इस्तेमाल होने वाले जूतों में है. इसके बाद, आपको किसी दूसरे ऐप्लिकेशन पर, दौड़ने के लिए इस्तेमाल होने वाले जूतों का विज्ञापन दिख सकता है. इस विज्ञापन का सुझाव वह ऐप्लिकेशन देता है जिसका इस्तेमाल मैराथन की ट्रेनिंग के बारे में जानने के लिए किया गया है.\n\nAndroid, ऐप्लिकेशन पर विज्ञापन दिखाने के लिए सुझाया जाने वाला डेटा, समय-समय पर अपने-आप मिटाता रहता है. किसी ऐप्लिकेशन का फिर से इस्तेमाल करने पर, सूची में वह दोबारा दिख सकता है. इसके अलावा, किसी ऐप्लिकेशन को दूसरे ऐप्लिकेशन पर विज्ञापन के सुझाव देने से रोका जा सकता है.\n\nआपको किसी ऐप्लिकेशन में अपनी पसंद के मुताबिक विज्ञापन दिख सकते हैं. हालांकि, ये विज्ञापन इस सेटिंग, विज्ञापन के विषयों की सेटिंग, और आपके विज्ञापन आईडी की सेटिंग पर निर्भर करते हैं. यहां इस बात से भी फ़र्क़ पड़ता है कि क्या कोई ऐप्लिकेशन, आपकी पसंद के मुताबिक विज्ञापन दिखाने की सुविधा देता है या नहीं."</string>
-    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
-    <skip />
-    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
-    <skip />
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"रंगों की मदद से, संगीत, खबरों, और खेल-कूद जैसे पसंदीदा विषयों के सिंबल दिखाए गए हैं"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"रंगों की मदद से, सर्कल के अंदर लॉक का सिंबल दिखाया गया है"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"स्क्वेयर बनाने के लिए इस्तेमाल किए गए नौ बिंदुओं को ब्लैक एंड व्हाइट कलर में दिखाया गया है"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"हार्ट, ट्रायएंगल, और स्क्वेयर जैसे सामान्य आकारों को ब्लैक एंड व्हाइट कलर में दिखाया गया है"</string>
     <string name="topic10001" msgid="1636806320891333775">"कला और मनोरंजन"</string>
     <string name="topic10002" msgid="1226367977754287428">"अभिनय और थिएटर"</string>
     <string name="topic10003" msgid="6949890838957814881">"ऐनमे और मंगा"</string>
