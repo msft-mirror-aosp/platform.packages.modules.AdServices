@@ -16,8 +16,8 @@
 
 package android.adservices.adselection;
 
-import static android.adservices.adselection.ReportInteractionInput.FLAG_DESTINATION_BUYER;
-import static android.adservices.adselection.ReportInteractionInput.FLAG_DESTINATION_SELLER;
+import static android.adservices.adselection.ReportInteractionRequest.FLAG_DESTINATION_BUYER;
+import static android.adservices.adselection.ReportInteractionRequest.FLAG_DESTINATION_SELLER;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;

@@ -6,7 +6,8 @@
         "attribution_src_url": "https://www.ad-tech1.test",
         "source_type": "navigation",
         "registrant": "example.1s1.com",
-        "debug_reporting": true
+        "debug_reporting": true,
+        "has_ad_id_permission": true
       },
       "responses": [{
         "url": "https://www.ad-tech1.test",
@@ -16,6 +17,7 @@
             "destination": "android-app://example.2d1.com",
             "priority": "100",
             "expiry": "172801",
+            "debug_key": "347982378",
             "debug_reporting": true
           },
           "Location": null,
@@ -56,7 +58,20 @@
         "source_event_id": "1",
         "trigger_data": "2",
         "source_type": "navigation",
-        "randomized_trigger_rate": 0.0024263
+        "randomized_trigger_rate": 0.0024263,
+        "source_debug_key": "347982378"
+      }
+    }],
+    "debug_event_level_results": [{
+      "report_time": "800176400001",
+      "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
+      "payload": {
+        "attribution_destination": "android-app://example.2d1.com",
+        "source_event_id": "1",
+        "trigger_data": "2",
+        "source_type": "navigation",
+        "randomized_trigger_rate": 0.0024263,
+        "source_debug_key": "347982378"
       }
     }],
     "aggregatable_results": [],
@@ -67,7 +82,8 @@
         "body": {
           "source_event_id": "1",
           "attribution_destination": "android-app://example.2d1.com",
-          "source_site": "android-app://example.1s1.com"
+          "source_site": "android-app://example.1s1.com",
+          "source_debug_key": "347982378"
         }
       }
     }]

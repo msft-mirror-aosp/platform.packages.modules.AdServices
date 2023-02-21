@@ -31,6 +31,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.build.SdkLevel;
 
 import com.google.android.libraries.mobiledatadownload.file.SynchronousFileStorage;
 import com.google.common.collect.ImmutableList;
@@ -48,6 +49,7 @@ import org.mockito.quality.Strictness;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -286,7 +288,8 @@ public class ModelManagerTest {
     @Test
     public void testRetrieveLabels_downloaded_emptyListReturnedOnException() throws IOException {
         // Mock a MDD FileGroup and FileStorage
-        when(mMockFileStorage.open(any(), any())).thenReturn(FileInputStream.nullInputStream());
+        InputStream inputStream = SdkLevel.isAtLeastT() ? FileInputStream.nullInputStream() : null;
+        when(mMockFileStorage.open(any(), any())).thenReturn(inputStream);
         mProductionModelManager =
                 new ModelManager(
                         sContext,
@@ -533,9 +536,9 @@ public class ModelManagerTest {
                 .isEqualTo("assets/classifier/topic_id_to_name.csv");
 
         // The asset "precomputed_app_list" should have attribution "checksum" and
-        // its value should be "6901c8be98bc1350ca46c1763868ce13e52225ddbf5ef6fd5126015dc991852b"
+        // its value should be "2c4a95459c01f228526077d291f2a6aed0ea530ca9d35fd2ad255fbe177f72f2"
         assertThat(mProductionClassifierAssetsMetadata.get("precomputed_app_list").get("checksum"))
-                .isEqualTo("6901c8be98bc1350ca46c1763868ce13e52225ddbf5ef6fd5126015dc991852b");
+                .isEqualTo("2c4a95459c01f228526077d291f2a6aed0ea530ca9d35fd2ad255fbe177f72f2");
     }
 
     @Test
@@ -614,9 +617,9 @@ public class ModelManagerTest {
                 .isEqualTo("assets/classifier/topic_id_to_name.csv");
 
         // The asset "precomputed_app_list" should have attribution "checksum" and
-        // its value should be "6901c8be98bc1350ca46c1763868ce13e52225ddbf5ef6fd5126015dc991852b"
+        // its value should be "2c4a95459c01f228526077d291f2a6aed0ea530ca9d35fd2ad255fbe177f72f2"
         assertThat(mProductionClassifierAssetsMetadata.get("precomputed_app_list").get("checksum"))
-                .isEqualTo("6901c8be98bc1350ca46c1763868ce13e52225ddbf5ef6fd5126015dc991852b");
+                .isEqualTo("2c4a95459c01f228526077d291f2a6aed0ea530ca9d35fd2ad255fbe177f72f2");
     }
 
     @Test

@@ -19,11 +19,11 @@ package android.adservices.adselection;
 import android.adservices.common.FledgeErrorResponse;
 
 /**
- * This interface defines callback functions for an overrideAdSelectionConfigRemoteInfo request,
- * which contain a function to be called upon success that accepts a void argument, as well
- * as a function to be called upon failure that accepts an FledgeErrorResponse argument.
+ * This interface defines callback functions for an ad selection override request, which contains a
+ * function to be called upon success, as well as a function to be called upon failure that accepts
+ * a FledgeErrorResponse argument.
  *
- * {@hide}
+ * @hide
  */
 oneway interface AdSelectionOverrideCallback {
     void onSuccess();
