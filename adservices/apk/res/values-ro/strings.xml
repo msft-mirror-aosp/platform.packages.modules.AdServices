@@ -183,11 +183,9 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Aplicațiile pe care le folosești pot stabili lucrurile care te interesează și în funcție de modul în care le folosești."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Aplicațiile pe care le folosești pot solicita informații de la Android pentru a măsura performanța anunțurilor lor. Android permite aplicațiilor să colecteze tipuri de date limitate."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Activate / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> subiecte"</string>
-    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
-    <skip />
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Activat / # subiect}few{Activate / # subiecte}other{Activate / # de subiecte}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Activate / <xliff:g id="APPS_COUNT">%1$d</xliff:g> aplicații"</string>
-    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
-    <skip />
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{Activată / # aplicație}few{Activate / # aplicații}other{Activate / # de aplicații}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"Activat"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Dezactivat"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Subiectele de interes se bazează pe aplicațiile pe care le-ai folosit recent și sunt utilizate de aplicații pentru a-ți afișa anunțuri personalizate.\n\nPoți să blochezi subiectele care nu vrei să fie trimise la aplicații. În plus, Android șterge automat subiectele cu regularitate."</string>
@@ -200,14 +198,10 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Aplicații pe care le-ai blocat"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Resetează datele sugerate de aplicații"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Se întâmplă frecvent ca aplicațiile pe care le folosești să rețină lucrurile care te interesează pentru a-ți personaliza experiența. Aplicațiile pot și să stocheze informații pe Android despre subiectele tale.\n\nDe exemplu, dacă folosești o aplicație despre antrenamente pentru maraton, aplicația poate deduce că te interesează pantofii de alergare. Ulterior, dacă folosești altă aplicație, acea aplicație îți poate afișa un anunț pentru pantofi de alergare sugerat de prima aplicație.\n\nAndroid șterge automat datele sugerate de aplicații cu regularitate. Este posibil ca aplicațiile pe care le folosești din nou să reapară în listă. Poți să nu permiți unei aplicații să îți sugereze anunțuri.\n\nÎn aplicațiile pe care le folosești, un anunț pe care îl vezi poate fi personalizat în funcție de această setare, de setarea pentru subiectele anunțurilor, de setările tale pentru ID-ul publicitar și de capacitatea aplicației pe care o folosești de a personaliza anunțurile."</string>
-    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
-    <skip />
-    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
-    <skip />
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Ilustrație colorată cu simboluri care reprezintă subiecte de interes, cum ar fi muzică, știri și sport"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Ilustrație colorată cu un lacăt într-un cerc"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Ilustrație alb-negru mică cu nouă puncte care formează un pătrat"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"Ilustrație alb-negru mică cu forme simple, cum ar fi o inimă, un triunghi și un pătrat"</string>
     <string name="topic10001" msgid="1636806320891333775">"Artă și divertisment"</string>
     <string name="topic10002" msgid="1226367977754287428">"Actorie și teatru"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime și manga"</string>

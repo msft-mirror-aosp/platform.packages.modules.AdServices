@@ -183,11 +183,9 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Az Ön által használt alkalmazások meg is határozhatják, hogy mi tetszik Önnek az alapján, hogy hogyan használja őket."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Az Ön által használt alkalmazások információkat kérhetnek az Android rendszertől, amelyek segítenek a hirdetéseik teljesítményének mérésében. Az Android korlátozott adattípusok gyűjtését engedélyezi az alkalmazásoknak."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Bekapcsolva / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> téma"</string>
-    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
-    <skip />
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Bekapcsolva / # téma}other{Bekapcsolva / # téma}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Bekapcsolva / <xliff:g id="APPS_COUNT">%1$d</xliff:g> alkalmazás"</string>
-    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
-    <skip />
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{Bekapcsolva / # alkalmazás}other{Bekapcsolva / # alkalmazás}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"Be"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Ki"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Az Önt érdeklő témák az Ön által nemrégiben használt alkalmazásokon alapulnak, az alkalmazások pedig arra használják e témákat, hogy személyre szabott hirdetéseket jelenítsenek meg Önnek.\n\nLehetősége van azoknak a témáknak a letiltására, amelyeket nem kíván megosztani az alkalmazásokkal. Az Android ezenkívül rendszeresen, automatikusan törli is a témákat."</string>
@@ -200,14 +198,10 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Ön által letiltott alkalmazások"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Az alkalmazások által javasolt adatok visszaállítása"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Az alkalmazások gyakran megjegyzik, hogy Ön mi iránt érdeklődik, hogy személyre szabhassák a felhasználói élményt. Ezenkívül információkat is tárolhatnak az Android rendszeren az Önt érdeklő témákról.\n\nHa például egy maratonra való felkészüléssel kapcsolatos alkalmazást használ, az alkalmazás megállapíthatja, hogy Önt érdeklik a futócipők. Később, egy másik alkalmazás megjeleníthet Önnek egy futócipőkkel kapcsolatos hirdetést az első app javaslata alapján.\n\nAz Android automatikusan, rendszeresen törli az alkalmazások által javasolt adatokat. Ha ismét használja valamelyik alkalmazást, újra megjelenhet a listán. Emellett lehetősége van arra is, hogy letiltsa a kívánt alkalmazás számára, hogy hirdetéseket javasoljon Önnek.\n\nAz alkalmazásaiban megjelenő hirdetések a következőktől függően lehetnek személyre szabva: ez a beállítás, a hirdetéstémák beállítás, a hirdetésazonosítóval kapcsolatos beállításai, valamint az, hogy az éppen használt app személyre szabott hirdetéseket használ-e."</string>
-    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
-    <skip />
-    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
-    <skip />
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Érdeklődési köröket, például zenét, híreket vagy sportot jelképező szimbólumok színes illusztrációja"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Körben lévő lakat színes illusztrációja"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Négyzetet formáló kilenc pont kis méretű, fekete-fehér illusztrációja"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"Egyszerű alakzatok, például szív, háromszög és négyzet kis méretű, fekete-fehér illusztrációja"</string>
     <string name="topic10001" msgid="1636806320891333775">"Művészetek és szórakoztatás"</string>
     <string name="topic10002" msgid="1226367977754287428">"Színészet és színház"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime és manga"</string>
