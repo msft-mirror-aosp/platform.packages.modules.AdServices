@@ -60,7 +60,7 @@ public class NotificationTriggerTest {
     public void setUp() throws Exception {
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
-        mCommonManager = sContext.getSystemService(AdServicesCommonManager.class);
+        mCommonManager = AdServicesCommonManager.get(sContext);
 
         // consent debug mode is turned off for this test class as we only care about the
         // first trigger (API call).
