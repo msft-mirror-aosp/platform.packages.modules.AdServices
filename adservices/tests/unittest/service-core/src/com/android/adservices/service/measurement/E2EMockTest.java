@@ -126,12 +126,12 @@ public abstract class E2EMockTest extends E2ETest {
     E2EMockTest(
             Collection<Action> actions,
             ReportObjects expectedOutput,
-            PrivacyParamsProvider privacyParamsProvider,
+            ParamsProvider paramsProvider,
             String name) {
         super(actions, expectedOutput, name);
         mClickVerifier = mock(ClickVerifier.class);
         mFlags = mock(Flags.class);
-        mE2EMockStaticRule = new E2EMockStatic.E2EMockStaticRule(privacyParamsProvider);
+        mE2EMockStaticRule = new E2EMockStatic.E2EMockStaticRule(paramsProvider);
         mMeasurementDataDeleter = spy(new MeasurementDataDeleter(sDatastoreManager));
 
         mAsyncSourceFetcher =
