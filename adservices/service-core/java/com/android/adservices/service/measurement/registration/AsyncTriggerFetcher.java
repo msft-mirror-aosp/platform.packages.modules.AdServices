@@ -209,6 +209,10 @@ public class AsyncTriggerFetcher {
                                 json.getJSONArray(TriggerHeaderContract.ATTRIBUTION_CONFIG));
                 result.setAttributionConfig(attributionConfigsString);
             }
+
+            if (!json.isNull(TriggerHeaderContract.DEBUG_JOIN_KEY)) {
+                result.setDebugJoinKey(json.optString(TriggerHeaderContract.DEBUG_JOIN_KEY));
+            }
             triggers.add(result.build());
             return true;
         } catch (JSONException e) {
@@ -570,5 +574,6 @@ public class AsyncTriggerFetcher {
         String DEBUG_KEY = "debug_key";
         String DEBUG_REPORTING = "debug_reporting";
         String X_NETWORK_KEY_MAPPING = "x_network_key_mapping";
+        String DEBUG_JOIN_KEY = "debug_join_key";
     }
 }
