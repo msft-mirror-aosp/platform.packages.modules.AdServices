@@ -172,14 +172,14 @@ class AttributionJobHandler {
                 measurementDao.getNumAggregateReportsPerDestination(
                         trigger.getAttributionDestination(), trigger.getDestinationType());
 
-        if (numReports >= SystemHealthParams.MAX_AGGREGATE_REPORTS_PER_DESTINATION) {
+        if (numReports >= SystemHealthParams.getMaxAggregateReportsPerDestination()) {
             LogUtil.d(
                     String.format(
                             Locale.ENGLISH,
                             "Aggregate reports for destination %1$s exceeds system health limit of"
                                     + " %2$d.",
                             trigger.getAttributionDestination(),
-                            SystemHealthParams.MAX_AGGREGATE_REPORTS_PER_DESTINATION));
+                            SystemHealthParams.getMaxAggregateReportsPerDestination()));
             return false;
         }
 
@@ -389,14 +389,14 @@ class AttributionJobHandler {
                 measurementDao.getNumEventReportsPerDestination(
                         trigger.getAttributionDestination(), trigger.getDestinationType());
 
-        if (numReports >= SystemHealthParams.MAX_EVENT_REPORTS_PER_DESTINATION) {
+        if (numReports >= SystemHealthParams.getMaxEventReportsPerDestination()) {
             LogUtil.d(
                     String.format(
                             Locale.ENGLISH,
                             "Event reports for destination %1$s exceeds system health limit of"
                                     + " %2$d.",
                             trigger.getAttributionDestination(),
-                            SystemHealthParams.MAX_EVENT_REPORTS_PER_DESTINATION));
+                            SystemHealthParams.getMaxEventReportsPerDestination()));
             return false;
         }
 

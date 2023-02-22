@@ -24,6 +24,7 @@ import static org.junit.Assume.assumeTrue;
 
 import android.Manifest;
 import android.app.NotificationManager;
+import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -104,8 +105,7 @@ public class SdkSandboxRestrictionsTest {
         SecurityException thrown = assertThrows(
                 SecurityException.class,
                 () -> context.startActivity(intent));
-        assertThat(thrown).hasMessageThat().contains(
-                "may not be broadcast from an SDK sandbox uid");
+        assertThat(thrown).hasMessageThat().contains("may not be started from an SDK sandbox uid.");
     }
 
     /**
@@ -124,7 +124,7 @@ public class SdkSandboxRestrictionsTest {
         SecurityException thrown = assertThrows(
                 SecurityException.class,
                 () -> ctx.startActivity(sendIntent));
-        assertThat(thrown).hasMessageThat().contains("may not be broadcast from an SDK sandbox");
+        assertThat(thrown).hasMessageThat().contains("may not be started from an SDK sandbox uid.");
     }
 
     /** Tests that the sandbox cannot send broadcasts. */
@@ -173,12 +173,12 @@ public class SdkSandboxRestrictionsTest {
         Intent packageIntent = new Intent(Intent.ACTION_VIEW);
         packageIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         packageIntent.setPackage("test.package");
-        assertThrows(SecurityException.class, () -> context.startActivity(packageIntent));
+        assertThrows(ActivityNotFoundException.class, () -> context.startActivity(packageIntent));
 
         Intent componentIntent = new Intent(Intent.ACTION_VIEW);
         componentIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         componentIntent.setComponent(new ComponentName("test.package", "TestClass"));
-        assertThrows(SecurityException.class, () -> context.startActivity(componentIntent));
+        assertThrows(ActivityNotFoundException.class, () -> context.startActivity(componentIntent));
     }
 
     /** Tests that sandbox cannot execute code in read-write locations. */
@@ -285,8 +285,9 @@ public class SdkSandboxRestrictionsTest {
 
             SecurityException thrown = assertThrows(SecurityException.class,
                     () -> ctx.startActivity(intent));
-            assertThat(thrown).hasMessageThat().contains(
-                    "may not be broadcast from an SDK sandbox uid");
+            assertThat(thrown)
+                    .hasMessageThat()
+                    .contains("may not be started from an SDK sandbox uid.");
         }
     }
 

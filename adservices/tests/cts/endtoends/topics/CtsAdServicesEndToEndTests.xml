@@ -26,6 +26,7 @@
         <option name="cleanup-apks" value="true"/>
         <!-- The test apps to be installed and uninstalled -->
         <option name="test-file-name" value="CtsAdServicesEndToEndTests.apk"/>
+        <option name="check-min-sdk" value="true" />
     </target_preparer>
 
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">

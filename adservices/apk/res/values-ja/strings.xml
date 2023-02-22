@@ -183,11 +183,9 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"ユーザーが使用するアプリは、アプリの使われ方を元にユーザーの好みを特定する場合もあります。"</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"ユーザーが使用するアプリが、広告のパフォーマンスを測定するための情報を Android に求めることがあります。Android では、限られた種類のデータのみアプリが収集できるよう設定できます。"</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"ON / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> 件のトピック"</string>
-    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
-    <skip />
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{ON / # 件のトピック}other{ON / # 件のトピック}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"ON / <xliff:g id="APPS_COUNT">%1$d</xliff:g> 個のアプリ"</string>
-    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
-    <skip />
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{ON / # 個のアプリ}other{ON / # 個のアプリ}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"ON"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"OFF"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"広告のトピックは、最近使用されたアプリに基づいており、パーソナライズド広告を表示するためにアプリが使用します。\n\nアプリで共有されたくないトピックをブロックできます。また Android では、トピックを定期的に自動で削除しています。"</string>
@@ -200,14 +198,10 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"ブロックしたアプリ"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"アプリから提案されたデータをリセット"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"一般に、ご利用のアプリはユーザーの利便性をパーソナライズするためにユーザーが関心 / 興味を持っている内容を記録します。また、アプリはユーザーのトピックに関する情報も Android で保存できます。\n\nたとえば、マラソンのトレーニングについてアプリを使用した場合、そのアプリは、ユーザーはランニング シューズに関心がある、と判断することがあります。その後に使用した別のアプリには、最初のアプリから提案されたランニング シューズの広告が表示される可能性があります。\n\nAndroid は、アプリから提案されたデータを定期的に自動削除します。再び使用したアプリはリストに再表示される可能性があります。また、アプリがユーザーに適した広告を提案しないようブロックすることもできます。\n\nアプリにパーソナライズド広告が表示されるかどうかは、この設定のほか、広告トピックの設定、広告 ID の設定、使用しているアプリが広告をパーソナライズするかどうかによって決まります。"</string>
-    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
-    <skip />
-    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
-    <skip />
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"音楽、ニュース、スポーツなど、興味 / 関心のあるトピックを表すカラフルなイラスト"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"円の中に鍵が描かれているカラフルなイラスト"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"9 個の点で四角形が描かれているモノクロの小さなイラスト"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"ハート、三角形、四角形などのシンプルな図形が描かれているモノクロの小さなイラスト"</string>
     <string name="topic10001" msgid="1636806320891333775">"アート、エンターテインメント"</string>
     <string name="topic10002" msgid="1226367977754287428">"劇場、映画館"</string>
     <string name="topic10003" msgid="6949890838957814881">"アニメ、漫画"</string>

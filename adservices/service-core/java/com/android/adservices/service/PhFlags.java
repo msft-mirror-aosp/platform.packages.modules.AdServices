@@ -31,6 +31,9 @@ import com.android.internal.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /** Flags Implementation that delegates to DeviceConfig. */
 // TODO(b/228037065): Add validation logics for Feature flags read from PH.
@@ -52,6 +55,7 @@ public final class PhFlags implements Flags {
     static final String KEY_TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS = "topics_number_of_lookback_epochs";
     static final String KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY =
             "topics_number_of_epochs_to_keep_in_history";
+    static final String KEY_GLOBAL_BLOCKED_TOPIC_IDS = "topics_global_blocked_topic_ids";
 
     // Topics classifier keys
     static final String KEY_CLASSIFIER_TYPE = "classifier_type";
@@ -193,6 +197,8 @@ public final class PhFlags implements Flags {
             "fledge_ad_selection_enforce_foreground_status_run_ad_selection";
     static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION =
             "fledge_ad_selection_enforce_foreground_status_report_impression";
+    static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_INTERACTION =
+            "fledge_ad_selection_enforce_foreground_status_report_interaction";
     static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDE =
             "fledge_ad_selection_enforce_foreground_status_ad_selection_override";
     static final String KEY_FOREGROUND_STATUS_LEVEL = "foreground_validation_status_level";
@@ -302,6 +308,18 @@ public final class PhFlags implements Flags {
     // Consent Notification debug mode keys.
     static final String KEY_CONSENT_NOTIFICATION_DEBUG_MODE = "consent_notification_debug_mode";
 
+    // Consent Notification interval begin ms.
+    static final String KEY_CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS =
+            "consent_notification_interval_begin_ms";
+
+    // Consent Notification interval end ms.
+    static final String KEY_CONSENT_NOTIFICATION_INTERVAL_END_MS =
+            "consent_notification_interval_end_ms";
+
+    // Consent Notification minimal delay before interval ms.
+    static final String KEY_CONSENT_NOTIFICATION_MINIMAL_DELAY_BEFORE_INTERVAL_ENDS =
+            "consent_notification_minimal_delay_before_interval_ends";
+
     // Consent Manager debug mode keys.
     static final String KEY_CONSENT_MANAGER_DEBUG_MODE = "consent_manager_debug_mode";
 
@@ -325,6 +343,8 @@ public final class PhFlags implements Flags {
     static final String KEY_UI_OTA_STRINGS_DOWNLOAD_DEADLINE = "ui_ota_strings_download_deadline";
 
     static final String KEY_UI_DIALOGS_FEATURE_ENABLED = "ui_dialogs_feature_enabled";
+
+    static final String KEY_UI_EEA_COUNTRIES = "ui_eea_countries";
 
     static final String KEY_GA_UX_FEATURE_ENABLED = "ga_ux_enabled";
 
@@ -1680,6 +1700,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getEnforceForegroundStatusForFledgeReportInteraction() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_INTERACTION,
+                /* defaultValue */ ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_INTERACTION);
+    }
+
+    @Override
     public int getForegroundStatuslLevelForValidation() {
         return DeviceConfig.getInt(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -1784,6 +1812,30 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public long getConsentNotificationIntervalBeginMs() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS,
+                /* defaultValue */ CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS);
+    }
+
+    @Override
+    public long getConsentNotificationIntervalEndMs() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_CONSENT_NOTIFICATION_INTERVAL_END_MS,
+                /* defaultValue */ CONSENT_NOTIFICATION_INTERVAL_END_MS);
+    }
+
+    @Override
+    public long getConsentNotificationMinimalDelayBeforeIntervalEnds() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_CONSENT_NOTIFICATION_MINIMAL_DELAY_BEFORE_INTERVAL_ENDS,
+                /* defaultValue */ CONSENT_NOTIFICATION_MINIMAL_DELAY_BEFORE_INTERVAL_ENDS);
+    }
+
+    @Override
     public boolean getConsentManagerDebugMode() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(KEY_CONSENT_MANAGER_DEBUG_MODE),
@@ -1828,6 +1880,14 @@ public final class PhFlags implements Flags {
                         DeviceConfig.NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_UI_DIALOGS_FEATURE_ENABLED,
                         /* defaultValue */ UI_DIALOGS_FEATURE_ENABLED));
+    }
+
+    @Override
+    public String getUiEeaCountries() {
+        String uiEeaCountries =
+                DeviceConfig.getString(
+                        DeviceConfig.NAMESPACE_ADSERVICES, KEY_UI_EEA_COUNTRIES, UI_EEA_COUNTRIES);
+        return uiEeaCountries;
     }
 
     @Override
@@ -1955,6 +2015,7 @@ public final class PhFlags implements Flags {
                         + KEY_TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS
                         + " = "
                         + getTopicsNumberOfLookBackEpochs());
+        writer.println("\t" + KEY_GLOBAL_BLOCKED_TOPIC_IDS + " = " + getGlobalBlockedTopicIds());
 
         writer.println("==== AdServices PH Flags Dump Topics Classifier related flags ====");
         writer.println(
@@ -2278,6 +2339,11 @@ public final class PhFlags implements Flags {
                         + getEnforceForegroundStatusForFledgeReportImpression());
         writer.println(
                 "\t"
+                        + KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_INTERACTION
+                        + " = "
+                        + getEnforceForegroundStatusForFledgeReportInteraction());
+        writer.println(
+                "\t"
                         + KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION
                         + " = "
                         + getEnforceForegroundStatusForFledgeRunAdSelection());
@@ -2316,6 +2382,7 @@ public final class PhFlags implements Flags {
         writer.println("==== AdServices PH Flags Dump UI Related Flags ====");
         writer.println(
                 "\t" + KEY_UI_DIALOGS_FEATURE_ENABLED + " = " + getUIDialogsFeatureEnabled());
+        writer.println("\t" + KEY_UI_EEA_COUNTRIES + " = " + getUiEeaCountries());
         writer.println(
                 "\t"
                         + KEY_UI_OTA_STRINGS_FEATURE_ENABLED
@@ -2381,5 +2448,37 @@ public final class PhFlags implements Flags {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_ENABLE_BACK_COMPAT,
                 /* defaultValue */ ENABLE_BACK_COMPAT);
+    }
+
+    @Override
+    public ImmutableList<Integer> getGlobalBlockedTopicIds() {
+        String defaultGlobalBlockedTopicIds =
+                TOPICS_GLOBAL_BLOCKED_TOPIC_IDS.stream()
+                        .map(String::valueOf)
+                        .collect(Collectors.joining(","));
+
+        String globalBlockedTopicIds =
+                DeviceConfig.getString(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        KEY_GLOBAL_BLOCKED_TOPIC_IDS,
+                        defaultGlobalBlockedTopicIds);
+        if (TextUtils.isEmpty(globalBlockedTopicIds)) {
+            return ImmutableList.of();
+        }
+        globalBlockedTopicIds = globalBlockedTopicIds.trim();
+        String[] globalBlockedTopicIdsList = globalBlockedTopicIds.split(",");
+
+        List<Integer> globalBlockedTopicIdsIntList = new ArrayList<>();
+
+        for (String blockedTopicId : globalBlockedTopicIdsList) {
+            try {
+                int topicIdInteger = Integer.parseInt(blockedTopicId.trim());
+                globalBlockedTopicIdsIntList.add(topicIdInteger);
+            } catch (NumberFormatException e) {
+                LogUtil.e("Parsing global blocked topic ids failed for " + globalBlockedTopicIds);
+                return TOPICS_GLOBAL_BLOCKED_TOPIC_IDS;
+            }
+        }
+        return ImmutableList.copyOf(globalBlockedTopicIdsIntList);
     }
 }
