@@ -41,8 +41,8 @@ public class E2EDenoisedMockTest extends E2EMockTest {
     }
 
     public E2EDenoisedMockTest(Collection<Action> actions, ReportObjects expectedOutput,
-            PrivacyParamsProvider privacyParamsProvider, String name) throws DatastoreException {
-        super(actions, expectedOutput, privacyParamsProvider, name);
+            ParamsProvider paramsProvider, String name) throws DatastoreException {
+        super(actions, expectedOutput, paramsProvider, name);
         mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager, mFlags);
         mMeasurementImpl =
                 TestObjectProvider.getMeasurementImpl(
