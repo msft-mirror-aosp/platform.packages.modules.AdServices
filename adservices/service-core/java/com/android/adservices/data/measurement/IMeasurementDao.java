@@ -132,17 +132,18 @@ public interface IMeasurementDao {
      * matching publisher, enrollment, and ACTIVE status, excluding a given destination.
      */
     Integer countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(Uri publisher,
-            @EventSurfaceType int publisherType, String enrollmentId, Uri excludedDestination,
-            @EventSurfaceType int destinationType, long windowStartTime, long windowEndTime)
-            throws DatastoreException;
+            @EventSurfaceType int publisherType, String enrollmentId,
+            List<Uri> excludedDestinations, @EventSurfaceType int destinationType,
+            long windowStartTime, long windowEndTime) throws DatastoreException;
 
     /**
      * Gets the count of distinct IDs of enrollments in the Source table in a time window with
      * matching publisher and destination, excluding a given enrollment ID.
      */
     Integer countDistinctEnrollmentsPerPublisherXDestinationInSource(Uri publisher,
-            @EventSurfaceType int publisherType, Uri destination, String enrollmentId,
-            long windowStartTime, long windowEndTime) throws DatastoreException;
+            @EventSurfaceType int publisherType, List<Uri> destinations,
+            String excludedEnrollmentId, long windowStartTime, long windowEndTime)
+            throws DatastoreException;
 
     /**
      * Updates the {@link Trigger.Status} value for the provided {@link Trigger}.

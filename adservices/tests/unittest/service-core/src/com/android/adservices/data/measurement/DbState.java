@@ -331,8 +331,8 @@ public class DbState {
         return new EventReport.Builder()
                 .setId(rJSON.getString("id"))
                 .setSourceEventId(new UnsignedLong(rJSON.getString("sourceEventId")))
-                .setAttributionDestinations(List.of(
-                        Uri.parse(rJSON.getString("attributionDestination"))))
+                .setAttributionDestinations(SqliteObjectMapper.destinationsStringToList(
+                        rJSON.getString("attributionDestination")))
                 .setEnrollmentId(rJSON.getString("enrollmentId"))
                 .setTriggerData(new UnsignedLong(rJSON.getString("triggerData")))
                 .setTriggerTime(rJSON.getLong("triggerTime"))
