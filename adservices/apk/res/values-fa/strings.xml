@@ -98,7 +98,7 @@
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  از چه داده‌هایی استفاده می‌شود"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"موضوع‌های آگهی شما براساس برنامه‌هایی که اخیراً از آن‌ها استفاده کرده‌اید و میزان استفاده از آن‌ها است."</string>
     <string name="notificationUI_how_it_works_topics_expanded_text5" msgid="5976468008939416198">"•  نحوه استفاده ما از این داده‌ها"</string>
-    <string name="notificationUI_how_it_works_topics_expanded_text6" msgid="6318275524155409408">"‏هنگامی که از برنامه‌ها استفاده می‌کنید، Android به موضوع‌های موردعلاقه‌تان پی می‌برد. برچسب‌های موضوع ازپیش تعیین شده‌اند و شامل مواردی نظیر هنر و سرگرمی، خرید، و ورزش هستند. بعداً، برنامه‌ای که از آن استفاده می‌کنید می‌تواند برای شخصی کردن آگهی‌هایی که می‌بینید، برخی‌از موضوعات شما را از Android درخواست کند (اما نمی‌تواند اطلاعات مربوط به استفاده‌تان از برنامه یا هویت شما را درخواست کند)."</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text6" msgid="6318275524155409408">"‏هنگامی که از برنامه‌ها استفاده می‌کنید، Android به موضوع‌های موردعلاقه‌تان پی می‌برد. برچسب‌های موضوع ازپیش تعیین شده‌اند و شامل مواردی نظیر هنر و سرگرمی، خرید، و ورزش هستند. بعداً، برنامه‌ای که از آن استفاده می‌کنید می‌تواند برای شخصی‌سازی آگهی‌هایی که می‌بینید، برخی‌از موضوعات شما را از Android درخواست کند (اما نمی‌تواند اطلاعات مربوط به استفاده شما از برنامه یا هویت شما را درخواست کند)."</string>
     <string name="notificationUI_how_it_works_topics_expanded_text7" msgid="4275126336833782389">"•  چگونه می‌توانید داده‌هایتان را مدیریت کنید"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"‏Android مرتباً موضوع‌ها را به‌طور خودکار حذف می‌کند. همان‌طور که به استفاده از برنامه‌ها ادامه می‌دهید، ممکن است موضوعی دوباره در فهرست پیدا شود. همچنین می‌توانید موضوع‌هایی را که نمی‌خواهید Android با برنامه‌ها هم‌رسانی کند مسدود کنید و هر زمان بخواهید موضوع‌های آگهی را در تنظیمات حریم خصوصی خاموش کنید."</string>
     <string name="notificationUI_you_can_change_in_privacy_settings" msgid="4781410091509838647">"می‌توانید تغییرات موردنظرتان را در تنظیمات حریم خصوصی اعمال کنید."</string>
@@ -183,11 +183,9 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"همچنین برنامه‌هایی که استفاده می‌کنید می‌توانند براساس نحوه استفاده‌تان از آن برنامه‌ها تشخیص دهند چه چیزهایی را دوست دارید."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"‏برنامه‌هایی که از آن‌ها استفاده می‌کنید ممکن است اطلاعاتی از Android درخواست کنند تا بتوانند عملکرد آگهی‌هایشان را بسنجند. Android به برنامه‌ها اجازه می‌دهد انواع محدودی از داده‌ها را جمع‌آوری کنند."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"روشن / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> موضوع"</string>
-    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
-    <skip />
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{روشن / # موضوع}one{روشن / # موضوع}other{روشن / # موضوع}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"روشن / <xliff:g id="APPS_COUNT">%1$d</xliff:g> برنامه"</string>
-    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
-    <skip />
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{روشن / # برنامه}one{روشن / # برنامه}other{روشن / # برنامه}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"روشن"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"خاموش"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"‏موضوع‌های موردعلاقه براساس برنامه‌هایی که اخیراً از آن‌ها استفاده کرده‌اید تعیین می‌شود و برنامه‌ها برای نمایش آگهی‌های شخصی‌سازی‌شده از این اطلاعات استفاده می‌کنند.\n\nمی‌توانید موضوع‌هایی را که نمی‌خواهید با برنامه‌ها هم‌رسانی شود مسدود کنید. Android نیز مرتباً موضوع‌ها را به‌طور خودکار حذف می‌کند."</string>
@@ -200,14 +198,10 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"برنامه‌هایی که مسدود کرده‌اید"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"بازنشانی داده‌های پیشنهادی برنامه"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"‏برنامه‌هایی که استفاده می‌کنید معمولاً علایق شما را به‌خاطر می‌سپارند تا بتوانند تجربه شما را شخصی‌سازی کنند. برنامه‌ها می‌توانند اطلاعات مربوط به موضوعات شما را نیز با کمک Android ذخیره کنند.\n\nبرای مثال، اگر از برنامه‌ای درباره تمرین دو مارتون استفاده کنید، ممکن است برنامه نتیجه‌گیری کند که به کفش مخصوص دویدن علاقه‌مند هستید. اگر بعداً از برنامه دیگری استفاده کنید، آن برنامه می‌تواند آگهی‌ای درخصوص کفش دو به شما نشان دهد که توسط برنامه اول پیشنهاد شده است.\n\nAndroid مرتباً داده‌های پیشنهادی برنامه‌ها را به‌طور خودکار حذف می‌کند. اگر از برنامه‌ای دوباره استفاده کنید ممکن است دوباره در فهرست پیدا شود. همچنین می‌توانید آگهی‌های پیشنهادی برنامه‌ها را مسدود کنید.\n\nبسته به این تنظیم، تنظیم موضوع‌های آگهی، تنظیمات شناسه تبلیغاتی شما، و اینکه آیا برنامه‌ای که از آن استفاده می‌کنید آگهی‌ها را شخصی‌سازی می‌کند یا نه، ممکن است آگهی‌هایی که در برنامه‌هایتان می‌بینید شخصی‌سازی شود."</string>
-    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
-    <skip />
-    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
-    <skip />
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"تصویر رنگارنگ نمادهایی که علایقی مثل موسیقی، اخبار، و ورزش را نشان می‌دهند"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"تصویر رنگارنگ قفلی درون دایره"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"تصویر سیاه‌وسفید کوچکی از نه نقطه که یک مربع را شکل داده‌اند"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"تصویر سیاه‌وسفید کوچکی از اشکال ساده مثل قلب، مثلث، و مربع"</string>
     <string name="topic10001" msgid="1636806320891333775">"هنر و سرگرمی"</string>
     <string name="topic10002" msgid="1226367977754287428">"بازیگری و تئاتر"</string>
     <string name="topic10003" msgid="6949890838957814881">"انیمه و مانگا"</string>

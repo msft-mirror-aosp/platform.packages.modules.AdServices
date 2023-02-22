@@ -183,11 +183,9 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Използваните от вас приложения също могат да определят какво харесвате въз основа на начина, по който ги използвате."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Приложенията, които използвате, може да поискат от Android информация, с чиято помощ да измерят ефективността на рекламите си. Android разрешава на приложенията да събират ограничени типове данни."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Вкл./<xliff:g id="TOPICS_COUNT">%1$d</xliff:g> теми"</string>
-    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
-    <skip />
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Вкл./# тема}other{Вкл./# теми}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Вкл./<xliff:g id="APPS_COUNT">%1$d</xliff:g> приложения"</string>
-    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
-    <skip />
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{Вкл./# приложение}other{Вкл./# приложения}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"Включено"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Изкл."</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Интересуващите ви теми се базират на приложенията, с които сте работили наскоро, и се използват от приложенията, за да ви показват персонализирани реклами.\n\nМожете да блокирате темите, които не искате да бъдат споделяни с приложенията. Android също така редовно изтрива автоматично темите."</string>
@@ -200,14 +198,10 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Приложенията, които сте блокирали"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Нулиране на предложените от приложенията данни"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"За приложенията, които използвате, е характерно да помнят нещата, които ви интересуват, за да персонализират практическата ви работа. Те могат също да съхраняват информация в Android за темите ви.\n\nАко например използвате приложение за подготовка за маратон, то може да реши, че се интересувате от обувки за бягане. По-късно, ако използвате друго приложение, то може да ви покаже реклами за обувки за бягане, предложени от първото приложение.\n\nAndroid редовно изтрива автоматично предложените от приложенията данни. Приложение, което използвате отново, може пак да се покаже в списъка. Можете също да блокирате дадено приложение, така че да не ви предлага реклами.\n\nРекламите, които виждате в приложенията, може да са персонализирани. Това зависи от тази настройка, настройката за рекламните теми, настройките за идентификатора ви за рекламиране и това дали приложението, което използвате, персонализира рекламите."</string>
-    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
-    <skip />
-    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
-    <skip />
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Цветни илюстрации на символи, представящи темите, които ви интересуват, като например музика, новини и спорт"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Цветна илюстрация на катинар в кръг"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Малка черно-бяла илюстрация на девет точки, които образуват квадрат"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"Малка черно-бяла илюстрация на прости форми, като например сърце, триъгълник и квадрат"</string>
     <string name="topic10001" msgid="1636806320891333775">"Изкуства и развлечения"</string>
     <string name="topic10002" msgid="1226367977754287428">"Актьорско майсторство и театър"</string>
     <string name="topic10003" msgid="6949890838957814881">"Аниме и манга"</string>
