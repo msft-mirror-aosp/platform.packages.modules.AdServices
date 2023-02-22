@@ -126,6 +126,7 @@ public final class MeasurementTables {
         String REGISTRATION_ID = "registration_id";
         String SHARED_AGGREGATION_KEYS = "shared_aggregation_keys";
         String INSTALL_TIME = "install_time";
+        String DEBUG_JOIN_KEY = "debug_join_key";
     }
 
     /** Contract for Trigger. */
@@ -150,6 +151,7 @@ public final class MeasurementTables {
         String AR_DEBUG_PERMISSION = "ar_debug_permission";
         String ATTRIBUTION_CONFIG = "attribution_config";
         String X_NETWORK_KEY_MAPPING = "x_network_key_mapping";
+        String DEBUG_JOIN_KEY = "debug_join_key";
     }
 
     /** Contract for EventReport. */
@@ -384,7 +386,75 @@ public final class MeasurementTables {
                     + SourceContract.INSTALL_TIME
                     + " INTEGER "
                     + ")";
-    public static final String CREATE_TABLE_SOURCE_LATEST = CREATE_TABLE_SOURCE_V6;
+    public static final String CREATE_TABLE_SOURCE_LATEST =
+            "CREATE TABLE "
+                    + SourceContract.TABLE
+                    + " ("
+                    + SourceContract.ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + SourceContract.EVENT_ID
+                    + " INTEGER, "
+                    + SourceContract.PUBLISHER
+                    + " TEXT, "
+                    + SourceContract.PUBLISHER_TYPE
+                    + " INTEGER, "
+                    + SourceContract.APP_DESTINATION
+                    + " TEXT, "
+                    + SourceContract.ENROLLMENT_ID
+                    + " TEXT, "
+                    + SourceContract.EVENT_TIME
+                    + " INTEGER, "
+                    + SourceContract.EXPIRY_TIME
+                    + " INTEGER, "
+                    + SourceContract.EVENT_REPORT_WINDOW
+                    + " INTEGER, "
+                    + SourceContract.AGGREGATABLE_REPORT_WINDOW
+                    + " INTEGER, "
+                    + SourceContract.PRIORITY
+                    + " INTEGER, "
+                    + SourceContract.STATUS
+                    + " INTEGER, "
+                    + SourceContract.EVENT_REPORT_DEDUP_KEYS
+                    + " TEXT, "
+                    + SourceContract.AGGREGATE_REPORT_DEDUP_KEYS
+                    + " TEXT, "
+                    + SourceContract.SOURCE_TYPE
+                    + " TEXT, "
+                    + SourceContract.REGISTRANT
+                    + " TEXT, "
+                    + SourceContract.ATTRIBUTION_MODE
+                    + " INTEGER, "
+                    + SourceContract.INSTALL_ATTRIBUTION_WINDOW
+                    + " INTEGER, "
+                    + SourceContract.INSTALL_COOLDOWN_WINDOW
+                    + " INTEGER, "
+                    + SourceContract.IS_INSTALL_ATTRIBUTED
+                    + " INTEGER, "
+                    + SourceContract.FILTER_DATA
+                    + " TEXT, "
+                    + SourceContract.AGGREGATE_SOURCE
+                    + " TEXT, "
+                    + SourceContract.AGGREGATE_CONTRIBUTIONS
+                    + " INTEGER, "
+                    + SourceContract.WEB_DESTINATION
+                    + " TEXT, "
+                    + SourceContract.DEBUG_KEY
+                    + " INTEGER , "
+                    + SourceContract.DEBUG_REPORTING
+                    + " INTEGER, "
+                    + SourceContract.AD_ID_PERMISSION
+                    + " INTEGER, "
+                    + SourceContract.AR_DEBUG_PERMISSION
+                    + " INTEGER, "
+                    + SourceContract.REGISTRATION_ID
+                    + " TEXT, "
+                    + SourceContract.SHARED_AGGREGATION_KEYS
+                    + " TEXT, "
+                    + SourceContract.INSTALL_TIME
+                    + " INTEGER, "
+                    + SourceContract.DEBUG_JOIN_KEY
+                    + " TEXT "
+                    + ")";
 
     public static final String CREATE_TABLE_TRIGGER_V6 =
             "CREATE TABLE "
@@ -430,7 +500,51 @@ public final class MeasurementTables {
                     + " TEXT "
                     + ")";
 
-    public static final String CREATE_TABLE_TRIGGER_LATEST = CREATE_TABLE_TRIGGER_V6;
+    public static final String CREATE_TABLE_TRIGGER_LATEST =
+            "CREATE TABLE "
+                    + TriggerContract.TABLE
+                    + " ("
+                    + TriggerContract.ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + TriggerContract.ATTRIBUTION_DESTINATION
+                    + " TEXT, "
+                    + TriggerContract.DESTINATION_TYPE
+                    + " INTEGER, "
+                    + TriggerContract.ENROLLMENT_ID
+                    + " TEXT, "
+                    + TriggerContract.TRIGGER_TIME
+                    + " INTEGER, "
+                    + TriggerContract.EVENT_TRIGGERS
+                    + " TEXT, "
+                    + TriggerContract.STATUS
+                    + " INTEGER, "
+                    + TriggerContract.REGISTRANT
+                    + " TEXT, "
+                    + TriggerContract.AGGREGATE_TRIGGER_DATA
+                    + " TEXT, "
+                    + TriggerContract.AGGREGATE_VALUES
+                    + " TEXT, "
+                    + TriggerContract.AGGREGATABLE_DEDUPLICATION_KEYS
+                    + " TEXT, "
+                    + TriggerContract.FILTERS
+                    + " TEXT, "
+                    + TriggerContract.NOT_FILTERS
+                    + " TEXT, "
+                    + TriggerContract.DEBUG_KEY
+                    + " INTEGER, "
+                    + TriggerContract.DEBUG_REPORTING
+                    + " INTEGER, "
+                    + TriggerContract.AD_ID_PERMISSION
+                    + " INTEGER, "
+                    + TriggerContract.AR_DEBUG_PERMISSION
+                    + " INTEGER, "
+                    + TriggerContract.ATTRIBUTION_CONFIG
+                    + " TEXT, "
+                    + TriggerContract.X_NETWORK_KEY_MAPPING
+                    + " TEXT, "
+                    + TriggerContract.DEBUG_JOIN_KEY
+                    + " TEXT "
+                    + ")";
 
     public static final String CREATE_TABLE_EVENT_REPORT_V6 =
             "CREATE TABLE "

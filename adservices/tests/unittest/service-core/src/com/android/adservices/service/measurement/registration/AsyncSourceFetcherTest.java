@@ -2846,8 +2846,11 @@ public final class AsyncSourceFetcherTest {
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch = mFetcher.fetchSource(
-                webSourceRegistrationRequest(request, true), asyncFetchStatus, asyncRedirect);
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
         assertTrue(fetch.isPresent());
@@ -2893,8 +2896,11 @@ public final class AsyncSourceFetcherTest {
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch = mFetcher.fetchSource(
-                webSourceRegistrationRequest(request, false), asyncFetchStatus, asyncRedirect);
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, false),
+                        asyncFetchStatus,
+                        asyncRedirect);
         // Assertion
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
@@ -2943,8 +2949,11 @@ public final class AsyncSourceFetcherTest {
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch = mFetcher.fetchSource(
-                webSourceRegistrationRequest(request, true), asyncFetchStatus, asyncRedirect);
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.PARSING_ERROR, asyncFetchStatus.getStatus());
         assertFalse(fetch.isPresent());
@@ -2986,8 +2995,11 @@ public final class AsyncSourceFetcherTest {
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch = mFetcher.fetchSource(
-                webSourceRegistrationRequest(request, true), asyncFetchStatus, asyncRedirect);
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
         assertTrue(fetch.isPresent());
@@ -3043,8 +3055,11 @@ public final class AsyncSourceFetcherTest {
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch = mFetcher.fetchSource(
-                webSourceRegistrationRequest(request, true), asyncFetchStatus, asyncRedirect);
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
         assertTrue(fetch.isPresent());
@@ -3097,8 +3112,11 @@ public final class AsyncSourceFetcherTest {
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch = mFetcher.fetchSource(
-                webSourceRegistrationRequest(request, true), asyncFetchStatus, asyncRedirect);
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.PARSING_ERROR, asyncFetchStatus.getStatus());
         assertFalse(fetch.isPresent());
@@ -3142,8 +3160,11 @@ public final class AsyncSourceFetcherTest {
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch = mFetcher.fetchSource(
-                webSourceRegistrationRequest(request, true), asyncFetchStatus, asyncRedirect);
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.PARSING_ERROR, asyncFetchStatus.getStatus());
         assertFalse(fetch.isPresent());
@@ -3183,8 +3204,11 @@ public final class AsyncSourceFetcherTest {
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch = mFetcher.fetchSource(
-                webSourceRegistrationRequest(request, true), asyncFetchStatus, asyncRedirect);
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
 
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
@@ -3235,8 +3259,11 @@ public final class AsyncSourceFetcherTest {
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch = mFetcher.fetchSource(
-                webSourceRegistrationRequest(request, true), asyncFetchStatus, asyncRedirect);
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
 
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
@@ -3285,8 +3312,11 @@ public final class AsyncSourceFetcherTest {
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch = mFetcher.fetchSource(
-                webSourceRegistrationRequest(request, true), asyncFetchStatus, asyncRedirect);
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
         assertTrue(fetch.isPresent());
@@ -3327,8 +3357,11 @@ public final class AsyncSourceFetcherTest {
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch = mFetcher.fetchSource(
-                webSourceRegistrationRequest(request, true), asyncFetchStatus, asyncRedirect);
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.PARSING_ERROR, asyncFetchStatus.getStatus());
         assertFalse(fetch.isPresent());
@@ -3363,8 +3396,11 @@ public final class AsyncSourceFetcherTest {
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch = mFetcher.fetchSource(
-                webSourceRegistrationRequest(request, true), asyncFetchStatus, asyncRedirect);
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
         assertTrue(fetch.isPresent());
@@ -3411,8 +3447,11 @@ public final class AsyncSourceFetcherTest {
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch = mFetcher.fetchSource(
-                webSourceRegistrationRequest(request, true), asyncFetchStatus, asyncRedirect);
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.PARSING_ERROR, asyncFetchStatus.getStatus());
         assertFalse(fetch.isPresent());
@@ -3525,11 +3564,12 @@ public final class AsyncSourceFetcherTest {
     private static AsyncRegistration webSourceRegistrationRequest(
             WebSourceRegistrationRequest webSourceRegistrationRequest, boolean arDebugPermission) {
         return webSourceRegistrationRequest(
-            webSourceRegistrationRequest, arDebugPermission, Source.SourceType.NAVIGATION);
+                webSourceRegistrationRequest, arDebugPermission, Source.SourceType.NAVIGATION);
     }
 
     private static AsyncRegistration webSourceRegistrationRequest(
-            WebSourceRegistrationRequest webSourceRegistrationRequest, boolean arDebugPermission,
+            WebSourceRegistrationRequest webSourceRegistrationRequest,
+            boolean arDebugPermission,
             Source.SourceType sourceType) {
         if (webSourceRegistrationRequest.getSourceParams().size() > 0) {
             WebSourceParams webSourceParams = webSourceRegistrationRequest.getSourceParams().get(0);
