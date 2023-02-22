@@ -114,7 +114,7 @@ public class MigrationTestHelper {
         return true;
     }
 
-    public static boolean nearlyEqual(float a, float b, float epsilon) {
+    private static boolean nearlyEqual(float a, float b, float epsilon) {
         if (a == b) {
             return true;
         }

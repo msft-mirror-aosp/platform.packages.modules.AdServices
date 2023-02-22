@@ -1779,16 +1779,6 @@ public class AsyncRegistrationQueueRunnerTest {
     @Test
     public void testRegisterTrigger_atSystemHealthLimits_success() throws Exception {
         // Setup
-        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
-                spy(
-                        new AsyncRegistrationQueueRunner(
-                                mContentResolver,
-                                mAsyncSourceFetcher,
-                                mAsyncTriggerFetcher,
-                                mEnrollmentDao,
-                                new FakeDatastoreManager(),
-                                mDebugReportApi));
-
         when(mMeasurementDao.getNumTriggersPerDestination(APP_DESTINATION, EventSurfaceType.APP))
                 .thenReturn(MAX_TRIGGER_REGISTERS_PER_DESTINATION - 1L);
 

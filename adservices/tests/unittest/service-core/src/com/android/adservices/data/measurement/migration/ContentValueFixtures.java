@@ -97,6 +97,7 @@ public class ContentValueFixtures {
         public static final String REGISTRATION_ID = "registration_id";
         public static final String SHARED_AGGREGATION_KEY = "shared_aggregation_key";
         public static final long INSTALL_TIME = 8660000000L;
+        public static final String DEBUG_JOIN_KEY = "sample_debug_join_key";
     }
 
     public static class TriggerValues {
@@ -152,6 +153,7 @@ public class ContentValueFixtures {
         public static final String X_NETWORK_KEY_MAPPING = "x_network_key_mapping";
         public static final String AGGREGATABLE_DEDUPLICATION_KEYS =
                 "aggregatable_deduplication_keys";
+        public static final String DEBUG_JOIN_KEY = "sample_debug_join_key";
     }
 
     public static class AttributionValues {
@@ -327,6 +329,10 @@ public class ContentValueFixtures {
         return values;
     }
 
+    public static ContentValues generateAsyncRegistrationContentValuesV7() {
+        return generateAsyncRegistrationContentValuesV6();
+    }
+
     public static ContentValues generateSourceContentValuesV1() {
         ContentValues source = new ContentValues();
 
@@ -423,6 +429,12 @@ public class ContentValueFixtures {
         return generateSourceContentValuesV6();
     }
 
+    public static ContentValues generateSourceContentValuesV8() {
+        ContentValues values = generateSourceContentValuesV7();
+        values.put(MeasurementTables.SourceContract.DEBUG_JOIN_KEY, SourceValues.DEBUG_JOIN_KEY);
+        return values;
+    }
+
     public static ContentValues generateTriggerContentValuesV1() {
         ContentValues trigger = new ContentValues();
 
@@ -496,6 +508,12 @@ public class ContentValueFixtures {
 
     public static ContentValues generateTriggerContentValuesV7() {
         return generateTriggerContentValuesV6();
+    }
+
+    public static ContentValues generateTriggerContentValuesV8() {
+        ContentValues values = generateTriggerContentValuesV7();
+        values.put(MeasurementTables.TriggerContract.DEBUG_JOIN_KEY, TriggerValues.DEBUG_JOIN_KEY);
+        return values;
     }
 
     public static ContentValues generateAttributionContentValuesV1() {
