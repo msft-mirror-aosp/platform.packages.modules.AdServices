@@ -99,7 +99,7 @@ public class TriggerTest {
         values.put("geoValue", 1664);
         JSONObject adtechBitMapping = new JSONObject();
         adtechBitMapping.put("AdTechA-enrollment_id", "0x1");
-        String debugJoinKey = "debug-join-key";
+        String debugJoinKey = "SAMPLE_DEBUG_JOIN_KEY";
         assertEquals(
                 TriggerFixture.getValidTriggerBuilder()
                         .setEnrollmentId("enrollment-id")

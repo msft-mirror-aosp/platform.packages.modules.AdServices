@@ -142,6 +142,8 @@ public final class AsyncSourceFetcherTest {
     private static final String SHARED_AGGREGATION_KEYS =
             "[\"GoogleCampaignCounts\",\"GoogleGeo\"]";
 
+    private static final String DEBUG_JOIN_KEY = "SAMPLE_DEBUG_JOIN_KEY";
+
     AsyncSourceFetcher mFetcher;
 
     @Mock HttpsURLConnection mUrlConnection;
@@ -3125,6 +3127,60 @@ public final class AsyncSourceFetcherTest {
     }
 
     @Test
+    public void fetchWebSources_withDebugJoinKey_getsParsed() throws IOException {
+        // Setup
+        WebSourceRegistrationRequest request =
+                buildWebSourceRegistrationRequest(
+                        Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "\"destination\": \""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\n"
+                                                + "\"source_event_id\": \""
+                                                + EVENT_ID_1
+                                                + "\",\n"
+                                                + "  \"debug_key\": \""
+                                                + DEBUG_KEY
+                                                + "\",\n"
+                                                + "  \"debug_join_key\": \""
+                                                + DEBUG_JOIN_KEY
+                                                + "\"\n"
+                                                + "}\n")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertEquals(0, asyncRedirect.getRedirects().size());
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals(Uri.parse(DEFAULT_DESTINATION), result.getAppDestinations().get(0));
+        assertEquals(EVENT_ID_1, result.getEventId());
+        long expiry =
+                result.getEventTime()
+                        + TimeUnit.SECONDS.toMillis(
+                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+        assertEquals(expiry, result.getExpiryTime());
+        assertEquals(expiry, result.getEventReportWindow());
+        assertEquals(expiry, result.getAggregatableReportWindow());
+        assertEquals(DEBUG_JOIN_KEY, result.getDebugJoinKey());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
     public void fetchWebSources_webDestinationDoNotMatch_failsDropsSource() throws IOException {
         // Setup
         WebSourceRegistrationRequest request =
@@ -3148,10 +3204,13 @@ public final class AsyncSourceFetcherTest {
                                                 + "  \"expiry\": \"456789\",\n"
                                                 + "  \"source_event_id\": \"987654321\",\n"
                                                 + "  \"destination\":  "
-                                                + "\"" + OS_DESTINATION + "\""
+                                                + "\""
+                                                + OS_DESTINATION
+                                                + "\""
                                                 + ",\n"
                                                 + "  \"web_destination\": "
-                                                + "\"" + WebUtil.validUrl(
+                                                + "\""
+                                                + WebUtil.validUrl(
                                                         "https://wrong-web-destination.test")
                                                 + "\",\n"
                                                 + "  \"filter_data\": "
@@ -3496,6 +3555,59 @@ public final class AsyncSourceFetcherTest {
                                                 115)
                                         .setAdTechDomain(DEFAULT_REGISTRATION)
                                         .build()));
+    }
+
+    @Test
+    public void fetchSource_withDebugJoinKey_getsParsed() throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "  \"destination\": \""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\n"
+                                                + "  \"priority\": \""
+                                                + DEFAULT_PRIORITY
+                                                + "\",\n"
+                                                + "  \"expiry\": \""
+                                                + DEFAULT_EXPIRY
+                                                + "\",\n"
+                                                + "  \"source_event_id\": \""
+                                                + DEFAULT_EVENT_ID
+                                                + "\",\n"
+                                                + "  \"debug_key\": \""
+                                                + DEBUG_KEY
+                                                + "\","
+                                                + "\"debug_join_key\": "
+                                                + DEBUG_JOIN_KEY
+                                                + "}\n")));
+
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestinations().get(0).toString());
+        assertEquals(DEFAULT_PRIORITY, result.getPriority());
+        assertEquals(
+                result.getEventTime() + TimeUnit.SECONDS.toMillis(DEFAULT_EXPIRY_ROUNDED),
+                result.getExpiryTime());
+        assertEquals(DEFAULT_EVENT_ID, result.getEventId());
+        assertEquals(DEBUG_KEY, result.getDebugKey());
+        assertEquals(DEBUG_JOIN_KEY, result.getDebugJoinKey());
     }
 
     private RegistrationRequest buildRequest(String registrationUri) {

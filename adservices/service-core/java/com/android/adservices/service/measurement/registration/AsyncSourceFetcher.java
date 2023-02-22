@@ -225,6 +225,10 @@ public class AsyncSourceFetcher {
             }
         }
 
+        if (!json.isNull(SourceHeaderContract.DEBUG_JOIN_KEY)) {
+            result.setDebugJoinKey(json.optString(SourceHeaderContract.DEBUG_JOIN_KEY));
+        }
+
         if (shouldValidateDestinationWebSource
                 && appDestinationFromRequest != null // Only validate when non-null in request
                 && !appDestinationFromRequest.equals(appUri)) {
@@ -541,5 +545,6 @@ public class AsyncSourceFetcher {
         String AGGREGATION_KEYS = "aggregation_keys";
         String SHARED_AGGREGATION_KEYS = "shared_aggregation_keys";
         String DEBUG_REPORTING = "debug_reporting";
+        String DEBUG_JOIN_KEY = "debug_join_key";
     }
 }
