@@ -44,7 +44,7 @@ import java.util.concurrent.Executors;
 public class GetAdId {
     private static final String TAG = GetAdId.class.getSimpleName();
     private static final Context sContext = ApplicationProvider.getApplicationContext();
-    private static final AdIdManager sAdIdManager = sContext.getSystemService(AdIdManager.class);
+    private static final AdIdManager sAdIdManager = AdIdManager.get(sContext);
     private static final Executor sExecutor = Executors.newCachedThreadPool();
 
     @Before
