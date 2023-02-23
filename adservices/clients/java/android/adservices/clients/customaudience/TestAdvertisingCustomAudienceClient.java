@@ -22,6 +22,7 @@ import android.adservices.customaudience.RemoveCustomAudienceOverrideRequest;
 import android.adservices.customaudience.TestCustomAudienceManager;
 import android.annotation.NonNull;
 import android.content.Context;
+import android.os.Build;
 import android.os.OutcomeReceiver;
 
 import androidx.concurrent.futures.CallbackToFutureAdapter;
@@ -45,7 +46,10 @@ public class TestAdvertisingCustomAudienceClient {
         mContext = context;
         mExecutor = executor;
         mTestCustomAudienceManager =
-                CustomAudienceManager.get(context).getTestCustomAudienceManager();
+                (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                        ? mContext.getSystemService(CustomAudienceManager.class)
+                                .getTestCustomAudienceManager()
+                        : CustomAudienceManager.get(context).getTestCustomAudienceManager();
     }
 
     /**
