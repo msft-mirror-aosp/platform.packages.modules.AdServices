@@ -386,7 +386,7 @@ public class AdSelectionManager {
                             .setAdSelectionId(request.getAdSelectionId())
                             .setInteractionKey(request.getInteractionKey())
                             .setInteractionData(request.getInteractionData())
-                            .setDestinations(request.getDestinations())
+                            .setReportingDestinations(request.getReportingDestinations())
                             .setCallerPackageName(getCallerPackageName())
                             .build(),
                     new ReportInteractionCallback.Stub() {
