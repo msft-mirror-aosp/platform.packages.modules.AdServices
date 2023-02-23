@@ -111,6 +111,7 @@ public class AdServicesCommonServiceImplTest {
                 .when(() -> ConsentManager.getInstance(any(Context.class)));
 
         // Set device to EU
+        doReturn(Flags.UI_EEA_COUNTRIES).when(mFlags).getUiEeaCountries();
         doReturn("pl").when(mTelephonyManager).getSimCountryIso();
         doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
         doReturn(mPackageManager).when(mContext).getPackageManager();

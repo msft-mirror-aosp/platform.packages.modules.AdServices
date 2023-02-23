@@ -19,6 +19,11 @@ package com.android.adservices.service.consent;
 import android.annotation.NonNull;
 import android.content.Context;
 import android.telephony.TelephonyManager;
+import android.text.TextUtils;
+
+import com.android.adservices.LogUtil;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 
 import java.util.Locale;
 import java.util.Objects;
@@ -30,39 +35,6 @@ import java.util.Set;
  */
 public class DeviceRegionProvider {
     private static final String FEATURE_TELEPHONY = "android.hardware.telephony";
-    private static final Set<String> EU_ALPHA2_CODES =
-            Set.of(
-                    "AT", // Austria
-                    "BE", // Belgium
-                    "BG", // Bulgaria
-                    "HR", // Croatia
-                    "CY", // Republic of Cyprus
-                    "CZ", // Czech Republic
-                    "DK", // Denmark
-                    "EE", // Estonia
-                    "FI", // Finland
-                    "FR", // France
-                    "DE", // Germany
-                    "GR", // Greece
-                    "HU", // Hungary
-                    "IE", // Ireland
-                    "IT", // Italy
-                    "LV", // Latvia
-                    "LT", // Lithuania
-                    "LU", // Luxembourg
-                    "MT", // Malta
-                    "NL", // Netherlands
-                    "PL", // Poland
-                    "PT", // Portugal
-                    "RO", // Romania
-                    "SK", // Slovakia
-                    "SI", // Slovenia
-                    "ES", // Spain
-                    "SE", // Sweden
-                    "IS", // Iceland
-                    "LI", // Liechtenstein
-                    "NO" // Norway
-                    );
 
     /**
      * @return true if the device should be treated as EU device, otherwise false.
@@ -72,25 +44,94 @@ public class DeviceRegionProvider {
         Objects.requireNonNull(context);
         if (context.getPackageManager().hasSystemFeature(FEATURE_TELEPHONY)) {
             TelephonyManager telephonyManager = context.getSystemService(TelephonyManager.class);
-            // if there is no telephony manager accessible, we fallback to EU device
+            // if there is no telephony manager accessible, we fall back to EU device
             if (telephonyManager == null) return true;
 
-            String simCountryIso = telephonyManager.getSimCountryIso();
+            // we use PH to determine whether device is in the EEA region.
+            if (FlagsFactory.getFlags().isEeaDeviceFeatureEnabled()) {
+                return FlagsFactory.getFlags().isEeaDevice();
+            }
 
-            // if there is no sim card installed, we fallback to EU device
-            if (simCountryIso.isEmpty()) {
+            // and fall back to sim card locations if the feature is not yet enabled.
+            // if there is no sim card installed, we fall back to EU device
+            String deviceCountryIso = telephonyManager.getSimCountryIso();
+            if (deviceCountryIso.isEmpty()) {
                 return true;
             }
 
             // if simCountryIso detects the user's country as one of EEA countries
             // we treat this device as EU device, otherwise ROW device
-            if (EU_ALPHA2_CODES.contains(simCountryIso.toUpperCase(Locale.ENGLISH))) {
+            if (getUiEeaCountriesSet().contains(deviceCountryIso.toUpperCase(Locale.ENGLISH))) {
                 return true;
             }
 
             return false;
         }
-        // if there is no telephony feature, we fallback to EU device
+        // if there is no telephony feature, we fall back to EU device
         return true;
+    }
+
+    /**
+     * @return true if the device should be treated as EU device, otherwise false.
+     * @param context {@link Context} of the caller.
+     */
+    public static boolean isEuDevice(@NonNull Context context, @NonNull Flags flags) {
+        Objects.requireNonNull(context);
+        if (context.getPackageManager().hasSystemFeature(FEATURE_TELEPHONY)) {
+            TelephonyManager telephonyManager = context.getSystemService(TelephonyManager.class);
+            // if there is no telephony manager accessible, we fall back to EU device
+            if (telephonyManager == null) return true;
+
+            // we use PH to determine whether device is in the EEA region.
+            if (flags.isEeaDeviceFeatureEnabled()) {
+                return flags.isEeaDevice();
+            }
+
+            // and fall back to sim card locations if the feature is not yet enabled.
+            // if there is no sim card installed, we fall back to EU device
+            String deviceCountryIso = telephonyManager.getSimCountryIso();
+            if (deviceCountryIso.isEmpty()) {
+                return true;
+            }
+
+            // if simCountryIso detects the user's country as one of EEA countries
+            // we treat this device as EU device, otherwise ROW device
+            if (getUiEeaCountriesSet(flags)
+                    .contains(deviceCountryIso.toUpperCase(Locale.ENGLISH))) {
+                return true;
+            }
+
+            return false;
+        }
+        // if there is no telephony feature, we fall back to EU device
+        return true;
+    }
+
+    private static Set<String> getUiEeaCountriesSet(Flags flags) {
+        String uiEeaCountries = flags.getUiEeaCountries();
+        if (!isValidEeaCountriesString(uiEeaCountries)) {
+            LogUtil.e("Invalid EEA countries string.");
+            return Set.of();
+        } else {
+            return Set.of(uiEeaCountries.split(","));
+        }
+    }
+
+    private static Set<String> getUiEeaCountriesSet() {
+        String uiEeaCountries = FlagsFactory.getFlags().getUiEeaCountries();
+        if (!isValidEeaCountriesString(uiEeaCountries)) {
+            LogUtil.e("Invalid EEA countries string.");
+            return Set.of();
+        } else {
+            return Set.of(uiEeaCountries.split(","));
+        }
+    }
+
+    /** Checks whether an EEA countries string is valid. */
+    public static boolean isValidEeaCountriesString(String str) {
+        if (str == null || TextUtils.isEmpty(str)) {
+            return false;
+        }
+        return (str + ",").matches(String.format("^([A-Z]{2},){%d}$", (str.length() + 1) / 3));
     }
 }
