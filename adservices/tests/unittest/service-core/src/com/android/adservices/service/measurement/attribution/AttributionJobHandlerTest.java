@@ -1006,8 +1006,8 @@ public class AttributionJobHandlerTest {
                         .setAttributionDestination(trigger.getAttributionDestination())
                         .setDebugCleartextPayload(
                                 "{\"operation\":\"histogram\","
-                                    + "\"data\":[{\"bucket\":\"2693\",\"value\":1644},"
-                                    + "{\"bucket\":\"1369\",\"value\":32768}]}")
+                                    + "\"data\":[{\"bucket\":\"1369\",\"value\":32768},"
+                                    + "{\"bucket\":\"2693\",\"value\":1644}]}")
                         .setEnrollmentId(source.getEnrollmentId())
                         .setPublisher(source.getRegistrant())
                         .setSourceId(source.getId())
@@ -1017,12 +1017,12 @@ public class AttributionJobHandlerTest {
                                         .setContributions(
                                                 Arrays.asList(
                                                         new AggregateHistogramContribution.Builder()
-                                                                .setKey(new BigInteger("2693"))
-                                                                .setValue(1644)
-                                                                .build(),
-                                                        new AggregateHistogramContribution.Builder()
                                                                 .setKey(new BigInteger("1369"))
                                                                 .setValue(32768)
+                                                                .build(),
+                                                        new AggregateHistogramContribution.Builder()
+                                                                .setKey(new BigInteger("2693"))
+                                                                .setValue(1644)
                                                                 .build()))
                                         .build())
                         .build();
@@ -1089,8 +1089,8 @@ public class AttributionJobHandlerTest {
                         .setAttributionDestination(trigger.getAttributionDestination())
                         .setDebugCleartextPayload(
                                 "{\"operation\":\"histogram\","
-                                    + "\"data\":[{\"bucket\":\"2693\",\"value\":1644},"
-                                    + "{\"bucket\":\"1369\",\"value\":32768}]}")
+                                    + "\"data\":[{\"bucket\":\"1369\",\"value\":32768},"
+                                    + "{\"bucket\":\"2693\",\"value\":1644}]}")
                         .setEnrollmentId(source.getEnrollmentId())
                         .setPublisher(source.getRegistrant())
                         .setSourceId(source.getId())
@@ -1100,12 +1100,12 @@ public class AttributionJobHandlerTest {
                                         .setContributions(
                                                 Arrays.asList(
                                                         new AggregateHistogramContribution.Builder()
-                                                                .setKey(new BigInteger("2693"))
-                                                                .setValue(1644)
-                                                                .build(),
-                                                        new AggregateHistogramContribution.Builder()
                                                                 .setKey(new BigInteger("1369"))
                                                                 .setValue(32768)
+                                                                .build(),
+                                                        new AggregateHistogramContribution.Builder()
+                                                                .setKey(new BigInteger("2693"))
+                                                                .setValue(1644)
                                                                 .build()))
                                         .build())
                         .build();
