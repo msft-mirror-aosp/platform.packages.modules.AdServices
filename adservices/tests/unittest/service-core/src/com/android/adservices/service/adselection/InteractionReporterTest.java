@@ -111,8 +111,10 @@ public class InteractionReporterTest {
     private static final String BUYER_INTERACTION_REPORTING_PATH = "/buyer/interactionReporting/";
     private static final Uri RENDER_URI = Uri.parse("https://test.com/advert/");
 
-    private static final int BUYER_DESTINATION = ReportInteractionRequest.FLAG_DESTINATION_BUYER;
-    private static final int SELLER_DESTINATION = ReportInteractionRequest.FLAG_DESTINATION_SELLER;
+    private static final int BUYER_DESTINATION =
+            ReportInteractionRequest.FLAG_REPORTING_DESTINATION_BUYER;
+    private static final int SELLER_DESTINATION =
+            ReportInteractionRequest.FLAG_REPORTING_DESTINATION_SELLER;
     private static final String CLICK_EVENT = "click";
 
     private AdSelectionEntryDao mAdSelectionEntryDao;
@@ -204,7 +206,7 @@ public class InteractionReporterTest {
                 DBRegisteredAdInteraction.builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setInteractionKey(CLICK_EVENT)
-                        .setDestination(BUYER_DESTINATION)
+                        .setReportingDestination(BUYER_DESTINATION)
                         .setInteractionReportingUri(
                                 mMockWebServerRule.uriForPath(
                                         BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT))
@@ -214,7 +216,7 @@ public class InteractionReporterTest {
                 DBRegisteredAdInteraction.builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setInteractionKey(CLICK_EVENT)
-                        .setDestination(SELLER_DESTINATION)
+                        .setReportingDestination(SELLER_DESTINATION)
                         .setInteractionReportingUri(
                                 mMockWebServerRule.uriForPath(
                                         SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT))
@@ -248,7 +250,7 @@ public class InteractionReporterTest {
                         .setCallerPackageName(TEST_PACKAGE_NAME)
                         .setInteractionKey(CLICK_EVENT)
                         .setInteractionData(mInteractionData)
-                        .setDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
+                        .setReportingDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
                         .build();
 
         ReportInteractionTestCallback callback = callReportInteraction(inputParams);
@@ -300,7 +302,7 @@ public class InteractionReporterTest {
                         .setCallerPackageName(TEST_PACKAGE_NAME)
                         .setInteractionKey(CLICK_EVENT)
                         .setInteractionData(mInteractionData)
-                        .setDestinations(BUYER_DESTINATION)
+                        .setReportingDestinations(BUYER_DESTINATION)
                         .build();
 
         ReportInteractionTestCallback callback = callReportInteraction(inputParams);
@@ -348,7 +350,7 @@ public class InteractionReporterTest {
                         .setCallerPackageName(TEST_PACKAGE_NAME)
                         .setInteractionKey(CLICK_EVENT)
                         .setInteractionData(mInteractionData)
-                        .setDestinations(SELLER_DESTINATION)
+                        .setReportingDestinations(SELLER_DESTINATION)
                         .build();
 
         ReportInteractionTestCallback callback = callReportInteraction(inputParams);
@@ -424,7 +426,7 @@ public class InteractionReporterTest {
                         .setCallerPackageName(TEST_PACKAGE_NAME)
                         .setInteractionKey(CLICK_EVENT)
                         .setInteractionData(mInteractionData)
-                        .setDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
+                        .setReportingDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
                         .build();
 
         ReportInteractionTestCallback callback = callReportInteraction(inputParams);
@@ -497,7 +499,7 @@ public class InteractionReporterTest {
                         .setCallerPackageName(TEST_PACKAGE_NAME)
                         .setInteractionKey(CLICK_EVENT)
                         .setInteractionData(mInteractionData)
-                        .setDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
+                        .setReportingDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
                         .build();
 
         ReportInteractionTestCallback callback = callReportInteraction(inputParams);
@@ -544,7 +546,7 @@ public class InteractionReporterTest {
                         .setCallerPackageName(TEST_PACKAGE_NAME)
                         .setInteractionKey(CLICK_EVENT)
                         .setInteractionData(mInteractionData)
-                        .setDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
+                        .setReportingDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
                         .build();
 
         ReportInteractionTestCallback callback = callReportInteraction(inputParams);
@@ -596,7 +598,7 @@ public class InteractionReporterTest {
                         .setCallerPackageName(TEST_PACKAGE_NAME)
                         .setInteractionKey(CLICK_EVENT)
                         .setInteractionData(mInteractionData)
-                        .setDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
+                        .setReportingDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
                         .build();
 
         ReportInteractionTestCallback callback = callReportInteraction(inputParams);
@@ -645,7 +647,7 @@ public class InteractionReporterTest {
                         .setCallerPackageName(TEST_PACKAGE_NAME)
                         .setInteractionKey(CLICK_EVENT)
                         .setInteractionData(mInteractionData)
-                        .setDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
+                        .setReportingDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
                         .build();
 
         // First call should succeed
@@ -726,7 +728,7 @@ public class InteractionReporterTest {
                         .setCallerPackageName(TEST_PACKAGE_NAME)
                         .setInteractionKey(CLICK_EVENT)
                         .setInteractionData(mInteractionData)
-                        .setDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
+                        .setReportingDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
                         .build();
 
         ReportInteractionTestCallback callback = callReportInteraction(inputParams);
@@ -774,7 +776,7 @@ public class InteractionReporterTest {
                         .setCallerPackageName(TEST_PACKAGE_NAME)
                         .setInteractionKey(CLICK_EVENT)
                         .setInteractionData(mInteractionData)
-                        .setDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
+                        .setReportingDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
                         .build();
 
         ReportInteractionTestCallback callback = callReportInteraction(inputParams);
@@ -811,7 +813,7 @@ public class InteractionReporterTest {
                         .setCallerPackageName(TEST_PACKAGE_NAME)
                         .setInteractionKey(CLICK_EVENT)
                         .setInteractionData(mInteractionData)
-                        .setDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
+                        .setReportingDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
                         .build();
 
         ReportInteractionTestCallback callback = callReportInteraction(inputParams);
@@ -847,7 +849,7 @@ public class InteractionReporterTest {
                         .setCallerPackageName(TEST_PACKAGE_NAME)
                         .setInteractionKey(CLICK_EVENT)
                         .setInteractionData(mInteractionData)
-                        .setDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
+                        .setReportingDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
                         .build();
 
         ReportInteractionTestCallback callback = callReportInteraction(inputParams);

@@ -36,28 +36,29 @@ import java.util.Objects;
  */
 // TODO(b/261812140): Unhide for report interaction API review
 public class ReportInteractionRequest {
-    public static final int FLAG_DESTINATION_SELLER = 1 << 0;
-    public static final int FLAG_DESTINATION_BUYER = 1 << 1;
-    private static final int UNSET_DESTINATIONS = 0;
-    private static final String UNSET_DESTINATIONS_MESSAGE = "Destinations bitfield not set.";
+    public static final int FLAG_REPORTING_DESTINATION_SELLER = 1 << 0;
+    public static final int FLAG_REPORTING_DESTINATION_BUYER = 1 << 1;
+    private static final int UNSET_REPORTING_DESTINATIONS = 0;
+    private static final String UNSET_REPORTING_DESTINATIONS_MESSAGE =
+            "Reporting destinations bitfield not set.";
 
     private final long mAdSelectionId;
     @NonNull private final String mInteractionKey;
     @NonNull private final String mInteractionData;
-    private final int mDestinations; // buyer, seller, or both
+    private final int mReportingDestinations; // buyer, seller, or both
 
     private ReportInteractionRequest(
             long adSelectionId,
             @NonNull String interactionKey,
             @NonNull String interactionData,
-            int destinations) {
+            int reportingDestinations) {
         Objects.requireNonNull(interactionKey);
         Objects.requireNonNull(interactionData);
 
         this.mAdSelectionId = adSelectionId;
         this.mInteractionKey = interactionKey;
         this.mInteractionData = interactionData;
-        this.mDestinations = destinations;
+        this.mReportingDestinations = reportingDestinations;
     }
 
     /** Returns the adSelectionId, the primary identifier of an ad selection process. */
@@ -86,26 +87,28 @@ public class ReportInteractionRequest {
     }
 
     /**
-     * Returns the bitfield of destinations to report to (buyer, seller, or both).
+     * Returns the bitfield of reporting destinations to report to (buyer, seller, or both).
      *
      * <p>To create this bitfield, place an {@code |} bitwise operator between each {@link
-     * Destination} to be reported to. For example to only report to buyer, set the destinations
-     * field to {@link Destination#FLAG_DESTINATION_BUYER} To only report to seller, set the
-     * destinations field to {@link Destination#FLAG_DESTINATION_SELLER} To report to both buyers
-     * and sellers, set the destinations field to {@link Destination#FLAG_DESTINATION_BUYER} |
-     * {@link Destination#FLAG_DESTINATION_SELLER}
+     * ReportingDestination} to be reported to. For example to only report to buyer, set the
+     * reportingDestinations field to {@link ReportingDestination#FLAG_REPORTING_DESTINATION_BUYER}
+     * To only report to seller, set the reportingDestinations field to {@link
+     * ReportingDestination#FLAG_REPORTING_DESTINATION_SELLER} To report to both buyers and sellers,
+     * set the reportingDestinations field to {@link
+     * ReportingDestination#FLAG_REPORTING_DESTINATION_BUYER} | {@link
+     * ReportingDestination#FLAG_REPORTING_DESTINATION_SELLER}
      */
-    public int getDestinations() {
-        return mDestinations;
+    public int getReportingDestinations() {
+        return mReportingDestinations;
     }
 
     /** @hide */
     @IntDef(
             flag = true,
-            prefix = {"FLAG_"},
-            value = {FLAG_DESTINATION_SELLER, FLAG_DESTINATION_BUYER})
+            prefix = {"FLAG_REPORTING_DESTINATION"},
+            value = {FLAG_REPORTING_DESTINATION_SELLER, FLAG_REPORTING_DESTINATION_BUYER})
     @Retention(RetentionPolicy.SOURCE)
-    public @interface Destination {}
+    public @interface ReportingDestination {}
 
     /**
      * Builder for {@link ReportInteractionRequest} objects.
@@ -117,7 +120,7 @@ public class ReportInteractionRequest {
         private long mAdSelectionId = UNSET_AD_SELECTION_ID;
         @Nullable private String mInteractionKey;
         @Nullable private String mInteractionData;
-        private int mDestinations = UNSET_DESTINATIONS;
+        private int mReportingDestinations = UNSET_REPORTING_DESTINATIONS;
 
         public Builder() {}
 
@@ -163,16 +166,18 @@ public class ReportInteractionRequest {
         }
 
         /**
-         * Sets the bitfield of destinations.
+         * Sets the bitfield of reporting destinations.
          *
-         * <p>See {@link ReportInteractionRequest#getDestinations()} for more details.
+         * <p>See {@link ReportInteractionRequest#getReportingDestinations()} for more details.
          */
         @NonNull
-        public ReportInteractionRequest.Builder setDestinations(int destinations) {
+        public ReportInteractionRequest.Builder setReportingDestinations(
+                int reportingDestinations) {
             Preconditions.checkArgument(
-                    destinations != UNSET_DESTINATIONS, UNSET_DESTINATIONS_MESSAGE);
+                    reportingDestinations != UNSET_REPORTING_DESTINATIONS,
+                    UNSET_REPORTING_DESTINATIONS_MESSAGE);
 
-            mDestinations = destinations;
+            mReportingDestinations = reportingDestinations;
             return this;
         }
 
@@ -185,10 +190,11 @@ public class ReportInteractionRequest {
             Preconditions.checkArgument(
                     mAdSelectionId != UNSET_AD_SELECTION_ID, UNSET_AD_SELECTION_ID_MESSAGE);
             Preconditions.checkArgument(
-                    mDestinations != UNSET_DESTINATIONS, UNSET_DESTINATIONS_MESSAGE);
+                    mReportingDestinations != UNSET_REPORTING_DESTINATIONS,
+                    UNSET_REPORTING_DESTINATIONS_MESSAGE);
 
             return new ReportInteractionRequest(
-                    mAdSelectionId, mInteractionKey, mInteractionData, mDestinations);
+                    mAdSelectionId, mInteractionKey, mInteractionData, mReportingDestinations);
         }
     }
 }

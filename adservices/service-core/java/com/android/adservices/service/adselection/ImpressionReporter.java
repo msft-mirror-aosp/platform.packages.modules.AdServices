@@ -16,8 +16,8 @@
 
 package com.android.adservices.service.adselection;
 
-import static android.adservices.adselection.ReportInteractionRequest.FLAG_DESTINATION_BUYER;
-import static android.adservices.adselection.ReportInteractionRequest.FLAG_DESTINATION_SELLER;
+import static android.adservices.adselection.ReportInteractionRequest.FLAG_REPORTING_DESTINATION_BUYER;
+import static android.adservices.adselection.ReportInteractionRequest.FLAG_REPORTING_DESTINATION_SELLER;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
 
@@ -591,7 +591,7 @@ public class ImpressionReporter {
                                     sellerReportingResult.getInteractionReportingUris(),
                                     sellerValidator,
                                     ctx.mDBAdSelectionEntry.getAdSelectionId(),
-                                    FLAG_DESTINATION_SELLER);
+                                    FLAG_REPORTING_DESTINATION_SELLER);
                             return Pair.create(sellerReportingResult, ctx);
                         }));
     }
@@ -627,7 +627,7 @@ public class ImpressionReporter {
                                             .getInteractionReportingUris(),
                                     buyerValidator,
                                     ctx.mDBAdSelectionEntry.getAdSelectionId(),
-                                    FLAG_DESTINATION_BUYER);
+                                    FLAG_REPORTING_DESTINATION_BUYER);
                             return Pair.create(
                                     new ReportingUris(
                                             reportingResults.mBuyerReportingResult
@@ -648,7 +648,7 @@ public class ImpressionReporter {
             @NonNull List<InteractionUriRegistrationInfo> interactionUriRegistrationInfos,
             @NonNull AdTechUriValidator validator,
             long adSelectionId,
-            @ReportInteractionRequest.Destination int destination) {
+            @ReportInteractionRequest.ReportingDestination int destination) {
         long numSellerEventUriEntries = 0;
         long maxRegisteredAdEventsPerAdTech = mFlags.getReportImpressionMaxEventUriEntriesCount();
 
@@ -669,7 +669,7 @@ public class ImpressionReporter {
                                 .setAdSelectionId(adSelectionId)
                                 .setInteractionKey(uriRegistrationInfo.getInteractionKey())
                                 .setInteractionReportingUri(uriToValidate)
-                                .setDestination(destination)
+                                .setReportingDestination(destination)
                                 .build();
                 adEventsToRegister.add(dbRegisteredAdInteraction);
                 numSellerEventUriEntries++;
