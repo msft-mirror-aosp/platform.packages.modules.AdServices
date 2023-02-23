@@ -30,10 +30,10 @@ import org.mockito.stubbing.Answer;
  */
 public final class E2EMockStatic implements StaticMockFixture {
 
-    private final E2ETest.PrivacyParamsProvider mPrivacyParams;
+    private final E2ETest.ParamsProvider mParams;
 
-    public E2EMockStatic(E2ETest.PrivacyParamsProvider privacyParamsProvider) {
-        mPrivacyParams = privacyParamsProvider;
+    public E2EMockStatic(E2ETest.ParamsProvider paramsProvider) {
+        mParams = paramsProvider;
     }
     /**
      * {@inheritDoc}
@@ -42,6 +42,7 @@ public final class E2EMockStatic implements StaticMockFixture {
     public StaticMockitoSessionBuilder setUpMockedClasses(
             StaticMockitoSessionBuilder sessionBuilder) {
         sessionBuilder.spyStatic(PrivacyParams.class);
+        sessionBuilder.spyStatic(SystemHealthParams.class);
         return sessionBuilder;
     }
 
@@ -50,24 +51,35 @@ public final class E2EMockStatic implements StaticMockFixture {
      */
     @Override
     public void setUpMockBehaviors() {
+        // Privacy params
         doAnswer((Answer<Integer>) invocation ->
-                mPrivacyParams.getMaxAttributionPerRateLimitWindow())
+                mParams.getMaxAttributionPerRateLimitWindow())
                     .when(() -> PrivacyParams.getMaxAttributionPerRateLimitWindow());
         doAnswer((Answer<Integer>) invocation ->
-                mPrivacyParams.getNavigationTriggerDataCardinality())
+                mParams.getNavigationTriggerDataCardinality())
                     .when(() -> PrivacyParams.getNavigationTriggerDataCardinality());
         doAnswer((Answer<Integer>) invocation ->
-                mPrivacyParams.getMaxDistinctEnrollmentsPerPublisherXDestinationInAttribution())
+                mParams.getMaxDistinctEnrollmentsPerPublisherXDestinationInAttribution())
                     .when(() -> PrivacyParams
                             .getMaxDistinctEnrollmentsPerPublisherXDestinationInAttribution());
         doAnswer((Answer<Integer>) invocation ->
-                mPrivacyParams.getMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource())
+                mParams.getMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource())
                     .when(() -> PrivacyParams
                             .getMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource());
         doAnswer((Answer<Integer>) invocation ->
-                mPrivacyParams.getMaxDistinctEnrollmentsPerPublisherXDestinationInSource())
+                mParams.getMaxDistinctEnrollmentsPerPublisherXDestinationInSource())
                     .when(() -> PrivacyParams
                             .getMaxDistinctEnrollmentsPerPublisherXDestinationInSource());
+        // System health params
+        doAnswer((Answer<Integer>) invocation ->
+                mParams.getMaxSourcesPerPublisher())
+                    .when(() -> SystemHealthParams.getMaxSourcesPerPublisher());
+        doAnswer((Answer<Integer>) invocation ->
+                mParams.getMaxEventReportsPerDestination())
+                    .when(() -> SystemHealthParams.getMaxEventReportsPerDestination());
+        doAnswer((Answer<Integer>) invocation ->
+                mParams.getMaxAggregateReportsPerDestination())
+                    .when(() -> SystemHealthParams.getMaxAggregateReportsPerDestination());
     }
 
     /**
@@ -77,8 +89,8 @@ public final class E2EMockStatic implements StaticMockFixture {
     public void tearDown() { }
 
     public static class E2EMockStaticRule extends StaticMockFixtureRule {
-        public E2EMockStaticRule(E2ETest.PrivacyParamsProvider privacyParamsProvider) {
-            super(TestableDeviceConfig::new, () -> new E2EMockStatic(privacyParamsProvider));
+        public E2EMockStaticRule(E2ETest.ParamsProvider paramsProvider) {
+            super(TestableDeviceConfig::new, () -> new E2EMockStatic(paramsProvider));
         }
     }
 }

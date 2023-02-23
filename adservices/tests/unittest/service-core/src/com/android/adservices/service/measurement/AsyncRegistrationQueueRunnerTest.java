@@ -1560,7 +1560,7 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mDebugReportApi));
 
         // Execution
-        doReturn(SystemHealthParams.MAX_SOURCES_PER_PUBLISHER)
+        doReturn((long) SystemHealthParams.getMaxSourcesPerPublisher())
                 .when(mMeasurementDao)
                 .getNumSourcesPerPublisher(any(), anyInt());
         boolean status =
@@ -1704,7 +1704,7 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mEnrollmentDao,
                                 new FakeDatastoreManager(),
                                 mDebugReportApi));
-        doReturn(SystemHealthParams.MAX_SOURCES_PER_PUBLISHER)
+        doReturn((long) SystemHealthParams.getMaxSourcesPerPublisher())
                 .when(mMeasurementDao)
                 .getNumSourcesPerPublisher(any(), anyInt());
 
@@ -1735,7 +1735,7 @@ public class AsyncRegistrationQueueRunnerTest {
                                 new FakeDatastoreManager(),
                                 mDebugReportApi));
 
-        doReturn(SystemHealthParams.MAX_SOURCES_PER_PUBLISHER)
+        doReturn((long) SystemHealthParams.getMaxSourcesPerPublisher())
                 .when(mMeasurementDao)
                 .getNumSourcesPerPublisher(any(), anyInt());
 

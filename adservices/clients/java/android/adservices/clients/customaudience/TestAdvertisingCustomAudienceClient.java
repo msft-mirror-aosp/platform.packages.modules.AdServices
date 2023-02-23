@@ -45,8 +45,7 @@ public class TestAdvertisingCustomAudienceClient {
         mContext = context;
         mExecutor = executor;
         mTestCustomAudienceManager =
-                mContext.getSystemService(CustomAudienceManager.class)
-                        .getTestCustomAudienceManager();
+                CustomAudienceManager.get(context).getTestCustomAudienceManager();
     }
 
     /**
