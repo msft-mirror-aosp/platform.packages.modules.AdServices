@@ -1406,13 +1406,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         DEFAULT_VALUE_DISABLE_SDK_SANDBOX);
 
         @GuardedBy("mLock")
-        private boolean mCustomizedSdkContextEnabled =
-                DeviceConfig.getBoolean(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        PROPERTY_CUSTOMIZED_SDK_CONTEXT_ENABLED,
-                        DEFAULT_VALUE_CUSTOMIZED_SDK_CONTEXT_ENABLED);
-
-        @GuardedBy("mLock")
         private boolean mEnforceBroadcastReceiverRestrictions =
                 DeviceConfig.getBoolean(
                         DeviceConfig.NAMESPACE_ADSERVICES,
@@ -1461,9 +1454,14 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
         boolean isCustomizedSdkContextEnabled() {
-            synchronized (mLock) {
-                return mCustomizedSdkContextEnabled;
+            // Can only be enabled on U+ devices
+            if (!SdkLevel.isAtLeastU()) {
+                return false;
             }
+            return DeviceConfig.getBoolean(
+                    DeviceConfig.NAMESPACE_ADSERVICES,
+                    PROPERTY_CUSTOMIZED_SDK_CONTEXT_ENABLED,
+                    DEFAULT_VALUE_CUSTOMIZED_SDK_CONTEXT_ENABLED);
         }
 
         boolean isBroadcastReceiverRestrictionsEnforced() {
@@ -1502,12 +1500,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                                     stopAllSandboxesLocked();
                                 }
                             }
-                            break;
-                        case PROPERTY_CUSTOMIZED_SDK_CONTEXT_ENABLED:
-                            mCustomizedSdkContextEnabled =
-                                    properties.getBoolean(
-                                            PROPERTY_CUSTOMIZED_SDK_CONTEXT_ENABLED,
-                                            DEFAULT_VALUE_CUSTOMIZED_SDK_CONTEXT_ENABLED);
                             break;
                         case PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS:
                             mEnforceBroadcastReceiverRestrictions =
