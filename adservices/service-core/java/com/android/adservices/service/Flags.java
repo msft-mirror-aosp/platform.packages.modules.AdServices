@@ -1581,6 +1581,22 @@ public interface Flags {
         return UI_DIALOGS_FEATURE_ENABLED;
     }
 
+    /** The EEA device region feature is off by default. */
+    boolean IS_EEA_DEVICE_FEATURE_ENABLED = false;
+
+    /** Returns if the EEA device region feature has been enabled. */
+    default boolean isEeaDeviceFeatureEnabled() {
+        return IS_EEA_DEVICE_FEATURE_ENABLED;
+    }
+
+    /** Default is that the device is in the EEA region. */
+    boolean IS_EEA_DEVICE = true;
+
+    /** Returns if device is in the EEA region. */
+    default boolean isEeaDevice() {
+        return IS_EEA_DEVICE;
+    }
+
     String UI_EEA_COUNTRIES =
             "AT," // Austria
                     + "BE," // Belgium
