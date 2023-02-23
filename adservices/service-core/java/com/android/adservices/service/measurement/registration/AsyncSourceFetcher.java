@@ -23,7 +23,10 @@ import static com.android.adservices.service.measurement.PrivacyParams.MIN_POST_
 import static com.android.adservices.service.measurement.PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATE_KEYS_PER_REGISTRATION;
 import static com.android.adservices.service.measurement.util.BaseUriExtractor.getBaseUri;
+import static com.android.adservices.service.measurement.util.MathUtils.extractValidNumberInRange;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__SOURCE;
+
+import static java.lang.Math.min;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
@@ -47,6 +50,7 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -69,6 +73,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class AsyncSourceFetcher {
 
+    private static final long ONE_DAY_IN_SECONDS = TimeUnit.DAYS.toSeconds(1);
     private final String mDefaultAndroidAppScheme = "android-app";
     private final String mDefaultAndroidAppUriPrefix = mDefaultAndroidAppScheme + "://";
     private final MeasurementHttpClient mNetworkConnection = new MeasurementHttpClient();
@@ -92,6 +97,7 @@ public class AsyncSourceFetcher {
 
     private boolean parseCommonSourceParams(
             @NonNull JSONObject json,
+            @NonNull Source.SourceType sourceType,
             @Nullable Uri appDestinationFromRequest,
             @Nullable Uri webDestinationFromRequest,
             long sourceEventTime,
@@ -123,6 +129,9 @@ public class AsyncSourceFetcher {
                             json.getLong(SourceHeaderContract.EXPIRY),
                             MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
                             MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+            if (sourceType == Source.SourceType.EVENT) {
+                expiry = roundSecondsToWholeDays(expiry);
+            }
         } else {
             expiry = MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
         }
@@ -143,7 +152,7 @@ public class AsyncSourceFetcher {
         long aggregateReportWindow;
         if (!json.isNull(SourceHeaderContract.AGGREGATABLE_REPORT_WINDOW)) {
             aggregateReportWindow =
-                    Math.min(
+                    min(
                             expiry,
                             extractValidNumberInRange(
                                     json.getLong(SourceHeaderContract.AGGREGATABLE_REPORT_WINDOW),
@@ -224,7 +233,7 @@ public class AsyncSourceFetcher {
         }
 
         if (appUri != null) {
-            result.setAppDestination(getBaseUri(appUri));
+            result.setAppDestinations(List.of(getBaseUri(appUri)));
         }
 
         if (shouldValidateDestinationWebSource
@@ -241,12 +250,12 @@ public class AsyncSourceFetcher {
                 LogUtil.d("Unable to extract top private domain and scheme from web destination.");
                 return false;
             } else {
-                result.setWebDestination(topPrivateDomainAndScheme.get());
+                result.setWebDestinations(List.of(topPrivateDomainAndScheme.get()));
             }
         }
-        if (shouldOverrideDestinationAppSource && !isWebSource) {
-            result.setAppDestination(appDestinationFromRequest);
-            result.setWebDestination(webDestinationFromRequest);
+        if (shouldOverrideDestinationAppSource && !isWebSource
+                && appDestinationFromRequest != null) {
+            result.setAppDestinations(List.of(appDestinationFromRequest));
         }
         return true;
     }
@@ -254,13 +263,14 @@ public class AsyncSourceFetcher {
     /** Parse a {@code Source}, given response headers, adding the {@code Source} to a given list */
     @VisibleForTesting
     public boolean parseSource(
+            @NonNull String registrationId,
             @NonNull Uri publisher,
             @NonNull String enrollmentId,
             @Nullable Uri appDestination,
             @Nullable Uri webDestination,
             @Nullable Uri registrant,
             long eventTime,
-            @Nullable Source.SourceType sourceType,
+            @NonNull Source.SourceType sourceType,
             boolean shouldValidateDestinationWebSource,
             boolean shouldOverrideDestinationAppSource,
             @NonNull Map<String, List<String>> headers,
@@ -269,6 +279,7 @@ public class AsyncSourceFetcher {
             boolean adIdPermission,
             boolean arDebugPermission) {
         Source.Builder result = new Source.Builder();
+        result.setRegistrationId(registrationId);
         result.setPublisher(publisher);
         result.setEnrollmentId(enrollmentId);
         result.setRegistrant(registrant);
@@ -291,6 +302,7 @@ public class AsyncSourceFetcher {
             boolean isValid =
                     parseCommonSourceParams(
                             json,
+                            sourceType,
                             appDestination,
                             webDestination,
                             eventTime,
@@ -307,6 +319,13 @@ public class AsyncSourceFetcher {
                     return false;
                 }
                 result.setAggregateSource(json.getString(SourceHeaderContract.AGGREGATION_KEYS));
+            }
+            if (mFlags.getMeasurementEnableXNA()
+                    && !json.isNull(SourceHeaderContract.SHARED_AGGREGATION_KEYS)) {
+                // Parsed as JSONArray for validation
+                JSONArray sharedAggregationKeys =
+                        json.getJSONArray(SourceHeaderContract.SHARED_AGGREGATION_KEYS);
+                result.setSharedAggregationKeys(sharedAggregationKeys.toString());
             }
             sources.add(result.build());
             return true;
@@ -333,15 +352,6 @@ public class AsyncSourceFetcher {
                 && Objects.equals(expectedValue, Uri.parse(json.getString(fieldName)));
     }
 
-    private static long extractValidNumberInRange(long value, long lowerLimit, long upperLimit) {
-        if (value < lowerLimit) {
-            return lowerLimit;
-        } else if (value > upperLimit) {
-            return upperLimit;
-        }
-        return value;
-    }
-
     /** Provided a testing hook. */
     @NonNull
     @VisibleForTesting
@@ -361,6 +371,7 @@ public class AsyncSourceFetcher {
             AsyncRedirect asyncRedirect) {
         List<Source> out = new ArrayList<>();
         fetchSource(
+                asyncRegistration.getId(),
                 asyncRegistration.getTopOrigin(),
                 asyncRegistration.getRegistrationUri(),
                 asyncRegistration.getOsDestination(),
@@ -386,6 +397,7 @@ public class AsyncSourceFetcher {
     }
 
     private void fetchSource(
+            @NonNull String registrationId,
             @NonNull Uri publisher,
             @NonNull Uri registrationUri,
             @Nullable Uri appDestination,
@@ -452,6 +464,7 @@ public class AsyncSourceFetcher {
             asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
             final boolean parsed =
                     parseSource(
+                            registrationId,
                             publisher,
                             enrollmentId.get(),
                             appDestination,
@@ -507,6 +520,12 @@ public class AsyncSourceFetcher {
         return true;
     }
 
+    private static long roundSecondsToWholeDays(long seconds) {
+        long remainder = seconds % ONE_DAY_IN_SECONDS;
+        boolean roundUp = remainder >= ONE_DAY_IN_SECONDS / 2L;
+        return seconds - remainder + (roundUp ? ONE_DAY_IN_SECONDS : 0);
+    }
+
     private interface SourceHeaderContract {
         String SOURCE_EVENT_ID = "source_event_id";
         String DEBUG_KEY = "debug_key";
@@ -520,6 +539,7 @@ public class AsyncSourceFetcher {
         String FILTER_DATA = "filter_data";
         String WEB_DESTINATION = "web_destination";
         String AGGREGATION_KEYS = "aggregation_keys";
+        String SHARED_AGGREGATION_KEYS = "shared_aggregation_keys";
         String DEBUG_REPORTING = "debug_reporting";
     }
 }

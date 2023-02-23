@@ -27,6 +27,7 @@ import android.annotation.RequiresPermission;
 import android.annotation.TestApi;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
+import android.os.Build;
 import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
@@ -66,6 +67,20 @@ public final class TopicsManager {
 
     private Context mContext;
     private ServiceBinder<ITopicsService> mServiceBinder;
+
+    /**
+     * Factory method for creating an instance of TopicsManager.
+     *
+     * @param context The {@link Context} to use
+     * @return A {@link TopicsManager} instance
+     */
+    @NonNull
+    public static TopicsManager get(@NonNull Context context) {
+        // On T+, context.getSystemService() does more than just call constructor.
+        return (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                ? context.getSystemService(TopicsManager.class)
+                : new TopicsManager(context);
+    }
 
     /**
      * Create TopicsManager

@@ -16,8 +16,8 @@ import xml.etree.ElementTree as ET
 import datetime
 import os
 
-class AdServicesUiUtil:
 
+class AdServicesUiUtil:
     PUBLIC_XML_DIR = '../apk/publicres/values/public.xml'
     STRINGS_XML_DIR = '../apk/res/values/strings.xml'
     COPYRIGHT_TEXT = f'''<?xml version="1.0" encoding="utf-8"?>
@@ -40,8 +40,8 @@ class AdServicesUiUtil:
     def __init__(self):
         pass
 
-    def _get_max_id(self, existing_mapping):
-        return int(max(existing_mapping.values()), 0)
+    def _get_min_id(self, existing_mapping):
+        return int(min(existing_mapping.values()), 0)
 
     def _get_existing_tree(self, dir):
         if not os.path.exists(dir):
@@ -49,7 +49,7 @@ class AdServicesUiUtil:
         else:
             root = ET.parse(dir).getroot()
             return root, {
-                node.attrib['name']:node.attrib['id']
+                node.attrib['name']: node.attrib['id']
                 for node in root
             }
 
@@ -66,25 +66,26 @@ class AdServicesUiUtil:
         if not os.path.exists(strings_xml_dir):
             return
 
-        new_strings= set(node.attrib['name'] for node in ET.parse(strings_xml_dir).getroot())
+        new_strings = set(node.attrib['name'] for node in ET.parse(strings_xml_dir).getroot())
         root, mapping = self._get_existing_tree(public_xml_dir)
 
         added_strings = set(string for string in new_strings if string not in mapping)
-        #TO-DO: add code to remove exsting elements when needed.
+        # TO-DO: add code to remove exsting elements when needed.
         deleted_strings = set(string for string in mapping if string not in new_strings)
 
         if not added_strings:
             return
 
-        i_max = self._get_max_id(mapping)
+        i_min = self._get_min_id(mapping)
         for string in added_strings:
-            i_max += 1
+            i_min -= 1
             added_element = ET.SubElement(root, 'public')
             added_element.set('type', 'string')
             added_element.set('name', string)
-            added_element.set('id', hex(i_max))
+            added_element.set('id', hex(i_min))
 
         self._overwrite_public_xml(root, public_xml_dir)
+
 
 if __name__ == '__main__':
     util = AdServicesUiUtil()

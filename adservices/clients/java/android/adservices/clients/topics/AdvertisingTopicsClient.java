@@ -48,7 +48,7 @@ public class AdvertisingTopicsClient {
         mSdkName = sdkName;
         mRecordObservation = recordObservation;
         mExecutor = executor;
-        mTopicsManager = mContext.getSystemService(TopicsManager.class);
+        mTopicsManager = TopicsManager.get(context);
     }
 
     /** Gets the SdkName. */

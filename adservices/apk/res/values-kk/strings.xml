@@ -41,10 +41,10 @@
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"AdServicesManager-дің API-ларын пайдалану"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Қолданбаға AdServicesManager-дің API-ларын пайдалануға рұқсат береді."</string>
     <string name="app_label" msgid="5985320129629013968">"Android жүйесі"</string>
-    <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Android-тың жарнама құпиялығына (бета нұсқасы) арналған бағдарламасына қосылыңыз"</string>
+    <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Android жарнамасындағы құпиялық (бета нұсқасы) бағдарламасына қосылыңыз"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android қолданбалардың жарнаманы барынша жеке көрсету жолдарын зерттеп жатыр."</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Толық ақпарат"</string>
-    <string name="notificationUI_header_title_eu" msgid="4955298263079910371">"Android-тың жарнама құпиялығы (бета нұсқасы)"</string>
+    <string name="notificationUI_header_title_eu" msgid="4955298263079910371">"Android жарнамасындағы құпиялық (бета нұсқасы)"</string>
     <string name="notificationUI_container1_title_eu" msgid="8315199862119660570">"Жаңалықтар"</string>
     <string name="notificationUI_container1_body_text_eu" msgid="1700290522706948241">"Privacy Sandbox-тағы жаңа құпиялық функциялары сізге қолданбалардың сәйкес жарнамаларды көрсетуіне мүмкіндік береді. Алайда басқа әзірлеушілердің веб-сайттары мен қолданбаларында жасаған әрекеттеріңіз туралы деректер алу мүмкіндігін шектейді."</string>
     <string name="notificationUI_container1_control_text_eu" msgid="3158258148321255153">"Бұл қалай жұмыс істейді?"</string>
@@ -69,59 +69,59 @@
     <string name="notificationUI_how_it_works_expanded_text4" msgid="3910573920883580609">"Android мерзімді түрде сіз пайдаланатын \"Спорт\" немесе \"Саяхат\" сияқты қолданбаларға қарай негізгі қызығушылықтарыңызды бағалайды.\n\nСодан кейін қолданбалар сізге көбірек сәйкес келетін жарнамалар көрсету үшін Android жүйесінен сол қызығушылықтарды пайдалануға рұқсат сұрауы мүмкін.\n\nҚазіргі қызығушылықтар тізімін құпиялық параметрлерінен көріп, ұнамайтынын бөгей аласыз."</string>
     <string name="notificationUI_how_it_works_expanded_text5" msgid="7257714040472055781">"•  Қолданбалар бағалаған қызығушылықтар"</string>
     <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"Қолданбалар қызығушылықтарыңызды бағалап, оларды уақытша Android-та сақтай алады. Мысалы, сіз кроссовка сатып алу үшін пайдаланатын қолданба қызығушылығыңызды \"марафондарда жүгіру\" деп бағалауы мүмкін.\n\nСодан кейін осы қызығушылыққа қарай басқа қолданба сізге марафондарға қатысты жарнама көрсете алады.\n\nҚұпиялық параметрлерінде қызығушылықтарды сақтаған қолданбалар тізімін басқара аласыз."</string>
-    <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"Жаңа жарнама құпиялығы функциялары"</string>
+    <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"Жарнамадағы құпиялықтың жаңа функциялары"</string>
     <string name="notificationUI_notification_ga_content" msgid="3483979694272908942">"Жарнама тақырыптары және жаңа басқару элементтері көрсетілетін жарнамаларды таңдауға мүмкіндік береді."</string>
-    <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"Android сіз жақында пайдаланған қолданбаларға негізделген қызықты тақырыптарды көрсетеді. Пайдаланатын қолданбаларыңыз сізге ненің ұнайтынын да анықтай алады. Содан кейін қолданбалар осы ақпаратты жекелендірілген жарнамалар көрсету үшін сұрай алады. Сізге жарнамалар көрсетуге қандай тақырыптар мен қолданбалардың пайдаланылатынын таңдай аласыз."</string>
-    <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"Жарнаманың өнімділігін анықтау үшін қолданбалар шектеулі дерек түрлерін өзара бөліседі."</string>
+    <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"Android сіз жақында пайдаланған қолданбалар бойынша қызықты тақырыптарды көрсетеді. Пайдаланатын қолданбаларыңыз да сізге ұнайтын нәрсені анықтай алады. Содан кейін қолданбалар осы ақпаратты сұрап, сізге жекелендірілген жарнамаларды көрсетуі мүмкін. Жарнамалар көрсетуге пайдаланылатын тақырыптар мен қолданбаларды таңдай аласыз."</string>
+    <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"Жарнаманың өнімділігін өлшеу үшін шектеулі дерек түрлері қолданбаларға беріледі."</string>
     <string name="notificationUI_ga_container1_control_text" msgid="2711321174550177509">"Android-тағы жарнамалар туралы толық ақпарат"</string>
     <string name="notificationUI_how_it_works_row_subtitle1" msgid="8685034725335826096">"Пайдасы көбірек жарнамалар"</string>
-    <string name="notificationUI_how_it_works_row_body1" msgid="5865369599951938718">"Көрсетілетін жарнамаларды жекелендіруге көмектесу үшін қолданбалар Android-тан ақпарат сұрай алады."</string>
-    <string name="notificationUI_how_it_works_row_body2" msgid="6601773212442110369">"•  Android сіз жақында пайдаланған қолданбаларға негізделген қызықты тақырыптарды көрсетеді."</string>
-    <string name="notificationUI_how_it_works_row_body3" msgid="3692457397642529055">"•  Қолданбаларды қалай пайдаланатыныңызға байланысты олар сізге не ұнайтынын анықтай алады. Мысалы, ұзақ қашықтыққа жүгіруге арналған аяқ киім сататын қолданбаны пайдалансаңыз, қолданба сіз марафондарға қызығады деп ұйғаруы мүмкін."</string>
-    <string name="notificationUI_how_it_works_row_body4" msgid="8731138074016839243">"Кейін сіз пайдаланатын қолданба тиісті қолданбалар ұсынған жарнамаларды не жарнама тақырыптарын сұрауы мүмкін."</string>
-    <string name="notificationUI_how_it_works_row_body5" msgid="4524382869577899661">"Android жүйесі тақырыптарды және қолданба ұсынған деректерді үнемі автоматты жойып отырады. Сондай-ақ ұсыныстар бергенін қаламайтын нақты тақырыптар мен қолданбаларды бөгеуіңізге болады."</string>
-    <string name="notificationUI_how_it_works_subtitle2" msgid="2203542887026049927">"Жарнама өнімділігін бағалау"</string>
-    <string name="notificationUI_how_it_works_row_body6" msgid="5368364880910986588">"Сіз пайдаланатын қолданбалар Android-тан оларға өз жарнамаларының өнімділігін бағалауға көмектесетін ақпаратты сұрай алады. Android қолданбаларға деректердің белгілі бір түрлерін (мысалы, сізге жарнама көрсетілген тәуілік уақыты) жинауға мүмкіндік береді."</string>
+    <string name="notificationUI_how_it_works_row_body1" msgid="5865369599951938718">"Қолданбалар Android жүйесінен көрсетілетін жарнамаларды жекелендіруге көмектесу үшін ақпарат сұрай алады."</string>
+    <string name="notificationUI_how_it_works_row_body2" msgid="6601773212442110369">"•  Android сіз жақында пайдаланған қолданбалар бойынша қызықты тақырыптарды көрсетеді."</string>
+    <string name="notificationUI_how_it_works_row_body3" msgid="3692457397642529055">"•  Сонымен қатар пайдаланатын қолданбаларыңыз олардағы әрекетіңізге қарай сізге не ұнайтынын анықтай алады. Мысалы, алыс қашықтыққа жүгіруге арналған аяқ киім сататын қолданбаны пайдалансаңыз, қолданба сіз марафондарға қызығады деп шешуі мүмкін."</string>
+    <string name="notificationUI_how_it_works_row_body4" msgid="8731138074016839243">"Кейінірек сіз пайдаланатын қолданба осы ақпаратты: жарнама тақырыптарын немесе пайдаланған өолданбалар ұсынған жарнамаларды сұрауы мүмкін."</string>
+    <string name="notificationUI_how_it_works_row_body5" msgid="4524382869577899661">"Android жүйесі тақырыптарды және қолданба ұсынған деректерді автоматты түрде жойып отырады. Сондай-ақ ұсыныстар бергенін қаламайтын нақты тақырыптар мен қолданбаларды бөгей аласыз."</string>
+    <string name="notificationUI_how_it_works_subtitle2" msgid="2203542887026049927">"Жарнама өнімділігін өлшеу"</string>
+    <string name="notificationUI_how_it_works_row_body6" msgid="5368364880910986588">"Сіз пайдаланатын қолданбалар жарнамалар өнімділігін өлшеуге көмектесу үшін Android жүйесінен ақпарат сұрай алады. Android қолданбалардың жарнама көрсетілген күн уақыты сияқты шектеулі дерек түрлерін жинауына мүмкіндік береді."</string>
     <!-- no translation found for notificationUI_how_it_works_row_body7 (8158317350415462142) -->
     <skip />
-    <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"Жаңа құпиялық функцияларын пайдаланып көріңіз."</string>
+    <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"Жарнамадағы құпиялықтың жаңа функцияларын пайдаланып көріңіз"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"Жарнама тақырыптары сіз көретін жарнамаларды таңдауға мүмкіндік береді."</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"Мәліметтерді көру"</string>
-    <string name="notificationUI_header_ga_title_eu" msgid="4461095539795574989">"Android жүйесіндегі жақсартылған жарнама құпиялығы"</string>
-    <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android көрсетілетін жарнамаларды таңдауға мүмкіндік беретін құпиялықтың жаңа функцияларын енгізіп жатыр."</string>
-    <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"Жарнама тақырыптары жеке басыңызды және қолданбаның пайдаланылуы туралы мәліметті қорғай отырып, қолданбаларға сәйкес жарнамаларды көрсетуге көмектеседі. Android сіз жақында пайдаланған қолданбаларға негізделген қызық тақырыптарды көрсете алады. Кейін сіз пайдаланатын қолданба жарнамаларды жекелендіру үшін Android-тан сәйкес тақырыптар сұрауы мүмкін."</string>
-    <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"Құрылғы параметрлерінен жарнама тақырыптарын көре аласыз және қолданбалармен бөліскіңіз келмейтінін бөгеуіңізге болады. Сондай-ақ Android тақырыптарды автоматты түрде жойып отырады."</string>
+    <string name="notificationUI_header_ga_title_eu" msgid="4461095539795574989">"Android жарнамаларындағы құпиялықтың күшейтілуі"</string>
+    <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android көрсетілетін жарнамаларды таңдауға мүмкіндік беретін жаңа құпиялық функцияларын іске қосып жатыр."</string>
+    <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"Жарнама тақырыптары жеке басыңызды және қолданбаның пайдаланылуы туралы мәліметті қорғай отырып, сізге қолданбалардың қатысты жарнамаларды көрсетуіне көмектеседі. Android өзіңіз жақында пайдаланған қолданбалар бойынша қызық тақырыптарды көрсете алады. Кейін пайдаланатын қолданбаңыз көрсетілетін жарнамаларды жекелендіру үшін Android-тан қатысты тақырыптар сұрауы мүмкін."</string>
+    <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"Құрылғы параметрлерінен жарнама тақырыптарын көре аласыз және қолданбалармен бөліскіңіз келмейтінін бөгеуіңізге болады. Сондай-ақ Android жарнама тақырыптарын автоматты түрде жойып отырады."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"Құпиялық параметрлерінен шешіміңізді кез келген уақытта өзгерте аласыз."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"Жарнама тақырыптары туралы толық ақпарат"</string>
     <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"Құпиялық саясатымыздан Android-тың деректерді қалай қорғайтыны туралы толық ақпарат алыңыз."</string>
     <string name="notificationUI_right_control_button_ga_text_eu" msgid="2022252072760042013">"Жарайды"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  Пайдаланылатын деректер"</string>
-    <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"Жарнама тақырыптары сіз жақында осы құрылғыда пайдаланған қолданбаларға және оларды пайдалану жиілігіне негізделеді."</string>
-    <string name="notificationUI_how_it_works_topics_expanded_text5" msgid="5976468008939416198">"•  Осы деректерді пайдалану жолдары"</string>
-    <string name="notificationUI_how_it_works_topics_expanded_text6" msgid="6318275524155409408">"Android сіз қолданбаларды пайдаланғанда, қызықты тақырыптарды көрсетеді. Тақырып белгілері алдын ала анықталған және \"Өнер және ойын-сауық\", \"Шопинг\" және \"Спорт\" сияқты санаттарды қамтиды. Кейін сіз пайдаланатын қолданба көретін жарнамаларды жекелендіру үшін Android-тан бірнеше тақырыпты (қолданбаның пайдаланылуы немесе жеке басыңыз туралы мәліметті емес) сұрайды."</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"Жарнама тақырыптары сіз жақында осы құрылғыда пайдаланған қолданбаларға және оларды пайдалану жиілігіне негізделген."</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text5" msgid="5976468008939416198">"•  Бұл деректерді пайдалану жолдары"</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text6" msgid="6318275524155409408">"Сіз қолданбаларды пайдаланғанда, Android қызықты тақырыптарды көрсетеді. Тақырып белгілері алдын ала анықталған және \"Өнер және ойын-сауық\", \"Сауда жасау\" және \"Спорт\" сияқты санаттарды қамтиды. Кейін сіз пайдаланатын қолданба көретін жарнамаларды жекелендіру үшін Android-тан бірнеше тақырыпты (қолданбаның пайдаланылуы немесе жеке басыңыз туралы мәліметтен басқа) сұрайды."</string>
     <string name="notificationUI_how_it_works_topics_expanded_text7" msgid="4275126336833782389">"•  Деректеріңізді қалай басқара аласыз?"</string>
-    <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"Android тақырыптарды автоматты түрде жойып отырады. Қолданбаларды пайдалануыңызға байланысты тақырып тізімде қайта шығуы мүмкін. Сонымен қатар Android қолданбалармен бөліспеуі тиіс тақырыптарды бөгей аласыз және кез келген уақытта құпиялық параметрлерінен жарнама тақырыптарын өшіре аласыз."</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"Android тақырыптарды автоматты түрде жояды. Қолданбаларды пайдалануыңызға байланысты тақырып тізімде қайта шығуы мүмкін. Сонымен қатар Android қолданбалармен бөліспейтін тақырыптарды бөгей және құпиялық параметрлерінен жарнама тақырыптарын кез келген уақытта өшіре аласыз."</string>
     <string name="notificationUI_you_can_change_in_privacy_settings" msgid="4781410091509838647">"Кез келген уақытта құпиялық параметрлерінде өзгерістер енгізе аласыз."</string>
     <string name="notificationUI_fledge_measurement_title" msgid="5279119450359078459">"Жарнамалардың құпиялық деңгейін арттыратын басқа функциялар"</string>
-    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="6943787406043534689">"Android пайдаланушыларында жекелендірілген жарнамалар көрсетілгенде, қолданбалардың жеке деректерді пайдалануын шектейтін мүмкіндік болады."</string>
-    <string name="notificationUI_fledge_measurement_introduction_text2" msgid="601600895880486962">"•  Қолданба ұсынатын жарнамалар қолданбаларға сәйкес жарнамаларды көрсетуге мүмкіндік бере отырып, жеке басыңызды және қолданбаның пайдалануы туралы мәліметті қорғауға көмектеседі. Әрекетіңізге байланысты сіз пайдаланатын қолданба басқа қолданбаларда сәйкес жарнамалар ұсына алады. Құпиялық параметрлерінен қолданбалар тізімін көре аласыз және оларды бөгеуіңізге болады."</string>
-    <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"•  Жарнама көрсеткіштерін өлшеу кезінде шектеулі дерек түрлерін қолданбалар өзара бөлісіп, ондағы жарнамалардың өнімділігі, соның ішінде жарнама сізге көрсетілген уақыт анықталады."</string>
-    <string name="notificationUI_fledge_measurement_control_ga_text_eu" msgid="2346851728118443500">"Қолданба ұсынатын жарнамалар мен жарнама көрсеткіштерін бағалау туралы көбірек ақпарат"</string>
-    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text0" msgid="2456923104551938349">"Қолданба ұсынатын жарнамалар"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="6943787406043534689">"Қолданбаларда жекелендірілген жарнамалар көрсетілгенде, Android сіз туралы не білуге болатынын шектейтін жаңа жолдарды іске қосып жатыр."</string>
+    <string name="notificationUI_fledge_measurement_introduction_text2" msgid="601600895880486962">"•  Қолданба ұсынған жарнамалар қолданбалардың қатысты жарнамаларды көрсетуіне мүмкіндік бере отырып, жеке басыңызды және қолданбаның пайдаланылуы туралы мәліметті қорғауға көмектеседі. Әрекетіңізге байланысты сіз пайдаланатын қолданба басқа қолданбаларда сәйкес жарнамалар ұсына алады. Құпиялық параметрлерінен қолданбалар тізімін қарауға және оларды ұсыныс жасаудан бөгеуге болады."</string>
+    <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"•  Жарнама көрсеткіштерін өлшеу кезінде шектеулі дерек түрлері қолданбалар арасында беріліп, олардағы жарнамалардың өнімділігі, соның ішінде жарнама сізге көрсетілген уақыт анықталады."</string>
+    <string name="notificationUI_fledge_measurement_control_ga_text_eu" msgid="2346851728118443500">"Қолданба ұсынған жарнамалар және жарнама көрсеткіштерін өлшеу туралы қосымша ақпарат"</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text0" msgid="2456923104551938349">"Қолданба ұсынған жарнамалар"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text1" msgid="5606895535548790900">"•  Пайдаланылатын деректер"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text2" msgid="6309052819494439288">"Осы құрылғыда пайдаланатын қолданбадағы әрекетіңіз."</string>
-    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text3" msgid="5347980571056638783">"•  Қолданбалардың деректерді пайдалану әдісі"</string>
-    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text4" msgid="4738335469671465639">"Android жүйесінде қолданбалар сізге ұнайтын нәрселер туралы ақпаратты сақтай алады. Мысалы, марафонға дайындалуға арналған қолданбаны пайдалансаңыз, қолданба сіз жүгіруге арналған аяқ киімге қызығады деп ұйғаруы мүмкін. Кейін басқа қолданбаны пайдаланғанда, ол алдыңғы қолданба ұсынған аяқ киімнің жарнамасын көрсетуі мүмкін."</string>
-    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text5" msgid="8737925570089314631">"•  Деректеріңізді қалай басқара аласыз?"</string>
-    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android жүйесі қолданба ұсынған деректерді үнемі автоматты жойып отырады. Қайта пайдаланатын қолданбаңыз тізімде қайта шығуы мүмкін."</string>
-    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"Кез келген уақытта құпиялық параметрлерінен қолданбаның сізге жарнамалар ұсынуын бөгеуіңізге, барлық жарнама ұсыну дерегін қайтаруыңызға не қолданба ұсынған жарнамаларды өшіруіңізге болады."</string>
-    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"Сіз пайдаланатын қолданбалар Android-тан өз жарнамаларының өнімділігін бағалауға көмектесетін ақпаратты сұрай алады. Android қолданбалар өзара бөлісетін ақпаратты шектеу арқылы құпиялығыңызды қорғайды."</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text3" msgid="5347980571056638783">"•  Қолданбалардың деректерді пайдалану жолы"</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text4" msgid="4738335469671465639">"Android сізге ұнайтын нәрселер туралы ақпаратты Android көмегімен сақтай алады. Мысалы, марафонға дайындық туралы қолданбаны пайдалансаңыз, қолданба сіз жүгіруге арналған аяқ киімге қызығады деп ұйғаруы мүмкін. Кейінірек басқа қолданбаны пайдалансаңыз, сол қолданба сізге бірінші қолданба ұсынған аяқ киімнің жарнамасын көрсетуі мүмкін."</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text5" msgid="8737925570089314631">"•  Деректерді басқару жолы"</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android жүйесі қолданба ұсынған деректерді автоматты түрде жойып отырады. Қайта пайдаланатын қолданбаңыз тізімде қайта шығуы мүмкін."</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"Кез келген уақытта құпиялық параметрлерінен қолданбаның сізге жарнамалар ұсынуын бөгеуге, барлық жарнама ұсыну дерегін қайтаруға не қолданба ұсынған жарнамаларды өшіруге болады."</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"Сіз пайдаланатын қолданбалар Android жүйесінен жарнамаларының өнімділігін өлшеуше көмектесетін ақпаратты сұрай алады. Android қолданбалар өзара бөлісетін ақпаратты шектеу арқылы құпиялығыңызды қорғайды."</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Privacy Sandbox"</string>
     <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"Android-тың жарнама құпиялығына (бета нұсқасы) арналған бағдарламасына қатысыңыз."</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_title" msgid="5996189869721397937">"Android бағалаған қызығушылықтар"</string>
     <string name="settingsUI_apps_title" msgid="2772289096915264175">"Қызығушылықтарды бағалайтын қолданбалар"</string>
-    <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"Жарнама тиімділігін анықтау"</string>
+    <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"Жарнама көрсеткіштерін өлшеу"</string>
     <string name="settingsUI_main_view_info_text9" msgid="5431131706102562540">"Қолданбалар өз жарнамаларының тиімділігін анықтау үшін Privacy Sandbox-ты пайдалана алады. Ол үшін жарнама берушілер сіздің олардың жарнамалары мен қолданбаларын пайдалану туралы деректерді Android-та уақытша сақтай алады. Олар сақтай алатын деректер көлемі шектелген және тұрақты түрде жойылып отырады.\n\nPrivacy Sandbox-ты өшіру арқылы бұл деректерді кез келген уақытта жоя аласыз."</string>
     <string name="settingsUI_topics_view_subtitle" msgid="6608135144119617292">"Android мерзімді түрде сіз пайдаланатын қолданбаларға қарай негізгі қызығушылықтарыңызды бағалайды. Содан кейін қолданбалар сізге көбірек сәйкес келетін жарнамалар көрсету үшін Android жүйесінен сол қызығушылықтарды пайдалануға рұқсат сұрауы мүмкін.\n\nҚызығушылықты бөгесеңіз, бөгеуден алмайынша, ол тізімге қайта қосылмайды. Қызығушылықтарға қатысты кейбір жарнамалар көрсетіле беруі мүмкін."</string>
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"Бөгеу"</string>
@@ -131,12 +131,10 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Дәл қазір көрсететін қызығушылық жоқ."</string>
     <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"Дәл қазір көрсететін тақырып жоқ."</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
-    <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android-тың жарнама құпиялығы (бета нұсқасы) қолданбалар сізге ұнайды деген жарнамаларды көрсету үшін пайдалана алатын жаңа функцияларды ұсынады. Бұл технологиялар құрылғы идентификаторларын пайдаланбайды.\n\nAndroid сізді қызықтыруы мүмкін жарнама түрлерін бағалап, бұл қызығушылықтарды құрылғыңызда уақытша сақтай алады. Соның нәтижесінде қолданбалар басқа әзірлеушілердің веб-сайттары мен қолданбаларында жасаған әрекеттеріңізді бақыламай, сізге сәйкес жарнамаларды көрсете алады."</string>
+    <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android жарнамасындағы құпиялық (бета нұсқасы) бағдарламасы қолданбалар сізге ұнайды деген жарнамаларды көрсетуге пайдалана алатын жаңа функцияларды ұсынады. Бұл технологиялар құрылғы идентификаторларын пайдаланбайды.\n\nAndroid сізге қызық деген жарнама түрлерін анықтап, бұл мәліметті құрылғыңызда уақытша сақтайды. Соның нәтижесінде қолданбалар басқа әзірлеушілердің веб-сайттары мен қолданбаларында жасаған әрекеттеріңізді бақыламай, сізге сәйкес жарнамаларды көрсетеді."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Сізде бөгелген қызығушылықтар жоқ"</string>
-    <!-- no translation found for settingsUI_no_blocked_topics_ga_text (377459829879121256) -->
-    <skip />
-    <!-- no translation found for settingsUI_view_blocked_topics_title (3705333677440361392) -->
-    <skip />
+    <string name="settingsUI_no_blocked_topics_ga_text" msgid="377459829879121256">"Бөгелген тақырыптар жоқ."</string>
+    <string name="settingsUI_view_blocked_topics_title" msgid="3705333677440361392">"Бөгелген тақырыптарды көру"</string>
     <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Қызығушылықтар қайта орнатылды."</string>
     <string name="settingsUI_topics_are_reset_ga" msgid="5250296990870048195">"Тақырыптар қайтарылды."</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Қолданбалар қызығушылықтарыңызды бағалап, оларды уақытша Android-та сақтай алады. Содан кейін осы қызығушылыққа қарай басқа қолданба сізге марафондарға қатысты жарнама көрсете алады.\n\nҚолданбаны бөгесеңіз, ол бұдан былай қызығушылықтарды бағаламайды. Қолданбаны бөгеуден алмайынша, ол қолданбалар тізіміне қайта қосылмайды. Қолданба бағалап қойған қызығушылықтар жойылады, бірақ оған қатысты кейбір жарнамалар көрсетіле беруі мүмкін."</string>
@@ -146,10 +144,9 @@
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"Қазір қолданбалар қызығушылықтарыңызды бағалап жатқан жоқ"</string>
     <string name="settingsUI_apps_view_no_apps_ga_text" msgid="8540919050517478161">"Дәл қазір көрсететін қолданба жоқ."</string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
-    <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android-тың жарнама құпиялығы (бета нұсқасы) қолданбалар сізге ұнайды деген жарнамаларды көрсету үшін пайдалана алатын жаңа функцияларды ұсынады. Бұл технологиялар құрылғы идентификаторларын пайдаланбайды.\n\nҚолданбалар сізді қызықтыруы мүмкін жарнама түрлерін бағалап, бұл қызығушылықтарды құрылғыңызда уақытша сақтай алады. Соның нәтижесінде қолданбалар басқа әзірлеушілердің веб-сайттары мен қолданбаларында жасаған әрекеттеріңізді бақыламай, сізге сәйкес жарнамаларды көрсете алады."</string>
+    <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android жарнамасындағы құпиялық (бета нұсқасы) бағдарламасы қолданбалар сізге ұнайды деген жарнамаларды көрсетуге пайдалана алатын жаңа функцияларды ұсынады. Бұл технологиялар құрылғы идентификаторларын пайдаланбайды.\n\nAndroid сізге қызық деген жарнама түрлерін анықтап, бұл мәліметті құрылғыңызда уақытша сақтайды. Соның нәтижесінде қолданбалар басқа әзірлеушілердің веб-сайттары мен қолданбаларында жасаған әрекеттеріңізді бақыламай, сізге сәйкес жарнамаларды көрсетеді."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Сізде бөгелген қолданбалар жоқ"</string>
-    <!-- no translation found for settingsUI_no_blocked_apps_ga_text (7488680173653861943) -->
-    <skip />
+    <string name="settingsUI_no_blocked_apps_ga_text" msgid="7488680173653861943">"Бөгелген қолданбалар жоқ."</string>
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"Жарнама тиімділігін анықтауға рұқсат ету"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"Қолданбалар мен жарнама берушілер Android жүйесінен тиісті жарнамалардың өнімділігін анықтауға көмектесетін ақпаратты сұрауы мүмкін.\n\nЖарнама көрсеткіштерін анықтау деректері құрылғыңыздан тұрақты негізде жойылып отырады."</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"Тиімділікті анықтау деректерін қайта орнату"</string>
@@ -157,35 +154,27 @@
     <string name="settingsUI_measurement_are_reset" msgid="4375330550418573499">"Жарнама көрсеткіштерін анықтау деректері өшірілді."</string>
     <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Бас тарту"</string>
     <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Privacy Sandbox өшірілсін бе?"</string>
-    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Ойыңыздан айнып қалсаңыз немесе Android-тың жарнама құпиялығы (бета нұсқасы) туралы толық ақпарат алғыңыз келсе, құпиялық параметрлеріне өтіңіз."</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Ойыңыздан айнысаңыз немесе Android жарнамасындағы құпиялық (бета нұсқасы) туралы толық ақпарат алғыңыз келсе, құпиялық параметрлеріне өтіңіз."</string>
     <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Өшіру"</string>
     <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"<xliff:g id="TOPIC">%1$s</xliff:g> бөгелсін бе?"</string>
-    <!-- no translation found for settingsUI_dialog_block_topic_message (2581824495438333677) -->
-    <skip />
+    <string name="settingsUI_dialog_block_topic_message" msgid="2581824495438333677">"Бұл тақырып бөгеледі және тізімге өзіңіз қоспайынша, қайта пайда болмайды. Кейбір сәйкес жарнамалар көрсетіле беруі мүмкін."</string>
     <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Бөгеу"</string>
     <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"<xliff:g id="TOPIC">%1$s</xliff:g> бөгеуден шығарылды"</string>
-    <!-- no translation found for settingsUI_dialog_unblock_topic_message (1090743551997420666) -->
-    <skip />
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="1090743551997420666">"Android бұл тақырыпты тізімге қайта қосуы мүмкін. Алайда ол тізімде дереу пайда болмайды."</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"Жарайды"</string>
-    <!-- no translation found for settingsUI_dialog_reset_topic_title (8025836207966712435) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (4243744527757134000) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_topic_title" msgid="8025836207966712435">"Барлық жарнама тақырыбы бастапқы күйге қайтарылсын ба?"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="4243744527757134000">"Тізім өшіріледі және алдағы уақытта жаңа тақырыптар қосылады. Бастапқы күйге қайтарылған тақырыптарға қатысты кейбір жарнамалар көрсетіле беруі мүмкін."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Қайтару"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g> бөгелсін бе?"</string>
-    <!-- no translation found for settingsUI_dialog_block_app_message (758788973278770119) -->
-    <skip />
+    <string name="settingsUI_dialog_block_app_message" msgid="758788973278770119">"Бұл қолданба жарнамалар ұсынбайды және бөгеу алынбайынша, тізімге қайта қосылмайды. Кейбір сәйкес жарнамалар көрсетіле беруі мүмкін."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> бөгеуден шығарылды"</string>
-    <!-- no translation found for settingsUI_dialog_unblock_app_message (5758218424845642060) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_app_title (5177572712117150557) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_app_message (7845329616145691006) -->
-    <skip />
+    <string name="settingsUI_dialog_unblock_app_message" msgid="5758218424845642060">"Бұл қолданба жарнамаларды қайта ұсына алады. Алайда ол тізімде бірден шықпайды. Тиісті жарнамалардың көрсетілуіне біраз уақыт керек болуы мүмкін."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"Қолданба ұсынатын жарнамалардың параметрі бастапқы күйге қайтарылсын ба?"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Тізіміңіздегі қолданбалар ұсынған жарнама деректері жойылады және қолданбалар алдағы уақытта жаңа жарнамалар ұсынатын болады. Кейбір сәйкес жарнамалар көрсетіле беруі мүмкін."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Қолданба деректері қайтарылды."</string>
     <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"Барлық тақырып қайтарылсын ба?"</string>
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"Қолданба ұсынатын жарнамалардың параметрі бастапқы күйге қайтарылсын ба?"</string>
-    <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Жарнама құпиялығы"</string>
+    <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Жарнамадағы құпиялық"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Жарнама тақырыптары"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Қолданба ұсынатын жарнамалар"</string>
     <!-- no translation found for settingsUI_measurement_ga_title (2255921375701745943) -->
@@ -194,20 +183,25 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Қолданбаларды қалай пайдаланатыныңызға байланысты олар сізге не ұнайтынын анықтай алады."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Сіз пайдаланатын қолданбалар жарнамалардың тиімділігін бағалау үшін Android-тан мәліметтер сұрауы мүмкін. Android қолданбаларға деректердің белгілі бір түрін ғана жинауға мүмкіндік береді."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Қосулы/<xliff:g id="TOPICS_COUNT">%1$d</xliff:g> тақырып"</string>
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Қосулы/# тақырып}other{Қосулы/# тақырып}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Қосулы/<xliff:g id="APPS_COUNT">%1$d</xliff:g> қолданба"</string>
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{Қосулы/# қолданба}other{Қосулы/# қолданба}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"Қосулы"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Өшірулі"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Қызығушылық тақырыптары сіз жақында пайдаланған қолданбаларға негізделеді. Қолданбалар оларды жекелендірілген жарнамалар көрсету үшін пайдаланады.\n\nҚолданбалармен бөліскіңіз келмейтін тақырыптарды бөгеуіңізге болады. Сондай-ақ Android жүйесі тақырыптарды тұрақты негізде автоматты жойып отырады."</string>
     <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"Жарнама тақырыптарына рұқсат ету"</string>
     <string name="settingsUI_blocked_topics_ga_title" msgid="7163366621282449273">"Сіз бөгеген жарнама тақырыптары"</string>
-    <!-- no translation found for settingsUI_reset_topics_ga_title (5365554894399951300) -->
-    <skip />
+    <string name="settingsUI_reset_topics_ga_title" msgid="5365554894399951300">"Барлық жарнама тақырыбын бастапқы күйге қайтару"</string>
     <string name="settingsU_topics_view_footer" msgid="4769146330248953561">"Android жүйесі сіз соңғы апталарда пайдаланған қолданбаларға негізделген қызықты тақырыптарды көрсетеді.\n\nКейін сіз пайдаланатын қолданба Android жүйесінен сізге арналған тақырыптарды сұрап, сіз көретін жарнамаларды жекелендіре алады. Android жүйесі жеке басыңызды және сіздің қолданбаны пайдалануыңыз туралы ақпаратты қорғай отырып, 3 тақырыпқа дейін бөліседі.\n\nAndroid жүйесі тақырыптарды үнемі автоматты жойып отырады. Қолданбаларды пайдалануыңызға байланысты тақырып тізімде қайта шығуы мүмкін. Бұл ретте Android-тың қолданбалармен бөліскенін қаламайтын тақырыптарды бөгеуіңізге болады.\n\nҚолданбаларда сіз көретін жарнама осы параметрге, қолданба ұсынған жарнамалар параметріне, жарнама идентификаторы параметрлеріне және сіз пайдаланатын қолданбаның жарнамаларды өңдеуіне байланыстыжекелендірілуі мүмкін."</string>
     <string name="settingsUI_apps_switch_title" msgid="1308209012769248890">"Қолданба ұсынатын жарнамаларға рұқсат ету"</string>
     <string name="settingsUI_apps_view_ga_subtitle" msgid="1911743837387384160">"Пайдаланатын қолданбаларыңыз сізге ненің ұнайтынын анықтап, басқа қолданбаларда сәйкес жарнамалар ұсына алады.\n\nҚолданбалардың ұсыныс жасауын бөгеуіңізге болады. Сонымен қатар Android қолданба ұсынатын деректерді әрдайым автоматты жойып отырады."</string>
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Сіз бөгеген қолданбалар"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Қолданба ұсынған деректерді өшіру"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Әдетте сіз пайдаланатын қолданбалар жекелендірілген контент ұсыну үшін сіз қызығатын тақырыптарды есте сақтайды. Сонымен қатар олар Android арқылы тақырыптар туралы мәліметті сақтайды.\n\nМысалы, марафонға дайындалатын жаттығулары бар қолданбаны пайдалансаңыз, қолданба сізді жүгіруге арналған аяқ киімдерге қызығады деп анықтауы мүмкін. Кейін басқа қолданбаны пайдаланғанда, алдыңғы қолданба ұсынған аяқ киімдер көрсетілуі мүмкін.\n\nAndroid қолданба ұсынатын деректерді автоматты түрде жойып отырады. Қолданбаны әрі қарай пайдалана берсеңіз, оның деректері тізімде қайта шығуы мүмкін. Сіз қолданбаның жарнамалар ұсынуына тыйым сала аласыз.\n\nҚолданбалардағы жарнама параметрге байланысты жекелендірілуі мүмкін. Ол тақырыптардың параметріне, жарнама идентификаторының параметрлеріне және пайдаланылып жатқан қолданбаның жарнаманы жекелендіруіне немесе жекелендірмеуіне негізделіп көрсетіледі."</string>
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Музыка, жаңалықтар және спорт сияқты қызық тақырыптарды қамтитын түрлі-түсті кескіндер"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Шеңбердің ішіндегі құлыптың түрлі-түсті кескіні"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Шаршыны құраған тоғыз нүктенің шағын ақ-қара кескіні"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"Жүрек, үшбұрыш және шаршы сияқты пішіндердің шағын ақ-қара кескіні"</string>
     <string name="topic10001" msgid="1636806320891333775">"Өнер және ойын-сауық"</string>
     <string name="topic10002" msgid="1226367977754287428">"Актерлік өнер және театр"</string>
     <string name="topic10003" msgid="6949890838957814881">"Аниме және манга"</string>

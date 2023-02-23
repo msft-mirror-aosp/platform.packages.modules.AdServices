@@ -300,10 +300,14 @@ public abstract class AbstractDbIntegrationTest {
                 source.getPublisherType());
         values.put(
                 MeasurementTables.SourceContract.APP_DESTINATION,
-                source.getAppDestination() == null ? null : source.getAppDestination().toString());
+                source.getAppDestinations() == null
+                ? null
+                : source.getAppDestinations().get(0).toString());
         values.put(
                 MeasurementTables.SourceContract.WEB_DESTINATION,
-                source.getWebDestination() == null ? null : source.getWebDestination().toString());
+                source.getWebDestinations() == null
+                ? null
+                : source.getWebDestinations().get(0).toString());
         values.put(MeasurementTables.SourceContract.AGGREGATE_SOURCE, source.getAggregateSource());
         values.put(MeasurementTables.SourceContract.ENROLLMENT_ID, source.getEnrollmentId());
         values.put(MeasurementTables.SourceContract.STATUS, source.getStatus());
@@ -325,7 +329,14 @@ public abstract class AbstractDbIntegrationTest {
         values.put(
                 MeasurementTables.SourceContract.AGGREGATE_CONTRIBUTIONS,
                 source.getAggregateContributions());
-        values.put(MeasurementTables.SourceContract.FILTER_DATA, source.getFilterData());
+        values.put(MeasurementTables.SourceContract.FILTER_DATA, source.getFilterDataString());
+        values.put(MeasurementTables.SourceContract.DEBUG_REPORTING, source.isDebugReporting());
+        values.put(MeasurementTables.SourceContract.INSTALL_TIME, source.getInstallTime());
+        values.put(MeasurementTables.SourceContract.REGISTRATION_ID, source.getRegistrationId());
+        values.put(
+                MeasurementTables.SourceContract.SHARED_AGGREGATION_KEYS,
+                source.getSharedAggregationKeys());
+
         long row = db.insert(MeasurementTables.SourceContract.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("Source insertion failed");
@@ -353,6 +364,12 @@ public abstract class AbstractDbIntegrationTest {
                 trigger.getRegistrant().toString());
         values.put(MeasurementTables.TriggerContract.FILTERS, trigger.getFilters());
         values.put(MeasurementTables.TriggerContract.NOT_FILTERS, trigger.getNotFilters());
+        values.put(
+                MeasurementTables.TriggerContract.ATTRIBUTION_CONFIG,
+                trigger.getAttributionConfig());
+        values.put(
+                MeasurementTables.TriggerContract.X_NETWORK_KEY_MAPPING,
+                trigger.getAdtechKeyMapping());
         long row = db.insert(MeasurementTables.TriggerContract.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("Trigger insertion failed");
@@ -368,7 +385,7 @@ public abstract class AbstractDbIntegrationTest {
                 report.getSourceEventId().getValue());
         values.put(MeasurementTables.EventReportContract.ENROLLMENT_ID, report.getEnrollmentId());
         values.put(MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
-                report.getAttributionDestination().toString());
+                report.getAttributionDestinations().get(0).toString());
         values.put(MeasurementTables.EventReportContract.REPORT_TIME, report.getReportTime());
         values.put(MeasurementTables.EventReportContract.TRIGGER_DATA,
                 report.getTriggerData().getValue());

@@ -126,7 +126,11 @@ public class ConsentNotificationJobServiceTest {
         doNothing().when(consentManager).recordGaUxNotificationDisplayed();
         mConsentNotificationJobService.setConsentManager(consentManager);
         doReturn(consentManager).when(() -> ConsentManager.getInstance(any(Context.class)));
-        doReturn(true).when(() -> ConsentNotificationJobService.isEuDevice(any(Context.class)));
+        doReturn(true)
+                .when(
+                        () ->
+                                ConsentNotificationJobService.isEuDevice(
+                                        any(Context.class), any(Flags.class)));
         when(mMockJobParameters.getExtras()).thenReturn(mPersistableBundle);
         when(mPersistableBundle.getBoolean(anyString(), anyBoolean())).thenReturn(true);
         doReturn(mAdservicesSyncUtil).when(AdServicesSyncUtil::getInstance);
@@ -160,7 +164,11 @@ public class ConsentNotificationJobServiceTest {
         doReturn(mPackageManager).when(mConsentNotificationJobService).getPackageManager();
         mConsentNotificationJobService.setConsentManager(consentManager);
         doReturn(consentManager).when(() -> ConsentManager.getInstance(any(Context.class)));
-        doReturn(true).when(() -> ConsentNotificationJobService.isEuDevice(any(Context.class)));
+        doReturn(true)
+                .when(
+                        () ->
+                                ConsentNotificationJobService.isEuDevice(
+                                        any(Context.class), any(Flags.class)));
         when(mMockJobParameters.getExtras()).thenReturn(mPersistableBundle);
         when(mPersistableBundle.getBoolean(anyString(), anyBoolean())).thenReturn(true);
         doReturn(mAdservicesSyncUtil).when(AdServicesSyncUtil::getInstance);
@@ -194,7 +202,11 @@ public class ConsentNotificationJobServiceTest {
         doReturn(mPackageManager).when(mConsentNotificationJobService).getPackageManager();
         mConsentNotificationJobService.setConsentManager(consentManager);
         doReturn(consentManager).when(() -> ConsentManager.getInstance(any(Context.class)));
-        doReturn(true).when(() -> ConsentNotificationJobService.isEuDevice(any(Context.class)));
+        doReturn(true)
+                .when(
+                        () ->
+                                ConsentNotificationJobService.isEuDevice(
+                                        any(Context.class), any(Flags.class)));
         when(mMockJobParameters.getExtras()).thenReturn(mPersistableBundle);
         when(mPersistableBundle.getBoolean(eq(ADID_ENABLE_STATUS), anyBoolean())).thenReturn(true);
         when(mPersistableBundle.getBoolean(eq(RE_CONSENT_STATUS), anyBoolean())).thenReturn(false);
@@ -408,7 +420,11 @@ public class ConsentNotificationJobServiceTest {
 
     private void mockEuDevice() {
         doReturn(mPackageManager).when(mConsentNotificationJobService).getPackageManager();
-        doReturn(true).when(() -> ConsentNotificationJobService.isEuDevice(any(Context.class)));
+        doReturn(true)
+                .when(
+                        () ->
+                                ConsentNotificationJobService.isEuDevice(
+                                        any(Context.class), any(Flags.class)));
     }
 
     private void mockGaUxEnabled() {

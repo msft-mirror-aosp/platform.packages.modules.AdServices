@@ -72,7 +72,7 @@
     <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"Nya funktioner för annonsintegritet"</string>
     <string name="notificationUI_notification_ga_content" msgid="3483979694272908942">"Annonsämnen och nya inställningar ger dig mer kontroll över annonserna som visas"</string>
     <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"Android registrerar ämnen du är intresserad av baserat på appar du nyligen har använt. Appar som du använder kan också bedöma vad du gillar. Senare kan appar be om denna information för att visa anpassade annonser för dig. Du kan välja vilka ämnen och appar som ska användas för att visa annonser."</string>
-    <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"Begränsade typer av data delas mellan appar för att mäta resultatet av en annons."</string>
+    <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"För att mäta en annons resultat delas begränsade typer av data mellan appar."</string>
     <string name="notificationUI_ga_container1_control_text" msgid="2711321174550177509">"Mer om annonser på Android"</string>
     <string name="notificationUI_how_it_works_row_subtitle1" msgid="8685034725335826096">"Mer användbara annonser"</string>
     <string name="notificationUI_how_it_works_row_body1" msgid="5865369599951938718">"Appar kan be Android om information för att anpassa vilka annonser som visas."</string>
@@ -88,9 +88,9 @@
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"Annonsämnen ger dig större kontroll över vilka annonser du ser"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"Visa information"</string>
     <string name="notificationUI_header_ga_title_eu" msgid="4461095539795574989">"Förbättrad annonsintegritet på Android"</string>
-    <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android lanserar nya integritetsfunktioner som ger dig mer kontroll över annonserna som visas."</string>
+    <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android lanserar nya integritetsfunktioner som ger dig större kontroll över vilka annonser du ser."</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"Annonsämnen hjälper appar att visa relevanta annonser samtidigt som din appanvändning och identitet skyddas. Android kan registrera ämnen du är intresserad av baserat på vilka appar du nyligen har använt. Senare kan en app be Android om relevanta ämnen för att anpassa vilka annonser som visas."</string>
-    <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"Du kan se annonsämnen i enhetsinställningarna och blockera dem som du inte vill ska delas med appar. Android raderar också annonsämnen automatiskt och regelbundet."</string>
+    <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"Du kan se annonsämnen i enhetsinställningarna och blockera dem som du inte vill ska delas med appar. Android raderar även annonsämnen regelbundet och automatiskt."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"Du kan ångra dig när som helst i integritetsinställningarna."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"Mer om annonsämnen"</string>
     <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"Läs mer om hur Android skyddar din data i vår integritetspolicy."</string>
@@ -104,14 +104,14 @@
     <string name="notificationUI_you_can_change_in_privacy_settings" msgid="4781410091509838647">"Du kan göra ändringar i integritetsinställningarna."</string>
     <string name="notificationUI_fledge_measurement_title" msgid="5279119450359078459">"Andra funktioner som gör annonser mer privata"</string>
     <string name="notificationUI_fledge_measurement_introduction_text1" msgid="6943787406043534689">"Android lanserar nya sätt att begränsa vilken information appar kan få om dig när de visar anpassade annonser."</string>
-    <string name="notificationUI_fledge_measurement_introduction_text2" msgid="601600895880486962">"•  Föreslagna annonser i appar bidrar till att skydda din identitet och appanvändning samtidigt som webbplatser kan visa relevanta annonser. Utifrån din aktivitet kan en app föreslå relaterade annonser i andra appar. I integritetsinställningarna kan du se en lista över appar och blockera dem från att ge förslag."</string>
+    <string name="notificationUI_fledge_measurement_introduction_text2" msgid="601600895880486962">"•  Föreslagna annonser i appar bidrar till att skydda din identitet och appanvändning samtidigt som appar kan visa relevanta annonser. Utifrån din aktivitet kan en app föreslå relaterade annonser i andra appar. I integritetsinställningarna kan du se en lista över appar och blockera dem från att ge förslag."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"•  Med annonsmätning delas begränsade typer av data mellan appar för att mäta annonsernas resultat, till exempel vilken tidpunkt en annons visades för dig."</string>
     <string name="notificationUI_fledge_measurement_control_ga_text_eu" msgid="2346851728118443500">"Mer om föreslagna annonser i appar och annonsmätning"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text0" msgid="2456923104551938349">"Föreslagna annonser i appar"</string>
-    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text1" msgid="5606895535548790900">"•  Vilken data används?"</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text1" msgid="5606895535548790900">"•  Vilken data som används"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text2" msgid="6309052819494439288">"Din aktivitet i en app som du använder på den här enheten."</string>
-    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text3" msgid="5347980571056638783">"•  Så här använder appar den här datan"</string>
-    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text4" msgid="4738335469671465639">"Appar kan spara information hos Android om saker du gillar. Om du till exempel använder en app om maratonträning kan appen göra bedömningen att du är intresserad av löparskor. Om du senare använder en annan app kan den appen visa en annons för löparskor utifrån den första appens förslag."</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text3" msgid="5347980571056638783">"•  Så här använder appar denna data"</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text4" msgid="4738335469671465639">"Appar kan lagra information om saker du gillar i Android. Om du till exempel använder en app om maratonträning kan appen göra bedömningen att du är intresserad av löparskor. Om du senare använder en annan app kan den appen visa en annons för löparskor utifrån den första appens förslag."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text5" msgid="8737925570089314631">"•  Så här kan du hantera din data"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android raderar föreslagen data från appar automatiskt och regelbundet. Om du använder en app på nytt kan den dyka upp på listan igen."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"Du kan även blockera en app från att föreslå annonser för dig, återställa all data om annonsförslag eller inaktivera föreslagna annonser i appar när som helst i integritetsinställningarna."</string>
@@ -133,10 +133,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Androids betaprogram för annonsintegritet tillhandahåller nya funktioner som appar kan använda för att visa annonser som kan intressera dig. Med dessa funktioner används inte enhetsidentifierare.\n\nAndroid kan uppskatta vilka typer av annonser du kan vara intresserad av och spara dessa intressen tillfälligt på enheten. Det innebär att appar kan visa relevanta annonser, utan att spåra dina aktivitet på webbplatser och i appar från andra utvecklare."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Du har inga blockerade intressen"</string>
-    <!-- no translation found for settingsUI_no_blocked_topics_ga_text (377459829879121256) -->
-    <skip />
-    <!-- no translation found for settingsUI_view_blocked_topics_title (3705333677440361392) -->
-    <skip />
+    <string name="settingsUI_no_blocked_topics_ga_text" msgid="377459829879121256">"Inga blockerade ämnen"</string>
+    <string name="settingsUI_view_blocked_topics_title" msgid="3705333677440361392">"Se blockerade ämnen"</string>
     <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Intressen återställs"</string>
     <string name="settingsUI_topics_are_reset_ga" msgid="5250296990870048195">"Ämnena har återställts"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Appar kan uppskatta dina intressen och spara dem tillfälligt med Android. Sedan kan en annan app visa annonser utifrån dessa intressen.\n\nOm du blockerar en app uppskattar den inte längre dina intressen. Den läggs inte till i den här applistan igen såvida du inte tar bort blockeringen. Intressen som redan uppskattats av appen raderas, men du kan fortfarande se relaterade annonser."</string>
@@ -148,8 +146,7 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Androids betaprogram för annonsintegritet tillhandahåller nya funktioner som appar kan använda för att visa annonser som kan intressera dig. Med dessa funktioner används inte enhetsidentifierare.\n\nAndroid kan uppskatta vilka typer av annonser du kan vara intresserad av och spara dessa intressen tillfälligt på enheten. Det innebär att appar kan visa relevanta annonser, utan att spåra dina aktivitet på webbplatser och i appar från andra utvecklare."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Du har inga blockerade appar"</string>
-    <!-- no translation found for settingsUI_no_blocked_apps_ga_text (7488680173653861943) -->
-    <skip />
+    <string name="settingsUI_no_blocked_apps_ga_text" msgid="7488680173653861943">"Inga blockerade appar"</string>
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"Tillåt annonsmätning"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"Appar och annonsörer kan be om information från Android som hjälper dem att mäta annonsresultat.\n\nAnnonsresultatdata raderas regelbundet från enheten."</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"Återställ mätdata"</string>
@@ -160,28 +157,20 @@
     <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Om du ändrar dig eller vill läsa mer om Androids betaprogram för annonsintegritet, kan du gå till dina integritetsinställningar"</string>
     <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Inaktivera"</string>
     <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Vill du blockera <xliff:g id="TOPIC">%1$s</xliff:g>?"</string>
-    <!-- no translation found for settingsUI_dialog_block_topic_message (2581824495438333677) -->
-    <skip />
+    <string name="settingsUI_dialog_block_topic_message" msgid="2581824495438333677">"Det här ämnet blockeras och läggs inte till i listan igen såvida du inte lägger till det själv. Du kanske fortfarande ser relaterade annonser."</string>
     <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Blockera"</string>
     <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"Blockeringen av <xliff:g id="TOPIC">%1$s</xliff:g> har tagits bort"</string>
-    <!-- no translation found for settingsUI_dialog_unblock_topic_message (1090743551997420666) -->
-    <skip />
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="1090743551997420666">"Android kan lägga till det här ämnet i listan igen, men det dyker kanske inte upp omedelbart"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
-    <!-- no translation found for settingsUI_dialog_reset_topic_title (8025836207966712435) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (4243744527757134000) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_topic_title" msgid="8025836207966712435">"Vill du återställa alla annonsämnen?"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="4243744527757134000">"Listan rensas och nya ämnen läggs till från och med nu. Du kanske fortfarande ser en del annonser som är relaterade till de återställda ämnena."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Återställ"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Vill du blockera <xliff:g id="APP">%1$s</xliff:g>?"</string>
-    <!-- no translation found for settingsUI_dialog_block_app_message (758788973278770119) -->
-    <skip />
+    <string name="settingsUI_dialog_block_app_message" msgid="758788973278770119">"Den här appen kommer inte att föreslå annonser eller läggas till i listan igen såvida du inte tar bort blockeringen. Du kanske fortfarande ser relaterade annonser."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Blockeringen av <xliff:g id="APP">%1$s</xliff:g> har tagits bort"</string>
-    <!-- no translation found for settingsUI_dialog_unblock_app_message (5758218424845642060) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_app_title (5177572712117150557) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_app_message (7845329616145691006) -->
-    <skip />
+    <string name="settingsUI_dialog_unblock_app_message" msgid="5758218424845642060">"Den här appen kan föreslå annonser för dig igen, men de dyker kanske inte upp i listan omedelbart. Det kan ta ett tag innan du ser relaterade annonser."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"Vill du återställa annonsförslag från appar?"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"All data om annonsförslag från apparna på listan raderas och apparna föreslår nya annonser från och med nu. Du kanske fortfarande ser relaterade annonser."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Appdata har återställts"</string>
     <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"Vill du återställa alla ämnen?"</string>
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"Vill du återställa annonsförslag från appar?"</string>
@@ -194,20 +183,25 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Appar som du använder kan också bedöma vad du gillar baserat på hur du använder dem."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Appar du använder kan be Android om information för att hjälpa dem att mäta annonsernas resultat. Android tillåter att appar samlar in begränsade typer av data."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"På/<xliff:g id="TOPICS_COUNT">%1$d</xliff:g> ämnen"</string>
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{På/# ämne}other{På/# ämnen}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"På/<xliff:g id="APPS_COUNT">%1$d</xliff:g> appar"</string>
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{På/# app}other{På/# appar}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"På"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Av"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"De ämnen du är intresserad av baseras på vilka appar du nyligen har använt och de används av apparna för att visa dig anpassade annonser.\n\nDu kan blockera ämnen som du inte vill dela med appar. Android raderar också ämnen automatiskt och regelbundet."</string>
     <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"Tillåt annonsämnen"</string>
     <string name="settingsUI_blocked_topics_ga_title" msgid="7163366621282449273">"Annonsämnen du har blockerat"</string>
-    <!-- no translation found for settingsUI_reset_topics_ga_title (5365554894399951300) -->
-    <skip />
+    <string name="settingsUI_reset_topics_ga_title" msgid="5365554894399951300">"Återställ alla annonsämnen"</string>
     <string name="settingsU_topics_view_footer" msgid="4769146330248953561">"Android registrerar ämnen du är intresserad av baserat på vilka appar du har använt de senaste veckorna.\n\nSenare kan en app du använder fråga Android om dina ämnen för att anpassa annonserna som visas. Android delar upp till tre ämnen, samtidigt som din identitet och information om din appanvändning skyddas.\n\nAndroid raderar automatiskt ämnen regelbundet. När du använder appar kan ett ämne dyka upp på listan igen. Du kan också blockera ämnen som du inte vill att Android ska dela med appar.\n\nEn annons som du ser i en app kan vara anpassad – det beror på den här inställningen, inställningen för annonsämnen, dina inställningar för reklam-id och huruvida appen du använder anpassar annonser."</string>
     <string name="settingsUI_apps_switch_title" msgid="1308209012769248890">"Tillåt annonsförslag från appar"</string>
     <string name="settingsUI_apps_view_ga_subtitle" msgid="1911743837387384160">"Appar som du använder kan bedöma vad du gillar och sedan föreslå annonser i andra appar.\n\nDu kan blockera appar från att ge förslag. Android raderar data om annonsförslag automatiskt och regelbundet."</string>
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Appar du har blockerat"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Återställ föreslagen data från appar"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Det är vanligt att appar du använder kommer ihåg vad du är intresserad av för att anpassa din upplevelse. Appar kan även lagra information om dina ämnen med Android.\n\nOm du till exempel använder en app om maratonträning kan appen göra bedömningen att du är intresserad av löparskor. Om du senare använder en annan app kan den appen visa en annons för löparskor utifrån den första appens förslag.\n\nAndroid raderar föreslagen data från appar automatiskt och regelbundet. Om du använder en app på nytt kan den dyka upp på listan igen. Du kan även blockera en app från att föreslå annonser för dig.\n\nEn annons som du ser i en app kan vara anpassad – det beror på den här inställningen, inställningen för annonsämnen, dina inställningar för reklam-id och huruvida appen du använder anpassar annonser."</string>
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Färgglad illustration av symboler som representerar intressanta ämnen som musik, nyheter och sport"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Färgglad illustration av ett lås inuti en cirkel"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Liten, svartvit illustration av nio punkter som bildar en kvadrat"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"Liten, svartvit illustration av enkla former som ett hjärta, en triangel och en kvadrat"</string>
     <string name="topic10001" msgid="1636806320891333775">"Konst och underhållning"</string>
     <string name="topic10002" msgid="1226367977754287428">"Skådespeleri och teater"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime och manga"</string>

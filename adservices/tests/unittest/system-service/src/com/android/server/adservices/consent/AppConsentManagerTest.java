@@ -16,6 +16,8 @@
 
 package com.android.server.adservices.consent;
 
+import static com.android.server.adservices.consent.ConsentManager.STORAGE_XML_IDENTIFIER;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -28,6 +30,8 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 
 import androidx.test.core.app.ApplicationProvider;
+
+import com.android.server.adservices.common.BooleanFileDatastore;
 
 import org.junit.After;
 import org.junit.Before;
@@ -51,7 +55,11 @@ public class AppConsentManagerTest {
 
     @Spy
     private BooleanFileDatastore mDatastoreSpy =
-            new BooleanFileDatastore(BASE_DIR, AppConsentManagerFixture.TEST_DATASTORE_NAME, 1);
+            new BooleanFileDatastore(
+                    BASE_DIR,
+                    AppConsentManagerFixture.TEST_DATASTORE_NAME,
+                    1,
+                    STORAGE_XML_IDENTIFIER);
 
     @Before
     public void setup() throws IOException {

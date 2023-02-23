@@ -30,6 +30,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.topics.TopicsWorker;
@@ -129,7 +130,9 @@ public class PackageChangedReceiver extends BroadcastReceiver {
 
         LogUtil.d("Package Data Cleared: " + packageUri);
         sBackgroundExecutor.execute(
-                () -> MeasurementImpl.getInstance(context).deletePackageRecords(packageUri));
+                () -> {
+                    MeasurementImpl.getInstance(context).deletePackageRecords(packageUri);
+                });
     }
 
     @VisibleForTesting
@@ -246,10 +249,8 @@ public class PackageChangedReceiver extends BroadcastReceiver {
     boolean isPackageStillInstalled(@NonNull Context context, @NonNull String packageName) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(packageName);
-        return context
-                .getPackageManager()
-                .getInstalledPackages(PackageManager.PackageInfoFlags.of(0))
-                .stream()
+        PackageManager packageManager = context.getPackageManager();
+        return PackageManagerCompatUtils.getInstalledPackages(packageManager, 0).stream()
                 .anyMatch(s -> packageName.equals(s.packageName));
     }
 

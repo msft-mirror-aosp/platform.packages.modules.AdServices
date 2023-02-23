@@ -69,10 +69,10 @@
     <string name="notificationUI_how_it_works_expanded_text4" msgid="3910573920883580609">"तुम्ही वापरत असलेल्या अ‍ॅप्सच्या आधारे Android हे तुमच्या टॉप स्वारस्यांचा अधूनमधून अंदाज लावते, उदाहरणार्थ, \"क्रीडा\" किंवा \"प्रवास.\"\n\nनंतर, तुम्हाला आणखी उपयुक्त जाहिराती दाखवण्यासाठी ॲप हे Android ला त्या स्वारस्यांचा वापर करण्यास सांगू शकते.\n\nतुम्ही तुमच्या गोपनीयता सेटिंग्जमध्ये सध्याच्या स्वारस्यांची सूची पाहू शकता आणि तुम्हाला आवडत नसलेले कोणतेही स्वारस्य ब्लॉक करू शकता."</string>
     <string name="notificationUI_how_it_works_expanded_text5" msgid="7257714040472055781">"•  अ‍ॅप्सद्वारे अंदाज लावलेली स्वारस्ये"</string>
     <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"अ‍ॅप्स ही तुमच्या स्वारस्यांचा अंदाज लावून ती Android वर तात्पुरती सेव्ह करू शकतात. उदाहरणार्थ, तुम्ही धावण्यासाठीचे शूज खरेदी करण्याकरिता वापरलेले अ‍ॅप हे तुमच्या स्वारस्याचा अंदाज \"मॅरेथॉन धावणे\" म्हणून लावू शकते.\n\nनंतर, या स्वारस्याच्या आधारे दुसरे अ‍ॅप तुम्हाला मॅरेथॉनशी संबंधित जाहिरात दाखवू शकते.\n\nतुमच्या गोपनीयता सेटिंग्जमध्ये, तुम्ही स्वारस्ये सेव्ह केलेल्या अ‍ॅप्सची सूची व्यवस्थापित करू शकता."</string>
-    <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"जाहिरात गोपनीयतेशी संबंधित नवीन वैशिष्ट्ये"</string>
+    <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"जाहिरातींशी संबंधित गोपनीयतेची नवीन वैशिष्ट्ये"</string>
     <string name="notificationUI_notification_ga_content" msgid="3483979694272908942">"जाहिरातीचे विषय आणि नवीन नियंत्रणे ही तुम्ही पाहत असलेल्या जाहिरातींच्या बाबतीत तुम्हाला अधिक पर्याय देतात"</string>
-    <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"Android हे तुम्ही अलीकडे वापरलेल्या अ‍ॅप्सच्या आधारावर स्वारस्य असलेल्या विषयांची नोंद ठेवते. तसेच, तुम्ही वापरत असलेली अ‍ॅप्स तुम्हाला काय आवडते हे निर्धारित करू शकतात. नंतर, अ‍ॅप्स तुम्हाला पर्सनलाइझ केलेल्या जाहिराती दाखवण्यासाठी या माहितीची विनंती करू शकतात. तुम्ही कोणते विषय आणि अ‍ॅप्स तुम्हाला जाहिराती दाखवण्यासाठी वापरली जावीत हे निवडू शकता."</string>
-    <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"जाहिरातीचा परफॉर्मन्स मोजण्यासाठी, ॲप्सदरम्यान मर्यादित प्रकारचा डेटा शेअर केला जातो."</string>
+    <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"Android हे तुम्ही अलीकडे वापरलेल्या अ‍ॅप्सच्या आधारावर स्वारस्य असलेल्या विषयांची नोंद ठेवते. तसेच, तुम्ही वापरत असलेली अ‍ॅप्स तुम्हाला काय आवडते हे निर्धारित करू शकतात. नंतर, तुम्हाला पर्सनलाइझ केलेल्या जाहिराती दाखवण्यासाठी अ‍ॅप्स ही माहिती मागू शकतात. तुम्हाला जाहिराती दाखवण्यासाठी कोणते विषय आणि कोणती अ‍ॅप्स वापरली जावीत हे तुम्ही निवडू शकता."</string>
+    <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"जाहिरातीचा परफॉर्मन्स मोजण्यासाठी, मर्यादित प्रकारचा डेटा ॲप्सदरम्यान शेअर केला जातो."</string>
     <string name="notificationUI_ga_container1_control_text" msgid="2711321174550177509">"Android वरील जाहिरातींबद्दल अधिक माहिती"</string>
     <string name="notificationUI_how_it_works_row_subtitle1" msgid="8685034725335826096">"आणखी उपयुक्त जाहिराती"</string>
     <string name="notificationUI_how_it_works_row_body1" msgid="5865369599951938718">"तुम्ही पाहत असलेल्या जाहिराती पर्सनलाइझ करण्यात मदत करण्यासाठी अ‍ॅप्स ही Android कडे माहिती मागू शकतात."</string>
@@ -81,19 +81,19 @@
     <string name="notificationUI_how_it_works_row_body4" msgid="8731138074016839243">"नंतर, तुम्ही वापरत असलेले ॲप ही माहिती मागू शकते — तुमचे जाहिरातीचे विषय किंवा तुम्ही वापरलेल्या ॲप्सद्वारे सुचवलेल्या जाहिराती."</string>
     <string name="notificationUI_how_it_works_row_body5" msgid="4524382869577899661">"Android हे विषय आणि अ‍ॅपने सुचवलेला डेटा नियमितपणे ऑटो-डिलीट करते. सूचना देऊ नये असे तुम्हाला वाटत असलेले विशिष्ट विषय आणि अ‍ॅप्स तुम्ही ब्लॉकदेखील करू शकता."</string>
     <string name="notificationUI_how_it_works_subtitle2" msgid="2203542887026049927">"जाहिरात किती चांगल्या पद्धतीने परफॉर्म करते हे मोजणे"</string>
-    <string name="notificationUI_how_it_works_row_body6" msgid="5368364880910986588">"तुम्ही वापरत असलेली अ‍ॅप्स त्यांच्या जाहिरातींचा परफॉर्मन्स मोजण्यात मदत करणारी माहिती Android कडे मागू शकतात. Android हे अ‍ॅप्सना मर्यादित प्रकारचा डेटा गोळा करू देते, जसे तुम्हाला दिवसाच्या कोणत्या वेळी जाहिरात दाखवली गेली होती."</string>
+    <string name="notificationUI_how_it_works_row_body6" msgid="5368364880910986588">"तुम्ही वापरत असलेली अ‍ॅप्स ही त्यांच्या जाहिरातींचा परफॉर्मन्स मोजण्यात मदत करण्यासाठी Android कडे माहिती मागू शकतात. तुम्हाला दिवसाच्या कोणत्या वेळी जाहिरात दाखवली गेली यासारखा मर्यादित प्रकारचा डेटा Android हे अ‍ॅप्सना गोळा करू देते."</string>
     <!-- no translation found for notificationUI_how_it_works_row_body7 (8158317350415462142) -->
     <skip />
-    <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"नवीन जाहिरात गोपनीयता वैशिष्ट्ये वापरून पहा"</string>
+    <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"जाहिरातींशी संबंधित गोपनीयतेची नवीन वैशिष्ट्ये वापरून पहा"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"जाहिरातीचे विषय हे तुम्ही पाहत असलेल्या जाहिरातींच्या बाबतीत तुम्हाला अधिक पर्याय देतात"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"तपशील पहा"</string>
-    <string name="notificationUI_header_ga_title_eu" msgid="4461095539795574989">"Android वरील वर्धित जाहिरात गोपनीयता"</string>
-    <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"तुम्ही पाहत असलेल्या जाहिरातींच्या बाबतीत तुम्हाला अधिक पर्याय देण्यासाठी, Android हे नवीन गोपनीयता वैशिष्ट्ये लाँच करत आहे."</string>
-    <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"जाहिरात विषय तुमची ओळख आणि तुमच्या अ‍ॅप वापरासंबंधित माहितीचे संरक्षण करताना तुम्हाला उपयुक्त जाहिराती दाखवण्यात अ‍ॅप्सना मदत करतात. Android हे तुम्ही अलीकडे वापरलेल्या अ‍ॅप्सच्या आधारावर स्वारस्य असलेल्या विषयांची नोंद ठेवू शकते. त्यानंतर, तुम्ही वापरत असलेले अ‍ॅप हे तुम्ही पाहत असलेल्या जाहिराती पर्सनलाइझ करण्यासाठी Android कडे उपयुक्त विषय मागू शकते."</string>
+    <string name="notificationUI_header_ga_title_eu" msgid="4461095539795574989">"Android वरील वर्धित जाहिरातींशी संबंधित गोपनीयता"</string>
+    <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android हे नवीन गोपनीयता वैशिष्ट्ये लाँच करत आहे, जी तुम्हाला तुम्ही पाहत असलेल्या जाहिरातींबद्दल अधिक निवड करू देतील."</string>
+    <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"जाहिरातीचे विषय तुमची ओळख आणि तुमच्या अ‍ॅप वापरासंबंधित माहितीचे संरक्षण करताना तुम्हाला उपयुक्त जाहिराती दाखवण्यात अ‍ॅप्सना मदत करतात. Android हे तुम्ही अलीकडे वापरलेल्या अ‍ॅप्सच्या आधारावर स्वारस्य असलेल्या विषयांची नोंद ठेवू शकते. त्यानंतर, तुम्ही वापरत असलेले अ‍ॅप हे तुम्ही पाहत असलेल्या जाहिराती पर्सनलाइझ करण्यासाठी Android कडे उपयुक्त विषय मागू शकते."</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"तुम्ही तुमच्या डिव्हाइस सेटिंग्जमध्ये जाहिरातीचे विषय पाहू शकता आणि तुम्हाला जे विषय अ‍ॅप्ससोबत शेअर करायचे नाहीत ते ब्लॉक करू शकता. Android हे जाहिरातीचे विषय नियमितपणे ऑटो-डिलीटदेखील करते."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"तुम्ही गोपनीयता सेटिंग्जमध्ये तुमचा निर्णय कधीही बदलू शकता."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"जाहिरातीच्या विषयांबद्दल अधिक माहिती"</string>
-    <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"Android तुमचा डेटा कसा संरक्षित करते याबद्दल आमचे गोपनीयता धोरण यामध्ये अधिक जाणून घ्या."</string>
+    <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"Android हे तुमच्या डेटाचे संरक्षण कसे करते याबद्दल आमचे गोपनीयता धोरण यामध्ये अधिक जाणून घ्या."</string>
     <string name="notificationUI_right_control_button_ga_text_eu" msgid="2022252072760042013">"होय, मला मान्य आहे"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  कोणता डेटा वापरला जातो"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"तुमचे जाहिरातीचे विषय तुम्ही अलीकडे या डिव्हाइसवर वापरलेल्या ॲप्सवर आणि तुम्ही ती किती वारंवार वापरता यावर आधारित असतात."</string>
@@ -105,13 +105,13 @@
     <string name="notificationUI_fledge_measurement_title" msgid="5279119450359078459">"जाहिरातींना आणखी खाजगी बनवणारी इतर वैशिष्ट्ये"</string>
     <string name="notificationUI_fledge_measurement_introduction_text1" msgid="6943787406043534689">"अ‍ॅप्स तुम्हाला पर्सनलाइझ केलेल्या जाहिराती दाखवतात, तेव्हा ती तुमच्याबद्दल काय जाणून घेऊ शकतात हे मर्यादित करण्यासाठी Android नवीन मार्ग लाँच करत आहे."</string>
     <string name="notificationUI_fledge_measurement_introduction_text2" msgid="601600895880486962">"•  अ‍ॅपने सुचवलेल्या जाहिराती या अ‍ॅप्सना तुम्हाला उपयुक्त जाहिराती दाखवण्यासाठी सक्षम करून, तुमची ओळख आणि तुमच्या अ‍ॅपच्या वापराबद्दलची माहिती संरक्षित करण्यात मदत करतात. तुमच्या अ‍ॅक्टिव्हिटीवर आधारित, तुम्ही वापरत असलेले अ‍ॅप हे इतर अ‍ॅप्सवर संबंधित जाहिराती सुचवू शकते. तुम्ही गोपनीयता सेटिंग्जमध्ये अ‍ॅप्सची सूची पाहू शकता आणि सूचना देण्यापासून त्यांना ब्लॉक करू शकता."</string>
-    <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"•  जाहिरात मापनासह, ॲप्सदरम्यान त्यांच्या जाहिरातींचा परफॉर्मन्स मोजण्यासाठी मर्यादित प्रकारचा डेटा शेअर केला जातो, जसे की तुम्हाला जाहिरात दाखवण्यात आलेली दिवसाची वेळ."</string>
-    <string name="notificationUI_fledge_measurement_control_ga_text_eu" msgid="2346851728118443500">"अ‍ॅपने सुचवलेल्या जाहिराती आणि जाहिरातीशी संबंधित मापन यांविषयी अधिक माहिती"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"जाहिरात मापनासह, तुम्हाला जाहिरात दाखवण्यात आलेली दिवसाची वेळ यासारखा मर्यादित प्रकारचा डेटा हा ॲप्सदरम्यान त्यांच्या जाहिरातींचा परफॉर्मन्स मोजण्यासाठी शेअर केला जातो."</string>
+    <string name="notificationUI_fledge_measurement_control_ga_text_eu" msgid="2346851728118443500">"अ‍ॅपने सुचवलेल्या जाहिराती आणि जाहिरात मापन याबद्दल अधिक माहिती"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text0" msgid="2456923104551938349">"अ‍ॅपने सुचवलेल्या जाहिराती"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text1" msgid="5606895535548790900">"•  कोणता डेटा वापरला जातो"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text2" msgid="6309052819494439288">"तुम्ही या डिव्हाइसवर वापरत असलेल्या अ‍ॅपमधील तुमची अ‍ॅक्टिव्हिटी."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text3" msgid="5347980571056638783">"•  अ‍ॅप्स हा डेटा कसा वापरतात"</string>
-    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text4" msgid="4738335469671465639">"अ‍ॅप्स ही तुम्हाला पसंत असलेल्या गोष्टींबद्दल Android सह माहिती स्टोअर करू शकतात. उदाहरणार्थ, तुम्ही मॅरेथॉनच्या प्रशिक्षणाशी संबंधित अ‍ॅप वापरत असल्यास, तुम्हाला धावण्यासाठीच्या शूजमध्ये स्वारस्य आहे हे अ‍ॅप ठरवू शकते. त्यानंतर, तुम्ही वेगळे अ‍ॅप वापरत असल्यास, ते अ‍ॅप पहिल्या अ‍ॅपने सुचवलेली धावण्यासाठीच्या शूजची जाहिरात तुम्हाला दाखवू शकते."</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text4" msgid="4738335469671465639">"अ‍ॅप्स ही तुमच्या पसंतीच्या गोष्टींबद्दल Android सह माहिती स्टोअर करू शकतात. उदाहरणार्थ, तुम्ही मॅरेथॉनच्या प्रशिक्षणाशी संबंधित अ‍ॅप वापरत असल्यास, तुम्हाला धावण्यासाठीच्या शूजमध्ये स्वारस्य आहे हे अ‍ॅप ठरवू शकते. त्यानंतर, तुम्ही वेगळे अ‍ॅप वापरत असल्यास, ते अ‍ॅप पहिल्या अ‍ॅपने सुचवलेली धावण्यासाठीच्या शूजची जाहिरात तुम्हाला दाखवू शकते."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text5" msgid="8737925570089314631">"•  तुम्ही तुमचा डेटा कसा व्यवस्थापित करू शकता"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android हे अ‍ॅपने सुचवलेला डेटा नियमितपणे ऑटो-डिलीट करते. तुम्ही पुन्हा वापरत असलेले अ‍ॅप या सूचीमध्ये परत दिसू शकते."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"तुम्ही ॲपला तुमच्यासाठी जाहिराती सुचवण्यापासून ब्लॉक करू शकता, सर्व जाहिरात सूचना डेटा रीसेट करू शकता किंवा गोपनीयता सेटिंग्जमध्ये ॲपने सुचवलेल्या जाहिराती कधीही बंद करू शकता."</string>
@@ -133,10 +133,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"प्रायव्हसी सॅंडबाॅक्स"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"तुम्हाला कदाचित आवडतील अशा जाहिराती दाखवण्यासाठी अ‍ॅप्सना वापरता येतील अशी नवीन वैशिष्ट्ये Android ची जाहिरातींशी संबंधित गोपनीयतेची बीटा आवृत्ती पुरवते. ही तंत्रज्ञाने डिव्हाइस आयडेंटिफायर वापरत नाहीत.\n\nतुम्हाला कोणत्या प्रकारच्या जाहिरातींमध्ये स्वारस्य असू शकते याच अंदाज Android लावू शकते आणि तुमच्या डिव्हाइसवर ती स्वारस्ये तात्पुरती सेव्ह करू शकते. हे अ‍ॅप्सना इतर डेव्हलपरच्या सर्व वेबसाइटवर आणि अ‍ॅप्सवर तुमची अ‍ॅक्टिव्हिटी ट्रॅक न करता उपयुक्त जाहिराती दाखवण्याची अनुमती देते."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"तुमच्याकडे कोणतीही ब्लॉक केलेली स्वारस्ये नाहीत"</string>
-    <!-- no translation found for settingsUI_no_blocked_topics_ga_text (377459829879121256) -->
-    <skip />
-    <!-- no translation found for settingsUI_view_blocked_topics_title (3705333677440361392) -->
-    <skip />
+    <string name="settingsUI_no_blocked_topics_ga_text" msgid="377459829879121256">"ब्लॉक केलेले कोणतेही विषय नाहीत"</string>
+    <string name="settingsUI_view_blocked_topics_title" msgid="3705333677440361392">"ब्लॉक केलेले विषय पहा"</string>
     <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"स्वारस्ये रीसेट केली"</string>
     <string name="settingsUI_topics_are_reset_ga" msgid="5250296990870048195">"विषय रीसेट केले होते"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"अ‍ॅप्स ही तुमच्या स्वारस्यांचा अंदाज लावून ती Android वर तात्पुरती सेव्ह करू शकतात. नंतर, दुसरे एखादे अ‍ॅप या स्वारस्यांच्या आधारावर तुम्हाला जाहिरात दाखवू शकते.\n\nतुम्ही एखादे अ‍ॅप ब्लॉक केल्यास, ते आणखी स्वारस्यांचा अंदाज लावणार नाही. तुम्ही ते अनब्लॉक केल्याशिवाय पुन्हा या अ‍ॅप्सच्या सूचीमध्ये जोडले जाणार नाही. ॲपद्वारे आधीच अंजाद वर्तवलेली स्वारस्ये हटवली जातील, परंतु तरीही तुम्हाला काही संबंधित जाहिराती दिसतील."</string>
@@ -148,8 +146,7 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"प्रायव्हसी सॅंडबाॅक्स"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"तुम्हाला कदाचित आवडतील अशा जाहिराती दाखवण्यासाठी अ‍ॅप्सना वापरता येतील अशी नवीन वैशिष्ट्ये Android ची जाहिरातींशी संबंधित गोपनीयतेची बीटा आवृत्ती पुरवते. ही तंत्रज्ञाने डिव्हाइस आयडेंटिफायर वापरत नाहीत.\n\nतुम्हाला कोणत्या प्रकारच्या जाहिरातींमध्ये स्वारस्य असू शकते याच अंदाज अ‍ॅप्स लावू शकतात आणि तुमच्या डिव्हाइसवर ती स्वारस्ये तात्पुरती सेव्ह करू शकतात. हे अ‍ॅप्सना इतर डेव्हलपरच्या सर्व वेबसाइटवर आणि अ‍ॅप्सवर तुमची अ‍ॅक्टिव्हिटी ट्रॅक न करता उपयुक्त जाहिराती दाखवण्याची अनुमती देते."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"तुमच्याकडे कोणतीही ब्लॉक केलेली अ‍ॅप्स नाहीत"</string>
-    <!-- no translation found for settingsUI_no_blocked_apps_ga_text (7488680173653861943) -->
-    <skip />
+    <string name="settingsUI_no_blocked_apps_ga_text" msgid="7488680173653861943">"ब्लॉक केलेली कोणतीही ॲप्स नाहीत"</string>
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"जाहिरातीशी संबंधित मापनाला अनुमती द्या"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"ॲप्स आणि जाहिरातदारांना त्यांच्या जाहिरातींचा परफॉर्मन्स मोजण्यात मदत करणाऱ्या माहितीची ते Android कडून विनंती करू शकतात.\n\nतुमच्या डिव्हाइसवरून जाहिरात मापन डेटा नियमितपणे हटवला जातो."</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"मापन डेटा रीसेट करा"</string>
@@ -157,35 +154,27 @@
     <string name="settingsUI_measurement_are_reset" msgid="4375330550418573499">"जाहिरात मापन डेटा रीसेट केला होता"</string>
     <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"रद्द करा"</string>
     <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"प्रायव्हसी सॅंडबाॅक्स बंद करायचा आहे का?"</string>
-    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"तुम्ही तुमचे मत बदलल्यास किंवा तुम्हाला Android च्या जाहिराती गोपनीयता बीटाबद्दल अधिक जाणून घ्यायचे असल्यास, तुमच्या गोपनीयता सेटिंग्जवर जा"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"तुम्ही तुमचे मत बदलल्यास किंवा तुम्हाला Android च्या जाहिरातींशी संबंधित गोपनीयतेच्या बीटा आवृत्तीबद्दल अधिक जाणून घ्यायचे असल्यास, तुमच्या गोपनीयता सेटिंग्जवर जा"</string>
     <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"बंद करा"</string>
     <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"<xliff:g id="TOPIC">%1$s</xliff:g> ला ब्लॉक करायचे आहे का?"</string>
-    <!-- no translation found for settingsUI_dialog_block_topic_message (2581824495438333677) -->
-    <skip />
+    <string name="settingsUI_dialog_block_topic_message" msgid="2581824495438333677">"हा विषय ब्लॉक केला जाईल आणि तुम्ही तो पुन्हा जोडत नाही, तोपर्यंत सूचीमध्ये पुन्हा जोडला जाणार नाही. तुम्हाला तरीही काही संबंधित जाहिराती दिसू शकतात."</string>
     <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"ब्लॉक करा"</string>
     <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"<xliff:g id="TOPIC">%1$s</xliff:g> अनब्लॉक केले आहे"</string>
-    <!-- no translation found for settingsUI_dialog_unblock_topic_message (1090743551997420666) -->
-    <skip />
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="1090743551997420666">"Android हा विषय तुमच्या सूचीमध्ये पुन्हा जोडू शकते, पण तो कदाचित तात्काळ दिसणार नाही"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"ओके"</string>
-    <!-- no translation found for settingsUI_dialog_reset_topic_title (8025836207966712435) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (4243744527757134000) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_topic_title" msgid="8025836207966712435">"सर्व जाहिरात विषय रीसेट करायचे का?"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="4243744527757134000">"तुमची सूची साफ केली जाईल आणि यापुढे नवीन विषय जोडले जातील. तुम्ही रीसेट केलेल्या विषयांबद्दल तुम्हाला तरीही काही जाहिराती दिसू शकतात."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"रीसेट करा"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g> ब्लॉक करायचे आहे का?"</string>
-    <!-- no translation found for settingsUI_dialog_block_app_message (758788973278770119) -->
-    <skip />
+    <string name="settingsUI_dialog_block_app_message" msgid="758788973278770119">"हे अ‍ॅप जाहिराती सुचवणार नाही आणि तुम्ही ते अनब्लॉक करत नाही, तोपर्यंत तुमच्या सूचीमध्ये पुन्हा जोडले जाणार नाही. तुम्हाला तरीही काही संबंधित जाहिराती दिसू शकतात."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> अनब्लॉक केले आहे"</string>
-    <!-- no translation found for settingsUI_dialog_unblock_app_message (5758218424845642060) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_app_title (5177572712117150557) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_app_message (7845329616145691006) -->
-    <skip />
+    <string name="settingsUI_dialog_unblock_app_message" msgid="5758218424845642060">"हे अ‍ॅप तुमच्यासाठी पुन्हा जाहिराती सुचवू शकते, पण ते तुमच्या सूचीमध्ये कदाचित तात्काळ दिसणार नाही. तुम्हाला संबंधित जाहिराती पाहण्यासाठी कदाचित थोडा वेळ लागेल."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"अ‍ॅप्सद्वारे सुचवलेल्या जाहिराती रीसेट करायच्या का?"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"तुमच्या सूचीतील ॲप्समधील जाहिरात सूचना डेटा हटवला जाईल आणि ॲप्स यापुढे नवीन जाहिराती सुचवतील. तुम्हाला तरीही काही संबंधित जाहिराती दिसू शकतात."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"अ‍ॅप डेटा रीसेट केला गेला"</string>
     <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"सर्व विषय रीसेट करायचे आहेत का?"</string>
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"अ‍ॅप्सद्वारे सुचवलेल्या जाहिराती रीसेट करायच्या का?"</string>
-    <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"जाहिरात गोपनीयता"</string>
+    <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"जाहिरातींशी संबंधित गोपनीयता"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"जाहिरातीचे विषय"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"अ‍ॅपने सुचवलेल्या जाहिराती"</string>
     <!-- no translation found for settingsUI_measurement_ga_title (2255921375701745943) -->
@@ -194,20 +183,25 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"तुम्ही वापरता ती ॲप्स तुम्ही ती कशी वापरता याच्या आधारावर तुम्हाला काय आवडते हेदेखील निर्धारित करू शकतात."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"तुम्ही वापरत असलेली अ‍ॅप्स त्यांच्या जाहिरातींचा परफॉर्मन्स मोजण्यात मदत करणारी माहिती Android कडे मागू शकतात. Android हे अ‍ॅप्सना मर्यादित प्रकारचा डेटा गोळा करू देते."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"सुरू/ <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> विषय"</string>
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{सुरू आहे/ # विषय}other{सुरू आहे/ # विषय}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"सुरू आहे / <xliff:g id="APPS_COUNT">%1$d</xliff:g> अ‍ॅप्स"</string>
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{सुरू आहे / # ॲप}other{सुरू आहे / # ॲप्स}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"सुरू आहे"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"बंद आहे"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"स्वारस्य असलेले विषय तुम्ही अलीकडे वापरलेल्या ॲप्सवर आधारित असतात आणि तुम्हाला पर्सनलाइझ केलेल्या जाहिराती दाखवण्यासाठी ॲप्सद्वारे वापरले जातात.\n\nतुम्हाला ॲप्ससह शेअर करायचे नसलेले विषय तुम्ही ब्लॉक करू शकता. Android हे जाहिरातीचे विषय नियमितपणे ऑटो-डिलीटदेखील करते."</string>
     <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"जाहिरातीच्या विषयांना अनुमती द्या"</string>
     <string name="settingsUI_blocked_topics_ga_title" msgid="7163366621282449273">"तुम्ही ब्लॉक केलेले जाहिरातीचे विषय"</string>
-    <!-- no translation found for settingsUI_reset_topics_ga_title (5365554894399951300) -->
-    <skip />
+    <string name="settingsUI_reset_topics_ga_title" msgid="5365554894399951300">"सर्व जाहिरात विषय रीसेट करा"</string>
     <string name="settingsU_topics_view_footer" msgid="4769146330248953561">"Android हे तुम्ही मागील काही आठवड्यांमध्ये वापरलेली अ‍ॅप्स यांवर आधारित स्वारस्य असलेल्या विषयांची नोंद ठेवते.\n\nत्यानंतर, तुम्ही वापरत असलेले अ‍ॅप हे तुम्ही पाहत असलेल्या जाहिराती पर्सनलाइझ करण्यासाठी Android कडे तुमचे विषय मागू शकते. Android हे तुमची ओळख आणि तुमच्या अ‍ॅपच्या वापराबद्दलची माहिती संरक्षित करून कमाल तीन विषय शेअर करते.\n\nAndroid हे विषय नियमितपणे ऑटो-डिलीट करते. तुम्ही अ‍ॅप्स वापरणे पुढे सुरू ठेवता, तसा विषय सूचीमध्ये पुन्हा दिसू शकतो. किंवा Android ने अ‍ॅप्ससोबत शेअर करू नये असे तुम्हाला वाटत असलेले विषय तुम्ही ब्लॉक करू शकता.\n\nतुमच्या अ‍ॅप्समध्ये, हे सेटिंग, अ‍ॅपने सुचवलेल्या जाहिरातींचे सेटिंग, तुमच्या जाहिरात आयडीची सेटिंग्ज आणि तुम्ही वापरत असलेले अ‍ॅप जाहिराती पर्सनलाइझ करते की नाही यांनुसार तुम्ही पाहत असलेली जाहिरात पर्सनलाइझ केलेली असू शकते."</string>
     <string name="settingsUI_apps_switch_title" msgid="1308209012769248890">"अ‍ॅपने सुचवलेल्या जाहिरातींना अनुमती द्या"</string>
     <string name="settingsUI_apps_view_ga_subtitle" msgid="1911743837387384160">"तुम्ही वापरत असलेली अ‍ॅप्स तुम्हाला काय आवडते हे निर्धारित करू शकतात आणि इतर अ‍ॅप्सवर जाहिराती सुचवू शकतात.\n\nतुम्ही सूचना देण्यापासून अ‍ॅप्सना ब्लॉक करू शकता. Android नियमितपणे अ‍ॅपने सुचवलेला डेटा ऑटो-डिलीटदेखील करते."</string>
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"तुम्ही ब्लॉक केलेली अ‍ॅप्स"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"अ‍ॅपने सुचवलेला डेटा रीसेट करा"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"तुमचा अनुभव पर्सनलाइझ करण्यासाठी तुम्हाला स्वारस्य असलेल्या गोष्टी लक्षात ठेवणे ही अ‍ॅप्ससाठी सामान्य बाब आहे. अ‍ॅप्स ही तुमच्या विषयांबद्दल Android सह माहिती स्टोअरदेखील करू शकतात.\n\nउदाहरणार्थ, तुम्ही मॅरेथॉनच्या प्रशिक्षणाशी संबंधित अ‍ॅप वापरत असल्यास, तुम्हाला धावण्यासाठीच्या शूजमध्ये स्वारस्य आहे हे अ‍ॅप ठरवू शकते. त्यानंतर, तुम्ही वेगळे अ‍ॅप वापरत असल्यास, ते अ‍ॅप पहिल्या अ‍ॅपने सुचवलेली धावण्यासाठीच्या शूजची जाहिरात तुम्हाला दाखवू शकते.\n\nAndroid हे अ‍ॅपने सुचवलेला डेटा ऑटो-डिलीट करते. तुम्ही पुन्हा वापरत असलेले अ‍ॅप या सूचीमध्ये परत दिसू शकते. किंवा तुम्ही अ‍ॅपला तुम्हाला जाहिराती सुचवण्यापासून ब्लॉक करू शकता.\n\nतुमच्या अ‍ॅप्समध्ये, हे सेटिंग, जाहिरातीच्या विषयांचे सेटिंग, तुमच्या जाहिरात आयडीची सेटिंग्ज आणि तुम्ही वापरत असलेले अ‍ॅप जाहिराती पर्सनलाइझ करते की नाही यांनुसार तुम्ही पाहत असलेली जाहिरात पर्सनलाइझ केलेली असू शकते."</string>
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"संगीत, बातम्या आणि क्रीडा यांसारख्या स्वारस्य असलेल्या विषयांचे प्रतिनिधित्व करणाऱ्या चिन्हांचे रंगीत इलस्ट्रेशन"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"वर्तुळातील लॉकचे रंगीत इलस्ट्रेशन"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"चौरस बनवणारे नऊ ठिपके असलेले छोटे कृष्णधवल इलस्ट्रेशन"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"हृदय, त्रिकोण आणि चौरस यांसारख्या साध्या आकारांचे लहान कृष्णधवल इलस्ट्रेशन"</string>
     <string name="topic10001" msgid="1636806320891333775">"कला आणि मनोरंजन"</string>
     <string name="topic10002" msgid="1226367977754287428">"अभिनय आणि रंगभूमी"</string>
     <string name="topic10003" msgid="6949890838957814881">"ॲनिमे आणि मांगा"</string>

@@ -36,13 +36,24 @@ import java.util.UUID;
 /** Class used to send debug reports to Ad-Tech {@link DebugReport} */
 public class DebugReportApi {
 
-    private static final String TYPE_SOURCE_NOISED = "source-noised";
-    private static final String TYPE_SOURCE_DESTINATION_LIMIT = "source-destination-limit";
+    private interface Type {
+        String SOURCE_NOISED = "source-noised";
+        String SOURCE_DESTINATION_LIMIT = "source-destination-limit";
+    }
 
-    private static final String BODY_SOURCE_EVENT_ID = "source_event_id";
-    private static final String BODY_ATTRIBUTION_DESTINATION = "attribution_destination";
-    private static final String BODY_SOURCE_SITE = "source_site";
-    private static final String BODY_LIMIT = "limit";
+    private interface Body {
+        String SOURCE_EVENT_ID = "source_event_id";
+        String ATTRIBUTION_DESTINATION = "attribution_destination";
+        String SOURCE_SITE = "source_site";
+        String LIMIT = "limit";
+        String SOURCE_DEBUG_KEY = "source_debug_key";
+    }
+
+    private enum PermissionState {
+        GRANTED,
+        DENIED,
+        NONE
+    }
 
     private final Context mContext;
 
@@ -54,18 +65,23 @@ public class DebugReportApi {
     public void scheduleSourceDestinationLimitDebugReport(
             Source source, String limit, IMeasurementDao dao) {
         try {
+            boolean isAppSource = source.getPublisherType() == EventSurfaceType.APP;
             JSONObject body = new JSONObject();
-            body.put(BODY_SOURCE_EVENT_ID, source.getEventId().toString());
+            body.put(Body.SOURCE_EVENT_ID, source.getEventId().toString());
             body.put(
-                    BODY_ATTRIBUTION_DESTINATION,
-                    source.getPublisherType() == EventSurfaceType.APP
-                            ? source.getAppDestination().toString()
-                            : source.getWebDestination().toString());
+                    Body.ATTRIBUTION_DESTINATION,
+                    isAppSource
+                            ? source.getAppDestinations().get(0).toString()
+                            : source.getWebDestinations().get(0).toString());
             body.put(
-                    BODY_SOURCE_SITE,
+                    Body.SOURCE_SITE,
                     BaseUriExtractor.getBaseUri(source.getPublisher()).toString());
-            body.put(BODY_LIMIT, limit);
-            scheduleReport(TYPE_SOURCE_DESTINATION_LIMIT, body, source.getEnrollmentId(), dao);
+            body.put(Body.LIMIT, limit);
+            if (getAdIdPermissionState(source) == PermissionState.GRANTED
+                    || getArDebugPermissionState(source) == PermissionState.GRANTED) {
+                body.put(Body.SOURCE_DEBUG_KEY, source.getDebugKey());
+            }
+            scheduleReport(Type.SOURCE_DESTINATION_LIMIT, body, source.getEnrollmentId(), dao);
         } catch (JSONException e) {
             LogUtil.e(e, "Json error in destination limit debug report");
         }
@@ -73,18 +89,24 @@ public class DebugReportApi {
 
     /** Schedules the Source Noised Debug Report */
     public void scheduleSourceNoisedDebugReport(Source source, IMeasurementDao dao) {
+        if (getAdIdPermissionState(source) == PermissionState.DENIED
+                || getArDebugPermissionState(source) == PermissionState.DENIED) {
+            LogUtil.d("Skipping source noised debug report");
+            return;
+        }
         try {
             JSONObject body = new JSONObject();
-            body.put(BODY_SOURCE_EVENT_ID, source.getEventId().toString());
+            body.put(Body.SOURCE_EVENT_ID, source.getEventId().toString());
             body.put(
-                    BODY_ATTRIBUTION_DESTINATION,
+                    Body.ATTRIBUTION_DESTINATION,
                     source.getPublisherType() == EventSurfaceType.APP
-                            ? source.getAppDestination().toString()
-                            : source.getWebDestination().toString());
+                            ? source.getAppDestinations().get(0).toString()
+                            : source.getWebDestinations().get(0).toString());
             body.put(
-                    BODY_SOURCE_SITE,
+                    Body.SOURCE_SITE,
                     BaseUriExtractor.getBaseUri(source.getPublisher()).toString());
-            scheduleReport(TYPE_SOURCE_NOISED, body, source.getEnrollmentId(), dao);
+            body.put(Body.SOURCE_DEBUG_KEY, source.getDebugKey());
+            scheduleReport(Type.SOURCE_NOISED, body, source.getEnrollmentId(), dao);
         } catch (JSONException e) {
             LogUtil.e(e, "Json error in source noised debug report");
         }
@@ -132,4 +154,29 @@ public class DebugReportApi {
                 mContext, /*forceSchedule=*/ true, /*isDebugReportApi=*/ true);
     }
 
+    /* Get AdIdPermission State */
+    private PermissionState getAdIdPermissionState(Source source) {
+        if (source.getPublisherType() == EventSurfaceType.APP) {
+            if (source.hasAdIdPermission()) {
+                return PermissionState.GRANTED;
+            } else {
+                LogUtil.d("Missing AdId permission");
+                return PermissionState.DENIED;
+            }
+        }
+        return PermissionState.NONE;
+    }
+
+    /* Get ArDebugPermission State */
+    private PermissionState getArDebugPermissionState(Source source) {
+        if (source.getPublisherType() == EventSurfaceType.WEB) {
+            if (source.hasArDebugPermission()) {
+                return PermissionState.GRANTED;
+            } else {
+                LogUtil.d("Missing ArDebug permission");
+                return PermissionState.DENIED;
+            }
+        }
+        return PermissionState.NONE;
+    }
 }

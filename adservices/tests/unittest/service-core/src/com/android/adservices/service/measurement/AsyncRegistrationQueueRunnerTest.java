@@ -114,8 +114,8 @@ public class AsyncRegistrationQueueRunnerTest {
             SourceFixture.getValidSourceBuilder()
                     .setEventId(new UnsignedLong(1L))
                     .setPublisher(APP_TOP_ORIGIN)
-                    .setAppDestination(Uri.parse("android-app://com.destination1"))
-                    .setWebDestination(WebUtil.validUri("https://web-destination1.test"))
+                    .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
+                    .setWebDestinations(List.of(WebUtil.validUri("https://web-destination1.test")))
                     .setEnrollmentId(DEFAULT_ENROLLMENT_ID)
                     .setRegistrant(Uri.parse("android-app://com.example"))
                     .setEventTime(new Random().nextLong())
@@ -147,11 +147,11 @@ public class AsyncRegistrationQueueRunnerTest {
 
     private AsyncSourceFetcher mAsyncSourceFetcher;
     private AsyncTriggerFetcher mAsyncTriggerFetcher;
+    private Source mMockedSource;
 
     @Mock HttpsURLConnection mUrlConnection1;
     @Mock HttpsURLConnection mUrlConnection2;
     @Mock private IMeasurementDao mMeasurementDao;
-    @Mock private Source mMockedSource;
     @Mock private Trigger mMockedTrigger;
     @Mock private ITransaction mTransaction;
     @Mock private EnrollmentDao mEnrollmentDao;
@@ -199,6 +199,7 @@ public class AsyncRegistrationQueueRunnerTest {
 
         mAsyncSourceFetcher = spy(new AsyncSourceFetcher(sDefaultContext));
         mAsyncTriggerFetcher = spy(new AsyncTriggerFetcher(sDefaultContext));
+        mMockedSource = spy(SourceFixture.getValidSource());
         MockitoAnnotations.initMocks(this);
         when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(any()))
                 .thenReturn(getEnrollment(DEFAULT_ENROLLMENT_ID));
@@ -229,9 +230,8 @@ public class AsyncRegistrationQueueRunnerTest {
                 .when(mAsyncSourceFetcher)
                 .fetchSource(any(), any(), any());
 
-        Source.FakeReport sf =
-                new Source.FakeReport(
-                        new UnsignedLong(1L), 1L, WebUtil.validUri("https://example.test/sF"));
+        Source.FakeReport sf = new Source.FakeReport(
+                new UnsignedLong(1L), 1L, List.of(WebUtil.validUri("https://example.test/sF")));
         List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
         when(mMockedSource.assignAttributionModeAndGenerateFakeReports())
                 .thenReturn(eventReportList);
@@ -276,7 +276,7 @@ public class AsyncRegistrationQueueRunnerTest {
                 .fetchSource(any(), any(), any());
 
         List<Source.FakeReport> eventReportList = Collections.singletonList(
-                new Source.FakeReport(new UnsignedLong(1L), 1L, APP_DESTINATION));
+                new Source.FakeReport(new UnsignedLong(1L), 1L, List.of(APP_DESTINATION)));
         when(mMockedSource.assignAttributionModeAndGenerateFakeReports())
                 .thenReturn(eventReportList);
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyShort(), any()))
@@ -334,7 +334,7 @@ public class AsyncRegistrationQueueRunnerTest {
                 .fetchSource(any(), any(), any());
 
         List<Source.FakeReport> eventReportList = Collections.singletonList(
-                new Source.FakeReport(new UnsignedLong(1L), 1L, APP_DESTINATION));
+                new Source.FakeReport(new UnsignedLong(1L), 1L, List.of(APP_DESTINATION)));
         when(mMockedSource.assignAttributionModeAndGenerateFakeReports())
                 .thenReturn(eventReportList);
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyShort(), any()))
@@ -387,7 +387,7 @@ public class AsyncRegistrationQueueRunnerTest {
                 .fetchSource(any(), any(), any());
 
         List<Source.FakeReport> eventReportList = Collections.singletonList(
-                new Source.FakeReport(new UnsignedLong(1L), 1L, APP_DESTINATION));
+                new Source.FakeReport(new UnsignedLong(1L), 1L, List.of(APP_DESTINATION)));
         when(mMockedSource.assignAttributionModeAndGenerateFakeReports())
                 .thenReturn(eventReportList);
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyShort(), any()))
@@ -595,9 +595,8 @@ public class AsyncRegistrationQueueRunnerTest {
                 .when(mAsyncSourceFetcher)
                 .fetchSource(any(), any(), any());
 
-        Source.FakeReport sf =
-                new Source.FakeReport(
-                        new UnsignedLong(1L), 1L, WebUtil.validUri("https://example.test/sF"));
+        Source.FakeReport sf = new Source.FakeReport(
+                new UnsignedLong(1L), 1L, List.of(WebUtil.validUri("https://example.test/sF")));
         List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
         when(mMockedSource.assignAttributionModeAndGenerateFakeReports())
                 .thenReturn(eventReportList);
@@ -640,9 +639,8 @@ public class AsyncRegistrationQueueRunnerTest {
                 .when(mAsyncSourceFetcher)
                 .fetchSource(any(), any(), any());
 
-        Source.FakeReport sf =
-                new Source.FakeReport(
-                        new UnsignedLong(1L), 1L, WebUtil.validUri("https://example.test/sF"));
+        Source.FakeReport sf = new Source.FakeReport(
+                new UnsignedLong(1L), 1L, List.of(WebUtil.validUri("https://example.test/sF")));
         List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
         when(mMockedSource.assignAttributionModeAndGenerateFakeReports())
                 .thenReturn(eventReportList);
@@ -693,9 +691,8 @@ public class AsyncRegistrationQueueRunnerTest {
                 .when(mAsyncSourceFetcher)
                 .fetchSource(any(), any(), any());
 
-        Source.FakeReport sf =
-                new Source.FakeReport(
-                        new UnsignedLong(1L), 1L, WebUtil.validUri("https://example.test/sF"));
+        Source.FakeReport sf = new Source.FakeReport(
+                new UnsignedLong(1L), 1L, List.of(WebUtil.validUri("https://example.test/sF")));
         List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
         when(mMockedSource.assignAttributionModeAndGenerateFakeReports())
                 .thenReturn(eventReportList);
@@ -973,9 +970,8 @@ public class AsyncRegistrationQueueRunnerTest {
                 .when(mAsyncSourceFetcher)
                 .fetchSource(any(), any(), any());
 
-        Source.FakeReport sf =
-                new Source.FakeReport(
-                        new UnsignedLong(1L), 1L, WebUtil.validUri("https://example.test/sF"));
+        Source.FakeReport sf = new Source.FakeReport(
+                new UnsignedLong(1L), 1L, List.of(WebUtil.validUri("https://example.test/sF")));
         List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
         when(mMockedSource.assignAttributionModeAndGenerateFakeReports())
                 .thenReturn(eventReportList);
@@ -1013,9 +1009,8 @@ public class AsyncRegistrationQueueRunnerTest {
                 .when(mAsyncSourceFetcher)
                 .fetchSource(any(), any(), any());
 
-        Source.FakeReport sf =
-                new Source.FakeReport(
-                        new UnsignedLong(1L), 1L, WebUtil.validUri("https://example.test/sF"));
+        Source.FakeReport sf = new Source.FakeReport(
+                new UnsignedLong(1L), 1L, List.of(WebUtil.validUri("https://example.test/sF")));
         List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
         when(mMockedSource.assignAttributionModeAndGenerateFakeReports())
                 .thenReturn(eventReportList);
@@ -1102,9 +1097,8 @@ public class AsyncRegistrationQueueRunnerTest {
                 .when(mAsyncSourceFetcher)
                 .fetchSource(any(), any(), any());
 
-        Source.FakeReport sf =
-                new Source.FakeReport(
-                        new UnsignedLong(1L), 1L, WebUtil.validUri("https://example.test/sF"));
+        Source.FakeReport sf = new Source.FakeReport(
+                new UnsignedLong(1L), 1L, List.of(WebUtil.validUri("https://example.test/sF")));
         List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
         when(mMockedSource.assignAttributionModeAndGenerateFakeReports())
                 .thenReturn(eventReportList);
@@ -1280,15 +1274,15 @@ public class AsyncRegistrationQueueRunnerTest {
         Source source =
                 spy(
                         SourceFixture.getValidSourceBuilder()
-                                .setAppDestination(
-                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
-                                .setWebDestination(null)
+                                .setAppDestinations(
+                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
+                                .setWebDestinations(null)
                                 .build());
         List<Source.FakeReport> fakeReports =
                 createFakeReports(
                         source,
                         fakeReportsCount,
-                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION);
+                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS);
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 getSpyAsyncRegistrationQueueRunner();
         Answer<?> falseAttributionAnswer =
@@ -1310,8 +1304,8 @@ public class AsyncRegistrationQueueRunnerTest {
 
         assertEquals(
                 new Attribution.Builder()
-                        .setDestinationOrigin(source.getAppDestination().toString())
-                        .setDestinationSite(source.getAppDestination().toString())
+                        .setDestinationOrigin(source.getAppDestinations().get(0).toString())
+                        .setDestinationSite(source.getAppDestinations().get(0).toString())
                         .setEnrollmentId(source.getEnrollmentId())
                         .setSourceOrigin(source.getPublisher().toString())
                         .setSourceSite(source.getPublisher().toString())
@@ -1329,12 +1323,13 @@ public class AsyncRegistrationQueueRunnerTest {
         Source source =
                 spy(
                         SourceFixture.getValidSourceBuilder()
-                                .setAppDestination(null)
-                                .setWebDestination(SourceFixture.ValidSourceParams.WEB_DESTINATION)
+                                .setAppDestinations(null)
+                                .setWebDestinations(
+                                        SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
                                 .build());
         List<Source.FakeReport> fakeReports =
                 createFakeReports(
-                        source, fakeReportsCount, SourceFixture.ValidSourceParams.WEB_DESTINATION);
+                        source, fakeReportsCount, SourceFixture.ValidSourceParams.WEB_DESTINATIONS);
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 getSpyAsyncRegistrationQueueRunner();
         Answer<?> falseAttributionAnswer =
@@ -1356,8 +1351,8 @@ public class AsyncRegistrationQueueRunnerTest {
 
         assertEquals(
                 new Attribution.Builder()
-                        .setDestinationOrigin(source.getWebDestination().toString())
-                        .setDestinationSite(source.getWebDestination().toString())
+                        .setDestinationOrigin(source.getWebDestinations().get(0).toString())
+                        .setDestinationSite(source.getWebDestinations().get(0).toString())
                         .setEnrollmentId(source.getEnrollmentId())
                         .setSourceOrigin(source.getPublisher().toString())
                         .setSourceSite(source.getPublisher().toString())
@@ -1375,9 +1370,10 @@ public class AsyncRegistrationQueueRunnerTest {
         Source source =
                 spy(
                         SourceFixture.getValidSourceBuilder()
-                                .setAppDestination(
-                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
-                                .setWebDestination(SourceFixture.ValidSourceParams.WEB_DESTINATION)
+                                .setAppDestinations(
+                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
+                                .setWebDestinations(
+                                        SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
                                 .build());
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 getSpyAsyncRegistrationQueueRunner();
@@ -1386,7 +1382,7 @@ public class AsyncRegistrationQueueRunnerTest {
                 createFakeReports(
                         source,
                         fakeReportsCount,
-                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION);
+                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS);
 
         Answer<?> falseAttributionAnswer =
                 (arg) -> {
@@ -1407,8 +1403,8 @@ public class AsyncRegistrationQueueRunnerTest {
                 .insertAttribution(attributionRateLimitArgCaptor.capture());
         assertEquals(
                 new Attribution.Builder()
-                        .setDestinationOrigin(source.getAppDestination().toString())
-                        .setDestinationSite(source.getAppDestination().toString())
+                        .setDestinationOrigin(source.getAppDestinations().get(0).toString())
+                        .setDestinationSite(source.getAppDestinations().get(0).toString())
                         .setEnrollmentId(source.getEnrollmentId())
                         .setSourceOrigin(source.getPublisher().toString())
                         .setSourceSite(source.getPublisher().toString())
@@ -1419,8 +1415,8 @@ public class AsyncRegistrationQueueRunnerTest {
 
         assertEquals(
                 new Attribution.Builder()
-                        .setDestinationOrigin(source.getWebDestination().toString())
-                        .setDestinationSite(source.getWebDestination().toString())
+                        .setDestinationOrigin(source.getWebDestinations().get(0).toString())
+                        .setDestinationSite(source.getWebDestinations().get(0).toString())
                         .setEnrollmentId(source.getEnrollmentId())
                         .setSourceOrigin(source.getPublisher().toString())
                         .setSourceSite(source.getPublisher().toString())
@@ -1437,9 +1433,9 @@ public class AsyncRegistrationQueueRunnerTest {
         Source source =
                 spy(
                         SourceFixture.getValidSourceBuilder()
-                                .setAppDestination(
-                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
-                                .setWebDestination(null)
+                                .setAppDestinations(
+                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
+                                .setWebDestinations(null)
                                 .build());
         List<Source.FakeReport> fakeReports = Collections.emptyList();
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
@@ -1463,8 +1459,8 @@ public class AsyncRegistrationQueueRunnerTest {
 
         assertEquals(
                 new Attribution.Builder()
-                        .setDestinationOrigin(source.getAppDestination().toString())
-                        .setDestinationSite(source.getAppDestination().toString())
+                        .setDestinationOrigin(source.getAppDestinations().get(0).toString())
+                        .setDestinationSite(source.getAppDestinations().get(0).toString())
                         .setEnrollmentId(source.getEnrollmentId())
                         .setSourceOrigin(source.getPublisher().toString())
                         .setSourceSite(source.getPublisher().toString())
@@ -1564,7 +1560,7 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mDebugReportApi));
 
         // Execution
-        doReturn(SystemHealthParams.MAX_SOURCES_PER_PUBLISHER)
+        doReturn((long) SystemHealthParams.getMaxSourcesPerPublisher())
                 .when(mMeasurementDao)
                 .getNumSourcesPerPublisher(any(), anyInt());
         boolean status =
@@ -1708,7 +1704,7 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mEnrollmentDao,
                                 new FakeDatastoreManager(),
                                 mDebugReportApi));
-        doReturn(SystemHealthParams.MAX_SOURCES_PER_PUBLISHER)
+        doReturn((long) SystemHealthParams.getMaxSourcesPerPublisher())
                 .when(mMeasurementDao)
                 .getNumSourcesPerPublisher(any(), anyInt());
 
@@ -1739,7 +1735,7 @@ public class AsyncRegistrationQueueRunnerTest {
                                 new FakeDatastoreManager(),
                                 mDebugReportApi));
 
-        doReturn(SystemHealthParams.MAX_SOURCES_PER_PUBLISHER)
+        doReturn((long) SystemHealthParams.getMaxSourcesPerPublisher())
                 .when(mMeasurementDao)
                 .getNumSourcesPerPublisher(any(), anyInt());
 
@@ -1823,7 +1819,7 @@ public class AsyncRegistrationQueueRunnerTest {
     }
 
     @Test
-    public void testRegisterAppSource_redirectOverridesWebAndOsDestinations()
+    public void testRegisterAppSource_redirectOverridesOsButNotWebDestination()
             throws DatastoreException, IOException {
         // Setup
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
@@ -1908,13 +1904,13 @@ public class AsyncRegistrationQueueRunnerTest {
             Assert.assertTrue(cursor.moveToNext());
             Source source = SqliteObjectMapperAccessor.constructSourceFromCursor(cursor);
             assertEquals(new UnsignedLong(987654321L), source.getEventId());
-            assertEquals(DEFAULT_WEB_DESTINATION, source.getWebDestination());
-            assertEquals(DEFAULT_OS_DESTINATION, source.getAppDestination());
+            assertEquals(DEFAULT_WEB_DESTINATION, source.getWebDestinations().get(0));
+            assertEquals(DEFAULT_OS_DESTINATION, source.getAppDestinations().get(0));
             Assert.assertTrue(cursor.moveToNext());
             source = SqliteObjectMapperAccessor.constructSourceFromCursor(cursor);
             assertEquals(new UnsignedLong(123456789L), source.getEventId());
-            assertEquals(DEFAULT_WEB_DESTINATION, source.getWebDestination());
-            assertEquals(DEFAULT_OS_DESTINATION, source.getAppDestination());
+            assertEquals(ALT_WEB_DESTINATION, source.getWebDestinations().get(0));
+            assertEquals(DEFAULT_OS_DESTINATION, source.getAppDestinations().get(0));
         }
     }
 
@@ -2013,14 +2009,15 @@ public class AsyncRegistrationQueueRunnerTest {
         return webSourceRegistrationRequestBuilder.build();
     }
 
-    private List<Source.FakeReport> createFakeReports(Source source, int count, Uri destination) {
+    private List<Source.FakeReport> createFakeReports(
+            Source source, int count, List<Uri> destinations) {
         return IntStream.range(0, count)
                 .mapToObj(
                         x ->
                                 new Source.FakeReport(
                                         new UnsignedLong(0L),
                                         source.getReportingTimeForNoising(0),
-                                        destination))
+                                        destinations))
                 .collect(Collectors.toList());
     }
 
