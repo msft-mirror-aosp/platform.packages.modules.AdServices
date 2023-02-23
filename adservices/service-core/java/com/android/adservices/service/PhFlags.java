@@ -335,6 +335,10 @@ public final class PhFlags implements Flags {
             "max_response_based_registration_size_bytes";
 
     // UI keys
+    static final String KEY_IS_EEA_DEVICE_FEATURE_ENABLED = "is_eea_device_feature_enabled";
+
+    static final String KEY_IS_EEA_DEVICE = "is_eea_device";
+
     static final String KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL =
             "mdd_ui_ota_strings_manifest_file_url";
 
@@ -342,9 +346,9 @@ public final class PhFlags implements Flags {
 
     static final String KEY_UI_OTA_STRINGS_DOWNLOAD_DEADLINE = "ui_ota_strings_download_deadline";
 
-    static final String KEY_UI_DIALOGS_FEATURE_ENABLED = "ui_dialogs_feature_enabled";
-
     static final String KEY_UI_EEA_COUNTRIES = "ui_eea_countries";
+
+    static final String KEY_UI_DIALOGS_FEATURE_ENABLED = "ui_dialogs_feature_enabled";
 
     static final String KEY_GA_UX_FEATURE_ENABLED = "ga_ux_enabled";
 
@@ -1883,7 +1887,23 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean isEeaDeviceFeatureEnabled() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_IS_EEA_DEVICE_FEATURE_ENABLED,
+                IS_EEA_DEVICE_FEATURE_ENABLED);
+    }
+
+    @Override
+    public boolean isEeaDevice() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES, KEY_IS_EEA_DEVICE, IS_EEA_DEVICE);
+    }
+
+    @Override
     public String getUiEeaCountries() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         String uiEeaCountries =
                 DeviceConfig.getString(
                         DeviceConfig.NAMESPACE_ADSERVICES, KEY_UI_EEA_COUNTRIES, UI_EEA_COUNTRIES);
@@ -2382,6 +2402,9 @@ public final class PhFlags implements Flags {
         writer.println("==== AdServices PH Flags Dump UI Related Flags ====");
         writer.println(
                 "\t" + KEY_UI_DIALOGS_FEATURE_ENABLED + " = " + getUIDialogsFeatureEnabled());
+        writer.println(
+                "\t" + KEY_IS_EEA_DEVICE_FEATURE_ENABLED + " = " + isEeaDeviceFeatureEnabled());
+        writer.println("\t" + KEY_IS_EEA_DEVICE + " = " + isEeaDevice());
         writer.println("\t" + KEY_UI_EEA_COUNTRIES + " = " + getUiEeaCountries());
         writer.println(
                 "\t"
