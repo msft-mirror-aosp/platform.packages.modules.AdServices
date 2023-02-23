@@ -12,27 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package {
-    default_applicable_licenses: ["Android-Apache-2.0"],
-}
+package com.android.sdksandbox.uiprovider;
 
-android_test {
-    name: "SdkSandboxUiTests",
-    srcs: ["src/**/*.java"],
-    libs: [
-        "android.test.base",
-        "android.test.mock",
-        "android.test.runner",
-    ],
-    static_libs: [
-        "androidx.test.ext.junit",
-        "androidx.test.runner",
-        "SdkSandboxTestUtils",
-        "truth-prebuilt",
-        "UiProviderApi",
-    ],
-    data: [":SdkSandboxUiProvider"],
-    asset_dirs: ["assets"],
-    resource_dirs: ["res"],
-    test_suites: ["general-tests"],
+interface IUiProviderApi {
+    boolean wasViewClicked();
 }
