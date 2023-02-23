@@ -183,11 +183,9 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Apper du bruker, kan også avgjøre hva du liker, basert på hvordan du bruker dem."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Apper du bruker, kan be Android om informasjon for å måle ytelsen til annonsene i dem. Android lar apper samle inn begrensede typer data."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"På / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> emner"</string>
-    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
-    <skip />
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{På / # emne}other{På / # emner}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"På / <xliff:g id="APPS_COUNT">%1$d</xliff:g> apper"</string>
-    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
-    <skip />
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{På / # app}other{På / # apper}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"På"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Av"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Interesseemner er basert på appene du har brukt nylig, og de brukes av apper for å vise deg personlig tilpassede annonser.\n\nDu kan blokkere emner du ikke vil at skal deles med apper. Android sletter også regelmessig emner automatisk"</string>
@@ -200,14 +198,10 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Apper du har blokkert"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Tilbakestill dataene som er foreslått av apper"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Det er vanlig at apper du bruker, husker ting du er interessert i, for å gi deg en tilpasset opplevelse. Apper kan også lagre informasjon i Android om emnene dine.\n\nHvis du for eksempel bruker en app om maratontrening, kan appen fastslå at du er interessert i løpesko. Hvis du bruker en annen app senere, kan den appen vise deg en annonse for løpesko som ble foreslått av den første appen.\n\nAndroid sletter automatisk data fra appforslag regelmessig. Apper du bruker igjen, kan vises på listen igjen. Du kan også blokkere enkeltapper fra å foreslå annonser for deg.\n\nI apper kan annonser du ser, være personlig tilpasset avhengig av denne innstillingen, innstillingen for annonseemner, innstillingene for annonserings-ID og hvorvidt appen du bruker, har personlig tilpassede annonser."</string>
-    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
-    <skip />
-    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
-    <skip />
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Fargerik illustrasjon av symboler som representerer interessante emner som musikk, nyheter og sport"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Fargerik illustrasjon av en lås i en sirkel"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Liten illustrasjon i svart-hvitt av ni punkter som danner et kvadrat"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"Liten illustrasjon i svart-hvitt av enkle former som et hjerte, en trekant og et kvadrat"</string>
     <string name="topic10001" msgid="1636806320891333775">"Kunst og underholdning"</string>
     <string name="topic10002" msgid="1226367977754287428">"Skuespill og teater"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime og manga"</string>

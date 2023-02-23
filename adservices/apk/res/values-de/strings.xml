@@ -183,11 +183,9 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Von dir genutzte Apps können auch aufgrund dessen, wie du sie verwendest, feststellen, was dir gefällt."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Von dir genutzte Apps können von Android Informationen abfragen, die dazu beitragen, die Leistung ihrer Anzeigen zu messen. Android gibt Apps aber nur Zugang zu bestimmten Arten von Daten."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"An / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> Themen"</string>
-    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
-    <skip />
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Aktiviert / # Thema}other{Aktiviert / # Themen}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"An / <xliff:g id="APPS_COUNT">%1$d</xliff:g> Apps"</string>
-    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
-    <skip />
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{Aktiviert / # App}other{Aktiviert / # Apps}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"An"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Aus"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Themen, die dich interessieren könnten, basieren auf Apps, die du in letzter Zeit auf diesem Gerät verwendet hast. Sie werden von Apps verwendet, um dir personalisierte Werbung anzuzeigen.\n\nDu kannst Themen blockieren, die nicht mit Apps geteilt werden sollen. Android löscht außerdem Themen in regelmäßigen Abständen automatisch."</string>
@@ -200,14 +198,10 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Apps, die keine Vorschläge machen dürfen"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Daten zu App-Vorschlägen zurücksetzen"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Es ist üblich, dass in Apps, die du verwendest, Themen gespeichert werden, die dich interessieren, um deine Nutzung zu personalisieren. Apps können auch in Android Informationen über deine Themen speichern.\n\nWenn du zum Beispiel eine App zum Marathontraining nutzt, könnte daraus geschlossen werden, dass du dich für Laufschuhe interessierst. Wenn du dann später eine andere App verwendest, zeigt dir diese App möglicherweise aufgrund von Vorschlägen der ersten App Werbung für Laufschuhe.\n\nIn Android werden Daten zu App-Vorschlägen regelmäßig automatisch gelöscht. Apps, die du wiederholt verwendest, können aber wieder in die Liste aufgenommen werden. Du kannst auch verhindern, dass eine App dir Werbung vorschlägt.\n\nOb in deinen Apps personalisierte Werbung angezeigt wird, hängt von dieser Einstellung, der Einstellung zu Anzeigenthemen, den Einstellungen zu deiner Werbe-ID und davon ab, ob die jeweilige App personalisierte Werbung nutzt."</string>
-    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
-    <skip />
-    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
-    <skip />
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Farbige Abbildung von Symbolen, die Themen wie Musik, Nachrichten und Sport repräsentieren"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Farbige Abbildung eines Schlosses in einem Kreis"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Kleine schwarz-weiße Abbildung mit neun Punkten, die ein Quadrat bilden"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"Kleine schwarz-weiße Abbildung von einfachen Formen wie Herz, Dreieck und Quadrat"</string>
     <string name="topic10001" msgid="1636806320891333775">"Kunst und Unterhaltung"</string>
     <string name="topic10002" msgid="1226367977754287428">"Schauspielkunst und Theater"</string>
     <string name="topic10003" msgid="6949890838957814881">"Manga und Anime"</string>
