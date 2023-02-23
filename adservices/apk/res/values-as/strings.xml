@@ -183,11 +183,9 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"আপুনি ব্যৱহাৰ কৰা এপ্‌সমূহেও আপুনি সেইবিলাক কেনেকৈ ব্যৱহাৰ কৰে তাৰ ওপৰত ভিত্তি কৰি আপুনি কি ভাল পায় সেইটো নিৰ্ধাৰণ কৰিব পাৰে।"</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"আপুনি ব্যৱহাৰ কৰা এপ্‌সমূহে দেখুওৱা বিজ্ঞাপনৰ পাৰদৰ্শিতাৰ জোখ-মাখ কৰাত সহায় কৰিবলৈ সেইসমূহে Androidৰ পৰা তথ্য বিচাৰিব পাৰে। Androidএ এপ্‌সমূহক সীমিত ধৰণৰ ডেটা সংগ্ৰহ কৰিবলৈ দিয়ে।"</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"অন আছে / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> টা বিষয়বস্তু"</string>
-    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
-    <skip />
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{অন আছে / # টা বিষয়বস্তু}one{অন আছে / # টা বিষয়বস্তু}other{অন আছে / # টা বিষয়বস্তু}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"অন আছে / <xliff:g id="APPS_COUNT">%1$d</xliff:g> টা এপ্‌"</string>
-    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
-    <skip />
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{অন আছে / # টা এপ্}one{অন আছে / # টা এপ্}other{অন আছে / # টা এপ্}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"অন আছে"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"অফ আছে"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"আগ্ৰহৰ বিষয়বস্তু আপুনি শেহতীয়াকৈ ব্যৱহাৰ কৰা এপ্‌সমূহৰ ওপৰত আধাৰিত আৰু সেইবোৰ এপ্‌সমূহে আপোনাক ব্যক্তিগতকৃত বিজ্ঞাপন দেখুৱাবলৈ ব্যৱহাৰ কৰে।\n\nআপুনি এপ্‌সমূহৰ সৈতে শ্বেয়াৰ কৰিবলৈ নিবিচৰা বিষয়বস্তু অৱৰোধ কৰিব পাৰে। Androidএও নিয়মীয়াকৈ বিষয়বস্তু স্বয়ংক্ৰিয়ভাৱে মচে।"</string>
@@ -200,14 +198,10 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"আপুনি অৱৰোধ কৰা এপ্‌"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"এপে পৰামৰ্শ দিয়া ডেটা ৰিছেট কৰক"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"আপোনাৰ অভিজ্ঞতা ব্যক্তিগতকৰণ কৰিবলৈ আপুনি ব্যৱহাৰ কৰা এপ্‌সমূহে আপুনি আগ্ৰহ দেখুওৱা বস্তুৰ বিষয়ে মনত ৰখাটো সাধাৰণ কথা। এপ্‌সমূহে আপোনাৰ বিষয়বস্তু সম্পৰ্কে Androidৰ সহায়ত তথ্য ষ্ট’ৰো কৰিব পাৰে।\n\nউদাহৰণস্বৰূপে, আপুনি যদি মাৰাথন প্ৰশিক্ষণৰ সৈতে জড়িত কোনো এপ্‌ ব্যৱহাৰ কৰে, এপ্‌টোৱে সিদ্ধান্ত ল’ব পাৰে যে আপুনি দৌৰোঁতে পিন্ধা জোতাৰ প্ৰতি আগ্ৰহী হ’ব পাৰে। পাছত, আপুনি যদি অন্য কোনো এপ্‌ ব্যৱহাৰ কৰে, সেই এপ্‌টোৱে আপোনাক প্ৰথমটো এপে পৰামৰ্শ আগবঢ়োৱা দৌৰোঁতে পিন্ধা জোতাৰ বিজ্ঞাপন দেখুৱাব পাৰে।\n\nএপে পৰামৰ্শ হিচাপে আগবঢ়োৱা ডেটা Androidএ নিয়মীয়াকৈ স্বয়ংক্ৰিয়ভাৱে মচে। আপুনি পুনৰ ব্যৱহাৰ কৰিব পৰা কোনো এপ্‌ সূচীখনত পুনৰ ওলাব পাৰে। অথবা আপুনি কোনো এপক আপোনাৰ বাবে বিজ্ঞাপনৰ পৰামৰ্শ আগবঢ়োৱাৰ ক্ষেত্ৰত বাধা দিব পাৰে।\n\nআপোনাৰ এপ্‌সমূহত আপুনি দেখা কোনো বিজ্ঞাপন এইটো ছেটিং, বিজ্ঞাপনৰ বিষয়বস্তুৰ ছেটিং, আপোনাৰ বিজ্ঞাপন IDৰ ছেটিং আৰু আপুনি ব্যৱহাৰ কৰি থকা এপ্‌টোৱে বিজ্ঞাপন ব্যক্তিগতকৰণ কৰেনে নকৰে তাৰ ওপৰত ভিত্তি কৰি ব্যক্তিগতকৰণ কৰা হ’ব পাৰে।"</string>
-    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
-    <skip />
-    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
-    <skip />
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"সংগীত, বাতৰি আৰু ক্ৰীড়াৰ দৰে আগ্ৰহৰ বিষয়সমূহ প্ৰতিনিধিত্ব কৰা চিহ্নবোৰৰ ৰঙীন চিত্ৰণ"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"এটা বৃত্তৰ ভিতৰত থকা এটা তলাৰ ৰঙীন চিত্ৰণ"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"এটা বৰ্গ গঠন কৰা নটা বিন্দুৰ সৰু ক’লা আৰু বগা চিত্ৰণ"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"হৃদয়, ত্ৰিভূজ আৰু বৰ্গৰ দৰে সৰল আকৃতিবোৰৰ সৰু ক’লা আৰু বগা চিত্ৰণ"</string>
     <string name="topic10001" msgid="1636806320891333775">"কলা আৰু বিনোদন"</string>
     <string name="topic10002" msgid="1226367977754287428">"অভিনয় আৰু থিয়েটাৰ"</string>
     <string name="topic10003" msgid="6949890838957814881">"এনিমে’ আৰু মাংগা"</string>

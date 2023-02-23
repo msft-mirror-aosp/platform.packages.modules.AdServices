@@ -80,7 +80,7 @@
     <string name="notificationUI_how_it_works_row_body3" msgid="3692457397642529055">"• Apps die je gebruikt kunnen ook vaststellen wat je leuk vindt op basis van hoe je ze gebruikt. Als je bijvoorbeeld een app gebruikt die hardloopschoenen voor lange afstanden verkoopt, kan de app besluiten dat je geïnteresseerd bent in marathons."</string>
     <string name="notificationUI_how_it_works_row_body4" msgid="8731138074016839243">"Later kan een app die je gebruikt vragen om je advertentieonderwerpen of om advertenties die zijn voorgesteld door apps die je hebt gebruikt."</string>
     <string name="notificationUI_how_it_works_row_body5" msgid="4524382869577899661">"Android verwijdert onderwerpen en door apps voorgestelde gegevens regelmatig automatisch. Je kunt ook specifieke onderwerpen en ongewenste apps blokkeren om geen suggesties te krijgen."</string>
-    <string name="notificationUI_how_it_works_subtitle2" msgid="2203542887026049927">"Meten hoe goed een advertentie presteert"</string>
+    <string name="notificationUI_how_it_works_subtitle2" msgid="2203542887026049927">"Checken hoe goed een advertentie presteert"</string>
     <string name="notificationUI_how_it_works_row_body6" msgid="5368364880910986588">"Apps die je gebruikt kunnen Android om informatie vragen waarmee ze de prestaties van hun advertenties kunnen meten. Met Android kunnen apps slechts bepaalde soorten gegevens verzamelen, zoals het tijdstip waarop je een advertentie te zien kreeg."</string>
     <!-- no translation found for notificationUI_how_it_works_row_body7 (8158317350415462142) -->
     <skip />
