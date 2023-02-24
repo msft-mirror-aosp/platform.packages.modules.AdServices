@@ -256,7 +256,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
     /** Mock the ActivityManager::killUid to avoid SecurityException thrown in test. **/
     private void disableKillUid() {
-        Mockito.doNothing().when(mAmSpy).killUid(Mockito.anyInt(), Mockito.anyString());
+        Mockito.lenient().doNothing().when(mAmSpy).killUid(Mockito.anyInt(), Mockito.anyString());
     }
 
     private void disableForegroundCheck() {
@@ -1278,8 +1278,13 @@ public class SdkSandboxManagerServiceUnitTest {
                 TEST_PACKAGE, SDK_PROVIDER_RESOURCES_SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER);
 
         // No more SDKs should be loaded at this point. Verify that the sandbox has been killed.
-        Mockito.verify(mAmSpy)
-                .killUid(Mockito.eq(Process.toSdkSandboxUid(Process.myUid())), Mockito.anyString());
+        if (!SdkLevel.isAtLeastU()) {
+            // For T, killUid() is used to kill the sandbox.
+            Mockito.verify(mAmSpy)
+                    .killUid(
+                            Mockito.eq(Process.toSdkSandboxUid(Process.myUid())),
+                            Mockito.anyString());
+        }
         assertThat(sProvider.getSdkSandboxServiceForApp(callingInfo)).isNull();
     }
 
@@ -2746,6 +2751,11 @@ public class SdkSandboxManagerServiceUnitTest {
 
         @Override
         public void unbindService(CallingInfo callingInfo) {
+            mService.remove(callingInfo);
+        }
+
+        @Override
+        public void stopSandboxService(CallingInfo callingInfo) {
             mService.remove(callingInfo);
         }
 

@@ -51,6 +51,7 @@ java_library {
     ],
     static_libs: [
         "modules-utils-backgroundthread",
+        "modules-utils-build",
     ], //do not add any other static libs to SdkSandbox, else proguard will shrink it.
 }
 

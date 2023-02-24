@@ -69,6 +69,13 @@ public interface SdkSandboxServiceProvider {
     void unbindService(CallingInfo callingInfo);
 
     /**
+     * Kills the sandbox for the given app.
+     *
+     * @param callingInfo app for which the sandbox kill is being requested.
+     */
+    void stopSandboxService(CallingInfo callingInfo);
+
+    /**
      * Return {@link ISdkSandboxService} connected for {@code callingInfo} or otherwise {@code
      * null}.
      */
