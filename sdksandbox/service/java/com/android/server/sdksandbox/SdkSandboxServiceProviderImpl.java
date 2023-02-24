@@ -93,7 +93,20 @@ class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
             String sandboxProcessName = toSandboxProcessName(callingPackageName);
             try {
                 boolean bound;
+                // For U+, we start the sandbox and then bind to it to prevent restarts. For T,
+                // the sandbox service is directly bound to using BIND_AUTO_CREATE flag which brings
+                // up the sandbox but also restarts it if the sandbox dies when bound.
                 if (SdkLevel.isAtLeastU()) {
+                    ComponentName name =
+                            mActivityManagerLocal.startSdkSandboxService(
+                                    intent,
+                                    callingInfo.getUid(),
+                                    callingPackageName,
+                                    sandboxProcessName);
+                    if (name == null) {
+                        notifyFailedBinding(serviceConnection);
+                        return;
+                    }
                     bound =
                             mActivityManagerLocal.bindSdkSandboxService(
                                     intent,
@@ -102,8 +115,9 @@ class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
                                     callingInfo.getAppProcessToken(),
                                     callingPackageName,
                                     sandboxProcessName,
-                                    Context.BIND_AUTO_CREATE);
+                                    0);
                 } else {
+                    // Using BIND_AUTO_CREATE will create the sandbox process.
                     bound =
                             mActivityManagerLocal.bindSdkSandboxService(
                                     intent,
@@ -174,6 +188,29 @@ class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
                 sandbox.onUnbind();
                 Log.i(TAG, "Sdk sandbox for " + callingInfo + " has been unbound");
             }
+        }
+    }
+
+    @Override
+    public void stopSandboxService(CallingInfo callingInfo) {
+        synchronized (mLock) {
+            SdkSandboxConnection sandbox = getSdkSandboxConnectionLocked(callingInfo);
+
+            if (!SdkLevel.isAtLeastU() || sandbox == null || sandbox.getStatus() == NON_EXISTENT) {
+                return;
+            }
+
+            ComponentName componentName = getServiceComponentName();
+            if (componentName == null) {
+                Log.e(TAG, "Failed to find sdk sandbox service");
+                return;
+            }
+            final Intent intent = new Intent().setComponent(componentName);
+            final String callingPackageName = callingInfo.getPackageName();
+            String sandboxProcessName = toSandboxProcessName(callingPackageName);
+
+            mActivityManagerLocal.stopSdkSandboxService(
+                    intent, callingInfo.getUid(), callingPackageName, sandboxProcessName);
         }
     }
 
@@ -335,6 +372,12 @@ class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
 
         public void onSdkSandboxDeath() {
             synchronized (mLock) {
+                // For U+, the sandbox does not restart after dying.
+                if (SdkLevel.isAtLeastU()) {
+                    mStatus = NON_EXISTENT;
+                    return;
+                }
+
                 if (isBound) {
                     // If the sandbox was bound at the time of death, the system will automatically
                     // restart it.

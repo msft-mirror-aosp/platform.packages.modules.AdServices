@@ -102,6 +102,13 @@ public class SdkSandboxServiceImpl extends Service {
     }
 
     @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        // This prevents the sandbox from restarting. This should be kept in sync with the status
+        // maintained in SdkSandboxServiceProviderImpl.SdkSandboxConnection.
+        return START_NOT_STICKY;
+    }
+
+    @Override
     public IBinder onBind(Intent intent) {
         return mBinder;
     }

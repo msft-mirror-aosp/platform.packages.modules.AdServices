@@ -1150,9 +1150,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         @Override
         public void onBindingDied(ComponentName name) {
-            Log.d(TAG, "Sandbox service failed to bind for " + mCallingInfo + " : died on binding");
+            Log.d(TAG, "Sandbox service for " + mCallingInfo + " : died on binding");
             mServiceProvider.unbindService(mCallingInfo);
-            mServiceProvider.bindService(mCallingInfo, this);
         }
 
         @Override
@@ -1571,20 +1570,24 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         mServiceProvider.unbindService(currentCallingInfo);
 
-        // For apps with shared uid, unbind the sandboxes for all the remaining apps since we kill
-        // the sandbox by uid.
-        synchronized (mLock) {
-            for (int i = 0; i < mCallingInfosWithDeathRecipients.size(); i++) {
-                final CallingInfo callingInfo = mCallingInfosWithDeathRecipients.keyAt(i);
-                if (callingInfo.getUid() == currentCallingInfo.getUid()) {
-                    mServiceProvider.unbindService(callingInfo);
+        // For T, we kill the sandbox by uid. For U, we kill a specific sandbox process.
+        if (SdkLevel.isAtLeastU()) {
+            mServiceProvider.stopSandboxService(currentCallingInfo);
+        } else {
+            // For apps with shared uid, unbind the sandboxes for all the remaining apps since we
+            // kill the sandbox by uid.
+            synchronized (mLock) {
+                for (int i = 0; i < mCallingInfosWithDeathRecipients.size(); i++) {
+                    final CallingInfo callingInfo = mCallingInfosWithDeathRecipients.keyAt(i);
+                    if (callingInfo.getUid() == currentCallingInfo.getUid()) {
+                        mServiceProvider.unbindService(callingInfo);
+                    }
                 }
             }
+            final int sdkSandboxUid = Process.toSdkSandboxUid(currentCallingInfo.getUid());
+            Log.i(TAG, "Killing sdk sandbox/s with uid " + sdkSandboxUid);
+            mActivityManager.killUid(sdkSandboxUid, reason);
         }
-        final int sdkSandboxUid = Process.toSdkSandboxUid(currentCallingInfo.getUid());
-        Log.i(TAG, "Killing sdk sandbox/s with uid " + sdkSandboxUid);
-        // TODO(b/230839879): Avoid killing by uid
-        mActivityManager.killUid(sdkSandboxUid, reason);
     }
 
     boolean isSdkSandboxServiceRunning(CallingInfo callingInfo) {
