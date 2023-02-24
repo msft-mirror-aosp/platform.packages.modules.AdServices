@@ -16,8 +16,8 @@
 
 package com.android.adservices.service.adselection;
 
-import static android.adservices.adselection.ReportInteractionRequest.FLAG_DESTINATION_BUYER;
-import static android.adservices.adselection.ReportInteractionRequest.FLAG_DESTINATION_SELLER;
+import static android.adservices.adselection.ReportInteractionRequest.FLAG_REPORTING_DESTINATION_BUYER;
+import static android.adservices.adselection.ReportInteractionRequest.FLAG_REPORTING_DESTINATION_SELLER;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 
@@ -62,9 +62,9 @@ import java.util.concurrent.ExecutorService;
 
 /** Encapsulates the Interaction Reporting logic */
 public class InteractionReporter {
-    @ReportInteractionRequest.Destination
+    @ReportInteractionRequest.ReportingDestination
     private static final int[] POSSIBLE_DESTINATIONS =
-            new int[] {FLAG_DESTINATION_SELLER, FLAG_DESTINATION_BUYER};
+            new int[] {FLAG_REPORTING_DESTINATION_SELLER, FLAG_REPORTING_DESTINATION_BUYER};
 
     @NonNull private final Context mContext;
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
@@ -221,14 +221,14 @@ public class InteractionReporter {
                 "Fetching ad selection entry ID %d for caller \"%s\"",
                 inputParams.getAdSelectionId(), inputParams.getCallerPackageName());
         long adSelectionId = inputParams.getAdSelectionId();
-        int destinationsBitField = inputParams.getDestinations();
+        int destinationsBitField = inputParams.getReportingDestinations();
         String interactionKey = inputParams.getInteractionKey();
 
         return FluentFuture.from(
                 mBackgroundExecutorService.submit(
                         () -> {
                             List<Uri> resultingReportingUris = new ArrayList<>();
-                            for (@ReportInteractionRequest.Destination
+                            for (@ReportInteractionRequest.ReportingDestination
                             int destination : POSSIBLE_DESTINATIONS) {
                                 if (bitExists(destination, destinationsBitField)) {
                                     if (mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
@@ -331,8 +331,8 @@ public class InteractionReporter {
     }
 
     private boolean bitExists(
-            @ReportInteractionRequest.Destination int bit,
-            @ReportInteractionRequest.Destination int bitSet) {
+            @ReportInteractionRequest.ReportingDestination int bit,
+            @ReportInteractionRequest.ReportingDestination int bitSet) {
         return (bit & bitSet) != 0;
     }
 
