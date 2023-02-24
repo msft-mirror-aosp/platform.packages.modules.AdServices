@@ -37,6 +37,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.measurement.AsyncRegistration;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.MeasurementHttpClient;
@@ -60,10 +61,12 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -104,7 +107,8 @@ public class AsyncSourceFetcher {
             boolean shouldValidateDestinationWebSource,
             boolean shouldOverrideDestinationAppSource,
             Source.Builder result,
-            boolean isWebSource)
+            boolean isWebSource,
+            @NonNull String enrollmentId)
             throws JSONException {
         final boolean hasRequiredParams =
                 hasRequiredParams(json, shouldValidateDestinationWebSource);
@@ -225,7 +229,12 @@ public class AsyncSourceFetcher {
             }
         }
 
-        if (!json.isNull(SourceHeaderContract.DEBUG_JOIN_KEY)) {
+        Set<String> allowedEnrollmentsString =
+                new HashSet<>(
+                        AllowLists.splitAllowList(
+                                mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist()));
+        if (allowedEnrollmentsString.contains(enrollmentId)
+                && !json.isNull(SourceHeaderContract.DEBUG_JOIN_KEY)) {
             result.setDebugJoinKey(json.optString(SourceHeaderContract.DEBUG_JOIN_KEY));
         }
 
@@ -313,7 +322,8 @@ public class AsyncSourceFetcher {
                             shouldValidateDestinationWebSource,
                             shouldOverrideDestinationAppSource,
                             result,
-                            isWebSource);
+                            isWebSource,
+                            enrollmentId);
             if (!isValid) {
                 return false;
             }

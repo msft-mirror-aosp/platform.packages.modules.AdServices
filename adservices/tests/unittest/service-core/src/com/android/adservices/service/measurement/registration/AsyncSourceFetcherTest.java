@@ -60,6 +60,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.measurement.AsyncRegistration;
 import com.android.adservices.service.measurement.Source;
+import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.WebUtil;
 import com.android.adservices.service.measurement.util.AsyncFetchStatus;
 import com.android.adservices.service.measurement.util.AsyncRedirect;
@@ -167,6 +168,8 @@ public final class AsyncSourceFetcherTest {
         // registration URIs and not yet enforcing uniqueness of enrollment.
         when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(any())).thenReturn(ENROLLMENT);
         when(mFlags.getMeasurementEnableXNA()).thenReturn(false);
+        when(mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist())
+                .thenReturn(SourceFixture.ValidSourceParams.ENROLLMENT_ID);
     }
 
     @After
@@ -3106,7 +3109,9 @@ public final class AsyncSourceFetcherTest {
                                                 + "  \"destination\":"
                                                 + " android-app://wrong.os-destination,\n"
                                                 + "  \"web_destination\": "
-                                                + "\"" + WEB_DESTINATION + "\""
+                                                + "\""
+                                                + WEB_DESTINATION
+                                                + "\""
                                                 + ",\n"
                                                 + "  \"filter_data\": "
                                                 + filterData
@@ -3177,6 +3182,62 @@ public final class AsyncSourceFetcherTest {
         assertEquals(expiry, result.getEventReportWindow());
         assertEquals(expiry, result.getAggregatableReportWindow());
         assertEquals(DEBUG_JOIN_KEY, result.getDebugJoinKey());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void fetchWebSources_withDebugJoinKeyEnrollmentNotAllowListed_joinKeyDropped()
+            throws IOException {
+        // Setup
+        when(mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist()).thenReturn("");
+        WebSourceRegistrationRequest request =
+                buildWebSourceRegistrationRequest(
+                        Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "\"destination\": \""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\n"
+                                                + "\"source_event_id\": \""
+                                                + EVENT_ID_1
+                                                + "\",\n"
+                                                + "  \"debug_key\": \""
+                                                + DEBUG_KEY
+                                                + "\",\n"
+                                                + "  \"debug_join_key\": \""
+                                                + DEBUG_JOIN_KEY
+                                                + "\"\n"
+                                                + "}\n")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertEquals(0, asyncRedirect.getRedirects().size());
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals(Uri.parse(DEFAULT_DESTINATION), result.getAppDestinations().get(0));
+        assertEquals(EVENT_ID_1, result.getEventId());
+        long expiry =
+                result.getEventTime()
+                        + TimeUnit.SECONDS.toMillis(
+                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+        assertEquals(expiry, result.getExpiryTime());
+        assertEquals(expiry, result.getEventReportWindow());
+        assertEquals(expiry, result.getAggregatableReportWindow());
+        assertNull(result.getDebugJoinKey());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -3334,8 +3395,7 @@ public final class AsyncSourceFetcherTest {
         assertNull(result.getFilterDataString());
         assertEquals(new UnsignedLong(987654321L), result.getEventId());
         assertEquals(
-                result.getEventTime() + TimeUnit.SECONDS.toMillis(456789L),
-                result.getExpiryTime());
+                result.getEventTime() + TimeUnit.SECONDS.toMillis(456789L), result.getExpiryTime());
         assertNull(result.getAggregateSource());
         verify(mUrlConnection).setRequestMethod("POST");
     }
@@ -3386,8 +3446,7 @@ public final class AsyncSourceFetcherTest {
         assertNull(result.getFilterDataString());
         assertEquals(new UnsignedLong(987654321L), result.getEventId());
         assertEquals(
-                result.getEventTime() + TimeUnit.SECONDS.toMillis(456789L),
-                result.getExpiryTime());
+                result.getEventTime() + TimeUnit.SECONDS.toMillis(456789L), result.getExpiryTime());
         assertNull(result.getAggregateSource());
         verify(mUrlConnection).setRequestMethod("POST");
     }
@@ -3608,6 +3667,61 @@ public final class AsyncSourceFetcherTest {
         assertEquals(DEFAULT_EVENT_ID, result.getEventId());
         assertEquals(DEBUG_KEY, result.getDebugKey());
         assertEquals(DEBUG_JOIN_KEY, result.getDebugJoinKey());
+    }
+
+    @Test
+    public void fetchSource_withDebugJoinKeyEnrollmentNotAllowListed_joinKeyDropped()
+            throws Exception {
+        when(mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist()).thenReturn("");
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "  \"destination\": \""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\n"
+                                                + "  \"priority\": \""
+                                                + DEFAULT_PRIORITY
+                                                + "\",\n"
+                                                + "  \"expiry\": \""
+                                                + DEFAULT_EXPIRY
+                                                + "\",\n"
+                                                + "  \"source_event_id\": \""
+                                                + DEFAULT_EVENT_ID
+                                                + "\",\n"
+                                                + "  \"debug_key\": \""
+                                                + DEBUG_KEY
+                                                + "\","
+                                                + "\"debug_join_key\": "
+                                                + DEBUG_JOIN_KEY
+                                                + "}\n")));
+
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestinations().get(0).toString());
+        assertEquals(DEFAULT_PRIORITY, result.getPriority());
+        assertEquals(
+                result.getEventTime() + TimeUnit.SECONDS.toMillis(DEFAULT_EXPIRY_ROUNDED),
+                result.getExpiryTime());
+        assertEquals(DEFAULT_EVENT_ID, result.getEventId());
+        assertEquals(DEBUG_KEY, result.getDebugKey());
+        assertNull(result.getDebugJoinKey());
     }
 
     private RegistrationRequest buildRequest(String registrationUri) {
