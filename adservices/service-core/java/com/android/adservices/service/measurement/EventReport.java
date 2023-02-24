@@ -22,7 +22,7 @@ import android.util.Pair;
 
 import androidx.annotation.Nullable;
 
-import com.android.adservices.service.measurement.util.DebugKey;
+import com.android.adservices.service.measurement.reporting.DebugKeyAccessor;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import java.lang.annotation.Retention;
@@ -378,7 +378,8 @@ public class EventReport {
                             trigger.getDestinationType());
             mBuilding.mSourceType = source.getSourceType();
             mBuilding.mRandomizedTriggerRate = source.getRandomAttributionProbability();
-            Pair<UnsignedLong, UnsignedLong> debugKeyPair = DebugKey.getDebugKeys(source, trigger);
+            Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                    new DebugKeyAccessor().getDebugKeys(source, trigger);
             mBuilding.mSourceDebugKey = debugKeyPair.first;
             mBuilding.mTriggerDebugKey = debugKeyPair.second;
             mBuilding.mDebugReportStatus = DebugReportStatus.NONE;

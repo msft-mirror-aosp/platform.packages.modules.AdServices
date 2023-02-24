@@ -56,10 +56,12 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Download and decode Trigger registration.
@@ -210,7 +212,12 @@ public class AsyncTriggerFetcher {
                 result.setAttributionConfig(attributionConfigsString);
             }
 
-            if (!json.isNull(TriggerHeaderContract.DEBUG_JOIN_KEY)) {
+            Set<String> allowedEnrollmentsString =
+                    new HashSet<>(
+                            AllowLists.splitAllowList(
+                                    mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist()));
+            if (allowedEnrollmentsString.contains(enrollmentId)
+                    && !json.isNull(TriggerHeaderContract.DEBUG_JOIN_KEY)) {
                 result.setDebugJoinKey(json.optString(TriggerHeaderContract.DEBUG_JOIN_KEY));
             }
             triggers.add(result.build());
