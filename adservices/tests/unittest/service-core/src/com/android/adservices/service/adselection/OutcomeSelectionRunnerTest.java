@@ -64,7 +64,7 @@ import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.common.FledgeServiceFilter;
+import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -152,7 +152,7 @@ public class OutcomeSelectionRunnerTest {
     private MockitoSession mStaticMockSession = null;
     private ListeningExecutorService mBlockingExecutorService;
 
-    @Mock private FledgeServiceFilter mFledgeServiceFilter;
+    @Mock private AdSelectionServiceFilter mAdSelectionServiceFilter;
 
     @Before
     public void setup() {
@@ -183,10 +183,10 @@ public class OutcomeSelectionRunnerTest {
                         mAdServicesLoggerMock,
                         mContext,
                         mFlags,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter);
 
         doNothing()
-                .when(mFledgeServiceFilter)
+                .when(mAdSelectionServiceFilter)
                 .filterRequest(
                         SAMPLE_SELLER,
                         MY_APP_PACKAGE_NAME,
@@ -277,7 +277,7 @@ public class OutcomeSelectionRunnerTest {
     @Test
     public void testRunOutcomeSelectionRevokedUserConsentEmptyResult() {
         doThrow(new ConsentManager.RevokedConsentException())
-                .when(mFledgeServiceFilter)
+                .when(mAdSelectionServiceFilter)
                 .filterRequest(
                         SAMPLE_SELLER,
                         MY_APP_PACKAGE_NAME,
@@ -367,7 +367,7 @@ public class OutcomeSelectionRunnerTest {
                         mAdServicesLoggerMock,
                         mContext,
                         mFlags,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter);
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelectionFromOutcomes(
