@@ -44,9 +44,9 @@ import java.util.UUID;
  * End-to-end test from source and trigger registration to attribution reporting, using mocked HTTP
  * requests.
  *
- * Tests in assets/msmt_interop_tests/ directory were copied from
- * https://github.com/chromium/chromium/tree/main/content/test/data/attribution_reporting/interop
- * commit 8ff1e4f84ea36f339d440252ab36559263cf540c
+ * Tests in assets/msmt_interop_tests/ directory were copied from Chromium
+ * src/content/test/data/attribution_reporting/interop
+ * Friday February 17, 2023
  */
 @RunWith(Parameterized.class)
 public class E2EInteropMockTest extends E2EMockTest {
@@ -69,8 +69,8 @@ public class E2EInteropMockTest extends E2EMockTest {
     }
 
     public E2EInteropMockTest(Collection<Action> actions, ReportObjects expectedOutput,
-            PrivacyParamsProvider privacyParamsProvider, String name) throws DatastoreException {
-        super(actions, expectedOutput, privacyParamsProvider, name);
+            ParamsProvider paramsProvider, String name) throws DatastoreException {
+        super(actions, expectedOutput, paramsProvider, name);
         mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager, mFlags);
         mMeasurementImpl =
                 TestObjectProvider.getMeasurementImpl(

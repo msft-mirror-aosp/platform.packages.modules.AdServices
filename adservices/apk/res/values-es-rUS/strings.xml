@@ -156,7 +156,7 @@
     <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"¿Quieres desactivar Privacy Sandbox?"</string>
     <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Si cambias de opinión o quieres obtener más información sobre la privacidad en los anuncios beta de Android, ve a la Configuración de privacidad"</string>
     <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Desactivar"</string>
-    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"¿Quieres bloquear a <xliff:g id="TOPIC">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"¿Quieres bloquear <xliff:g id="TOPIC">%1$s</xliff:g>?"</string>
     <string name="settingsUI_dialog_block_topic_message" msgid="2581824495438333677">"Se bloqueará este tema y ya no estará en tu lista, a menos que decidas volver a agregarlo. Es posible que aún veas anuncios relacionados."</string>
     <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Bloquear"</string>
     <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"Se desbloqueó <xliff:g id="TOPIC">%1$s</xliff:g>"</string>

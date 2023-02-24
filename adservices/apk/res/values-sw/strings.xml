@@ -165,9 +165,9 @@
     <string name="settingsUI_dialog_reset_topic_title" msgid="8025836207966712435">"Ungependa kuweka upya mada zote za matangazo?"</string>
     <string name="settingsUI_dialog_reset_topic_message" msgid="4243744527757134000">"Orodha yako itafutwa na mada mpya zitawekwa kuanzia sasa. Huenda ukaendelea kuona baadhi ya matangazo yanayohusiana na mada ulizoziweka upya."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Weka upya"</string>
-    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Ungependa kuzuia programu ya <xliff:g id="APP">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Ungependa kuzuia <xliff:g id="APP">%1$s</xliff:g>?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="758788973278770119">"Programu hii haitapendekeza matangazo na haitawekwa tena kwenye orodha yako, isipokuwa uiondolee kizuizi. Huenda bado ukaona baadhi ya matangazo yanayohusiana."</string>
-    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Umeiondolea kizuizi programu ya <xliff:g id="APP">%1$s</xliff:g>"</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Umeiondolea kizuizi <xliff:g id="APP">%1$s</xliff:g>"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="5758218424845642060">"Programu hii inaweza kukupendekezea tena matangazo, lakini huenda isionekane kwenye orodha yako papo hapo. Huenda ikachukua muda hadi uone matangazo yanayohusiana."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"Je, ungependa kuweka upya matangazo yanayopendekezwa na programu?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Data ya mapendekezo ya matangazo kutoka kwenye programu zilizo katika orodha yako itafutwa na programu zitapendekeza matangazo mapya kuanzia sasa. Bado unaweza kuona baadhi ya matangazo yanayohusiana."</string>
