@@ -239,7 +239,7 @@ public class MeasurementManager {
 
                     @Override
                     public void onError(Exception error) {
-                        LogUtil.e(error, "Failed to get Ad ID");
+                        LogUtil.w(error, "Failed to get Ad ID");
                         register(
                                 builder.setAdIdPermissionGranted(false).build(),
                                 service,
@@ -322,7 +322,7 @@ public class MeasurementManager {
 
                     @Override
                     public void onError(Exception error) {
-                        LogUtil.e(error, "Failed to get Ad ID");
+                        LogUtil.w(error, "Failed to get Ad ID");
                         registerWebSourceWrapper(
                                 builder.setAdIdPermissionGranted(false).build(),
                                 service,
@@ -421,7 +421,7 @@ public class MeasurementManager {
 
                     @Override
                     public void onError(Exception error) {
-                        LogUtil.e(error, "Failed to get Ad ID");
+                        LogUtil.w(error, "Failed to get Ad ID");
                         registerWebTriggerWrapper(
                                 builder.setAdIdPermissionGranted(false).build(),
                                 service,
@@ -496,7 +496,7 @@ public class MeasurementManager {
 
                     @Override
                     public void onError(Exception error) {
-                        LogUtil.e(error, "Failed to get Ad ID");
+                        LogUtil.w(error, "Failed to get Ad ID");
                         register(
                                 builder.setAdIdPermissionGranted(false).build(),
                                 service,
