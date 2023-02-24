@@ -45,7 +45,7 @@ public class AdSelectionClient {
     private AdSelectionClient(@NonNull Context context, @NonNull Executor executor) {
         mContext = context;
         mExecutor = executor;
-        mAdSelectionManager = mContext.getSystemService(AdSelectionManager.class);
+        mAdSelectionManager = AdSelectionManager.get(context);
     }
 
     /**

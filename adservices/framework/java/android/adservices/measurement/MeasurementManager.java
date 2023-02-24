@@ -31,6 +31,7 @@ import android.annotation.RequiresPermission;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 import android.net.Uri;
+import android.os.Build;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
 import android.os.SystemClock;
@@ -79,6 +80,20 @@ public class MeasurementManager {
     private ServiceBinder<IMeasurementService> mServiceBinder;
     private AdIdManager mAdIdManager;
     private Executor mAdIdExecutor = Executors.newCachedThreadPool();
+
+    /**
+     * Factory method for creating an instance of MeasurementManager.
+     *
+     * @param context The {@link Context} to use
+     * @return A {@link MeasurementManager} instance
+     */
+    @NonNull
+    public static MeasurementManager get(@NonNull Context context) {
+        // On T+, context.getSystemService() does more than just call constructor.
+        return (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                ? context.getSystemService(MeasurementManager.class)
+                : new MeasurementManager(context);
+    }
 
     /**
      * Create MeasurementManager.
