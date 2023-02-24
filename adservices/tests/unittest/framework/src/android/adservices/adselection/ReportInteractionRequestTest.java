@@ -16,8 +16,8 @@
 
 package android.adservices.adselection;
 
-import static android.adservices.adselection.ReportInteractionRequest.FLAG_DESTINATION_BUYER;
-import static android.adservices.adselection.ReportInteractionRequest.FLAG_DESTINATION_SELLER;
+import static android.adservices.adselection.ReportInteractionRequest.FLAG_REPORTING_DESTINATION_BUYER;
+import static android.adservices.adselection.ReportInteractionRequest.FLAG_REPORTING_DESTINATION_SELLER;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
@@ -30,7 +30,8 @@ public class ReportInteractionRequestTest {
     private static final long AD_SELECTION_ID = 1234L;
     private static final String INTERACTION_KEY = "click";
     private String mInteractionData;
-    private static final int DESTINATIONS = FLAG_DESTINATION_SELLER | FLAG_DESTINATION_BUYER;
+    private static final int DESTINATIONS =
+            FLAG_REPORTING_DESTINATION_SELLER | FLAG_REPORTING_DESTINATION_BUYER;
 
     @Before
     public void setup() throws Exception {
@@ -45,13 +46,13 @@ public class ReportInteractionRequestTest {
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setInteractionKey(INTERACTION_KEY)
                         .setInteractionData(mInteractionData)
-                        .setDestinations(DESTINATIONS)
+                        .setReportingDestinations(DESTINATIONS)
                         .build();
 
         assertEquals(AD_SELECTION_ID, request.getAdSelectionId());
         assertEquals(INTERACTION_KEY, request.getInteractionKey());
         assertEquals(mInteractionData, request.getInteractionData());
-        assertEquals(DESTINATIONS, request.getDestinations());
+        assertEquals(DESTINATIONS, request.getReportingDestinations());
     }
 
     @Test
@@ -62,7 +63,7 @@ public class ReportInteractionRequestTest {
                     new ReportInteractionRequest.Builder()
                             .setInteractionKey(INTERACTION_KEY)
                             .setInteractionData(mInteractionData)
-                            .setDestinations(DESTINATIONS)
+                            .setReportingDestinations(DESTINATIONS)
                             .build();
                 });
     }
@@ -75,7 +76,7 @@ public class ReportInteractionRequestTest {
                     new ReportInteractionRequest.Builder()
                             .setAdSelectionId(AD_SELECTION_ID)
                             .setInteractionData(mInteractionData)
-                            .setDestinations(DESTINATIONS)
+                            .setReportingDestinations(DESTINATIONS)
                             .build();
                 });
     }
@@ -88,7 +89,7 @@ public class ReportInteractionRequestTest {
                     new ReportInteractionRequest.Builder()
                             .setAdSelectionId(AD_SELECTION_ID)
                             .setInteractionKey(INTERACTION_KEY)
-                            .setDestinations(DESTINATIONS)
+                            .setReportingDestinations(DESTINATIONS)
                             .build();
                 });
     }
