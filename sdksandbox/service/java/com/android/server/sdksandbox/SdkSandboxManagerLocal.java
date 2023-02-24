@@ -22,6 +22,7 @@ import android.annotation.SystemApi;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.ProviderInfo;
 import android.os.IBinder;
 
@@ -122,6 +123,19 @@ public interface SdkSandboxManagerLocal {
      */
     @NonNull
     String getSdkSandboxProcessNameForInstrumentation(@NonNull ApplicationInfo clientAppInfo);
+
+    /**
+     * Returns the application info of the sdk sandbox process that corresponds to the given client
+     * app.
+     *
+     * @param clientAppInfo {@link ApplicationInfo} of the client app
+     * @param userId the target user ID
+     * @return {@link ApplicationInfo} of the sdk sandbox process to be instrumented
+     * @throws NameNotFoundException if the sandbox package name cannot be found.
+     */
+    @NonNull
+    ApplicationInfo getSdkSandboxApplicationInfoForInstrumentation(
+            @NonNull ApplicationInfo clientAppInfo, int userId) throws NameNotFoundException;
 
     /**
      * Called by the {@code ActivityManagerService} to notify that instrumentation of the
