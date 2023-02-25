@@ -24,6 +24,7 @@ import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
 import android.annotation.SystemApi;
 import android.content.Context;
+import android.os.Build;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
 
@@ -57,7 +58,22 @@ public class AdServicesCommonManager {
             mAdServicesCommonServiceBinder;
 
     /**
+     * Factory method for creating an instance of AdServicesCommonManager.
+     *
+     * @param context The {@link Context} to use
+     * @return A {@link AdServicesCommonManager} instance
+     */
+    @NonNull
+    public static AdServicesCommonManager get(@NonNull Context context) {
+        // On T+, context.getSystemService() does more than just call constructor.
+        return (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                ? context.getSystemService(AdServicesCommonManager.class)
+                : new AdServicesCommonManager(context);
+    }
+
+    /**
      * Create AdServicesCommonManager.
+     *
      * @hide
      */
     public AdServicesCommonManager(@NonNull Context context) {

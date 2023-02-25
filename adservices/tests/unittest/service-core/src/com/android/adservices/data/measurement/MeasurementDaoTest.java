@@ -1296,16 +1296,14 @@ public class MeasurementDaoTest {
     public void testInstallAttribution_selectHighestPriority() {
         long currentTimestamp = System.currentTimeMillis();
 
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
-        Objects.requireNonNull(db);
-        AbstractDbIntegrationTest.insertToDb(
+        insertSource(
                 createSourceForIATest(
                         "IA1", currentTimestamp, 100, -1, false, DEFAULT_ENROLLMENT_ID),
-                db);
-        AbstractDbIntegrationTest.insertToDb(
+                "IA1");
+        insertSource(
                 createSourceForIATest(
                         "IA2", currentTimestamp, 50, -1, false, DEFAULT_ENROLLMENT_ID),
-                db);
+                "IA2");
         // Should select id IA1 because it has higher priority
         assertTrue(
                 DatastoreManagerFactory.getDatastoreManager(sContext)
@@ -1314,6 +1312,7 @@ public class MeasurementDaoTest {
                                     measurementDao.doInstallAttribution(
                                             INSTALLED_PACKAGE, currentTimestamp);
                                 }));
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
         assertTrue(getInstallAttributionStatus("IA1", db));
         assertFalse(getInstallAttributionStatus("IA2", db));
         removeSources(Arrays.asList("IA1", "IA2"), db);
@@ -1322,15 +1321,13 @@ public class MeasurementDaoTest {
     @Test
     public void testInstallAttribution_selectLatest() {
         long currentTimestamp = System.currentTimeMillis();
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
-        Objects.requireNonNull(db);
-        AbstractDbIntegrationTest.insertToDb(
+        insertSource(
                 createSourceForIATest(
                         "IA1", currentTimestamp, -1, 10, false, DEFAULT_ENROLLMENT_ID),
-                db);
-        AbstractDbIntegrationTest.insertToDb(
+                "IA1");
+        insertSource(
                 createSourceForIATest("IA2", currentTimestamp, -1, 5, false, DEFAULT_ENROLLMENT_ID),
-                db);
+                "IA2");
         // Should select id=IA2 as it is latest
         assertTrue(
                 DatastoreManagerFactory.getDatastoreManager(sContext)
@@ -1339,6 +1336,7 @@ public class MeasurementDaoTest {
                                     measurementDao.doInstallAttribution(
                                             INSTALLED_PACKAGE, currentTimestamp);
                                 }));
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
         assertFalse(getInstallAttributionStatus("IA1", db));
         assertTrue(getInstallAttributionStatus("IA2", db));
 
@@ -1348,15 +1346,13 @@ public class MeasurementDaoTest {
     @Test
     public void testInstallAttribution_ignoreNewerSources() {
         long currentTimestamp = System.currentTimeMillis();
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
-        Objects.requireNonNull(db);
-        AbstractDbIntegrationTest.insertToDb(
+        insertSource(
                 createSourceForIATest(
                         "IA1", currentTimestamp, -1, 10, false, DEFAULT_ENROLLMENT_ID),
-                db);
-        AbstractDbIntegrationTest.insertToDb(
+                "IA1");
+        insertSource(
                 createSourceForIATest("IA2", currentTimestamp, -1, 5, false, DEFAULT_ENROLLMENT_ID),
-                db);
+                "IA2");
         // Should select id=IA1 as it is the only valid choice.
         // id=IA2 is newer than the evenTimestamp of install event.
         assertTrue(
@@ -1367,23 +1363,21 @@ public class MeasurementDaoTest {
                                             INSTALLED_PACKAGE,
                                             currentTimestamp - TimeUnit.DAYS.toMillis(7));
                                 }));
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
         assertTrue(getInstallAttributionStatus("IA1", db));
         assertFalse(getInstallAttributionStatus("IA2", db));
-
         removeSources(Arrays.asList("IA1", "IA2"), db);
     }
 
     @Test
     public void testInstallAttribution_noValidSource() {
         long currentTimestamp = System.currentTimeMillis();
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
-        Objects.requireNonNull(db);
-        AbstractDbIntegrationTest.insertToDb(
+        insertSource(
                 createSourceForIATest("IA1", currentTimestamp, 10, 10, true, DEFAULT_ENROLLMENT_ID),
-                db);
-        AbstractDbIntegrationTest.insertToDb(
+                "IA1");
+        insertSource(
                 createSourceForIATest("IA2", currentTimestamp, 10, 11, true, DEFAULT_ENROLLMENT_ID),
-                db);
+                "IA2");
         // Should not update any sources.
         assertTrue(
                 DatastoreManagerFactory.getDatastoreManager(sContext)
@@ -1391,6 +1385,7 @@ public class MeasurementDaoTest {
                                 measurementDao ->
                                         measurementDao.doInstallAttribution(
                                                 INSTALLED_PACKAGE, currentTimestamp)));
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
         assertFalse(getInstallAttributionStatus("IA1", db));
         assertFalse(getInstallAttributionStatus("IA2", db));
         removeSources(Arrays.asList("IA1", "IA2"), db);
@@ -1399,12 +1394,10 @@ public class MeasurementDaoTest {
     @Test
     public void installAttribution_install_installTimeEqualsEventTime() {
         long currentTimestamp = System.currentTimeMillis();
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
-        Objects.requireNonNull(db);
-        AbstractDbIntegrationTest.insertToDb(
+        insertSource(
                 createSourceForIATest(
                         "IA1", currentTimestamp, -1, 10, false, DEFAULT_ENROLLMENT_ID),
-                db);
+                "IA1");
         assertTrue(
                 DatastoreManagerFactory.getDatastoreManager(sContext)
                         .runInTransaction(
@@ -1413,6 +1406,7 @@ public class MeasurementDaoTest {
                                             INSTALLED_PACKAGE,
                                             currentTimestamp - TimeUnit.DAYS.toMillis(7));
                                 }));
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
         assertEquals(
                 currentTimestamp - TimeUnit.DAYS.toMillis(7),
                 getInstallAttributionInstallTime("IA1", db).longValue());
@@ -1422,8 +1416,6 @@ public class MeasurementDaoTest {
     @Test
     public void doInstallAttribution_noValidSourceStatus_IgnoresSources() {
         long currentTimestamp = System.currentTimeMillis();
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
-        Objects.requireNonNull(db);
         Source source =
                 createSourceForIATest(
                         "IA1", currentTimestamp, 100, -1, false, DEFAULT_ENROLLMENT_ID);
@@ -1431,19 +1423,20 @@ public class MeasurementDaoTest {
         // Execution
         // Active source should get install attributed
         source.setStatus(Source.Status.ACTIVE);
-        AbstractDbIntegrationTest.insertToDb(source, db);
+        insertSource(source, source.getId());
         assertTrue(
                 DatastoreManagerFactory.getDatastoreManager(sContext)
                         .runInTransaction(
                                 measurementDao ->
                                         measurementDao.doInstallAttribution(
                                                 INSTALLED_PACKAGE, currentTimestamp)));
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
         assertTrue(getInstallAttributionStatus("IA1", db));
         removeSources(Collections.singletonList("IA1"), db);
 
         // Active source should not get install attributed
         source.setStatus(Source.Status.IGNORED);
-        AbstractDbIntegrationTest.insertToDb(source, db);
+        insertSource(source, source.getId());
         assertTrue(
                 DatastoreManagerFactory.getDatastoreManager(sContext)
                         .runInTransaction(
@@ -1455,7 +1448,7 @@ public class MeasurementDaoTest {
 
         // MARKED_TO_DELETE source should not get install attributed
         source.setStatus(Source.Status.MARKED_TO_DELETE);
-        AbstractDbIntegrationTest.insertToDb(source, db);
+        insertSource(source, source.getId());
         assertTrue(
                 DatastoreManagerFactory.getDatastoreManager(sContext)
                         .runInTransaction(
@@ -1469,60 +1462,58 @@ public class MeasurementDaoTest {
     @Test
     public void doInstallAttribution_withSourcesAcrossEnrollments_marksOneInstallFromEachAdTech() {
         long currentTimestamp = System.currentTimeMillis();
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
-        Objects.requireNonNull(db);
 
         // Enrollment1: Choose IA2 because that's newer and still occurred before install
-        AbstractDbIntegrationTest.insertToDb(
+        insertSource(
                 createSourceForIATest(
                         "IA1", currentTimestamp, -1, 10, false, DEFAULT_ENROLLMENT_ID + "_1"),
-                db);
-        AbstractDbIntegrationTest.insertToDb(
+                "IA1");
+        insertSource(
                 createSourceForIATest(
                         "IA2", currentTimestamp, -1, 9, false, DEFAULT_ENROLLMENT_ID + "_1"),
-                db);
+                "IA2");
 
         // Enrollment2: Choose IA4 because IA3's install attribution window has expired
-        AbstractDbIntegrationTest.insertToDb(
+        insertSource(
                 createSourceForIATest(
                         "IA3", currentTimestamp, -1, 10, true, DEFAULT_ENROLLMENT_ID + "_2"),
-                db);
-        AbstractDbIntegrationTest.insertToDb(
+                "IA3");
+        insertSource(
                 createSourceForIATest(
                         "IA4", currentTimestamp, -1, 9, false, DEFAULT_ENROLLMENT_ID + "_2"),
-                db);
+                "IA4");
 
         // Enrollment3: Choose IA5 because IA6 was registered after install event
-        AbstractDbIntegrationTest.insertToDb(
+        insertSource(
                 createSourceForIATest(
                         "IA5", currentTimestamp, -1, 10, false, DEFAULT_ENROLLMENT_ID + "_3"),
-                db);
-        AbstractDbIntegrationTest.insertToDb(
+                "IA5");
+        insertSource(
                 createSourceForIATest(
                         "IA6", currentTimestamp, -1, 5, false, DEFAULT_ENROLLMENT_ID + "_3"),
-                db);
+                "IA6");
 
         // Enrollment4: Choose IA8 due to higher priority
-        AbstractDbIntegrationTest.insertToDb(
+        insertSource(
                 createSourceForIATest(
                         "IA7", currentTimestamp, 5, 10, false, DEFAULT_ENROLLMENT_ID + "_4"),
-                db);
-        AbstractDbIntegrationTest.insertToDb(
+                "IA7");
+        insertSource(
                 createSourceForIATest(
                         "IA8", currentTimestamp, 10, 10, false, DEFAULT_ENROLLMENT_ID + "_4"),
-                db);
+                "IA8");
 
         // Enrollment5: Choose none because both sources are ineligible
         // Expired install attribution window
-        AbstractDbIntegrationTest.insertToDb(
+        insertSource(
                 createSourceForIATest(
                         "IA9", currentTimestamp, 5, 31, true, DEFAULT_ENROLLMENT_ID + "_5"),
-                db);
+                "IA9");
         // Registered after install attribution
-        AbstractDbIntegrationTest.insertToDb(
+        insertSource(
                 createSourceForIATest(
                         "IA10", currentTimestamp, 10, 3, false, DEFAULT_ENROLLMENT_ID + "_5"),
-                db);
+                "IA10");
 
         assertTrue(
                 DatastoreManagerFactory.getDatastoreManager(sContext)
@@ -1532,6 +1523,7 @@ public class MeasurementDaoTest {
                                             INSTALLED_PACKAGE,
                                             currentTimestamp - TimeUnit.DAYS.toMillis(7));
                                 }));
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
         assertTrue(getInstallAttributionStatus("IA2", db));
         assertTrue(getInstallAttributionStatus("IA4", db));
         assertTrue(getInstallAttributionStatus("IA5", db));
@@ -1804,10 +1796,10 @@ public class MeasurementDaoTest {
         Attribution att44 =
                 createAttributionWithSourceAndTriggerIds("ATT44", s4.getId(), t4.getId());
 
-        AbstractDbIntegrationTest.insertToDb(s1, db);
-        AbstractDbIntegrationTest.insertToDb(s2, db);
-        AbstractDbIntegrationTest.insertToDb(s3, db);
-        AbstractDbIntegrationTest.insertToDb(s4, db);
+        insertSource(s1, s1.getId());
+        insertSource(s2, s2.getId());
+        insertSource(s3, s3.getId());
+        insertSource(s4, s4.getId());
 
         AbstractDbIntegrationTest.insertToDb(t1, db);
         AbstractDbIntegrationTest.insertToDb(t2, db);
@@ -1838,18 +1830,17 @@ public class MeasurementDaoTest {
     @Test
     public void testUndoInstallAttribution_noMarkedSource() {
         long currentTimestamp = System.currentTimeMillis();
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
-        Objects.requireNonNull(db);
         Source source =
                 createSourceForIATest(
                         "IA1", currentTimestamp, 10, 10, false, DEFAULT_ENROLLMENT_ID);
         source.setInstallAttributed(true);
-        AbstractDbIntegrationTest.insertToDb(source, db);
+        insertSource(source, source.getId());
         assertTrue(
                 DatastoreManagerFactory.getDatastoreManager(sContext)
                         .runInTransaction(
                                 measurementDao ->
                                         measurementDao.undoInstallAttribution(INSTALLED_PACKAGE)));
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
         // Should set installAttributed = false for id=IA1
         assertFalse(getInstallAttributionStatus("IA1", db));
     }
@@ -1857,18 +1848,17 @@ public class MeasurementDaoTest {
     @Test
     public void undoInstallAttribution_uninstall_nullInstallTime() {
         long currentTimestamp = System.currentTimeMillis();
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
-        Objects.requireNonNull(db);
         Source source =
                 createSourceForIATest(
                         "IA1", currentTimestamp, 10, 10, false, DEFAULT_ENROLLMENT_ID);
         source.setInstallAttributed(true);
-        AbstractDbIntegrationTest.insertToDb(source, db);
+        insertSource(source, source.getId());
         assertTrue(
                 DatastoreManagerFactory.getDatastoreManager(sContext)
                         .runInTransaction(
                                 measurementDao ->
                                         measurementDao.undoInstallAttribution(INSTALLED_PACKAGE)));
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
         // Should set installTime = null for id=IA1
         assertNull(getInstallAttributionInstallTime("IA1", db));
     }
@@ -2167,7 +2157,7 @@ public class MeasurementDaoTest {
 
         SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
         Objects.requireNonNull(db);
-        sourceList.forEach(source -> AbstractDbIntegrationTest.insertToDb(source, db));
+        sourceList.forEach(source -> insertSource(source, source.getId()));
         triggers.forEach(trigger -> AbstractDbIntegrationTest.insertToDb(trigger, db));
 
         Stream.of(reportList1, reportList2, reportList3)
@@ -2302,7 +2292,7 @@ public class MeasurementDaoTest {
 
         SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
         Objects.requireNonNull(db);
-        sourceList.forEach(source -> AbstractDbIntegrationTest.insertToDb(source, db));
+        sourceList.forEach(source -> insertSource(source, source.getId()));
         triggers.forEach(trigger -> AbstractDbIntegrationTest.insertToDb(trigger, db));
 
         Stream.of(reportList1, reportList2, reportList3)
@@ -3387,7 +3377,7 @@ public class MeasurementDaoTest {
                         .setRegistrant(Uri.parse("android-app://installed-app"))
                         .setPublisher(Uri.parse("android-app://installed-app"))
                         .build());
-        sourceList.forEach(source -> AbstractDbIntegrationTest.insertToDb(source, db));
+        sourceList.forEach(source -> insertSource(source, source.getId()));
 
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
@@ -3737,12 +3727,18 @@ public class MeasurementDaoTest {
                 .build();
     }
 
-    // This is needed because MeasurementDao::insertSource inserts a default value for status.
     private static void insertSource(Source source) {
+        insertSource(source, UUID.randomUUID().toString());
+    }
+
+    // This is needed because MeasurementDao::insertSource inserts a default value for status.
+    private static void insertSource(Source source, String sourceId) {
         SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
         ContentValues values = new ContentValues();
-        values.put(SourceContract.ID, UUID.randomUUID().toString());
-        values.put(SourceContract.EVENT_ID, source.getEventId().getValue());
+        values.put(SourceContract.ID, sourceId);
+        if (source.getEventId() != null) {
+            values.put(SourceContract.EVENT_ID, source.getEventId().getValue());
+        }
         values.put(SourceContract.PUBLISHER, source.getPublisher().toString());
         values.put(SourceContract.PUBLISHER_TYPE, source.getPublisherType());
         values.put(
@@ -3754,15 +3750,19 @@ public class MeasurementDaoTest {
         values.put(SourceContract.EXPIRY_TIME, source.getExpiryTime());
         values.put(SourceContract.PRIORITY, source.getPriority());
         values.put(SourceContract.STATUS, source.getStatus());
-        values.put(SourceContract.SOURCE_TYPE, source.getSourceType().name());
+        values.put(SourceContract.SOURCE_TYPE, source.getSourceType().toString());
         values.put(SourceContract.REGISTRANT, source.getRegistrant().toString());
         values.put(SourceContract.INSTALL_ATTRIBUTION_WINDOW, source.getInstallAttributionWindow());
         values.put(SourceContract.INSTALL_COOLDOWN_WINDOW, source.getInstallCooldownWindow());
         values.put(SourceContract.ATTRIBUTION_MODE, source.getAttributionMode());
         values.put(SourceContract.AGGREGATE_SOURCE, source.getAggregateSource());
         values.put(SourceContract.FILTER_DATA, source.getFilterDataString());
-        values.put(SourceContract.AGGREGATE_CONTRIBUTIONS, 0);
-        long row = db.insert("msmt_source", null, values);
+        values.put(SourceContract.AGGREGATE_CONTRIBUTIONS, source.getAggregateContributions());
+        values.put(SourceContract.DEBUG_REPORTING, source.isDebugReporting());
+        values.put(SourceContract.INSTALL_TIME, source.getInstallTime());
+        values.put(SourceContract.REGISTRATION_ID, source.getRegistrationId());
+        values.put(SourceContract.SHARED_AGGREGATION_KEYS, source.getSharedAggregationKeys());
+        long row = db.insert(SourceContract.TABLE, null, values);
         assertNotEquals("Source insertion failed", -1, row);
     }
 
@@ -4056,7 +4056,7 @@ public class MeasurementDaoTest {
                         createAggregateReportForSourceAndTrigger(sources.get(2), triggers.get(2)));
 
         SQLiteDatabase db = DbHelper.getInstance(sContext).getWritableDatabase();
-        sources.forEach(source -> AbstractDbIntegrationTest.insertToDb(source, db));
+        sources.forEach(source -> insertSource(source, source.getId()));
         triggers.forEach(trigger -> AbstractDbIntegrationTest.insertToDb(trigger, db));
         reports.forEach(
                 report ->
@@ -4148,7 +4148,7 @@ public class MeasurementDaoTest {
                         createEventReportForSourceAndTrigger(sources.get(2), triggers.get(2)));
 
         SQLiteDatabase db = DbHelper.getInstance(sContext).getWritableDatabase();
-        sources.forEach(source -> AbstractDbIntegrationTest.insertToDb(source, db));
+        sources.forEach(source -> insertSource(source, source.getId()));
         triggers.forEach(trigger -> AbstractDbIntegrationTest.insertToDb(trigger, db));
         reports.forEach(
                 report ->
@@ -4781,7 +4781,7 @@ public class MeasurementDaoTest {
         SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
         Objects.requireNonNull(db);
         // Insert all sources to the DB
-        sources.forEach(source -> AbstractDbIntegrationTest.insertToDb(source, db));
+        sources.forEach(source -> insertSource(source, source.getId()));
 
         // Insert XNA ignored sources
         ContentValues values = new ContentValues();
@@ -4824,11 +4824,11 @@ public class MeasurementDaoTest {
     @Test
     public void insertIgnoredSourceForEnrollment_success() {
         // Setup
-        DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
         SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
         // Need to insert sources before, to honor the foreign key constraint
-        AbstractDbIntegrationTest.insertToDb(createSourceBuilder().setId("s1").build(), db);
-        AbstractDbIntegrationTest.insertToDb(createSourceBuilder().setId("s2").build(), db);
+        insertSource(createSourceBuilder().setId("s1").build(), "s1");
+        insertSource(createSourceBuilder().setId("s2").build(), "s2");
 
         Pair<String, String> entry11 = new Pair<>("s1", "e1");
         Pair<String, String> entry21 = new Pair<>("s2", "e1");

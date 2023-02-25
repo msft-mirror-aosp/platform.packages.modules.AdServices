@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.UUID;
 
 public final class SourceFixture {
@@ -123,8 +124,10 @@ public final class SourceFixture {
         }
 
         public static final AggregatableAttributionSource buildAggregatableAttributionSource() {
+            TreeMap<String, BigInteger> aggregateSourceMap = new TreeMap<>();
+            aggregateSourceMap.put("5", new BigInteger("345"));
             return new AggregatableAttributionSource.Builder()
-                    .setAggregatableSource(Map.of("5", new BigInteger("345")))
+                    .setAggregatableSource(aggregateSourceMap)
                     .setFilterMap(
                             new FilterMap.Builder()
                                     .setAttributionFilterMap(

@@ -183,11 +183,9 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Aplikasi yang Anda gunakan juga dapat menyimpulkan minat Anda berdasarkan cara Anda menggunakannya."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Aplikasi yang Anda gunakan dapat meminta informasi dari Android untuk membantu mereka mengukur performa iklan. Android mengizinkan aplikasi mengumpulkan beberapa jenis data tertentu."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Aktif / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> topik"</string>
-    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
-    <skip />
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Aktif/# topik}other{Aktif/# topik}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Aktif / <xliff:g id="APPS_COUNT">%1$d</xliff:g> aplikasi"</string>
-    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
-    <skip />
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{Aktif/# aplikasi}other{Aktif/# aplikasi}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"Aktif"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Nonaktif"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Minat topik didasarkan pada aplikasi yang digunakan baru-baru ini dan digunakan oleh aplikasi untuk menampilkan iklan yang dipersonalisasi kepada Anda.\n\nAnda dapat memblokir topik yang tidak ingin dibagikan kepada aplikasi. Android juga menghapus otomatis topik secara rutin."</string>
@@ -200,14 +198,10 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Aplikasi yang Anda blokir"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Reset data yang disarankan aplikasi"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Aplikasi yang Anda gunakan biasanya mengingat hal-hal yang Anda minati untuk mempersonalisasi pengalaman Anda. Aplikasi juga dapat menyimpan informasi dengan Android tentang topik yang Anda suka.\n\nMisalnya, jika Anda menggunakan aplikasi untuk latihan maraton, aplikasi mungkin akan menyimpulkan bahwa Anda tertarik dengan sepatu lari. Nantinya, jika Anda menggunakan aplikasi lain, aplikasi tersebut dapat menampilkan iklan sepatu lari yang disarankan oleh aplikasi pertama.\n\nAndroid akan rutin menghapus otomatis data yang disarankan aplikasi. Aplikasi yang Anda gunakan lagi mungkin akan muncul kembali di daftar. Atau, Anda dapat memblokir aplikasi agar tidak menyarankan iklan untuk Anda.\n\nDi aplikasi, iklan yang Anda lihat mungkin telah dipersonalisasi, bergantung pada setelan ini, setelan topik iklan, setelan ID iklan Anda, dan apakah aplikasi Anda menggunakan iklan yang dipersonalisasi."</string>
-    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
-    <skip />
-    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
-    <skip />
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Ilustrasi simbol penuh warna yang menampilkan topik minat seperti musik, berita, dan olahraga"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Ilustrasi kunci dalam lingkaran yang penuh warna"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Ilustrasi hitam putih kecil yang menggambarkan sembilan titik membentuk persegi"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"Ilustrasi hitam putih kecil yang menggambarkan bentuk sederhana seperti hati, segitiga, dan persegi"</string>
     <string name="topic10001" msgid="1636806320891333775">"Seni &amp; Hiburan"</string>
     <string name="topic10002" msgid="1226367977754287428">"Akting &amp; Teater"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime &amp; Manga"</string>

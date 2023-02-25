@@ -183,11 +183,9 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"మీరు ఉపయోగించే యాప్‌లు, వాటిని మీరు ఎలా ఉపయోగిస్తున్నారనే దాని ఆధారంగా, మీకు ఏవేవి అంటే ఇష్టమో కూడా నిర్ణయించగలవు."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"మీరు ఉపయోగించే యాప్‌లు తమ యాడ్‌ల పనితీరును అంచనా వేయడంలో సహాయపడటానికి Androidను సమాచారం కోసం అడగవచ్చు. పరిమిత రకాల డేటాను కలెక్ట్ చేయడానికి యాప్‌లను Android అనుమతిస్తుంది."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"ఆన్‌లో ఉన్నాయి / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> టాపిక్‌లు"</string>
-    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
-    <skip />
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{ఆన్‌లో ఉంది / # టాపిక్}other{ఆన్‌లో ఉన్నాయి / # టాపిక్‌లు}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"ఆన్‌లో ఉన్నాయి / <xliff:g id="APPS_COUNT">%1$d</xliff:g> యాప్‌లు"</string>
-    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
-    <skip />
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{ఆన్‌లో ఉంది / # యాప్}other{/ # యాప్‌లు ఆన్‌లో ఉన్నాయి}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"ఆన్‌లో ఉంది"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"ఆఫ్‌లో ఉంది"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"ఆసక్తి గల టాపిక్‌లు, మీరు ఇటీవల ఏ యాప్‌లను ఉపయోగించారు అనే దానిపై ఆధారపడి ఉంటాయి, మీకు వ్యక్తిగతీకరించబడిన యాడ్‌లను చూపడానికి వీటిని యాప్‌లు ఉపయోగిస్తాయి.\n\nమీరు యాప్‌లకు ఏవైనా టాపిక్‌లను షేర్ చేయకూడదనుకుంటే, ఆ టాపిక్‌లను మీరు బ్లాక్ చేయవచ్చు. Android క్రమం తప్పకుండా టాపిక్‌లను ఆటోమేటిక్‌గా తొలగిస్తుంది కూడా."</string>
@@ -200,14 +198,10 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"మీరు బ్లాక్ చేసిన యాప్‌లు"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"యాప్‌లు సూచించిన డేటాను రీసెట్ చేయండి"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"మీరు ఉపయోగించే యాప్‌లు, మీ అనుభవాన్ని వ్యక్తిగతీకరించడానికి మీకు ఆసక్తి ఉన్న అంశాలను గుర్తుంచుకోవడం సాధారణం. యాప్‌లు మీ టాపిక్‌ల గురించి Androidతో సమాచారాన్ని కూడా స్టోర్ చేయగలవు.\n\nఉదాహరణకు, మీరు మారథాన్ ట్రైనింగ్‌కు సంబంధించిన యాప్‌ను ఉపయోగిస్తే, మీరు రన్నింగ్ షూల పట్ల ఆసక్తి కలిగి ఉన్నారని యాప్ నిర్ధారించవచ్చు. తర్వాత, మీరు వేరొక యాప్‌ను ఉపయోగిస్తే, మొదటి యాప్ సూచించిన రన్నింగ్ షూలకు సంబంధించిన యాడ్‌ను మీకు చూపవచ్చు.\n\nAndroid క్రమం తప్పకుండా యాప్ సూచించిన డేటాను ఆటోమేటిక్‌గా తొలగిస్తుంది. మీరు మళ్లీ ఉపయోగించే యాప్ లిస్ట్‌లో తిరిగి కనిపించవచ్చు. లేదా, మీ కోసం యాడ్‌లను సూచించకుండా మీరు యాప్‌ను బ్లాక్ చేయవచ్చు.\n\nమీ యాప్‌లలో మీరు చూసే యాడ్, ఈ సెట్టింగ్, యాడ్ టాపిక్‌ల సెట్టింగ్, మీ అడ్వర్టయిజింగ్ ID సెట్టింగ్‌లు ఇంకా మీరు ఉపయోగిస్తున్న యాప్ యాడ్‌లను వ్యక్తిగతీకరిస్తుందా అనే దాని ఆధారంగా అనుకూలీకరించబడవచ్చు."</string>
-    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
-    <skip />
-    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
-    <skip />
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"మ్యూజిక్, వార్తలు, క్రీడల వంటి ఆసక్తి ఉన్న టాపిక్‌లను రంగురంగుల చిహ్నాలతో సూచించిన ఉదాహరణ"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"సర్కిల్ లోపల లాక్‌ను రంగు రంగులుగా సూచించిన ఉదాహరణ"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"తొమ్మిది చుక్కలతో ఏర్పడిన స్క్వేర్‌ను నలుపు, తెలుపు రంగులతో సూచించిన ఉదాహరణ"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"హార్ట్, ట్రయాంగిల్, స్క్వేర్ వంటి సాధారణమైన ఆకారాలను చిన్నగా నలుపు, తెలుపు రంగులతో సూచించిన ఉదాహరణ"</string>
     <string name="topic10001" msgid="1636806320891333775">"కళలు &amp; వినోదం"</string>
     <string name="topic10002" msgid="1226367977754287428">"నటన &amp; థియేటర్"</string>
     <string name="topic10003" msgid="6949890838957814881">"యానిమే &amp; మాంగా"</string>

@@ -16,8 +16,8 @@
 
 package android.adservices.adselection;
 
-import static android.adservices.adselection.ReportInteractionRequest.FLAG_DESTINATION_BUYER;
-import static android.adservices.adselection.ReportInteractionRequest.FLAG_DESTINATION_SELLER;
+import static android.adservices.adselection.ReportInteractionRequest.FLAG_REPORTING_DESTINATION_BUYER;
+import static android.adservices.adselection.ReportInteractionRequest.FLAG_REPORTING_DESTINATION_SELLER;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
@@ -34,7 +34,8 @@ public class ReportInteractionInputTest {
     private static final String INTERACTION_KEY = "click";
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private String mInteractionData;
-    private static final int DESTINATIONS = FLAG_DESTINATION_SELLER | FLAG_DESTINATION_BUYER;
+    private static final int DESTINATIONS =
+            FLAG_REPORTING_DESTINATION_SELLER | FLAG_REPORTING_DESTINATION_BUYER;
 
     @Before
     public void setup() throws Exception {
@@ -50,7 +51,7 @@ public class ReportInteractionInputTest {
                         .setInteractionKey(INTERACTION_KEY)
                         .setInteractionData(mInteractionData)
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
-                        .setDestinations(DESTINATIONS)
+                        .setReportingDestinations(DESTINATIONS)
                         .build();
 
         Parcel p = Parcel.obtain();
@@ -63,7 +64,7 @@ public class ReportInteractionInputTest {
         assertEquals(INTERACTION_KEY, fromParcel.getInteractionKey());
         assertEquals(mInteractionData, fromParcel.getInteractionData());
         assertEquals(CALLER_PACKAGE_NAME, fromParcel.getCallerPackageName());
-        assertEquals(DESTINATIONS, fromParcel.getDestinations());
+        assertEquals(DESTINATIONS, fromParcel.getReportingDestinations());
     }
 
     @Test
@@ -75,7 +76,7 @@ public class ReportInteractionInputTest {
                             .setInteractionKey(INTERACTION_KEY)
                             .setInteractionData(mInteractionData)
                             .setCallerPackageName(CALLER_PACKAGE_NAME)
-                            .setDestinations(DESTINATIONS)
+                            .setReportingDestinations(DESTINATIONS)
                             .build();
                 });
     }
@@ -89,7 +90,7 @@ public class ReportInteractionInputTest {
                             .setAdSelectionId(AD_SELECTION_ID)
                             .setInteractionData(mInteractionData)
                             .setCallerPackageName(CALLER_PACKAGE_NAME)
-                            .setDestinations(DESTINATIONS)
+                            .setReportingDestinations(DESTINATIONS)
                             .build();
                 });
     }
@@ -103,7 +104,7 @@ public class ReportInteractionInputTest {
                             .setAdSelectionId(AD_SELECTION_ID)
                             .setInteractionKey(INTERACTION_KEY)
                             .setCallerPackageName(CALLER_PACKAGE_NAME)
-                            .setDestinations(DESTINATIONS)
+                            .setReportingDestinations(DESTINATIONS)
                             .build();
                 });
     }
@@ -117,7 +118,7 @@ public class ReportInteractionInputTest {
                             .setAdSelectionId(AD_SELECTION_ID)
                             .setInteractionKey(INTERACTION_KEY)
                             .setInteractionData(mInteractionData)
-                            .setDestinations(DESTINATIONS)
+                            .setReportingDestinations(DESTINATIONS)
                             .build();
                 });
     }
@@ -143,7 +144,7 @@ public class ReportInteractionInputTest {
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setInteractionKey(INTERACTION_KEY)
                         .setInteractionData(mInteractionData)
-                        .setDestinations(DESTINATIONS)
+                        .setReportingDestinations(DESTINATIONS)
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .build();
 

@@ -183,11 +183,9 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"તમે ઉપયોગ કરતા હો એ બધી ઍપ પણ તમે તેમનો ઉપયોગ કેવી રીતે કરો છો તેના આધારે તમને શું ગમે છે તે નક્કી કરી શકે છે."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"તમે ઉપયોગમાં લો એ બધી ઍપ તેમની જાહેરાતોનું પર્ફોર્મન્સ માપવામાં તેમને સહાય કરે એવી માહિતી Android પાસે માગી શકે છે. Android બધી ઍપને મર્યાદિત ડેટા એકત્રિત કરવાની મંજૂરી આપે છે."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"ચાલુ / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> વિષયો"</string>
-    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
-    <skip />
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{ચાલુ / # વિષય}one{ચાલુ / # વિષય}other{ચાલુ / # વિષય}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"ચાલુ / <xliff:g id="APPS_COUNT">%1$d</xliff:g> ઍપ"</string>
-    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
-    <skip />
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{ચાલુ / # ઍપ}one{ચાલુ / # ઍપ}other{ચાલુ / # ઍપ}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"ચાલુ છે"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"બંધ છે"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"તમારી રુચિના વિષયો તાજેતરમાં તમે ઉપયોગમાં લીધી હોય એવી ઍપ અને તમને મનગમતી બનાવેલી જાહેરાતો બતાવવા માટે ઍપ દ્વારા ઉપયોગમાં લેવામાં આવ્યા હોય એવા વિષયો પર આધારિત છે.\n\nતમે ઍપ સાથે શેર કરવા માગતા ન હો એવા વિષયો બ્લૉક કરી શકો છો. Android પણ વિષયોને નિયમિત, ઑટોમૅટિક રીતે ડિલીટ કરે છે."</string>
@@ -200,14 +198,10 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"તમે બ્લૉક કરેલી ઍપ"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"ઍપ દ્વારા સૂચવેલા ડેટા રીસેટ કરો"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"તમારો અનુભવ મનગમતો બનાવવા માટે, તમે ઉપયોગમાં લો છો તે વિવિધ ઍપ દ્વારા તમે રુચિ ધરાવતા હો તેવી બાબતો યાદ રાખવી સામાન્ય વાત છે. ઍપ, તમારા વિષયો સંબંધિત માહિતી Androidની સહાયથી સ્ટોર પણ કરી શકે છે.\n\nઉદાહરણ તરીકે, જો તમે મેરેથોનના પ્રશિક્ષણ સંબંધિત કોઈ ઍપનો ઉપયોગ કરો, તો તે ઍપ નક્કી કરી શકે છે કે તમે દોડવા માટેના શૂઝમાં રુચિ ધરાવો છો. પછીથી, જો તમે બીજી કોઈ ઍપનો ઉપયોગ કરો તો તે ઍપ તમને પહેલી ઍપ દ્વારા સૂચવવામાં આવેલી દોડવાના શૂઝવાળી જાહેરાત બતાવી શકે છે.\n\nઍપ દ્વારા સૂચવેલી જાહેરાતો સંબંધિત ડેટાને Android નિયમિત, ઑટોમૅટિક રીતે ડિલીટ કરે છે. તમે ફરી ઉપયોગ કરો છો તે ઍપ સૂચિમાં ફરીથી દેખાઈ શકે છે. અથવા તમે કોઈ ઍપને તમને જાહેરાતોનું સૂચન આપવાથી બ્લૉક કરી શકો છો.\n\nતમારી ઍપમાં તમને જોવા મળતી જાહેરાત આ સેટિંગ, જાહેરાતના વિષયોના સેટિંગ, તમારા જાહેરાત IDના સેટિંગ અને તમે ઉપયોગમાં લઈ રહ્યાં હો તે ઍપ જાહેરાતોને મનગમતી બનાવે છે કે નહીં, તેના આધારે મનગમતી બનાવેલી હોઈ શકે છે."</string>
-    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
-    <skip />
-    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
-    <skip />
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"મ્યુઝિક, સમાચાર અને રમતગમત જેવા રુચિના વિષયોનું પ્રતિનિધિત્વ કરતા પ્રતીકોનું રંગીન ચિત્ર"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"વર્તુળની અંદર લૉકનું રંગીન ચિત્ર"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"ચોરસ આકાર બનાવતા નવ ડોટનું નાનું બ્લૅક ઍન્ડ વ્હાઇટ ચિત્ર"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"હાર્ટ, ત્રિકોણ અને ચોરસ જેવા સાદા આકારોનું નાનું બ્લૅક ઍન્ડ વ્હાઇટ ચિત્ર"</string>
     <string name="topic10001" msgid="1636806320891333775">"આર્ટ અને મનોરંજન"</string>
     <string name="topic10002" msgid="1226367977754287428">"અભિનય અને થિએટર"</string>
     <string name="topic10003" msgid="6949890838957814881">"ઍનિમે અને માંગા"</string>

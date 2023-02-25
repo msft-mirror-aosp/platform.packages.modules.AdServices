@@ -20,7 +20,6 @@ import android.adservices.topics.GetTopicsResponse;
 import android.adservices.topics.TopicsManager;
 import android.annotation.NonNull;
 import android.content.Context;
-import android.os.Build;
 import android.os.OutcomeReceiver;
 
 import androidx.concurrent.futures.CallbackToFutureAdapter;
@@ -49,10 +48,7 @@ public class AdvertisingTopicsClient {
         mSdkName = sdkName;
         mRecordObservation = recordObservation;
         mExecutor = executor;
-        mTopicsManager =
-                (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-                        ? mContext.getSystemService(TopicsManager.class)
-                        : TopicsManager.get(context);
+        mTopicsManager = TopicsManager.get(context);
     }
 
     /** Gets the SdkName. */

@@ -183,11 +183,9 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"ਜਿਨ੍ਹਾਂ ਐਪਾਂ ਨੂੰ ਤੁਸੀਂ ਵਰਤਦੇ ਹੋ, ਉਹ ਉਨ੍ਹਾਂ ਨੂੰ ਵਰਤੇ ਜਾਣ ਦੇ ਤਰੀਕੇ ਦੇ ਆਧਾਰ \'ਤੇ ਇਹ ਵੀ ਨਿਰਧਾਰਿਤ ਕਰ ਸਕਦੀਆਂ ਹਨ ਕਿ ਤੁਹਾਨੂੰ ਕੀ ਪਸੰਦ ਹੈ।"</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"ਜੋ ਐਪਾਂ ਤੁਸੀਂ ਵਰਤਦੇ ਹੋ, ਉਹ ਆਪਣੇ ਵਿਗਿਆਪਨਾਂ ਦੀ ਕਾਰਗੁਜ਼ਾਰੀ ਦਾ ਮੁਲਾਂਕਣ ਕਰਨ ਵਿੱਚ ਉਨ੍ਹਾਂ ਦੀ ਮਦਦ ਵਾਸਤੇ Android ਤੋਂ ਜਾਣਕਾਰੀ ਮੰਗ ਸਕਦੀਆਂ ਹਨ। Android, ਐਪਾਂ ਨੂੰ ਸੀਮਤ ਕਿਸਮ ਦਾ ਡਾਟਾ ਇਕੱਤਰ ਕਰਨ ਦੀ ਆਗਿਆ ਦਿੰਦਾ ਹੈ।"</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"ਚਾਲੂ / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> ਵਿਸ਼ੇ"</string>
-    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
-    <skip />
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{ਚਾਲੂ / # ਵਿਸ਼ਾ}one{ਚਾਲੂ / # ਵਿਸ਼ਾ}other{ਚਾਲੂ / # ਵਿਸ਼ੇ}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"ਚਾਲੂ / <xliff:g id="APPS_COUNT">%1$d</xliff:g> ਐਪਾਂ"</string>
-    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
-    <skip />
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{ਚਾਲੂ / # ਐਪ}one{ਚਾਲੂ / # ਐਪ}other{ਚਾਲੂ / # ਐਪਾਂ}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"ਚਾਲੂ"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"ਬੰਦ"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"ਦਿਲਚਸਪੀ ਦੇ ਵਿਸ਼ੇ ਉਨ੍ਹਾਂ ਐਪਾਂ \'ਤੇ ਆਧਾਰਿਤ ਹੁੰਦੇ ਹਨ ਜਿਨ੍ਹਾਂ ਨੂੰ ਤੁਸੀਂ ਹਾਲ ਹੀ ਵਿੱਚ ਵਰਤਿਆ ਹੈ ਅਤੇ ਤੁਹਾਨੂੰ ਵਿਅਕਤੀਗਤ ਬਣਾਏ ਵਿਗਿਆਪਨ ਦਿਖਾਉਣ ਲਈ ਉਨ੍ਹਾਂ ਨੂੰ ਐਪਾਂ ਵੱਲੋਂ ਵਰਤਿਆ ਜਾਂਦਾ ਹੈ।\n\nਤੁਸੀਂ ਉਨ੍ਹਾਂ ਵਿਸ਼ਿਆਂ ਨੂੰ ਬਲਾਕ ਕਰ ਸਕਦੇ ਹੋ ਜਿਨ੍ਹਾਂ ਨੂੰ ਤੁਸੀਂ ਐਪਾਂ ਨਾਲ ਸਾਂਝਾ ਨਹੀਂ ਕਰਨਾ ਚਾਹੁੰਦੇ। Android ਵੀ ਨਿਯਮਿਤ ਤੌਰ \'ਤੇ ਵਿਸ਼ਿਆਂ ਨੂੰ ਸਵੈਚਲਿਤ-ਮਿਟਾਉਂਦਾ ਹੈ।"</string>
@@ -200,14 +198,10 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"ਤੁਹਾਡੇ ਵੱਲੋਂ ਬਲਾਕ ਕੀਤੀਆਂ ਐਪਾਂ"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"ਐਪ ਵੱਲੋਂ ਸੁਝਾਏ ਗਏ ਡਾਟੇ ਨੂੰ ਰੀਸੈੱਟ ਕਰੋ"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"ਤੁਹਾਡੀ ਦਿਲਚਸਪੀ ਵਾਲੀਆਂ ਚੀਜ਼ਾਂ ਯਾਦ ਰੱਖਣਾ, ਉਨ੍ਹਾਂ ਐਪਾਂ ਲਈ ਆਮ ਗੱਲ ਹੈ ਜਿਨ੍ਹਾਂ ਦੀ ਵਰਤੋਂ ਤੁਸੀਂ ਆਪਣੇ ਅਨੁਭਵ ਨੂੰ ਵਿਅਕਤੀਗਤ ਬਣਾਉਣ ਲਈ ਕਰਦੇ ਹੋ। ਐਪਾਂ Android ਦੀ ਮਦਦ ਨਾਲ ਤੁਹਾਡੇ ਵਿਸ਼ਿਆਂ ਬਾਰੇ ਜਾਣਕਾਰੀ ਵੀ ਸਟੋਰ ਕਰ ਸਕਦੀਆਂ ਹਨ।\n\nਉਦਾਹਰਨ ਲਈ, ਜੇ ਤੁਸੀਂ ਮੈਰਾਥਨ ਦੀ ਸਿਖਲਾਈ ਬਾਰੇ ਕਿਸੇ ਐਪ ਦੀ ਵਰਤੋਂ ਕਰਦੇ ਹੋ, ਤਾਂ ਉਹ ਐਪ ਇਹ ਫ਼ੈਸਲਾ ਕਰ ਸਕਦੀ ਹੈ ਕਿ ਤੁਸੀਂ ਦੌੜਨ ਵਾਲੇ ਜੁੱਤਿਆਂ ਵਿੱਚ ਦਿਲਚਸਪੀ ਰੱਖਦੇ ਹੋ। ਬਾਅਦ ਵਿੱਚ, ਜੇ ਤੁਸੀਂ ਕੋਈ ਵੱਖਰੀ ਐਪ ਵਰਤਦੇ ਹੋ, ਤਾਂ ਉਹ ਐਪ ਪਹਿਲੀ ਵਾਲੀ ਐਪ ਵੱਲੋਂ ਸੁਝਾਏ ਗਏ ਦੌੜਨ ਵਾਲੇ ਜੁੱਤਿਆਂ ਦਾ ਵਿਗਿਆਪਨ ਦਿਖਾ ਸਕਦੀ ਹੈ।\n\nAndroid, ਐਪ ਵੱਲੋਂ ਸੁਝਾਏ ਗਏ ਡਾਟੇ ਨੂੰ ਨਿਯਮਿਤ ਤੌਰ \'ਤੇ ਸਵੈਚਲਿਤ-ਮਿਟਾਉਂਦਾ ਹੈ। ਉਹ ਐਪ ਸੂਚੀ ਵਿੱਚ ਮੁੜ ਦਿਖਾਈ ਦੇ ਸਕਦੀ ਹੈ, ਜਿਸਨੂੰ ਤੁਸੀਂ ਦੁਬਾਰਾ ਵਰਤਦੇ ਹੋ। ਜਾਂ ਤੁਸੀਂ ਕਿਸੇ ਐਪ ਨੂੰ ਤੁਹਾਡੇ ਲਈ ਵਿਗਿਆਪਨਾਂ ਸੰਬੰਧੀ ਸੁਝਾਅ ਦੇਣ ਤੋਂ ਬਲਾਕ ਕਰ ਸਕਦੇ ਹੋ।\n\nਤੁਹਾਡੀਆਂ ਐਪਾਂ ਵਿੱਚ, ਤੁਹਾਨੂੰ ਦਿਖਾਈ ਦੇਣ ਵਾਲਾ ਵਿਗਿਆਪਨ ਇਸ ਸੈਟਿੰਗ, ਵਿਗਿਆਪਨ ਵਿਸ਼ਿਆਂ ਸੰਬੰਧੀ ਸੈਟਿੰਗ, ਤੁਹਾਡੀ ਵਿਗਿਆਪਨ ਆਈਡੀ ਸੰਬੰਧੀ ਸੈਟਿੰਗਾਂ ਅਤੇ ਤੁਹਾਡੇ ਵੱਲੋਂ ਵਰਤੀ ਜਾਣ ਵਾਲੀ ਐਪ ਰਾਹੀਂ ਵਿਗਿਆਪਨਾਂ ਨੂੰ ਵਿਅਕਤੀਗਤ ਬਣਾਉਣ ਦੀ ਵਿਸ਼ੇਸ਼ਤਾ ਦੇ ਆਧਾਰ \'ਤੇ ਵਿਅਕਤੀਗਤ ਬਣਾਇਆ ਗਿਆ ਹੋ ਸਕਦਾ ਹੈ।"</string>
-    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
-    <skip />
-    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
-    <skip />
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"ਸੰਗੀਤ, ਖਬਰਾਂ ਅਤੇ ਖੇਡਾਂ ਵਰਗੇ ਦਿਸਚਸਪ ਵਿਸ਼ਿਆਂ ਨੂੰ ਦਰਸਾਉਣ ਵਾਲੇ ਚਿੰਨ੍ਹਾਂ ਦਾ ਰੰਗਦਾਰ ਚਿੱਤਰ"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"ਚੱਕਰ ਵਿੱਚ ਤਾਲੇ ਦਾ ਰੰਗਦਾਰ ਚਿੱਤਰ"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"ਵਰਗ ਬਣਾਉਂਦੇ ਨੌਂ ਬਿੰਦੂਆਂ ਦਾ ਕਾਲੇ ਅਤੇ ਸਫ਼ੈਦ ਰੰਗ ਵਿੱਚ ਛੋਟਾ ਚਿੱਤਰ"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"ਦਿਲ, ਤਿਕੋਣ ਅਤੇ ਵਰਗ ਵਰਗੀਆਂ ਸਧਾਰਨ ਆਕ੍ਰਿਤੀਆਂ ਦਾ ਕਾਲੇ ਅਤੇ ਸਫ਼ੈਦ ਰੰਗ ਵਿੱਚ ਛੋਟਾ ਚਿੱਤਰ"</string>
     <string name="topic10001" msgid="1636806320891333775">"ਕਲਾ ਅਤੇ ਮਨੋਰੰਜਨ"</string>
     <string name="topic10002" msgid="1226367977754287428">"ਅਦਾਕਾਰੀ ਅਤੇ ਥੀਏਟਰ"</string>
     <string name="topic10003" msgid="6949890838957814881">"ਐਨੀਮੇ ਅਤੇ ਮਾਂਗਾ"</string>

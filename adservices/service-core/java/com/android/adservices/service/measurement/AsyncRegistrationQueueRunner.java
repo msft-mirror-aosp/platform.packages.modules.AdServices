@@ -369,10 +369,10 @@ public class AsyncRegistrationQueueRunner {
             return false;
         }
 
-        if (numOfSourcesPerPublisher >= SystemHealthParams.MAX_SOURCES_PER_PUBLISHER) {
+        if (numOfSourcesPerPublisher >= SystemHealthParams.getMaxSourcesPerPublisher()) {
             LogUtil.d(
                     "insertSources: Max limit of %s sources for publisher - %s reached.",
-                    SystemHealthParams.MAX_SOURCES_PER_PUBLISHER, publisher);
+                    SystemHealthParams.getMaxSourcesPerPublisher(), publisher);
             return false;
         }
         if (source.getAppDestinations() != null) {

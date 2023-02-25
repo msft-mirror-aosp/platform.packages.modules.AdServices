@@ -35,14 +35,15 @@ import java.util.Objects;
  */
 public class ReportInteractionInput implements Parcelable {
 
-    private static final int UNSET_DESTINATIONS = 0;
-    private static final String UNSET_DESTINATIONS_MESSAGE = "Destinations bitfield not set.";
+    private static final int UNSET_REPORTING_DESTINATIONS = 0;
+    private static final String UNSET_REPORTING_DESTINATIONS_MESSAGE =
+            "Reporting Destinations bitfield not set.";
 
     private final long mAdSelectionId;
     @NonNull private final String mInteractionKey;
     @NonNull private final String mInteractionData;
     @NonNull private final String mCallerPackageName;
-    private final int mDestinations; // buyer, seller, or both
+    private final int mReportingDestinations; // buyer, seller, or both
 
     @NonNull
     public static final Creator<ReportInteractionInput> CREATOR =
@@ -65,7 +66,7 @@ public class ReportInteractionInput implements Parcelable {
             @NonNull String interactionKey,
             @NonNull String interactionData,
             @NonNull String callerPackageName,
-            int destinations) {
+            int reportingDestinations) {
         Objects.requireNonNull(interactionKey);
         Objects.requireNonNull(interactionData);
         Objects.requireNonNull(callerPackageName);
@@ -74,7 +75,7 @@ public class ReportInteractionInput implements Parcelable {
         this.mInteractionKey = interactionKey;
         this.mInteractionData = interactionData;
         this.mCallerPackageName = callerPackageName;
-        this.mDestinations = destinations;
+        this.mReportingDestinations = reportingDestinations;
     }
 
     private ReportInteractionInput(@NonNull Parcel in) {
@@ -82,7 +83,7 @@ public class ReportInteractionInput implements Parcelable {
         this.mInteractionKey = in.readString();
         this.mInteractionData = in.readString();
         this.mCallerPackageName = in.readString();
-        this.mDestinations = in.readInt();
+        this.mReportingDestinations = in.readInt();
     }
 
     @Override
@@ -97,7 +98,7 @@ public class ReportInteractionInput implements Parcelable {
         dest.writeString(mInteractionKey);
         dest.writeString(mInteractionData);
         dest.writeString(mCallerPackageName);
-        dest.writeInt(mDestinations);
+        dest.writeInt(mReportingDestinations);
     }
 
     /** Returns the adSelectionId, the primary identifier of an ad selection process. */
@@ -131,9 +132,9 @@ public class ReportInteractionInput implements Parcelable {
         return mCallerPackageName;
     }
 
-    /** Returns the bitfield of destinations to report to (buyer, seller, or both) */
-    public int getDestinations() {
-        return mDestinations;
+    /** Returns the bitfield of reporting destinations to report to (buyer, seller, or both) */
+    public int getReportingDestinations() {
+        return mReportingDestinations;
     }
 
     /**
@@ -146,7 +147,7 @@ public class ReportInteractionInput implements Parcelable {
         @Nullable private String mInteractionKey;
         @Nullable private String mInteractionData;
         @Nullable private String mCallerPackageName;
-        private int mDestinations = UNSET_DESTINATIONS;
+        private int mReportingDestinations = UNSET_REPORTING_DESTINATIONS;
 
         public Builder() {}
 
@@ -185,13 +186,14 @@ public class ReportInteractionInput implements Parcelable {
             return this;
         }
 
-        /** Sets the bitfield of destinations. */
+        /** Sets the bitfield of reporting destinations. */
         @NonNull
-        public ReportInteractionInput.Builder setDestinations(int destinations) {
+        public ReportInteractionInput.Builder setReportingDestinations(int reportingDestinations) {
             Preconditions.checkArgument(
-                    destinations != UNSET_DESTINATIONS, UNSET_DESTINATIONS_MESSAGE);
+                    reportingDestinations != UNSET_REPORTING_DESTINATIONS,
+                    UNSET_REPORTING_DESTINATIONS_MESSAGE);
 
-            mDestinations = destinations;
+            mReportingDestinations = reportingDestinations;
             return this;
         }
 
@@ -205,14 +207,15 @@ public class ReportInteractionInput implements Parcelable {
             Preconditions.checkArgument(
                     mAdSelectionId != UNSET_AD_SELECTION_ID, UNSET_AD_SELECTION_ID_MESSAGE);
             Preconditions.checkArgument(
-                    mDestinations != UNSET_DESTINATIONS, UNSET_DESTINATIONS_MESSAGE);
+                    mReportingDestinations != UNSET_REPORTING_DESTINATIONS,
+                    UNSET_REPORTING_DESTINATIONS_MESSAGE);
 
             return new ReportInteractionInput(
                     mAdSelectionId,
                     mInteractionKey,
                     mInteractionData,
                     mCallerPackageName,
-                    mDestinations);
+                    mReportingDestinations);
         }
     }
 }

@@ -46,8 +46,7 @@ public class AdvertisingCustomAudienceClient {
     private AdvertisingCustomAudienceClient(@NonNull Context context, @NonNull Executor executor) {
         mContext = context;
         mExecutor = executor;
-        mCustomAudienceManager = mContext.getSystemService(CustomAudienceManager.class);
-
+        mCustomAudienceManager = CustomAudienceManager.get(context);
     }
 
     /** Gets the context. */

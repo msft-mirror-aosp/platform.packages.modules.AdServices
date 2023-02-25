@@ -46,7 +46,7 @@ public class ApiPermissionTest {
     public void setUp() throws Exception {
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
-        mCommonManager = sContext.getSystemService(AdServicesCommonManager.class);
+        mCommonManager = AdServicesCommonManager.get(sContext);
 
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()

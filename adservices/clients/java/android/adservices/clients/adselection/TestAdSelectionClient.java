@@ -43,8 +43,7 @@ public class TestAdSelectionClient {
     private TestAdSelectionClient(@NonNull Context context, @NonNull Executor executor) {
         mContext = context;
         mExecutor = executor;
-        mTestAdSelectionManager =
-                mContext.getSystemService(AdSelectionManager.class).getTestAdSelectionManager();
+        mTestAdSelectionManager = AdSelectionManager.get(context).getTestAdSelectionManager();
     }
 
     /**
