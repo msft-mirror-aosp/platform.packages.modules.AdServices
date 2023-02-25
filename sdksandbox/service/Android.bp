@@ -78,6 +78,7 @@ java_sdk_library {
         "sdksandbox-statsd",
         "modules-utils-build",
         "modules-utils-backgroundthread",
+        "modules-utils-build",
         "modules-utils-shell-command-handler",
     ],
     defaults: [
