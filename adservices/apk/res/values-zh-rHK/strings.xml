@@ -183,11 +183,9 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"您使用的應用程式亦可以根據您的使用方式，判斷您喜歡的內容。"</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"您使用的應用程式可要求 Android 提供相關資料，協助應用程式評估廣告成效。Android 只允許應用程式收集特定類型的資料。"</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"已啟用/<xliff:g id="TOPICS_COUNT">%1$d</xliff:g> 個主題"</string>
-    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
-    <skip />
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{已開啟/# 個主題}other{已開啟/# 個主題}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"已啟用/<xliff:g id="APPS_COUNT">%1$d</xliff:g> 個應用程式"</string>
-    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
-    <skip />
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{已開啟/# 個應用程式}other{已開啟/# 個應用程式}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"已啟用"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"已停用"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"系統根據您最近使用的應用程式來判斷您感興趣的主題，而應用程式會利用這些主題向您顯示個人化廣告。\n\n您可封鎖不希望與應用程式分享的主題。Android 亦會定期自動刪除主題。"</string>
@@ -200,14 +198,10 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"您已封鎖的應用程式"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"重設應用程式建議的資料"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"您使用的應用程式通常會記住您感興趣的項目，以便為您提供個人化體驗。應用程式亦會儲存您在 Android 中的相關主題資料。\n\n例如，如果您使用關於馬拉松訓練的應用程式，該應用程式便可能會判斷您對跑步鞋有興趣。如果您日後使用其他應用程式，該應用程式就可以根據第一個應用程式建議的感興趣項目，向您顯示跑步鞋廣告。\n\nAndroid 會定期自動刪除應用程式建議的資料。如您再次使用應用程式，該應用程式便可能會再次在清單中顯示。您亦可禁止應用程式為您建議廣告。\n\n您在應用程式中看到的廣告可能是個人化廣告，視乎此設定、廣告主題設定、您的廣告 ID 設定，以及您使用的應用程式是否將廣告個人化而定。"</string>
-    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
-    <skip />
-    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
-    <skip />
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"呢張彩色插圖入面嘅符號代表音樂、新聞同體育賽事之類嘅興趣主題"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"呢張彩色插圖入面嘅圓圈入面有一個鎖"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"呢張細嘅黑白插圖入面有由九個圓點組成嘅正方形"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"呢張細嘅黑白插圖入面有心形、三角形同正方形之類嘅簡單圖形"</string>
     <string name="topic10001" msgid="1636806320891333775">"藝術和娛樂"</string>
     <string name="topic10002" msgid="1226367977754287428">"表演和戲劇"</string>
     <string name="topic10003" msgid="6949890838957814881">"動漫和日本漫畫"</string>
