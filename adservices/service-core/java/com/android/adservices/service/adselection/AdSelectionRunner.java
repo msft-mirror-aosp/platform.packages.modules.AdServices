@@ -46,6 +46,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
@@ -288,10 +289,15 @@ public abstract class AdSelectionRunner {
                         @Override
                         public void onFailure(Throwable t) {
                             Tracing.endAsyncSection(Tracing.RUN_AD_SELECTION, traceCookie);
-                            if (t instanceof ConsentManager.RevokedConsentException) {
-                                notifyEmptySuccessToCaller(
-                                        callback,
-                                        AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED);
+                            if (t instanceof FilterException
+                                    && t.getCause()
+                                            instanceof ConsentManager.RevokedConsentException) {
+                                // Skip logging if a FilterException occurs.
+                                // AdSelectionServiceFilter ensures the failing assertion is logged
+                                // internally.
+
+                                // Fail Silently by notifying success to caller
+                                notifyEmptySuccessToCaller(callback);
                             } else {
                                 if (t.getCause() instanceof AdServicesException) {
                                     notifyFailureToCaller(callback, t.getCause());
@@ -336,18 +342,7 @@ public abstract class AdSelectionRunner {
 
     private void notifySuccessToCaller(
             @NonNull DBAdSelection result, @NonNull AdSelectionCallback callback) {
-        int resultCode = AdServicesStatusUtils.STATUS_UNSET;
         try {
-            callback.onSuccess(
-                    new AdSelectionResponse.Builder()
-                            .setAdSelectionId(result.getAdSelectionId())
-                            .setRenderUri(result.getWinningAdRenderUri())
-                            .build());
-            resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
-        } catch (RemoteException e) {
-            LogUtil.e(e, "Encountered exception during notifying AdSelection callback");
-            resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
-        } finally {
             int overallLatencyMs =
                     mAdSelectionExecutionLogger.getRunAdSelectionOverallLatencyInMs();
             LogUtil.v(
@@ -356,13 +351,24 @@ public abstract class AdSelectionRunner {
                     result.getAdSelectionId(), overallLatencyMs);
             // TODO(b//253522566): When including logging data from bidding & auction server side
             //  should be able to differentiate the data from the on-device telemetry.
+            // Note: Success is logged before the callback to ensure deterministic testing.
             mAdServicesLogger.logFledgeApiCallStats(
-                    AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, resultCode, overallLatencyMs);
+                    AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                    AdServicesStatusUtils.STATUS_SUCCESS,
+                    overallLatencyMs);
+
+            callback.onSuccess(
+                    new AdSelectionResponse.Builder()
+                            .setAdSelectionId(result.getAdSelectionId())
+                            .setRenderUri(result.getWinningAdRenderUri())
+                            .build());
+        } catch (RemoteException e) {
+            LogUtil.e(e, "Encountered exception during notifying AdSelection callback");
         }
     }
 
     /** Sends a successful response to the caller that represents a silent failure. */
-    private void notifyEmptySuccessToCaller(@NonNull AdSelectionCallback callback, int resultCode) {
+    private void notifyEmptySuccessToCaller(@NonNull AdSelectionCallback callback) {
         try {
             callback.onSuccess(
                     new AdSelectionResponse.Builder()
@@ -371,26 +377,30 @@ public abstract class AdSelectionRunner {
                             .build());
         } catch (RemoteException e) {
             LogUtil.e(e, "Encountered exception during notifying AdSelection callback");
-            resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
-        } finally {
-            int overallLatencyMs =
-                    mAdSelectionExecutionLogger.getRunAdSelectionOverallLatencyInMs();
-            LogUtil.v(
-                    "Ad Selection with Id:%d completed with overall latency %d in ms, "
-                            + "attempted notifying success for a silent failure",
-                    mAdSelectionIdGenerator.generateId(), overallLatencyMs);
-            // TODO(b//253522566): When including logging data from bidding & auction server side
-            //  should be able to differentiate the data from the on-device telemetry.
-            mAdServicesLogger.logFledgeApiCallStats(
-                    AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, resultCode, overallLatencyMs);
         }
     }
 
     private void notifyFailureToCaller(
             @NonNull AdSelectionCallback callback, @NonNull Throwable t) {
-        int resultCode = AdServicesStatusUtils.STATUS_UNSET;
         try {
-            resultCode = AdServicesLoggerUtil.getResultCodeFromException(t);
+            LogUtil.e(t, "Ad Selection failure: ");
+
+            int resultCode = AdServicesLoggerUtil.getResultCodeFromException(t);
+
+            // Skip logging if a FilterException occurs.
+            // AdSelectionServiceFilter ensures the failing assertion is logged internally.
+            // Note: Failure is logged before the callback to ensure deterministic testing.
+            if (!(t instanceof FilterException)) {
+                int overallLatencyMs =
+                        mAdSelectionExecutionLogger.getRunAdSelectionOverallLatencyInMs();
+                LogUtil.v("Ad Selection failed with overall latency %d in ms", overallLatencyMs);
+                // TODO(b//253522566): When including logging data from bidding & auction server
+                // side
+                //  should be able to differentiate the data from the on-device telemetry.
+                mAdServicesLogger.logFledgeApiCallStats(
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, resultCode, overallLatencyMs);
+            }
+
             FledgeErrorResponse selectionFailureResponse =
                     new FledgeErrorResponse.Builder()
                             .setErrorMessage(
@@ -400,19 +410,9 @@ public abstract class AdSelectionRunner {
                                             t.getMessage()))
                             .setStatusCode(resultCode)
                             .build();
-            LogUtil.e(t, "Ad Selection failure: ");
             callback.onFailure(selectionFailureResponse);
         } catch (RemoteException e) {
             LogUtil.e(e, "Encountered exception during notifying AdSelection callback");
-            resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
-        } finally {
-            int overallLatencyMs =
-                    mAdSelectionExecutionLogger.getRunAdSelectionOverallLatencyInMs();
-            LogUtil.v("Ad Selection failed with overall latency %d in ms", overallLatencyMs);
-            // TODO(b//253522566): When including logging data from bidding & auction server side
-            //  should be able to differentiate the data from the on-device telemetry.
-            mAdServicesLogger.logFledgeApiCallStats(
-                    AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, resultCode, overallLatencyMs);
         }
     }
 
