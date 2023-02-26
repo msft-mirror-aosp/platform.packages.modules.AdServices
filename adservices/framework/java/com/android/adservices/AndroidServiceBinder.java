@@ -98,7 +98,7 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
                     LogUtil.e("Failed to find AdServices service");
                     return null;
                 }
-                final Intent intent = new Intent().setComponent(componentName);
+                final Intent intent = new Intent(mServiceIntentAction).setComponent(componentName);
 
                 LogUtil.d("bindService: " + mServiceIntentAction);
 
