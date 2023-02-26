@@ -76,7 +76,7 @@ public final class TopicsManager {
      */
     @NonNull
     public static TopicsManager get(@NonNull Context context) {
-        // On TM+, context.getSystemService() does more than just call constructor.
+        // On T+, context.getSystemService() does more than just call constructor.
         return (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
                 ? context.getSystemService(TopicsManager.class)
                 : new TopicsManager(context);

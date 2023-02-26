@@ -39,12 +39,11 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -655,7 +654,7 @@ public class Source {
                 return mAggregatableAttributionSource;
             }
             JSONObject jsonObject = new JSONObject(mAggregateSource);
-            Map<String, BigInteger> aggregateSourceMap = new HashMap<>();
+            TreeMap<String, BigInteger> aggregateSourceMap = new TreeMap<>();
             for (String key : jsonObject.keySet()) {
                 // Remove "0x" prefix.
                 String hexString = jsonObject.getString(key).substring(2);

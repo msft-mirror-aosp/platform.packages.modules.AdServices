@@ -183,11 +183,9 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"তাছাড়া, অ্যাপ কীভাবে ব্যবহার করছেন তার উপরে ভিত্তি করেও আপনার ব্যবহার করা অ্যাপ পছন্দের বিষয়গুলি নির্ধারণ করতে পারে।"</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"আপনার ব্যবহার করা অ্যাপ যাতে নিজের বিজ্ঞাপনের পারফর্ম্যান্স পরিমাপ করতে পারে তার জন্য সাহায্য করতে Android-এর কাছে তথ্য চাইতে পারে। Android অ্যাপকে সীমিত ধরনের ডেটা সংগ্রহ করার অনুমতি দেয়।"</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"চালু আছে / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g>টি বিষয়"</string>
-    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
-    <skip />
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{চালু আছে / #টি বিষয়}one{চালু আছে / #টি বিষয়}other{চালু আছে / #টি বিষয়}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"চালু আছে / <xliff:g id="APPS_COUNT">%1$d</xliff:g>টি অ্যাপ"</string>
-    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
-    <skip />
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{চালু আছে / #টি অ্যাপ}one{চালু আছে / #টি অ্যাপ}other{চালু আছে / #টি অ্যাপ}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"চালু আছে"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"বন্ধ আছে"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"সম্প্রতি ব্যবহার করা অ্যাপের উপর ভিত্তি করে আগ্রহের বিষয় নির্ধারণ করা হয় এবং অ্যাপ পছন্দ অনুযায়ী বিজ্ঞাপন দেখাতে সেগুলি ব্যবহার করে।\n\nআপনি সেইসব বিষয় ব্লক করতে পারবেন, যেগুলি অ্যাপের সাথে শেয়ার করতে চান না। তাছাড়াও, Android নিয়মিত বিষয়গুলিকে নিজে থেকেই মুছে দেয়।"</string>
@@ -200,14 +198,10 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"আপনার ব্লক করা অ্যাপ"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"অ্যাপের সাজেস্ট করা ডেটা রিসেট করুন"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"সাধারণত, আপনি যে অ্যাপ ব্যবহার করেন তা পছন্দমতো অভিজ্ঞতা দিতে আপনার আগ্রহের বিষয়গুলি মনে রাখে। এছাড়াও আপনার আগ্রহের বিষয়গুলি সম্পর্কে Android-এর মাধ্যমে অ্যাপ তথ্য সেভ করতে পারে।\n\nযেমন, আপনি ম্যারাথন প্রশিক্ষণ সম্পর্কে কোনও অ্যাপ ব্যবহার করলে, অ্যাপ সিদ্ধান্ত নিতে পারে যে আপনি দৌড়ানোর জুতোর বিষয়ে আগ্রহী। পরে, আপনি আলাদা কোনও অ্যাপ ব্যবহার করলে, সেই অ্যাপটি প্রথম অ্যাপের মাধ্যমে সাজেস্ট করা দৌড়ানোর জুতো সম্পর্কিত বিজ্ঞাপন দেখাতে পারে।\n\nAndroid নিয়মিত অ্যাপের মাধ্যমে সাজেস্ট করা ডেটা অটোমেটিক মুছে দেয়। আপনি অ্যাপ ব্যবহার করা চালিয়ে গেলে তবে এর ডেটা আবার তালিকায় অন্তর্ভুক্ত করা যেতে পারে। বা আপনার জন্য বিজ্ঞাপনের সাজেশন দেওয়া থেকে কোনও অ্যাপকে আটকাতে পারবেন।\n\nএই সেটিং, বিজ্ঞাপনের বিষয়ের সেটিং, আপনার বিজ্ঞাপন আইডি সেটিংস ও আপনার ব্যবহার করা অ্যাপের ক্ষেত্রে পছন্দ অনুযায়ী বিজ্ঞাপন ব্যবহার করা হচ্ছে কিনা, এই বিভিন্ন বিষয়ের উপর ভিত্তি করে আপনাকে আপনার পছন্দ অনুযায়ী বিজ্ঞাপন দেখানো হতে পারে।"</string>
-    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
-    <skip />
-    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
-    <skip />
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"মিউজিক, খবর এবং খেলাধুলার মতো আকর্ষণীয় বিষয়গুলি তুলে ধরে এমন চিহ্নগুলির রঙিন ছবি"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"একটি বৃত্তের ভিতরে একটি তালার রঙিন চিত্র"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"একটি বর্গক্ষেত্র গঠন করে এমন নয়টি বিন্দুর একটি ছোট কালো এবং সাদা চিত্র"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"হার্ট, ত্রিভুজ এবং বর্গক্ষেত্রের মতো সাধারণ আকারের একটি ছোট কালো-সাদা চিত্র"</string>
     <string name="topic10001" msgid="1636806320891333775">"শিল্পকলা ও বিনোদন"</string>
     <string name="topic10002" msgid="1226367977754287428">"অভিনয় ও থিয়েটার"</string>
     <string name="topic10003" msgid="6949890838957814881">"অ্যানিমে এবং মাঙ্গা"</string>

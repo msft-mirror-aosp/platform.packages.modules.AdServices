@@ -77,6 +77,7 @@ import com.android.adservices.AdServicesCommon;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.BackgroundThread;
+import com.android.modules.utils.build.SdkLevel;
 import com.android.sdksandbox.IComputeSdkStorageCallback;
 import com.android.sdksandbox.IRequestSurfacePackageFromSdkCallback;
 import com.android.sdksandbox.ISdkSandboxDisabledCallback;
@@ -1324,13 +1325,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         PROPERTY_DISABLE_SDK_SANDBOX,
                         DEFAULT_VALUE_DISABLE_SDK_SANDBOX);
 
-        @GuardedBy("mLock")
-        private boolean mCustomizedSdkContextEnabled =
-                DeviceConfig.getBoolean(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        PROPERTY_CUSTOMIZED_SDK_CONTEXT_ENABLED,
-                        DEFAULT_VALUE_CUSTOMIZED_SDK_CONTEXT_ENABLED);
-
         SdkSandboxSettingsListener(Context context) {
             mContext = context;
         }
@@ -1366,9 +1360,14 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
         boolean isCustomizedSdkContextEnabled() {
-            synchronized (mLock) {
-                return mCustomizedSdkContextEnabled;
+            // Can only be enabled on U+ devices
+            if (!SdkLevel.isAtLeastU()) {
+                return false;
             }
+            return DeviceConfig.getBoolean(
+                    DeviceConfig.NAMESPACE_ADSERVICES,
+                    PROPERTY_CUSTOMIZED_SDK_CONTEXT_ENABLED,
+                    DEFAULT_VALUE_CUSTOMIZED_SDK_CONTEXT_ENABLED);
         }
 
         @Override
@@ -1394,11 +1393,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                                 stopAllSandboxesLocked();
                             }
                         }
-                    } else if (name.equals(PROPERTY_CUSTOMIZED_SDK_CONTEXT_ENABLED)) {
-                        mCustomizedSdkContextEnabled =
-                                properties.getBoolean(
-                                        PROPERTY_CUSTOMIZED_SDK_CONTEXT_ENABLED,
-                                        DEFAULT_VALUE_CUSTOMIZED_SDK_CONTEXT_ENABLED);
                     }
                 }
             }

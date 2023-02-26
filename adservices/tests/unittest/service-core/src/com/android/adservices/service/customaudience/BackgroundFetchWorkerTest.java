@@ -71,6 +71,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class BackgroundFetchWorkerTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
@@ -222,7 +223,7 @@ public class BackgroundFetchWorkerTest {
 
     @Test
     public void testRunBackgroundFetchNothingToUpdate()
-            throws ExecutionException, InterruptedException, TimeoutException {
+            throws ExecutionException, InterruptedException {
         assertTrue(
                 mCustomAudienceDaoSpy
                         .getActiveEligibleCustomAudienceBackgroundFetchData(
@@ -243,7 +244,7 @@ public class BackgroundFetchWorkerTest {
 
     @Test
     public void testRunBackgroundFetchUpdateOneCustomAudience()
-            throws ExecutionException, InterruptedException, TimeoutException {
+            throws ExecutionException, InterruptedException {
         // Mock a single custom audience eligible for update
         DBCustomAudienceBackgroundFetchData fetchData =
                 DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(
@@ -271,7 +272,7 @@ public class BackgroundFetchWorkerTest {
 
     @Test
     public void testRunBackgroundFetchUpdateCustomAudiences()
-            throws ExecutionException, InterruptedException, TimeoutException {
+            throws ExecutionException, InterruptedException {
         int numEligibleCustomAudiences = 12;
 
         // Mock a list of custom audiences eligible for update
@@ -306,7 +307,7 @@ public class BackgroundFetchWorkerTest {
 
     @Test
     public void testRunBackgroundFetchChecksWorkInProgress()
-            throws InterruptedException, ExecutionException, TimeoutException {
+            throws InterruptedException, ExecutionException {
         int numEligibleCustomAudiences = 16;
         CountDownLatch partialCompletionLatch = new CountDownLatch(numEligibleCustomAudiences / 4);
 
@@ -411,7 +412,7 @@ public class BackgroundFetchWorkerTest {
     }
 
     @Test
-    public void testStopWorkPrehemptsDataUpdates() throws Exception {
+    public void testStopWorkPreemptsDataUpdates() throws Exception {
         int numEligibleCustomAudiences = 16;
         CountDownLatch beforeUpdatingCasLatch = new CountDownLatch(numEligibleCustomAudiences / 4);
 
@@ -452,5 +453,79 @@ public class BackgroundFetchWorkerTest {
         // waiting for 200ms to handle thread scheduling delays.
         // The important check is that the time is less than the time of updating all CAs
         backgrounFetchResult.get(200, TimeUnit.MILLISECONDS);
+    }
+
+    @Test
+    public void testRunBackgroundFetchInSequence() throws InterruptedException, ExecutionException {
+        int numEligibleCustomAudiences = 16;
+        CountDownLatch completionLatch = new CountDownLatch(numEligibleCustomAudiences / 2);
+
+        // Mock two lists of custom audiences eligible for update
+        DBCustomAudienceBackgroundFetchData.Builder fetchDataBuilder =
+                DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(
+                                CommonFixture.VALID_BUYER_1)
+                        .setEligibleUpdateTime(CommonFixture.FIXED_NOW);
+        List<DBCustomAudienceBackgroundFetchData> fetchDataList1 = new ArrayList<>();
+        List<DBCustomAudienceBackgroundFetchData> fetchDataList2 = new ArrayList<>();
+        for (int i = 0; i < numEligibleCustomAudiences; i++) {
+            DBCustomAudienceBackgroundFetchData fetchData =
+                    fetchDataBuilder.setName("ca" + i).build();
+            if (i < numEligibleCustomAudiences / 2) {
+                fetchDataList1.add(fetchData);
+            } else {
+                fetchDataList2.add(fetchData);
+            }
+        }
+
+        // Count the number of times updateCustomAudience is run
+        AtomicInteger completionCount = new AtomicInteger(0);
+
+        // Return the first list the first time, and the second list in the second call
+        doReturn(fetchDataList1)
+                .doReturn(fetchDataList2)
+                .when(mCustomAudienceDaoSpy)
+                .getActiveEligibleCustomAudienceBackgroundFetchData(any(), anyLong());
+        doAnswer(
+                        unusedInvocation -> {
+                            completionLatch.countDown();
+                            completionCount.getAndIncrement();
+                            return FluentFuture.from(immediateFuture(null));
+                        })
+                .when(mBackgroundFetchRunnerSpy)
+                .updateCustomAudience(any(), any());
+
+        when(mClock.instant()).thenReturn(CommonFixture.FIXED_NOW);
+
+        CountDownLatch bgfWorkStoppedLatch = new CountDownLatch(1);
+        mExecutorService.execute(
+                () -> {
+                    try {
+                        mBackgroundFetchWorker.runBackgroundFetch().get();
+                    } catch (Exception exception) {
+                        LogUtil.e(
+                                exception, "Exception encountered while running background fetch");
+                    } finally {
+                        bgfWorkStoppedLatch.countDown();
+                    }
+                });
+
+        // Wait til updates are complete, then try running background fetch again and
+        // verify the second run updates more custom audiences successfully
+        completionLatch.await();
+        bgfWorkStoppedLatch.await();
+        when(mClock.instant()).thenReturn(CommonFixture.FIXED_NOW.plusSeconds(1));
+        mBackgroundFetchWorker.runBackgroundFetch().get();
+
+        verify(mBackgroundFetchRunnerSpy, times(2)).deleteExpiredCustomAudiences(any());
+        verify(mCustomAudienceDaoSpy, times(2)).deleteAllExpiredCustomAudienceData(any());
+        verify(mBackgroundFetchRunnerSpy, times(2)).deleteDisallowedOwnerCustomAudiences();
+        verify(mCustomAudienceDaoSpy, times(2))
+                .deleteAllDisallowedOwnerCustomAudienceData(any(), any());
+        verify(mBackgroundFetchRunnerSpy, times(2)).deleteDisallowedBuyerCustomAudiences();
+        verify(mCustomAudienceDaoSpy, times(2))
+                .deleteAllDisallowedBuyerCustomAudienceData(any(), any());
+        verify(mBackgroundFetchRunnerSpy, times(numEligibleCustomAudiences))
+                .updateCustomAudience(any(), any());
+        assertThat(completionCount.get()).isEqualTo(numEligibleCustomAudiences);
     }
 }

@@ -22,6 +22,7 @@ import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
+import android.os.Build;
 import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
@@ -50,6 +51,20 @@ public class AppSetIdManager {
 
     private Context mContext;
     private ServiceBinder<IAppSetIdService> mServiceBinder;
+
+    /**
+     * Factory method for creating an instance of AppSetIdManager.
+     *
+     * @param context The {@link Context} to use
+     * @return A {@link AppSetIdManager} instance
+     */
+    @NonNull
+    public static AppSetIdManager get(@NonNull Context context) {
+        // On T+, context.getSystemService() does more than just call constructor.
+        return (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                ? context.getSystemService(AppSetIdManager.class)
+                : new AppSetIdManager(context);
+    }
 
     /**
      * Create AppSetIdManager
