@@ -183,11 +183,9 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"நீங்கள் ஆப்ஸை எப்படிப் பயன்படுத்துகிறீர்கள் என்பதன் அடிப்படையில், அந்த ஆப்ஸால் உங்கள் விருப்பங்களை அறிந்துகொள்ளவும் முடியும்."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"நீங்கள் பயன்படுத்தும் ஆப்ஸ், அவற்றின் விளம்பரங்களின் செயல்திறனை அளவிடுவதற்கான தகவல்களை வழங்கும்படி Androidஐக் கோரலாம். குறிப்பிட்ட வகையான தரவை மட்டுமே சேகரிக்க ஆப்ஸை Android அனுமதிக்கும்."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"ஆன் / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> தலைப்புகள்"</string>
-    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
-    <skip />
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{ஆன் / # தலைப்பு}other{ஆன் / # தலைப்புகள்}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"இயக்கப்பட்டுள்ளது / <xliff:g id="APPS_COUNT">%1$d</xliff:g> ஆப்ஸ்"</string>
-    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
-    <skip />
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{ஆன் / # ஆப்ஸ்}other{ஆன் / # ஆப்ஸ்}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"ஆன்"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"முடக்கப்பட்டுள்ளது"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"ஆர்வங்களின் தலைப்புகள் நீங்கள் சமீபத்தில் பயன்படுத்திய ஆப்ஸின் அடிப்படையிலானவை, அவை பிரத்தியேக விளம்பரங்களைக் காட்டுவதற்குப் பயன்படுத்தப்படுகின்றன.\n\nஆப்ஸுடன் பகிர விரும்பாத தலைப்புகளை நீங்கள் தடைசெய்யலாம். அத்துடன், Android அவ்வப்போது தானாகவே தலைப்புகளை நீக்கும்."</string>
@@ -200,14 +198,10 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"தடுக்கப்பட்ட ஆப்ஸ்"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"ஆப்ஸ் பரிந்துரைக்கும் தரவை ரீசெட் செய்"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"பொதுவாக, உங்கள் அனுபவத்தைப் பிரத்தியேகப்படுத்த நீங்கள் விரும்பும் விஷயங்களை ஆப்ஸ் நினைவில் வைத்துக்கொள்ளும். நீங்கள் விரும்பும் தலைப்புகள் தொடர்பான தகவல்களை ஆப்ஸால் Androidல் சேமிக்க முடியும்.\n\nஉதாரணமாக, மாரத்தான் பயிற்சி தொடர்பான ஆப்ஸை நீங்கள் பயன்படுத்தினால், உங்களுக்கு ஓட்டப் பயிற்சிக்கான ஷூக்களை வாங்க விருப்பம் இருப்பதாக ஆப்ஸ் கருதக்கூடும். பின்னர் நீங்கள் வேறொரு ஆப்ஸைப் பயன்படுத்தும்போது முதலில் பயன்படுத்திய ஆப்ஸின் பரிந்துரைப்படி ஓட்டப் பயிற்சி ஷூக்களுக்கான விளம்பரத்தை இந்த ஆப்ஸ் காட்டலாம்.\n\nஆப்ஸ் பரிந்துரைக்கும் தரவை அவ்வப்போது Android தானாகவே நீக்கிவிடும். நீங்கள் மீண்டும் ஓர் ஆப்ஸைப் பயன்படுத்தினால் அது திரும்பவும் பட்டியலில் காட்டப்படலாம். ஓர் ஆப்ஸ் உங்களுக்கு விளம்பரங்கள் காட்டுவதை நீங்கள் தடுக்கலாம்.\n\nஇந்த அமைப்பு, விளம்பரத் தலைப்புகளுக்கான அமைப்பு, உங்கள் விளம்பரப்படுத்தல் ஐடிக்கான அமைப்புகள் ஆகியவற்றைப் பொறுத்தும் நீங்கள் பயன்படுத்தும் ஆப்ஸ் விளம்பரங்களைப் பிரத்தியேகப்படுத்துகிறதா இல்லையா என்பதைப் பொறுத்தும் உங்கள் ஆப்ஸில் காட்டப்படும் விளம்பரங்கள் பிரத்தியேகப்படுத்தப்படலாம்."</string>
-    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
-    <skip />
-    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
-    <skip />
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"இசை, செய்தி, விளையாட்டு போன்ற ஆர்வமுள்ள தலைப்புகளைக் குறிக்கும் சின்னங்களின் வண்ணமயமான விளக்கப்படம்"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"வட்டத்திற்குள் இருக்கும் பூட்டின் வண்ணமயமான விளக்கப்படம்"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"சதுரத்தை உருவாக்கும் ஒன்பது புள்ளிகளின் சிறிய கருப்பு வெள்ளை விளக்கப்படம்"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"இதயம், முக்கோணம், சதுரம் போன்ற எளிய வடிவங்களின் சிறிய கருப்பு வெள்ளை விளக்கப்படம்"</string>
     <string name="topic10001" msgid="1636806320891333775">"கலை &amp; பொழுதுபோக்கு"</string>
     <string name="topic10002" msgid="1226367977754287428">"நடிப்பு &amp; திரையரங்கு"</string>
     <string name="topic10003" msgid="6949890838957814881">"அனிமே &amp; மங்கா"</string>

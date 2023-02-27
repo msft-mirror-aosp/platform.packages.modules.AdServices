@@ -26,18 +26,14 @@
     <string name="permdesc_accessAdServicesCustomAudience" msgid="2034811807106784662">"‏מאפשרת לאפליקציה לגשת לממשק ה‑API של \'קהל בהתאמה אישית\' (Custom Audience) ב‑AdServices."</string>
     <string name="permlab_accessAdServicesAdId" msgid="2754825914769538156">"‏גישה לממשק ה‑API של מזהה הפרסום"</string>
     <string name="permdesc_accessAdServicesAdId" msgid="7717770480967762044">"‏מאפשרת לאפליקציה לגשת לממשק ה-API של מזהה הפרסום."</string>
-    <!-- no translation found for permlab_accessAdServicesConsent (3203633397142568707) -->
-    <skip />
-    <!-- no translation found for permdesc_accessAdServicesConsent (8440334072391708453) -->
-    <skip />
+    <string name="permlab_accessAdServicesConsent" msgid="3203633397142568707">"‏גישה לממשק ה‑API של \'הסכמה\' (Consent) ב‑AdServices"</string>
+    <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"‏מאפשרת לאפליקציה לגשת לממשק ה‑API של \'הסכמה\' (Consent) ב‑AdServices."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"‏גישה לממשק ה‑API של מזהה המודעה"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"‏מאפשרת לאפליקציה לגשת ל-API של מזהה ההודעה."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"‏גישה לממשק ה‑API של מזהה קבוצת האפליקציות"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"‏מאפשרת לאפליקציה לגשת ל-API של מזהה קבוצת האפליקציות."</string>
-    <!-- no translation found for permlab_adServicesAccessConsentService (5994709782267864205) -->
-    <skip />
-    <!-- no translation found for permdesc_adServicesAccessConsentService (4587727715580124241) -->
-    <skip />
+    <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"‏גישה לממשק ה-API של \'שירות הסכמה\'"</string>
+    <string name="permdesc_adServicesAccessConsentService" msgid="4587727715580124241">"‏מאפשרת לאפליקציה לגשת לממשק ה-API של \'שירות הסכמה\' (Consent Service)."</string>
     <string name="permlab_modifyAdServicesState" msgid="3594653261299518914">"‏גישה לשינוי מצב ההפעלה של ממשק ה-API ב-AdService"</string>
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"‏מאפשרת לאפליקציה לגשת לשינוי מצב ההפעלה של ממשק ה-API ב-AdService."</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"‏גישה למצב ההפעלה של ממשק ה-API ב-AdService"</string>

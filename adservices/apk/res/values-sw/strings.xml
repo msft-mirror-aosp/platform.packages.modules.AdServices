@@ -165,9 +165,9 @@
     <string name="settingsUI_dialog_reset_topic_title" msgid="8025836207966712435">"Ungependa kuweka upya mada zote za matangazo?"</string>
     <string name="settingsUI_dialog_reset_topic_message" msgid="4243744527757134000">"Orodha yako itafutwa na mada mpya zitawekwa kuanzia sasa. Huenda ukaendelea kuona baadhi ya matangazo yanayohusiana na mada ulizoziweka upya."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Weka upya"</string>
-    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Ungependa kuzuia programu ya <xliff:g id="APP">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Ungependa kuzuia <xliff:g id="APP">%1$s</xliff:g>?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="758788973278770119">"Programu hii haitapendekeza matangazo na haitawekwa tena kwenye orodha yako, isipokuwa uiondolee kizuizi. Huenda bado ukaona baadhi ya matangazo yanayohusiana."</string>
-    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Umeiondolea kizuizi programu ya <xliff:g id="APP">%1$s</xliff:g>"</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Umeiondolea kizuizi <xliff:g id="APP">%1$s</xliff:g>"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="5758218424845642060">"Programu hii inaweza kukupendekezea tena matangazo, lakini huenda isionekane kwenye orodha yako papo hapo. Huenda ikachukua muda hadi uone matangazo yanayohusiana."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"Je, ungependa kuweka upya matangazo yanayopendekezwa na programu?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Data ya mapendekezo ya matangazo kutoka kwenye programu zilizo katika orodha yako itafutwa na programu zitapendekeza matangazo mapya kuanzia sasa. Bado unaweza kuona baadhi ya matangazo yanayohusiana."</string>
@@ -183,14 +183,12 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Pia, programu unazotumia zinaweza kubainisha unachopenda kulingana na jinsi unavyozitumia."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Programu unazotumia zinaweza kuiomba Android maelezo ili kuzisaidia zipime utendaji wa matangazo yao. Android huziwezesha programu kukusanya aina chache za data."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Umewasha / mada <xliff:g id="TOPICS_COUNT">%1$d</xliff:g>"</string>
-    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
-    <skip />
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Imewashwa / mada #}other{Zimewashwa / mada #}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Imewashwa / programu <xliff:g id="APPS_COUNT">%1$d</xliff:g>"</string>
-    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
-    <skip />
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{Imewashwa / programu #}other{Zimewashwa / programu #}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"Umewasha"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Umezima"</string>
-    <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Mada zinazovutia hulingana na programu ulizotumia hivi karibuni na hutumiwa na programu ili kukuonyesha matangazo yaliyowekewa mapendeleo.\n\nUnaweza kuzuia mada ambazo hungependa kushiriki kwenye programu. Android pia hufuta kiotomatiki mada mara kwa mara."</string>
+    <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Mada zinazokuvutia hutegemea programu ulizotumia hivi karibuni na hutumiwa na programu ili kukuonyesha matangazo yaliyowekewa mapendeleo.\n\nUnaweza kuzuia mada ambazo hungependa kushiriki na programu. Android pia hufuta kiotomatiki mada mara kwa mara."</string>
     <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"Ruhusu mada za matangazo"</string>
     <string name="settingsUI_blocked_topics_ga_title" msgid="7163366621282449273">"Mada za matangazo ulizozuia"</string>
     <string name="settingsUI_reset_topics_ga_title" msgid="5365554894399951300">"Weka upya mada zote za matangazo"</string>
@@ -200,14 +198,10 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Programu ulizozuia"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Weka upya data inayopendekezwa na programu"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Ni kawaida kwa programu unazotumia kukumbuka mambo yanayokuvutia ili kuweka mapendeleo kwenye matumizi yako. Programu zinaweza pia kuhifadhi maelezo kwenye Android kuhusu mada zako.\n\nKwa mfano, ikiwa unatumia programu inayohusu mafunzo ya mbio, programu inaweza kuamua kuwa unavutiwa na viatu vya mazoezi ya kukimbia. Baadaye, ukitumia programu tofauti, programu hiyo inaweza kukuonyesha tangazo la viatu vya mazoezi ya kukimbia lililopendekezwa na programu ya kwanza.\n\nAndroid hufuta kiotomatiki data iliyopendekezwa na programu mara kwa mara. Huenda programu unayotumia tena ikaonekana tena kwenye orodha. Au unaweza kuizuia programu isikupendekezee matangazo.\n\nKwenye programu zako, tangazo unaloona linaweza kuwekewa mapendeleo, kulingana na mipangilio hii, mipangilio ya mada za matangazo, mipangilio ya kitambulisho chako cha matangazo na ikiwa programu unayotumia inaweka mapendeleo kwenye matangazo."</string>
-    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
-    <skip />
-    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
-    <skip />
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Mchoro unaovutia wa ishara unaowakilisha mada unazopendelea kama vile muziki, habari na michezo"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Mchoro unaovutia wa kufuli ikiwa ndani ya duara"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Mchoro mdogo wenye rangi nyeusi na nyeupe ulio na nukta tisa unaounda umbo mraba"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"Mchoro mdogo wenye rangi nyeusi na nyeupe ulio na umbo rahisi kama vile moyo, pembe tatu na mraba"</string>
     <string name="topic10001" msgid="1636806320891333775">"Sanaa na Burudani"</string>
     <string name="topic10002" msgid="1226367977754287428">"Uigizaji na Ukumbi wa Maonyesho"</string>
     <string name="topic10003" msgid="6949890838957814881">"Vibonzo na Manga"</string>

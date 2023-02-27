@@ -183,11 +183,9 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Қолданбаларды қалай пайдаланатыныңызға байланысты олар сізге не ұнайтынын анықтай алады."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Сіз пайдаланатын қолданбалар жарнамалардың тиімділігін бағалау үшін Android-тан мәліметтер сұрауы мүмкін. Android қолданбаларға деректердің белгілі бір түрін ғана жинауға мүмкіндік береді."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Қосулы/<xliff:g id="TOPICS_COUNT">%1$d</xliff:g> тақырып"</string>
-    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
-    <skip />
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Қосулы/# тақырып}other{Қосулы/# тақырып}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Қосулы/<xliff:g id="APPS_COUNT">%1$d</xliff:g> қолданба"</string>
-    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
-    <skip />
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{Қосулы/# қолданба}other{Қосулы/# қолданба}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"Қосулы"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Өшірулі"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Қызығушылық тақырыптары сіз жақында пайдаланған қолданбаларға негізделеді. Қолданбалар оларды жекелендірілген жарнамалар көрсету үшін пайдаланады.\n\nҚолданбалармен бөліскіңіз келмейтін тақырыптарды бөгеуіңізге болады. Сондай-ақ Android жүйесі тақырыптарды тұрақты негізде автоматты жойып отырады."</string>
@@ -200,14 +198,10 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Сіз бөгеген қолданбалар"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Қолданба ұсынған деректерді өшіру"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Әдетте сіз пайдаланатын қолданбалар жекелендірілген контент ұсыну үшін сіз қызығатын тақырыптарды есте сақтайды. Сонымен қатар олар Android арқылы тақырыптар туралы мәліметті сақтайды.\n\nМысалы, марафонға дайындалатын жаттығулары бар қолданбаны пайдалансаңыз, қолданба сізді жүгіруге арналған аяқ киімдерге қызығады деп анықтауы мүмкін. Кейін басқа қолданбаны пайдаланғанда, алдыңғы қолданба ұсынған аяқ киімдер көрсетілуі мүмкін.\n\nAndroid қолданба ұсынатын деректерді автоматты түрде жойып отырады. Қолданбаны әрі қарай пайдалана берсеңіз, оның деректері тізімде қайта шығуы мүмкін. Сіз қолданбаның жарнамалар ұсынуына тыйым сала аласыз.\n\nҚолданбалардағы жарнама параметрге байланысты жекелендірілуі мүмкін. Ол тақырыптардың параметріне, жарнама идентификаторының параметрлеріне және пайдаланылып жатқан қолданбаның жарнаманы жекелендіруіне немесе жекелендірмеуіне негізделіп көрсетіледі."</string>
-    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
-    <skip />
-    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
-    <skip />
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Музыка, жаңалықтар және спорт сияқты қызық тақырыптарды қамтитын түрлі-түсті кескіндер"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Шеңбердің ішіндегі құлыптың түрлі-түсті кескіні"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Шаршыны құраған тоғыз нүктенің шағын ақ-қара кескіні"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"Жүрек, үшбұрыш және шаршы сияқты пішіндердің шағын ақ-қара кескіні"</string>
     <string name="topic10001" msgid="1636806320891333775">"Өнер және ойын-сауық"</string>
     <string name="topic10002" msgid="1226367977754287428">"Актерлік өнер және театр"</string>
     <string name="topic10003" msgid="6949890838957814881">"Аниме және манга"</string>

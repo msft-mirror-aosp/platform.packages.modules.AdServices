@@ -183,11 +183,9 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Aplikacije, ki jih uporabljate, lahko tudi ugotavljajo, kaj vam je všeč, na podlagi tega, kako jih uporabljate."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Aplikacije, ki jih uporabljate, lahko prosijo Android za podatke, da bodo lažje merile uspešnost oglasov. Android aplikacijam omogoča, da zbirajo omejene vrste podatkov."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Vklopljeno / Št. tem: <xliff:g id="TOPICS_COUNT">%1$d</xliff:g>"</string>
-    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
-    <skip />
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Vklopljeno / # tema}one{Vklopljeno / # tema}two{Vklopljeno / # temi}few{Vklopljeno / # teme}other{Vklopljeno / # tem}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Vklopljeno / Št. aplikacij: <xliff:g id="APPS_COUNT">%1$d</xliff:g>"</string>
-    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
-    <skip />
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{Vklopljeno / # aplikacija}one{Vklopljeno / # aplikacija}two{Vklopljeno / # aplikaciji}few{Vklopljeno / # aplikacije}other{Vklopljeno / # aplikacij}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"Vklopljeno"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Izklopljeno"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Teme, ki vas zanimajo, se določajo na podlagi aplikacij, ki ste jih nedavno uporabljali. Aplikacije jih uporabijo, da vam prikazujejo osebno prilagojene oglase.\n\nTeme, ki jih ne želite deliti z aplikacijami, lahko blokirate. Poleg tega Android redno samodejno briše teme."</string>
@@ -200,14 +198,10 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Blokirane aplikacije"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Ponastavi podatke, ki jih predlagajo aplikacije"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Običajno je, da si aplikacije, ki jih uporabljate, zapomnijo stvari, ki vas zanimajo, zato da osebno prilagodijo vašo izkušnjo. Aplikacije lahko v napravi Android tudi shranjujejo informacije o vaših temah.\n\nČe na primer uporabljate aplikacijo, ki se nanaša na trening za maraton, se aplikacija lahko odloči, da vas zanimajo tekaški čevlji. Če pozneje uporabite drugo aplikacijo, vam ta aplikacija lahko prikaže oglas za tekaške čevlje, ki ga je predlagala prva aplikacija.\n\nAndroid redno samodejno briše podatke, ki jih predlagajo aplikacije. Aplikacija, ki jo znova uporabite, se lahko znova prikaže na seznamu. Lahko pa blokirate, da bi aplikacija predlagala oglase za vas.\n\nV aplikacijah je oglas, ki ga vidite, lahko osebno prilagojen. To je odvisno od te nastavitve, nastavitve tem oglasov, nastavitev oglaševalskega ID-ja in tega, ali aplikacija, ki jo uporabljate, osebno prilagaja oglase."</string>
-    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
-    <skip />
-    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
-    <skip />
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Barvna ilustracija simbolov, ki predstavljajo teme zanimanj, kot so glasba, novice in šport"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Barvna ilustracija ključavnice v krogu"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Majhna črno-bela ilustracija devetih pik, razporejenih v kvadrat"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"Majhna črno-bela ilustracija preprostih oblik, kot so srce, trikotnik in kvadrat"</string>
     <string name="topic10001" msgid="1636806320891333775">"Umetnost in zabava"</string>
     <string name="topic10002" msgid="1226367977754287428">"Igralstvo in gledališče"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime in manga"</string>

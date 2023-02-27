@@ -183,11 +183,9 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"آپ جو ایپس استعمال کرتے ہیں وہ اس بات کا تعین بھی کر سکتی ہیں کہ آپ ان کو کس طرح استعمال کرتے ہیں اس کی بنیاد پر آپ کو کیا پسند ہے۔"</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"‏آپ جو ایپس استعمال کرتے ہیں وہ اپنے اشتہارات کی کارکردگی کی پیمائش کرنے میں مدد کے لیے Android سے معلومات طلب کر سکتی ہیں۔ Android ایپس کو محدود قسم کا ڈیٹا اکٹھا کرنے دیتا ہے۔"</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"آن ہے / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> موضوعات"</string>
-    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
-    <skip />
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{آن / # موضوع}other{آن / # موضوعات}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"آن ہے / <xliff:g id="APPS_COUNT">%1$d</xliff:g> ایپس"</string>
-    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
-    <skip />
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{آن / # ایپ}other{آن / # ایپس}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"آن ہے"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"آف ہے"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"‏دلچسپی کے موضوعات ان ایپس پر مبنی ہوتے ہیں جنہیں آپ نے حال ہی میں استعمال کیا ہے اور ایپس ان کا استعمال آپ کو ذاتی نوعیت کے اشتہارات دکھانے کے لیے کرتی ہیں۔\n\nآپ ان موضوعات کو مسدود کر سکتے ہیں جن کا اشتراک آپ ایپس کے ساتھ نہیں کرنا چاہتے ہیں۔ Android موضوعات کو باقاعدگی سے خودکار طور پر حذف بھی کرتا ہے۔"</string>
@@ -200,14 +198,10 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"آپ کی مسدود کردہ ایپس"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"ایپ کے تجویز کردہ ڈیٹا کو ری سیٹ کریں"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"‏یہ ان ایپس کے لیے عام ہے جنہیں آپ اپنے تجربے کو ذاتی نوعیت کا بنانے کے لیے ان چیزوں کو یاد رکھنے کے لیے استعمال کرتے ہیں جن میں آپ کی دلچسپی ہے۔ ایپس آپ کے موضوعات کے بارے میں بھی معلومات کو Android کے ساتھ اسٹور کر سکتی ہیں۔\n\nمثال کے طور پر، اگر آپ میراتھن ٹریننگ کے بارے میں کوئی ایپ استعمال کرتے ہیں تو ایپ یہ فیصلہ کر سکتی ہے کہ آپ کو رننگ شوز میں دلچسپی ہے۔ بعد میں، اگر آپ کوئی مختلف ایپ استعمال کرتے ہیں تو وہ ایپ آپ کو پہلی ایپ کے تجویز کردہ رننگ شوز کا اشتہار دکھا سکتی ہے۔\n\nAndroid ایپ کے تجویز کردہ ڈیٹا کو باقاعدگی سے خودکار طور پر حذف کرتا ہے۔ آپ جو ایپ دوبارہ استعمال کرتے ہیں وہ فہرست میں دوبارہ ظاہر ہو سکتی ہے۔ یا آپ کسی ایپ کو اپنے لیے اشتہارات تجویز کرنے سے مسدود کر سکتے ہیں۔\n\nآپ کی ایپس میں، آپ جو اشتہار دیکھتے ہیں وہ ذاتی نوعیت کا ہو سکتا ہے، اس ترتیب، اشتہار کے موضوعات کی ترتیب، آپ کی تشہیری ID کی ترتیبات اور آیا آپ جس ایپ کو استعمال کر رہے ہیں وہ اشتہارات کو ذاتی نوعیت کا بناتی ہے کی بنیاد پر۔"</string>
-    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
-    <skip />
-    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
-    <skip />
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"موسیقی، خبروں اور اسپورٹس جیسے دلچسپی کے موضوعات کی نمائندگی کرنے والے علامات کا رنگین خاکہ"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"دائرے کے اندر قفل کا رنگین خاکہ"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"مربع کو تشکیل دینے والے نو نقطوں کا چھوٹا سیاہ اور سفید خاکہ"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"دل، مثلث اور مربع جیسی سادہ شکلوں کا چھوٹا سیاہ اور سفید خاکہ"</string>
     <string name="topic10001" msgid="1636806320891333775">"آرٹس اور تفریح"</string>
     <string name="topic10002" msgid="1226367977754287428">"اداکاری اور تھیٹر"</string>
     <string name="topic10003" msgid="6949890838957814881">"اینیمی اور مانگا"</string>
