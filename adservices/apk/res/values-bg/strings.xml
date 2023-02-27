@@ -156,10 +156,10 @@
     <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Искате ли да изключите Privacy Sandbox?"</string>
     <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Ако промените решението си или искате да научите повече за бета-версията на Android за поверителността при рекламите, отворете настройките за поверителност"</string>
     <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Изключване"</string>
-    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Да се блокира ли <xliff:g id="TOPIC">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Да се блокира ли „<xliff:g id="TOPIC">%1$s</xliff:g>“?"</string>
     <string name="settingsUI_dialog_block_topic_message" msgid="2581824495438333677">"Тази тема ще бъде блокирана и няма да бъде включена отново в списъка ви, освен ако не я добавите ръчно. Възможно е да продължите да виждате свързани с нея реклами."</string>
     <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Блокиране"</string>
-    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"Темата <xliff:g id="TOPIC">%1$s</xliff:g> е отблокирана"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"Темата „<xliff:g id="TOPIC">%1$s</xliff:g>“ е отблокирана"</string>
     <string name="settingsUI_dialog_unblock_topic_message" msgid="1090743551997420666">"Android може отново да добави тази тема към списъка ви, но е възможно тя да не се покаже веднага"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="8025836207966712435">"Да се нулират ли всички рекламни теми?"</string>
