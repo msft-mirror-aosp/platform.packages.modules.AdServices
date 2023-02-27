@@ -2078,15 +2078,21 @@ public class FledgeE2ETest {
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 DEFAULT_FLAGS),
                         FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLogger),
-                        mFledgeAllowListsFilterSpy,
                         mConsentManagerMock,
                         mDevContextFilter,
                         MoreExecutors.newDirectExecutorService(),
                         mAdServicesLogger,
                         mAppImportanceFilter,
                         flags,
-                        mThrottlerSupplier,
-                        CallingAppUidSupplierProcessImpl.create());
+                        CallingAppUidSupplierProcessImpl.create(),
+                        new CustomAudienceServiceFilter(
+                                CONTEXT,
+                                mConsentManagerMock,
+                                flags,
+                                mAppImportanceFilter,
+                                FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLogger),
+                                mFledgeAllowListsFilterSpy,
+                                mThrottlerSupplier));
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
