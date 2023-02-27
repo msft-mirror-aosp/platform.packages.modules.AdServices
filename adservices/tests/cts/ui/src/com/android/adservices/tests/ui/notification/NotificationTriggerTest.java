@@ -35,7 +35,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -254,7 +253,6 @@ public class NotificationTriggerTest {
      * should not displayed
      */
     @Test
-    @Ignore("b/269145305")
     public void testRowAdIdEnabledGaUxEnabledReConsentSecondNotDisplayed() throws Exception {
         UiUtils.setAsRowDevice();
         UiUtils.disableGaUxFeature();
