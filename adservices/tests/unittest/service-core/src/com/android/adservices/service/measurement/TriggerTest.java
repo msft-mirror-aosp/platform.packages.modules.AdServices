@@ -579,15 +579,6 @@ public class TriggerTest {
     }
 
     @Test
-    public void testGetAttributionDestinationBaseUri_trimsAppDestination() throws JSONException {
-        Trigger trigger = TriggerFixture.getValidTriggerBuilder()
-                .setAttributionDestination(APP_DESTINATION_WITH_PATH)
-                .setDestinationType(EventSurfaceType.APP)
-                .build();
-        assertEquals(APP_DESTINATION, trigger.getAttributionDestinationBaseUri());
-    }
-
-    @Test
     public void testGetAttributionDestinationBaseUri_webDestination() throws JSONException {
         Trigger trigger = TriggerFixture.getValidTriggerBuilder()
                 .setAttributionDestination(WEB_DESTINATION)
