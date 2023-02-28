@@ -93,9 +93,9 @@ package android.adservices.adselection {
 
   public class AddAdSelectionFromOutcomesOverrideRequest {
     ctor public AddAdSelectionFromOutcomesOverrideRequest(@NonNull android.adservices.adselection.AdSelectionFromOutcomesConfig, @NonNull String, @NonNull android.adservices.common.AdSelectionSignals);
-    method @NonNull public android.adservices.adselection.AdSelectionFromOutcomesConfig getAdSelectionConfig();
-    method @NonNull public String getSelectionLogicJs();
-    method @NonNull public android.adservices.common.AdSelectionSignals getSelectionSignals();
+    method @NonNull public android.adservices.adselection.AdSelectionFromOutcomesConfig getAdSelectionFromOutcomesConfig();
+    method @NonNull public String getOutcomeSelectionLogicJs();
+    method @NonNull public android.adservices.common.AdSelectionSignals getOutcomeSelectionTrustedSignals();
   }
 
   public class AddAdSelectionOverrideRequest {
