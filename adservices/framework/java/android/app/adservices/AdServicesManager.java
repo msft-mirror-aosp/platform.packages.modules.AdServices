@@ -30,6 +30,8 @@ import android.os.Build;
 import android.os.IBinder;
 import android.os.RemoteException;
 
+import androidx.annotation.RequiresApi;
+
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -44,6 +46,8 @@ import java.util.Objects;
  *
  * @hide
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public final class AdServicesManager {
     @GuardedBy("SINGLETON_LOCK")
     private static AdServicesManager sSingleton;
