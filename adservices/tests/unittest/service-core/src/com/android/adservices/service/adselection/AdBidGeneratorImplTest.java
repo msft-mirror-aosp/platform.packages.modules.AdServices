@@ -347,7 +347,6 @@ public class AdBidGeneratorImplTest {
                 new JsFetcher(
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
-                        customAudienceDevOverridesHelper,
                         mAdServicesHttpsClient);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
@@ -446,7 +445,6 @@ public class AdBidGeneratorImplTest {
                 new JsFetcher(
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
-                        customAudienceDevOverridesHelper,
                         mAdServicesHttpsClient);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
@@ -542,7 +540,6 @@ public class AdBidGeneratorImplTest {
                 new JsFetcher(
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
-                        customAudienceDevOverridesHelper,
                         mAdServicesHttpsClient);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
@@ -635,7 +632,6 @@ public class AdBidGeneratorImplTest {
                 new JsFetcher(
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
-                        customAudienceDevOverridesHelper,
                         mAdServicesHttpsClient);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
@@ -736,7 +732,6 @@ public class AdBidGeneratorImplTest {
                 new JsFetcher(
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
-                        customAudienceDevOverridesHelper,
                         mAdServicesHttpsClient);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
@@ -830,7 +825,6 @@ public class AdBidGeneratorImplTest {
                 new JsFetcher(
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
-                        customAudienceDevOverridesHelper,
                         mAdServicesHttpsClient);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
@@ -923,7 +917,6 @@ public class AdBidGeneratorImplTest {
                 new JsFetcher(
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
-                        customAudienceDevOverridesHelper,
                         mAdServicesHttpsClient);
         Flags flagsWithSmallerLimits =
                 new Flags() {
@@ -1017,7 +1010,6 @@ public class AdBidGeneratorImplTest {
                 new JsFetcher(
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
-                        customAudienceDevOverridesHelper,
                         mAdServicesHttpsClient);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
@@ -1092,7 +1084,6 @@ public class AdBidGeneratorImplTest {
                 new JsFetcher(
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
-                        customAudienceDevOverridesHelper,
                         mAdServicesHttpsClient);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
@@ -1181,7 +1172,6 @@ public class AdBidGeneratorImplTest {
                 new JsFetcher(
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
-                        customAudienceDevOverridesHelper,
                         mAdServicesHttpsClient);
         List<String> emptyTrustedBiddingKeys = Collections.EMPTY_LIST;
         DBTrustedBiddingData trustedBiddingData =
@@ -1303,7 +1293,6 @@ public class AdBidGeneratorImplTest {
                 new JsFetcher(
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
-                        customAudienceDevOverridesHelper,
                         mAdServicesHttpsClient);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
@@ -1365,7 +1354,6 @@ public class AdBidGeneratorImplTest {
                 new JsFetcher(
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
-                        customAudienceDevOverridesHelper,
                         mAdServicesHttpsClient);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
@@ -1426,7 +1414,6 @@ public class AdBidGeneratorImplTest {
                 new JsFetcher(
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
-                        customAudienceDevOverridesHelper,
                         mAdServicesHttpsClient);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
