@@ -24,4 +24,5 @@ interface ICtsSdkProviderApi {
     void testStoragePaths();
     int getProcessImportance();
     void startActivity(IActivityStarter callback);
+    String getOpPackageName();
 }
