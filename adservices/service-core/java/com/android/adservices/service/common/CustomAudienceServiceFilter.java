@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,15 +22,16 @@ import android.annotation.Nullable;
 import android.content.Context;
 import android.os.LimitExceededException;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.consent.ConsentManager;
 
 import java.util.Objects;
 import java.util.function.Supplier;
 
-/** Utility class to filter FLEDGE requests. */
-public class FledgeServiceFilter extends AbstractFledgeServiceFilter {
-    public FledgeServiceFilter(
+/** Composite filter for CustomAudienceService request. */
+public class CustomAudienceServiceFilter extends AbstractFledgeServiceFilter {
+    public CustomAudienceServiceFilter(
             @NonNull Context context,
             @NonNull ConsentManager consentManager,
             @NonNull Flags flags,
@@ -49,13 +50,15 @@ public class FledgeServiceFilter extends AbstractFledgeServiceFilter {
     }
 
     /**
-     * Applies the filtering operations to the context of a FLEDGE request. The specific filtering
-     * operations are discussed in the comments below.
+     * Composite filter for FLEDGE's CustomAudience-specific requests.
      *
-     * @param adTech the adTech associated with the request. This parameter is nullable, and the
-     *     enrollment check will not be applied if it is null.
+     * @param adTech the ad tech associated with the request. If null, the enrollment check will be
+     *     skipped.
      * @param callerPackageName caller package name to be validated
      * @param enforceForeground whether to enforce a foreground check
+     * @param callerUid caller's uid from the Binder thread
+     * @param apiName the id of the api being called
+     * @param apiKey api-specific throttler key
      * @throws FledgeAuthorizationFilter.CallerMismatchException if the {@code callerPackageName} is
      *     not valid
      * @throws AppImportanceFilter.WrongCallingApplicationStateException if the foreground check is
@@ -63,8 +66,6 @@ public class FledgeServiceFilter extends AbstractFledgeServiceFilter {
      * @throws FledgeAuthorizationFilter.AdTechNotAllowedException if the ad tech is not authorized
      *     to perform the operation
      * @throws FledgeAllowListsFilter.AppNotAllowedException if the package is not authorized.
-     * @throws ConsentManager.RevokedConsentException if FLEDGE or the Privacy Sandbox do not have
-     *     user consent
      * @throws LimitExceededException if the provided {@code callerPackageName} exceeds the rate
      *     limits
      */
@@ -79,15 +80,22 @@ public class FledgeServiceFilter extends AbstractFledgeServiceFilter {
         Objects.requireNonNull(callerPackageName);
         Objects.requireNonNull(apiKey);
 
+        LogUtil.v("Validating caller package name.");
         assertCallerPackageName(callerPackageName, callerUid, apiName);
+
+        LogUtil.v("Validating API is not throttled.");
         assertCallerNotThrottled(callerPackageName, apiKey);
+
         if (enforceForeground) {
+            LogUtil.v("Checking caller is in foreground.");
             assertForegroundCaller(callerUid, apiName);
         }
         if (!Objects.isNull(adTech)) {
+            LogUtil.v("Checking ad tech is allowed to use FLEDGE.");
             assertFledgeEnrollment(adTech, callerPackageName, apiName);
         }
+
+        LogUtil.v("Validating caller package is in allow list.");
         assertAppInAllowList(callerPackageName, apiName);
-        assertCallerHasUserConsent();
     }
 }
