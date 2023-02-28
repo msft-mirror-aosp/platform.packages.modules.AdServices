@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.common;
+package com.android.adservices.service.common.httpclient;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.common.ValidatorUtil;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.cache.DBCacheEntry;
 import com.android.adservices.service.common.cache.HttpCache;
@@ -29,6 +30,8 @@ import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.ClosingFuture;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -48,6 +51,8 @@ import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -174,41 +179,52 @@ public class AdServicesHttpsClient {
      * @return a string containing the fetched payload
      */
     @NonNull
-    public ListenableFuture<String> fetchPayload(@NonNull Uri uri) {
-        // TODO(b/260042942) : Refactor to let the Cache decide if caching should be used or not
-        return fetchPayload(uri, false);
+    public ListenableFuture<AdServicesHttpClientResponse> fetchPayload(@NonNull Uri uri) {
+        return fetchPayload(AdServicesHttpClientRequest.builder().setUri(uri).build());
     }
 
     /**
      * Performs a GET request on the given URI in order to fetch a payload.
      *
-     * @param uri a {@link Uri} pointing to a target server, converted to a URL for fetching
-     * @param useCache the intent to use cache for storing & retrieving results
+     * @param request of type {@link AdServicesHttpClientRequest}
      * @return a string containing the fetched payload
      */
     @NonNull
-    public ListenableFuture<String> fetchPayload(@NonNull Uri uri, boolean useCache) {
-        Objects.requireNonNull(uri);
-        return ClosingFuture.from(mExecutorService.submit(() -> mUriConverter.toUrl(uri)))
+    public ListenableFuture<AdServicesHttpClientResponse> fetchPayload(
+            @NonNull AdServicesHttpClientRequest request) {
+        Objects.requireNonNull(request.getUri());
+        return ClosingFuture.from(
+                        mExecutorService.submit(
+                                () ->
+                                        mUriConverter.toUrl(
+                                                request.getUri(), request.getQueryParams())))
                 .transformAsync(
                         (closer, url) ->
                                 ClosingFuture.from(
                                         mExecutorService.submit(
-                                                () -> doFetchPayload(url, closer, useCache))),
+                                                () -> doFetchPayload(url, closer, request))),
                         mExecutorService)
                 .finishToFuture();
     }
 
-    private String doFetchPayload(
-            @NonNull URL url, @NonNull ClosingFuture.DeferredCloser closer, boolean useCache)
+    private AdServicesHttpClientResponse doFetchPayload(
+            @NonNull URL url,
+            @NonNull ClosingFuture.DeferredCloser closer,
+            AdServicesHttpClientRequest request)
             throws IOException {
         int traceCookie = Tracing.beginAsyncSection(Tracing.FETCH_PAYLOAD);
         LogUtil.v("Downloading payload from: \"%s\"", url.toString());
-        if (useCache) {
+        if (request.getUseCache()) {
             DBCacheEntry cachedEntry = mCache.get(url);
             if (cachedEntry != null) {
                 LogUtil.v("Cache hit for url: %s", url.toString());
-                return cachedEntry.getResponseBody();
+                return AdServicesHttpClientResponse.builder()
+                        .setResponseBody(cachedEntry.getResponseBody())
+                        .setResponseHeaders(
+                                ImmutableMap.<String, List<String>>builder()
+                                        .putAll(cachedEntry.getResponseHeaders().entrySet())
+                                        .build())
+                        .build();
             }
             LogUtil.v("Cache miss for url: %s", url.toString());
         }
@@ -232,11 +248,22 @@ public class AdServicesHttpsClient {
             if (isSuccessfulResponse(responseCode)) {
                 String responseBody =
                         fromInputStream(inputStream, urlConnection.getContentLengthLong());
-                if (useCache) {
+                Map<String, List<String>> responseHeadersMap =
+                        pickRequiredHeaderFields(
+                                urlConnection.getHeaderFields(), request.getResponseHeaderKeys());
+                if (request.getUseCache()) {
                     LogUtil.v("Putting data in cache for url: %s", url);
-                    mCache.put(url, responseBody, requestPropertiesMap);
+                    mCache.put(url, responseBody, requestPropertiesMap, responseHeadersMap);
                 }
-                return responseBody;
+                AdServicesHttpClientResponse response =
+                        AdServicesHttpClientResponse.builder()
+                                .setResponseBody(responseBody)
+                                .setResponseHeaders(
+                                        ImmutableMap.<String, List<String>>builder()
+                                                .putAll(responseHeadersMap.entrySet())
+                                                .build())
+                                .build();
+                return response;
             } else {
                 throwError(urlConnection, responseCode);
                 return null;
@@ -249,6 +276,17 @@ public class AdServicesHttpsClient {
             Tracing.endAsyncSection(Tracing.HTTP_REQUEST, httpTraceCookie);
             Tracing.endAsyncSection(Tracing.FETCH_PAYLOAD, traceCookie);
         }
+    }
+
+    private Map<String, List<String>> pickRequiredHeaderFields(
+            Map<String, List<String>> allHeaderFields, ImmutableSet<String> requiredHeaderKeys) {
+        Map<String, List<String>> result = new HashMap<>();
+        for (String headerKey : requiredHeaderKeys) {
+            if (allHeaderFields.containsKey(headerKey)) {
+                result.put(headerKey, new ArrayList<>(allHeaderFields.get(headerKey)));
+            }
+        }
+        return result;
     }
 
     /**
@@ -513,6 +551,15 @@ public class AdServicesHttpsClient {
                 throw new IllegalArgumentException("Uri is malformed!");
             }
             return url;
+        }
+
+        @NonNull
+        URL toUrl(@NonNull Uri uri, @NonNull Map<String, String> queryParams) {
+            Uri.Builder uriBuilder = uri.buildUpon();
+            for (Map.Entry<String, String> queryParam : queryParams.entrySet()) {
+                uriBuilder.appendQueryParameter(queryParam.getKey(), queryParam.getValue());
+            }
+            return toUrl(uriBuilder.build());
         }
     }
 

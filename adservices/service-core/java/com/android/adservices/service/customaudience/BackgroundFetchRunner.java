@@ -29,7 +29,7 @@ import com.android.adservices.data.customaudience.CustomAudienceStats;
 import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetchData;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.common.AdServicesHttpsClient;
+import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 
 import com.google.common.util.concurrent.FluentFuture;
 
@@ -157,7 +157,9 @@ public class BackgroundFetchRunner {
         // TODO(b/234884352): Perform k-anon check on daily fetch URI
         return FluentFuture.from(mHttpsClient.fetchPayload(dailyFetchUri))
                 .transform(
-                        updateResponse -> Pair.create(UpdateResultType.SUCCESS, updateResponse),
+                        updateResponse ->
+                                Pair.create(
+                                        UpdateResultType.SUCCESS, updateResponse.getResponseBody()),
                         AdServicesExecutors.getBackgroundExecutor())
                 .catching(
                         Throwable.class,
