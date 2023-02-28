@@ -83,6 +83,10 @@
     {
       // Install com.google.android.adservices.apex and run CtsAppSetIdEndToEndTest.
       "name": "CtsAppSetIdEndToEndTest[com.google.android.adservices.apex]"
+    },
+    {
+      // Install com.google.android.adservices.apex and run CtsAdServicesHostTests.
+      "name": "CtsAdServicesHostTests[com.google.android.adservices.apex]"
     }
   ],
   "presubmit": [
@@ -136,6 +140,9 @@
     },
     {
       "name": "CtsRootAdServicesUiTest"
+    },
+    {
+      "name": "CtsAdServicesHostTests"
     }
   ]
 }
