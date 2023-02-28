@@ -23,11 +23,8 @@ import android.adservices.common.FledgeErrorResponse;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
-import android.os.Build;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
-
-import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 
@@ -40,8 +37,6 @@ import java.util.concurrent.Executor;
  * <p>These APIs are intended to be used for end-to-end testing. They are enabled only for
  * debuggable apps on phones running a debuggable OS build with developer options enabled.
  */
-// TODO(b/269798827): Enable for R.
-@RequiresApi(Build.VERSION_CODES.S)
 public class TestAdSelectionManager {
 
     private final AdSelectionManager mAdSelectionManager;

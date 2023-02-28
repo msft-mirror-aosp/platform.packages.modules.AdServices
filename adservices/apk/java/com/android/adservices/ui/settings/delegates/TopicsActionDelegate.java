@@ -16,12 +16,10 @@
 package com.android.adservices.ui.settings.delegates;
 
 import android.content.Intent;
-import android.os.Build;
 import android.util.Pair;
 import android.view.View;
 import android.widget.TextView;
 
-import androidx.annotation.RequiresApi;
 import androidx.lifecycle.Observer;
 
 import com.android.adservices.api.R;
@@ -39,8 +37,6 @@ import com.android.settingslib.widget.MainSwitchBar;
 /**
  * Delegate class that helps AdServices Settings fragments to respond to all view model/user events.
  */
-// TODO(b/269798827): Enable for R.
-@RequiresApi(Build.VERSION_CODES.S)
 public class TopicsActionDelegate extends BaseActionDelegate {
     private final TopicsActivity mTopicsActivity;
     private final TopicsViewModel mTopicsViewModel;

@@ -17,11 +17,9 @@ package com.android.adservices.ui.settings.delegates;
 
 import android.content.Intent;
 import android.icu.text.MessageFormat;
-import android.os.Build;
 import android.view.View;
 import android.widget.TextView;
 
-import androidx.annotation.RequiresApi;
 import androidx.lifecycle.Observer;
 
 import com.android.adservices.api.R;
@@ -43,8 +41,6 @@ import java.util.Map;
 /**
  * Delegate class that helps AdServices Settings fragments to respond to all view model/user events.
  */
-// TODO(b/269798827): Enable for R.
-@RequiresApi(Build.VERSION_CODES.S)
 public class MainActionDelegate extends BaseActionDelegate {
     private final AdServicesSettingsMainActivity mAdServicesSettingsMainActivity;
     private final MainViewModel mMainViewModel;

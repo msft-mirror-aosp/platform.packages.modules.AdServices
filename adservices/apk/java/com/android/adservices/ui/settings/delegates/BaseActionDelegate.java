@@ -29,10 +29,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
 
 import android.app.Activity;
-import android.os.Build;
 import android.util.Log;
-
-import androidx.annotation.RequiresApi;
 
 import com.android.adservices.service.consent.DeviceRegionProvider;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -47,8 +44,6 @@ import com.android.adservices.ui.settings.activities.AdServicesBaseActivity;
  *   <li>common logging events
  * </ul>
  */
-// TODO(b/269798827): Enable for R.
-@RequiresApi(Build.VERSION_CODES.S)
 public abstract class BaseActionDelegate {
     private final int mDeviceLoggingRegion;
 

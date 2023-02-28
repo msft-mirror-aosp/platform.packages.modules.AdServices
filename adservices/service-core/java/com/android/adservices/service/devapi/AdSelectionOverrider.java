@@ -29,10 +29,7 @@ import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
 import android.annotation.NonNull;
 import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.RemoteException;
-
-import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
@@ -53,8 +50,6 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
 /** Encapsulates the AdSelection Override Logic */
-// TODO(b/269798827): Enable for R.
-@RequiresApi(Build.VERSION_CODES.S)
 public class AdSelectionOverrider {
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;

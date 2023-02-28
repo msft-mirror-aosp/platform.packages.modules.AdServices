@@ -24,10 +24,8 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
@@ -39,8 +37,6 @@ import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.ui.OTAResourcesManager;
 
 /** Provides methods which can be used to display Privacy Sandbox consent notification. */
-// TODO(b/269798827): Enable for R.
-@RequiresApi(Build.VERSION_CODES.S)
 public class ConsentNotificationTrigger {
     // Random integer for NotificationCompat purposes
     private static final int NOTIFICATION_ID = 67920;

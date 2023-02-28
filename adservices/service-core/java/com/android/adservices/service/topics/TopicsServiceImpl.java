@@ -37,11 +37,8 @@ import android.annotation.NonNull;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Binder;
-import android.os.Build;
 import android.os.RemoteException;
 import android.text.TextUtils;
-
-import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -71,8 +68,6 @@ import java.util.concurrent.Executor;
  *
  * @hide
  */
-// TODO(b/269798827): Enable for R.
-@RequiresApi(Build.VERSION_CODES.S)
 public class TopicsServiceImpl extends ITopicsService.Stub {
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
     private final Context mContext;
