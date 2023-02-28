@@ -15,10 +15,8 @@
  */
 package com.android.adservices.ui.settings.activities;
 
-import android.os.Build;
 import android.os.Bundle;
 
-import androidx.annotation.RequiresApi;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.android.adservices.api.R;
@@ -29,8 +27,6 @@ import com.android.adservices.ui.settings.viewmodels.BlockedTopicsViewModel;
 /**
  * Android application activity for controlling blocked topics that were generated from Topics API.
  */
-// TODO(b/269798827): Enable for R.
-@RequiresApi(Build.VERSION_CODES.S)
 public class BlockedTopicsActivity extends AdServicesBaseActivity {
     private BlockedTopicsActionDelegate mActionDelegate;
 

@@ -22,13 +22,11 @@ import android.content.res.Resources;
 import android.content.res.loader.ResourcesLoader;
 import android.content.res.loader.ResourcesProvider;
 import android.net.Uri;
-import android.os.Build;
 import android.os.ParcelFileDescriptor;
 import android.util.ArrayMap;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.download.MobileDataDownloadFactory;
@@ -48,8 +46,6 @@ import java.util.concurrent.ExecutionException;
  * Manages OTA (over the air) Resources downloaded from MDD. This allows device to use updated OTA
  * resources. Currently only strings are supported.
  */
-// TODO(b/269798827): Enable for R.
-@RequiresApi(Build.VERSION_CODES.S)
 public class OTAResourcesManager {
     // this value needs to be updated if bundled resources are updated
     private static final long BUNDLED_RESOURCES_VERSION = 0;

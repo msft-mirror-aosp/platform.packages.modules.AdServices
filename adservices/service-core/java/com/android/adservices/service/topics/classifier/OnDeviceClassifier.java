@@ -19,9 +19,6 @@ package com.android.adservices.service.topics.classifier;
 import static com.android.adservices.service.topics.classifier.Preprocessor.limitDescriptionSize;
 
 import android.annotation.NonNull;
-import android.os.Build;
-
-import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.topics.Topic;
@@ -54,8 +51,6 @@ import java.util.stream.Collectors;
 /**
  * This Classifier classifies app into list of Topics using the on-device classification ML Model.
  */
-// TODO(b/269798827): Enable for R.
-@RequiresApi(Build.VERSION_CODES.S)
 public class OnDeviceClassifier implements Classifier {
 
     private static OnDeviceClassifier sSingleton;

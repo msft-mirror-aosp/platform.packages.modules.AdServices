@@ -50,10 +50,7 @@ import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CallerMetadata;
 import android.annotation.NonNull;
 import android.content.Context;
-import android.os.Build;
 import android.os.RemoteException;
-
-import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -93,8 +90,6 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
  *
  * @hide
  */
-// TODO(b/269798827): Enable for R.
-@RequiresApi(Build.VERSION_CODES.S)
 public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;

@@ -20,10 +20,8 @@ import static com.android.adservices.service.topics.classifier.ModelManager.BUND
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Build;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -71,8 +69,6 @@ import java.util.List;
 import java.util.concurrent.Executor;
 
 /** Mobile Data Download Factory. */
-// TODO(b/269798827): Enable for R.
-@RequiresApi(Build.VERSION_CODES.S)
 public class MobileDataDownloadFactory {
     private static MobileDataDownload sSingletonMdd;
     private static SynchronousFileStorage sSynchronousFileStorage;

@@ -35,8 +35,6 @@ import android.os.RemoteException;
 import android.os.SystemClock;
 import android.os.TransactionTooLargeException;
 
-import androidx.annotation.RequiresApi;
-
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
 import com.android.adservices.ServiceBinder;
@@ -46,11 +44,9 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.TimeoutException;
 
 /**
- * AdSelection Manager provides APIs for app and ad-SDKs to run ad selection processes as well as
- * report impressions.
+ * AdSelection Manager provides APIs for app and ad-SDKs to run ad selection processes as well
+ * as report impressions.
  */
-// TODO(b/269798827): Enable for R.
-@RequiresApi(Build.VERSION_CODES.S)
 public class AdSelectionManager {
     /**
      * Constant that represents the service name for {@link AdSelectionManager} to be used in {@link
