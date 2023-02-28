@@ -19,12 +19,10 @@ package com.android.adservices.service.topics;
 import android.annotation.NonNull;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
-import android.os.Build;
 import android.text.TextUtils;
 import android.util.Pair;
 
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.DbHelper;
@@ -51,8 +49,6 @@ import java.util.Random;
 import java.util.Set;
 
 /** A class to manage Epoch computation. */
-// TODO(b/269798827): Enable for R.
-@RequiresApi(Build.VERSION_CODES.S)
 public class EpochManager {
     // The tables to do garbage collection for old epochs
     // and its corresponding epoch_id column name.

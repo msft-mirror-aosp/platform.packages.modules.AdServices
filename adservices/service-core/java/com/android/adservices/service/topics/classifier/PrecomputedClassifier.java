@@ -17,9 +17,6 @@
 package com.android.adservices.service.topics.classifier;
 
 import android.annotation.NonNull;
-import android.os.Build;
-
-import androidx.annotation.RequiresApi;
 
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -50,8 +47,6 @@ import javax.annotation.concurrent.NotThreadSafe;
  *
  * <p>This class is not thread safe.
  */
-// TODO(b/269798827): Enable for R.
-@RequiresApi(Build.VERSION_CODES.S)
 @NotThreadSafe
 public class PrecomputedClassifier implements Classifier {
 
