@@ -202,8 +202,21 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
         final List<ResolveInfo> resolveInfos =
                 mContext.getPackageManager()
                         .queryIntentServices(intent, PackageManager.MATCH_SYSTEM_ONLY);
-        final ServiceInfo serviceInfo =
-                AdServicesCommon.resolveAdServicesService(resolveInfos, mServiceIntentAction);
+        if (resolveInfos == null || resolveInfos.isEmpty()) {
+            LogUtil.e(
+                    "Failed to find resolveInfo for adServices service. Intent action: "
+                            + mServiceIntentAction);
+            return null;
+        }
+
+        if (resolveInfos.size() > 1) {
+            LogUtil.e(
+                    "Found multiple services (%1$s) for the same intent action (%2$s)",
+                    mServiceIntentAction, resolveInfos.toString());
+            return null;
+        }
+
+        final ServiceInfo serviceInfo = resolveInfos.get(0).serviceInfo;
         if (serviceInfo == null) {
             LogUtil.e("Failed to find serviceInfo for adServices service");
             return null;

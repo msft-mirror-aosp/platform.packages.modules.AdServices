@@ -27,9 +27,6 @@ import android.app.job.JobScheduler;
 import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
-import android.os.Build;
-
-import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -45,8 +42,6 @@ import java.util.List;
 import java.util.Objects;
 
 /** Maintenance job to clean up. */
-// TODO(b/269798827): Enable for R.
-@RequiresApi(Build.VERSION_CODES.S)
 public final class MaintenanceJobService extends JobService {
 
     private FledgeMaintenanceTasksWorker mFledgeMaintenanceTasksWorker;

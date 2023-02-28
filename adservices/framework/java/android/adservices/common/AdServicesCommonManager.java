@@ -28,8 +28,6 @@ import android.os.Build;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
 
-import androidx.annotation.RequiresApi;
-
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
 import com.android.adservices.ServiceBinder;
@@ -50,8 +48,6 @@ import java.util.concurrent.Executor;
  *
  * @hide
  */
-// TODO(b/269798827): Enable for R.
-@RequiresApi(Build.VERSION_CODES.S)
 @SystemApi
 public class AdServicesCommonManager {
     /** @hide */

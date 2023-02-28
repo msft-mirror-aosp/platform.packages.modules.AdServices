@@ -15,10 +15,8 @@
  */
 package com.android.adservices.ui.settings.activities;
 
-import android.os.Build;
 import android.os.Bundle;
 
-import androidx.annotation.RequiresApi;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.android.adservices.api.R;
@@ -32,8 +30,6 @@ import com.android.adservices.ui.settings.viewmodels.MainViewModel;
 /**
  * Android application activity for controlling settings related to PP (Privacy Preserving) APIs.
  */
-// TODO(b/269798827): Enable for R.
-@RequiresApi(Build.VERSION_CODES.S)
 public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
     public static final String FROM_NOTIFICATION_KEY = "FROM_NOTIFICATION";
     private MainActionDelegate mActionDelegate;

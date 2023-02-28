@@ -25,10 +25,7 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.os.Build;
 import android.util.Pair;
-
-import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
@@ -62,8 +59,6 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.stream.Collectors;
 
 /** Orchestrate on-device ad selection. */
-// TODO(b/269798827): Enable for R.
-@RequiresApi(Build.VERSION_CODES.S)
 public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
     @NonNull protected final AdsScoreGenerator mAdsScoreGenerator;
     @NonNull protected final AdServicesHttpsClient mAdServicesHttpsClient;

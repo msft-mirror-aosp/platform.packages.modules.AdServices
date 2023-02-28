@@ -16,11 +16,9 @@
 package com.android.adservices.ui.settings.viewmodels;
 
 import android.app.Application;
-import android.os.Build;
 import android.util.Pair;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -39,8 +37,6 @@ import com.google.common.collect.ImmutableList;
  * interacting with the {@link ConsentManager} that persists and changes the topics data in a
  * storage.
  */
-// TODO(b/269798827): Enable for R.
-@RequiresApi(Build.VERSION_CODES.S)
 public class BlockedTopicsViewModel extends AndroidViewModel {
 
     private final MutableLiveData<Pair<BlockedTopicsViewModelUiEvent, Topic>> mEventTrigger =

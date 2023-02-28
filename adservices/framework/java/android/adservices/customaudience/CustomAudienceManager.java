@@ -32,8 +32,6 @@ import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
 
-import androidx.annotation.RequiresApi;
-
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
 import com.android.adservices.ServiceBinder;
@@ -41,9 +39,9 @@ import com.android.adservices.ServiceBinder;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
-/** CustomAudienceManager provides APIs for app and ad-SDKs to join / leave custom audiences. */
-// TODO(b/269798827): Enable for R.
-@RequiresApi(Build.VERSION_CODES.S)
+/**
+ * CustomAudienceManager provides APIs for app and ad-SDKs to join / leave custom audiences.
+ */
 public class CustomAudienceManager {
     /**
      * Constant that represents the service name for {@link CustomAudienceManager} to be used in
