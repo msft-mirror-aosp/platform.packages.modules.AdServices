@@ -18,10 +18,7 @@ package com.android.adservices.service.topics;
 
 import android.annotation.NonNull;
 import android.content.Context;
-import android.os.Build;
 import android.util.Pair;
-
-import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.topics.Topic;
@@ -56,8 +53,6 @@ import javax.annotation.concurrent.ThreadSafe;
  *
  * <p>This class is thread safe.
  */
-// TODO(b/269798827): Enable for R.
-@RequiresApi(Build.VERSION_CODES.S)
 @ThreadSafe
 public class CacheManager {
     // The verbose level for dumpsys usage

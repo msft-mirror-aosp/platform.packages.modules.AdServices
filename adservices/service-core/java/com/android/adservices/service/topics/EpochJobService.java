@@ -27,9 +27,6 @@ import android.app.job.JobScheduler;
 import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
-import android.os.Build;
-
-import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -40,9 +37,10 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
-/** Epoch computation job. This will be run approximately once per epoch to compute Topics. */
-// TODO(b/269798827): Enable for R.
-@RequiresApi(Build.VERSION_CODES.S)
+/**
+ * Epoch computation job. This will be run approximately once per epoch to
+ * compute Topics.
+ */
 public final class EpochJobService extends JobService {
 
     @Override

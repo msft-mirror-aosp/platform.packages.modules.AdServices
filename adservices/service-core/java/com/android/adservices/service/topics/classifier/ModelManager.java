@@ -21,12 +21,10 @@ import android.content.Context;
 import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
 import android.net.Uri;
-import android.os.Build;
 import android.util.ArrayMap;
 import android.util.JsonReader;
 
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.download.MobileDataDownloadFactory;
@@ -67,8 +65,6 @@ import java.util.concurrent.ExecutionException;
  *
  * <p>ModelManager will select the right model to serve Classifier.
  */
-// TODO(b/269798827): Enable for R.
-@RequiresApi(Build.VERSION_CODES.S)
 public class ModelManager {
     public static final String BUNDLED_LABELS_FILE_PATH = "classifier/labels_topics.txt";
     public static final String BUNDLED_TOP_APP_FILE_PATH = "classifier/precomputed_app_list.csv";
