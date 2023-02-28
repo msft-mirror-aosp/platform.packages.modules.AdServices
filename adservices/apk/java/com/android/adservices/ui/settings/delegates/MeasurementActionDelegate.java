@@ -15,9 +15,11 @@
  */
 package com.android.adservices.ui.settings.delegates;
 
+import android.os.Build;
 import android.view.View;
 import android.widget.Toast;
 
+import androidx.annotation.RequiresApi;
 import androidx.lifecycle.Observer;
 
 import com.android.adservices.api.R;
@@ -30,6 +32,8 @@ import com.android.settingslib.widget.MainSwitchBar;
 /**
  * Delegate class that helps AdServices Settings fragments to respond to all view model/user events.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class MeasurementActionDelegate extends BaseActionDelegate {
     private final MeasurementActivity mMeasurementActivity;
     private final MeasurementViewModel mMeasurementViewModel;

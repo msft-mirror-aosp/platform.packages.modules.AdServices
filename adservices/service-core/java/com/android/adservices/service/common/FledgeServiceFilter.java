@@ -20,7 +20,10 @@ import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
+import android.os.Build;
 import android.os.LimitExceededException;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.consent.ConsentManager;
@@ -29,6 +32,8 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 /** Utility class to filter FLEDGE requests. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class FledgeServiceFilter extends AbstractFledgeServiceFilter {
     public FledgeServiceFilter(
             @NonNull Context context,
