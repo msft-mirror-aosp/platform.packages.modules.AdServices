@@ -34,6 +34,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.adservices.download.MobileDataDownloadFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.android.libraries.mobiledatadownload.GetFileGroupRequest;
@@ -43,6 +44,7 @@ import com.google.mobiledatadownload.ClientConfigProto.ClientFile;
 import com.google.mobiledatadownload.ClientConfigProto.ClientFileGroup;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -64,6 +66,9 @@ public class OTAResourcesManagerTest {
 
     @Before
     public void setUp() {
+        // Skip the test if it runs on unsupported platforms.
+        Assume.assumeTrue(ApkTestUtil.isDeviceSupported());
+
         mContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
         MockitoAnnotations.initMocks(this);
         mStaticMockSession =
