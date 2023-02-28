@@ -559,6 +559,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     .get(callingInfo)
                     .put(appOwnedSdkSandboxInterface.getName(), appOwnedSdkSandboxInterface);
         }
+        // registerAppOwnedSdkSandboxInterface() can be called without calling loadSdk(). Register
+        // for app death to make sure cleanup occurs.
+        registerForAppDeath(callingInfo, appOwnedSdkSandboxInterface.getInterface());
     }
 
     @Override
@@ -901,7 +904,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
             mSyncDataCallbacks.remove(callingInfo);
             mLoadSdkSessions.remove(callingInfo);
-            // TODO(b/270960437) : Need to write tests for mHeldInterfaces.remove after death
             mHeldInterfaces.remove(callingInfo);
             stopSdkSandboxService(callingInfo, "Caller " + callingInfo + " has died");
             mServiceProvider.onAppDeath(callingInfo);
