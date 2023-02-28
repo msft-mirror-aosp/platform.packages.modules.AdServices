@@ -50,7 +50,7 @@ filegroup {
 android_library {
     name: "adservices-service-core",
     sdk_version: "module_current",
-    min_sdk_version: "31",
+    min_sdk_version: "30",
     srcs: [
         ":adservices-service-core-sources",
         ":adservices-service-core-jni-sources",
@@ -96,7 +96,7 @@ android_library {
 
 cc_library_shared {
     name: "libhpke_jni",
-    min_sdk_version: "31",
+    min_sdk_version: "30",
     sdk_version: "current",
     stl: "libc++_static",
     cflags: [
