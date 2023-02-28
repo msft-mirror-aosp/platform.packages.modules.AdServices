@@ -296,6 +296,13 @@ public interface Flags {
         return MEASUREMENT_ENABLE_XNA;
     }
 
+    long MEASUREMENT_DATA_EXPIRY_WINDOW_MS = TimeUnit.DAYS.toMillis(37);
+
+    /** Returns the data expiry window in milliseconds. */
+    default long getMeasurementDataExpiryWindowMs() {
+        return MEASUREMENT_DATA_EXPIRY_WINDOW_MS;
+    }
+
     long FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = 4000L;
     long FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT = 1000L;
     long FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT = 1000L;
