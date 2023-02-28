@@ -143,7 +143,10 @@ public class SdkSandboxServiceImpl extends Service {
         cleanUpSyncedSharedPreferencesData();
 
         mInitialized = true;
-        LogUtil.d(TAG, "Sandbox initialized");
+        LogUtil.d(
+                TAG,
+                "Sandbox initialized. isCustomizedSdkContextEnabled: "
+                        + isCustomizedSdkContextEnabled);
     }
 
     /** Computes the storage of the shared and SDK storage for an app */
