@@ -335,6 +335,7 @@ public class CacheManager {
                         && Integer.parseInt(args[0].toLowerCase()) == VERBOSE;
         writer.println("==== CacheManager Dump ====");
         writer.println(String.format("mCachedTopics size: %d", mCachedTopics.size()));
+        writer.println(String.format("mCachedBlockedTopics size: %d", mCachedBlockedTopics.size()));
         if (isVerbose) {
             for (Long epochId : mCachedTopics.keySet()) {
                 writer.println(String.format("Epoch Id: %d \n", epochId));
