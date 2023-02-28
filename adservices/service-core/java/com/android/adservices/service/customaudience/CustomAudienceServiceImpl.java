@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.customaudience;
 
-import static android.adservices.common.AdServicesStatusUtils.RATE_LIMIT_REACHED_ERROR_MESSAGE;
 
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_JOIN_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_LEAVE_CUSTOM_AUDIENCE;
@@ -49,6 +48,7 @@ import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
 import com.android.adservices.service.common.CallingAppUidSupplier;
 import com.android.adservices.service.common.CallingAppUidSupplierBinderImpl;
+import com.android.adservices.service.common.CustomAudienceServiceFilter;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.Throttler;
@@ -62,22 +62,21 @@ import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
-import java.util.function.Supplier;
 
 /** Implementation of the Custom Audience service. */
 public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
     @NonNull private final Context mContext;
     @NonNull private final CustomAudienceImpl mCustomAudienceImpl;
     @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
-    @NonNull private final FledgeAllowListsFilter mFledgeAllowListsFilter;
     @NonNull private final ConsentManager mConsentManager;
     @NonNull private final ExecutorService mExecutorService;
     @NonNull private final DevContextFilter mDevContextFilter;
     @NonNull private final AdServicesLogger mAdServicesLogger;
     @NonNull private final AppImportanceFilter mAppImportanceFilter;
     @NonNull private final Flags mFlags;
-    @NonNull private final Supplier<Throttler> mThrottlerSupplier;
     @NonNull private final CallingAppUidSupplier mCallingAppUidSupplier;
+
+    @NonNull private final CustomAudienceServiceFilter mCustomAudienceServiceFilter;
 
     private static final String API_NOT_AUTHORIZED_MSG =
             "This API is not enabled for the given app because either dev options are disabled or"
@@ -88,8 +87,6 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                 context,
                 CustomAudienceImpl.getInstance(context),
                 FledgeAuthorizationFilter.create(context, AdServicesLoggerImpl.getInstance()),
-                new FledgeAllowListsFilter(
-                        FlagsFactory.getFlags(), AdServicesLoggerImpl.getInstance()),
                 ConsentManager.getInstance(context),
                 DevContextFilter.create(context),
                 AdServicesExecutors.getBackgroundExecutor(),
@@ -99,8 +96,22 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                         AD_SERVICES_API_CALLED__API_CLASS__FLEDGE,
                         () -> FlagsFactory.getFlags().getForegroundStatuslLevelForValidation()),
                 FlagsFactory.getFlags(),
-                () -> Throttler.getInstance(FlagsFactory.getFlags()),
-                CallingAppUidSupplierBinderImpl.create());
+                CallingAppUidSupplierBinderImpl.create(),
+                new CustomAudienceServiceFilter(
+                        context,
+                        ConsentManager.getInstance(context),
+                        FlagsFactory.getFlags(),
+                        AppImportanceFilter.create(
+                                context,
+                                AD_SERVICES_API_CALLED__API_CLASS__FLEDGE,
+                                () ->
+                                        FlagsFactory.getFlags()
+                                                .getForegroundStatuslLevelForValidation()),
+                        FledgeAuthorizationFilter.create(
+                                context, AdServicesLoggerImpl.getInstance()),
+                        new FledgeAllowListsFilter(
+                                FlagsFactory.getFlags(), AdServicesLoggerImpl.getInstance()),
+                        () -> Throttler.getInstance(FlagsFactory.getFlags())));
     }
 
     /** Creates a new instance of {@link CustomAudienceServiceImpl}. */
@@ -113,36 +124,33 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             @NonNull Context context,
             @NonNull CustomAudienceImpl customAudienceImpl,
             @NonNull FledgeAuthorizationFilter fledgeAuthorizationFilter,
-            @NonNull FledgeAllowListsFilter fledgeAllowListsFilter,
             @NonNull ConsentManager consentManager,
             @NonNull DevContextFilter devContextFilter,
             @NonNull ExecutorService executorService,
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull AppImportanceFilter appImportanceFilter,
             @NonNull Flags flags,
-            @NonNull Supplier<Throttler> throttlerSupplier,
-            @NonNull CallingAppUidSupplier callingAppUidSupplier) {
+            @NonNull CallingAppUidSupplier callingAppUidSupplier,
+            @NonNull CustomAudienceServiceFilter customAudienceServiceFilter) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(customAudienceImpl);
         Objects.requireNonNull(fledgeAuthorizationFilter);
-        Objects.requireNonNull(fledgeAllowListsFilter);
         Objects.requireNonNull(consentManager);
         Objects.requireNonNull(executorService);
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(appImportanceFilter);
-        Objects.requireNonNull(throttlerSupplier);
+        Objects.requireNonNull(customAudienceServiceFilter);
         mContext = context;
         mCustomAudienceImpl = customAudienceImpl;
         mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
-        mFledgeAllowListsFilter = fledgeAllowListsFilter;
         mConsentManager = consentManager;
         mDevContextFilter = devContextFilter;
         mExecutorService = executorService;
         mAdServicesLogger = adServicesLogger;
         mAppImportanceFilter = appImportanceFilter;
         mFlags = flags;
-        mThrottlerSupplier = throttlerSupplier;
         mCallingAppUidSupplier = callingAppUidSupplier;
+        mCustomAudienceServiceFilter = customAudienceServiceFilter;
     }
 
     /**
@@ -197,25 +205,14 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         boolean shouldLog = false;
         try {
             try {
-                LogUtil.v("Validating caller package name");
-                mFledgeAuthorizationFilter.assertCallingPackageName(
-                        ownerPackageName, callerUid, apiName);
-
-                LogUtil.v("Validating API is not throttled");
-                assertCallerNotThrottled(FLEDGE_API_JOIN_CUSTOM_AUDIENCE, ownerPackageName);
-
-                if (mFlags.getEnforceForegroundStatusForFledgeCustomAudience()) {
-                    LogUtil.v("Checking caller is in foreground");
-                    mAppImportanceFilter.assertCallerIsInForeground(
-                            ownerPackageName, apiName, null);
-                }
-
-                if (!mFlags.getDisableFledgeEnrollmentCheck()) {
-                    mFledgeAuthorizationFilter.assertAdTechAllowed(
-                            mContext, ownerPackageName, customAudience.getBuyer(), apiName);
-                }
-
-                mFledgeAllowListsFilter.assertAppCanUsePpapi(ownerPackageName, apiName);
+                // Filter and validate request
+                mCustomAudienceServiceFilter.filterRequest(
+                        customAudience.getBuyer(),
+                        ownerPackageName,
+                        mFlags.getEnforceForegroundStatusForFledgeCustomAudience(),
+                        callerUid,
+                        apiName,
+                        FLEDGE_API_JOIN_CUSTOM_AUDIENCE);
 
                 shouldLog = true;
 
@@ -328,22 +325,14 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         boolean shouldLog = false;
         try {
             try {
-                mFledgeAuthorizationFilter.assertCallingPackageName(
-                        ownerPackageName, callerUid, apiName);
-
-                assertCallerNotThrottled(FLEDGE_API_LEAVE_CUSTOM_AUDIENCE, ownerPackageName);
-
-                if (mFlags.getEnforceForegroundStatusForFledgeCustomAudience()) {
-                    mAppImportanceFilter.assertCallerIsInForeground(
-                            ownerPackageName, apiName, null);
-                }
-
-                if (!mFlags.getDisableFledgeEnrollmentCheck()) {
-                    mFledgeAuthorizationFilter.assertAdTechAllowed(
-                            mContext, ownerPackageName, buyer, apiName);
-                }
-
-                mFledgeAllowListsFilter.assertAppCanUsePpapi(ownerPackageName, apiName);
+                // Filter and validate request
+                mCustomAudienceServiceFilter.filterRequest(
+                        buyer,
+                        ownerPackageName,
+                        mFlags.getEnforceForegroundStatusForFledgeCustomAudience(),
+                        callerUid,
+                        apiName,
+                        FLEDGE_API_LEAVE_CUSTOM_AUDIENCE);
 
                 shouldLog = true;
 
@@ -494,26 +483,6 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         overrider.removeOverride(owner, buyer, name, callback);
     }
 
-    /**
-     * Ensures that the caller package is not throttled from calling current the API
-     *
-     * @param callerPackageName the package name, which should be verified
-     * @throws LimitExceededException if the provided {@code callerPackageName} exceeds its rate
-     *     limits
-     * @return an ignorable {@code null}
-     */
-    private Void assertCallerNotThrottled(
-            final Throttler.ApiKey apiName, final String callerPackageName)
-            throws LimitExceededException {
-        Throttler throttler = mThrottlerSupplier.get();
-        boolean isThrottled = !throttler.tryAcquire(apiName, callerPackageName);
-
-        if (isThrottled) {
-            LogUtil.e("Rate Limit Reached for API: %s", apiName);
-            throw new LimitExceededException(RATE_LIMIT_REACHED_ERROR_MESSAGE);
-        }
-        return null;
-    }
 
     /**
      * Resets all custom audience overrides for a given caller.
