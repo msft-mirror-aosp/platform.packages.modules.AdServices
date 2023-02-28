@@ -32,7 +32,10 @@ import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.RemoteException;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -47,8 +50,9 @@ import java.util.concurrent.Executor;
  *
  * @hide
  */
-public class AdServicesCommonServiceImpl extends
-        IAdServicesCommonService.Stub {
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
+public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
 
     private final Context mContext;
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
