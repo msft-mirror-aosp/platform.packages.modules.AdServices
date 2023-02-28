@@ -28,7 +28,6 @@ import android.content.Context;
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
-import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.FlagsFactory;
 import com.android.internal.annotations.VisibleForTesting;
@@ -50,12 +49,16 @@ public final class DeleteExpiredJobService extends JobService {
         }
 
         LogUtil.d("DeleteExpiredJobService.onStartJob");
-        sBackgroundExecutor.execute(() -> {
-            DatastoreManagerFactory
-                    .getDatastoreManager(this)
-                    .runInTransaction(IMeasurementDao::deleteExpiredRecords);
-            jobFinished(params, false);
-        });
+        sBackgroundExecutor.execute(
+                () -> {
+                    DatastoreManagerFactory.getDatastoreManager(this)
+                            .runInTransaction(
+                                    dao ->
+                                            dao.deleteExpiredRecords(
+                                                    FlagsFactory.getFlags()
+                                                            .getMeasurementDataExpiryWindowMs()));
+                    jobFinished(params, false);
+                });
         return true;
     }
 

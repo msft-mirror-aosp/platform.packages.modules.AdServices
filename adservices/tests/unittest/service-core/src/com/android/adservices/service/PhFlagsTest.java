@@ -108,6 +108,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_API_REGISTER_TRIG
 import static com.android.adservices.service.Flags.MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_API_STATUS_KILL_SWITCH;
+import static com.android.adservices.service.Flags.MEASUREMENT_DATA_EXPIRY_WINDOW_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_DB_SIZE_LIMIT;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_XNA;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS;
@@ -245,6 +246,7 @@ import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_API_REGISTE
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_API_STATUS_KILL_SWITCH;
+import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_DATA_EXPIRY_WINDOW_MS;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_DB_SIZE_LIMIT;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_ENABLE_XNA;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS;
@@ -311,6 +313,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.util.concurrent.TimeUnit;
 
 /** Unit tests for {@link com.android.adservices.service.PhFlags} */
 @SmallTest
@@ -1138,6 +1141,24 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getMeasurementEnableXNA()).isTrue();
+    }
+
+    @Test
+    public void testGetMeasurementDataExpiryWindowMs() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getMeasurementDataExpiryWindowMs())
+                .isEqualTo(MEASUREMENT_DATA_EXPIRY_WINDOW_MS);
+
+        final long phOverridingValue = TimeUnit.DAYS.toMillis(20);
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_DATA_EXPIRY_WINDOW_MS,
+                Long.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getMeasurementDataExpiryWindowMs()).isEqualTo(phOverridingValue);
     }
 
     @Test
