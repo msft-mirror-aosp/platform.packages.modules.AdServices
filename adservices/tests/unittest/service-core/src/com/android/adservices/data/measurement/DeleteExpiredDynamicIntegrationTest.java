@@ -15,11 +15,11 @@
  */
 
 package com.android.adservices.data.measurement;
-import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_DELETE_EXPIRED_WINDOW_MS;
 
 import android.net.Uri;
 
 import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
@@ -47,8 +47,8 @@ public class DeleteExpiredDynamicIntegrationTest extends AbstractDbIntegrationTe
                 AbstractDbIntegrationTest.getTestCasesFrom(inputStream, null);
 
         // Add a non-expired Source.
-        long insideExpiredWindow = System.currentTimeMillis()
-                - MEASUREMENT_DELETE_EXPIRED_WINDOW_MS / 2;
+        long insideExpiredWindow =
+                System.currentTimeMillis() - Flags.MEASUREMENT_DATA_EXPIRY_WINDOW_MS / 2;
 
         Source source =
                 new Source.Builder()
@@ -82,7 +82,8 @@ public class DeleteExpiredDynamicIntegrationTest extends AbstractDbIntegrationTe
     }
 
     public void runActionToTest() {
-        mDatastoreManager.runInTransaction(IMeasurementDao::deleteExpiredRecords);
+        mDatastoreManager.runInTransaction(
+                dao -> dao.deleteExpiredRecords(Flags.MEASUREMENT_DATA_EXPIRY_WINDOW_MS));
     }
 
 }

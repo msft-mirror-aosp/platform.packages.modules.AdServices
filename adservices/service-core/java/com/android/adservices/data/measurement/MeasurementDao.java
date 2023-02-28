@@ -16,8 +16,6 @@
 
 package com.android.adservices.data.measurement;
 
-import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_DELETE_EXPIRED_WINDOW_MS;
-
 import android.adservices.measurement.DeletionRequest;
 import android.content.ContentValues;
 import android.database.Cursor;
@@ -1104,10 +1102,9 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public void deleteExpiredRecords() throws DatastoreException {
+    public void deleteExpiredRecords(long expiryWindowMs) throws DatastoreException {
         SQLiteDatabase db = mSQLTransaction.getDatabase();
-        long earliestValidInsertion =
-                System.currentTimeMillis() - MEASUREMENT_DELETE_EXPIRED_WINDOW_MS;
+        long earliestValidInsertion = System.currentTimeMillis() - expiryWindowMs;
         String earliestValidInsertionStr = String.valueOf(earliestValidInsertion);
         // Deleting the sources and triggers will take care of deleting records from
         // event report, aggregate report and attribution tables as well. No explicit deletion is

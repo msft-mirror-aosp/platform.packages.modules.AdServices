@@ -20,7 +20,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -86,6 +88,27 @@ public abstract class AbstractMeasurementDbMigratorTestBase {
 
     abstract AbstractMeasurementDbMigrator getTestSubject();
 
+    // Create our own method instead of using DatabaseUtils.cursorRowToContentValues because that
+    // one reads every type from the cursor as a String.
+    public static ContentValues cursorRowToContentValues(Cursor cursor) {
+        String[] columns = cursor.getColumnNames();
+        ContentValues values = new ContentValues();
+        for (int i = 0; i < columns.length; i++) {
+            switch (cursor.getType(i)) {
+                case Cursor.FIELD_TYPE_FLOAT:
+                    values.put(columns[i], cursor.getDouble(i));
+                    break;
+                case Cursor.FIELD_TYPE_INTEGER:
+                    values.put(columns[i], cursor.getLong(i));
+                    break;
+                case Cursor.FIELD_TYPE_STRING:
+                default:
+                    values.put(columns[i], cursor.getString(i));
+                    break;
+            }
+        }
+        return values;
+    }
 }
 
 
