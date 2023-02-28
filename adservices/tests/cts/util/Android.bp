@@ -35,7 +35,6 @@ java_library {
         ":adservices-cts-utility-sources",
     ],
     libs: [
-        "framework-adservices-lib",
         "framework-annotations-lib",
     ],
     static_libs: [

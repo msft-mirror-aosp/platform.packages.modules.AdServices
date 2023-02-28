@@ -18,10 +18,8 @@ package com.android.adservices.download;
 
 import android.content.Context;
 import android.net.Uri;
-import android.os.Build;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
@@ -47,8 +45,6 @@ import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 
 /** Handles EnrollmentData download from MDD server to device. */
-// TODO(b/269798827): Enable for R.
-@RequiresApi(Build.VERSION_CODES.S)
 public class EnrollmentDataDownloadManager {
     private final Context mContext;
     private static volatile EnrollmentDataDownloadManager sEnrollmentDataDownloadManager;

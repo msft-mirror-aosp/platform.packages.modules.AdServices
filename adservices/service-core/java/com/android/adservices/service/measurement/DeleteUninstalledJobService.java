@@ -24,9 +24,6 @@ import android.app.job.JobScheduler;
 import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
-import android.os.Build;
-
-import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -39,8 +36,6 @@ import java.util.concurrent.Executor;
 /**
  * Service for deleting data for uninstalled packages that the package change receiver has missed.
  */
-// TODO(b/269798827): Enable for R.
-@RequiresApi(Build.VERSION_CODES.S)
 public final class DeleteUninstalledJobService extends JobService {
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
 
