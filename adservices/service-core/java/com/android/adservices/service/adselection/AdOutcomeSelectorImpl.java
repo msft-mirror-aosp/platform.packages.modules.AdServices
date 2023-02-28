@@ -22,7 +22,7 @@ import android.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.common.AdServicesHttpsClient;
+import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.internal.annotations.VisibleForTesting;
@@ -169,8 +169,12 @@ public class AdOutcomeSelectorImpl implements AdOutcomeSelector {
                         jsOverride -> {
                             if (jsOverride == null) {
                                 LogUtil.v("Fetching Outcome Selector Logic from the server");
-                                return mAdServicesHttpsClient.fetchPayload(
-                                        config.getSelectionLogicUri());
+                                return FluentFuture.from(
+                                                mAdServicesHttpsClient.fetchPayload(
+                                                        config.getSelectionLogicUri()))
+                                        .transform(
+                                                response -> response.getResponseBody(),
+                                                mLightweightExecutorService);
                             } else {
                                 LogUtil.d(
                                         "Developer options enabled and an override JS is provided "

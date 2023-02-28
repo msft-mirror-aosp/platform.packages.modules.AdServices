@@ -22,7 +22,8 @@ import android.net.Uri;
 import android.os.Trace;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.service.common.AdServicesHttpsClient;
+import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
+import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
@@ -104,8 +105,15 @@ public class JsFetcher {
                                 LogUtil.v(
                                         "Fetching buyer decision logic from server: %s",
                                         decisionLogicUri.toString());
-                                return mAdServicesHttpsClient.fetchPayload(
-                                        decisionLogicUri, useCaching);
+                                return FluentFuture.from(
+                                                mAdServicesHttpsClient.fetchPayload(
+                                                        AdServicesHttpClientRequest.builder()
+                                                                .setUri(decisionLogicUri)
+                                                                .setUseCache(useCaching)
+                                                                .build()))
+                                        .transform(
+                                                response -> response.getResponseBody(),
+                                                mLightweightExecutorService);
                             } else {
                                 LogUtil.d(
                                         "Developer options enabled and an override JS is provided "
@@ -171,8 +179,15 @@ public class JsFetcher {
                                 LogUtil.v(
                                         "Fetching buyer decision logic from server: %s",
                                         decisionLogicUri.toString());
-                                return mAdServicesHttpsClient.fetchPayload(
-                                        decisionLogicUri, useCaching);
+                                return FluentFuture.from(
+                                                mAdServicesHttpsClient.fetchPayload(
+                                                        AdServicesHttpClientRequest.builder()
+                                                                .setUri(decisionLogicUri)
+                                                                .setUseCache(useCaching)
+                                                                .build()))
+                                        .transform(
+                                                response -> response.getResponseBody(),
+                                                mLightweightExecutorService);
                             } else {
                                 LogUtil.d(
                                         "Developer options enabled and an override JS is provided "
