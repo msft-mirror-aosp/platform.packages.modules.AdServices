@@ -100,14 +100,14 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
 
     private static final String[][] INSERTED_TRIGGER_DATA = {
         // id, eventTriggers, aggregateTriggerData, filters
-        {"1", null, null, null},
+        {"1", null, null, "{"}, // Invalid filters JSON
         {"2", "{[]}", null, null},
         {"3", "[}]", null, null},
         {"4", EVENT_TRIGGERS_V2, AGGREGATE_TRIGGER_DATA_V2, FILTERS_V2_1}
     };
 
     private static final String[][] MIGRATED_TRIGGER_DATA = {
-        // id, eventTriggers, aggregateTriggerData, filters, notFilters
+        // id, eventTriggers, aggregateTriggerData, filters
         {"1", "[]", null, null, null},
         {"2", "[]", null, null, null},
         {"3", "[]", null, null, null},
