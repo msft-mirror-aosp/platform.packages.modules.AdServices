@@ -102,6 +102,7 @@ public final class PhFlags implements Flags {
     static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS =
             "measurement_enforce_foreground_status_get_status";
     static final String KEY_MEASUREMENT_ENABLE_XNA = "measurement_enable_xna";
+    static final String KEY_MEASUREMENT_DATA_EXPIRY_WINDOW_MS = "measurement_data_expiry_window_ms";
 
     // FLEDGE Custom Audience keys
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = "fledge_custom_audience_max_count";
@@ -691,6 +692,14 @@ public final class PhFlags implements Flags {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_ENABLE_XNA,
                 /* defaultValue */ MEASUREMENT_ENABLE_XNA);
+    }
+
+    @Override
+    public long getMeasurementDataExpiryWindowMs() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_DATA_EXPIRY_WINDOW_MS,
+                /* defaultValue */ MEASUREMENT_DATA_EXPIRY_WINDOW_MS);
     }
 
     @Override
@@ -2109,6 +2118,11 @@ public final class PhFlags implements Flags {
                         + " = "
                         + getEnforceForegroundStatusForMeasurementRegisterWebTrigger());
         writer.println("\t" + KEY_MEASUREMENT_ENABLE_XNA + " = " + getMeasurementEnableXNA());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_DATA_EXPIRY_WINDOW_MS
+                        + " = "
+                        + getMeasurementDataExpiryWindowMs());
         writer.println(
                 "\t"
                         + KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH

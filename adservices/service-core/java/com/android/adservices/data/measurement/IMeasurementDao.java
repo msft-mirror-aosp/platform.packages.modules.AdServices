@@ -307,7 +307,7 @@ public interface IMeasurementDao {
     void deleteAppRecords(Uri uri) throws DatastoreException;
 
     /** Deletes all expired records in measurement tables. */
-    void deleteExpiredRecords() throws DatastoreException;
+    void deleteExpiredRecords(long expiryWindowMs) throws DatastoreException;
 
     /**
      * Mark relevant source as install attributed.
