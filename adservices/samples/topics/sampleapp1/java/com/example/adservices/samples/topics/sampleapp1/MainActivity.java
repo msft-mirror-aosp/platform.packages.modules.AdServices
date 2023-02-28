@@ -110,13 +110,25 @@ public class MainActivity extends AppCompatActivity {
 
     @SuppressWarnings("NewApi")
     private void getTopics(String sdkName, boolean shouldRecordObservation) {
-      mAdvertisingTopicsClient =
-              new AdvertisingTopicsClient.Builder()
-                      .setContext(this)
-                      .setSdkName(sdkName)
-                      .setExecutor(CALLBACK_EXECUTOR)
-                      .setShouldRecordObservation(shouldRecordObservation)
-                      .build();
+        // On R, Privacy Sandbox is initially disabled.
+        try {
+            mAdvertisingTopicsClient =
+                    new AdvertisingTopicsClient.Builder()
+                            .setContext(this)
+                            .setSdkName(sdkName)
+                            .setExecutor(CALLBACK_EXECUTOR)
+                            .setShouldRecordObservation(shouldRecordObservation)
+                            .build();
+        } catch (IllegalStateException e) {
+            mHandler.post(
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            mResultTextView.append("Privacy Sandbox is not available.");
+                        }
+                    });
+            return;
+        }
       ListenableFuture<GetTopicsResponse> getTopicsResponseFuture =
               mAdvertisingTopicsClient.getTopics();
 
