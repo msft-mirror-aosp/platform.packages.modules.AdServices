@@ -17,6 +17,10 @@ package com.android.adservices;
 
 import android.adservices.adid.AdIdProviderService;
 import android.adservices.appsetid.AppSetIdProviderService;
+import android.content.pm.ResolveInfo;
+import android.content.pm.ServiceInfo;
+
+import java.util.List;
 
 /**
  * Common constants for AdServices
@@ -57,4 +61,58 @@ public class AdServicesCommon {
     /** Intent action to discover the AdServicesCommon service in the APK. */
     public static final String ACTION_AD_SERVICES_COMMON_SERVICE =
             "android.adservices.AD_SERVICES_COMMON_SERVICE";
+
+    // Used to differentiate between AdServices APK package name and AdExtServices APK package name.
+    // The AdExtServices APK package name suffix is android.ext.services.
+    private static final String ADSERVICES_APK_PACKAGE_NAME_SUFFIX = "android.adservices";
+
+    /** The package name of the active AdServices APK on this device. */
+    public static final ServiceInfo resolveAdServicesService(
+            List<ResolveInfo> intentResolveInfos, String intentAction) {
+        if (intentResolveInfos == null || intentResolveInfos.isEmpty()) {
+            LogUtil.e(
+                    "Failed to find resolveInfo for adServices service. Intent action: "
+                            + intentAction);
+            return null;
+        }
+
+        // On T+ devices, we may have two versions of the services present due to
+        // b/263904312.
+        if (intentResolveInfos.size() > 2) {
+            LogUtil.e(
+                    "Found multiple services (%1$s) for the same intent action (%2$s)",
+                    intentAction, intentResolveInfos.toString());
+
+            return null;
+        }
+
+        // On T+ devices, only use the service that comes from AdServices APK. The package name of
+        // AdService is com.[google.]android.adservices while the package name of AdExtServices APK
+        // is com.[google.]android.ext.adservices.
+        ServiceInfo serviceInfo = null;
+        // We have already checked if there are 0 OR more than 2 services returned.
+        switch (intentResolveInfos.size()) {
+            case 2:
+                // In the case of 2, always use the one from AdServicesApk.
+                if (intentResolveInfos
+                        .get(0)
+                        .serviceInfo
+                        .packageName
+                        .contains(ADSERVICES_APK_PACKAGE_NAME_SUFFIX)) {
+                    serviceInfo = intentResolveInfos.get(0).serviceInfo;
+                } else if (intentResolveInfos
+                        .get(1)
+                        .serviceInfo
+                        .packageName
+                        .contains(ADSERVICES_APK_PACKAGE_NAME_SUFFIX)) {
+                    serviceInfo = intentResolveInfos.get(1).serviceInfo;
+                }
+                break;
+
+            case 1:
+                serviceInfo = intentResolveInfos.get(0).serviceInfo;
+                break;
+        }
+        return serviceInfo;
+    }
 }

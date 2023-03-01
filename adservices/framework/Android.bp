@@ -35,10 +35,11 @@ java_sdk_library {
     srcs: [":framework-adservices-sources"],
     libs: [
         "modules-utils-preconditions",
-        "framework-sdksandbox.impl"
+        "framework-sdksandbox.impl",
+        "androidx.annotation_annotation",
     ],
     sdk_version: "module_current",
-    min_sdk_version: "31",
+    min_sdk_version: "30",
     permitted_packages: [
         "com.android.adservices",
         "android.adservices",
@@ -56,9 +57,10 @@ java_library {
     srcs: [":framework-adservices-sources"],
     libs: [
         "modules-utils-preconditions",
-        "framework-sdksandbox.impl"
+        "framework-sdksandbox.impl",
+        "androidx.annotation_annotation",
     ],
-    min_sdk_version: "31",
+    min_sdk_version: "30",
     defaults: ["framework-module-defaults"],
 }
 
@@ -72,10 +74,10 @@ java_api_contribution {
 }
 
 java_library {
-    name: "framework-adextservices",
+    name: "android.ext.adservices",
     static_libs: ["framework-adservices.impl"],
     sdk_version: "module_current",
-    min_sdk_version: "31",
+    min_sdk_version: "30",
     max_sdk_version: "32",
     visibility: [
         "//packages/modules/AdServices:__subpackages__",

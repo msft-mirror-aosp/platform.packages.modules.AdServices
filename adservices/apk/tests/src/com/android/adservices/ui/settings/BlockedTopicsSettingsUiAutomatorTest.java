@@ -36,6 +36,7 @@ import androidx.test.uiautomator.UiScrollable;
 import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
+import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
 import com.android.adservices.api.R;
 import com.android.adservices.service.FlagsFactory;
@@ -485,25 +486,8 @@ public class BlockedTopicsSettingsUiAutomatorTest {
         final List<ResolveInfo> resolveInfos =
                 CONTEXT.getPackageManager()
                         .queryIntentServices(intent, PackageManager.MATCH_SYSTEM_ONLY);
-
-        if (resolveInfos == null || resolveInfos.isEmpty()) {
-            LogUtil.e(
-                    LOG_TAG,
-                    "Failed to find resolveInfo for adServices service. Intent action: "
-                            + TOPICS_SERVICE_NAME);
-            return null;
-        }
-
-        if (resolveInfos.size() > 1) {
-            LogUtil.e(
-                    LOG_TAG,
-                    String.format(
-                            "Found multiple services (%1$s) for the same intent action (%2$s)",
-                            TOPICS_SERVICE_NAME, resolveInfos));
-            return null;
-        }
-
-        final ServiceInfo serviceInfo = resolveInfos.get(0).serviceInfo;
+        final ServiceInfo serviceInfo =
+                AdServicesCommon.resolveAdServicesService(resolveInfos, TOPICS_SERVICE_NAME);
         if (serviceInfo == null) {
             LogUtil.e(LOG_TAG, "Failed to find serviceInfo for adServices service");
             return null;

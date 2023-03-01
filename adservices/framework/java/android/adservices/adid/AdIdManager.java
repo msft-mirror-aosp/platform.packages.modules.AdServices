@@ -31,6 +31,8 @@ import android.os.OutcomeReceiver;
 import android.os.RemoteException;
 import android.os.SystemClock;
 
+import androidx.annotation.RequiresApi;
+
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
 import com.android.adservices.ServiceBinder;
@@ -44,6 +46,8 @@ import java.util.concurrent.Executor;
  * provides developers with a simple, standard system to continue to monetize their apps via
  * personalized ads (formerly known as interest-based ads).
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class AdIdManager {
     /**
      * Service used for registering AdIdManager in the system service registry.

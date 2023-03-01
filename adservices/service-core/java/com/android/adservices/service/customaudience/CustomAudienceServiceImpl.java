@@ -36,8 +36,11 @@ import android.adservices.customaudience.ICustomAudienceCallback;
 import android.adservices.customaudience.ICustomAudienceService;
 import android.annotation.NonNull;
 import android.content.Context;
+import android.os.Build;
 import android.os.LimitExceededException;
 import android.os.RemoteException;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -64,6 +67,8 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
 /** Implementation of the Custom Audience service. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
     @NonNull private final Context mContext;
     @NonNull private final CustomAudienceImpl mCustomAudienceImpl;
