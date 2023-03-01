@@ -32,11 +32,14 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -44,6 +47,8 @@ import android.adservices.common.CallerMetadata;
 import android.adservices.topics.GetTopicsParam;
 import android.adservices.topics.GetTopicsResult;
 import android.adservices.topics.IGetTopicsCallback;
+import android.app.adservices.AdServicesManager;
+import android.app.adservices.topics.TopicParcel;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
@@ -77,9 +82,11 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -94,11 +101,13 @@ import org.mockito.stubbing.Answer;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /** Unit test for {@link com.android.adservices.service.topics.TopicsServiceImpl}. */
 public class TopicsServiceImplTest {
@@ -141,6 +150,7 @@ public class TopicsServiceImplTest {
     @Mock private EnrollmentDao mEnrollmentDao;
     @Mock private AppImportanceFilter mMockAppImportanceFilter;
     @Mock AdServicesLogger mLogger;
+    @Mock AdServicesManager mMockAdServicesManager;
 
     @Before
     public void setup() throws Exception {
@@ -151,9 +161,18 @@ public class TopicsServiceImplTest {
 
         DbHelper dbHelper = DbTestUtil.getDbHelperForTest();
         mTopicsDao = new TopicsDao(dbHelper);
-        CacheManager cacheManager = new CacheManager(mTopicsDao, mMockFlags, mLogger);
+        mBlockedTopicsManager =
+                new BlockedTopicsManager(
+                        mTopicsDao, mMockAdServicesManager, Flags.PPAPI_AND_SYSTEM_SERVER);
+        CacheManager cacheManager =
+                new CacheManager(
+                        mTopicsDao,
+                        mMockFlags,
+                        mLogger,
+                        mBlockedTopicsManager,
+                        new GlobalBlockedTopicsManager(
+                                /* globalBlockedTopicsManager = */ new HashSet<>()));
 
-        mBlockedTopicsManager = new BlockedTopicsManager(mTopicsDao);
         AppUpdateManager appUpdateManager =
                 new AppUpdateManager(dbHelper, mTopicsDao, new Random(), mMockFlags);
         mTopicsWorker =
@@ -293,6 +312,8 @@ public class TopicsServiceImplTest {
 
     @Test
     public void testEnforceForeground_backgroundCaller() throws InterruptedException {
+        Assume.assumeTrue(SdkLevel.isAtLeastT()); // R/S can't enforce foreground checks.
+
         final int uid = Process.myUid();
         // Mock AppImportanceFilter to throw WrongCallingApplicationStateException
         doThrow(new WrongCallingApplicationStateException())
@@ -311,6 +332,8 @@ public class TopicsServiceImplTest {
 
     @Test
     public void testEnforceForeground_sandboxCaller() throws Exception {
+        Assume.assumeTrue(SdkLevel.isAtLeastT()); // Only applicable for T+
+
         // Mock AppImportanceFilter to throw Exception when invoked. This is to verify getTopics()
         // doesn't throw if caller is via Sandbox.
         doThrow(new WrongCallingApplicationStateException())
@@ -390,6 +413,7 @@ public class TopicsServiceImplTest {
 
     @Test
     public void checkSdkNoPermission() throws InterruptedException {
+        Assume.assumeTrue(SdkLevel.isAtLeastT()); // Sdk Sandbox only exists in T+
         when(mPackageManager.checkPermission(ACCESS_ADSERVICES_TOPICS, SDK_PACKAGE_NAME))
                 .thenReturn(PackageManager.PERMISSION_DENIED);
         when(Binder.getCallingUidOrThrow()).thenReturn(SANDBOX_UID);
@@ -512,7 +536,16 @@ public class TopicsServiceImplTest {
         final long currentEpochId = 4L;
         final int numberOfLookBackEpochs = 3;
         List<Topic> topics = prepareAndPersistTopics(numberOfLookBackEpochs);
+        List<TopicParcel> topicParcels =
+                topics.stream()
+                        .map(BlockedTopicsManager::convertTopicToTopicParcel)
+                        .collect(Collectors.toList());
 
+        // Mock IPC calls
+        doNothing().when(mMockAdServicesManager).recordBlockedTopic(List.of(topicParcels.get(0)));
+        doReturn(List.of(topicParcels.get(0)))
+                .when(mMockAdServicesManager)
+                .retrieveAllBlockedTopics();
         // block topic1
         mBlockedTopicsManager.blockTopic(topics.get(0));
 
@@ -555,6 +588,10 @@ public class TopicsServiceImplTest {
         // loadCache() : 1, getTopics(): 1 * 2
         verify(mMockEpochManager, Mockito.times(3)).getCurrentEpochId();
         verify(mMockFlags, Mockito.times(3)).getTopicsNumberOfLookBackEpochs();
+
+        // Verify IPC calls
+        verify(mMockAdServicesManager).recordBlockedTopic(List.of(topicParcels.get(0)));
+        verify(mMockAdServicesManager).retrieveAllBlockedTopics();
     }
 
     @Test
@@ -563,7 +600,14 @@ public class TopicsServiceImplTest {
         final long currentEpochId = 4L;
         final int numberOfLookBackEpochs = 3;
         List<Topic> topics = prepareAndPersistTopics(numberOfLookBackEpochs);
+        List<TopicParcel> topicParcels =
+                topics.stream()
+                        .map(BlockedTopicsManager::convertTopicToTopicParcel)
+                        .collect(Collectors.toList());
 
+        // Mock IPC calls
+        doNothing().when(mMockAdServicesManager).recordBlockedTopic(anyList());
+        doReturn(topicParcels).when(mMockAdServicesManager).retrieveAllBlockedTopics();
         // block all topics
         for (Topic topic : topics) {
             mBlockedTopicsManager.blockTopic(topic);
@@ -604,6 +648,9 @@ public class TopicsServiceImplTest {
         verify(mMockEpochManager, Mockito.times(3)).getCurrentEpochId();
         // getTopics in CacheManager and TopicsWorker calls this mock
         verify(mMockFlags, Mockito.times(3)).getTopicsNumberOfLookBackEpochs();
+        // Verify IPC calls
+        verify(mMockAdServicesManager, times(topics.size())).recordBlockedTopic(anyList());
+        verify(mMockAdServicesManager).retrieveAllBlockedTopics();
     }
 
     @Test
@@ -1134,11 +1181,11 @@ public class TopicsServiceImplTest {
     private List<Topic> prepareAndPersistTopics(int numberOfLookBackEpochs) {
         final Pair<String, String> appSdkKey = Pair.create(TEST_APP_PACKAGE_NAME, SOME_SDK_NAME);
         Topic topic1 =
-                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
+                Topic.create(/* topic */ 1, /* taxonomyVersion= */ 1L, /* modelVersion= */ 4L);
         Topic topic2 =
-                Topic.create(/* topic */ 2, /* taxonomyVersion = */ 2L, /* modelVersion = */ 5L);
+                Topic.create(/* topic */ 2, /* taxonomyVersion= */ 2L, /* modelVersion= */ 5L);
         Topic topic3 =
-                Topic.create(/* topic */ 3, /* taxonomyVersion = */ 3L, /* modelVersion = */ 6L);
+                Topic.create(/* topic */ 3, /* taxonomyVersion= */ 3L, /* modelVersion= */ 6L);
         Topic[] topics = {topic1, topic2, topic3};
         // persist returned topics into DB
         for (int numEpoch = 1; numEpoch <= numberOfLookBackEpochs; numEpoch++) {

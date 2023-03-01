@@ -37,7 +37,6 @@ import android.annotation.NonNull;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Binder;
-import android.os.Process;
 import android.os.RemoteException;
 import android.text.TextUtils;
 
@@ -52,6 +51,7 @@ import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.common.PermissionHelper;
 import com.android.adservices.service.common.SdkRuntimeUtil;
 import com.android.adservices.service.common.Throttler;
+import com.android.adservices.service.common.compat.ProcessCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
@@ -125,7 +125,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
         // permission is declared in the manifest of that package name.
         boolean hasTopicsPermission =
                 PermissionHelper.hasTopicsPermission(
-                        mContext, Process.isSdkSandboxUid(callingUid), sdkPackageName);
+                        mContext, ProcessCompatUtils.isSdkSandboxUid(callingUid), sdkPackageName);
 
         sBackgroundExecutor.execute(
                 () -> {
@@ -203,7 +203,8 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
     private void enforceForeground(int callingUid, @NonNull String sdkName) {
         // If caller calls Topics API from Sandbox, regard it as foreground.
         // Also enable a flag to force switch on/off this enforcing.
-        if (Process.isSdkSandboxUid(callingUid) || !mFlags.getEnforceForegroundStatusForTopics()) {
+        if (ProcessCompatUtils.isSdkSandboxUid(callingUid)
+                || !mFlags.getEnforceForegroundStatusForTopics()) {
             return;
         }
 
@@ -295,7 +296,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                     (enrollmentData != null && enrollmentData.getEnrollmentId() != null)
                             && AppManifestConfigHelper.isAllowedTopicsAccess(
                                     mContext,
-                                    Process.isSdkSandboxUid(callingUid),
+                                    ProcessCompatUtils.isSdkSandboxUid(callingUid),
                                     topicsParam.getAppPackageName(),
                                     enrollmentData.getEnrollmentId())
                             && !mFlags.isEnrollmentBlocklisted(enrollmentData.getEnrollmentId());

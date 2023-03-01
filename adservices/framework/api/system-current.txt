@@ -24,6 +24,7 @@ package android.adservices.appsetid {
 package android.adservices.common {
 
   public class AdServicesCommonManager {
+    method @NonNull public static android.adservices.common.AdServicesCommonManager get(@NonNull android.content.Context);
     method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_STATE) public void isAdServicesEnabled(@NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Boolean,java.lang.Exception>);
     method @RequiresPermission(android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE) public void setAdServicesEnabled(boolean, boolean);
   }

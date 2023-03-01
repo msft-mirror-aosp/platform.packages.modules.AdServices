@@ -66,7 +66,7 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
     private boolean mIsDebugMode;
 
     @Before
-    public void setup() {
+    public void setup() throws InterruptedException {
         assertForegroundActivityStarted();
 
         mClient =
@@ -86,6 +86,9 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
     }
 
     @Test
@@ -240,7 +243,17 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
                             ExecutionException.class,
                             () -> {
                                 mClient.joinCustomAudience(customAudience1).get();
+
+                                // TODO(b/266725238): Remove/modify once the API rate limit has been
+                                //  adjusted for FLEDGE
+                                Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
                                 mClient.joinCustomAudience(customAudience2).get();
+
+                                // TODO(b/266725238): Remove/modify once the API rate limit has been
+                                //  adjusted for FLEDGE
+                                Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
                                 mClient.joinCustomAudience(customAudience3).get();
                             });
             assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
@@ -274,7 +287,17 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
                             ExecutionException.class,
                             () -> {
                                 mClient.joinCustomAudience(customAudience1).get();
+
+                                // TODO(b/266725238): Remove/modify once the API rate limit has been
+                                //  adjusted for FLEDGE
+                                Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
                                 mClient.joinCustomAudience(customAudience2).get();
+
+                                // TODO(b/266725238): Remove/modify once the API rate limit has been
+                                //  adjusted for FLEDGE
+                                Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
                                 mClient.joinCustomAudience(customAudience3).get();
                             });
             assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);

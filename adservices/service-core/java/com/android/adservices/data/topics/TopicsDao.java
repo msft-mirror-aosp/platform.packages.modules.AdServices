@@ -41,6 +41,7 @@ import java.util.Set;
 /** Data Access Object for the Topics API. */
 public class TopicsDao {
     private static TopicsDao sSingleton;
+    private static final Object SINGLETON_LOCK = new Object();
 
     // TODO(b/227393493): Should support a test to notify if new table is added.
     private static final String[] ALL_TOPICS_TABLES = {
@@ -71,7 +72,7 @@ public class TopicsDao {
     /** Returns an instance of the TopicsDAO given a context. */
     @NonNull
     public static TopicsDao getInstance(@NonNull Context context) {
-        synchronized (TopicsDao.class) {
+        synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
                 sSingleton = new TopicsDao(DbHelper.getInstance(context));
             }
@@ -1205,6 +1206,26 @@ public class TopicsDao {
         }
 
         return topicToContributorsMap;
+    }
+
+    /**
+     * Delete all entries from a table.
+     *
+     * @param tableName the table to delete entries from
+     */
+    public void deleteAllEntriesFromTable(@NonNull String tableName) {
+        SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
+        if (db == null) {
+            return;
+        }
+
+        try {
+            db.delete(tableName, /* whereClause */ "", /* whereArgs */ new String[0]);
+        } catch (SQLException e) {
+            LogUtil.e(
+                    "Failed to delete all entries from table %s. Error: %s",
+                    tableName, e.getMessage());
+        }
     }
 
     /** Check whether TopContributors Table is supported in current database. */

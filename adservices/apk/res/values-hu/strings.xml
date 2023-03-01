@@ -44,7 +44,7 @@
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Csatlakozzon Ön is az Android hirdetésekhez kapcsolódó adatvédelmi bétaprogramjához"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Az Android folyamatosan privátabb jellegű módokat keres az alkalmazások számára a hirdetések megjelenítéséhez"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"További információ"</string>
-    <string name="notificationUI_header_title_eu" msgid="4955298263079910371">"Az Android hirdetési adatvédelmének bétaverziója"</string>
+    <string name="notificationUI_header_title_eu" msgid="4955298263079910371">"Az Android hirdetésekhez kapcsolódó adatvédelmének bétaverziója"</string>
     <string name="notificationUI_container1_title_eu" msgid="8315199862119660570">"Újdonságok:"</string>
     <string name="notificationUI_container1_body_text_eu" msgid="1700290522706948241">"A Privacy Sandbox új adatvédelmi funkciói lehetővé teszik, hogy az alkalmazások releváns hirdetéseket jelenítsenek meg Önnek, de korlátozhatják is, hogy a szóban forgó alkalmazások mit tudhatnak meg az Ön más fejlesztőktől származó webhelyeken és alkalmazásokban folytatott tevékenységeiről."</string>
     <string name="notificationUI_container1_control_text_eu" msgid="3158258148321255153">"Hogyan működik?"</string>
@@ -77,18 +77,18 @@
     <string name="notificationUI_how_it_works_row_subtitle1" msgid="8685034725335826096">"Hasznosabb hirdetések"</string>
     <string name="notificationUI_how_it_works_row_body1" msgid="5865369599951938718">"Az alkalmazások információkat kérhetnek az Android rendszertől az Önnek megjelenített hirdetések személyre szabásához."</string>
     <string name="notificationUI_how_it_works_row_body2" msgid="6601773212442110369">"•  Az Android feljegyzi az Önt érdeklő témákat a nemrégiben használt alkalmazásai alapján."</string>
-    <string name="notificationUI_how_it_works_row_body3" msgid="3692457397642529055">"•  Az Ön által használt alkalmazások azt is meghatározhatják, hogy mi tetszik Önnek az alapján, hogy hogyan használja őket. Ha például egy olyan alkalmazást használ, amely hosszútávfutásra való futócipőket árul, az alkalmazás megállapíthatja, hogy Önt érdekli a maratonfutás."</string>
-    <string name="notificationUI_how_it_works_row_body4" msgid="8731138074016839243">"Később egy Ön által használt alkalmazás rákérdezhet ezekre az információkra – az Ön hirdetéstémáira és az Ön által használt alkalmazások által javasolt hirdetésekre is."</string>
+    <string name="notificationUI_how_it_works_row_body3" msgid="3692457397642529055">"•  Az alkalmazások a használat módja alapján is kikövetkeztethetik, hogy mit kedvel. Ha például Ön hosszútávfutáshoz készült cipőket árusító alkalmazást használ, akkor előfordulhat, hogy az alkalmazás úgy dönt, Ön érdeklődik a maratonfutás iránt."</string>
+    <string name="notificationUI_how_it_works_row_body4" msgid="8731138074016839243">"A későbbiekben az Ön által használt alkalmazások lekérhetik ezeket az információkat – akár az Önre vonatkozó hirdetéstémákat, akár a használt alkalmazások által javasolt hirdetéseket."</string>
     <string name="notificationUI_how_it_works_row_body5" msgid="4524382869577899661">"Az Android automatikusan, rendszeresen törli a témákat és az alkalmazások által javasolt adatokat. Önnek lehetősége van arra is, hogy letiltson bizonyos témákat, valamint azokat az alkalmazásokat is, amelyeknél nem szeretné, hogy javaslatot tegyenek."</string>
     <string name="notificationUI_how_it_works_subtitle2" msgid="2203542887026049927">"Hirdetések teljesítményének mérése"</string>
-    <string name="notificationUI_how_it_works_row_body6" msgid="5368364880910986588">"Az Ön által használt alkalmazások információkat kérhetnek az Android rendszertől, amelyek segítenek a hirdetéseik teljesítményének mérésében. Az Android lehetővé teszi az alkalmazások számára korlátozott adattípusok gyűjtését (ilyen például az a napszak, amikor egy adott hirdetés megjelent Önnek)."</string>
+    <string name="notificationUI_how_it_works_row_body6" msgid="5368364880910986588">"Az Ön által használt alkalmazások olyan információkat kérhetnek az Android rendszertől, amelyek segítségével mérhetik a hirdetések teljesítményét. Az Android lehetővé teszi az alkalmazások számára, hogy korlátozott adattípusokat gyűjtsenek (például hogy milyen napszakban jelent meg Önnek a hirdetés)."</string>
     <!-- no translation found for notificationUI_how_it_works_row_body7 (8158317350415462142) -->
     <skip />
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"Próbálja ki a hirdetésekhez kapcsolódó adatvédelem új funkcióit"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"A hirdetéstémák révén jobban megválogathatja az Ön számára megjelenő hirdetéseket"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"Részletek megtekintése"</string>
     <string name="notificationUI_header_ga_title_eu" msgid="4461095539795574989">"Megerősített szintű, hirdetésekhez kapcsolódó adatvédelem Androidon"</string>
-    <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Az android új adatvédelmi funkciókat vezet be, amelyek révén jobban megválogathatja az Ön számára megjelenő hirdetéseket."</string>
+    <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Az android új adatvédelmi funkciókat vezet be, amelyek nagyobb választási szabadságot biztosítanak a megjelenő hirdetések felett."</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"A hirdetéstémák segítségével az alkalmazások releváns hirdetéseket jeleníthetnek meg Önnek, miközben a rendszer védi a személyazonosságát és az alkalmazáshasználatával kapcsolatos adatokat. Az Android feljegyezheti az Önt érdeklő témákat a nemrégiben használt alkalmazásai alapján. Később egy Ön által használt alkalmazás lekérdezheti az Androidtól a releváns témákat, hogy személyre szabhassa az Önnek megjelenő hirdetéseket."</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"A hirdetéstémákat megtekintheti az eszköz beállításaiban, ahol le is tilthatja azokat a témákat, amelyeket nem szeretne megosztani az alkalmazásokkal. Az Android ezenkívül rendszeresen, automatikusan törli is a hirdetéstémákat."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"Bármikor meggondolhatja magát, és módosíthatja az adatvédelmi beállításokat."</string>
@@ -96,9 +96,9 @@
     <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"Az adatvédelmi irányelvekben további információkat is találhat arról, hogy az Android miként védi az adatait."</string>
     <string name="notificationUI_right_control_button_ga_text_eu" msgid="2022252072760042013">"Igen"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  Milyen adatokat használunk fel?"</string>
-    <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"Az Ön hirdetéstémái azokon az alkalmazásokon alapulnak, amelyeket a közelmúltban használt ezen az eszközön, valamint azon, hogy milyen gyakran használja őket."</string>
-    <string name="notificationUI_how_it_works_topics_expanded_text5" msgid="5976468008939416198">"•  Hogyan használjuk fel ezeket az adatokat?"</string>
-    <string name="notificationUI_how_it_works_topics_expanded_text6" msgid="6318275524155409408">"Miközben használja az alkalmazásait, az Android feljegyzi az Önt érdeklő témákat. A témakörcímkék előre meg vannak határozva, például a következők tartoznak közéjük: Művészet és szórakozás, Vásárlás és Sport. Később az egyik Ön által alkalmazás lekérdezhet az Androidtól néhány témát (de alkalmazáshasználattal vagy személyazonossággal kapcsolatos információkat nem), hogy személyre szabja az Önnek megjelenített hirdetéseket."</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"Hirdetéstémái azokon az alkalmazásokon alapulnak, amelyeket a közelmúltban használt ezen az eszközön, valamint azon, hogy milyen gyakran használja őket."</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text5" msgid="5976468008939416198">"•  Az adatok felhasználási módja"</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text6" msgid="6318275524155409408">"Miközben használja az alkalmazásait, az Android feljegyzi az Önt érdeklő témákat. A témakörcímkék előre meg vannak határozva, például a következők tartoznak közéjük: Művészet és szórakozás, Vásárlás és Sport. Később az egyik Ön által használt alkalmazás lekérdezhet az Androidtól néhány témát (de alkalmazáshasználattal vagy személyazonossággal kapcsolatos információkat nem) a megjelenő hirdetések személyre szabásához."</string>
     <string name="notificationUI_how_it_works_topics_expanded_text7" msgid="4275126336833782389">"•  Hogyan kezelheti az adatait?"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"Az Android rendszeresen és automatikusan törli a témákat. Az alkalmazások használata során egy-egy téma újra megjelenhet a listán. Lehetősége van arra is, hogy letiltsa azokat a témákat, amelyeket nem szeretné, hogy az Android megosszon alkalmazásokkal, valamint bármikor ki is kapcsolhatja a hirdetéstémákat az adatvédelmi beállításokban."</string>
     <string name="notificationUI_you_can_change_in_privacy_settings" msgid="4781410091509838647">"Módosíthatja az adatvédelmi beállításokat."</string>
@@ -108,13 +108,13 @@
     <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"•  A hirdetésméréssel korlátozott adattípusokat osztanak meg egymással az alkalmazások a hirdetéseik teljesítményének mérése érdekében (ilyen adat például az a napszak, amikor egy adott hirdetés megjelent Önnek)."</string>
     <string name="notificationUI_fledge_measurement_control_ga_text_eu" msgid="2346851728118443500">"További információk az alkalmazások által javasolt hirdetésekről és a hirdetésmérésről"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text0" msgid="2456923104551938349">"Alkalmazások által javasolt hirdetések"</string>
-    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text1" msgid="5606895535548790900">"•  Milyen adatokat használunk fel?"</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text1" msgid="5606895535548790900">"•  Felhasznált adatok"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text2" msgid="6309052819494439288">"Az Ön tevékenységei az ezen az eszközön használt egyik alkalmazásban."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text3" msgid="5347980571056638783">"•  Hogyan használják az alkalmazások ezeket az adatokat?"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text4" msgid="4738335469671465639">"Az alkalmazások információkat tárolhatnak az Android rendszeren az Önt érdeklő témákról. Ha például egy maratonra való felkészüléssel kapcsolatos alkalmazást használ, az app megállapíthatja, hogy Önt érdeklik a futócipők. Később, egy másik alkalmazás megjeleníthet Önnek egy futócipőkkel kapcsolatos hirdetést az első app javaslata alapján."</string>
-    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text5" msgid="8737925570089314631">"•  Hogyan kezelheti az adatait?"</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text5" msgid="8737925570089314631">"•  Az adatok kezelésének módja"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Az Android automatikusan, rendszeresen törli az alkalmazások által javasolt adatokat. Ha ismét használja valamelyik alkalmazást, újra megjelenhet a listán."</string>
-    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"A következőkre is lehetősége van: letilthatja, hogy egy adott alkalmazás hirdetéseket javasoljon Önnek, visszaállíthatja az összes hirdetésjavaslat-adatot, illetve bármikor kikapcsolhatja az alkalmazások által javasolt hirdetéseket az adatvédelmi beállításokban."</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"Az adatvédelmi beállítások között letilthatja, hogy egy adott webhely hirdetéseket javasoljon Önnek, visszaállíthatja az összes hirdetésjavaslat-adatot, és bármikor kikapcsolhatja az alkalmazások által javasolt hirdetéseket."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"Az Ön által használt alkalmazások olyan információkat kérhetnek az Android rendszertől, amelyek segítenek nekik a hirdetéseik teljesítményének mérésében. Az Android elkötelezett az Ön adatainak védelme iránt, ezért korlátozza azokat az információkat, amelyeket az alkalmazások megoszthatnak egymással."</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Privacy Sandbox"</string>
     <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"Részvétel az Android hirdetésekhez kapcsolódó adatvédelmi bétaprogramjában"</string>
@@ -133,10 +133,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Az Android hirdetési adatvédelmének bétaverziója olyan új funkciókat biztosít, melyek segítségével az alkalmazások Önnek esetlegesen tetsző hirdetéseket jeleníthetnek meg. Ezek a technológiák nem használnak eszközazonosítókat.\n\nAz Android becslést tehet az Önt esetlegesen érdeklő hirdetéstípusokra, az érdeklődési köröket pedig ideiglenesen az eszközön menti. Az alkalmazások ennek segítségével releváns hirdetéseket jeleníthetnek meg Önnek anélkül, hogy nyomon követnék a más fejlesztőktől származó webhelyeken és alkalmazásokban végzett tevékenységeit."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Önnek nincsenek letiltott érdeklődési körei"</string>
-    <!-- no translation found for settingsUI_no_blocked_topics_ga_text (377459829879121256) -->
-    <skip />
-    <!-- no translation found for settingsUI_view_blocked_topics_title (3705333677440361392) -->
-    <skip />
+    <string name="settingsUI_no_blocked_topics_ga_text" msgid="377459829879121256">"Nincsenek letiltott témák"</string>
+    <string name="settingsUI_view_blocked_topics_title" msgid="3705333677440361392">"Letiltott témák megtekintése"</string>
     <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"A rendszer visszaállította az érdeklődési köröket"</string>
     <string name="settingsUI_topics_are_reset_ga" msgid="5250296990870048195">"A témák visszaállítása megtörtént"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Az alkalmazások becslést tehetnek az Ön érdeklődési köreire vonatkozóan, és ideiglenesen menthetik e becsléseket az Android rendszerre. Később egy másik alkalmazás hirdetéseket jeleníthet meg Önnek ezen érdeklődési körök alapján.\n\nHa letiltja valamelyik alkalmazást, akkor az a továbbiakban nem tesz becslést az érdeklődési körökre vonatkozóan. Nem kerül fel újból az alkalmazások ezen listájára, kivéve, ha Ön feloldja a letiltását. Az alkalmazás becslése szerinti érdeklődési körök törlődnek majd, de előfordulhat, hogy továbbra is megjelenik néhány kapcsolódó hirdetés."</string>
@@ -146,10 +144,9 @@
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"Jelenleg egyetlen alkalmazás sem generál érdeklődési köröket Önnek"</string>
     <string name="settingsUI_apps_view_no_apps_ga_text" msgid="8540919050517478161">"Jelenleg nincsenek megjeleníthető alkalmazások"</string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
-    <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Az Android hirdetési adatvédelmének bétaverziója olyan új funkciókat biztosít, melyek segítségével az alkalmazások Önnek esetlegesen tetsző hirdetéseket jeleníthetnek meg. Ezek a technológiák nem használnak eszközazonosítókat.\n\nAz alkalmazások becslést tehetnek az Önt esetlegesen érdeklő hirdetéstípusokra vonatkozóan, az érdeklődési köröket pedig ideiglenesen az eszközre mentik. Az alkalmazások ennek segítségével releváns hirdetéseket jeleníthetnek meg Önnek anélkül, hogy nyomon követnék a más fejlesztőktől származó webhelyeken és alkalmazásokban végzett tevékenységeit."</string>
+    <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Az Android hirdetésekhez kapcsolódó adatvédelmének bétaverziója olyan új funkciókat biztosít, melyek segítségével az alkalmazások Önnek esetlegesen tetsző hirdetéseket jeleníthetnek meg. Ezek a technológiák nem használnak eszközazonosítókat.\n\nAz alkalmazások becslést tehetnek az Önt esetlegesen érdeklő hirdetéstípusokra vonatkozóan, az érdeklődési köröket pedig ideiglenesen az eszközre mentik. Az alkalmazások ennek segítségével releváns hirdetéseket jeleníthetnek meg Önnek anélkül, hogy nyomon követnék a más fejlesztőktől származó webhelyeken és alkalmazásokban végzett tevékenységeit."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Nincsenek letiltott alkalmazásai"</string>
-    <!-- no translation found for settingsUI_no_blocked_apps_ga_text (7488680173653861943) -->
-    <skip />
+    <string name="settingsUI_no_blocked_apps_ga_text" msgid="7488680173653861943">"Nincsenek letiltott alkalmazások"</string>
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"Hirdetésmérés engedélyezése"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"Az alkalmazások és a hirdetők olyan információkat kérhetnek az Androidtól, amelyek segítségével mérni tudják a hirdetéseik teljesítményét.\n\nAz alkalmazásmérési adatok rendszeresen törlődnek az eszközről."</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"Mérési adatok visszaállítása"</string>
@@ -160,28 +157,20 @@
     <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Ha meggondolja magát, vagy részletesebben meg szeretné ismerni az Android hirdetésekhez kapcsolódó adatvédelmének bétaverzióját, lépjen az adatvédelmi beállításokhoz"</string>
     <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Kikapcsolás"</string>
     <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Letiltja ezt: <xliff:g id="TOPIC">%1$s</xliff:g>?"</string>
-    <!-- no translation found for settingsUI_dialog_block_topic_message (2581824495438333677) -->
-    <skip />
+    <string name="settingsUI_dialog_block_topic_message" msgid="2581824495438333677">"A rendszer letiltja ezt a témát, és nem veszi fel újból a listára, hacsak Ön újra hozzá nem adja. Ennek ellenére előfordulhat, hogy továbbra is lát néhány kapcsolódó hirdetést."</string>
     <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Letiltás"</string>
     <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"<xliff:g id="TOPIC">%1$s</xliff:g> letiltása feloldva"</string>
-    <!-- no translation found for settingsUI_dialog_unblock_topic_message (1090743551997420666) -->
-    <skip />
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="1090743551997420666">"Az Android újból felveheti ezt a témát az Ön listájára, de előfordulhat, hogy nem jelenik meg azonnal."</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
-    <!-- no translation found for settingsUI_dialog_reset_topic_title (8025836207966712435) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (4243744527757134000) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_topic_title" msgid="8025836207966712435">"Visszaállítja az összes hirdetéstémát?"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="4243744527757134000">"Listájának tartalma törlődik, és mostantól új témák lesznek hozzáadva. Ezzel együtt előfordulhat, hogy találkozik néhány olyan hirdetéssel, amely a visszaállított témákhoz kapcsolódik."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Alaphelyzet"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Letiltja ezt: <xliff:g id="APP">%1$s</xliff:g>?"</string>
-    <!-- no translation found for settingsUI_dialog_block_app_message (758788973278770119) -->
-    <skip />
+    <string name="settingsUI_dialog_block_app_message" msgid="758788973278770119">"Ez az alkalmazás nem fog hirdetéseket javasolni, és addig nem kerül fel újból a listájára, amíg Ön vissza nem vonja a letiltását. Ennek ellenére előfordulhat, hogy továbbra is lát néhány kapcsolódó hirdetést."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> letiltása feloldva"</string>
-    <!-- no translation found for settingsUI_dialog_unblock_app_message (5758218424845642060) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_app_title (5177572712117150557) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_app_message (7845329616145691006) -->
-    <skip />
+    <string name="settingsUI_dialog_unblock_app_message" msgid="5758218424845642060">"Ez az alkalmazás újra javasolhat Önnek hirdetéseket, de előfordulhat, hogy nem jelenik meg azonnal a listáján. Szükség lehet némi időre ahhoz, hogy kapcsolódó hirdetéseket láthasson."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"Visszaállítja az alkalmazások által javasolt hirdetéseket?"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"A listáján található alkalmazásoktól származó hirdetésjavaslat-adatok törölve lesznek, és mostantól új hirdetéseket javasolnak majd az alkalmazások. Ennek ellenére előfordulhat, hogy továbbra is lát néhány kapcsolódó hirdetést."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Alkalmazásadatok visszaállítva"</string>
     <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"Visszaállítja az összes témát?"</string>
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"Visszaállítja az alkalmazások által javasolt hirdetéseket?"</string>
@@ -194,20 +183,25 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Az Ön által használt alkalmazások meg is határozhatják, hogy mi tetszik Önnek az alapján, hogy hogyan használja őket."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Az Ön által használt alkalmazások információkat kérhetnek az Android rendszertől, amelyek segítenek a hirdetéseik teljesítményének mérésében. Az Android korlátozott adattípusok gyűjtését engedélyezi az alkalmazásoknak."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Bekapcsolva / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> téma"</string>
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Bekapcsolva / # téma}other{Bekapcsolva / # téma}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Bekapcsolva / <xliff:g id="APPS_COUNT">%1$d</xliff:g> alkalmazás"</string>
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{Bekapcsolva / # alkalmazás}other{Bekapcsolva / # alkalmazás}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"Be"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Ki"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Az Önt érdeklő témák az Ön által nemrégiben használt alkalmazásokon alapulnak, az alkalmazások pedig arra használják e témákat, hogy személyre szabott hirdetéseket jelenítsenek meg Önnek.\n\nLehetősége van azoknak a témáknak a letiltására, amelyeket nem kíván megosztani az alkalmazásokkal. Az Android ezenkívül rendszeresen, automatikusan törli is a témákat."</string>
     <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"Hirdetéstémák engedélyezése"</string>
     <string name="settingsUI_blocked_topics_ga_title" msgid="7163366621282449273">"Ön által letiltott hirdetéstémák"</string>
-    <!-- no translation found for settingsUI_reset_topics_ga_title (5365554894399951300) -->
-    <skip />
+    <string name="settingsUI_reset_topics_ga_title" msgid="5365554894399951300">"Az összes hirdetéstéma visszaállítása"</string>
     <string name="settingsU_topics_view_footer" msgid="4769146330248953561">"Az Android az elmúlt hetekben Ön által használt alkalmazások alapján megjegyzi az Önt érdeklő témákat.\n\nKésőbb az egyik Ön által használt alkalmazás lekérdezhet az Androidtól néhány témát, hogy személyre szabja az Önnek megjelenített hirdetéseket. Az Android legfeljebb három témát oszt meg, miközben védi az Ön személyazonosságát és az alkalmazáshasználatára vonatkozó információkat.\n\nAz Android rendszeresen, automatikusan törli a témákat. Az alkalmazások használata során egy-egy téma újra megjelenhet a listán. Lehetősége van arra is, hogy letiltsa azokat a témákat, amelyeket nem szeretne, hogy az Android megosszon az alkalmazásokkal.\n\nAz alkalmazásokban Önnek megjelenő hirdetések személyre szabottak lehetnek attól függően, hogy ez a beállítás, az alkalmazás által javasolt hirdetések beállítása, a hirdetésazonosítóval kapcsolatos beállításai és az Ön által használt alkalmazás személyre szabja-e a hirdetéseket."</string>
     <string name="settingsUI_apps_switch_title" msgid="1308209012769248890">"Alkalmazás által javasolt hirdetések engedélyezése"</string>
     <string name="settingsUI_apps_view_ga_subtitle" msgid="1911743837387384160">"Az Ön által használt alkalmazások meghatározhatják, hogy mi tetszik Önnek, majd hirdetéseket javasolhatnak más alkalmazások számára.\n\nÖn letilthatja az egyes appok számára, hogy javaslatokat tegyenek. Az Android automatikusan, rendszeresen törli is az alkalmazások által javasolt adatokat."</string>
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Ön által letiltott alkalmazások"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Az alkalmazások által javasolt adatok visszaállítása"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Az alkalmazások gyakran megjegyzik, hogy Ön mi iránt érdeklődik, hogy személyre szabhassák a felhasználói élményt. Ezenkívül információkat is tárolhatnak az Android rendszeren az Önt érdeklő témákról.\n\nHa például egy maratonra való felkészüléssel kapcsolatos alkalmazást használ, az alkalmazás megállapíthatja, hogy Önt érdeklik a futócipők. Később, egy másik alkalmazás megjeleníthet Önnek egy futócipőkkel kapcsolatos hirdetést az első app javaslata alapján.\n\nAz Android automatikusan, rendszeresen törli az alkalmazások által javasolt adatokat. Ha ismét használja valamelyik alkalmazást, újra megjelenhet a listán. Emellett lehetősége van arra is, hogy letiltsa a kívánt alkalmazás számára, hogy hirdetéseket javasoljon Önnek.\n\nAz alkalmazásaiban megjelenő hirdetések a következőktől függően lehetnek személyre szabva: ez a beállítás, a hirdetéstémák beállítás, a hirdetésazonosítóval kapcsolatos beállításai, valamint az, hogy az éppen használt app személyre szabott hirdetéseket használ-e."</string>
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Érdeklődési köröket, például zenét, híreket vagy sportot jelképező szimbólumok színes illusztrációja"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Körben lévő lakat színes illusztrációja"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Négyzetet formáló kilenc pont kis méretű, fekete-fehér illusztrációja"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"Egyszerű alakzatok, például szív, háromszög és négyzet kis méretű, fekete-fehér illusztrációja"</string>
     <string name="topic10001" msgid="1636806320891333775">"Művészetek és szórakoztatás"</string>
     <string name="topic10002" msgid="1226367977754287428">"Színészet és színház"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime és manga"</string>

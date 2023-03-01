@@ -20,7 +20,6 @@ import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREG
 
 import android.annotation.IntDef;
 import android.annotation.NonNull;
-import android.util.Dumpable;
 
 import androidx.annotation.Nullable;
 
@@ -39,7 +38,7 @@ import java.util.concurrent.TimeUnit;
  * AdServices Feature Flags interface. This Flags interface hold the default values of Ad Services
  * Flags.
  */
-public interface Flags extends Dumpable {
+public interface Flags {
     /** Topics Epoch Job Period. */
     long TOPICS_EPOCH_JOB_PERIOD_MS = 7 * 86_400_000; // 7 days.
 
@@ -78,6 +77,14 @@ public interface Flags extends Dumpable {
     /** Returns the number of top topics. */
     default int getTopicsNumberOfRandomTopics() {
         return TOPICS_NUMBER_OF_RANDOM_TOPICS;
+    }
+
+    /** Global blocked Topics. Default value is empty list. */
+    ImmutableList<Integer> TOPICS_GLOBAL_BLOCKED_TOPIC_IDS = ImmutableList.of();
+
+    /** Returns a list of global blocked topics. */
+    default ImmutableList<Integer> getGlobalBlockedTopicIds() {
+        return TOPICS_GLOBAL_BLOCKED_TOPIC_IDS;
     }
 
     /** How many epochs to look back when deciding if a caller has observed a topic before. */
@@ -280,6 +287,20 @@ public interface Flags extends Dumpable {
     /** Measurement manifest file url. */
     default String getMeasurementManifestFileUrl() {
         return MEASUREMENT_MANIFEST_FILE_URL;
+    }
+
+    boolean MEASUREMENT_ENABLE_XNA = false;
+
+    /** Returns whether XNA should be used for eligible sources. */
+    default boolean getMeasurementEnableXNA() {
+        return MEASUREMENT_ENABLE_XNA;
+    }
+
+    long MEASUREMENT_DATA_EXPIRY_WINDOW_MS = TimeUnit.DAYS.toMillis(37);
+
+    /** Returns the data expiry window in milliseconds. */
+    default long getMeasurementDataExpiryWindowMs() {
+        return MEASUREMENT_DATA_EXPIRY_WINDOW_MS;
     }
 
     long FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = 4000L;
@@ -735,6 +756,15 @@ public interface Flags extends Dumpable {
         return DEFAULT_CONSENT_SOURCE_OF_TRUTH;
     }
 
+    /* Blocked topics source of truth intended to be used by default */
+    @ConsentSourceOfTruth int DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH = PPAPI_AND_SYSTEM_SERVER;
+
+    /** Returns the blocked topics source of truth currently used for PPAPI */
+    @ConsentSourceOfTruth
+    default int getBlockedTopicsSourceOfTruth() {
+        return DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
+    }
+
     // Group of All Killswitches
 
     /**
@@ -1065,6 +1095,24 @@ public interface Flags extends Dumpable {
                 || MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH;
     }
 
+    /**
+     * Measurement Rollback Kill Switch. The default value is false which means the rollback
+     * handling on measurement service start is enabled. This flag is used for emergency turning off
+     * measurement rollback data deletion handling.
+     */
+    boolean MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for Measurement rollback deletion handling. The rollback
+     * deletion handling will be disabled if the Global Kill Switch, Measurement Kill Switch or the
+     * Measurement rollback deletion Kill Switch value is true.
+     */
+    default boolean getMeasurementRollbackDeletionKillSwitch() {
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH;
+    }
+
     // ADID Killswitch.
     /**
      * AdId API Kill Switch. The default value is false which means the AdId API is enabled. This
@@ -1153,6 +1201,17 @@ public interface Flags extends Dumpable {
     default boolean getFledgeCustomAudienceServiceKillSwitch() {
         // Check for global kill switch first, as it should override all other kill switches
         return getGlobalKillSwitch() || FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
+    }
+
+    /**
+     * Enable Back Compat feature flag. The default value is false which means that all back compat
+     * related features are disabled by default. This flag would be enabled for R/S during rollout.
+     */
+    boolean ENABLE_BACK_COMPAT = false;
+
+    /** @return value of enable Back Compat */
+    default boolean getEnableBackCompat() {
+        return ENABLE_BACK_COMPAT;
     }
 
     /*
@@ -1336,6 +1395,7 @@ public interface Flags extends Dumpable {
     boolean ENFORCE_FOREGROUND_STATUS_APPSETID = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION = true;
+    boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_INTERACTION = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDES = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE = true;
     boolean ENFORCE_FOREGROUND_STATUS_TOPICS = true;
@@ -1354,6 +1414,14 @@ public interface Flags extends Dumpable {
      */
     default boolean getEnforceForegroundStatusForFledgeReportImpression() {
         return ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION;
+    }
+
+    /**
+     * @return true if FLEDGE reportInteraction API should require that the calling API is running
+     *     in foreground.
+     */
+    default boolean getEnforceForegroundStatusForFledgeReportInteraction() {
+        return ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_INTERACTION;
     }
 
     /**
@@ -1520,6 +1588,81 @@ public interface Flags extends Dumpable {
         return UI_DIALOGS_FEATURE_ENABLED;
     }
 
+    /** The EEA device region feature is off by default. */
+    boolean IS_EEA_DEVICE_FEATURE_ENABLED = false;
+
+    /** Returns if the EEA device region feature has been enabled. */
+    default boolean isEeaDeviceFeatureEnabled() {
+        return IS_EEA_DEVICE_FEATURE_ENABLED;
+    }
+
+    /** Default is that the device is in the EEA region. */
+    boolean IS_EEA_DEVICE = true;
+
+    /** Returns if device is in the EEA region. */
+    default boolean isEeaDevice() {
+        return IS_EEA_DEVICE;
+    }
+
+    String UI_EEA_COUNTRIES =
+            "AT," // Austria
+                    + "BE," // Belgium
+                    + "BG," // Bulgaria
+                    + "HR," // Croatia
+                    + "CY," // Republic of Cyprus
+                    + "CZ," // Czech Republic
+                    + "DK," // Denmark
+                    + "EE," // Estonia
+                    + "FI," // Finland
+                    + "FR," // France
+                    + "DE," // Germany
+                    + "GR," // Greece
+                    + "HU," // Hungary
+                    + "IE," // Ireland
+                    + "IT," // Italy
+                    + "LV," // Latvia
+                    + "LT," // Lithuania
+                    + "LU," // Luxembourg
+                    + "MT," // Malta
+                    + "NL," // Netherlands
+                    + "PL," // Poland
+                    + "PT," // Portugal
+                    + "RO," // Romania
+                    + "SK," // Slovakia
+                    + "SI," // Slovenia
+                    + "ES," // Spain
+                    + "SE," // Sweden
+                    + "IS," // Iceland
+                    + "LI," // Liechtenstein
+                    + "NO," // Norway
+                    + "CH," // Switzerland
+                    + "GB," // Great Britain
+                    + "GI," // Gibraltar
+                    + "GP," // Guadeloupe
+                    + "GG," // Guernsey
+                    + "JE," // Jersey
+                    + "VA," // Vatican City
+                    + "AX," // Åland Islands
+                    + "IC," // Canary Islands
+                    + "EA," // Ceuta & Melilla
+                    + "GF," // French Guiana
+                    + "PF," // French Polynesia
+                    + "TF," // French Southern Territories
+                    + "MQ," // Martinique
+                    + "YT," // Mayotte
+                    + "NC," // New Caledonia
+                    + "RE," // Réunion
+                    + "BL," // St. Barthélemy
+                    + "MF," // St. Martin
+                    + "PM," // St. Pierre & Miquelon
+                    + "SJ," // Svalbard & Jan Mayen
+                    + "WF"; // Wallis & Futuna
+
+    /** Returns the list of EEA countries in a String separated by comma */
+    default String getUiEeaCountries() {
+        return UI_EEA_COUNTRIES;
+    }
+
     /**
      * GA UX enabled. It contains features that have to be enabled at the same time:
      *
@@ -1576,12 +1719,12 @@ public interface Flags extends Dumpable {
         return ENABLE_TOPIC_CONTRIBUTORS_CHECK;
     }
 
-    /** Whether to enable database schema version 5 */
-    boolean ENABLE_DATABASE_SCHEMA_VERSION_5 = false;
+    /** Whether to enable database schema version 7 */
+    boolean ENABLE_TOPIC_MIGRATION = false;
 
-    /** @return if to enable database schema version 5. */
-    default boolean getEnableDatabaseSchemaVersion5() {
-        return ENABLE_DATABASE_SCHEMA_VERSION_5;
+    /** @return if to enable database schema version 7 */
+    default boolean getEnableTopicMigration() {
+        return ENABLE_TOPIC_MIGRATION;
     }
 
     /** Returns true if the given enrollmentId is blocked from using PP-API. */
@@ -1592,5 +1735,13 @@ public interface Flags extends Dumpable {
     /** Returns a list of enrollmentId blocked from using PP-API. */
     default ImmutableList<String> getEnrollmentBlocklist() {
         return ImmutableList.of();
+    }
+
+    /** Kill switch to guard backward-compatible logging. See go/rbc-ww-logging */
+    boolean COMPAT_LOGGING_KILL_SWITCH = false;
+
+    /** Returns true if backward-compatible logging should be disabled; false otherwise. */
+    default boolean getCompatLoggingKillSwitch() {
+        return COMPAT_LOGGING_KILL_SWITCH;
     }
 }

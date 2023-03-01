@@ -16,32 +16,20 @@
 
 package com.android.adservices.service.common;
 
-import static android.adservices.common.AdServicesStatusUtils.RATE_LIMIT_REACHED_ERROR_MESSAGE;
-
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.content.Context;
 import android.os.LimitExceededException;
 
-import com.android.adservices.LogUtil;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.consent.AdServicesApiConsent;
-import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 
 import java.util.Objects;
 import java.util.function.Supplier;
 
 /** Utility class to filter FLEDGE requests. */
-public class FledgeServiceFilter {
-    @NonNull private final Context mContext;
-    @NonNull private final ConsentManager mConsentManager;
-    @NonNull private final Flags mFlags;
-    @NonNull private final AppImportanceFilter mAppImportanceFilter;
-    @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
-    @NonNull private final FledgeAllowListsFilter mFledgeAllowListsFilter;
-    @NonNull private final Supplier<Throttler> mThrottlerSupplier;
-
+public class FledgeServiceFilter extends AbstractFledgeServiceFilter {
     public FledgeServiceFilter(
             @NonNull Context context,
             @NonNull ConsentManager consentManager,
@@ -50,118 +38,22 @@ public class FledgeServiceFilter {
             @NonNull FledgeAuthorizationFilter fledgeAuthorizationFilter,
             @NonNull FledgeAllowListsFilter fledgeAllowListsFilter,
             @NonNull Supplier<Throttler> throttlerSupplier) {
-        Objects.requireNonNull(context);
-        Objects.requireNonNull(consentManager);
-        Objects.requireNonNull(flags);
-        Objects.requireNonNull(appImportanceFilter);
-        Objects.requireNonNull(fledgeAuthorizationFilter);
-        Objects.requireNonNull(fledgeAllowListsFilter);
-        Objects.requireNonNull(throttlerSupplier);
-
-        mConsentManager = consentManager;
-        mFlags = flags;
-        mAppImportanceFilter = appImportanceFilter;
-        mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
-        mContext = context;
-        mFledgeAllowListsFilter = fledgeAllowListsFilter;
-        mThrottlerSupplier = throttlerSupplier;
-    }
-
-    /**
-     * Asserts that FLEDGE APIs and the Privacy Sandbox as a whole have user consent.
-     *
-     * @throws ConsentManager.RevokedConsentException if FLEDGE or the Privacy Sandbox do not have
-     *     user consent
-     */
-    private void assertCallerHasUserConsent() throws ConsentManager.RevokedConsentException {
-        AdServicesApiConsent userConsent;
-        if (mFlags.getGaUxFeatureEnabled()) {
-            userConsent = mConsentManager.getConsent(AdServicesApiType.FLEDGE);
-        } else {
-            userConsent = mConsentManager.getConsent();
-        }
-        if (!userConsent.isGiven()) {
-            throw new ConsentManager.RevokedConsentException();
-        }
-    }
-
-    /**
-     * Asserts that the caller has the appropriate foreground status.
-     *
-     * @throws AppImportanceFilter.WrongCallingApplicationStateException if the foreground check
-     *     fails
-     */
-    private void assertForegroundCaller(int callerUid, int apiName)
-            throws AppImportanceFilter.WrongCallingApplicationStateException {
-        mAppImportanceFilter.assertCallerIsInForeground(callerUid, apiName, null);
-    }
-
-    /**
-     * Asserts that the package name provided by the caller is one of the packages of the calling
-     * uid.
-     *
-     * @param callerPackageName caller package name from the request
-     * @throws FledgeAuthorizationFilter.CallerMismatchException if the provided {@code
-     *     callerPackageName} is not valid
-     */
-    private void assertCallerPackageName(String callerPackageName, int callerUid, int apiName)
-            throws FledgeAuthorizationFilter.CallerMismatchException {
-        mFledgeAuthorizationFilter.assertCallingPackageName(callerPackageName, callerUid, apiName);
-    }
-
-    /**
-     * Check if a certain ad tech is enrolled and authorized to perform the operation for the
-     * package.
-     *
-     * @param adTech ad tech to check against
-     * @param callerPackageName the package name to check against
-     * @throws FledgeAuthorizationFilter.AdTechNotAllowedException if the ad tech is not authorized
-     *     to perform the operation
-     */
-    private void assertFledgeEnrollment(
-            AdTechIdentifier adTech, String callerPackageName, int apiName)
-            throws FledgeAuthorizationFilter.AdTechNotAllowedException {
-        if (!mFlags.getDisableFledgeEnrollmentCheck()) {
-            mFledgeAuthorizationFilter.assertAdTechAllowed(
-                    mContext, callerPackageName, adTech, apiName);
-        }
-    }
-
-    /**
-     * Asserts the package is allowed to call PPAPI.
-     *
-     * @param callerPackageName the package name to be validated.
-     * @throws FledgeAllowListsFilter.AppNotAllowedException if the package is not authorized.
-     */
-    private void assertAppInAllowList(String callerPackageName, int apiName)
-            throws FledgeAllowListsFilter.AppNotAllowedException {
-        mFledgeAllowListsFilter.assertAppCanUsePpapi(callerPackageName, apiName);
-    }
-
-    /**
-     * Ensures that the caller package is not throttled from calling current the API
-     *
-     * @param callerPackageName the package name, which should be verified
-     * @throws LimitExceededException if the provided {@code callerPackageName} exceeds its rate
-     *     limits
-     */
-    private void assertCallerNotThrottled(final String callerPackageName, Throttler.ApiKey apiKey)
-            throws LimitExceededException {
-        LogUtil.v("Checking if API is throttled for package: %s ", callerPackageName);
-        Throttler throttler = mThrottlerSupplier.get();
-        boolean isThrottled = !throttler.tryAcquire(apiKey, callerPackageName);
-
-        if (isThrottled) {
-            LogUtil.e(String.format("Rate Limit Reached for API: %s", apiKey));
-            throw new LimitExceededException(RATE_LIMIT_REACHED_ERROR_MESSAGE);
-        }
+        super(
+                context,
+                consentManager,
+                flags,
+                appImportanceFilter,
+                fledgeAuthorizationFilter,
+                fledgeAllowListsFilter,
+                throttlerSupplier);
     }
 
     /**
      * Applies the filtering operations to the context of a FLEDGE request. The specific filtering
      * operations are discussed in the comments below.
      *
-     * @param adTech the adTech associated with the request
+     * @param adTech the adTech associated with the request. This parameter is nullable, and the
+     *     enrollment check will not be applied if it is null.
      * @param callerPackageName caller package name to be validated
      * @param enforceForeground whether to enforce a foreground check
      * @throws FledgeAuthorizationFilter.CallerMismatchException if the {@code callerPackageName} is
@@ -176,19 +68,25 @@ public class FledgeServiceFilter {
      * @throws LimitExceededException if the provided {@code callerPackageName} exceeds the rate
      *     limits
      */
+    @Override
     public void filterRequest(
-            AdTechIdentifier adTech,
-            String callerPackageName,
+            @Nullable AdTechIdentifier adTech,
+            @NonNull String callerPackageName,
             boolean enforceForeground,
             int callerUid,
             int apiName,
-            Throttler.ApiKey apiKey) {
+            @NonNull Throttler.ApiKey apiKey) {
+        Objects.requireNonNull(callerPackageName);
+        Objects.requireNonNull(apiKey);
+
         assertCallerPackageName(callerPackageName, callerUid, apiName);
         assertCallerNotThrottled(callerPackageName, apiKey);
         if (enforceForeground) {
             assertForegroundCaller(callerUid, apiName);
         }
-        assertFledgeEnrollment(adTech, callerPackageName, apiName);
+        if (!Objects.isNull(adTech)) {
+            assertFledgeEnrollment(adTech, callerPackageName, apiName);
+        }
         assertAppInAllowList(callerPackageName, apiName);
         assertCallerHasUserConsent();
     }

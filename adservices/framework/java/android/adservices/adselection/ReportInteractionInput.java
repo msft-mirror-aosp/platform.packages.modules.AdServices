@@ -16,7 +16,9 @@
 
 package android.adservices.adselection;
 
-import android.annotation.IntDef;
+import static android.adservices.adselection.AdSelectionOutcome.UNSET_AD_SELECTION_ID;
+import static android.adservices.adselection.AdSelectionOutcome.UNSET_AD_SELECTION_ID_MESSAGE;
+
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.os.Parcel;
@@ -24,24 +26,24 @@ import android.os.Parcelable;
 
 import com.android.internal.util.Preconditions;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 import java.util.Objects;
 
 /**
- * Represent input params to the reportInteraction API.
+ * Input object wrapping the required arguments needed to report an interaction.
  *
  * @hide
  */
 public class ReportInteractionInput implements Parcelable {
-    public static final int DESTINATION_SELLER = 0x1;
-    public static final int DESTINATION_BUYER = 0x2;
-    private static final int UNSET = 0;
+
+    private static final int UNSET_REPORTING_DESTINATIONS = 0;
+    private static final String UNSET_REPORTING_DESTINATIONS_MESSAGE =
+            "Reporting Destinations bitfield not set.";
 
     private final long mAdSelectionId;
     @NonNull private final String mInteractionKey;
-    @NonNull private final InteractionData mInteractionData;
-    private final int mDestinations; // buyer, seller, or both
+    @NonNull private final String mInteractionData;
+    @NonNull private final String mCallerPackageName;
+    private final int mReportingDestinations; // buyer, seller, or both
 
     @NonNull
     public static final Creator<ReportInteractionInput> CREATOR =
@@ -62,22 +64,26 @@ public class ReportInteractionInput implements Parcelable {
     private ReportInteractionInput(
             long adSelectionId,
             @NonNull String interactionKey,
-            @NonNull InteractionData interactionData,
-            int destinations) {
+            @NonNull String interactionData,
+            @NonNull String callerPackageName,
+            int reportingDestinations) {
         Objects.requireNonNull(interactionKey);
         Objects.requireNonNull(interactionData);
+        Objects.requireNonNull(callerPackageName);
 
         this.mAdSelectionId = adSelectionId;
         this.mInteractionKey = interactionKey;
         this.mInteractionData = interactionData;
-        this.mDestinations = destinations;
+        this.mCallerPackageName = callerPackageName;
+        this.mReportingDestinations = reportingDestinations;
     }
 
     private ReportInteractionInput(@NonNull Parcel in) {
         this.mAdSelectionId = in.readLong();
         this.mInteractionKey = in.readString();
-        this.mInteractionData = InteractionData.CREATOR.createFromParcel(in);
-        this.mDestinations = in.readInt();
+        this.mInteractionData = in.readString();
+        this.mCallerPackageName = in.readString();
+        this.mReportingDestinations = in.readInt();
     }
 
     @Override
@@ -90,8 +96,9 @@ public class ReportInteractionInput implements Parcelable {
         Objects.requireNonNull(dest);
         dest.writeLong(mAdSelectionId);
         dest.writeString(mInteractionKey);
-        mInteractionData.writeToParcel(dest, flags);
-        dest.writeInt(mDestinations);
+        dest.writeString(mInteractionData);
+        dest.writeString(mCallerPackageName);
+        dest.writeInt(mReportingDestinations);
     }
 
     /** Returns the adSelectionId, the primary identifier of an ad selection process. */
@@ -104,6 +111,7 @@ public class ReportInteractionInput implements Parcelable {
      * fetch the {@code interactionReportingUri} associated with the {@code interactionKey}
      * registered in {@code registerAdBeacon} after ad selection.
      */
+    @NonNull
     public String getInteractionKey() {
         return mInteractionKey;
     }
@@ -113,21 +121,21 @@ public class ReportInteractionInput implements Parcelable {
      * will be attached in a POST request to the {@code interactionReportingUri} registered in
      * {@code registerAdBeacon}.
      */
-    public InteractionData getInteractionData() {
+    @NonNull
+    public String getInteractionData() {
         return mInteractionData;
     }
 
-    /** Returns the bitfield of destinations to report to (buyer, seller, or both) */
-    public int getDestinations() {
-        return mDestinations;
+    /** @return the caller package name */
+    @NonNull
+    public String getCallerPackageName() {
+        return mCallerPackageName;
     }
 
-    // TODO(b/261811605): Move this @IntDef to the external request object
-    @IntDef(
-            prefix = {"DESTINATION_"},
-            value = {DESTINATION_SELLER, DESTINATION_BUYER})
-    @Retention(RetentionPolicy.SOURCE)
-    public @interface Destination {}
+    /** Returns the bitfield of reporting destinations to report to (buyer, seller, or both) */
+    public int getReportingDestinations() {
+        return mReportingDestinations;
+    }
 
     /**
      * Builder for {@link ReportInteractionInput} objects.
@@ -135,10 +143,11 @@ public class ReportInteractionInput implements Parcelable {
      * @hide
      */
     public static final class Builder {
-        private long mAdSelectionId = UNSET;
+        private long mAdSelectionId = UNSET_AD_SELECTION_ID;
         @Nullable private String mInteractionKey;
-        @Nullable private InteractionData mInteractionData;
-        private int mDestinations = UNSET;
+        @Nullable private String mInteractionData;
+        @Nullable private String mCallerPackageName;
+        private int mReportingDestinations = UNSET_REPORTING_DESTINATIONS;
 
         public Builder() {}
 
@@ -160,19 +169,31 @@ public class ReportInteractionInput implements Parcelable {
 
         /** Sets the interactionData. */
         @NonNull
-        public ReportInteractionInput.Builder setInteractionData(
-                @NonNull InteractionData interactionData) {
+        public ReportInteractionInput.Builder setInteractionData(@NonNull String interactionData) {
             Objects.requireNonNull(interactionData);
 
             mInteractionData = interactionData;
             return this;
         }
 
-        /** Sets the bitfield of destinations. */
+        /** Sets the caller's package name. */
         @NonNull
-        public ReportInteractionInput.Builder setDestinations(int destinations) {
+        public ReportInteractionInput.Builder setCallerPackageName(
+                @NonNull String callerPackageName) {
+            Objects.requireNonNull(callerPackageName);
 
-            mDestinations = destinations;
+            this.mCallerPackageName = callerPackageName;
+            return this;
+        }
+
+        /** Sets the bitfield of reporting destinations. */
+        @NonNull
+        public ReportInteractionInput.Builder setReportingDestinations(int reportingDestinations) {
+            Preconditions.checkArgument(
+                    reportingDestinations != UNSET_REPORTING_DESTINATIONS,
+                    UNSET_REPORTING_DESTINATIONS_MESSAGE);
+
+            mReportingDestinations = reportingDestinations;
             return this;
         }
 
@@ -181,12 +202,20 @@ public class ReportInteractionInput implements Parcelable {
         public ReportInteractionInput build() {
             Objects.requireNonNull(mInteractionKey);
             Objects.requireNonNull(mInteractionData);
+            Objects.requireNonNull(mCallerPackageName);
 
-            Preconditions.checkArgument(mAdSelectionId != UNSET, "AdSelectionId not set");
-            Preconditions.checkArgument(mDestinations != UNSET, "Destinations not set");
+            Preconditions.checkArgument(
+                    mAdSelectionId != UNSET_AD_SELECTION_ID, UNSET_AD_SELECTION_ID_MESSAGE);
+            Preconditions.checkArgument(
+                    mReportingDestinations != UNSET_REPORTING_DESTINATIONS,
+                    UNSET_REPORTING_DESTINATIONS_MESSAGE);
 
             return new ReportInteractionInput(
-                    mAdSelectionId, mInteractionKey, mInteractionData, mDestinations);
+                    mAdSelectionId,
+                    mInteractionKey,
+                    mInteractionData,
+                    mCallerPackageName,
+                    mReportingDestinations);
         }
     }
 }

@@ -35,7 +35,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-/** Migrates Measurement DB from user version 2 to 3. */
+/** Upgrades Measurement DB from user version 2 to 3. */
 public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
     private static final String ANDROID_APP_SCHEME = "android-app";
     private static final String FILTERS = "filters";
@@ -67,10 +67,50 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
                     + MeasurementTables.AttributionContract.TRIGGER_TIME
                     + ")";
 
+    public static final String CREATE_TABLE_ASYNC_REGISTRATION_V3 =
+            "CREATE TABLE "
+                    + MeasurementTables.AsyncRegistrationContract.TABLE
+                    + " ("
+                    + MeasurementTables.AsyncRegistrationContract.ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + MeasurementTables.AsyncRegistrationContract.ENROLLMENT_ID
+                    + " TEXT, "
+                    + MeasurementTables.AsyncRegistrationContract.REGISTRATION_URI
+                    + " TEXT, "
+                    + MeasurementTables.AsyncRegistrationContract.WEB_DESTINATION
+                    + " TEXT, "
+                    + MeasurementTables.AsyncRegistrationContract.OS_DESTINATION
+                    + " TEXT, "
+                    + MeasurementTables.AsyncRegistrationContract.VERIFIED_DESTINATION
+                    + " TEXT, "
+                    + MeasurementTables.AsyncRegistrationContract.TOP_ORIGIN
+                    + " TEXT, "
+                    + MeasurementTables.AsyncRegistrationContract.REDIRECT_TYPE
+                    + " INTEGER, "
+                    + MeasurementTables.AsyncRegistrationContract.REDIRECT_COUNT
+                    + " INTEGER, "
+                    + MeasurementTables.AsyncRegistrationContract.SOURCE_TYPE
+                    + " INTEGER, "
+                    + MeasurementTables.AsyncRegistrationContract.REGISTRANT
+                    + " TEXT, "
+                    + MeasurementTables.AsyncRegistrationContract.REQUEST_TIME
+                    + " INTEGER, "
+                    + MeasurementTables.AsyncRegistrationContract.RETRY_COUNT
+                    + " INTEGER, "
+                    + MeasurementTables.AsyncRegistrationContract.LAST_PROCESSING_TIME
+                    + " INTEGER, "
+                    + MeasurementTables.AsyncRegistrationContract.TYPE
+                    + " INTEGER, "
+                    + MeasurementTables.AsyncRegistrationContract.DEBUG_KEY_ALLOWED
+                    + " INTEGER, "
+                    + MeasurementTables.AsyncRegistrationContract.AD_ID_PERMISSION
+                    + " INTEGER "
+                    + ")";
+
     private static final String[] UPDATE_ASYNC_REGISTRATION_TABLE_QUERIES = {
         String.format(
                 "DROP TABLE IF EXISTS %1$s", MeasurementTables.AsyncRegistrationContract.TABLE),
-        MeasurementTables.CREATE_TABLE_ASYNC_REGISTRATION_LATEST,
+        CREATE_TABLE_ASYNC_REGISTRATION_V3,
     };
     private static final String[] ADD_EVENT_REPORT_COLUMNS_VER_3 = {
         MeasurementTables.EventReportContract.SOURCE_ID,
@@ -139,6 +179,7 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
         db.execSQL(MeasurementTables.CREATE_TABLE_DEBUG_REPORT_LATEST);
 
         alterEventReportTable(db);
+        alterTriggerTable(db);
         alterAggregateReportTable(db);
         alterAttributionTable(db);
 
@@ -180,6 +221,9 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
                 MeasurementTables.EventReportContract.TABLE,
                 EVENT_REPORT_CONTRACT_BACKUP,
                 MeasurementTables.CREATE_TABLE_EVENT_REPORT_LATEST);
+    }
+
+    private static void alterTriggerTable(SQLiteDatabase db) {
         MigrationHelpers.addTextColumnIfAbsent(
                 db,
                 MeasurementTables.TriggerContract.TABLE,
@@ -255,8 +299,7 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
                         MeasurementTables.TriggerContract.ID,
                         MeasurementTables.TriggerContract.EVENT_TRIGGERS,
                         MeasurementTables.TriggerContract.AGGREGATE_TRIGGER_DATA,
-                        MeasurementTables.TriggerContract.FILTERS,
-                        MeasurementTables.TriggerContract.NOT_FILTERS
+                        MeasurementTables.TriggerContract.FILTERS
                     },
                     null, null, null, null, null, null)) {
             while (cursor.moveToNext()) {
@@ -325,20 +368,15 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
                 MeasurementTables.TriggerContract.AGGREGATE_TRIGGER_DATA));
         String filters = cursor.getString(cursor.getColumnIndex(
                 MeasurementTables.TriggerContract.FILTERS));
-        String notFilters = cursor.getString(cursor.getColumnIndex(
-                MeasurementTables.TriggerContract.NOT_FILTERS));
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.TriggerContract.EVENT_TRIGGERS,
                 updateEventTriggers(eventTriggers));
         values.put(MeasurementTables.TriggerContract.AGGREGATE_TRIGGER_DATA,
                 convertAggregateTriggerData(aggregateTriggerData));
         if (filters != null) {
-            values.put(MeasurementTables.TriggerContract.FILTERS,
-                    convertFilters(filters).toString());
-        }
-        if (notFilters != null) {
-            values.put(MeasurementTables.TriggerContract.NOT_FILTERS,
-                    convertFilters(notFilters).toString());
+            String convertedFilters = Optional.ofNullable(convertFilters(filters))
+                    .map(JSONArray::toString).orElse(null);
+            values.put(MeasurementTables.TriggerContract.FILTERS, convertedFilters);
         }
         long rowCount = db.update(
                 MeasurementTables.TriggerContract.TABLE,
@@ -397,7 +435,7 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
             return updateEventTriggers(new JSONArray(eventTriggers));
         } catch (JSONException e) {
             LogUtil.e(e, "MeasurementDbMigratorV3: failed to parse event triggers.");
-            return null;
+            return new JSONArray().toString();
         }
     }
 

@@ -24,9 +24,11 @@ import android.net.Uri;
  */
 interface IAdServicesCommonService {
     /**
-     * get adservice status service.
+     * Get AdServices status service.
      */
     void isAdServicesEnabled(in IAdServicesCommonCallback callback);
 
-    void setAdServicesEnabled(in boolean adServicesEntryPointEnabled, in boolean adIdEnabled);
+    void setAdServicesEnabled(
+            in boolean adServicesEntryPointEnabled,
+            in boolean adIdEnabled);
 }

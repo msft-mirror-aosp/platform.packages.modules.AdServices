@@ -51,8 +51,8 @@ public class AggregateCryptoConverterTest {
     private static final String DEFAULT_PAYLOAD =
             "{\"operation\":\"histogram\", "
                     + "\"data\": ["
-                    + "{\"bucket\": 1, \"value\":2},"
-                    + "{\"bucket\": 3, \"value\":4}"
+                    + "{\"bucket\": \"1\", \"value\":2},"
+                    + "{\"bucket\": \"3\", \"value\":4}"
                     + "]}";
 
     @Test
@@ -89,7 +89,7 @@ public class AggregateCryptoConverterTest {
                     AggregateCryptoFixture.getPublicKeyBase64(),
                     "{{\"operation\":\"histogram\", "
                             + "\"data\": [{"
-                            + "\"bucket\": 1, \"value\":2"
+                            + "\"bucket\": \"1\", \"value\":2"
                             + "}]}",
                     null);
             fail();
@@ -105,7 +105,7 @@ public class AggregateCryptoConverterTest {
                     AggregateCryptoFixture.getPublicKeyBase64(),
                     "{{\"ops\":\"histogram\", "
                             + "\"data\": [{"
-                            + "\"bucket\": 1, \"value\":2"
+                            + "\"bucket\": \"1\", \"value\":2"
                             + "}]}",
                     null);
             fail();
@@ -121,7 +121,7 @@ public class AggregateCryptoConverterTest {
                     AggregateCryptoFixture.getPublicKeyBase64(),
                     "{{\"operation\":\"histogram\", "
                             + "\"info\": [{"
-                            + "\"bucket\": 1, \"value\":2"
+                            + "\"bucket\": \"1\", \"value\":2"
                             + "}]}",
                     null);
             fail();
@@ -137,7 +137,7 @@ public class AggregateCryptoConverterTest {
                     AggregateCryptoFixture.getPublicKeyBase64(),
                     "{{\"operation\":\"histogram\", "
                             + "\"data\": [{"
-                            + "\"bucket\": 1, \"v\":2"
+                            + "\"bucket\": \"1\", \"v\":2"
                             + "}]}",
                     null);
             fail();
@@ -175,7 +175,7 @@ public class AggregateCryptoConverterTest {
             AggregateCryptoConverter.encode(
                     "{{\"operation\":\"histogram\", "
                             + "\"data\": [{"
-                            + "\"bucket\": 1, \"value\":2"
+                            + "\"bucket\": \"1\", \"value\":2"
                             + "}]}");
             fail();
         } catch (CryptoException e) {
@@ -189,7 +189,7 @@ public class AggregateCryptoConverterTest {
             AggregateCryptoConverter.encode(
                     "{{\"ops\":\"histogram\", "
                             + "\"data\": [{"
-                            + "\"bucket\": 1, \"value\":2"
+                            + "\"bucket\": \"1\", \"value\":2"
                             + "}]}");
             fail();
         } catch (CryptoException e) {
@@ -203,7 +203,7 @@ public class AggregateCryptoConverterTest {
             AggregateCryptoConverter.encode(
                     "{{\"operation\":\"histogram\", "
                             + "\"info\": [{"
-                            + "\"bucket\": 1, \"value\":2"
+                            + "\"bucket\": \"1\", \"value\":2"
                             + "}]}");
             fail();
         } catch (CryptoException e) {
@@ -217,7 +217,7 @@ public class AggregateCryptoConverterTest {
             AggregateCryptoConverter.encode(
                     "{{\"operation\":\"histogram\", "
                             + "\"data\": [{"
-                            + "\"bucket\": 1, \"v\":2"
+                            + "\"bucket\": \"1\", \"v\":2"
                             + "}]}");
             fail();
         } catch (CryptoException e) {
@@ -319,6 +319,36 @@ public class AggregateCryptoConverterTest {
     }
 
     @Test
+    public void testEncodeWithCbor_valuesAtUpperBoundLimit() throws Exception {
+        final List<AggregateHistogramContribution> contributions = new ArrayList<>();
+        final String bucketUpperBound = "340282366920938463463374607431768211455"; // 16 bytes
+        final int valueUpperBound = 15; // 4 bytes
+        final AggregateHistogramContribution contribution =
+                new AggregateHistogramContribution.Builder()
+                        .setKey(new BigInteger(bucketUpperBound))
+                        .setValue(valueUpperBound)
+                        .build();
+        contributions.add(contribution);
+
+        final byte[] encoded = AggregateCryptoConverter.encodeWithCbor(contributions);
+        final List<DataItem> dataItems =
+                new CborDecoder(new ByteArrayInputStream(encoded)).decode();
+
+        final Map payload = (Map) dataItems.get(0);
+        final Array payloadArray = (Array) payload.get(new UnicodeString("data"));
+
+        assertEquals(1, payloadArray.getDataItems().size());
+        assertEquals("histogram", payload.get(new UnicodeString("operation")).toString());
+        assertTrue(
+                payloadArray.getDataItems().stream()
+                        .anyMatch(
+                                i ->
+                                        isFound((Map) i, "bucket", bucketUpperBound)
+                                                && isFound(
+                                                        (Map) i, "value", "" + valueUpperBound)));
+    }
+
+    @Test
     public void testEncryptWithHpke_successfully() {
         byte[] encoded =
                 AggregateCryptoConverter.encryptWithHpke(
@@ -415,7 +445,9 @@ public class AggregateCryptoConverterTest {
 
     private boolean isFound(Map map, String name, String value) {
         return new BigInteger(value)
-                .equals(new BigInteger(((ByteString) map.get(new UnicodeString(name))).getBytes()));
+                .equals(
+                        new BigInteger(
+                                1, ((ByteString) map.get(new UnicodeString(name))).getBytes()));
     }
 
     private int getBytesLength(Map map, String keyName) {

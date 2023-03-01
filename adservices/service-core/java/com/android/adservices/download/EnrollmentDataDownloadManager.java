@@ -107,9 +107,11 @@ public class EnrollmentDataDownloadManager {
                 // Constructs EnrollmentData object and save it into DB.
                 String[] data = line.split(",");
                 if (data.length == 8) {
+                    String enrollmentId = data[0];
+                    LogUtil.d("Adding enrollmentId - %s", enrollmentId);
                     EnrollmentData enrollmentData =
                             new EnrollmentData.Builder()
-                                    .setEnrollmentId(data[0])
+                                    .setEnrollmentId(enrollmentId)
                                     .setCompanyId(data[1])
                                     .setSdkNames(data[2])
                                     .setAttributionSourceRegistrationUrl(

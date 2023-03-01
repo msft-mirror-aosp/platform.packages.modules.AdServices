@@ -28,6 +28,7 @@ import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
+import android.os.Build;
 import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
@@ -57,6 +58,20 @@ public class AdSelectionManager {
 
     @NonNull private Context mContext;
     @NonNull private ServiceBinder<AdSelectionService> mServiceBinder;
+
+    /**
+     * Factory method for creating an instance of AdSelectionManager.
+     *
+     * @param context The {@link Context} to use
+     * @return A {@link AdSelectionManager} instance
+     */
+    @NonNull
+    public static AdSelectionManager get(@NonNull Context context) {
+        // On T+, context.getSystemService() does more than just call constructor.
+        return (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                ? context.getSystemService(AdSelectionManager.class)
+                : new AdSelectionManager(context);
+    }
 
     /**
      * Create AdSelectionManager
@@ -327,6 +342,78 @@ public class AdSelectionManager {
             receiver.onError(new IllegalStateException("Failure of AdSelection service.", e));
         }
     }
+
+    /**
+     * Notifies PPAPI that there is a new interaction to report for the ad selected by the
+     * ad-selection run identified by {@code adSelectionId}. There is no guarantee about when the
+     * interaction will be reported. The interaction reporting could be delayed and interactions
+     * could be batched.
+     *
+     * <p>The output is passed by the receiver, which either returns an empty {@link Object} for a
+     * successful run, or an {@link Exception} includes the type of the exception thrown and the
+     * corresponding error message.
+     *
+     * <p>If the {@link IllegalArgumentException} is thrown, it is caused by invalid input argument
+     * the API received to report the interaction.
+     *
+     * <p>If the {@link IllegalStateException} is thrown with error message "Failure of AdSelection
+     * services.", it is caused by an internal failure of the ad selection service.
+     *
+     * <p>If the {@link LimitExceededException} is thrown, it is caused when the calling package
+     * exceeds the allowed rate limits and is throttled.
+     *
+     * <p>If the {@link SecurityException} is thrown, it is caused when the caller is not authorized
+     * or permission is not requested.
+     *
+     * <p>Interactions will be reported at most once as a best-effort attempt.
+     *
+     * @hide
+     */
+    // TODO(b/261812140): Unhide for report interaction API review
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
+    public void reportInteraction(
+            @NonNull ReportInteractionRequest request,
+            @NonNull Executor executor,
+            @NonNull OutcomeReceiver<Object, Exception> receiver) {
+        Objects.requireNonNull(request);
+        Objects.requireNonNull(executor);
+        Objects.requireNonNull(receiver);
+
+        try {
+            final AdSelectionService service = getService();
+            service.reportInteraction(
+                    new ReportInteractionInput.Builder()
+                            .setAdSelectionId(request.getAdSelectionId())
+                            .setInteractionKey(request.getInteractionKey())
+                            .setInteractionData(request.getInteractionData())
+                            .setReportingDestinations(request.getReportingDestinations())
+                            .setCallerPackageName(getCallerPackageName())
+                            .build(),
+                    new ReportInteractionCallback.Stub() {
+                        @Override
+                        public void onSuccess() {
+                            executor.execute(() -> receiver.onResult(new Object()));
+                        }
+
+                        @Override
+                        public void onFailure(FledgeErrorResponse failureParcel) {
+                            executor.execute(
+                                    () -> {
+                                        receiver.onError(
+                                                AdServicesStatusUtils.asException(failureParcel));
+                                    });
+                        }
+                    });
+        } catch (NullPointerException e) {
+            LogUtil.e(e, "Unable to find the AdSelection service.");
+            receiver.onError(
+                    new IllegalStateException("Unable to find the AdSelection service.", e));
+        } catch (RemoteException e) {
+            LogUtil.e(e, "Exception");
+            receiver.onError(new IllegalStateException("Failure of AdSelection service.", e));
+        }
+    }
+
     /**
      * Gives the provided list of adtechs the ability to do app install filtering on the calling
      * app.
@@ -392,6 +479,80 @@ public class AdSelectionManager {
         } catch (RemoteException e) {
             LogUtil.e(e, "Exception");
             receiver.onError(new IllegalStateException("Failure of AdSelection service.", e));
+        }
+    }
+
+    /**
+     * Updates the counter histograms for an ad.
+     *
+     * <p>The counter histograms are used in ad selection to inform frequency cap filtering on
+     * candidate ads, where ads whose frequency caps are met or exceeded are removed from the
+     * bidding process during ad selection.
+     *
+     * <p>Counter histograms can only be updated for ads specified by the given {@code
+     * adSelectionId} returned by a recent call to FLEDGE ad selection from the same caller app.
+     *
+     * <p>A {@link SecurityException} is returned via the {@code outcomeReceiver} if:
+     *
+     * <ol>
+     *   <li>the app has not declared the correct permissions in its manifest, or
+     *   <li>the app or entity identified by the {@code callerAdTechIdentifier} are not authorized
+     *       to use the API.
+     * </ol>
+     *
+     * An {@link IllegalStateException} is returned via the {@code outcomeReceiver} if the call does
+     * not come from an app with a foreground activity.
+     *
+     * <p>A {@link LimitExceededException} is returned via the {@code outcomeReceiver} if the call
+     * exceeds the calling app's API throttle.
+     *
+     * <p>In all other failure cases, the {@code outcomeReceiver} will return an empty {@link
+     * Object}. Note that to protect user privacy, internal errors will not be sent back via an
+     * exception.
+     *
+     * @hide
+     */
+    // TODO(b/221876775): Unhide for frequency cap API review
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
+    public void updateAdCounterHistogram(
+            @NonNull UpdateAdCounterHistogramRequest updateAdCounterHistogramRequest,
+            @NonNull @CallbackExecutor Executor executor,
+            @NonNull OutcomeReceiver<Object, Exception> outcomeReceiver) {
+        Objects.requireNonNull(updateAdCounterHistogramRequest, "Request must not be null");
+        Objects.requireNonNull(executor, "Executor must not be null");
+        Objects.requireNonNull(outcomeReceiver, "Outcome receiver must not be null");
+
+        try {
+            final AdSelectionService service = Objects.requireNonNull(getService());
+            service.updateAdCounterHistogram(
+                    new UpdateAdCounterHistogramInput.Builder()
+                            .setAdEventType(updateAdCounterHistogramRequest.getAdEventType())
+                            .setAdSelectionId(updateAdCounterHistogramRequest.getAdSelectionId())
+                            .setCallerAdTech(updateAdCounterHistogramRequest.getCallerAdTech())
+                            .setCallerPackageName(getCallerPackageName())
+                            .build(),
+                    new UpdateAdCounterHistogramCallback.Stub() {
+                        @Override
+                        public void onSuccess() {
+                            executor.execute(() -> outcomeReceiver.onResult(new Object()));
+                        }
+
+                        @Override
+                        public void onFailure(FledgeErrorResponse failureParcel) {
+                            executor.execute(
+                                    () -> {
+                                        outcomeReceiver.onError(
+                                                AdServicesStatusUtils.asException(failureParcel));
+                                    });
+                        }
+                    });
+        } catch (NullPointerException e) {
+            LogUtil.e(e, "Unable to find the AdSelection service");
+            outcomeReceiver.onError(
+                    new IllegalStateException("Unable to find the AdSelection service", e));
+        } catch (RemoteException e) {
+            LogUtil.e(e, "Remote exception encountered while updating ad counter histogram");
+            outcomeReceiver.onError(new IllegalStateException("Failure of AdSelection service", e));
         }
     }
 

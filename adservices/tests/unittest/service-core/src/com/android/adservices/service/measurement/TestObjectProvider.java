@@ -56,14 +56,13 @@ class TestObjectProvider {
     }
 
     static AttributionJobHandlerWrapper getAttributionJobHandler(
-            DatastoreManager datastoreManager) {
-        return new AttributionJobHandlerWrapper(datastoreManager);
+            DatastoreManager datastoreManager, Flags flags) {
+        return new AttributionJobHandlerWrapper(datastoreManager, flags);
     }
 
     static MeasurementImpl getMeasurementImpl(
             DatastoreManager datastoreManager,
             ClickVerifier clickVerifier,
-            Flags flags,
             MeasurementDataDeleter measurementDataDeleter,
             EnrollmentDao enrollmentDao) {
         return spy(
@@ -117,7 +116,7 @@ class TestObjectProvider {
                                         .setSourceEventId(source.getEventId())
                                         .setReportTime(source.getExpiryTime() + ONE_HOUR_IN_MILLIS)
                                         .setTriggerData(new UnsignedLong(0L))
-                                        .setAttributionDestination(source.getAppDestination())
+                                        .setAttributionDestinations(source.getAppDestinations())
                                         .setEnrollmentId(source.getEnrollmentId())
                                         .setTriggerTime(0)
                                         .setTriggerPriority(0L)
