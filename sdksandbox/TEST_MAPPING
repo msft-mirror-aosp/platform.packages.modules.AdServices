@@ -120,6 +120,9 @@
   "postsubmit": [
     {
       "name": "SdkSandboxStorageHostTest"
+    },
+    {
+      "name": "SdkSandboxUiTests"
     }
   ],
   "sdksandbox-postsubmit": [
