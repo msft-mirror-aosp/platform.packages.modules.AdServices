@@ -194,6 +194,24 @@ public class MockWebServerRule implements TestRule {
         serverSocket.close();
     }
 
+    /**
+     * Provides the ability to define a port before starting the mock web server. Otherwise, if the
+     * port has already been initialized it will throw an {@link IllegalStateException}
+     *
+     * @param port the port to be configured
+     * @throws IOException if port already in used
+     */
+    public void reserveServerListeningPort(int port) throws IOException {
+        if (mPort != UNINITIALIZED) {
+            throw new IllegalStateException("Port has already been initialized");
+        }
+
+        ServerSocket serverSocket = new ServerSocket(port);
+        serverSocket.setReuseAddress(true);
+        mPort = serverSocket.getLocalPort();
+        serverSocket.close();
+    }
+
     private SSLSocketFactory getTestingSslSocketFactory()
             throws GeneralSecurityException, IOException {
         final KeyManagerFactory keyManagerFactory =
