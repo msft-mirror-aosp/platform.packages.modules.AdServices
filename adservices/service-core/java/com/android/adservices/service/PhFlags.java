@@ -308,6 +308,18 @@ public final class PhFlags implements Flags {
     // SystemProperty prefix. We can use SystemProperty to override the AdService Configs.
     private static final String SYSTEM_PROPERTY_PREFIX = "debug.adservices.";
 
+    // Consent Notification interval begin ms.
+    static final String KEY_CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS =
+            "consent_notification_interval_begin_ms";
+
+    // Consent Notification interval end ms.
+    static final String KEY_CONSENT_NOTIFICATION_INTERVAL_END_MS =
+            "consent_notification_interval_end_ms";
+
+    // Consent Notification minimal delay before interval ms.
+    static final String KEY_CONSENT_NOTIFICATION_MINIMAL_DELAY_BEFORE_INTERVAL_ENDS =
+            "consent_notification_minimal_delay_before_interval_ends";
+
     // Consent Notification debug mode keys.
     static final String KEY_CONSENT_NOTIFICATION_DEBUG_MODE = "consent_notification_debug_mode";
 
@@ -1823,6 +1835,30 @@ public final class PhFlags implements Flags {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST,
                 /* defaultValue */ WEB_CONTEXT_CLIENT_ALLOW_LIST);
+    }
+
+    @Override
+    public long getConsentNotificationIntervalBeginMs() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS,
+                /* defaultValue */ CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS);
+    }
+
+    @Override
+    public long getConsentNotificationIntervalEndMs() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_CONSENT_NOTIFICATION_INTERVAL_END_MS,
+                /* defaultValue */ CONSENT_NOTIFICATION_INTERVAL_END_MS);
+    }
+
+    @Override
+    public long getConsentNotificationMinimalDelayBeforeIntervalEnds() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_CONSENT_NOTIFICATION_MINIMAL_DELAY_BEFORE_INTERVAL_ENDS,
+                /* defaultValue */ CONSENT_NOTIFICATION_MINIMAL_DELAY_BEFORE_INTERVAL_ENDS);
     }
 
     @Override
