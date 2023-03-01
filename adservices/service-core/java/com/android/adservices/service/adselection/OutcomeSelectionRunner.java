@@ -224,6 +224,7 @@ public class OutcomeSelectionRunner {
                                             inputParams.getCallerPackageName(),
                                             mFlags
                                                     .getEnforceForegroundStatusForFledgeRunAdSelection(),
+                                            true,
                                             mCallerUid,
                                             AdServicesStatsLog
                                                     .AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,

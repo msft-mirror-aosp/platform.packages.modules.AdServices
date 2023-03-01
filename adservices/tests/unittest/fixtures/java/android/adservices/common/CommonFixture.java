@@ -54,6 +54,9 @@ public class CommonFixture {
             AdTechIdentifier.fromString("notenrolled.com");
     public static final AdTechIdentifier VALID_BUYER_1 = AdTechIdentifier.fromString("test.com");
     public static final AdTechIdentifier VALID_BUYER_2 = AdTechIdentifier.fromString("test2.com");
+    public static final AdTechIdentifier INVALID_EMPTY_BUYER = AdTechIdentifier.fromString("");
+    public static final Set<AdTechIdentifier> BUYER_SET =
+            new HashSet<>(Arrays.asList(VALID_BUYER_1, VALID_BUYER_2));
 
     public static Uri getUri(String authority, String path) {
         return Uri.parse(ValidatorUtil.HTTPS_SCHEME + "://" + authority + path);
