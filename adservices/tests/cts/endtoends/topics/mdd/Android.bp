@@ -30,8 +30,7 @@ android_test {
     ],
     libs: [
         "android.test.base",
-        // TODO(b/246590510): Remove these.
-        "framework-adservices.impl",
+        "framework-adservices",
         "framework-sdksandbox.impl",
     ],
     test_suites: [
