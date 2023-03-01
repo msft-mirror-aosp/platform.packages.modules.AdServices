@@ -183,11 +183,9 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"သင်သုံးသောအက်ပ်များက ၎င်းတို့အား အသုံးပြုပုံပေါ် အခြေခံပြီး သင့်နှစ်သက်မှုကိုလည်း ဆုံးဖြတ်နိုင်သည်။"</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"သင်သုံးသော အက်ပ်များသည် ၎င်းတို့ကြော်ငြာများ၏ စွမ်းဆောင်ရည်ကို တိုင်းတာရန်အတွက် Android ထံမှ အချက်အလက်များ တောင်းနိုင်သည်။ Android သည် အက်ပ်များအား ဒေတာအမျိုးအစားများကို အကန့်အသတ်ဖြင့် စုဆောင်းခွင့်ပြုသည်။"</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"ဖွင့် / အကြောင်းအရာ <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> ခု"</string>
-    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
-    <skip />
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{ဖွင့် / အကြောင်းအရာ # ခု}other{ဖွင့် / အကြောင်းအရာ # ခု}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"ဖွင့် / အက်ပ် <xliff:g id="APPS_COUNT">%1$d</xliff:g> ခု"</string>
-    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
-    <skip />
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{ဖွင့် / အက်ပ် # ခု}other{ဖွင့် / အက်ပ် # ခု}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"ဖွင့်"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"ပိတ်"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"စိတ်ဝင်စားသည့် အကြောင်းအရာများကို မကြာသေးမီက သင်သုံးခဲ့သော အက်ပ်များပေါ် အခြေခံထားပြီး သင့်အား ပုဂ္ဂိုလ်ရေးသီးသန့် ကြော်ငြာများပြရန် အက်ပ်များက သုံးသည်။\n\nအက်ပ်များနှင့် မမျှဝေလိုသော အကြောင်းအရာများကို ပိတ်ထားနိုင်သည်။ Android သည် အကြောင်းအရာများကိုလည်း အလိုအလျောက် ပုံမှန်ဖျက်သည်။"</string>
@@ -200,14 +198,10 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"သင်ပိတ်ထားသော အက်ပ်များ"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"အက်ပ်အကြံပြုဒေတာကို ပြင်ဆင်သတ်မှတ်ရန်"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"ပုဂ္ဂိုလ်ရေးသီးသန့် အသုံးပြုနိုင်ရန် သင်စိတ်ဝင်စားသောအရာများကို သင်သုံးသော အက်ပ်များက မှတ်သားလေ့ရှိသည်။ အက်ပ်များသည် Android တွင် သင်၏အကြောင်းအရာနှင့် ပတ်သက်သော အချက်အလက်များကိုလည်း သိမ်းနိုင်သည်။\n\nဥပမာ သင်က မာရသွန်အပြေးလေ့ကျင့်ခြင်းဆိုင်ရာ အက်ပ်ကို သုံးပါက သင်သည် အပြေးဖိနပ်များကို စိတ်ဝင်စားသည်ဟု အက်ပ်ကဆုံးဖြတ်နိုင်သည်။ နောင်တွင် သင်သည် အခြားအက်ပ်သုံးပါက ယင်းအက်ပ်သည် ပထမအက်ပ်က အကြံပြုထားသည့် အပြေးဖိနပ်များအတွက် ကြော်ငြာကို သင့်အား ပြနိုင်သည်။\n\nAndroid သည် အက်ပ်အကြံပြု ဒေတာကို အလိုအလျောက် ပုံမှန်ဖျက်သည်။ သင်သုံးသော အက်ပ်သည် စာရင်းတွင် ပြန်ပေါ်လာနိုင်သည်။ သို့မဟုတ် အက်ပ်ကို သင့်အတွက် ကြော်ငြာများအကြံပြုခြင်းမှ ပိတ်ထားနိုင်သည်။\n\nသင်၏အက်ပ်များတွင် ဤဆက်တင်၊ ကြော်ငြာအကြောင်းအရာများ ဆက်တင်၊ သင်၏ ကြော်ငြာ ID ဆက်တင်နှင့် သင်သုံးနေသည့်အက်ပ်က ကြော်ငြာများကို ပုဂ္ဂိုလ်ရေးသီးသန့်ပြုလုပ်ခြင်း ရှိ၊ မရှိပေါ် မူတည်၍ သင်မြင်ရသော ကြော်ငြာကို ပုဂ္ဂိုလ်ရေးသီးသန့်ပြုလုပ်ထားနိုင်သည်။"</string>
-    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
-    <skip />
-    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
-    <skip />
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"တေးဂီတ၊ သတင်းနှင့် အားကစားကဲ့သို့ စိတ်ဝင်စားသည့် အကြောင်းအရာများကို ကိုယ်စားပြုသည့် သင်္ကေတများ၏ အရောင်စုံ သရုပ်ဖော်ပုံ"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"စက်ဝိုင်းအတွင်း သော့ခလောက်ပါသည့် အရောင်စုံ သရုပ်ဖော်ပုံ"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"စတုရန်းဖြစ်စေသည့် ဒေါ့(တ်) ၉ ခု၏ အနက်နှင့် အဖြူ သရုပ်ဖော်ပုံသေး"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"အသည်းနှလုံးပုံ၊ တြိဂံနှင့် စတုရန်းကဲ့သို့ ရိုးရှင်းသောပုံသဏ္ဌာန်များ၏ အနက်နှင့် အဖြူ သရုပ်ဖော်ပုံသေး"</string>
     <string name="topic10001" msgid="1636806320891333775">"အနုပညာနှင့် ဖျော်ဖြေရေး"</string>
     <string name="topic10002" msgid="1226367977754287428">"သရုပ်ဆောင်ခြင်းနှင့် ကဇာတ်ရုံ"</string>
     <string name="topic10003" msgid="6949890838957814881">"အန်နီမီနှင့် မန်ဂါ"</string>

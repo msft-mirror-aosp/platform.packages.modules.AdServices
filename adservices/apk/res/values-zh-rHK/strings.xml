@@ -69,7 +69,7 @@
     <string name="notificationUI_how_it_works_expanded_text4" msgid="3910573920883580609">"Android 會定期根據您所用的應用程式推測您最感興趣的類別，例如「運動」或「旅遊」。\n\n然後，應用程式可要求 Android 運用這些興趣向您顯示更相關的廣告。\n\n您可在私隱權設定中查看目前的興趣清單，並封鎖任何不喜歡的項目。"</string>
     <string name="notificationUI_how_it_works_expanded_text5" msgid="7257714040472055781">"•  應用程式推測的興趣"</string>
     <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"應用程式可推測您的興趣，並暫時儲存在 Android 系統中。例如，您用於購買跑鞋的應用程式可能會估計您的興趣是「跑馬拉松」。\n\n然後，另一個應用程式可根據這項興趣向您顯示與馬拉松相關的廣告。\n\n您可在私隱權設定中管理已儲存興趣的應用程式清單。"</string>
-    <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"全新廣告私隱功能"</string>
+    <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"全新廣告私隱權功能"</string>
     <string name="notificationUI_notification_ga_content" msgid="3483979694272908942">"利用廣告主題和全新控制項，進一步控制向您顯示的廣告"</string>
     <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"Android 會根據您最近使用過的應用程式，記住您感興趣的主題。此外，您使用的應用程式可判斷您喜歡的內容，並稍後要求您提供這些資料，以便向您顯示個人化廣告。您可選擇系統根據哪些主題和應用程式顯示廣告。"</string>
     <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"為評估廣告成效，應用程式之間會分享特定類型的資料。"</string>
@@ -84,7 +84,7 @@
     <string name="notificationUI_how_it_works_row_body6" msgid="5368364880910986588">"您使用的應用程式可要求 Android 提供資料，以協助評估廣告成效。Android 只允許應用程式收集特定類型的資料，例如在一天中向使用者放送廣告的時段。"</string>
     <!-- no translation found for notificationUI_how_it_works_row_body7 (8158317350415462142) -->
     <skip />
-    <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"試用全新廣告私隱功能"</string>
+    <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"試用全新廣告私隱權功能"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"利用廣告主題進一步控制向您顯示的廣告"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"查看詳情"</string>
     <string name="notificationUI_header_ga_title_eu" msgid="4461095539795574989">"強化 Android 上的廣告私隱權"</string>
@@ -133,7 +133,7 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"私隱沙箱"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android 廣告私隱權 Beta 版本提供全新功能，讓應用程式可向您顯示可能感興趣的廣告。這些技術不會使用裝置識別碼。\n\n推測您可能感興趣的廣告類別，並在裝置上暫時儲存興趣。這允許應用程式向您顯示相關的廣告，但不會追蹤您在其他開發人員的網站和應用程式內的活動。"</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"您沒有封鎖任何興趣"</string>
-    <string name="settingsUI_no_blocked_topics_ga_text" msgid="377459829879121256">"沒有已封鎖的主題"</string>
+    <string name="settingsUI_no_blocked_topics_ga_text" msgid="377459829879121256">"沒有封鎖任何主題"</string>
     <string name="settingsUI_view_blocked_topics_title" msgid="3705333677440361392">"查看已封鎖的主題"</string>
     <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"興趣已重設"</string>
     <string name="settingsUI_topics_are_reset_ga" msgid="5250296990870048195">"已重設主題"</string>
@@ -183,11 +183,9 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"您使用的應用程式亦可以根據您的使用方式，判斷您喜歡的內容。"</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"您使用的應用程式可要求 Android 提供相關資料，協助應用程式評估廣告成效。Android 只允許應用程式收集特定類型的資料。"</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"已啟用/<xliff:g id="TOPICS_COUNT">%1$d</xliff:g> 個主題"</string>
-    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
-    <skip />
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{已開啟/# 個主題}other{已開啟/# 個主題}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"已啟用/<xliff:g id="APPS_COUNT">%1$d</xliff:g> 個應用程式"</string>
-    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
-    <skip />
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{已開啟/# 個應用程式}other{已開啟/# 個應用程式}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"已啟用"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"已停用"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"系統根據您最近使用的應用程式來判斷您感興趣的主題，而應用程式會利用這些主題向您顯示個人化廣告。\n\n您可封鎖不希望與應用程式分享的主題。Android 亦會定期自動刪除主題。"</string>
@@ -200,14 +198,10 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"您已封鎖的應用程式"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"重設應用程式建議的資料"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"您使用的應用程式通常會記住您感興趣的項目，以便為您提供個人化體驗。應用程式亦會儲存您在 Android 中的相關主題資料。\n\n例如，如果您使用關於馬拉松訓練的應用程式，該應用程式便可能會判斷您對跑步鞋有興趣。如果您日後使用其他應用程式，該應用程式就可以根據第一個應用程式建議的感興趣項目，向您顯示跑步鞋廣告。\n\nAndroid 會定期自動刪除應用程式建議的資料。如您再次使用應用程式，該應用程式便可能會再次在清單中顯示。您亦可禁止應用程式為您建議廣告。\n\n您在應用程式中看到的廣告可能是個人化廣告，視乎此設定、廣告主題設定、您的廣告 ID 設定，以及您使用的應用程式是否將廣告個人化而定。"</string>
-    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
-    <skip />
-    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
-    <skip />
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"呢張彩色插圖入面嘅符號代表音樂、新聞同體育賽事之類嘅興趣主題"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"呢張彩色插圖入面嘅圓圈入面有一個鎖"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"呢張細嘅黑白插圖入面有由九個圓點組成嘅正方形"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"呢張細嘅黑白插圖入面有心形、三角形同正方形之類嘅簡單圖形"</string>
     <string name="topic10001" msgid="1636806320891333775">"藝術和娛樂"</string>
     <string name="topic10002" msgid="1226367977754287428">"表演和戲劇"</string>
     <string name="topic10003" msgid="6949890838957814881">"動漫和日本漫畫"</string>

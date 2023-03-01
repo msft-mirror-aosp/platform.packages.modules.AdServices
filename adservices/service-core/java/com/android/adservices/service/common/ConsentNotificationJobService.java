@@ -162,8 +162,8 @@ public class ConsentNotificationJobService extends JobService {
                 + flags.getConsentNotificationIntervalEndMs();
     }
 
-    static boolean isEuDevice(Context context) {
-        return DeviceRegionProvider.isEuDevice(context);
+    static boolean isEuDevice(Context context, Flags flags) {
+        return DeviceRegionProvider.isEuDevice(context, flags);
     }
 
     private static long getMillisecondsInTheCurrentDay(Calendar calendar) {
@@ -191,8 +191,11 @@ public class ConsentNotificationJobService extends JobService {
         if (mConsentManager == null) {
             setConsentManager(ConsentManager.getInstance(this));
         }
-        boolean isEuNotification =
-                !params.getExtras().getBoolean(ADID_ENABLE_STATUS, false) || isEuDevice(this);
+
+        boolean defaultAdIdState = params.getExtras().getBoolean(ADID_ENABLE_STATUS, false);
+        mConsentManager.recordDefaultAdIdState(defaultAdIdState);
+        boolean isEuNotification = !defaultAdIdState || isEuDevice(this, FlagsFactory.getFlags());
+        mConsentManager.recordDefaultConsent(!isEuNotification);
         boolean reConsentStatus = params.getExtras().getBoolean(RE_CONSENT_STATUS, false);
 
         AdServicesExecutors.getBackgroundExecutor()

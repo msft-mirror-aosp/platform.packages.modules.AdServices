@@ -37,6 +37,7 @@ android_test {
         "androidx.test.ext.truth",
         "androidx.test.ext.junit",
         "truth-prebuilt",
+        "modules-utils-build",
     ],
     test_suites: [
         "cts",

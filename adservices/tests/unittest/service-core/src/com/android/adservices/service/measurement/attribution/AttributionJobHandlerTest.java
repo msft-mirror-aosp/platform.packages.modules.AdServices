@@ -610,19 +610,19 @@ public class AttributionJobHandlerTest {
                         .setStatus(EventReport.Status.PENDING)
                         .setTriggerPriority(100L)
                         .setReportTime(5L)
-                        .setAttributionDestination(APP_DESTINATION)
+                        .setAttributionDestinations(List.of(APP_DESTINATION))
                         .build();
         EventReport eventReport2 =
                 new EventReport.Builder()
                         .setStatus(EventReport.Status.DELIVERED)
                         .setReportTime(5L)
-                        .setAttributionDestination(source.getAppDestination())
+                        .setAttributionDestinations(source.getAppDestinations())
                         .build();
         EventReport eventReport3 =
                 new EventReport.Builder()
                         .setStatus(EventReport.Status.DELIVERED)
                         .setReportTime(5L)
-                        .setAttributionDestination(source.getAppDestination())
+                        .setAttributionDestinations(source.getAppDestinations())
                         .build();
         List<EventReport> matchingReports = new ArrayList<>();
         matchingReports.add(eventReport1);
@@ -634,7 +634,7 @@ public class AttributionJobHandlerTest {
         when(source.getReportingTime(anyLong(), anyInt())).thenReturn(5L);
         when(source.getEventReportDedupKeys()).thenReturn(new ArrayList<>());
         when(source.getAttributionMode()).thenReturn(Source.AttributionMode.TRUTHFULLY);
-        when(source.getAppDestination()).thenReturn(APP_DESTINATION);
+        when(source.getAppDestinations()).thenReturn(List.of(APP_DESTINATION));
         when(source.getPublisherType()).thenReturn(EventSurfaceType.APP);
         when(source.getPublisher()).thenReturn(PUBLISHER);
         mHandler.performPendingAttributions();
@@ -1006,8 +1006,8 @@ public class AttributionJobHandlerTest {
                         .setAttributionDestination(trigger.getAttributionDestination())
                         .setDebugCleartextPayload(
                                 "{\"operation\":\"histogram\","
-                                    + "\"data\":[{\"bucket\":2693,\"value\":1644},{\"bucket\":1369,"
-                                    + "\"value\":32768}]}")
+                                    + "\"data\":[{\"bucket\":\"1369\",\"value\":32768},"
+                                    + "{\"bucket\":\"2693\",\"value\":1644}]}")
                         .setEnrollmentId(source.getEnrollmentId())
                         .setPublisher(source.getRegistrant())
                         .setSourceId(source.getId())
@@ -1017,12 +1017,12 @@ public class AttributionJobHandlerTest {
                                         .setContributions(
                                                 Arrays.asList(
                                                         new AggregateHistogramContribution.Builder()
-                                                                .setKey(new BigInteger("2693"))
-                                                                .setValue(1644)
-                                                                .build(),
-                                                        new AggregateHistogramContribution.Builder()
                                                                 .setKey(new BigInteger("1369"))
                                                                 .setValue(32768)
+                                                                .build(),
+                                                        new AggregateHistogramContribution.Builder()
+                                                                .setKey(new BigInteger("2693"))
+                                                                .setValue(1644)
                                                                 .build()))
                                         .build())
                         .build();
@@ -1089,8 +1089,8 @@ public class AttributionJobHandlerTest {
                         .setAttributionDestination(trigger.getAttributionDestination())
                         .setDebugCleartextPayload(
                                 "{\"operation\":\"histogram\","
-                                    + "\"data\":[{\"bucket\":2693,\"value\":1644},{\"bucket\":1369,"
-                                    + "\"value\":32768}]}")
+                                    + "\"data\":[{\"bucket\":\"1369\",\"value\":32768},"
+                                    + "{\"bucket\":\"2693\",\"value\":1644}]}")
                         .setEnrollmentId(source.getEnrollmentId())
                         .setPublisher(source.getRegistrant())
                         .setSourceId(source.getId())
@@ -1100,12 +1100,12 @@ public class AttributionJobHandlerTest {
                                         .setContributions(
                                                 Arrays.asList(
                                                         new AggregateHistogramContribution.Builder()
-                                                                .setKey(new BigInteger("2693"))
-                                                                .setValue(1644)
-                                                                .build(),
-                                                        new AggregateHistogramContribution.Builder()
                                                                 .setKey(new BigInteger("1369"))
                                                                 .setValue(32768)
+                                                                .build(),
+                                                        new AggregateHistogramContribution.Builder()
+                                                                .setKey(new BigInteger("2693"))
+                                                                .setValue(1644)
                                                                 .build()))
                                         .build())
                         .build();
@@ -1910,7 +1910,7 @@ public class AttributionJobHandlerTest {
                         .setTriggerTime(234324L)
                         .setSourceEventId(source.getEventId())
                         .setStatus(EventReport.Status.PENDING)
-                        .setAttributionDestination(source.getAppDestination())
+                        .setAttributionDestinations(source.getAppDestinations())
                         .setEnrollmentId(source.getEnrollmentId())
                         .setReportTime(
                                 source.getReportingTime(
@@ -1992,7 +1992,7 @@ public class AttributionJobHandlerTest {
                         .setTriggerTime(234324L)
                         .setSourceEventId(source.getEventId())
                         .setStatus(EventReport.Status.PENDING)
-                        .setAttributionDestination(source.getAppDestination())
+                        .setAttributionDestinations(source.getAppDestinations())
                         .setEnrollmentId(source.getEnrollmentId())
                         .setReportTime(
                                 source.getReportingTime(
@@ -2076,7 +2076,7 @@ public class AttributionJobHandlerTest {
                         .setTriggerTime(234324L)
                         .setSourceEventId(source.getEventId())
                         .setStatus(EventReport.Status.PENDING)
-                        .setAttributionDestination(source.getAppDestination())
+                        .setAttributionDestinations(source.getAppDestinations())
                         .setEnrollmentId(source.getEnrollmentId())
                         .setReportTime(
                                 source.getReportingTime(
@@ -2158,7 +2158,7 @@ public class AttributionJobHandlerTest {
                         .setTriggerTime(234324L)
                         .setSourceEventId(source.getEventId())
                         .setStatus(EventReport.Status.PENDING)
-                        .setAttributionDestination(source.getAppDestination())
+                        .setAttributionDestinations(source.getAppDestinations())
                         .setEnrollmentId(source.getEnrollmentId())
                         .setReportTime(
                                 source.getReportingTime(
@@ -2243,7 +2243,7 @@ public class AttributionJobHandlerTest {
                         .setTriggerTime(234324L)
                         .setSourceEventId(source.getEventId())
                         .setStatus(EventReport.Status.PENDING)
-                        .setAttributionDestination(source.getAppDestination())
+                        .setAttributionDestinations(source.getAppDestinations())
                         .setEnrollmentId(source.getEnrollmentId())
                         .setReportTime(
                                 source.getReportingTime(
@@ -2980,8 +2980,8 @@ public class AttributionJobHandlerTest {
                 .setId(UUID.randomUUID().toString())
                 .setEventId(SourceFixture.ValidSourceParams.SOURCE_EVENT_ID)
                 .setPublisher(SourceFixture.ValidSourceParams.PUBLISHER)
-                .setAppDestination(SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
-                .setWebDestination(SourceFixture.ValidSourceParams.WEB_DESTINATION)
+                .setAppDestinations(SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
+                .setWebDestinations(SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
                 .setEnrollmentId(SourceFixture.ValidSourceParams.ENROLLMENT_ID)
                 .setRegistrant(SourceFixture.ValidSourceParams.REGISTRANT)
                 .setEventTime(SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME)

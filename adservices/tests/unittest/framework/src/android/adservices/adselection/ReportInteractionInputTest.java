@@ -16,12 +16,13 @@
 
 package android.adservices.adselection;
 
-import static android.adservices.adselection.ReportInteractionInput.DESTINATION_BUYER;
-import static android.adservices.adselection.ReportInteractionInput.DESTINATION_SELLER;
+import static android.adservices.adselection.ReportInteractionRequest.FLAG_REPORTING_DESTINATION_BUYER;
+import static android.adservices.adselection.ReportInteractionRequest.FLAG_REPORTING_DESTINATION_SELLER;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
+import android.adservices.common.CommonFixture;
 import android.os.Parcel;
 
 import org.json.JSONObject;
@@ -31,13 +32,15 @@ import org.junit.Test;
 public class ReportInteractionInputTest {
     private static final long AD_SELECTION_ID = 1234L;
     private static final String INTERACTION_KEY = "click";
-    private InteractionData mInteractionData;
-    private static final int DESTINATIONS = DESTINATION_SELLER | DESTINATION_BUYER;
+    private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
+    private String mInteractionData;
+    private static final int DESTINATIONS =
+            FLAG_REPORTING_DESTINATION_SELLER | FLAG_REPORTING_DESTINATION_BUYER;
 
     @Before
     public void setup() throws Exception {
         JSONObject obj = new JSONObject().put("key", "value");
-        mInteractionData = InteractionData.fromString(obj.toString());
+        mInteractionData = obj.toString();
     }
 
     @Test
@@ -47,7 +50,8 @@ public class ReportInteractionInputTest {
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setInteractionKey(INTERACTION_KEY)
                         .setInteractionData(mInteractionData)
-                        .setDestinations(DESTINATIONS)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .setReportingDestinations(DESTINATIONS)
                         .build();
 
         Parcel p = Parcel.obtain();
@@ -58,8 +62,9 @@ public class ReportInteractionInputTest {
 
         assertEquals(AD_SELECTION_ID, fromParcel.getAdSelectionId());
         assertEquals(INTERACTION_KEY, fromParcel.getInteractionKey());
-        assertEquals(mInteractionData.toString(), fromParcel.getInteractionData().toString());
-        assertEquals(DESTINATIONS, fromParcel.getDestinations());
+        assertEquals(mInteractionData, fromParcel.getInteractionData());
+        assertEquals(CALLER_PACKAGE_NAME, fromParcel.getCallerPackageName());
+        assertEquals(DESTINATIONS, fromParcel.getReportingDestinations());
     }
 
     @Test
@@ -70,7 +75,8 @@ public class ReportInteractionInputTest {
                     new ReportInteractionInput.Builder()
                             .setInteractionKey(INTERACTION_KEY)
                             .setInteractionData(mInteractionData)
-                            .setDestinations(DESTINATIONS)
+                            .setCallerPackageName(CALLER_PACKAGE_NAME)
+                            .setReportingDestinations(DESTINATIONS)
                             .build();
                 });
     }
@@ -83,7 +89,8 @@ public class ReportInteractionInputTest {
                     new ReportInteractionInput.Builder()
                             .setAdSelectionId(AD_SELECTION_ID)
                             .setInteractionData(mInteractionData)
-                            .setDestinations(DESTINATIONS)
+                            .setCallerPackageName(CALLER_PACKAGE_NAME)
+                            .setReportingDestinations(DESTINATIONS)
                             .build();
                 });
     }
@@ -96,7 +103,22 @@ public class ReportInteractionInputTest {
                     new ReportInteractionInput.Builder()
                             .setAdSelectionId(AD_SELECTION_ID)
                             .setInteractionKey(INTERACTION_KEY)
-                            .setDestinations(DESTINATIONS)
+                            .setCallerPackageName(CALLER_PACKAGE_NAME)
+                            .setReportingDestinations(DESTINATIONS)
+                            .build();
+                });
+    }
+
+    @Test
+    public void testFailsToBuildWithUnsetCallerPackageName() {
+        assertThrows(
+                NullPointerException.class,
+                () -> {
+                    new ReportInteractionInput.Builder()
+                            .setAdSelectionId(AD_SELECTION_ID)
+                            .setInteractionKey(INTERACTION_KEY)
+                            .setInteractionData(mInteractionData)
+                            .setReportingDestinations(DESTINATIONS)
                             .build();
                 });
     }
@@ -110,6 +132,7 @@ public class ReportInteractionInputTest {
                             .setAdSelectionId(AD_SELECTION_ID)
                             .setInteractionKey(INTERACTION_KEY)
                             .setInteractionData(mInteractionData)
+                            .setCallerPackageName(CALLER_PACKAGE_NAME)
                             .build();
                 });
     }
@@ -121,7 +144,8 @@ public class ReportInteractionInputTest {
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setInteractionKey(INTERACTION_KEY)
                         .setInteractionData(mInteractionData)
-                        .setDestinations(DESTINATIONS)
+                        .setReportingDestinations(DESTINATIONS)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .build();
 
         assertEquals(input.describeContents(), 0);

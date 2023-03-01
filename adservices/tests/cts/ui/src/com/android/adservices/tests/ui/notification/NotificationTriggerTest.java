@@ -27,9 +27,11 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.runner.AndroidJUnit4;
 import androidx.test.uiautomator.UiDevice;
 
+import com.android.adservices.common.AdservicesCtsHelper;
 import com.android.adservices.tests.ui.libs.UiUtils;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -50,9 +52,12 @@ public class NotificationTriggerTest {
 
     @Before
     public void setUp() throws Exception {
+        // Skip the test if it runs on unsupported platforms.
+        Assume.assumeTrue(AdservicesCtsHelper.isDeviceSupported());
+
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
-        mCommonManager = sContext.getSystemService(AdServicesCommonManager.class);
+        mCommonManager = AdServicesCommonManager.get(sContext);
 
         // consent debug mode is turned on for this test class as we only care about the
         // first trigger (API call).

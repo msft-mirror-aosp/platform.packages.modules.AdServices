@@ -96,7 +96,7 @@ public class AdServicesHttpsClientTest {
     @Mock private InputStream mInputStreamMock;
     private HttpCache mCache;
     private CacheEntryDao mCacheEntryDao;
-    private JSONObject mEventData;
+    private String mData;
 
     @Before
     public void setup() throws Exception {
@@ -107,7 +107,7 @@ public class AdServicesHttpsClientTest {
 
         mCache = new FledgeHttpCache(mCacheEntryDao, MAX_AGE_SECONDS, MAX_ENTRIES);
         mClient = new AdServicesHttpsClient(mExecutorService, mCache);
-        mEventData = new JSONObject().put("key", "value");
+        mData = new JSONObject().put("key", "value").toString();
     }
 
     @Test
@@ -452,7 +452,7 @@ public class AdServicesHttpsClientTest {
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(ImmutableList.of(new MockResponse()));
         URL url = server.getUrl(mReportingPath);
-        assertThat(postJson(Uri.parse(url.toString()), mEventData)).isNull();
+        assertThat(postJson(Uri.parse(url.toString()), mData)).isNull();
     }
 
     @Test
@@ -460,7 +460,7 @@ public class AdServicesHttpsClientTest {
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(ImmutableList.of(new MockResponse()));
         URL url = server.getUrl(mReportingPath);
-        postJson(Uri.parse(url.toString()), mEventData);
+        postJson(Uri.parse(url.toString()), mData);
 
         RecordedRequest request1 = server.takeRequest();
         assertEquals(mReportingPath, request1.getPath());
@@ -472,11 +472,11 @@ public class AdServicesHttpsClientTest {
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(ImmutableList.of(new MockResponse()));
         URL url = server.getUrl(mReportingPath);
-        postJson(Uri.parse(url.toString()), mEventData);
+        postJson(Uri.parse(url.toString()), mData);
 
         RecordedRequest request1 = server.takeRequest();
         assertEquals("POST", request1.getMethod());
-        assertEquals(mEventData.toString(), request1.getUtf8Body());
+        assertEquals(mData.toString(), request1.getUtf8Body());
     }
 
     @Test
@@ -488,8 +488,7 @@ public class AdServicesHttpsClientTest {
 
         Exception exception =
                 assertThrows(
-                        ExecutionException.class,
-                        () -> postJson(Uri.parse(url.toString()), mEventData));
+                        ExecutionException.class, () -> postJson(Uri.parse(url.toString()), mData));
         assertThat(exception.getCause()).isInstanceOf(IOException.class);
     }
 
@@ -498,8 +497,7 @@ public class AdServicesHttpsClientTest {
         mMockWebServerRule.startMockWebServer(ImmutableList.of(new MockResponse()));
 
         Exception exception =
-                assertThrows(
-                        ExecutionException.class, () -> postJson(Uri.parse(mFakeUrl), mEventData));
+                assertThrows(ExecutionException.class, () -> postJson(Uri.parse(mFakeUrl), mData));
         assertThat(exception.getCause()).isInstanceOf(IOException.class);
     }
 
@@ -508,7 +506,7 @@ public class AdServicesHttpsClientTest {
         ExecutionException wrapperExecutionException =
                 assertThrows(
                         ExecutionException.class,
-                        () -> postJson(Uri.parse("http://google.com"), mEventData));
+                        () -> postJson(Uri.parse("http://google.com"), mData));
 
         assertThat(wrapperExecutionException.getCause())
                 .isInstanceOf(IllegalArgumentException.class);
@@ -522,7 +520,7 @@ public class AdServicesHttpsClientTest {
         return mClient.getAndReadNothing(uri).get();
     }
 
-    private Void postJson(Uri uri, JSONObject eventData) throws Exception {
-        return mClient.postJson(uri, eventData).get();
+    private Void postJson(Uri uri, String data) throws Exception {
+        return mClient.postPlainText(uri, data).get();
     }
 }

@@ -185,7 +185,7 @@ public class DbHelper extends SQLiteOpenHelper {
     // on Flags status.
     @VisibleForTesting
     static int getDatabaseVersionToCreate() {
-        return FlagsFactory.getFlags().getEnableDatabaseSchemaVersion5()
+        return FlagsFactory.getFlags().getEnableTopicMigration()
                 ? DATABASE_VERSION_V7
                 : CURRENT_DATABASE_VERSION;
     }

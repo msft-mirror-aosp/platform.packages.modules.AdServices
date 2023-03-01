@@ -35,8 +35,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
-import org.json.JSONObject;
-
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
@@ -160,11 +158,11 @@ public class AdServicesHttpsClient {
     }
 
     @NonNull
-    private HttpsURLConnection setupPostConnectionWithJson(URL url) throws IOException {
+    private HttpsURLConnection setupPostConnectionWithPlainText(URL url) throws IOException {
         Objects.requireNonNull(url);
         HttpsURLConnection urlConnection = setupConnection(url);
         urlConnection.setRequestMethod("POST");
-        urlConnection.setRequestProperty("Content-Type", "application/json");
+        urlConnection.setRequestProperty("Content-Type", "text/plain");
         urlConnection.setDoOutput(true);
         return urlConnection;
     }
@@ -303,32 +301,32 @@ public class AdServicesHttpsClient {
     }
 
     /**
-     * Performs a POST request on a Uri and attaches {@code JSONObject} to the request
+     * Performs a POST request on a Uri and attaches {@code String} to the request
      *
      * @param uri to do the POST request on
-     * @param eventData Attached to the POST request.
+     * @param requestBody Attached to the POST request.
      */
-    public ListenableFuture<Void> postJson(@NonNull Uri uri, @NonNull JSONObject eventData) {
+    public ListenableFuture<Void> postPlainText(@NonNull Uri uri, @NonNull String requestBody) {
         Objects.requireNonNull(uri);
-        Objects.requireNonNull(eventData);
+        Objects.requireNonNull(requestBody);
 
         return ClosingFuture.from(mExecutorService.submit(() -> mUriConverter.toUrl(uri)))
                 .transformAsync(
                         (closer, url) ->
                                 ClosingFuture.from(
                                         mExecutorService.submit(
-                                                () -> doPostJson(url, eventData, closer))),
+                                                () -> doPostPlainText(url, requestBody, closer))),
                         mExecutorService)
                 .finishToFuture();
     }
 
-    private Void doPostJson(URL url, JSONObject eventData, ClosingFuture.DeferredCloser closer)
+    private Void doPostPlainText(URL url, String data, ClosingFuture.DeferredCloser closer)
             throws IOException {
         LogUtil.v("Reporting to: \"%s\"", url.toString());
         HttpsURLConnection urlConnection;
 
         try {
-            urlConnection = setupPostConnectionWithJson(url);
+            urlConnection = setupPostConnectionWithPlainText(url);
 
         } catch (IOException e) {
             LogUtil.d(e, "Failed to open URL");
@@ -342,7 +340,7 @@ public class AdServicesHttpsClient {
 
             OutputStream os = urlConnection.getOutputStream();
             OutputStreamWriter osw = new OutputStreamWriter(os, StandardCharsets.UTF_8);
-            osw.write(eventData.toString());
+            osw.write(data);
             osw.flush();
             osw.close();
 
@@ -477,7 +475,7 @@ public class AdServicesHttpsClient {
             }
         }
         into.close();
-        return into.toString(Charsets.UTF_8);
+        return into.toString("UTF-8");
     }
 
     private static class CloseableConnectionWrapper implements Closeable {

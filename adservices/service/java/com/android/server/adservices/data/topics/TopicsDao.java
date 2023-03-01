@@ -183,11 +183,11 @@ public class TopicsDao {
     }
 
     /**
-     * Delete all entries in the database that belongs to a user
+     * Delete all blocked topics that belongs to a user.
      *
      * @param userIdentifier the user id to delete data for
      */
-    public void deleteAllDataOfUser(int userIdentifier) {
+    public void clearAllBlockedTopicsOfUser(int userIdentifier) {
         SQLiteDatabase db = mTopicsDbHelper.safeGetWritableDatabase();
         if (db == null) {
             return;

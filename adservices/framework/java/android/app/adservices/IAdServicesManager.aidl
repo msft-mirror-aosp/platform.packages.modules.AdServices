@@ -40,6 +40,11 @@ interface IAdServicesManager {
      */
      void recordAdServicesDeletionOccurred(in int deletionType);
 
+     /**
+      * Checks whether the module needs to handle data reconciliation after a rollback.
+      */
+     boolean needsToHandleRollbackReconciliation(in int deletionType);
+
     /**
      * Saves information to the storage that notification was displayed for the first time to the
      * user.
@@ -88,6 +93,11 @@ interface IAdServicesManager {
     List<TopicParcel> retrieveAllBlockedTopics();
 
     /**
+     * Clear all blocked topics.
+     */
+    void clearAllBlockedTopics();
+
+    /**
      * Returns information whether topics consent page was displayed or not.
      *
      * @return true if topics consent page was displayed, otherwise false.
@@ -106,6 +116,66 @@ interface IAdServicesManager {
      * @return true if fledge and measurement consent page was displayed, otherwise false.
      */
     boolean wasFledgeAndMsmtConsentPageDisplayed();
+
+    /**
+      * Saves the PP API default consent of a user.
+      */
+    void recordDefaultConsent(in boolean defaultConsent);
+
+    /**
+      * Saves the topics default consent of a user.
+      */
+    void recordTopicsDefaultConsent(in boolean defaultConsent);
+
+    /**
+      * Saves the FLEDGE default consent of a user.
+      */
+    void recordFledgeDefaultConsent(in boolean defaultConsent);
+
+    /**
+      * Saves the measurement default consent of a user.
+      */
+    void recordMeasurementDefaultConsent(in boolean defaultConsent);
+
+    /**
+      * Saves the default AdId state of a user.
+      */
+    void recordDefaultAdIdState(in boolean defaultAdIdState);
+
+    /**
+      * Returns the PP API default consent of a user.
+      *
+      * @return true if the PP API default consent is given, false otherwise.
+      */
+    boolean getDefaultConsent();
+
+    /**
+      * Returns the topics default consent of a user.
+      *
+      * @return true if the topics default consent is given, false otherwise.
+      */
+    boolean getTopicsDefaultConsent();
+
+    /**
+      * Returns the FLEDGE default consent of a user.
+      *
+      * @return true if the FLEDGE default consent is given, false otherwise.
+      */
+    boolean getFledgeDefaultConsent();
+
+     /**
+       * Returns the measurement default consent of a user.
+       *
+       * @return true if the measurement default consent is given, false otherwise.
+       */
+     boolean getMeasurementDefaultConsent();
+
+     /**
+       * Returns the default AdId state of a user.
+       *
+       * @return true if the default AdId state is enabled, false otherwise.
+       */
+     boolean getDefaultAdIdState();
 
     List<String> getKnownAppsWithConsent(in List<String> installedPackages);
 
