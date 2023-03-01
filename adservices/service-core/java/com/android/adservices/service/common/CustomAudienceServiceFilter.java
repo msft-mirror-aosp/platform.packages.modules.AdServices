@@ -20,7 +20,10 @@ import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
+import android.os.Build;
 import android.os.LimitExceededException;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.Flags;
@@ -30,6 +33,8 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 /** Composite filter for CustomAudienceService request. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class CustomAudienceServiceFilter extends AbstractFledgeServiceFilter {
     public CustomAudienceServiceFilter(
             @NonNull Context context,
