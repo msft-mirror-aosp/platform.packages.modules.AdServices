@@ -18,11 +18,14 @@ package com.android.sdksandbox.cts.app;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import android.app.sdksandbox.AppOwnedSdkSandboxInterface;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.content.Context;
+import android.os.Binder;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.os.RemoteException;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -36,6 +39,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -45,6 +49,11 @@ public class SdkSandboxMediationTestApp {
 
     private static final String SDK_NAME = "com.android.sdksandbox.cts.provider.mediationtest";
     private static final String SDK_NAME_2 = "com.android.sdksandbox.cts.provider.storagetest";
+    private static final String APP_OWNED_SDK_SANDBOX_INTERFACE_NAME =
+            "com.android.ctsappownedsdksandboxinterface";
+
+    private static final String APP_OWNED_SDK_SANDBOX_INTERFACE_NAME_2 =
+            "com.android.ctsappownedsdksandboxinterface2";
 
     @Rule public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(TestActivity.class);
 
@@ -58,6 +67,73 @@ public class SdkSandboxMediationTestApp {
         mSdkSandboxManager = mContext.getSystemService(SdkSandboxManager.class);
         assertThat(mSdkSandboxManager).isNotNull();
         mRule.getScenario();
+    }
+
+    @Test
+    public void testGetAppOwnedSdkSandboxInterfaces() throws Exception {
+        loadMediatorSdkAndPopulateInterface();
+        IBinder iBinder = new Binder();
+        mSdkSandboxManager.registerAppOwnedSdkSandboxInterface(
+                new AppOwnedSdkSandboxInterface(
+                        APP_OWNED_SDK_SANDBOX_INTERFACE_NAME,
+                        /*version=*/ 0,
+                        /*interfaceIBinder=*/ iBinder));
+
+        final List<AppOwnedSdkSandboxInterface> appOwnedSdkSandboxInterfaceList =
+                mSdk.getAppOwnedSdkSandboxInterfaces();
+
+        assertThat(appOwnedSdkSandboxInterfaceList).hasSize(1);
+
+        assertThat(appOwnedSdkSandboxInterfaceList.get(0).getName())
+                .isEqualTo(APP_OWNED_SDK_SANDBOX_INTERFACE_NAME);
+        assertThat(appOwnedSdkSandboxInterfaceList.get(0).getVersion()).isEqualTo(0);
+        assertThat(appOwnedSdkSandboxInterfaceList.get(0).getInterface()).isEqualTo(iBinder);
+    }
+
+    @Test
+    public void testGetAppOwnedSdkSandboxInterfaces_NoInterface() throws Exception {
+        loadMediatorSdkAndPopulateInterface();
+        assertThat(mSdk.getAppOwnedSdkSandboxInterfaces()).hasSize(0);
+    }
+
+    @Test
+    public void testGetAppOwnedSdkSandboxInterfaces_MultipleInterfaces() throws Exception {
+        loadMediatorSdkAndPopulateInterface();
+        IBinder iBinder = new Binder();
+        mSdkSandboxManager.registerAppOwnedSdkSandboxInterface(
+                new AppOwnedSdkSandboxInterface(
+                        APP_OWNED_SDK_SANDBOX_INTERFACE_NAME,
+                        /*version=*/ 0,
+                        /*interfaceIBinder=*/ iBinder));
+        IBinder iBinder2 = new Binder();
+
+        mSdkSandboxManager.registerAppOwnedSdkSandboxInterface(
+                new AppOwnedSdkSandboxInterface(
+                        APP_OWNED_SDK_SANDBOX_INTERFACE_NAME_2,
+                        /*version=*/ 1,
+                        /*interfaceIBinder=*/ iBinder2));
+        final List<AppOwnedSdkSandboxInterface> appOwnedSdkSandboxInterfaceList =
+                mSdk.getAppOwnedSdkSandboxInterfaces();
+
+        assertThat(appOwnedSdkSandboxInterfaceList).hasSize(2);
+
+        assertThat(
+                        Arrays.asList(
+                                appOwnedSdkSandboxInterfaceList.get(0).getName(),
+                                appOwnedSdkSandboxInterfaceList.get(1).getName()))
+                .containsExactly(
+                        APP_OWNED_SDK_SANDBOX_INTERFACE_NAME,
+                        APP_OWNED_SDK_SANDBOX_INTERFACE_NAME_2);
+        assertThat(
+                        Arrays.asList(
+                                appOwnedSdkSandboxInterfaceList.get(0).getVersion(),
+                                appOwnedSdkSandboxInterfaceList.get(1).getVersion()))
+                .containsExactly((long) 0, (long) 1);
+        assertThat(
+                        Arrays.asList(
+                                appOwnedSdkSandboxInterfaceList.get(0).getInterface(),
+                                appOwnedSdkSandboxInterfaceList.get(1).getInterface()))
+                .containsExactly(iBinder, iBinder2);
     }
 
     @Test

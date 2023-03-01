@@ -16,6 +16,7 @@
 
 package android.app.sdksandbox.testutils;
 
+import android.app.sdksandbox.AppOwnedSdkSandboxInterface;
 import android.app.sdksandbox.ILoadSdkCallback;
 import android.app.sdksandbox.IRequestSurfacePackageCallback;
 import android.app.sdksandbox.ISdkSandboxManager;
@@ -37,6 +38,13 @@ import java.util.List;
  */
 public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
     private IBinder mAdServicesManager;
+
+    @Override
+    public void registerAppOwnedSdkSandboxInterface(
+            String callingPackageName, AppOwnedSdkSandboxInterface appOwnedSdkSandboxInterface) {}
+
+    @Override
+    public void unregisterAppOwnedSdkSandboxInterface(String callingPackageName, String name) {}
 
     @Override
     public void loadSdk(
@@ -62,6 +70,12 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
             long timeAppCalledSystemServer,
             Bundle params,
             IRequestSurfacePackageCallback callback) {}
+
+    @Override
+    public List<AppOwnedSdkSandboxInterface> getAppOwnedSdkSandboxInterfaces(
+            String callingPackageName) {
+        return Collections.emptyList();
+    }
 
     @Override
     public List<SandboxedSdk> getSandboxedSdks(

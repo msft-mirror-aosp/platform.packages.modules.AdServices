@@ -26,11 +26,13 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.app.sdksandbox.AppOwnedSdkSandboxInterface;
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
@@ -72,6 +74,9 @@ import java.util.List;
 public class SdkSandboxManagerTest {
 
     private static final String NON_EXISTENT_SDK = "com.android.not_exist";
+
+    private static final String APP_OWNED_SDK_SANDBOX_INTERFACE_NAME =
+            "com.android.ctsappownedsdksandboxinterface";
     private static final String SDK_NAME_1 = "com.android.ctssdkprovider";
     private static final String SDK_NAME_2 = "com.android.emptysdkprovider";
 
@@ -118,6 +123,62 @@ public class SdkSandboxManagerTest {
         callback.assertLoadSdkIsSuccessful();
         assertNotNull(callback.getSandboxedSdk());
         assertNotNull(callback.getSandboxedSdk().getInterface());
+    }
+
+    @Test
+    public void testRegisterAndGetAppOwnedSdkSandboxInterface() throws Exception {
+        try {
+            IBinder iBinder = new Binder();
+            mSdkSandboxManager.registerAppOwnedSdkSandboxInterface(
+                    new AppOwnedSdkSandboxInterface(
+                            APP_OWNED_SDK_SANDBOX_INTERFACE_NAME,
+                            /*version=*/ 0,
+                            /*interfaceIBinder=*/ iBinder));
+            final List<AppOwnedSdkSandboxInterface> appOwnedSdkSandboxInterfaceList =
+                    mSdkSandboxManager.getAppOwnedSdkSandboxInterfaces();
+            assertThat(appOwnedSdkSandboxInterfaceList).hasSize(1);
+            assertThat(appOwnedSdkSandboxInterfaceList.get(0).getName())
+                    .isEqualTo(APP_OWNED_SDK_SANDBOX_INTERFACE_NAME);
+            assertThat(appOwnedSdkSandboxInterfaceList.get(0).getVersion()).isEqualTo(0);
+            assertThat(appOwnedSdkSandboxInterfaceList.get(0).getInterface()).isEqualTo(iBinder);
+        } finally {
+            mSdkSandboxManager.unregisterAppOwnedSdkSandboxInterface(
+                    APP_OWNED_SDK_SANDBOX_INTERFACE_NAME);
+        }
+    }
+
+    @Test
+    public void testUnregisterAppOwnedSdkSandboxInterface() throws Exception {
+        mSdkSandboxManager.registerAppOwnedSdkSandboxInterface(
+                new AppOwnedSdkSandboxInterface(
+                        APP_OWNED_SDK_SANDBOX_INTERFACE_NAME,
+                        /*version=*/ 0,
+                        /*interfaceIBinder=*/ new Binder()));
+        mSdkSandboxManager.unregisterAppOwnedSdkSandboxInterface(
+                APP_OWNED_SDK_SANDBOX_INTERFACE_NAME);
+        assertThat(mSdkSandboxManager.getAppOwnedSdkSandboxInterfaces()).hasSize(0);
+    }
+
+    @Test
+    public void testRegisterAppOwnedSdkSandboxInterfaceAlreadyRegistered() throws Exception {
+        try {
+            mSdkSandboxManager.registerAppOwnedSdkSandboxInterface(
+                    new AppOwnedSdkSandboxInterface(
+                            APP_OWNED_SDK_SANDBOX_INTERFACE_NAME,
+                            /*version=*/ 0,
+                            /*interfaceIBinder=*/ new Binder()));
+            assertThrows(
+                    RuntimeException.class,
+                    () ->
+                            mSdkSandboxManager.registerAppOwnedSdkSandboxInterface(
+                                    new AppOwnedSdkSandboxInterface(
+                                            APP_OWNED_SDK_SANDBOX_INTERFACE_NAME,
+                                            /*version=*/ 0,
+                                            /*interfaceIBinder=*/ new Binder())));
+        } finally {
+            mSdkSandboxManager.unregisterAppOwnedSdkSandboxInterface(
+                    APP_OWNED_SDK_SANDBOX_INTERFACE_NAME);
+        }
     }
 
     @Test
