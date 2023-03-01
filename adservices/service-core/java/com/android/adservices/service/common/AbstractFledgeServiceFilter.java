@@ -171,6 +171,7 @@ public abstract class AbstractFledgeServiceFilter {
      *     enrollment check will not be applied if it is null.
      * @param callerPackageName caller package name to be validated
      * @param enforceForeground whether to enforce a foreground check
+     * @param enforceConsent whether to enforce a consent check
      * @throws FledgeAuthorizationFilter.CallerMismatchException if the {@code callerPackageName} is
      *     not valid
      * @throws AppImportanceFilter.WrongCallingApplicationStateException if the foreground check is
@@ -187,6 +188,7 @@ public abstract class AbstractFledgeServiceFilter {
             @Nullable AdTechIdentifier adTech,
             @NonNull String callerPackageName,
             boolean enforceForeground,
+            boolean enforceConsent,
             int callerUid,
             int apiName,
             @NonNull Throttler.ApiKey apiKey);

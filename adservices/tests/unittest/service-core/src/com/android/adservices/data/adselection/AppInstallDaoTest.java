@@ -21,6 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.CommonFixture;
 import android.content.Context;
 
 import androidx.room.Room;
@@ -33,10 +34,10 @@ import org.junit.Test;
 import java.util.Arrays;
 
 public class AppInstallDaoTest {
-    public static AdTechIdentifier BUYER_1 = AdTechIdentifier.fromString("example1.com");
-    public static AdTechIdentifier BUYER_2 = AdTechIdentifier.fromString("example2.com");
-    public static String PACKAGE_1 = "package1.app";
-    public static String PACKAGE_2 = "package2.app";
+    public static AdTechIdentifier BUYER_1 = CommonFixture.VALID_BUYER_1;
+    public static AdTechIdentifier BUYER_2 = CommonFixture.VALID_BUYER_2;
+    public static String PACKAGE_1 = CommonFixture.TEST_PACKAGE_NAME_1;
+    public static String PACKAGE_2 = CommonFixture.TEST_PACKAGE_NAME_2;
 
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
 
@@ -57,32 +58,33 @@ public class AppInstallDaoTest {
     }
 
     @Test
-    public void testInsertThenRead() {
-        mAppInstallDao.insertAllAppInstallPermissions(
-                Arrays.asList(new DBAppInstallPermissions(BUYER_1, PACKAGE_1)));
+    public void testSetThenRead() {
+        mAppInstallDao.setAdTechsForPackage(
+                PACKAGE_1, Arrays.asList(new DBAppInstallPermissions(BUYER_1, PACKAGE_1)));
 
         assertTrue(mAppInstallDao.canBuyerFilterPackage(BUYER_1, PACKAGE_1));
     }
 
     @Test
-    public void testInsertThenDelete() {
-        mAppInstallDao.insertAllAppInstallPermissions(
-                Arrays.asList(new DBAppInstallPermissions(BUYER_1, PACKAGE_1)));
+    public void testSetThenDelete() {
+        mAppInstallDao.setAdTechsForPackage(
+                PACKAGE_1, Arrays.asList(new DBAppInstallPermissions(BUYER_1, PACKAGE_1)));
         assertEquals(1, mAppInstallDao.deleteByPackageName(PACKAGE_1));
     }
 
     @Test
-    public void testInsertThenDeleteThenRead() {
-        mAppInstallDao.insertAllAppInstallPermissions(
-                Arrays.asList(new DBAppInstallPermissions(BUYER_1, PACKAGE_1)));
+    public void testSetThenDeleteThenRead() {
+        mAppInstallDao.setAdTechsForPackage(
+                PACKAGE_1, Arrays.asList(new DBAppInstallPermissions(BUYER_1, PACKAGE_1)));
         mAppInstallDao.deleteByPackageName(PACKAGE_1);
 
         assertFalse(mAppInstallDao.canBuyerFilterPackage(BUYER_1, PACKAGE_1));
     }
 
     @Test
-    public void testInsertThenReadMultiple() {
-        mAppInstallDao.insertAllAppInstallPermissions(
+    public void testSetThenReadMultiple() {
+        mAppInstallDao.setAdTechsForPackage(
+                PACKAGE_1,
                 Arrays.asList(
                         new DBAppInstallPermissions(BUYER_1, PACKAGE_1),
                         new DBAppInstallPermissions(BUYER_2, PACKAGE_2)));
@@ -92,19 +94,20 @@ public class AppInstallDaoTest {
     }
 
     @Test
-    public void testInsertThenReadMultipleSeparateCalls() {
-        mAppInstallDao.insertAllAppInstallPermissions(
-                Arrays.asList(new DBAppInstallPermissions(BUYER_1, PACKAGE_1)));
-        mAppInstallDao.insertAllAppInstallPermissions(
-                Arrays.asList(new DBAppInstallPermissions(BUYER_2, PACKAGE_2)));
+    public void testSetThenReadMultipleSeparateCalls() {
+        mAppInstallDao.setAdTechsForPackage(
+                PACKAGE_1, Arrays.asList(new DBAppInstallPermissions(BUYER_1, PACKAGE_1)));
+        mAppInstallDao.setAdTechsForPackage(
+                PACKAGE_2, Arrays.asList(new DBAppInstallPermissions(BUYER_2, PACKAGE_2)));
 
         assertTrue(mAppInstallDao.canBuyerFilterPackage(BUYER_1, PACKAGE_1));
         assertTrue(mAppInstallDao.canBuyerFilterPackage(BUYER_2, PACKAGE_2));
     }
 
     @Test
-    public void testInsertThenReadMultipleBuyers() {
-        mAppInstallDao.insertAllAppInstallPermissions(
+    public void testSetThenReadMultipleBuyers() {
+        mAppInstallDao.setAdTechsForPackage(
+                PACKAGE_1,
                 Arrays.asList(
                         new DBAppInstallPermissions(BUYER_1, PACKAGE_1),
                         new DBAppInstallPermissions(BUYER_2, PACKAGE_1)));
@@ -113,8 +116,9 @@ public class AppInstallDaoTest {
     }
 
     @Test
-    public void testInsertThenDeleteMultipleBuyers() {
-        mAppInstallDao.insertAllAppInstallPermissions(
+    public void testSetThenDeleteMultipleBuyers() {
+        mAppInstallDao.setAdTechsForPackage(
+                PACKAGE_1,
                 Arrays.asList(
                         new DBAppInstallPermissions(BUYER_1, PACKAGE_1),
                         new DBAppInstallPermissions(BUYER_2, PACKAGE_1)));
@@ -122,8 +126,9 @@ public class AppInstallDaoTest {
     }
 
     @Test
-    public void testInsertThenDeleteThenReadMultipleBuyers() {
-        mAppInstallDao.insertAllAppInstallPermissions(
+    public void testSetThenDeleteThenReadMultipleBuyers() {
+        mAppInstallDao.setAdTechsForPackage(
+                PACKAGE_1,
                 Arrays.asList(
                         new DBAppInstallPermissions(BUYER_1, PACKAGE_1),
                         new DBAppInstallPermissions(BUYER_2, PACKAGE_1)));
@@ -133,8 +138,9 @@ public class AppInstallDaoTest {
     }
 
     @Test
-    public void testInsertThenReadMultiplePackages() {
-        mAppInstallDao.insertAllAppInstallPermissions(
+    public void testSetThenReadMultiplePackages() {
+        mAppInstallDao.setAdTechsForPackage(
+                PACKAGE_1,
                 Arrays.asList(
                         new DBAppInstallPermissions(BUYER_1, PACKAGE_1),
                         new DBAppInstallPermissions(BUYER_1, PACKAGE_2)));
@@ -143,8 +149,9 @@ public class AppInstallDaoTest {
     }
 
     @Test
-    public void testInsertThenDeleteThenReadMultiplePackages() {
-        mAppInstallDao.insertAllAppInstallPermissions(
+    public void testSetThenDeleteThenReadMultiplePackages() {
+        mAppInstallDao.setAdTechsForPackage(
+                PACKAGE_1,
                 Arrays.asList(
                         new DBAppInstallPermissions(BUYER_1, PACKAGE_1),
                         new DBAppInstallPermissions(BUYER_1, PACKAGE_2)));
@@ -152,5 +159,19 @@ public class AppInstallDaoTest {
         mAppInstallDao.deleteByPackageName(PACKAGE_2);
         assertFalse(mAppInstallDao.canBuyerFilterPackage(BUYER_1, PACKAGE_1));
         assertFalse(mAppInstallDao.canBuyerFilterPackage(BUYER_1, PACKAGE_2));
+    }
+
+    @Test
+    public void testSetAdTechsForPackageDeletesExisting() {
+        mAppInstallDao.setAdTechsForPackage(
+                PACKAGE_1,
+                Arrays.asList(
+                        new DBAppInstallPermissions(BUYER_1, PACKAGE_1),
+                        new DBAppInstallPermissions(BUYER_2, PACKAGE_2)));
+        mAppInstallDao.setAdTechsForPackage(
+                PACKAGE_1, Arrays.asList(new DBAppInstallPermissions(BUYER_2, PACKAGE_1)));
+        assertFalse(mAppInstallDao.canBuyerFilterPackage(BUYER_1, PACKAGE_1));
+        assertTrue(mAppInstallDao.canBuyerFilterPackage(BUYER_2, PACKAGE_2));
+        assertTrue(mAppInstallDao.canBuyerFilterPackage(BUYER_2, PACKAGE_1));
     }
 }
