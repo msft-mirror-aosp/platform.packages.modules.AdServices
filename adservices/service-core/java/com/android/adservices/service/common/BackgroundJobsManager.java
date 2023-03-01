@@ -19,6 +19,9 @@ package com.android.adservices.service.common;
 import android.annotation.NonNull;
 import android.app.job.JobScheduler;
 import android.content.Context;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.AdServicesConfig;
@@ -38,6 +41,8 @@ import com.android.adservices.service.topics.EpochJobService;
 import java.util.Objects;
 
 /** Provides functionality to schedule or unschedule all relevant background jobs. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class BackgroundJobsManager {
     /**
      * Tries to schedule all the relevant background jobs.

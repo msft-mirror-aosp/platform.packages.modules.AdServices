@@ -23,8 +23,11 @@ import android.adservices.common.FledgeErrorResponse;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
+import android.os.Build;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 
@@ -32,6 +35,8 @@ import java.util.Objects;
 import java.util.concurrent.Executor;
 
 /** TestCustomAudienceManager provides APIs for app and ad-SDKs to test custom audiences. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class TestCustomAudienceManager {
 
     private final CustomAudienceManager mCustomAudienceManager;
