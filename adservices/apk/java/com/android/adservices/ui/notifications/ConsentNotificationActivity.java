@@ -15,8 +15,10 @@
  */
 package com.android.adservices.ui.notifications;
 
+import android.os.Build;
 import android.os.Bundle;
 
+import androidx.annotation.RequiresApi;
 import androidx.core.view.WindowCompat;
 import androidx.fragment.app.FragmentActivity;
 
@@ -27,6 +29,8 @@ import com.android.adservices.ui.OTAResourcesManager;
 /**
  * Android application activity for controlling settings related to PP (Privacy Preserving) APIs.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class ConsentNotificationActivity extends FragmentActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
