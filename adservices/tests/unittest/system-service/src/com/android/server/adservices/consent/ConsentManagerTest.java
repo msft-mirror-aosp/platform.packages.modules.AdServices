@@ -19,6 +19,7 @@ package com.android.server.adservices.consent;
 import static com.android.server.adservices.consent.ConsentManager.NOTIFICATION_DISPLAYED_ONCE;
 import static com.android.server.adservices.consent.ConsentManager.STORAGE_VERSION;
 import static com.android.server.adservices.consent.ConsentManager.STORAGE_XML_IDENTIFIER;
+import static com.android.server.adservices.consent.ConsentManager.VERSION_KEY;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -28,6 +29,8 @@ import android.app.adservices.consent.ConsentParcel;
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
+
+import com.android.server.adservices.common.BooleanFileDatastore;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -53,7 +56,8 @@ public class ConsentManagerTest {
                 new BooleanFileDatastore(
                         PPAPI_CONTEXT.getFilesDir().getAbsolutePath(),
                         STORAGE_XML_IDENTIFIER,
-                        STORAGE_VERSION);
+                        STORAGE_VERSION,
+                        VERSION_KEY);
     }
 
     @After

@@ -36,20 +36,17 @@ import com.android.adservices.service.js.JSSandboxIsNotAvailableException;
 
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 
-import java.util.concurrent.TimeoutException;
-
 /** Util class for AdServicesLogger */
 public class AdServicesLoggerUtil {
     /** enum type value for any field in a telemetry atom that should be unset. */
-    // TODO(b/260148149): Replace STATUS_UNSET with UNSET for non status field a.k.a. resultCode. */
-    public static final int UNSET = -1;
+    public static final int FIELD_UNSET = -1;
 
     /** @return the resultCode corresponding to the type of exception to be used in logging. */
     public static int getResultCodeFromException(Throwable t) {
         int resultCode;
         if (t instanceof AppImportanceFilter.WrongCallingApplicationStateException) {
             resultCode = STATUS_BACKGROUND_CALLER;
-        } else if (t instanceof UncheckedTimeoutException || t instanceof TimeoutException) {
+        } else if (t instanceof UncheckedTimeoutException) {
             resultCode = STATUS_TIMEOUT;
         } else if (t instanceof FledgeAuthorizationFilter.AdTechNotAllowedException
                 || t instanceof FledgeAllowListsFilter.AppNotAllowedException) {

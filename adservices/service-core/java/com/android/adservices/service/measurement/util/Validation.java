@@ -18,6 +18,8 @@ package com.android.adservices.service.measurement.util;
 
 import android.net.Uri;
 
+import java.util.Collection;
+
 /**
  * Validations for the Measurement PPAPI module.
  */
@@ -29,6 +31,17 @@ public final class Validation {
         for (Object o : objects) {
             if (o == null) {
                 throw new IllegalArgumentException("Received null values");
+            }
+        }
+    }
+
+    /**
+     * @throws IllegalArgumentException if one of the parameters is an empty collection.
+     */
+    public static void validateNotEmpty(Collection... collections) throws IllegalArgumentException {
+        for (Collection c : collections) {
+            if (c.isEmpty()) {
+                throw new IllegalArgumentException("Received an empty collection");
             }
         }
     }

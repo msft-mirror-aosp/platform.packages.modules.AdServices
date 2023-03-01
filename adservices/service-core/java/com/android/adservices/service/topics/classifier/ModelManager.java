@@ -292,7 +292,7 @@ public class ModelManager {
     @NonNull
     public ImmutableList<Integer> retrieveLabels() {
         ImmutableList.Builder<Integer> labels = new ImmutableList.Builder();
-        InputStream inputStream = InputStream.nullInputStream();
+        InputStream inputStream = null; // InputStream.nullInputStream() is not available on S-.
         if (useDownloadedFiles()) {
             inputStream = readDownloadedFile(DOWNLOADED_LABEL_FILE_ID);
         } else {
@@ -303,7 +303,7 @@ public class ModelManager {
                 LogUtil.e(e, "Failed to read labels file");
             }
         }
-        return getLabelsList(labels, inputStream);
+        return inputStream == null ? labels.build() : getLabelsList(labels, inputStream);
     }
 
     @NonNull
@@ -342,7 +342,7 @@ public class ModelManager {
 
         // The immutable set of the topics from labels file
         ImmutableList<Integer> validTopics = retrieveLabels();
-        InputStream inputStream = InputStream.nullInputStream();
+        InputStream inputStream = null;
         if (useDownloadedFiles()) {
             inputStream = readDownloadedFile(DOWNLOADED_TOP_APPS_FILE_ID);
         } else {
@@ -353,7 +353,9 @@ public class ModelManager {
                 LogUtil.e(e, "Failed to read top apps file");
             }
         }
-        return getAppsTopicMap(appTopicsMap, validTopics, inputStream);
+        return inputStream == null
+                ? appTopicsMap
+                : getAppsTopicMap(appTopicsMap, validTopics, inputStream);
     }
 
     @NonNull
@@ -428,7 +430,7 @@ public class ModelManager {
         // classifierAssetsMetadata = ImmutableMap<AssetName, ImmutableMap<MetadataName, Value>>
         ImmutableMap.Builder<String, ImmutableMap<String, String>> classifierAssetsMetadata =
                 new ImmutableMap.Builder<>();
-        InputStream inputStream = InputStream.nullInputStream();
+        InputStream inputStream = null;
         if (useDownloadedFiles()) {
             inputStream = readDownloadedFile(DOWNLOADED_CLASSIFIER_ASSETS_METADATA_ID);
         } else {
@@ -439,7 +441,9 @@ public class ModelManager {
                 LogUtil.e(e, "Failed to read bundled metadata file");
             }
         }
-        return getAssetsMetadataMap(classifierAssetsMetadata, inputStream);
+        return inputStream == null
+                ? classifierAssetsMetadata.build()
+                : getAssetsMetadataMap(classifierAssetsMetadata, inputStream);
     }
 
     @NonNull
@@ -532,7 +536,7 @@ public class ModelManager {
     // ClientFile.file_id.
     @NonNull
     private InputStream readDownloadedFile(String fileId) {
-        InputStream inputStream = InputStream.nullInputStream();
+        InputStream inputStream = null;
         ClientFile downloadedFile = mDownloadedFiles.get(fileId);
         if (downloadedFile == null) {
             LogUtil.e("Failed to find downloaded %s file", fileId);

@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 3,
-    "identityHash": "2861f24c1b068b1603e33e3180d40eaf",
+    "identityHash": "3c98efd707ee1ac9ab137b491d90505e",
     "entities": [
       {
         "tableName": "ad_selection",
@@ -210,7 +210,7 @@
       },
       {
         "tableName": "registered_ad_interactions",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`ad_selection_id` INTEGER NOT NULL, `interaction_key` TEXT NOT NULL, `destination` INTEGER NOT NULL, `interaction_reporting_uri` TEXT NOT NULL, PRIMARY KEY(`ad_selection_id`, `interaction_key`, `destination`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`ad_selection_id` INTEGER NOT NULL, `interaction_key` TEXT NOT NULL, `reporting_destination` INTEGER NOT NULL, `interaction_reporting_uri` TEXT NOT NULL, PRIMARY KEY(`ad_selection_id`, `interaction_key`, `reporting_destination`))",
         "fields": [
           {
             "fieldPath": "adSelectionId",
@@ -225,8 +225,8 @@
             "notNull": true
           },
           {
-            "fieldPath": "destination",
-            "columnName": "destination",
+            "fieldPath": "reportingDestination",
+            "columnName": "reporting_destination",
             "affinity": "INTEGER",
             "notNull": true
           },
@@ -241,7 +241,7 @@
           "columnNames": [
             "ad_selection_id",
             "interaction_key",
-            "destination"
+            "reporting_destination"
           ],
           "autoGenerate": false
         },
@@ -252,7 +252,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '2861f24c1b068b1603e33e3180d40eaf')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '3c98efd707ee1ac9ab137b491d90505e')"
     ]
   }
 }

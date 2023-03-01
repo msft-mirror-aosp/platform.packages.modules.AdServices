@@ -28,6 +28,7 @@ import org.junit.Test;
 public class EventReportPayloadTest {
 
     private static final String ATTRIBUTION_DESTINATION = "https://toasters.example";
+    private static final String SCHEDULED_REPORT_TIME = "1675459163";
     private static final UnsignedLong SOURCE_EVENT_ID = new UnsignedLong(12345L);
     private static final UnsignedLong TRIGGER_DATA = new UnsignedLong(2L);
     private static final String REPORT_ID = "678";
@@ -40,6 +41,7 @@ public class EventReportPayloadTest {
             UnsignedLong sourceDebugKey, UnsignedLong triggerDebugKey) {
         return new EventReportPayload.Builder()
                 .setAttributionDestination(ATTRIBUTION_DESTINATION)
+                .setScheduledReportTime(SCHEDULED_REPORT_TIME)
                 .setSourceEventId(SOURCE_EVENT_ID)
                 .setTriggerData(triggerData)
                 .setReportId(REPORT_ID)
@@ -58,6 +60,7 @@ public class EventReportPayloadTest {
 
         assertEquals(ATTRIBUTION_DESTINATION,
                 eventPayloadReportJson.get("attribution_destination"));
+        assertEquals(SCHEDULED_REPORT_TIME, eventPayloadReportJson.get("scheduled_report_time"));
         assertEquals(SOURCE_EVENT_ID.toString(), eventPayloadReportJson.get("source_event_id"));
         assertEquals(TRIGGER_DATA.toString(), eventPayloadReportJson.get("trigger_data"));
         assertEquals(REPORT_ID, eventPayloadReportJson.get("report_id"));

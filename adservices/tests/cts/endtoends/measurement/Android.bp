@@ -28,6 +28,7 @@ android_test {
         "ub-uiautomator",
         "adservices-test-fixtures",
         "adservices-clients",
+        "adservices-cts-utility",
     ],
     libs: [
         "android.test.base",

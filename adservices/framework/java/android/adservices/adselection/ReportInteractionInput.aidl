@@ -19,7 +19,7 @@ package android.adservices.adselection;
 /**
  * This interface defines the input to the reportInteraction API.
  * A ReportInteractionInput is a Parcelable object that contains an adSelectionId,
- * an interactionKey, interactionData, and a list of destinations.
+ * an interactionKey, interactionData, and a list of reporting destinations.
  *
  * @hide
  */

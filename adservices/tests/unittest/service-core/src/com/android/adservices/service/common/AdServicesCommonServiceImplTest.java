@@ -31,7 +31,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.when;
 
 import android.adservices.common.IAdServicesCommonCallback;
 import android.adservices.common.IsAdServicesEnabledResult;
@@ -81,8 +80,6 @@ public class AdServicesCommonServiceImplTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        when(mFlags.getAdServicesEnabled()).thenReturn(true);
-
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(ConsentNotificationJobService.class)
@@ -91,10 +88,36 @@ public class AdServicesCommonServiceImplTest {
                         .strictness(Strictness.LENIENT)
                         .initMocks(this)
                         .startMocking();
-
+        mCommonService = new AdServicesCommonServiceImpl(mContext, mFlags);
+        doReturn(true).when(mFlags).getAdServicesEnabled();
         ExtendedMockito.doNothing()
                 .when(() -> BackgroundJobsManager.scheduleAllBackgroundJobs(any(Context.class)));
+        doNothing()
+                .when(
+                        () ->
+                                ConsentNotificationJobService.schedule(
+                                        any(Context.class),
+                                        any(Boolean.class),
+                                        any(Boolean.class)));
+
+        doReturn(mSharedPreferences).when(mContext).getSharedPreferences(anyString(), anyInt());
+        doReturn(mPackageManager).when(mContext).getPackageManager();
+        doReturn(mEditor).when(mSharedPreferences).edit();
+        doReturn(mEditor).when(mEditor).putInt(anyString(), anyInt());
+        Mockito.doNothing().when(mEditor).apply();
+        doReturn(true).when(mSharedPreferences).contains(anyString());
+
+        ExtendedMockito.doReturn(mConsentManager)
+                .when(() -> ConsentManager.getInstance(any(Context.class)));
+
+        // Set device to EU
+        doReturn(Flags.UI_EEA_COUNTRIES).when(mFlags).getUiEeaCountries();
+        doReturn("pl").when(mTelephonyManager).getSimCountryIso();
+        doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
+        doReturn(mPackageManager).when(mContext).getPackageManager();
+        doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
     }
+
 
     @After
     public void teardown() {
@@ -105,8 +128,7 @@ public class AdServicesCommonServiceImplTest {
 
     @Test
     public void getAdserviceStatusTest() throws InterruptedException {
-        when(mFlags.getAdServicesEnabled()).thenReturn(true);
-        when(mFlags.getGaUxFeatureEnabled()).thenReturn(false);
+        doReturn(false).when(mFlags).getGaUxFeatureEnabled();
         mCommonService = new AdServicesCommonServiceImpl(mContext, mFlags);
         // Calling get adservice status, init set the flag to true, expect to return true
         IsAdServicesEnabledResult[] capturedResponseParcel = getStatusResult();
@@ -118,7 +140,7 @@ public class AdServicesCommonServiceImplTest {
         assertThat(getStatusResult1.getAdServicesEnabled()).isTrue();
 
         // Set the flag to false
-        when(mFlags.getAdServicesEnabled()).thenReturn(false);
+        doReturn(false).when(mFlags).getAdServicesEnabled();
 
         // Calling again, expect to false
         capturedResponseParcel = getStatusResult();
@@ -131,34 +153,12 @@ public class AdServicesCommonServiceImplTest {
     }
 
     @Test
-    public void isAdservicesEnabledReconsentTest() throws InterruptedException {
-        when(mFlags.getAdServicesEnabled()).thenReturn(true);
-        when(mFlags.getGaUxFeatureEnabled()).thenReturn(true);
-        when(mContext.getSharedPreferences(anyString(), anyInt())).thenReturn(mSharedPreferences);
-        when(mSharedPreferences.contains(anyString())).thenReturn(true);
-        when(mContext.getPackageManager()).thenReturn(mPackageManager);
-        Mockito.doNothing().when(mEditor).apply();
-        doNothing()
-                .when(
-                        () ->
-                                ConsentNotificationJobService.schedule(
-                                        any(Context.class),
-                                        any(Boolean.class),
-                                        any(Boolean.class)));
-        ExtendedMockito.when(mConsentManager.getConsent())
-                .thenReturn(AdServicesApiConsent.getConsent(true));
-        ExtendedMockito.doReturn(mConsentManager)
-                .when(() -> ConsentManager.getInstance(any(Context.class)));
-        ExtendedMockito.when(mConsentManager.wasGaUxNotificationDisplayed()).thenReturn(false);
-        ExtendedMockito.when(mConsentManager.wasNotificationDisplayed()).thenReturn(true);
-        doReturn("pl").when(mTelephonyManager).getSimCountryIso();
-        doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
-        doReturn(mPackageManager).when(mContext).getPackageManager();
-        doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
-
+    public void isAdservicesEnabledReconsentTest_happycase() throws InterruptedException {
         // Happy case
-        mCommonService = new AdServicesCommonServiceImpl(mContext, mFlags);
         // Calling get adservice status, init set the flag to true, expect to return true
+        doReturn(true).when(mFlags).getGaUxFeatureEnabled();
+        doReturn(false).when(mConsentManager).wasGaUxNotificationDisplayed();
+        doReturn(AdServicesApiConsent.getConsent(true)).when(mConsentManager).getConsent();
         IsAdServicesEnabledResult[] capturedResponseParcel = getStatusResult();
         assertThat(
                         mGetCommonCallbackLatch.await(
@@ -171,86 +171,111 @@ public class AdServicesCommonServiceImplTest {
                         ConsentNotificationJobService.schedule(
                                 any(Context.class), anyBoolean(), anyBoolean()),
                 times(1));
+    }
 
+    @Test
+    public void isAdservicesEnabledReconsentTest_gaUxFeatureDisabled() throws InterruptedException {
         // GA UX feature disable, should not execute scheduler
-        when(mFlags.getGaUxFeatureEnabled()).thenReturn(false);
-        capturedResponseParcel = getStatusResult();
+        doReturn(false).when(mFlags).getGaUxFeatureEnabled();
+        doReturn(false).when(mConsentManager).wasGaUxNotificationDisplayed();
+        doReturn(AdServicesApiConsent.getConsent(true)).when(mConsentManager).getConsent();
+        IsAdServicesEnabledResult[] capturedResponseParcel = getStatusResult();
         assertThat(
                         mGetCommonCallbackLatch.await(
                                 BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
                 .isTrue();
-        getStatusResult1 = capturedResponseParcel[0];
+        IsAdServicesEnabledResult getStatusResult1 = capturedResponseParcel[0];
         assertThat(getStatusResult1.getAdServicesEnabled()).isTrue();
         verify(
                 () ->
                         ConsentNotificationJobService.schedule(
                                 any(Context.class), anyBoolean(), anyBoolean()),
-                times(1));
+                times(0));
+    }
 
+    @Test
+    public void isAdservicesEnabledReconsentTest_deviceNotEu() throws InterruptedException {
         // GA UX feature enable, set device to not EU, not execute scheduler
-        when(mFlags.getGaUxFeatureEnabled()).thenReturn(true);
+        doReturn(true).when(mFlags).getGaUxFeatureEnabled();
+        doReturn(false).when(mConsentManager).wasGaUxNotificationDisplayed();
         doReturn("us").when(mTelephonyManager).getSimCountryIso();
-        capturedResponseParcel = getStatusResult();
+        doReturn(AdServicesApiConsent.getConsent(true)).when(mConsentManager).getConsent();
+        IsAdServicesEnabledResult[] capturedResponseParcel = getStatusResult();
         assertThat(
                         mGetCommonCallbackLatch.await(
                                 BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
                 .isTrue();
-        getStatusResult1 = capturedResponseParcel[0];
+        IsAdServicesEnabledResult getStatusResult1 = capturedResponseParcel[0];
         assertThat(getStatusResult1.getAdServicesEnabled()).isTrue();
         verify(
                 () ->
                         ConsentNotificationJobService.schedule(
                                 any(Context.class), anyBoolean(), anyBoolean()),
-                times(1));
+                times(0));
+    }
 
+    @Test
+    public void isAdservicesEnabledReconsentTest_gaUxNotificationDisplayed()
+            throws InterruptedException {
         // GA UX feature enabled, device set to EU, GA UX notification set to displayed
+        doReturn(true).when(mFlags).getGaUxFeatureEnabled();
         doReturn("pl").when(mTelephonyManager).getSimCountryIso();
-        ExtendedMockito.when(mConsentManager.wasGaUxNotificationDisplayed()).thenReturn(true);
-        capturedResponseParcel = getStatusResult();
+        doReturn(true).when(mConsentManager).wasGaUxNotificationDisplayed();
+        doReturn(AdServicesApiConsent.getConsent(true)).when(mConsentManager).getConsent();
+        IsAdServicesEnabledResult[] capturedResponseParcel = getStatusResult();
         assertThat(
                         mGetCommonCallbackLatch.await(
                                 BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
                 .isTrue();
-        getStatusResult1 = capturedResponseParcel[0];
+        IsAdServicesEnabledResult getStatusResult1 = capturedResponseParcel[0];
         assertThat(getStatusResult1.getAdServicesEnabled()).isTrue();
         verify(
                 () ->
                         ConsentNotificationJobService.schedule(
                                 any(Context.class), anyBoolean(), anyBoolean()),
-                times(1));
+                times(0));
+    }
 
+    @Test
+    public void isAdservicesEnabledReconsentTest_sharedPreferenceNotContain()
+            throws InterruptedException {
         // GA UX notification set to not displayed, sharedpreference set to not contains
-        ExtendedMockito.when(mConsentManager.wasGaUxNotificationDisplayed()).thenReturn(false);
-        when(mSharedPreferences.contains(anyString())).thenReturn(false);
-        capturedResponseParcel = getStatusResult();
+        doReturn(true).when(mFlags).getGaUxFeatureEnabled();
+        doReturn(false).when(mConsentManager).wasGaUxNotificationDisplayed();
+        doReturn(false).when(mSharedPreferences).contains(anyString());
+        doReturn(AdServicesApiConsent.getConsent(true)).when(mConsentManager).getConsent();
+        IsAdServicesEnabledResult[] capturedResponseParcel = getStatusResult();
         assertThat(
                         mGetCommonCallbackLatch.await(
                                 BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
                 .isTrue();
-        getStatusResult1 = capturedResponseParcel[0];
+        IsAdServicesEnabledResult getStatusResult1 = capturedResponseParcel[0];
         assertThat(getStatusResult1.getAdServicesEnabled()).isTrue();
         verify(
                 () ->
                         ConsentNotificationJobService.schedule(
                                 any(Context.class), anyBoolean(), anyBoolean()),
-                times(1));
+                times(0));
+    }
 
+    @Test
+    public void isAdservicesEnabledReconsentTest_userConsentRevoked() throws InterruptedException {
         // Sharedpreference set to contains, user consent set to revoke
-        when(mSharedPreferences.contains(anyString())).thenReturn(true);
-        ExtendedMockito.when(mConsentManager.getConsent())
-                .thenReturn(AdServicesApiConsent.getConsent(false));
-        capturedResponseParcel = getStatusResult();
+        doReturn(true).when(mFlags).getGaUxFeatureEnabled();
+        doReturn(false).when(mConsentManager).wasGaUxNotificationDisplayed();
+        doReturn(AdServicesApiConsent.getConsent(false)).when(mConsentManager).getConsent();
+        IsAdServicesEnabledResult[] capturedResponseParcel = getStatusResult();
         assertThat(
                         mGetCommonCallbackLatch.await(
                                 BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
                 .isTrue();
-        getStatusResult1 = capturedResponseParcel[0];
+        IsAdServicesEnabledResult getStatusResult1 = capturedResponseParcel[0];
         assertThat(getStatusResult1.getAdServicesEnabled()).isTrue();
         verify(
                 () ->
                         ConsentNotificationJobService.schedule(
                                 any(Context.class), anyBoolean(), anyBoolean()),
-                times(1));
+                times(0));
     }
 
     private IsAdServicesEnabledResult[] getStatusResult() {
@@ -280,25 +305,11 @@ public class AdServicesCommonServiceImplTest {
 
     @Test
     public void setAdservicesEntryPointStatusTest() throws InterruptedException {
-        when(mContext.getSharedPreferences(anyString(), anyInt())).thenReturn(mSharedPreferences);
-        when(mContext.getPackageManager()).thenReturn(mPackageManager);
-        when(mSharedPreferences.edit()).thenReturn(mEditor);
-        when(mEditor.putInt(anyString(), anyInt())).thenReturn(mEditor);
-        Mockito.doNothing().when(mEditor).apply();
-        doNothing()
-                .when(
-                        () ->
-                                ConsentNotificationJobService.schedule(
-                                        any(Context.class),
-                                        any(Boolean.class),
-                                        any(Boolean.class)));
-        when(mFlags.getAdServicesEnabled()).thenReturn(true);
-        ExtendedMockito.when(mConsentManager.getConsent())
-                .thenReturn(AdServicesApiConsent.getConsent(true));
-        ExtendedMockito.doReturn(mConsentManager)
-                .when(() -> ConsentManager.getInstance(any(Context.class)));
-
-        mCommonService = new AdServicesCommonServiceImpl(mContext, mFlags);
+        // Not reconsent, as not ROW devices, Not first Consent, as notification displayed is true
+        doReturn(true).when(mFlags).getGaUxFeatureEnabled();
+        doReturn(false).when(mConsentManager).wasGaUxNotificationDisplayed();
+        doReturn(true).when(mConsentManager).wasNotificationDisplayed();
+        doReturn(AdServicesApiConsent.getConsent(true)).when(mConsentManager).getConsent();
         mCommonService.setAdServicesEnabled(true, false);
         Thread.sleep(1000);
 
@@ -306,7 +317,7 @@ public class AdServicesCommonServiceImplTest {
                 () ->
                         ConsentNotificationJobService.schedule(
                                 any(Context.class), eq(false), any(Boolean.class)),
-                times(1));
+                times(0));
         ExtendedMockito.verify(
                 () -> BackgroundJobsManager.scheduleAllBackgroundJobs(any(Context.class)));
 
@@ -316,13 +327,15 @@ public class AdServicesCommonServiceImplTest {
         assertThat(mIntegerArgumentCaptor.getValue())
                 .isEqualTo(ADSERVICES_ENTRY_POINT_STATUS_ENABLE);
 
+        // Not executed, as entry point enabled status is false
+        doReturn(false).when(mConsentManager).wasNotificationDisplayed();
         mCommonService.setAdServicesEnabled(false, true);
         Thread.sleep(1000);
 
         verify(
                 () ->
                         ConsentNotificationJobService.schedule(
-                                any(Context.class), eq(true), any(Boolean.class)),
+                                any(Context.class), eq(false), any(Boolean.class)),
                 times(0));
         Mockito.verify(mEditor, times(2))
                 .putInt(mStringArgumentCaptor.capture(), mIntegerArgumentCaptor.capture());
@@ -332,36 +345,13 @@ public class AdServicesCommonServiceImplTest {
     }
 
     @Test
-    public void setAdservicesEnabledConsentTest() throws InterruptedException {
-        when(mContext.getSharedPreferences(anyString(), anyInt())).thenReturn(mSharedPreferences);
-        when(mContext.getPackageManager()).thenReturn(mPackageManager);
-        when(mSharedPreferences.edit()).thenReturn(mEditor);
-        when(mEditor.putInt(anyString(), anyInt())).thenReturn(mEditor);
-        Mockito.doNothing().when(mEditor).apply();
+    public void setAdservicesEnabledConsentTest_happycase() throws InterruptedException {
         // Set device to ROW
+        doReturn(true).when(mFlags).getGaUxFeatureEnabled();
+        doReturn(false).when(mConsentManager).wasGaUxNotificationDisplayed();
+        doReturn(true).when(mConsentManager).wasNotificationDisplayed();
         doReturn("us").when(mTelephonyManager).getSimCountryIso();
-        doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
-        doReturn(mPackageManager).when(mContext).getPackageManager();
-        doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
-
-        ExtendedMockito.when(mConsentManager.wasGaUxNotificationDisplayed()).thenReturn(false);
-        ExtendedMockito.when(mConsentManager.wasNotificationDisplayed()).thenReturn(true);
-        doNothing()
-                .when(
-                        () ->
-                                ConsentNotificationJobService.schedule(
-                                        any(Context.class),
-                                        any(Boolean.class),
-                                        any(Boolean.class)));
-        when(mFlags.getAdServicesEnabled()).thenReturn(true);
-        when(mFlags.getGaUxFeatureEnabled()).thenReturn(true);
-        ExtendedMockito.when(mConsentManager.getConsent())
-                .thenReturn(AdServicesApiConsent.getConsent(true));
-        ExtendedMockito.doReturn(mConsentManager)
-                .when(() -> ConsentManager.getInstance(any(Context.class)));
-
-        // Reconsent happy case
-        mCommonService = new AdServicesCommonServiceImpl(mContext, mFlags);
+        doReturn(AdServicesApiConsent.getConsent(true)).when(mConsentManager).getConsent();
         mCommonService.setAdServicesEnabled(true, false);
         Thread.sleep(1000);
 
@@ -370,33 +360,17 @@ public class AdServicesCommonServiceImplTest {
                         ConsentNotificationJobService.schedule(
                                 any(Context.class), eq(false), eq(true)),
                 times(1));
+    }
 
+    @Test
+    public void setAdservicesEnabledConsentTest_ReconsentGaUxFeatureDisabled()
+            throws InterruptedException {
         // GA UX feature disable
-        when(mFlags.getGaUxFeatureEnabled()).thenReturn(false);
-        mCommonService.setAdServicesEnabled(true, false);
-        Thread.sleep(1000);
-
-        verify(
-                () ->
-                        ConsentNotificationJobService.schedule(
-                                any(Context.class), eq(false), eq(true)),
-                times(1));
-
-        // enable GA UX feature, but EU device
-        when(mFlags.getGaUxFeatureEnabled()).thenReturn(true);
-        doReturn("pl").when(mTelephonyManager).getSimCountryIso();
-        mCommonService.setAdServicesEnabled(true, false);
-        Thread.sleep(1000);
-
-        verify(
-                () ->
-                        ConsentNotificationJobService.schedule(
-                                any(Context.class), eq(false), eq(true)),
-                times(1));
-
-        // ROW device, GA UX notification displayed
         doReturn("us").when(mTelephonyManager).getSimCountryIso();
-        ExtendedMockito.when(mConsentManager.wasGaUxNotificationDisplayed()).thenReturn(true);
+        doReturn(false).when(mConsentManager).wasGaUxNotificationDisplayed();
+        doReturn(true).when(mConsentManager).wasNotificationDisplayed();
+        doReturn(false).when(mFlags).getGaUxFeatureEnabled();
+        doReturn(AdServicesApiConsent.getConsent(true)).when(mConsentManager).getConsent();
         mCommonService.setAdServicesEnabled(true, false);
         Thread.sleep(1000);
 
@@ -404,12 +378,55 @@ public class AdServicesCommonServiceImplTest {
                 () ->
                         ConsentNotificationJobService.schedule(
                                 any(Context.class), eq(false), eq(true)),
-                times(1));
+                times(0));
+    }
 
+    @Test
+    public void setAdservicesEnabledConsentTest_ReconsentEUDevice() throws InterruptedException {
+        // enable GA UX feature, but EU device
+        doReturn(true).when(mFlags).getGaUxFeatureEnabled();
+        doReturn(false).when(mConsentManager).wasGaUxNotificationDisplayed();
+        doReturn(true).when(mConsentManager).wasNotificationDisplayed();
+        doReturn(AdServicesApiConsent.getConsent(true)).when(mConsentManager).getConsent();
+        mCommonService.setAdServicesEnabled(true, false);
+        Thread.sleep(1000);
+
+        verify(
+                () ->
+                        ConsentNotificationJobService.schedule(
+                                any(Context.class), eq(false), eq(true)),
+                times(0));
+    }
+
+    @Test
+    public void setAdservicesEnabledConsentTest_ReconsentGaUxNotificationDisplayed()
+            throws InterruptedException {
+        // ROW device, GA UX notification displayed
+        doReturn(true).when(mFlags).getGaUxFeatureEnabled();
+        doReturn(true).when(mConsentManager).wasNotificationDisplayed();
+        doReturn("us").when(mTelephonyManager).getSimCountryIso();
+        doReturn(true).when(mConsentManager).wasGaUxNotificationDisplayed();
+        doReturn(AdServicesApiConsent.getConsent(true)).when(mConsentManager).getConsent();
+        mCommonService.setAdServicesEnabled(true, false);
+        Thread.sleep(1000);
+
+        verify(
+                () ->
+                        ConsentNotificationJobService.schedule(
+                                any(Context.class), eq(false), eq(true)),
+                times(0));
+    }
+
+    @Test
+    public void setAdservicesEnabledConsentTest_ReconsentNotificationNotDisplayed()
+            throws InterruptedException {
         // GA UX notification not displayed, notification not displayed, this also trigger
         // first consent case, but we verify here for reconsentStatus as true
-        ExtendedMockito.when(mConsentManager.wasGaUxNotificationDisplayed()).thenReturn(false);
-        ExtendedMockito.when(mConsentManager.wasNotificationDisplayed()).thenReturn(false);
+        doReturn(true).when(mFlags).getGaUxFeatureEnabled();
+        doReturn("us").when(mTelephonyManager).getSimCountryIso();
+        doReturn(false).when(mConsentManager).wasGaUxNotificationDisplayed();
+        doReturn(false).when(mConsentManager).wasNotificationDisplayed();
+        doReturn(AdServicesApiConsent.getConsent(true)).when(mConsentManager).getConsent();
         mCommonService.setAdServicesEnabled(true, false);
         Thread.sleep(1000);
 
@@ -417,54 +434,81 @@ public class AdServicesCommonServiceImplTest {
                 () ->
                         ConsentNotificationJobService.schedule(
                                 any(Context.class), eq(false), eq(true)),
-                times(1));
-
-        // Notification displayed, user consent is revoked
-        ExtendedMockito.when(mConsentManager.wasNotificationDisplayed()).thenReturn(true);
-        ExtendedMockito.when(mConsentManager.getConsent())
-                .thenReturn(AdServicesApiConsent.getConsent(false));
-        mCommonService.setAdServicesEnabled(true, false);
-        Thread.sleep(1000);
-
-        verify(
-                () ->
-                        ConsentNotificationJobService.schedule(
-                                any(Context.class), eq(false), eq(true)),
-                times(1));
-
-        // First Consent happy case, should be 2nd time
-        ExtendedMockito.when(mConsentManager.wasGaUxNotificationDisplayed()).thenReturn(false);
-        ExtendedMockito.when(mConsentManager.wasNotificationDisplayed()).thenReturn(false);
-        mCommonService.setAdServicesEnabled(true, false);
-        Thread.sleep(1000);
-
-        verify(
-                () ->
-                        ConsentNotificationJobService.schedule(
-                                any(Context.class), eq(false), eq(false)),
-                times(2));
-
-        // GA UX notification was displayed
-        ExtendedMockito.when(mConsentManager.wasGaUxNotificationDisplayed()).thenReturn(true);
-        mCommonService.setAdServicesEnabled(true, false);
-        Thread.sleep(1000);
-
-        verify(
-                () ->
-                        ConsentNotificationJobService.schedule(
-                                any(Context.class), eq(false), eq(false)),
-                times(2));
-
-        // Notification was displayed
-        ExtendedMockito.when(mConsentManager.wasGaUxNotificationDisplayed()).thenReturn(false);
-        ExtendedMockito.when(mConsentManager.wasNotificationDisplayed()).thenReturn(true);
-        mCommonService.setAdServicesEnabled(true, false);
-        Thread.sleep(1000);
-
-        verify(
-                () ->
-                        ConsentNotificationJobService.schedule(
-                                any(Context.class), eq(false), eq(false)),
-                times(2));
+                times(0));
     }
+
+    @Test
+    public void setAdservicesEnabledConsentTest_ReconsentUserConsentRevoked()
+            throws InterruptedException {
+        // Notification displayed, user consent is revoked
+        doReturn(true).when(mFlags).getGaUxFeatureEnabled();
+        doReturn("us").when(mTelephonyManager).getSimCountryIso();
+        doReturn(false).when(mConsentManager).wasGaUxNotificationDisplayed();
+        doReturn(true).when(mConsentManager).wasNotificationDisplayed();
+        doReturn(AdServicesApiConsent.getConsent(false)).when(mConsentManager).getConsent();
+        mCommonService.setAdServicesEnabled(true, false);
+        Thread.sleep(1000);
+
+        verify(
+                () ->
+                        ConsentNotificationJobService.schedule(
+                                any(Context.class), eq(false), eq(true)),
+                times(0));
+    }
+
+    @Test
+    public void setAdservicesEnabledConsentTest_FirstConsentHappycase()
+            throws InterruptedException {
+        // First Consent happy case, should be executed
+        doReturn(true).when(mFlags).getGaUxFeatureEnabled();
+        doReturn(false).when(mConsentManager).wasGaUxNotificationDisplayed();
+        doReturn(false).when(mConsentManager).wasNotificationDisplayed();
+        doReturn(AdServicesApiConsent.getConsent(true)).when(mConsentManager).getConsent();
+        mCommonService.setAdServicesEnabled(true, false);
+        Thread.sleep(1000);
+
+        verify(
+                () ->
+                        ConsentNotificationJobService.schedule(
+                                any(Context.class), eq(false), eq(false)),
+                times(1));
+    }
+
+    @Test
+    public void setAdservicesEnabledConsentTest_FirstConsentGaUxNotificationDisplayed()
+            throws InterruptedException {
+        // GA UX notification was displayed
+        doReturn(true).when(mFlags).getGaUxFeatureEnabled();
+        doReturn(true).when(mConsentManager).wasNotificationDisplayed();
+        doReturn(true).when(mConsentManager).wasGaUxNotificationDisplayed();
+        doReturn(AdServicesApiConsent.getConsent(true)).when(mConsentManager).getConsent();
+        mCommonService.setAdServicesEnabled(true, false);
+        Thread.sleep(1000);
+
+        verify(
+                () ->
+                        ConsentNotificationJobService.schedule(
+                                any(Context.class), eq(false), eq(false)),
+                times(0));
+    }
+
+    @Test
+    public void setAdservicesEnabledConsentTest_FirstConsentNotificationDisplayed()
+            throws InterruptedException {
+        // Notification was displayed
+        doReturn(true).when(mFlags).getGaUxFeatureEnabled();
+        doReturn(false).when(mConsentManager).wasGaUxNotificationDisplayed();
+        doReturn(true).when(mConsentManager).wasNotificationDisplayed();
+        doReturn(AdServicesApiConsent.getConsent(true)).when(mConsentManager).getConsent();
+        mCommonService.setAdServicesEnabled(true, false);
+        Thread.sleep(1000);
+
+        verify(
+                () ->
+                        ConsentNotificationJobService.schedule(
+                                any(Context.class), eq(false), eq(false)),
+                times(0));
+    }
+
+
 }
