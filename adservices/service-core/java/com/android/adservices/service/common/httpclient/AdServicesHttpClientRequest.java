@@ -30,7 +30,7 @@ public abstract class AdServicesHttpClientRequest {
     public abstract Uri getUri();
 
     /** @return request properties that need to be piggybacked to the url connection */
-    public abstract ImmutableMap<String, String> getQueryParams();
+    public abstract ImmutableMap<String, String> getRequestProperties();
 
     /** @return set of keys that we want in the {@link AdServicesHttpClientResponse} */
     public abstract ImmutableSet<String> getResponseHeaderKeys();
@@ -40,19 +40,19 @@ public abstract class AdServicesHttpClientRequest {
 
     /**
      * @param uri see {@link #getUri()}
-     * @param queryParams see {@link #getQueryParams()}
+     * @param requestProperties see {@link #getRequestProperties()}
      * @param responseHeaderKeys see {@link #getResponseHeaderKeys()}
      * @param useCache see {@link #getUseCache()}
      * @return an instance of {@link AdServicesHttpClientRequest}
      */
     public static AdServicesHttpClientRequest create(
             Uri uri,
-            ImmutableMap<String, String> queryParams,
+            ImmutableMap<String, String> requestProperties,
             ImmutableSet<String> responseHeaderKeys,
             boolean useCache) {
         return builder()
                 .setUri(uri)
-                .setQueryParams(queryParams)
+                .setRequestProperties(requestProperties)
                 .setResponseHeaderKeys(responseHeaderKeys)
                 .setUseCache(useCache)
                 .build();
@@ -61,7 +61,7 @@ public abstract class AdServicesHttpClientRequest {
     /** @return a builder that cane be used to build an {@link AdServicesHttpClientRequest} */
     public static AdServicesHttpClientRequest.Builder builder() {
         return new AutoValue_AdServicesHttpClientRequest.Builder()
-                .setQueryParams(ImmutableMap.of())
+                .setRequestProperties(ImmutableMap.of())
                 .setResponseHeaderKeys(ImmutableSet.of())
                 .setUseCache(false);
     }
@@ -74,7 +74,7 @@ public abstract class AdServicesHttpClientRequest {
         public abstract AdServicesHttpClientRequest.Builder setUri(Uri uri);
 
         /** @param queryParams that need to be piggybacked to the url connection */
-        public abstract AdServicesHttpClientRequest.Builder setQueryParams(
+        public abstract AdServicesHttpClientRequest.Builder setRequestProperties(
                 ImmutableMap<String, String> queryParams);
 
         /**

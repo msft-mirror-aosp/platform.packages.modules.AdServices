@@ -22,7 +22,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
-import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
@@ -84,8 +83,8 @@ public class AdServicesHttpsClientTest {
     private static final String RESPONSE_HEADER_KEY = "fake_response_header_key";
     private static final String RESPONSE_HEADER_VALUE_1 = "fake_response_header_value_1";
     private static final String RESPONSE_HEADER_VALUE_2 = "fake_response_header_value_2";
-    private static final String QUERY_PARAM_KEY = "X_PARAM_KEY";
-    private static final String QUERY_PARAM_VALUE = "Dummy_Value";
+    private static final String REQUEST_PROPERTY_KEY = "X_REQUEST_KEY";
+    private static final String REQUEST_PROPERTY_VALUE = "Dummy_Value";
     private static final long MAX_AGE_SECONDS = 120;
     private static final long MAX_ENTRIES = 20;
     private final ExecutorService mExecutorService = MoreExecutors.newDirectExecutorService();
@@ -287,7 +286,7 @@ public class AdServicesHttpsClientTest {
                         mUriConverterMock,
                         mCache);
 
-        doReturn(mUrlMock).when(mUriConverterMock).toUrl(any(Uri.class), anyMap());
+        doReturn(mUrlMock).when(mUriConverterMock).toUrl(any(Uri.class));
         doReturn(mURLConnectionMock).when(mUrlMock).openConnection();
         doReturn(mInputStreamMock).when(mURLConnectionMock).getInputStream();
         doAnswer(new AnswersWithDelay(delayMs, new Returns(202)))
@@ -324,7 +323,7 @@ public class AdServicesHttpsClientTest {
                         mUriConverterMock,
                         mCache);
 
-        doReturn(mUrlMock).when(mUriConverterMock).toUrl(any(Uri.class), anyMap());
+        doReturn(mUrlMock).when(mUriConverterMock).toUrl(any(Uri.class));
         doReturn(mURLConnectionMock).when(mUrlMock).openConnection();
         doReturn(mInputStreamMock).when(mURLConnectionMock).getInputStream();
         doReturn(202).when(mURLConnectionMock).getResponseCode();
@@ -395,20 +394,40 @@ public class AdServicesHttpsClientTest {
     }
 
     @Test
-    public void testFetchPayloadContainsRequestParams() throws Exception {
+    public void testFetchPayloadResponsesSkipsHeaderIfAbsent() throws Exception {
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(
                         new Dispatcher() {
                             @Override
                             public MockResponse dispatch(RecordedRequest request) {
-                                assertTrue(
-                                        "Request should have had query params",
-                                        request.getPath()
-                                                .contains(
-                                                        "?"
-                                                                + QUERY_PARAM_KEY
-                                                                + "="
-                                                                + QUERY_PARAM_VALUE));
+                                return new MockResponse().setBody(mJsScript);
+                            }
+                        });
+        URL url = server.getUrl(mFetchPayloadPath);
+        AdServicesHttpClientResponse response =
+                mClient.fetchPayload(
+                                AdServicesHttpClientRequest.builder()
+                                        .setUri(Uri.parse(url.toString()))
+                                        .setUseCache(false)
+                                        .setResponseHeaderKeys(ImmutableSet.of(RESPONSE_HEADER_KEY))
+                                        .build())
+                        .get();
+        assertEquals(mJsScript, response.getResponseBody());
+        assertEquals(
+                "No one header should have been returned", 0, response.getResponseHeaders().size());
+    }
+
+    @Test
+    public void testFetchPayloadContainsRequestProperties() throws Exception {
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        new Dispatcher() {
+                            @Override
+                            public MockResponse dispatch(RecordedRequest request) {
+                                assertEquals(
+                                        "Request header mismatch",
+                                        REQUEST_PROPERTY_VALUE,
+                                        request.getHeader(REQUEST_PROPERTY_KEY));
                                 return new MockResponse().setBody(mJsScript);
                             }
                         });
@@ -416,8 +435,10 @@ public class AdServicesHttpsClientTest {
         mClient.fetchPayload(
                         AdServicesHttpClientRequest.builder()
                                 .setUri(Uri.parse(url.toString()))
-                                .setUseCache(true)
-                                .setQueryParams(ImmutableMap.of(QUERY_PARAM_KEY, QUERY_PARAM_VALUE))
+                                .setUseCache(false)
+                                .setRequestProperties(
+                                        ImmutableMap.of(
+                                                REQUEST_PROPERTY_KEY, REQUEST_PROPERTY_VALUE))
                                 .build())
                 .get();
     }
