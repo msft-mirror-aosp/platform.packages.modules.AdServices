@@ -1,4 +1,4 @@
-// Copyright (C) 2022 The Android Open Source Project
+// Copyright (C) 2023 The Android Open Source Project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,31 +16,21 @@ package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
-java_library {
-    name: "SdkSandboxTestUtils",
-    srcs: [
-        "src/**/testutils/*.java",
-    ],
+android_test {
+    name: "SdkSandboxUiTests",
+    srcs: ["src/**/*.java"],
     libs: [
-        "framework-sdksandbox.impl",
+        "android.test.base",
+        "android.test.mock",
+        "android.test.runner",
     ],
     static_libs: [
-        "service-sdksandbox.impl",
-        "truth-prebuilt",
         "androidx.test.ext.junit",
-        "SdkSandbox-java-lib",
-        "platform-screenshot-diff-core",
+        "androidx.test.runner",
+        "SdkSandboxTestUtils",
     ],
-    visibility: [
-        // TODO(b/222118402): adjust once code is moved
-        "//packages/modules/AdServices:__subpackages__",
-    ],
-}
-
-java_library_host {
-    name: "SdkSandboxHostTestUtils",
-    srcs: [
-        "src/**/hosttestutils/*.java",
-    ],
-    libs: ["tradefed"],
+    data: [":SdkSandboxUiProvider"],
+    asset_dirs: ["assets"],
+    resource_dirs: ["res"],
+    test_suites: ["general-tests"],
 }
