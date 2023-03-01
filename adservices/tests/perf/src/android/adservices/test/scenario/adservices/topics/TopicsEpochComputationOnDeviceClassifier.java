@@ -165,10 +165,10 @@ public class TopicsEpochComputationOnDeviceClassifier {
         assertThat(sdk3Result.getTopics()).hasSize(1);
         Topic topic = sdk3Result.getTopics().get(0);
 
-        // Top 5 classifications for empty string with v2 model are [10230, 10253, 10227, 10250,
-        // 10257]. This is computed by running the model on the device for empty string.
+        // Top 5 classifications for empty string with v3 model are [10230, 10228, 10253, 10232,
+        // 10140]. This is computed by running the model on the device for empty string.
         // topic is one of the 5 classification topics of the Test App.
-        assertThat(topic.getTopicId()).isIn(Arrays.asList(10230, 10253, 10227, 10250, 10257));
+        assertThat(topic.getTopicId()).isIn(Arrays.asList(10230, 10228, 10253, 10232, 10140));
 
         assertThat(topic.getModelVersion()).isAtLeast(1L);
         assertThat(topic.getTaxonomyVersion()).isAtLeast(1L);
@@ -188,9 +188,6 @@ public class TopicsEpochComputationOnDeviceClassifier {
         // We need to turn the Consent Manager into debug mode
         overrideConsentManagerDebugMode();
 
-        // Turn off MDD to avoid model mismatching
-        disableMddBackgroundTasks(true);
-
         // Set classifier flag to use on-device classifier.
         overrideClassifierType(TEST_CLASSIFIER_TYPE);
 
@@ -204,7 +201,6 @@ public class TopicsEpochComputationOnDeviceClassifier {
         overrideDisableTopicsEnrollmentCheck("0");
         overrideEpochPeriod(DEFAULT_TOPICS_EPOCH_JOB_PERIOD_MS);
         overridePercentageForRandomTopic(DEFAULT_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
-        disableMddBackgroundTasks(false);
         overridingAdservicesLoggingLevel("INFO");
 
         // Set classifier flag back to default.
@@ -213,12 +209,6 @@ public class TopicsEpochComputationOnDeviceClassifier {
         overrideClassifierNumberOfTopLabels(DEFAULT_CLASSIFIER_NUMBER_OF_TOP_LABELS);
         // Set classifier threshold back to default.
         overrideClassifierThreshold(DEFAULT_CLASSIFIER_THRESHOLD);
-    }
-
-    // Switch on/off for MDD service. Default value is false, which means MDD is enabled.
-    private void disableMddBackgroundTasks(boolean isSwitchedOff) {
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.mdd_background_task_kill_switch " + isSwitchedOff);
     }
 
     // Override the flag to disable Topics enrollment check.

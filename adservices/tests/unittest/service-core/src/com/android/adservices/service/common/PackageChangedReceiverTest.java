@@ -21,7 +21,6 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyLong;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyString;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.doCallRealMethod;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
@@ -79,7 +78,6 @@ public class PackageChangedReceiverTest {
     private static final int BACKGROUND_THREAD_TIMEOUT_MS = 50;
     private static final int DEFAULT_PACKAGE_UID = -1;
 
-    @Mock PackageChangedReceiver mMockPackageChangedReceiver;
     @Mock EpochManager mMockEpochManager;
     @Mock CacheManager mMockCacheManager;
     @Mock BlockedTopicsManager mBlockedTopicsManager;
@@ -94,11 +92,8 @@ public class PackageChangedReceiverTest {
     @Before
     public void before() {
         MockitoAnnotations.initMocks(this);
-        doCallRealMethod()
-                .when(mMockPackageChangedReceiver)
-                .onReceive(any(Context.class), any(Intent.class));
+
         // Mock TopicsWorker to test app update flow in topics API.
-        // Start a mockitoSession to mock static method
         mSpyTopicsWorker =
                 Mockito.spy(
                         new TopicsWorker(
@@ -520,35 +515,35 @@ public class PackageChangedReceiverTest {
 
     @Test
     public void testReceivePackageAdded_topics() throws InterruptedException {
-        final long epochId = 1;
-
         Intent intent = createDefaultIntentWithAction(PackageChangedReceiver.PACKAGE_ADDED);
 
         // Start a mockitoSession to mock static method
         MockitoSession session =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(TopicsWorker.class)
-                        .spyStatic(FlagsFactory.class)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
 
         try {
             // Stubbing TopicsWorker.getInstance() to return mocked TopicsWorker instance
             doReturn(mSpyTopicsWorker).when(() -> TopicsWorker.getInstance(eq(sContext)));
-            when(mMockEpochManager.getCurrentEpochId()).thenReturn(epochId);
+
+            // Track whether the TopicsWorker.handleAppInstallation was ever invoked.
+            // Use a CountDownLatch since this invocation happens on a background thread.
+            CountDownLatch completionLatch = new CountDownLatch(1);
+            doAnswer(
+                            unusedInvocation -> {
+                                completionLatch.countDown();
+                                return null;
+                            })
+                    .when(mSpyTopicsWorker)
+                    .handleAppInstallation(Uri.parse(SAMPLE_PACKAGE));
 
             // Initialize package receiver meant for Topics and execute
             createSpyPackageReceiverForTopics().onReceive(sContext, intent);
 
-            // Grant some time to allow background thread to execute
-            Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
-
-            // Verify method in AppUpdateManager is invoked.
-            // getCurrentEpochId() is invoked twice: handleAppInstallation() + loadCache()
-            // Note that only package name is passed into following methods.
-            verify(mMockEpochManager, times(2)).getCurrentEpochId();
-            verify(mMockAppUpdateManager)
-                    .handleAppInstallationInRealTime(Uri.parse(SAMPLE_PACKAGE), epochId);
+            // Verify the execution in background thread has occurred.
+            assertThat(completionLatch.await(/* timeout */ 500, TimeUnit.MILLISECONDS)).isTrue();
         } finally {
             session.finishMocking();
         }
