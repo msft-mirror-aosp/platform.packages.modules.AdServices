@@ -201,14 +201,14 @@ public class AdSelectionEntryDaoTest {
             DBRegisteredAdInteraction.builder()
                     .setAdSelectionId(AD_SELECTION_ID_1)
                     .setInteractionKey(CLICK_EVENT)
-                    .setReportingDestination(SELLER_DESTINATION)
+                    .setDestination(SELLER_DESTINATION)
                     .setInteractionReportingUri(SELLER_CLICK_URI)
                     .build();
     private static final DBRegisteredAdInteraction DB_REGISTERED_INTERACTION_SELLER_HOVER_1 =
             DBRegisteredAdInteraction.builder()
                     .setAdSelectionId(AD_SELECTION_ID_1)
                     .setInteractionKey(HOVER_EVENT)
-                    .setReportingDestination(SELLER_DESTINATION)
+                    .setDestination(SELLER_DESTINATION)
                     .setInteractionReportingUri(SELLER_HOVER_URI)
                     .build();
     private static final DBRegisteredAdInteraction
@@ -216,35 +216,35 @@ public class AdSelectionEntryDaoTest {
                     DBRegisteredAdInteraction.builder()
                             .setAdSelectionId(AD_SELECTION_ID_1)
                             .setInteractionKey(CLICK_EVENT)
-                            .setReportingDestination(SELLER_DESTINATION)
+                            .setDestination(SELLER_DESTINATION)
                             .setInteractionReportingUri(Uri.parse(DIFFERENT_BASE_URI + CLICK_EVENT))
                             .build();
     private static final DBRegisteredAdInteraction DB_REGISTERED_INTERACTION_SELLER_CLICK_2 =
             DBRegisteredAdInteraction.builder()
                     .setAdSelectionId(AD_SELECTION_ID_2)
                     .setInteractionKey(CLICK_EVENT)
-                    .setReportingDestination(SELLER_DESTINATION)
+                    .setDestination(SELLER_DESTINATION)
                     .setInteractionReportingUri(SELLER_CLICK_URI)
                     .build();
     private static final DBRegisteredAdInteraction DB_REGISTERED_INTERACTION_SELLER_HOVER_2 =
             DBRegisteredAdInteraction.builder()
                     .setAdSelectionId(AD_SELECTION_ID_2)
                     .setInteractionKey(HOVER_EVENT)
-                    .setReportingDestination(SELLER_DESTINATION)
+                    .setDestination(SELLER_DESTINATION)
                     .setInteractionReportingUri(SELLER_HOVER_URI)
                     .build();
     private static final DBRegisteredAdInteraction DB_REGISTERED_INTERACTION_SELLER_CLICK_3 =
             DBRegisteredAdInteraction.builder()
                     .setAdSelectionId(AD_SELECTION_ID_3)
                     .setInteractionKey(CLICK_EVENT)
-                    .setReportingDestination(SELLER_DESTINATION)
+                    .setDestination(SELLER_DESTINATION)
                     .setInteractionReportingUri(SELLER_CLICK_URI)
                     .build();
     private static final DBRegisteredAdInteraction DB_REGISTERED_INTERACTION_SELLER_HOVER_3 =
             DBRegisteredAdInteraction.builder()
                     .setAdSelectionId(AD_SELECTION_ID_3)
                     .setInteractionKey(HOVER_EVENT)
-                    .setReportingDestination(SELLER_DESTINATION)
+                    .setDestination(SELLER_DESTINATION)
                     .setInteractionReportingUri(SELLER_HOVER_URI)
                     .build();
 
@@ -252,7 +252,7 @@ public class AdSelectionEntryDaoTest {
             DBRegisteredAdInteraction.builder()
                     .setAdSelectionId(AD_SELECTION_ID_1)
                     .setInteractionKey(CLICK_EVENT)
-                    .setReportingDestination(BUYER_DESTINATION)
+                    .setDestination(BUYER_DESTINATION)
                     .setInteractionReportingUri(BUYER_CLICK_URI)
                     .build();
 

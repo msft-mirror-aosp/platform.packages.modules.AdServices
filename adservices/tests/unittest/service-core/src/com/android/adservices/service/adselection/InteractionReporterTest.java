@@ -206,7 +206,7 @@ public class InteractionReporterTest {
                 DBRegisteredAdInteraction.builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setInteractionKey(CLICK_EVENT)
-                        .setReportingDestination(BUYER_DESTINATION)
+                        .setDestination(BUYER_DESTINATION)
                         .setInteractionReportingUri(
                                 mMockWebServerRule.uriForPath(
                                         BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT))
@@ -216,7 +216,7 @@ public class InteractionReporterTest {
                 DBRegisteredAdInteraction.builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setInteractionKey(CLICK_EVENT)
-                        .setReportingDestination(SELLER_DESTINATION)
+                        .setDestination(SELLER_DESTINATION)
                         .setInteractionReportingUri(
                                 mMockWebServerRule.uriForPath(
                                         SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT))
