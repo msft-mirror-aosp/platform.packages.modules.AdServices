@@ -307,6 +307,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         SELLER_VALID,
                         MY_APP_PACKAGE_NAME,
                         true,
+                        true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                         Throttler.ApiKey.FLEDGE_API_SELECT_ADS);
@@ -612,6 +613,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         SELLER_VALID,
                         MY_APP_PACKAGE_NAME,
                         true,
+                        true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                         Throttler.ApiKey.FLEDGE_API_SELECT_ADS);
@@ -857,6 +859,7 @@ public class OnDeviceAdSelectionRunnerTest {
                 .filterRequest(
                         SELLER_VALID,
                         MY_APP_PACKAGE_NAME,
+                        true,
                         true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
@@ -1830,6 +1833,7 @@ public class OnDeviceAdSelectionRunnerTest {
                 .filterRequest(
                         SELLER_VALID,
                         MY_APP_PACKAGE_NAME,
+                        true,
                         true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,

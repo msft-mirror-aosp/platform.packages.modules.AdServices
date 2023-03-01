@@ -244,6 +244,7 @@ public abstract class AdSelectionRunner {
                                             inputParams.getCallerPackageName(),
                                             mFlags
                                                     .getEnforceForegroundStatusForFledgeRunAdSelection(),
+                                            true,
                                             mCallerUid,
                                             AdServicesStatsLog
                                                     .AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,

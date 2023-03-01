@@ -137,6 +137,7 @@ public class CustomAudienceServiceFilterTest {
                                 SELLER_VALID,
                                 "invalidPackageName",
                                 false,
+                                false,
                                 MY_UID,
                                 API_NAME,
                                 Throttler.ApiKey.UNKNOWN));
@@ -153,6 +154,7 @@ public class CustomAudienceServiceFilterTest {
                         mCustomAudienceServiceFilter.filterRequest(
                                 SELLER_VALID,
                                 CALLER_PACKAGE_NAME,
+                                false,
                                 false,
                                 MY_UID,
                                 API_NAME,
@@ -173,6 +175,7 @@ public class CustomAudienceServiceFilterTest {
                                 SELLER_VALID,
                                 CALLER_PACKAGE_NAME,
                                 true,
+                                false,
                                 MY_UID,
                                 API_NAME,
                                 Throttler.ApiKey.UNKNOWN));
@@ -187,6 +190,7 @@ public class CustomAudienceServiceFilterTest {
         mCustomAudienceServiceFilter.filterRequest(
                 SELLER_VALID,
                 CALLER_PACKAGE_NAME,
+                false,
                 false,
                 MY_UID,
                 API_NAME,
@@ -217,6 +221,7 @@ public class CustomAudienceServiceFilterTest {
                                 SELLER_VALID,
                                 CALLER_PACKAGE_NAME,
                                 false,
+                                false,
                                 MY_UID,
                                 API_NAME,
                                 Throttler.ApiKey.UNKNOWN));
@@ -225,7 +230,13 @@ public class CustomAudienceServiceFilterTest {
     @Test
     public void testFilterRequestDoesNotDoEnrollmentCheckWhenAdTechParamIsNull() {
         mCustomAudienceServiceFilter.filterRequest(
-                null, CALLER_PACKAGE_NAME, false, MY_UID, API_NAME, Throttler.ApiKey.UNKNOWN);
+                null,
+                CALLER_PACKAGE_NAME,
+                false,
+                false,
+                MY_UID,
+                API_NAME,
+                Throttler.ApiKey.UNKNOWN);
 
         verify(mFledgeAuthorizationFilterSpy, never())
                 .assertAdTechAllowed(any(), anyString(), any(), anyInt());
@@ -243,6 +254,7 @@ public class CustomAudienceServiceFilterTest {
                         mCustomAudienceServiceFilter.filterRequest(
                                 SELLER_VALID,
                                 CALLER_PACKAGE_NAME,
+                                false,
                                 false,
                                 MY_UID,
                                 API_NAME,
