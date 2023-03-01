@@ -87,7 +87,9 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.DBAdSelectionOverride;
+import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
@@ -274,6 +276,7 @@ public class AdSelectionE2ETest {
     private ExecutorService mBackgroundExecutorService;
     private ScheduledThreadPoolExecutor mScheduledExecutor;
     private CustomAudienceDao mCustomAudienceDao;
+    private AppInstallDao mAppInstallDao;
     @Spy private AdSelectionEntryDao mAdSelectionEntryDaoSpy;
     private AdServicesHttpsClient mAdServicesHttpsClient;
     private AdSelectionConfig mAdSelectionConfig;
@@ -294,6 +297,10 @@ public class AdSelectionE2ETest {
                 Room.inMemoryDatabaseBuilder(mContext, AdSelectionDatabase.class)
                         .build()
                         .adSelectionEntryDao();
+        mAppInstallDao =
+                Room.inMemoryDatabaseBuilder(mContext, SharedStorageDatabase.class)
+                        .build()
+                        .appInstallDao();
 
         // Test applications don't have the required permissions to read config P/H flags, and
         // injecting mocked flags everywhere is annoying and non-trivial for static methods
@@ -325,6 +332,7 @@ public class AdSelectionE2ETest {
         mAdSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDaoSpy,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
@@ -404,6 +412,7 @@ public class AdSelectionE2ETest {
                 .filterRequest(
                         mSeller,
                         CALLER_PACKAGE_NAME,
+                        true,
                         true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
@@ -508,6 +517,7 @@ public class AdSelectionE2ETest {
                 .filterRequest(
                         mSeller,
                         CALLER_PACKAGE_NAME,
+                        true,
                         true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
@@ -764,6 +774,7 @@ public class AdSelectionE2ETest {
         AdSelectionServiceImpl adSelectionServiceNoCache =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDaoSpy,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         httpClientWithNoCaching,
                         mDevContextFilter,
@@ -869,6 +880,7 @@ public class AdSelectionE2ETest {
         AdSelectionServiceImpl adSelectionServiceWithCache =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDaoSpy,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         httpClientWithCaching,
                         mDevContextFilter,
@@ -987,6 +999,7 @@ public class AdSelectionE2ETest {
         mAdSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDaoSpy,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
@@ -2205,6 +2218,7 @@ public class AdSelectionE2ETest {
         mAdSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDaoSpy,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
@@ -2445,6 +2459,7 @@ public class AdSelectionE2ETest {
         mAdSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDaoSpy,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
@@ -2510,6 +2525,7 @@ public class AdSelectionE2ETest {
         mAdSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDaoSpy,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
@@ -2626,6 +2642,7 @@ public class AdSelectionE2ETest {
         mAdSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDaoSpy,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
@@ -2742,6 +2759,7 @@ public class AdSelectionE2ETest {
                 .filterRequest(
                         mSeller,
                         CALLER_PACKAGE_NAME,
+                        true,
                         true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
@@ -3131,6 +3149,7 @@ public class AdSelectionE2ETest {
                         mSeller,
                         invalidPackageName,
                         true,
+                        true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                         Throttler.ApiKey.FLEDGE_API_SELECT_ADS);
@@ -3212,6 +3231,7 @@ public class AdSelectionE2ETest {
                 .filterRequest(
                         mSeller,
                         CALLER_PACKAGE_NAME,
+                        true,
                         true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
@@ -3306,6 +3326,7 @@ public class AdSelectionE2ETest {
                         mSeller,
                         CALLER_PACKAGE_NAME,
                         true,
+                        true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                         Throttler.ApiKey.FLEDGE_API_SELECT_ADS);
@@ -3314,6 +3335,7 @@ public class AdSelectionE2ETest {
         mAdSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDaoSpy,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
@@ -3440,6 +3462,7 @@ public class AdSelectionE2ETest {
         AdSelectionServiceImpl adSelectionServiceWithThrottling =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDaoSpy,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
@@ -3505,6 +3528,7 @@ public class AdSelectionE2ETest {
                         mSeller,
                         CALLER_PACKAGE_NAME,
                         true,
+                        true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                         Throttler.ApiKey.FLEDGE_API_SELECT_ADS);
@@ -3567,6 +3591,7 @@ public class AdSelectionE2ETest {
         mAdSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDaoSpy,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
