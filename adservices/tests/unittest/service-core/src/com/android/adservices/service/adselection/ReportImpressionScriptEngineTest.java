@@ -40,10 +40,13 @@ import com.android.adservices.service.adselection.ReportImpressionScriptEngine.S
 import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
+import com.android.adservices.service.js.JSScriptEngine;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import org.junit.Assume;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.time.Instant;
@@ -60,11 +63,7 @@ public class ReportImpressionScriptEngineTest {
     private static final String TAG = "ReportImpressionScriptEngineTest";
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(1);
     IsolateSettings mIsolateSettings = IsolateSettings.forMaxHeapSizeEnforcementDisabled();
-    private final ReportImpressionScriptEngine mReportImpressionScriptEngine =
-            new ReportImpressionScriptEngine(
-                    sContext,
-                    () -> mIsolateSettings.getEnforceMaxHeapSizeFeature(),
-                    () -> mIsolateSettings.getMaxHeapSizeBytes());
+    private ReportImpressionScriptEngine mReportImpressionScriptEngine;
 
     private static final AdTechIdentifier BUYER_1 = AdSelectionConfigFixture.BUYER_1;
 
@@ -107,6 +106,20 @@ public class ReportImpressionScriptEngineTest {
                     .setInteractionKey("hover")
                     .setInteractionReportingUri(HOVER_URI)
                     .build();
+
+    @Before
+    public void setUp() {
+        // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
+        // availability depends on an external component (the system webview) being higher than a
+        // certain minimum version. Marking that as an assumption that the test is making.
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
+        mReportImpressionScriptEngine =
+                new ReportImpressionScriptEngine(
+                        sContext,
+                        () -> mIsolateSettings.getEnforceMaxHeapSizeFeature(),
+                        () -> mIsolateSettings.getMaxHeapSizeBytes());
+    }
 
     @Test
     public void testCanCallScript() throws Exception {
