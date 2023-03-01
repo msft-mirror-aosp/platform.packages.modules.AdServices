@@ -224,7 +224,7 @@ public class TriggerTest {
                         .setNotFilters(TOP_LEVEL_FILTERS_JSON_STRING_X).build());
         JSONArray attributionConfigList1 = new JSONArray();
         JSONObject attributionConfig1 = new JSONObject();
-        attributionConfig1.put("source_adtech", "AdTech1-Ads");
+        attributionConfig1.put("source_network", "AdTech1-Ads");
         JSONObject sourcePriorityRange1 = new JSONObject();
         sourcePriorityRange1.put("start", 100);
         sourcePriorityRange1.put("end", 1000);
@@ -242,7 +242,7 @@ public class TriggerTest {
 
         JSONArray attributionConfigList2 = new JSONArray();
         JSONObject attributionConfig2 = new JSONObject();
-        attributionConfig2.put("source_adtech", "AdTech2-Ads");
+        attributionConfig2.put("source_network", "AdTech2-Ads");
         JSONObject sourcePriorityRange2 = new JSONObject();
         sourcePriorityRange2.put("start", 100);
         sourcePriorityRange2.put("end", 1000);
@@ -780,7 +780,7 @@ public class TriggerTest {
         List<String> adtechIds = new ArrayList<>(Arrays.asList("AdTech1-Ads", "AdTech2-Ads"));
         for (String adtechId : adtechIds) {
             JSONObject attributionConfig = new JSONObject();
-            attributionConfig.put("source_adtech", adtechId);
+            attributionConfig.put("source_network", adtechId);
             JSONObject sourcePriorityRange = new JSONObject();
             sourcePriorityRange.put("start", 100L);
             sourcePriorityRange.put("end", 1000L);

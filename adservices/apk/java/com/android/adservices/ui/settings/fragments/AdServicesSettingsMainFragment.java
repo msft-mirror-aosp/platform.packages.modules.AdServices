@@ -48,12 +48,6 @@ public class AdServicesSettingsMainFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
-            // the entry point of Apps, Topics, Measurement should be visible all the time
-            requireView().findViewById(R.id.privacy_sandbox_controls).setVisibility(View.VISIBLE);
-        } else {
-            setupViewModel();
-        }
     }
 
     @Override
@@ -67,17 +61,21 @@ public class AdServicesSettingsMainFragment extends Fragment {
         MainActionDelegate actionDelegate =
                 ((AdServicesSettingsMainActivity) requireActivity()).getActionDelegate();
         actionDelegate.initMainFragment(this);
-        // configure the subtitles if GA UX is on
-        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
-            actionDelegate.configureSubtitles(this);
-        }
+        setupViewModel();
     }
 
     private void setupViewModel() {
-        MainViewModel model = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            // the entry point of Apps, Topics, Measurement should be visible all the time
+            requireView().findViewById(R.id.privacy_sandbox_controls).setVisibility(View.VISIBLE);
+            return;
+        }
 
+        MainViewModel model = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
         MainSwitchBar mainSwitchBar =
                 Objects.requireNonNull(requireView().findViewById(R.id.main_switch_bar));
+
+
         View privacySandboxControls = requireView().findViewById(R.id.privacy_sandbox_controls);
         model.getConsent()
                 .observe(

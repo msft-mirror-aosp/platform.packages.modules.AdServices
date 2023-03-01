@@ -18,11 +18,15 @@ package com.android.adservices.service.common;
 
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
 import static org.junit.Assert.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
@@ -319,5 +323,16 @@ public class FledgeServiceFilterTests {
                                 MY_UID,
                                 API_NAME,
                                 Throttler.ApiKey.UNKNOWN));
+    }
+
+    @Test
+    public void testFilterRequestDoesNotDoEnrollmentCheckWhenAdTechParamIsNull() {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+
+        mFledgeServiceFilter.filterRequest(
+                null, CALLER_PACKAGE_NAME, false, MY_UID, API_NAME, Throttler.ApiKey.UNKNOWN);
+
+        verify(mFledgeAuthorizationFilterSpy, never())
+                .assertAdTechAllowed(any(), anyString(), any(), anyInt());
     }
 }

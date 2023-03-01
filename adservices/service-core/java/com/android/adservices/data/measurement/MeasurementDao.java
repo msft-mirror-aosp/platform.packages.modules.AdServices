@@ -16,8 +16,6 @@
 
 package com.android.adservices.data.measurement;
 
-import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_DELETE_EXPIRED_WINDOW_MS;
-
 import android.adservices.measurement.DeletionRequest;
 import android.content.ContentValues;
 import android.database.Cursor;
@@ -105,6 +103,9 @@ class MeasurementDao implements IMeasurementDao {
                 trigger.getAggregateTriggerData());
         values.put(MeasurementTables.TriggerContract.AGGREGATE_VALUES,
                 trigger.getAggregateValues());
+        values.put(
+                MeasurementTables.TriggerContract.AGGREGATABLE_DEDUPLICATION_KEYS,
+                trigger.getAggregateDeduplicationKeys());
         values.put(MeasurementTables.TriggerContract.FILTERS, trigger.getFilters());
         values.put(MeasurementTables.TriggerContract.NOT_FILTERS, trigger.getNotFilters());
         values.put(MeasurementTables.TriggerContract.DEBUG_KEY,
@@ -282,12 +283,10 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.SourceContract.EVENT_ID, source.getEventId().getValue());
         values.put(MeasurementTables.SourceContract.PUBLISHER, source.getPublisher().toString());
         values.put(MeasurementTables.SourceContract.PUBLISHER_TYPE, source.getPublisherType());
-        values.put(
-                MeasurementTables.SourceContract.APP_DESTINATION,
-                getNullableUriString(source.getAppDestination()));
-        values.put(
-                MeasurementTables.SourceContract.WEB_DESTINATION,
-                getNullableUriString(source.getWebDestination()));
+        values.put(MeasurementTables.SourceContract.APP_DESTINATION,
+                getNullableUriString(source.getAppDestinations()));
+        values.put(MeasurementTables.SourceContract.WEB_DESTINATION,
+                getNullableUriString(source.getWebDestinations()));
         values.put(MeasurementTables.SourceContract.ENROLLMENT_ID, source.getEnrollmentId());
         values.put(MeasurementTables.SourceContract.EVENT_TIME, source.getEventTime());
         values.put(MeasurementTables.SourceContract.EXPIRY_TIME, source.getExpiryTime());
@@ -640,7 +639,7 @@ class MeasurementDao implements IMeasurementDao {
                 MeasurementTables.EventReportContract.SOURCE_EVENT_ID,
                 eventReport.getSourceEventId().getValue());
         values.put(MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
-                eventReport.getAttributionDestination().toString());
+                eventReport.getAttributionDestinations().get(0).toString());
         values.put(MeasurementTables.EventReportContract.TRIGGER_TIME,
                 eventReport.getTriggerTime());
         values.put(
@@ -1101,10 +1100,9 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public void deleteExpiredRecords() throws DatastoreException {
+    public void deleteExpiredRecords(long expiryWindowMs) throws DatastoreException {
         SQLiteDatabase db = mSQLTransaction.getDatabase();
-        long earliestValidInsertion =
-                System.currentTimeMillis() - MEASUREMENT_DELETE_EXPIRED_WINDOW_MS;
+        long earliestValidInsertion = System.currentTimeMillis() - expiryWindowMs;
         String earliestValidInsertionStr = String.valueOf(earliestValidInsertion);
         // Deleting the sources and triggers will take care of deleting records from
         // event report, aggregate report and attribution tables as well. No explicit deletion is
@@ -1860,7 +1858,8 @@ class MeasurementDao implements IMeasurementDao {
             return Optional.of(
                     Pair.create(
                             MeasurementTables.SourceContract.APP_DESTINATION,
-                            trigger.getAttributionDestination().toString()));
+                            BaseUriExtractor.getBaseUri(
+                                    trigger.getAttributionDestination()).toString()));
         } else {
             Optional<Uri> topPrivateDomainAndScheme =
                     Web.topPrivateDomainAndScheme(trigger.getAttributionDestination());
@@ -1933,6 +1932,10 @@ class MeasurementDao implements IMeasurementDao {
                     DatabaseUtils.sqlEscapeString(domainAndPathMatcher),
                     DatabaseUtils.sqlEscapeString(subDomainAndPathMatcher));
         }
+    }
+
+    private static String getNullableUriString(@Nullable List<Uri> uriList) {
+        return Optional.ofNullable(uriList).map(uris -> uris.get(0).toString()).orElse(null);
     }
 
     private static String getNullableUriString(@Nullable Uri uri) {

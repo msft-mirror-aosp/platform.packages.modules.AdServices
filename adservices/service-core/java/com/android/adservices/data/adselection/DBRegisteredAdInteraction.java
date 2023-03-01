@@ -16,7 +16,7 @@
 
 package com.android.adservices.data.adselection;
 
-import android.adservices.adselection.ReportInteractionInput;
+import android.adservices.adselection.ReportInteractionRequest;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
@@ -34,7 +34,7 @@ import com.google.auto.value.AutoValue.CopyAnnotations;
 @CopyAnnotations
 @Entity(
         tableName = "registered_ad_interactions",
-        primaryKeys = {"ad_selection_id", "interaction_key", "destination"})
+        primaryKeys = {"ad_selection_id", "interaction_key", "reporting_destination"})
 public abstract class DBRegisteredAdInteraction {
 
     /**
@@ -52,13 +52,13 @@ public abstract class DBRegisteredAdInteraction {
     public abstract String getInteractionKey();
 
     /**
-     * @return the destination of this registered interaction during reporting (buyer or seller,
-     *     etc.)
+     * @return the reporting destination of this registered interaction during reporting (buyer or
+     *     seller, etc.)
      */
     @CopyAnnotations
-    @ColumnInfo(name = "destination")
-    @ReportInteractionInput.Destination
-    public abstract int getDestination();
+    @ColumnInfo(name = "reporting_destination")
+    @ReportInteractionRequest.ReportingDestination
+    public abstract int getReportingDestination();
 
     /** @return Uri to be used during interaction reporting */
     @CopyAnnotations
@@ -71,12 +71,12 @@ public abstract class DBRegisteredAdInteraction {
     public static DBRegisteredAdInteraction create(
             long adSelectionId,
             String interactionKey,
-            @ReportInteractionInput.Destination int destination,
+            @ReportInteractionRequest.ReportingDestination int reportingDestination,
             Uri interactionReportingUri) {
         return builder()
                 .setAdSelectionId(adSelectionId)
                 .setInteractionKey(interactionKey)
-                .setDestination(destination)
+                .setReportingDestination(reportingDestination)
                 .setInteractionReportingUri(interactionReportingUri)
                 .build();
     }
@@ -99,10 +99,10 @@ public abstract class DBRegisteredAdInteraction {
         public abstract DBRegisteredAdInteraction.Builder setInteractionKey(
                 @NonNull String interactionKey);
 
-        /** Sets the destination for the {@link DBRegisteredAdInteraction} entry. */
+        /** Sets the reporting destination for the {@link DBRegisteredAdInteraction} entry. */
         @NonNull
-        public abstract DBRegisteredAdInteraction.Builder setDestination(
-                @ReportInteractionInput.Destination int destination);
+        public abstract DBRegisteredAdInteraction.Builder setReportingDestination(
+                @ReportInteractionRequest.ReportingDestination int destination);
 
         /** Sets the interactionReportingUri for the {@link DBRegisteredAdInteraction} entry. */
         @NonNull

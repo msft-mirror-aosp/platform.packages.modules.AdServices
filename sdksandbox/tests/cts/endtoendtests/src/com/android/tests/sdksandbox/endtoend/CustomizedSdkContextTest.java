@@ -76,6 +76,9 @@ public class CustomizedSdkContextTest {
     public void tearDown() {
         try {
             mSdkSandboxManager.unloadSdk(SDK_NAME_1);
+        } catch (Exception ignored) {
+        }
+        try {
             mSdkSandboxManager.unloadSdk(SDK_NAME_2);
         } catch (Exception ignored) {
         }

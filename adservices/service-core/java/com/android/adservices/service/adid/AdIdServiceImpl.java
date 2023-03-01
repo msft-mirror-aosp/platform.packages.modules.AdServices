@@ -35,7 +35,6 @@ import android.annotation.NonNull;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Binder;
-import android.os.Process;
 import android.os.RemoteException;
 
 import com.android.adservices.LogUtil;
@@ -47,6 +46,7 @@ import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApp
 import com.android.adservices.service.common.PermissionHelper;
 import com.android.adservices.service.common.SdkRuntimeUtil;
 import com.android.adservices.service.common.Throttler;
+import com.android.adservices.service.common.compat.ProcessCompatUtils;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.ApiCallStats;
@@ -108,7 +108,7 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
         // permission is declared in the manifest of that package name.
         boolean hasAdIdPermission =
                 PermissionHelper.hasAdIdPermission(
-                        mContext, Process.isSdkSandboxUid(callingUid), sdkPackageName);
+                        mContext, ProcessCompatUtils.isSdkSandboxUid(callingUid), sdkPackageName);
 
         sBackgroundExecutor.execute(
                 () -> {
@@ -171,7 +171,8 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
     private void enforceForeground(int callingUid) {
         // If caller calls Topics API from Sandbox, regard it as foreground.
         // Also enable a flag to force switch on/off this enforcing.
-        if (Process.isSdkSandboxUid(callingUid) || !mFlags.getEnforceForegroundStatusForAdId()) {
+        if (ProcessCompatUtils.isSdkSandboxUid(callingUid)
+                || !mFlags.getEnforceForegroundStatusForAdId()) {
             return;
         }
 

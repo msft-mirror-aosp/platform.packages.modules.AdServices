@@ -37,6 +37,7 @@ import java.net.HttpURLConnection;
 public class EventReportSenderTest {
 
     private static final String ATTRIBUTION_DESTINATION = "https://toasters.example";
+    private static final String SCHEDULED_REPORT_TIME = "1675459163";
     private static final UnsignedLong SOURCE_EVENT_ID = new UnsignedLong(12345L);
     private static final UnsignedLong TRIGGER_DATA = new UnsignedLong(2L);
     private static final String REPORT_ID = "678";
@@ -49,6 +50,7 @@ public class EventReportSenderTest {
     private EventReportPayload createEventReportPayloadExample1() {
         return new EventReportPayload.Builder()
                 .setAttributionDestination(ATTRIBUTION_DESTINATION)
+                .setScheduledReportTime(SCHEDULED_REPORT_TIME)
                 .setSourceEventId(SOURCE_EVENT_ID)
                 .setTriggerData(TRIGGER_DATA)
                 .setReportId(REPORT_ID)

@@ -213,7 +213,8 @@ public class XnaSourceCreatorTest {
                         // Set it such that
                         .setEventTime(
                                 trigger.getTriggerTime()
-                                        - attributionConfig2.getSourceExpiryOverride()
+                                        - TimeUnit.SECONDS.toMillis(
+                                                attributionConfig2.getSourceExpiryOverride())
                                         - 50L /* random value so that eventTime+override is before
                                               trigger time*/)
                         .build();
@@ -257,8 +258,8 @@ public class XnaSourceCreatorTest {
         return new Source.Builder()
                 .setEventId(SourceFixture.ValidSourceParams.SOURCE_EVENT_ID)
                 .setPublisher(SourceFixture.ValidSourceParams.PUBLISHER)
-                .setAppDestination(SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
-                .setWebDestination(SourceFixture.ValidSourceParams.WEB_DESTINATION)
+                .setAppDestinations(SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
+                .setWebDestinations(SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
                 .setEnrollmentId(SourceFixture.ValidSourceParams.ENROLLMENT_ID)
                 .setRegistrant(SourceFixture.ValidSourceParams.REGISTRANT)
                 .setEventTime(SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME)

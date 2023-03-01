@@ -66,9 +66,11 @@ public class AppsActionDelegate extends BaseActionDelegate {
                         switch (event) {
                             case SWITCH_ON_APPS:
                                 mAppsViewModel.setAppsConsent(true);
+                                mAppsViewModel.refresh();
                                 break;
                             case SWITCH_OFF_APPS:
                                 mAppsViewModel.setAppsConsent(false);
+                                mAppsViewModel.refresh();
                                 break;
                             case BLOCK_APP:
                                 logUIAction(ActionEnum.BLOCK_APP_SELECTED);

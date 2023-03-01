@@ -154,12 +154,15 @@ public class AsyncTriggerFetcher {
                         json.getString(TriggerHeaderContract.AGGREGATABLE_VALUES));
             }
             if (!json.isNull(TriggerHeaderContract.AGGREGATABLE_DEDUPLICATION_KEYS)) {
-                if (!isValidAggregateDuplicationKey(
-                        json.getJSONArray(TriggerHeaderContract.AGGREGATABLE_DEDUPLICATION_KEYS))) {
+                Optional<String> validAggregateDeduplicationKeysString =
+                        getValidAggregateDuplicationKeysString(
+                                json.getJSONArray(
+                                        TriggerHeaderContract.AGGREGATABLE_DEDUPLICATION_KEYS));
+                if (!validAggregateDeduplicationKeysString.isPresent()) {
+                    LogUtil.d("parseTrigger: aggregate deduplication keys are invalid.");
                     return false;
                 }
-                result.setAggregateDeduplicationKeys(
-                        json.getString(TriggerHeaderContract.AGGREGATABLE_DEDUPLICATION_KEYS));
+                result.setAggregateDeduplicationKeys(validAggregateDeduplicationKeysString.get());
             }
             if (!json.isNull(TriggerHeaderContract.FILTERS)) {
                 JSONArray filters = Filter.maybeWrapFilters(json, TriggerHeaderContract.FILTERS);
@@ -189,8 +192,9 @@ public class AsyncTriggerFetcher {
                     LogUtil.e(e, "Parsing trigger debug key failed");
                 }
             }
-            if (!json.isNull(TriggerHeaderContract.X_NETWORK_KEY_MAPPING)) {
-                if (!isValidAdtechBitMapping(
+            if (mFlags.getMeasurementEnableXNA()
+                    && !json.isNull(TriggerHeaderContract.X_NETWORK_KEY_MAPPING)) {
+                if (!isValidXNetworkKeyMapping(
                         json.getJSONObject(TriggerHeaderContract.X_NETWORK_KEY_MAPPING))) {
                     LogUtil.d("parseTrigger: adtech bit mapping is invalid.");
                 } else {
@@ -198,15 +202,14 @@ public class AsyncTriggerFetcher {
                             json.getString(TriggerHeaderContract.X_NETWORK_KEY_MAPPING));
                 }
             }
-
-            if (isXnaAllowedForTriggerRegistrant(registrant, registrationType)
+            if (mFlags.getMeasurementEnableXNA()
+                    && isXnaAllowedForTriggerRegistrant(registrant, registrationType)
                     && !json.isNull(TriggerHeaderContract.ATTRIBUTION_CONFIG)) {
                 String attributionConfigsString =
                         extractValidAttributionConfigs(
                                 json.getJSONArray(TriggerHeaderContract.ATTRIBUTION_CONFIG));
                 result.setAttributionConfig(attributionConfigsString);
             }
-
             triggers.add(result.build());
             return true;
         } catch (JSONException e) {
@@ -491,38 +494,44 @@ public class AsyncTriggerFetcher {
         return true;
     }
 
-    private boolean isValidAggregateDuplicationKey(JSONArray aggregateDeduplicationKeys)
-            throws JSONException {
+    private Optional<String> getValidAggregateDuplicationKeysString(
+            JSONArray aggregateDeduplicationKeys) throws JSONException {
+        JSONArray validAggregateDeduplicationKeys = new JSONArray();
         if (aggregateDeduplicationKeys.length()
                 > MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION) {
             LogUtil.d(
                     "Aggregate deduplication keys have more keys than permitted. %s",
                     aggregateDeduplicationKeys.length());
-            return false;
+            return Optional.empty();
         }
         for (int i = 0; i < aggregateDeduplicationKeys.length(); i++) {
-            JSONObject aggregateDedupKey = aggregateDeduplicationKeys.getJSONObject(i);
-            String deduplicationKey = aggregateDedupKey.optString("deduplication_key");
+            JSONObject aggregateDedupKey = new JSONObject();
+            JSONObject deduplication_key = aggregateDeduplicationKeys.getJSONObject(i);
+            String deduplicationKey = deduplication_key.optString("deduplication_key");
             if (!FetcherUtil.isValidAggregateDeduplicationKey(deduplicationKey)) {
-                return false;
+                return Optional.empty();
             }
-            if (!aggregateDedupKey.isNull("filters")) {
-                JSONArray filters = Filter.maybeWrapFilters(aggregateDedupKey, "filters");
+            aggregateDedupKey.put("deduplication_key", deduplicationKey);
+            if (!deduplication_key.isNull("filters")) {
+                JSONArray filters = Filter.maybeWrapFilters(deduplication_key, "filters");
                 if (!FetcherUtil.areValidAttributionFilters(filters)) {
                     LogUtil.d("Aggregate deduplication key: " + i + " contains invalid filters.");
-                    return false;
+                    return Optional.empty();
                 }
+                aggregateDedupKey.put("filters", filters);
             }
-            if (!aggregateDedupKey.isNull("not_filters")) {
-                JSONArray notFilters = Filter.maybeWrapFilters(aggregateDedupKey, "not_filters");
+            if (!deduplication_key.isNull("not_filters")) {
+                JSONArray notFilters = Filter.maybeWrapFilters(deduplication_key, "not_filters");
                 if (!FetcherUtil.areValidAttributionFilters(notFilters)) {
                     LogUtil.d(
                             "Aggregate deduplication key: " + i + " contains invalid not filters.");
-                    return false;
+                    return Optional.empty();
                 }
+                aggregateDedupKey.put("not_filters", notFilters);
             }
+            validAggregateDeduplicationKeys.put(aggregateDedupKey);
         }
-        return true;
+        return Optional.of(validAggregateDeduplicationKeys.toString());
     }
 
     private String extractValidAttributionConfigs(JSONArray attributionConfigsArray)
@@ -536,7 +545,7 @@ public class AsyncTriggerFetcher {
         return validAttributionConfigsArray.toString();
     }
 
-    private boolean isValidAdtechBitMapping(JSONObject adTechBitMapping) throws JSONException {
+    private boolean isValidXNetworkKeyMapping(JSONObject adTechBitMapping) throws JSONException {
         // TODO: Might need to add logic for keys' and values' lengths.
         Iterator<String> keys = adTechBitMapping.keys();
         while (keys.hasNext()) {

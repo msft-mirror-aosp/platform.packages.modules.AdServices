@@ -23,6 +23,8 @@ import android.database.sqlite.SQLiteDatabase;
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.MeasurementTables;
 
+import org.json.JSONArray;
+
 import java.util.UUID;
 
 /** Migrates Measurement DB from user version 3 to 6. */
@@ -48,10 +50,10 @@ public class MeasurementDbMigratorV6 extends AbstractMeasurementDbMigrator {
         String.format(
                 "ALTER TABLE %1$s RENAME COLUMN %2$s TO %3$s",
                 MeasurementTables.SourceContract.TABLE,
-                MeasurementTables.SourceContract.DEDUP_KEYS,
+                MeasurementTablesDeprecated.Source.DEDUP_KEYS,
                 MeasurementTables.SourceContract.EVENT_REPORT_DEDUP_KEYS),
         String.format(
-                "ALTER TABLE %1$s ADD %2$s INTEGER",
+                "ALTER TABLE %1$s ADD %2$s TEXT",
                 MeasurementTables.SourceContract.TABLE,
                 MeasurementTables.SourceContract.AGGREGATE_REPORT_DEDUP_KEYS),
         String.format(
@@ -111,6 +113,19 @@ public class MeasurementDbMigratorV6 extends AbstractMeasurementDbMigrator {
                     MeasurementTables.SourceContract.EXPIRY_TIME,
                     MeasurementTables.SourceContract.AGGREGATABLE_REPORT_WINDOW);
 
+    public static final String UPDATE_TRIGGER_STATEMENT = String.format(
+            "UPDATE %1$s SET %2$s = '%3$s' WHERE %2$s IS NULL",
+            MeasurementTables.TriggerContract.TABLE,
+            MeasurementTables.TriggerContract.EVENT_TRIGGERS,
+            new JSONArray().toString());
+
+    private static final String[] ALTER_TRIGGER_STATEMENTS_V6 = {
+        String.format(
+                "ALTER TABLE %1$s ADD %2$s TEXT",
+                MeasurementTables.TriggerContract.TABLE,
+                MeasurementTables.TriggerContract.AGGREGATABLE_DEDUPLICATION_KEYS)
+    };
+
     public MeasurementDbMigratorV6() {
         super(6);
     }
@@ -139,6 +154,7 @@ public class MeasurementDbMigratorV6 extends AbstractMeasurementDbMigrator {
         migrateSourceReportWindows(db);
         migrateAsyncRegistrationRegistrationId(db);
         migrateSourceRegistrationId(db);
+        migrateTriggerData(db);
     }
 
     private static void alterAsyncRegistrationTable(SQLiteDatabase db) {
@@ -193,6 +209,9 @@ public class MeasurementDbMigratorV6 extends AbstractMeasurementDbMigrator {
                         MeasurementTables.TriggerContract.TABLE,
                         MeasurementTables.TriggerContract.X_NETWORK_KEY_MAPPING)) {
             for (String sql : ALTER_STATEMENTS_XNA_TRIGGER) {
+                db.execSQL(sql);
+            }
+            for (String sql : ALTER_TRIGGER_STATEMENTS_V6) {
                 db.execSQL(sql);
             }
         }
@@ -274,5 +293,9 @@ public class MeasurementDbMigratorV6 extends AbstractMeasurementDbMigrator {
         if (rowCount != 1) {
             LogUtil.d("MeasurementDbMigratorV6: failed to update source record.");
         }
+    }
+
+    private static void migrateTriggerData(SQLiteDatabase db) {
+        db.execSQL(UPDATE_TRIGGER_STATEMENT);
     }
 }

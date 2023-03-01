@@ -28,6 +28,10 @@ public final class MeasurementTablesDeprecated {
         String SCHEDULED_TIME = "scheduled_time";
     }
 
+    public interface Source {
+        String DEDUP_KEYS = "dedup_keys";
+    }
+
     // Private constructor to prevent instantiation.
     private MeasurementTablesDeprecated() {
     }

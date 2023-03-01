@@ -79,7 +79,6 @@ public final class MeasurementTables {
         String PUBLISHER_TYPE = "publisher_type";
         String APP_DESTINATION = "app_destination";
         String WEB_DESTINATION = "web_destination";
-        String DEDUP_KEYS = "dedup_keys";
         String EVENT_REPORT_DEDUP_KEYS = "event_report_dedup_keys";
         String AGGREGATE_REPORT_DEDUP_KEYS = "aggregate_report_dedup_keys";
         String EVENT_TIME = "event_time";
@@ -120,6 +119,7 @@ public final class MeasurementTables {
         String EVENT_TRIGGERS = "event_triggers";
         String AGGREGATE_TRIGGER_DATA = "aggregate_trigger_data";
         String AGGREGATE_VALUES = "aggregate_values";
+        String AGGREGATABLE_DEDUPLICATION_KEYS = "aggregatable_deduplication_keys";
         String FILTERS = "filters";
         String NOT_FILTERS = "not_filters";
         String DEBUG_KEY = "debug_key";
@@ -309,7 +309,7 @@ public final class MeasurementTables {
                     + " INTEGER, "
                     + SourceContract.STATUS
                     + " INTEGER, "
-                    + SourceContract.DEDUP_KEYS
+                    + MeasurementTablesDeprecated.Source.DEDUP_KEYS
                     + " TEXT, "
                     + SourceContract.SOURCE_TYPE
                     + " TEXT, "
@@ -456,6 +456,8 @@ public final class MeasurementTables {
                     + TriggerContract.AGGREGATE_TRIGGER_DATA
                     + " TEXT, "
                     + TriggerContract.AGGREGATE_VALUES
+                    + " TEXT, "
+                    + TriggerContract.AGGREGATABLE_DEDUPLICATION_KEYS
                     + " TEXT, "
                     + TriggerContract.FILTERS
                     + " TEXT, "

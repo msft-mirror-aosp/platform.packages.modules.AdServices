@@ -148,7 +148,7 @@ public final class AttributionConfigTest {
     public void build_missingSourceAdTech_throwsJsonException() throws JSONException {
         // Setup
         JSONObject attributionConfigJson = createExampleAttributionConfigJson();
-        attributionConfigJson.remove(AttributionConfig.AttributionConfigContract.SOURCE_ADTECH);
+        attributionConfigJson.remove(AttributionConfig.AttributionConfigContract.SOURCE_NETWORK);
 
         // Assertion
         assertThrows(
@@ -160,7 +160,7 @@ public final class AttributionConfigTest {
     public void build_withOnlySourceAdTechField_success() throws JSONException {
         // Setup
         JSONObject attributionConfigJson = new JSONObject();
-        attributionConfigJson.put("source_adtech", SOURCE_AD_TECH);
+        attributionConfigJson.put("source_network", SOURCE_AD_TECH);
 
         // Assertion
         assertEquals(
@@ -181,7 +181,7 @@ public final class AttributionConfigTest {
 
     private JSONObject createExampleAttributionConfigJson() throws JSONException {
         JSONObject attributionConfig = new JSONObject();
-        attributionConfig.put("source_adtech", SOURCE_AD_TECH);
+        attributionConfig.put("source_network", SOURCE_AD_TECH);
         JSONObject sourcePriorityRangeJson = new JSONObject();
         sourcePriorityRangeJson.put("start", 100L);
         sourcePriorityRangeJson.put("end", 1000L);

@@ -41,7 +41,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -124,6 +123,7 @@ public class XnaSourceCreator {
             AttributionConfig attributionConfig, Trigger trigger) {
         return source ->
                 Optional.ofNullable(attributionConfig.getSourceExpiryOverride())
+                        .map(TimeUnit.SECONDS::toMillis)
                         .map(
                                 expiryOverride ->
                                         (source.getEventTime() + expiryOverride)
@@ -162,7 +162,10 @@ public class XnaSourceCreator {
     private Source generateDerivedSource(
             AttributionConfig attributionConfig, Source parentSource, Trigger trigger) {
         Source.Builder builder = Source.Builder.from(parentSource);
-        builder.setId(UUID.randomUUID().toString());
+        // A derived source will not be persisted in the DB. Generated reports should be related to
+        // a persisted source, so the ID needs to be null to satisfy FK constraint from
+        // report -> source table.
+        builder.setId(null);
         builder.setParentId(parentSource.getId());
         builder.setStatus(Source.Status.ACTIVE);
         setIfPresent(attributionConfig.getPriority(), builder::setPriority);
@@ -181,6 +184,11 @@ public class XnaSourceCreator {
                         .map(installTime -> installTime < trigger.getTriggerTime())
                         .orElse(false);
         builder.setInstallAttributed(isInstallAttributed);
+
+        // Skip copying these parameters on the derived source
+        builder.setDebugKey(null);
+        builder.setAggregateReportDedupKeys(new ArrayList<>());
+        builder.setEventReportDedupKeys(new ArrayList<>());
         return builder.build();
     }
 
@@ -218,10 +226,8 @@ public class XnaSourceCreator {
         long parentSourceExpiry = parentSource.getExpiryTime();
         long attributionConfigExpiry =
                 Optional.ofNullable(attributionConfig.getExpiry())
-                        .map(
-                                expiry ->
-                                        parentSource.getEventTime()
-                                                + TimeUnit.SECONDS.toMillis(expiry))
+                        .map(TimeUnit.SECONDS::toMillis)
+                        .map(expiry -> (parentSource.getEventTime() + expiry))
                         .orElse(Long.MAX_VALUE);
         return Math.min(parentSourceExpiry, attributionConfigExpiry);
     }

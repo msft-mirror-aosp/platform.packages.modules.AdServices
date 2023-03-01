@@ -31,6 +31,7 @@ import android.annotation.RequiresPermission;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 import android.net.Uri;
+import android.os.Build;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
 import android.os.SystemClock;
@@ -79,6 +80,20 @@ public class MeasurementManager {
     private ServiceBinder<IMeasurementService> mServiceBinder;
     private AdIdManager mAdIdManager;
     private Executor mAdIdExecutor = Executors.newCachedThreadPool();
+
+    /**
+     * Factory method for creating an instance of MeasurementManager.
+     *
+     * @param context The {@link Context} to use
+     * @return A {@link MeasurementManager} instance
+     */
+    @NonNull
+    public static MeasurementManager get(@NonNull Context context) {
+        // On T+, context.getSystemService() does more than just call constructor.
+        return (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                ? context.getSystemService(MeasurementManager.class)
+                : new MeasurementManager(context);
+    }
 
     /**
      * Create MeasurementManager.
@@ -178,7 +193,8 @@ public class MeasurementManager {
      * Register an attribution source (click or view).
      *
      * @param attributionSource the platform issues a request to this URI in order to fetch metadata
-     *     associated with the attribution source.
+     *     associated with the attribution source. The source metadata is stored on device, making
+     *     it eligible to be matched to future triggers.
      * @param inputEvent either an {@link InputEvent} object (for a click event) or null (for a view
      *     event).
      * @param executor used by callback to dispatch results.
@@ -439,7 +455,8 @@ public class MeasurementManager {
      * Register a trigger (conversion).
      *
      * @param trigger the API issues a request to this URI to fetch metadata associated with the
-     *     trigger.
+     *     trigger. The trigger metadata is stored on-device, and is eligible to be matched with
+     *     sources during the attribution process.
      * @param executor used by callback to dispatch results.
      * @param callback intended to notify asynchronously the API result.
      */

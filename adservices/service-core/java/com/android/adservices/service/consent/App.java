@@ -20,9 +20,10 @@ import android.annotation.NonNull;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.content.pm.PackageManager.ApplicationInfoFlags;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.drawable.Drawable;
+
+import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 
 /**
  * POJO Represents a App.
@@ -52,7 +53,7 @@ public class App {
     public String getAppDisplayName(@NonNull PackageManager packageManager) {
         ApplicationInfo ai;
         try {
-            ai = packageManager.getApplicationInfo(getPackageName(), ApplicationInfoFlags.of(0));
+            ai = PackageManagerCompatUtils.getApplicationInfo(packageManager, getPackageName(), 0);
         } catch (NameNotFoundException e) {
             return "";
         }

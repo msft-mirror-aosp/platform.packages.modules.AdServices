@@ -27,6 +27,8 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.AttributionConfig;
 import com.android.adservices.service.measurement.EventReport;
@@ -37,7 +39,10 @@ import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SystemHealthParams;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
+import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateAttributionData;
+import com.android.adservices.service.measurement.aggregation.AggregateDeduplicationKey;
 import com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution;
 import com.android.adservices.service.measurement.aggregation.AggregatePayloadGenerator;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
@@ -70,8 +75,16 @@ class AttributionJobHandler {
     private static final String API_VERSION = "0.1";
     private final DatastoreManager mDatastoreManager;
 
+    private final Flags mFlags;
+
     AttributionJobHandler(DatastoreManager datastoreManager) {
         mDatastoreManager = datastoreManager;
+        mFlags = FlagsFactory.getFlags();
+    }
+
+    AttributionJobHandler(DatastoreManager datastoreManager, Flags flags) {
+        mDatastoreManager = datastoreManager;
+        mFlags = flags;
     }
 
     /**
@@ -159,18 +172,25 @@ class AttributionJobHandler {
                 measurementDao.getNumAggregateReportsPerDestination(
                         trigger.getAttributionDestination(), trigger.getDestinationType());
 
-        if (numReports >= SystemHealthParams.MAX_AGGREGATE_REPORTS_PER_DESTINATION) {
+        if (numReports >= SystemHealthParams.getMaxAggregateReportsPerDestination()) {
             LogUtil.d(
                     String.format(
                             Locale.ENGLISH,
                             "Aggregate reports for destination %1$s exceeds system health limit of"
                                     + " %2$d.",
                             trigger.getAttributionDestination(),
-                            SystemHealthParams.MAX_AGGREGATE_REPORTS_PER_DESTINATION));
+                            SystemHealthParams.getMaxAggregateReportsPerDestination()));
             return false;
         }
 
         try {
+            Optional<AggregateDeduplicationKey> aggregateDeduplicationKey =
+                    maybeGetAggregateDeduplicationKey(source, trigger);
+            if (aggregateDeduplicationKey.isPresent()
+                    && source.getAggregateReportDedupKeys()
+                            .contains(aggregateDeduplicationKey.get().getDeduplicationKey())) {
+                return false;
+            }
             Optional<List<AggregateHistogramContribution>> contributions =
                     AggregatePayloadGenerator.generateAttributionReport(source, trigger);
             if (!contributions.isPresent()) {
@@ -208,7 +228,7 @@ class AttributionJobHandler {
                             .setAttributionDestination(trigger.getAttributionDestinationBaseUri())
                             .setSourceRegistrationTime(roundDownToDay(source.getEventTime()))
                             .setScheduledReportTime(trigger.getTriggerTime() + randomTime)
-                            .setEnrollmentId(source.getEnrollmentId())
+                            .setEnrollmentId(trigger.getEnrollmentId())
                             .setDebugCleartextPayload(
                                     AggregateReport.generateDebugPayload(contributions.get()))
                             .setAggregateAttributionData(
@@ -224,12 +244,8 @@ class AttributionJobHandler {
                             .setTriggerId(trigger.getId())
                             .build();
 
-            if (source.getParentId() == null) {
-                // Only update aggregate contributions for an original source, not for a derived
-                // source
-                measurementDao.updateSourceAggregateContributions(source);
-            }
-            measurementDao.insertAggregateReport(aggregateReport);
+            finalizeAggregateReportCreation(
+                    source, aggregateDeduplicationKey, aggregateReport, measurementDao);
             // TODO (b/230618328): read from DB and upload unencrypted aggregate report.
             return true;
         } catch (JSONException e) {
@@ -241,7 +257,7 @@ class AttributionJobHandler {
     private Optional<Source> selectSourceToAttribute(
             Trigger trigger, IMeasurementDao measurementDao) throws DatastoreException {
         List<Source> matchingSources;
-        if (trigger.getAttributionConfig() == null) {
+        if (!mFlags.getMeasurementEnableXNA() || trigger.getAttributionConfig() == null) {
             matchingSources = measurementDao.getMatchingActiveSources(trigger);
         } else {
             // XNA attribution is possible
@@ -296,12 +312,41 @@ class AttributionJobHandler {
                 // It can't be null, has already been validated at fetcher
                 enrollmentIds.add(
                         attributionConfigJson.getString(
-                                AttributionConfig.AttributionConfigContract.SOURCE_ADTECH));
+                                AttributionConfig.AttributionConfigContract.SOURCE_NETWORK));
             }
         } catch (JSONException e) {
             LogUtil.d(e, "Failed to parse attribution configs.");
         }
         return enrollmentIds;
+    }
+
+    private Optional<AggregateDeduplicationKey> maybeGetAggregateDeduplicationKey(
+            Source source, Trigger trigger) {
+        try {
+            Optional<AggregateDeduplicationKey> dedupKey;
+            Optional<AggregatableAttributionSource> optionalAggregateAttributionSource =
+                    source.getAggregatableAttributionSource();
+            Optional<AggregatableAttributionTrigger> optionalAggregateAttributionTrigger =
+                    trigger.getAggregatableAttributionTrigger();
+            if (!optionalAggregateAttributionSource.isPresent()
+                    || !optionalAggregateAttributionTrigger.isPresent()) {
+                return Optional.empty();
+            }
+            AggregatableAttributionSource aggregateAttributionSource =
+                    optionalAggregateAttributionSource.get();
+            AggregatableAttributionTrigger aggregateAttributionTrigger =
+                    optionalAggregateAttributionTrigger.get();
+            dedupKey =
+                    aggregateAttributionTrigger.maybeExtractDedupKey(
+                            aggregateAttributionSource.getFilterMap());
+            return dedupKey;
+        } catch (JSONException e) {
+            LogUtil.e(
+                    e,
+                    "JSONException when parse aggregate dedup key fields in "
+                            + "AttributionJobHandler.");
+            return Optional.empty();
+        }
     }
 
     private void ignoreRemainingSources(
@@ -344,14 +389,14 @@ class AttributionJobHandler {
                 measurementDao.getNumEventReportsPerDestination(
                         trigger.getAttributionDestination(), trigger.getDestinationType());
 
-        if (numReports >= SystemHealthParams.MAX_EVENT_REPORTS_PER_DESTINATION) {
+        if (numReports >= SystemHealthParams.getMaxEventReportsPerDestination()) {
             LogUtil.d(
                     String.format(
                             Locale.ENGLISH,
                             "Event reports for destination %1$s exceeds system health limit of"
                                     + " %2$d.",
                             trigger.getAttributionDestination(),
-                            SystemHealthParams.MAX_EVENT_REPORTS_PER_DESTINATION));
+                            SystemHealthParams.getMaxEventReportsPerDestination()));
             return false;
         }
 
@@ -436,6 +481,26 @@ class AttributionJobHandler {
         measurementDao.updateSourceEventReportDedupKeys(source);
 
         measurementDao.insertEventReport(eventReport);
+    }
+
+    private void finalizeAggregateReportCreation(
+            Source source,
+            Optional<AggregateDeduplicationKey> aggregateDeduplicationKey,
+            AggregateReport aggregateReport,
+            IMeasurementDao measurementDao)
+            throws DatastoreException {
+        if (aggregateDeduplicationKey.isPresent()) {
+            source.getAggregateReportDedupKeys()
+                    .add(aggregateDeduplicationKey.get().getDeduplicationKey());
+        }
+
+        if (source.getParentId() == null) {
+            // Only update aggregate contributions for an original source, not for a derived
+            // source
+            measurementDao.updateSourceAggregateContributions(source);
+            measurementDao.updateSourceAggregateReportDedupKeys(source);
+        }
+        measurementDao.insertAggregateReport(aggregateReport);
     }
 
     private void attributeTriggerAndInsertAttribution(Trigger trigger, Source source,

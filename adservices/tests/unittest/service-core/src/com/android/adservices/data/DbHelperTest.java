@@ -173,11 +173,11 @@ public class DbHelperTest {
     @Test
     public void testGetDatabaseVersionToCreate() {
         // Test feature flag is off
-        when(mMockFlags.getEnableDatabaseSchemaVersion5()).thenReturn(false);
+        when(mMockFlags.getEnableTopicMigration()).thenReturn(false);
         assertThat(DbHelper.getDatabaseVersionToCreate()).isEqualTo(CURRENT_DATABASE_VERSION);
 
         // Test feature flag is on
-        when(mMockFlags.getEnableDatabaseSchemaVersion5()).thenReturn(true);
+        when(mMockFlags.getEnableTopicMigration()).thenReturn(true);
         assertThat(DbHelper.getDatabaseVersionToCreate()).isEqualTo(DATABASE_VERSION_V7);
     }
 
@@ -196,7 +196,7 @@ public class DbHelperTest {
 
     private void assertMeasurementSchema(SQLiteDatabase db) {
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_source", 31));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_trigger", 18));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_trigger", 19));
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_async_registration_contract", 18));
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_event_report", 17));
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_attribution", 10));

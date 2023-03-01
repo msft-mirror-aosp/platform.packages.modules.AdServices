@@ -63,9 +63,11 @@ public class TopicsActionDelegate extends BaseActionDelegate {
                         switch (event) {
                             case SWITCH_ON_TOPICS:
                                 mTopicsViewModel.setTopicsConsent(true);
+                                mTopicsViewModel.refresh();
                                 break;
                             case SWITCH_OFF_TOPICS:
                                 mTopicsViewModel.setTopicsConsent(false);
+                                mTopicsViewModel.refresh();
                                 break;
                             case BLOCK_TOPIC:
                                 logUIAction(ActionEnum.BLOCK_TOPIC_SELECTED);

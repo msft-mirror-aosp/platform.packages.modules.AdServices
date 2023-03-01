@@ -24,6 +24,7 @@ import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.adservices.consent.AppConsentManager;
 import com.android.server.adservices.consent.ConsentManager;
 import com.android.server.adservices.data.topics.TopicsDao;
+import com.android.server.adservices.rollback.RollbackHandlingManager;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,18 +40,27 @@ import java.util.Map;
  */
 public class UserInstanceManager {
 
+    private final Object mLock = new Object();
+
     // We have 1 ConsentManager per user/user profile. This is to isolate user's data.
-    @GuardedBy("UserInstanceManager.class")
+    @GuardedBy("mLock")
     private final Map<Integer, ConsentManager> mConsentManagerMapLocked = new ArrayMap<>();
 
-    @GuardedBy("UserInstanceManager.class")
+    @GuardedBy("mLock")
     private final Map<Integer, AppConsentManager> mAppConsentManagerMapLocked = new ArrayMap<>();
+
 
     @GuardedBy("UserInstanceManager.class")
     private final Map<Integer, BlockedTopicsManager> mBlockedTopicsManagerMapLocked =
             new ArrayMap<>();
 
+    // We have 1 RollbackManager per user/user profile, to isolate each user's data.
+    @GuardedBy("mLock")
+    private final Map<Integer, RollbackHandlingManager> mRollbackHandlingManagerMapLocked =
+            new ArrayMap<>();
+
     private final String mAdServicesBaseDir;
+
     private final TopicsDao mTopicsDao;
 
     UserInstanceManager(@NonNull TopicsDao topicsDao, @NonNull String adServicesBaseDir) {
@@ -60,7 +70,7 @@ public class UserInstanceManager {
 
     @NonNull
     ConsentManager getOrCreateUserConsentManagerInstance(int userIdentifier) throws IOException {
-        synchronized (UserInstanceManager.class) {
+        synchronized (mLock) {
             ConsentManager instance = getUserConsentManagerInstance(userIdentifier);
             if (instance == null) {
                 instance = ConsentManager.createConsentManager(mAdServicesBaseDir, userIdentifier);
@@ -73,7 +83,7 @@ public class UserInstanceManager {
     @NonNull
     AppConsentManager getOrCreateUserAppConsentManagerInstance(int userIdentifier)
             throws IOException {
-        synchronized (UserInstanceManager.class) {
+        synchronized (mLock) {
             AppConsentManager instance = mAppConsentManagerMapLocked.get(userIdentifier);
             if (instance == null) {
                 instance =
@@ -93,14 +103,29 @@ public class UserInstanceManager {
                 instance = new BlockedTopicsManager(mTopicsDao, userIdentifier);
                 mBlockedTopicsManagerMapLocked.put(userIdentifier, instance);
             }
+            return instance;
+        }
+    }
 
+    @NonNull
+    RollbackHandlingManager getOrCreateUserRollbackHandlingManagerInstance(
+            int userIdentifier, int packageVersion) throws IOException {
+        synchronized (mLock) {
+            RollbackHandlingManager instance =
+                    mRollbackHandlingManagerMapLocked.get(userIdentifier);
+            if (instance == null) {
+                instance =
+                        RollbackHandlingManager.createRollbackHandlingManager(
+                                mAdServicesBaseDir, userIdentifier, packageVersion);
+                mRollbackHandlingManagerMapLocked.put(userIdentifier, instance);
+            }
             return instance;
         }
     }
 
     @VisibleForTesting
     ConsentManager getUserConsentManagerInstance(int userIdentifier) {
-        synchronized (UserInstanceManager.class) {
+        synchronized (mLock) {
             return mConsentManagerMapLocked.get(userIdentifier);
         }
     }
@@ -110,7 +135,7 @@ public class UserInstanceManager {
      * directory: /data/system/adservices/user_id
      */
     void deleteUserInstance(int userIdentifier) throws Exception {
-        synchronized (UserInstanceManager.class) {
+        synchronized (mLock) {
             ConsentManager instance = mConsentManagerMapLocked.get(userIdentifier);
             if (instance != null) {
                 String userDirectoryPath = mAdServicesBaseDir + "/" + userIdentifier;
@@ -124,18 +149,22 @@ public class UserInstanceManager {
             }
 
             // Delete all data in the database that belongs to this user
-            mTopicsDao.deleteAllDataOfUser(userIdentifier);
+            mTopicsDao.clearAllBlockedTopicsOfUser(userIdentifier);
         }
     }
 
     @VisibleForTesting
     void tearDownForTesting() {
-        synchronized (UserInstanceManager.class) {
+        synchronized (mLock) {
             for (ConsentManager consentManager : mConsentManagerMapLocked.values()) {
                 consentManager.tearDownForTesting();
             }
             for (AppConsentManager appConsentManager : mAppConsentManagerMapLocked.values()) {
                 appConsentManager.tearDownForTesting();
+            }
+            for (RollbackHandlingManager rollbackHandlingManager :
+                    mRollbackHandlingManagerMapLocked.values()) {
+                rollbackHandlingManager.tearDownForTesting();
             }
         }
     }

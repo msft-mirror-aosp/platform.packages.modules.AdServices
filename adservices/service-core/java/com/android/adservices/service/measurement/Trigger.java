@@ -111,7 +111,8 @@ public class Trigger {
                 && Objects.equals(mFilters, trigger.mFilters)
                 && Objects.equals(mNotFilters, trigger.mNotFilters)
                 && Objects.equals(mAttributionConfig, trigger.mAttributionConfig)
-                && Objects.equals(mAdtechKeyMapping, trigger.mAdtechKeyMapping);
+                && Objects.equals(mAdtechKeyMapping, trigger.mAdtechKeyMapping)
+                && Objects.equals(mAggregateDeduplicationKeys, trigger.mAggregateDeduplicationKeys);
     }
 
     @Override
@@ -133,7 +134,8 @@ public class Trigger {
                 mAdIdPermission,
                 mArDebugPermission,
                 mAttributionConfig,
-                mAdtechKeyMapping);
+                mAdtechKeyMapping,
+                mAggregateDeduplicationKeys);
     }
 
     /** Unique identifier for the {@link Trigger}. */
@@ -285,7 +287,7 @@ public class Trigger {
     }
 
     /**
-     * Returns field attribution config JSONArray as String. example: [{ "source_adtech":
+     * Returns field attribution config JSONArray as String. example: [{ "source_network":
      * "AdTech1-Ads", "source_priority_range": { “start”: 100, “end”: 1000 }, "source_filters": {
      * "campaign_type": ["install"], "source_type": ["navigation"], }, "priority": "99", "expiry":
      * "604800", "filter_data":{ "campaign_type": ["install"], } }]
@@ -353,8 +355,8 @@ public class Trigger {
             valueMap.put(key, values.getInt(key));
         }
         List<AggregateDeduplicationKey> dedupKeyList = new ArrayList<>();
-        if (this.mAggregateDeduplicationKeys != null) {
-            JSONArray dedupKeyObjects = new JSONArray(this.mAggregateDeduplicationKeys);
+        if (getAggregateDeduplicationKeys() != null) {
+            JSONArray dedupKeyObjects = new JSONArray(this.getAggregateDeduplicationKeys());
             for (int i = 0; i < dedupKeyObjects.length(); i++) {
                 JSONObject dedupKeyObject = dedupKeyObjects.getJSONObject(i);
                 UnsignedLong dedupKey =
@@ -554,7 +556,7 @@ public class Trigger {
 
         /** See {@link Trigger#getAggregateDeduplicationKeys()} */
         @NonNull
-        public Builder setAggregateDeduplicationKeys(@Nullable String aggregateDeduplicationKeys) {
+        public Builder setAggregateDeduplicationKeys(@NonNull String aggregateDeduplicationKeys) {
             mBuilding.mAggregateDeduplicationKeys = aggregateDeduplicationKeys;
             return this;
         }
