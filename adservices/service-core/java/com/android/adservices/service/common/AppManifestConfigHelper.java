@@ -46,10 +46,12 @@ public class AppManifestConfigHelper {
             @NonNull Context context, @NonNull String appPackageName)
             throws PackageManager.NameNotFoundException, XmlParseException {
         PackageManager pm = context.getPackageManager();
-        if (pm.getProperty(AD_SERVICES_CONFIG_PROPERTY, appPackageName) == null) {
+        PackageManager.Property property =
+                pm.getProperty(AD_SERVICES_CONFIG_PROPERTY, appPackageName);
+        if (property == null) {
             throw new XmlParseException("Property not found");
         }
-        int resId = pm.getProperty(AD_SERVICES_CONFIG_PROPERTY, appPackageName).getResourceId();
+        int resId = property.getResourceId();
         Resources resources = pm.getResourcesForApplication(appPackageName);
         return resources.getXml(resId);
     }
