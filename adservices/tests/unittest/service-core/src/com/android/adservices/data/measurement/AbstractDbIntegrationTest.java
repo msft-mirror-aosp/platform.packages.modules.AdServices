@@ -79,14 +79,14 @@ public abstract class AbstractDbIntegrationTest {
                         .startMocking();
         ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
 
-        SQLiteDatabase db = DbTestUtil.getDbHelperForTest().getWritableDatabase();
+        SQLiteDatabase db = DbTestUtil.getMeasurementDbHelperForTest().getWritableDatabase();
         emptyTables(db);
         seedTables(db, mInput);
     }
 
     @After
     public void after() {
-        SQLiteDatabase db = DbTestUtil.getDbHelperForTest().getWritableDatabase();
+        SQLiteDatabase db = DbTestUtil.getMeasurementDbHelperForTest().getWritableDatabase();
         emptyTables(db);
 
         mStaticMockSession.finishMocking();
@@ -105,10 +105,11 @@ public abstract class AbstractDbIntegrationTest {
     @Test
     public void runTest() throws DatastoreException, JSONException {
         runActionToTest();
-        SQLiteDatabase readerDb = DbTestUtil.getDbHelperForTest().getReadableDatabase();
+        SQLiteDatabase readerDb = DbTestUtil.getMeasurementDbHelperForTest().getReadableDatabase();
         DbState dbState = new DbState(readerDb);
         mOutput.sortAll();
         dbState.sortAll();
+
         Assert.assertTrue("Event report mismatch",
                 areEqual(mOutput.mEventReportList, dbState.mEventReportList));
         // Custom matching for AggregateReport due to non-deterministic reporting random number
