@@ -35,6 +35,8 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
+import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
@@ -121,7 +123,8 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                         backgroundExecutorService,
                         lightweightExecutorService,
                         mCustomAudienceDevOverridesHelper,
-                        adServicesHttpsClient);
+                        adServicesHttpsClient,
+                        mFlags);
     }
 
     @VisibleForTesting
@@ -185,13 +188,19 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
 
         // TODO(b/221862406): implement ads filtering logic.
 
-        FluentFuture<String> buyerDecisionLogic =
-                mJsFetcher.getBuyerDecisionLogicWithLogger(
+        AdServicesHttpClientRequest biddingLogicUriHttpRequest =
+                JsVersionHelper.getRequestWithVersionHeader(
                         customAudience.getBiddingLogicUri(),
+                        JsVersionHelper.JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS,
+                        mFlags.getFledgeAdSelectionBiddingLogicJsVersion(),
+                        mFlags.getFledgeHttpJsCachingEnabled());
+
+        FluentFuture<AdServicesHttpClientResponse> buyerDecisionLogic =
+                mJsFetcher.getBuyerDecisionLogicWithLogger(
+                        biddingLogicUriHttpRequest,
                         customAudience.getOwner(),
                         customAudience.getBuyer(),
                         customAudience.getName(),
-                        mFlags.getFledgeHttpJsCachingEnabled(),
                         runAdBiddingPerCAExecutionLogger);
 
         FluentFuture<Pair<AdWithBid, String>> adWithBidPair =
@@ -352,7 +361,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
     @VisibleForTesting
     FluentFuture<Pair<AdWithBid, String>> runBidding(
             @NonNull DBCustomAudience customAudience,
-            @NonNull String buyerDecisionLogicJs,
+            @NonNull AdServicesHttpClientResponse buyerDecisionLogicJs,
             @NonNull AdSelectionSignals buyerSignals,
             @NonNull AdSelectionSignals contextualSignals,
             @NonNull CustomAudienceSignals customAudienceSignals,
@@ -384,7 +393,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                 trustedBiddingSignals.transformAsync(
                         biddingSignals ->
                                 mAdSelectionScriptEngine.generateBids(
-                                        buyerDecisionLogicJs,
+                                        buyerDecisionLogicJs.getResponseBody(),
                                         ads,
                                         adSelectionSignals,
                                         buyerSignals,
@@ -397,7 +406,8 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                 .transform(
                         adWithBids -> {
                             return new Pair<>(
-                                    getBestAdWithBidPerCA(adWithBids), buyerDecisionLogicJs);
+                                    getBestAdWithBidPerCA(adWithBids),
+                                    buyerDecisionLogicJs.getResponseBody());
                         },
                         mLightweightExecutorService)
                 .transform(
