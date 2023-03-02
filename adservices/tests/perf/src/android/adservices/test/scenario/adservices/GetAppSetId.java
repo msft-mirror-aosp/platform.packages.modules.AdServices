@@ -45,8 +45,7 @@ public class GetAppSetId {
     private static final String DEFAULT_APP_SET_ID = "00000000-0000-0000-0000-000000000000";
     private static final String TAG = GetAppSetId.class.getSimpleName();
     private static final Context sContext = ApplicationProvider.getApplicationContext();
-    private static final AppSetIdManager sAppSetIdManager =
-            sContext.getSystemService(AppSetIdManager.class);
+    private static final AppSetIdManager sAppSetIdManager = AppSetIdManager.get(sContext);
     private static final Executor sExecutor = Executors.newCachedThreadPool();
 
     @Before
