@@ -27,6 +27,9 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 public class SelectAdsFlagRule implements TestRule {
+    // Command prevent activity manager from backing off on restarting the adservices process
+    public static final String DISABLE_ADSERVICES_BACKOFF_CMD =
+            "am service-restart-backoff disable com.google.android.adservices.api";
 
     @Override
     public Statement apply(Statement base, Description description) {
@@ -47,6 +50,8 @@ public class SelectAdsFlagRule implements TestRule {
         disableApiThrottling();
         disablePhenotypeFlagUpdates();
         extendAuctionTimeouts();
+        // Disable backoff since we will be killing the process between tests
+        ShellUtils.runShellCommand(DISABLE_ADSERVICES_BACKOFF_CMD);
     }
 
     private static void extendAuctionTimeouts() {

@@ -114,7 +114,6 @@ public final class SandboxedSdkContext extends ContextWrapper {
 
         mSdkSandboxSystemServiceRegistry = sdkSandboxSystemServiceRegistry;
         mClassLoader = classLoader;
-        // On legacy context, we manually create classloader which is different from baseContext's.
         mCustomizedSdkContextEnabled = isCustomizedSdkContextEnabled;
     }
 

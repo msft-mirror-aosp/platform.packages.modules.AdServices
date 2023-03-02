@@ -28,6 +28,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.App;
 import com.android.adservices.ui.settings.activities.BlockedAppsActivity;
 import com.android.adservices.ui.settings.delegates.BlockedAppsActionDelegate;
@@ -76,12 +77,22 @@ public class AdServicesSettingsBlockedAppsFragment extends Fragment {
         recyclerView.setAdapter(adapter);
 
         View noBlockedAppsMessage = rootView.findViewById(R.id.no_blocked_apps_message);
+        View noBlockedAppsGaMessage = rootView.findViewById(R.id.no_blocked_apps_ga_message);
         viewModel
                 .getBlockedApps()
-                .observe(getViewLifecycleOwner(), blockedAppsList -> {
-                    noBlockedAppsMessage.setVisibility(
-                            blockedAppsList.isEmpty() ? View.VISIBLE : View.GONE);
-                    adapter.notifyDataSetChanged();
-                });
+                .observe(
+                        getViewLifecycleOwner(),
+                        blockedAppsList -> {
+                            if (!FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+                                noBlockedAppsGaMessage.setVisibility(View.GONE);
+                                noBlockedAppsMessage.setVisibility(
+                                        blockedAppsList.isEmpty() ? View.VISIBLE : View.GONE);
+                            } else {
+                                noBlockedAppsMessage.setVisibility(View.GONE);
+                                noBlockedAppsGaMessage.setVisibility(
+                                        blockedAppsList.isEmpty() ? View.VISIBLE : View.GONE);
+                            }
+                            adapter.notifyDataSetChanged();
+                        });
     }
 }

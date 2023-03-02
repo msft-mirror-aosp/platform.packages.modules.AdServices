@@ -37,7 +37,12 @@
       ]
     },
     {
-      "name": "CtsSdkSandboxWebkitTestCases[com.google.android.adservices.apex]"
+      "name": "CtsSdkSandboxWebkitTestCases[com.google.android.adservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
     },
     {
       "name": "SdkSandboxManagerDisabledTests[com.google.android.adservices.apex]"
@@ -60,7 +65,12 @@
       "name": "CtsSdkSandboxInprocessTests"
     },
     {
-      "name": "CtsSdkSandboxWebkitTestCases"
+      "name": "CtsSdkSandboxWebkitTestCases",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
     },
     {
       "name": "SdkSandboxManagerServiceUnitTests"

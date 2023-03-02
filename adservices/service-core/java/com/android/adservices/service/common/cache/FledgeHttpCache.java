@@ -23,6 +23,7 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.net.HttpHeaders;
 
 import java.net.URL;
@@ -45,7 +46,6 @@ public class FledgeHttpCache implements HttpCache {
 
     @VisibleForTesting static final String PROPERTY_NO_CACHE = "no-cache";
     @VisibleForTesting static final String PROPERTY_NO_STORE = "no-store";
-    // TODO(b/259751285) support max-age cache header
     @VisibleForTesting static final String PROPERTY_MAX_AGE = "max-age";
     @VisibleForTesting static final String PROPERTY_MAX_AGE_SEPARATOR = "=";
 
@@ -99,9 +99,21 @@ public class FledgeHttpCache implements HttpCache {
      * @param requestPropertiesMap associated with the original url connection
      */
     @Override
-    public void put(URL url, String body, Map<String, List<String>> requestPropertiesMap) {
+    public void put(
+            URL url,
+            String body,
+            Map<String, List<String>> requestPropertiesMap,
+            Map<String, List<String>> responseHeaders) {
         int traceCookie = Tracing.beginAsyncSection(Tracing.CACHE_PUT);
-        List<String> cacheProperties = requestPropertiesMap.get(HttpHeaders.CACHE_CONTROL);
+        List<String> cacheProperties = new ArrayList<>();
+        List<String> requestCacheProperties = requestPropertiesMap.get(HttpHeaders.CACHE_CONTROL);
+        if (requestCacheProperties != null && !requestCacheProperties.isEmpty()) {
+            cacheProperties.addAll(requestCacheProperties);
+        }
+        List<String> responseCacheProperties = responseHeaders.get(HttpHeaders.CACHE_CONTROL);
+        if (responseCacheProperties != null && !responseCacheProperties.isEmpty()) {
+            cacheProperties.addAll(responseCacheProperties);
+        }
         if ((cacheProperties != null)
                 && (cacheProperties.contains(PROPERTY_NO_CACHE)
                         || cacheProperties.contains(PROPERTY_NO_STORE))) {
@@ -115,6 +127,10 @@ public class FledgeHttpCache implements HttpCache {
                         .setResponseBody(body)
                         .setCreationTimestamp(Instant.now())
                         .setMaxAgeSeconds(Math.min(requestMaxAge, mMaxAgeSeconds))
+                        .setResponseHeaders(
+                                ImmutableMap.<String, List<String>>builder()
+                                        .putAll(responseHeaders.entrySet())
+                                        .build())
                         .build();
         mCacheEntryDao.persistCacheEntry(entry);
         notifyObservers(CacheEventType.PUT);

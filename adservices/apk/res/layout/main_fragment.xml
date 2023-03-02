@@ -53,7 +53,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:src="@drawable/ic_main_view_ga_image"
-                    tools:ignore="ContentDescription"
+                    android:contentDescription="@string/ic_main_view_ga_image_description"
                     android:visibility="gone"/>
             </LinearLayout>
 
@@ -181,32 +181,27 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:layout_marginStart="2dp"
                     android:src="@drawable/ic_info_icon"
                     tools:ignore="ContentDescription" />
                 <TextView
-                    android:layout_marginTop="18dp"
                     android:layout_marginStart="0dp"
                     android:text="@string/settingsUI_topics_ga_title"
                     style="@style/MainStyle.Body2BoldBullet" />
                 <TextView
-                    android:layout_marginTop="18dp"
                     android:text="@string/settingsUI_main_view_ad_topics_info"
                     style="@style/MainStyle.Body2" />
                 <TextView
-                    android:layout_marginTop="18dp"
                     android:layout_marginStart="0dp"
                     android:text="@string/settingsUI_apps_ga_title"
                     style="@style/MainStyle.Body2BoldBullet" />
                 <TextView
-                    android:layout_marginTop="18dp"
                     android:text="@string/settingsUI_main_view_apps_info"
                     style="@style/MainStyle.Body2" />
                 <TextView
                     android:text="@string/settingsUI_measurement_ga_title"
+                    android:layout_marginStart="0dp"
                     style="@style/MainStyle.Body2BoldBullet" />
                 <TextView
-                    android:layout_marginTop="18dp"
                     android:text="@string/settingsU_main_view_measurement_info"
                     style="@style/MainStyle.Body2" />
             </LinearLayout>

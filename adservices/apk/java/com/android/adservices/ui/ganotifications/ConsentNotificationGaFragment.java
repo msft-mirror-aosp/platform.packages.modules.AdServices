@@ -55,7 +55,7 @@ public class ConsentNotificationGaFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
-        UiStatsLogger.logGaLandingPageDisplayed(getContext());
+        UiStatsLogger.logLandingPageDisplayed(getContext());
         setupListeners(savedInstanceState);
     }
 
@@ -200,7 +200,7 @@ public class ConsentNotificationGaFragment extends Fragment {
                 mLeftControlButton.setVisibility(View.VISIBLE);
                 mRightControlButton.setText(
                         mIsEUDevice
-                                ? R.string.notificationUI_right_control_button_text_eu
+                                ? R.string.notificationUI_right_control_button_ga_text_eu
                                 : R.string.notificationUI_right_control_button_text);
             } else {
                 mLeftControlButton.setVisibility(View.INVISIBLE);

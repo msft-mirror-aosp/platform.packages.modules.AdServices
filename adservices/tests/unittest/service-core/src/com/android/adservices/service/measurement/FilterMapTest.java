@@ -21,6 +21,8 @@ import static org.junit.Assert.assertNotEquals;
 
 import androidx.test.filters.SmallTest;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -77,6 +79,19 @@ public final class FilterMapTest {
         assertNotEquals(data1.hashCode(), data2.hashCode());
         assertNotEquals(data1, data2);
         assertNotEquals(dataSet1, dataSet2);
+    }
+
+    @Test
+    public void serializeAsJson_success() throws JSONException {
+        // Setup
+        FilterMap expected = createExample();
+
+        // Execution
+        JSONObject jsonObject = expected.serializeAsJson();
+        FilterMap actual = new FilterMap.Builder().buildFilterData(jsonObject).build();
+
+        // Assertion
+        assertEquals(expected, actual);
     }
 
     private FilterMap createExample() {

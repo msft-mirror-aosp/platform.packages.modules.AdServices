@@ -51,6 +51,9 @@ public class Throttler {
         // Key to throttle Report impressions API
         FLEDGE_API_REPORT_IMPRESSIONS,
 
+        // Key to throttle Report impressions API
+        FLEDGE_API_REPORT_INTERACTION,
+
         // Key to throttle Select Ads API
         FLEDGE_API_SELECT_ADS,
 
@@ -165,6 +168,7 @@ public class Throttler {
         mRateLimitPerApiMap.put(ApiKey.FLEDGE_API_JOIN_CUSTOM_AUDIENCE, defaultPermitsPerSecond);
         mRateLimitPerApiMap.put(ApiKey.FLEDGE_API_LEAVE_CUSTOM_AUDIENCE, defaultPermitsPerSecond);
         mRateLimitPerApiMap.put(ApiKey.FLEDGE_API_REPORT_IMPRESSIONS, defaultPermitsPerSecond);
+        mRateLimitPerApiMap.put(ApiKey.FLEDGE_API_REPORT_INTERACTION, defaultPermitsPerSecond);
         mRateLimitPerApiMap.put(ApiKey.FLEDGE_API_SELECT_ADS, defaultPermitsPerSecond);
 
         mRateLimitPerApiMap.put(

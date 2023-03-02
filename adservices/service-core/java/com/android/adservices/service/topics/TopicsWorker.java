@@ -29,6 +29,7 @@ import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
@@ -50,7 +51,10 @@ import javax.annotation.concurrent.ThreadSafe;
 @ThreadSafe
 @WorkerThread
 public class TopicsWorker {
+    private static final Object SINGLETON_LOCK = new Object();
+
     // Singleton instance of the TopicsWorker.
+    @GuardedBy("SINGLETON_LOCK")
     private static volatile TopicsWorker sTopicsWorker;
 
     // Lock for concurrent Read and Write processing in TopicsWorker.
@@ -88,7 +92,7 @@ public class TopicsWorker {
     @NonNull
     public static TopicsWorker getInstance(Context context) {
         if (sTopicsWorker == null) {
-            synchronized (TopicsWorker.class) {
+            synchronized (SINGLETON_LOCK) {
                 if (sTopicsWorker == null) {
                     sTopicsWorker =
                             new TopicsWorker(
@@ -287,6 +291,11 @@ public class TopicsWorker {
                 tablesToExclude.add(TopicsTables.TopicContributorsContract.TABLE);
             }
             mCacheManager.clearAllTopicsData(tablesToExclude);
+
+            // If clearing all Topics data, clear preserved blocked topics in system server.
+            if (!tablesToExclude.contains(TopicsTables.BlockedTopicsContract.TABLE)) {
+                mBlockedTopicsManager.clearAllBlockedTopicsInSystemServiceIfNeeded();
+            }
 
             loadCache();
             LogUtil.v(

@@ -20,6 +20,8 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
+import static org.junit.Assert.assertThrows;
+
 import android.content.Context;
 
 import androidx.javascriptengine.JavaScriptSandbox;
@@ -37,6 +39,7 @@ import com.google.common.util.concurrent.Futures;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.function.ThrowingRunnable;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
@@ -61,7 +64,27 @@ public class JavaScriptSandboxProviderTest {
                         .mockStatic(JavaScriptSandbox.class)
                         .initMocks(this)
                         .startMocking();
+    }
 
+    @After
+    public void shutDown() {
+        mStaticMockSession.finishMocking();
+    }
+
+    @Test
+    public void testJsSandboxProviderCreateFails() {
+        when(JavaScriptSandbox.isSupported()).thenReturn(false);
+        mJsSandboxProvider = new JSScriptEngine.JavaScriptSandboxProvider(mProfilerMock);
+        ThrowingRunnable getFutureInstance =
+                () -> mJsSandboxProvider.getFutureInstance(mApplicationContext);
+        assertThrows(JSSandboxIsNotAvailableException.class, getFutureInstance);
+        verify(JavaScriptSandbox::isSupported);
+    }
+
+    @Test
+    public void testJsSandboxProviderCreatesOnlyOneInstance()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        when(JavaScriptSandbox.isSupported()).thenReturn(true);
         doReturn(Futures.immediateFuture(mSandbox))
                 .when(
                         () -> {
@@ -72,16 +95,7 @@ public class JavaScriptSandboxProviderTest {
         when(mProfilerMock.start(JSScriptEngineLogConstants.SANDBOX_INIT_TIME))
                 .thenReturn(mSandboxInitWatch);
         mJsSandboxProvider = new JSScriptEngine.JavaScriptSandboxProvider(mProfilerMock);
-    }
 
-    @After
-    public void shutDown() {
-        mStaticMockSession.finishMocking();
-    }
-
-    @Test
-    public void testJsSandboxProviderCreatesOnlyOneInstance()
-            throws ExecutionException, InterruptedException, TimeoutException {
         mJsSandboxProvider.getFutureInstance(mApplicationContext).get(5, TimeUnit.SECONDS);
         mJsSandboxProvider.getFutureInstance(mApplicationContext).get(5, TimeUnit.SECONDS);
 
@@ -92,6 +106,17 @@ public class JavaScriptSandboxProviderTest {
     @Test
     public void testJsSandboxProviderCreatesNewInstanceAfterFirstIsDestroyed()
             throws ExecutionException, InterruptedException, TimeoutException {
+        when(JavaScriptSandbox.isSupported()).thenReturn(true);
+        doReturn(Futures.immediateFuture(mSandbox))
+                .when(
+                        () -> {
+                            return JavaScriptSandbox.createConnectedInstanceAsync(
+                                    mApplicationContext);
+                        });
+
+        when(mProfilerMock.start(JSScriptEngineLogConstants.SANDBOX_INIT_TIME))
+                .thenReturn(mSandboxInitWatch);
+        mJsSandboxProvider = new JSScriptEngine.JavaScriptSandboxProvider(mProfilerMock);
         mJsSandboxProvider.getFutureInstance(mApplicationContext).get(5, TimeUnit.SECONDS);
 
         // Waiting for the first instance closure
