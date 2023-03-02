@@ -20,10 +20,12 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FrequencyCapFilters;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.google.auto.value.AutoValue;
 
 import java.time.Instant;
+import java.util.Objects;
 
 /**
  * A value class representing a single histogram event.
@@ -45,11 +47,11 @@ public abstract class HistogramEvent {
     public abstract AdTechIdentifier getBuyer();
 
     /** Returns the owner package name of the custom audience the histogram is associated with. */
-    @NonNull
+    @Nullable
     public abstract String getCustomAudienceOwner();
 
     /** Returns the name of the custom audience the histogram is associated with. */
-    @NonNull
+    @Nullable
     public abstract String getCustomAudienceName();
 
     /** Returns the enumerated type of the ad event. */
@@ -82,11 +84,11 @@ public abstract class HistogramEvent {
 
         /** Sets the owner package name of the custom audience the histogram is associated with. */
         @NonNull
-        public abstract Builder setCustomAudienceOwner(@NonNull String customAudienceOwner);
+        public abstract Builder setCustomAudienceOwner(@Nullable String customAudienceOwner);
 
         /** Sets the name of the custom audience the histogram is associated with. */
         @NonNull
-        public abstract Builder setCustomAudienceName(@NonNull String customAudienceName);
+        public abstract Builder setCustomAudienceName(@Nullable String customAudienceName);
 
         /** Sets the enumerated type of the ad event. */
         @NonNull
@@ -99,9 +101,36 @@ public abstract class HistogramEvent {
         /**
          * Builds and returns the {@link HistogramEvent} object.
          *
-         * @throws IllegalStateException if any field is unset when the object is built
+         * <p>Note that AutoValue doesn't by itself do any validation, so splitting the builder with
+         * a manual verification is recommended.
+         *
+         * @throws IllegalStateException if any required field is unset when the object is built
          */
         @NonNull
-        public abstract HistogramEvent build();
+        abstract HistogramEvent autoValueBuild();
+
+        /**
+         * Builds, validates, and returns the {@link HistogramEvent} object.
+         *
+         * @throws IllegalStateException if any required field is unset when the object is built
+         * @throws NullPointerException if any custom audience field is unset when the object is
+         *     built with a {@link FrequencyCapFilters#AD_EVENT_TYPE_WIN} event type
+         */
+        @NonNull
+        public HistogramEvent build() {
+            HistogramEvent event = autoValueBuild();
+
+            // Win-typed events must be scoped to a custom audience
+            if (event.getAdEventType() == FrequencyCapFilters.AD_EVENT_TYPE_WIN) {
+                Objects.requireNonNull(
+                        event.getCustomAudienceOwner(),
+                        "Custom audience owner must not be null for WIN events");
+                Objects.requireNonNull(
+                        event.getCustomAudienceName(),
+                        "Custom audience name must not be null for WIN events");
+            }
+
+            return event;
+        }
     }
 }
