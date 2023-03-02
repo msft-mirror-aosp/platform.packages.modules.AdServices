@@ -78,12 +78,15 @@ import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.data.adselection.AppInstallDao;
+import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdSelectionServiceImpl;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
+import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
@@ -94,6 +97,7 @@ import com.android.adservices.service.customaudience.CustomAudienceServiceImpl;
 import com.android.adservices.service.customaudience.CustomAudienceValidator;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -105,6 +109,7 @@ import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -171,6 +176,7 @@ public class FledgeE2ETest {
     private AdServicesHttpsClient mAdServicesHttpsClient;
     private CustomAudienceDao mCustomAudienceDao;
     private AdSelectionEntryDao mAdSelectionEntryDao;
+    private AppInstallDao mAppInstallDao;
     private ExecutorService mLightweightExecutorService;
     private ExecutorService mBackgroundExecutorService;
     private ScheduledThreadPoolExecutor mScheduledExecutor;
@@ -193,6 +199,11 @@ public class FledgeE2ETest {
 
     @Before
     public void setUp() throws Exception {
+        // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
+        // availability depends on an external component (the system webview) being higher than a
+        // certain minimum version. Marking that as an assumption that the test is making.
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
         // Test applications don't have the required permissions to read config P/H flags, and
         // injecting mocked flags everywhere is annoying and non-trivial for static methods
         mStaticMockSession =
@@ -215,6 +226,10 @@ public class FledgeE2ETest {
                 Room.inMemoryDatabaseBuilder(CONTEXT, AdSelectionDatabase.class)
                         .build()
                         .adSelectionEntryDao();
+        mAppInstallDao =
+                Room.inMemoryDatabaseBuilder(CONTEXT, SharedStorageDatabase.class)
+                        .build()
+                        .appInstallDao();
 
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
@@ -242,7 +257,8 @@ public class FledgeE2ETest {
         when(mMockDBAdSelectionFile.length()).thenReturn(DB_AD_SELECTION_FILE_SIZE);
         doNothing()
                 .when(mFledgeServiceFilter)
-                .filterRequest(any(), anyString(), anyBoolean(), anyInt(), anyInt(), any());
+                .filterRequest(
+                        any(), anyString(), anyBoolean(), anyBoolean(), anyInt(), anyInt(), any());
         when(ConsentManager.getInstance(CONTEXT)).thenReturn(mConsentManagerMock);
         when(AppImportanceFilter.create(any(), anyInt(), any()))
                 .thenReturn(mAppImportanceFilterMock);
@@ -918,6 +934,7 @@ public class FledgeE2ETest {
         mAdSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
@@ -1703,7 +1720,8 @@ public class FledgeE2ETest {
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
         doThrow(new ConsentManager.RevokedConsentException())
                 .when(mFledgeServiceFilter)
-                .filterRequest(any(), anyString(), anyBoolean(), anyInt(), anyInt(), any());
+                .filterRequest(
+                        any(), anyString(), anyBoolean(), anyBoolean(), anyInt(), anyInt(), any());
 
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
@@ -2071,15 +2089,21 @@ public class FledgeE2ETest {
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 DEFAULT_FLAGS),
                         FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLogger),
-                        mFledgeAllowListsFilterSpy,
                         mConsentManagerMock,
                         mDevContextFilter,
                         MoreExecutors.newDirectExecutorService(),
                         mAdServicesLogger,
                         mAppImportanceFilter,
                         flags,
-                        mThrottlerSupplier,
-                        CallingAppUidSupplierProcessImpl.create());
+                        CallingAppUidSupplierProcessImpl.create(),
+                        new CustomAudienceServiceFilter(
+                                CONTEXT,
+                                mConsentManagerMock,
+                                flags,
+                                mAppImportanceFilter,
+                                FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLogger),
+                                mFledgeAllowListsFilterSpy,
+                                mThrottlerSupplier));
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
@@ -2088,6 +2112,7 @@ public class FledgeE2ETest {
         mAdSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,

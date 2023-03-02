@@ -16,8 +16,6 @@
 
 package com.android.adservices.service.measurement.aggregation;
 
-import com.android.adservices.service.measurement.FilterMap;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -25,6 +23,10 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import androidx.test.filters.SmallTest;
+
+import com.android.adservices.service.measurement.FilterMap;
+import com.android.adservices.service.measurement.XNetworkData;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.junit.Test;
 
@@ -39,10 +41,12 @@ import java.util.Set;
 /** Unit tests for {@link AggregateTriggerData} */
 @SmallTest
 public final class AggregateTriggerDataTest {
+    private static final XNetworkData X_NETWORK_DATA =
+            new XNetworkData.Builder().setKeyOffset(new UnsignedLong(5L)).build();
 
     @Test
     public void testCreation() throws Exception {
-        AggregateTriggerData attributionTriggerData = createExample();
+        AggregateTriggerData attributionTriggerData = createExampleBuilder().build();
 
         assertEquals(attributionTriggerData.getKey().longValue(), 5L);
         assertEquals(attributionTriggerData.getSourceKeys().size(), 3);
@@ -51,6 +55,8 @@ public final class AggregateTriggerDataTest {
         List<FilterMap> nonFilteredSet = attributionTriggerData.getNotFilterSet().get();
         assertEquals(2, filterSet.get(0).getAttributionFilterMap().get("ctid").size());
         assertEquals(1, nonFilteredSet.get(0).getAttributionFilterMap().get("nctid").size());
+        assertTrue(attributionTriggerData.getXNetworkData().isPresent());
+        assertEquals(X_NETWORK_DATA, attributionTriggerData.getXNetworkData().get());
     }
 
     @Test
@@ -61,12 +67,13 @@ public final class AggregateTriggerDataTest {
         assertEquals(attributionTriggerData.getSourceKeys().size(), 0);
         assertFalse(attributionTriggerData.getFilterSet().isPresent());
         assertFalse(attributionTriggerData.getNotFilterSet().isPresent());
+        assertFalse(attributionTriggerData.getXNetworkData().isPresent());
     }
 
     @Test
     public void testHashCode_equals() throws Exception {
-        final AggregateTriggerData data1 = createExample();
-        final AggregateTriggerData data2 = createExample();
+        final AggregateTriggerData data1 = createExampleBuilder().build();
+        final AggregateTriggerData data2 = createExampleBuilder().build();
         final Set<AggregateTriggerData> dataSet1 = Set.of(data1);
         final Set<AggregateTriggerData> dataSet2 = Set.of(data2);
         assertEquals(data1.hashCode(), data2.hashCode());
@@ -76,7 +83,7 @@ public final class AggregateTriggerDataTest {
 
     @Test
     public void testHashCode_notEquals() throws Exception {
-        final AggregateTriggerData data1 = createExample();
+        final AggregateTriggerData data1 = createExampleBuilder().build();
 
         Map<String, List<String>> attributionFilterMap = new HashMap<>();
         attributionFilterMap.put("ctid", Arrays.asList("1"));
@@ -92,24 +99,38 @@ public final class AggregateTriggerDataTest {
                         .setAttributionFilterMap(attributionNonFilterMap)
                         .build();
 
-        final AggregateTriggerData data2 =
-                new AggregateTriggerData.Builder()
-                        .setKey(BigInteger.valueOf(1L))
+        assertNotEquals(
+                data1.hashCode(),
+                createExampleBuilder().setKey(BigInteger.valueOf(1L)).build().hashCode());
+        assertNotEquals(
+                data1.hashCode(),
+                createExampleBuilder()
                         .setSourceKeys(
                                 new HashSet<>(
                                         Arrays.asList(
-                                                "campCounts", "campGeoCounts", "campGeoValue")))
-                        .setFilterSet(List.of(filterMap))
-                        .setNotFilterSet(List.of(nonFilterMap))
-                        .build();
-        final Set<AggregateTriggerData> dataSet1 = Set.of(data1);
-        final Set<AggregateTriggerData> dataSet2 = Set.of(data2);
-        assertNotEquals(data1.hashCode(), data2.hashCode());
-        assertNotEquals(data1, data2);
-        assertNotEquals(dataSet1, dataSet2);
+                                                "otherCampCounts",
+                                                "campGeoCounts",
+                                                "campGeoValue")))
+                        .build()
+                        .hashCode());
+        assertNotEquals(
+                data1.hashCode(),
+                createExampleBuilder().setFilterSet(List.of(filterMap)).build().hashCode());
+        assertNotEquals(
+                data1.hashCode(),
+                createExampleBuilder().setNotFilterSet(List.of(nonFilterMap)).build().hashCode());
+        assertNotEquals(
+                data1.hashCode(),
+                createExampleBuilder()
+                        .setXNetworkData(
+                                new XNetworkData.Builder()
+                                        .setKeyOffset(new UnsignedLong(100L))
+                                        .build())
+                        .build()
+                        .hashCode());
     }
 
-    private AggregateTriggerData createExample() {
+    private AggregateTriggerData.Builder createExampleBuilder() {
         Map<String, List<String>> attributionFilterMap = new HashMap<>();
         attributionFilterMap.put("ctid", Arrays.asList("1", "2"));
         FilterMap filterMap =
@@ -130,6 +151,6 @@ public final class AggregateTriggerDataTest {
                         new HashSet<>(Arrays.asList("campCounts", "campGeoCounts", "campGeoValue")))
                 .setFilterSet(List.of(filterMap))
                 .setNotFilterSet(List.of(nonFilterMap))
-                .build();
+                .setXNetworkData(X_NETWORK_DATA);
     }
 }

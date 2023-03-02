@@ -18,7 +18,6 @@ package com.android.adservices.service.stats;
 
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_UNSET;
 
 import static com.android.adservices.data.adselection.AdSelectionDatabase.DATABASE_NAME;
 import static com.android.adservices.service.stats.AdSelectionExecutionLogger.MISSING_END_GET_AD_SELECTION_LOGIC;
@@ -54,6 +53,7 @@ import static com.android.adservices.service.stats.AdSelectionExecutionLogger.RE
 import static com.android.adservices.service.stats.AdSelectionExecutionLogger.REPEATED_START_SCORE_ADS;
 import static com.android.adservices.service.stats.AdSelectionExecutionLogger.SCRIPT_JAVASCRIPT;
 import static com.android.adservices.service.stats.AdSelectionExecutionLogger.SCRIPT_UNSET;
+import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -91,21 +91,31 @@ import java.util.stream.Collectors;
 
 public class AdSelectionExecutionLoggerTest {
 
+    public static final int GET_BUYERS_CUSTOM_AUDIENCE_LATENCY_MS = 1;
+    public static final int RUN_AD_BIDDING_LATENCY_MS = 1;
+    public static final int GET_AD_SELECTION_LOGIC_LATENCY_MS = 1;
+    public static final int GET_TRUSTED_SCORING_SIGNALS_LATENCY_MS = 1;
+    public static final int SCORE_ADS_LATENCY_MS = 1;
+    public static final int PERSIST_AD_SELECTION_LATENCY_MS = 1;
+    public static final long DB_AD_SELECTION_FILE_SIZE = 10L;
+    public static final boolean IS_RMKT_ADS_WON_UNSET = false;
+    public static final int DB_AD_SELECTION_SIZE_IN_BYTES_UNSET = -1;
+    public static final boolean IS_RMKT_ADS_WON = true;
+    public static final int NUM_BUYERS_REQUESTED = 5;
+    public static final int NUM_BUYERS_FETCHED = 3;
     private static final long BINDER_ELAPSED_TIMESTAMP = 90L;
-    private static final int BINDER_LATENCY_MS = 2;
     public static final CallerMetadata sCallerMetadata =
             new CallerMetadata.Builder()
                     .setBinderElapsedTimestamp(BINDER_ELAPSED_TIMESTAMP)
                     .build();
+    private static final int BINDER_LATENCY_MS = 2;
     public static final long START_ELAPSED_TIMESTAMP =
             BINDER_ELAPSED_TIMESTAMP + (long) BINDER_LATENCY_MS / 2;
     public static final long BIDDING_STAGE_START_TIMESTAMP = START_ELAPSED_TIMESTAMP + 1L;
-    public static final int GET_BUYERS_CUSTOM_AUDIENCE_LATENCY_MS = 1;
     public static final long GET_BUYERS_CUSTOM_AUDIENCE_END_TIMESTAMP =
             BIDDING_STAGE_START_TIMESTAMP + GET_BUYERS_CUSTOM_AUDIENCE_LATENCY_MS;
     public static final long RUN_AD_BIDDING_START_TIMESTAMP =
             GET_BUYERS_CUSTOM_AUDIENCE_END_TIMESTAMP + 1L;
-    public static final int RUN_AD_BIDDING_LATENCY_MS = 1;
     public static final long RUN_AD_BIDDING_END_TIMESTAMP =
             RUN_AD_BIDDING_START_TIMESTAMP + RUN_AD_BIDDING_LATENCY_MS;
     public static final long BIDDING_STAGE_END_TIMESTAMP = RUN_AD_BIDDING_END_TIMESTAMP;
@@ -114,18 +124,15 @@ public class AdSelectionExecutionLoggerTest {
     public static final long RUN_AD_SCORING_START_TIMESTAMP = RUN_AD_BIDDING_END_TIMESTAMP;
     public static final long GET_AD_SELECTION_LOGIC_START_TIMESTAMP =
             RUN_AD_SCORING_START_TIMESTAMP + 1L;
-    public static final int GET_AD_SELECTION_LOGIC_LATENCY_MS = 1;
     public static final long GET_AD_SELECTION_LOGIC_END_TIMESTAMP =
             GET_AD_SELECTION_LOGIC_START_TIMESTAMP + GET_AD_SELECTION_LOGIC_LATENCY_MS;
     public static final long GET_AD_SCORES_START_TIMESTAMP = GET_AD_SELECTION_LOGIC_END_TIMESTAMP;
     public static final long GET_TRUSTED_SCORING_SIGNALS_START_TIMESTAMP =
             GET_AD_SCORES_START_TIMESTAMP + 1;
-    public static final int GET_TRUSTED_SCORING_SIGNALS_LATENCY_MS = 1;
     public static final long GET_TRUSTED_SCORING_SIGNALS_END_TIMESTAMP =
             GET_TRUSTED_SCORING_SIGNALS_START_TIMESTAMP + GET_TRUSTED_SCORING_SIGNALS_LATENCY_MS;
     public static final long SCORE_ADS_START_TIMESTAMP =
             GET_TRUSTED_SCORING_SIGNALS_END_TIMESTAMP + 1L;
-    public static final int SCORE_ADS_LATENCY_MS = 1;
     public static final long SCORE_ADS_END_TIMESTAMP =
             SCORE_ADS_START_TIMESTAMP + SCORE_ADS_LATENCY_MS;
     public static final long GET_AD_SCORES_END_TIMESTAMP = SCORE_ADS_END_TIMESTAMP;
@@ -136,7 +143,6 @@ public class AdSelectionExecutionLoggerTest {
             (int) (RUN_AD_SCORING_END_TIMESTAMP - RUN_AD_SCORING_START_TIMESTAMP);
     public static final long PERSIST_AD_SELECTION_START_TIMESTAMP =
             RUN_AD_SCORING_END_TIMESTAMP + 1;
-    public static final int PERSIST_AD_SELECTION_LATENCY_MS = 1;
     public static final long PERSIST_AD_SELECTION_END_TIMESTAMP =
             PERSIST_AD_SELECTION_START_TIMESTAMP + PERSIST_AD_SELECTION_LATENCY_MS;
     public static final long STOP_ELAPSED_TIMESTAMP = PERSIST_AD_SELECTION_END_TIMESTAMP + 1;
@@ -144,14 +150,8 @@ public class AdSelectionExecutionLoggerTest {
             (int) (STOP_ELAPSED_TIMESTAMP - START_ELAPSED_TIMESTAMP);
     public static final int RUN_AD_SELECTION_OVERALL_LATENCY_MS =
             BINDER_LATENCY_MS + RUN_AD_SELECTION_INTERNAL_FINAL_LATENCY_MS;
-    public static final long DB_AD_SELECTION_FILE_SIZE = 10L;
-    public static final boolean IS_RMKT_ADS_WON_UNSET = false;
-    public static final int DB_AD_SELECTION_SIZE_IN_BYTES_UNSET = -1;
-    public static final boolean IS_RMKT_ADS_WON = true;
     private static final Uri DECISION_LOGIC_URI =
             Uri.parse("https://developer.android.com/test/decisions_logic_uris");
-    public static final int NUM_BUYERS_REQUESTED = 5;
-    public static final int NUM_BUYERS_FETCHED = 3;
     private static final List<AdTechIdentifier> BUYERS =
             Arrays.asList(
                     AdSelectionConfigFixture.BUYER_1,
@@ -159,6 +159,13 @@ public class AdSelectionExecutionLoggerTest {
                     AdSelectionConfigFixture.BUYER_3);
     private static final List<DBCustomAudience> CUSTOM_AUDIENCES =
             DBCustomAudienceFixture.getListOfBuyersCustomAudiences(BUYERS);
+    private static final int NUM_OF_ADS_ENTERING_BIDDING =
+            CUSTOM_AUDIENCES.stream()
+                    .map(DBCustomAudience::getAds)
+                    .filter(Objects::nonNull)
+                    .map(List::size)
+                    .reduce(0, Integer::sum);
+    private static final int NUM_OF_CAS_ENTERING_BIDDING = CUSTOM_AUDIENCES.size();
     private static final double BID1 = 1.0;
     private static final double BID2 = 2.0;
     private static final double BID3 = 3.0;
@@ -167,13 +174,6 @@ public class AdSelectionExecutionLoggerTest {
                     Pair.create(AdSelectionConfigFixture.BUYER_1, BID1),
                     Pair.create(AdSelectionConfigFixture.BUYER_2, BID2),
                     Pair.create(AdSelectionConfigFixture.BUYER_3, BID3));
-    private static final int NUM_OF_ADS_ENTERING_BIDDING =
-            CUSTOM_AUDIENCES.stream()
-                    .map(DBCustomAudience::getAds)
-                    .filter(Objects::nonNull)
-                    .map(List::size)
-                    .reduce(0, Integer::sum);
-    private static final int NUM_OF_CAS_ENTERING_BIDDING = CUSTOM_AUDIENCES.size();
     public static final List<AdBiddingOutcome> AD_BIDDING_OUTCOMES =
             AdBiddingOutcomeFixture.getListOfAdBiddingOutcomes(buyersAndBids);
     private static final int NUM_OF_CAS_POST_BIDDING =
@@ -208,6 +208,16 @@ public class AdSelectionExecutionLoggerTest {
             SCRIPT_STRING.getBytes().length;
     public static final int FETCHED_TRUSTED_SCORING_SIGNALS_DATA_SIZE_IN_BYTES =
             SCRIPT_STRING.getBytes().length;
+    @Captor
+    ArgumentCaptor<RunAdSelectionProcessReportedStats>
+            mRunAdSelectionProcessReportedStatsArgumentCaptor;
+    @Captor
+    ArgumentCaptor<RunAdBiddingProcessReportedStats>
+            mRunAdBiddingProcessReportedStatsArgumentCaptor;
+    @Captor
+    ArgumentCaptor<RunAdScoringProcessReportedStats>
+            mRunAdScoringProcessReportedStatsArgumentCaptor;
+
     private String mAdSelectionLogic = SCRIPT_STRING;
     private AdSelectionSignals mAdSelectionSignals = AdSelectionSignals.fromString(SCRIPT_STRING);
     @Mock private Context mContextMock;
@@ -215,18 +225,6 @@ public class AdSelectionExecutionLoggerTest {
     @Mock private Clock mMockClock;
     @Mock private DBAdSelection mMockDBAdSelection;
     @Mock private AdServicesLogger mAdServicesLoggerMock;
-
-    @Captor
-    ArgumentCaptor<RunAdSelectionProcessReportedStats>
-            mRunAdSelectionProcessReportedStatsArgumentCaptor;
-
-    @Captor
-    ArgumentCaptor<RunAdBiddingProcessReportedStats>
-            mRunAdBiddingProcessReportedStatsArgumentCaptor;
-
-    @Captor
-    ArgumentCaptor<RunAdScoringProcessReportedStats>
-            mRunAdScoringProcessReportedStatsArgumentCaptor;
 
     @Before
     public void setUp() {
@@ -352,7 +350,7 @@ public class AdSelectionExecutionLoggerTest {
         assertThat(runAdScoringProcessReportedStats.getNumOfRemarketingAdsEnteringScoring())
                 .isEqualTo(NUM_OF_ADS_ENTERING_SCORING);
         assertThat(runAdScoringProcessReportedStats.getNumOfContextualAdsEnteringScoring())
-                .isEqualTo(STATUS_UNSET);
+                .isEqualTo(FIELD_UNSET);
         assertThat(runAdScoringProcessReportedStats.getRunAdScoringLatencyInMillis())
                 .isEqualTo(RUN_AD_SCORING_LATENCY_MS);
         assertThat(runAdScoringProcessReportedStats.getRunAdScoringResultCode())
@@ -481,7 +479,7 @@ public class AdSelectionExecutionLoggerTest {
         assertThat(runAdScoringProcessReportedStats.getNumOfRemarketingAdsEnteringScoring())
                 .isEqualTo(NUM_OF_ADS_ENTERING_SCORING);
         assertThat(runAdScoringProcessReportedStats.getNumOfContextualAdsEnteringScoring())
-                .isEqualTo(STATUS_UNSET);
+                .isEqualTo(FIELD_UNSET);
         assertThat(runAdScoringProcessReportedStats.getRunAdScoringLatencyInMillis())
                 .isEqualTo(RUN_AD_SCORING_LATENCY_MS);
         assertThat(runAdScoringProcessReportedStats.getRunAdScoringResultCode())
@@ -579,9 +577,9 @@ public class AdSelectionExecutionLoggerTest {
         assertThat(
                         runAdScoringProcessReportedStats
                                 .getFetchedTrustedScoringSignalsDataSizeInBytes())
-                .isEqualTo(STATUS_UNSET);
+                .isEqualTo(FIELD_UNSET);
         assertThat(runAdScoringProcessReportedStats.getScoreAdsLatencyInMillis())
-                .isEqualTo(STATUS_UNSET);
+                .isEqualTo(FIELD_UNSET);
         assertThat(runAdScoringProcessReportedStats.getGetAdScoresLatencyInMillis())
                 .isEqualTo((int) (RUN_AD_SCORING_END_TIMESTAMP - GET_AD_SCORES_START_TIMESTAMP));
         assertThat(runAdScoringProcessReportedStats.getGetAdScoresResultCode())
@@ -591,7 +589,7 @@ public class AdSelectionExecutionLoggerTest {
         assertThat(runAdScoringProcessReportedStats.getNumOfRemarketingAdsEnteringScoring())
                 .isEqualTo(NUM_OF_ADS_ENTERING_SCORING);
         assertThat(runAdScoringProcessReportedStats.getNumOfContextualAdsEnteringScoring())
-                .isEqualTo(STATUS_UNSET);
+                .isEqualTo(FIELD_UNSET);
         assertThat(runAdScoringProcessReportedStats.getRunAdScoringLatencyInMillis())
                 .isEqualTo(RUN_AD_SCORING_LATENCY_MS);
         assertThat(runAdScoringProcessReportedStats.getRunAdScoringResultCode())
@@ -673,27 +671,27 @@ public class AdSelectionExecutionLoggerTest {
         assertThat(runAdScoringProcessReportedStats.getGetAdSelectionLogicScriptType())
                 .isEqualTo(SCRIPT_UNSET);
         assertThat(runAdScoringProcessReportedStats.getFetchedAdSelectionLogicScriptSizeInBytes())
-                .isEqualTo(STATUS_UNSET);
+                .isEqualTo(FIELD_UNSET);
         assertThat(runAdScoringProcessReportedStats.getGetTrustedScoringSignalsLatencyInMillis())
-                .isEqualTo(STATUS_UNSET);
+                .isEqualTo(FIELD_UNSET);
         assertThat(runAdScoringProcessReportedStats.getGetTrustedScoringSignalsResultCode())
-                .isEqualTo(STATUS_UNSET);
+                .isEqualTo(FIELD_UNSET);
         assertThat(
                         runAdScoringProcessReportedStats
                                 .getFetchedTrustedScoringSignalsDataSizeInBytes())
-                .isEqualTo(STATUS_UNSET);
+                .isEqualTo(FIELD_UNSET);
         assertThat(runAdScoringProcessReportedStats.getScoreAdsLatencyInMillis())
-                .isEqualTo(STATUS_UNSET);
+                .isEqualTo(FIELD_UNSET);
         assertThat(runAdScoringProcessReportedStats.getGetAdScoresLatencyInMillis())
-                .isEqualTo(STATUS_UNSET);
+                .isEqualTo(FIELD_UNSET);
         assertThat(runAdScoringProcessReportedStats.getGetAdScoresResultCode())
-                .isEqualTo(STATUS_UNSET);
+                .isEqualTo(FIELD_UNSET);
         assertThat(runAdScoringProcessReportedStats.getNumOfCasEnteringScoring())
                 .isEqualTo(NUM_OF_CAS_ENTERING_SCORING);
         assertThat(runAdScoringProcessReportedStats.getNumOfRemarketingAdsEnteringScoring())
                 .isEqualTo(NUM_OF_ADS_ENTERING_SCORING);
         assertThat(runAdScoringProcessReportedStats.getNumOfContextualAdsEnteringScoring())
-                .isEqualTo(STATUS_UNSET);
+                .isEqualTo(FIELD_UNSET);
         assertThat(runAdScoringProcessReportedStats.getRunAdScoringLatencyInMillis())
                 .isEqualTo(RUN_AD_SCORING_LATENCY_MS);
         assertThat(runAdScoringProcessReportedStats.getRunAdScoringResultCode())
@@ -901,20 +899,19 @@ public class AdSelectionExecutionLoggerTest {
                 .isEqualTo(resultCode);
         assertThat(runAdBiddingProcessReportedStats.getNumBuyersRequested())
                 .isEqualTo(NUM_BUYERS_REQUESTED);
-        assertThat(runAdBiddingProcessReportedStats.getNumBuyersFetched())
-                .isEqualTo(AdServicesStatusUtils.STATUS_UNSET);
+        assertThat(runAdBiddingProcessReportedStats.getNumBuyersFetched()).isEqualTo(FIELD_UNSET);
         assertThat(runAdBiddingProcessReportedStats.getNumOfAdsEnteringBidding())
-                .isEqualTo(AdServicesStatusUtils.STATUS_UNSET);
+                .isEqualTo(FIELD_UNSET);
         assertThat(runAdBiddingProcessReportedStats.getNumOfCasEnteringBidding())
-                .isEqualTo(AdServicesStatusUtils.STATUS_UNSET);
+                .isEqualTo(FIELD_UNSET);
         assertThat(runAdBiddingProcessReportedStats.getNumOfCasPostBidding())
-                .isEqualTo(AdServicesStatusUtils.STATUS_UNSET);
+                .isEqualTo(FIELD_UNSET);
         assertThat(runAdBiddingProcessReportedStats.getRatioOfCasSelectingRmktAds())
                 .isEqualTo(RATIO_OF_CAS_UNSET);
         assertThat(runAdBiddingProcessReportedStats.getRunAdBiddingLatencyInMillis())
-                .isEqualTo(AdServicesStatusUtils.STATUS_UNSET);
+                .isEqualTo(FIELD_UNSET);
         assertThat(runAdBiddingProcessReportedStats.getRunAdBiddingResultCode())
-                .isEqualTo(AdServicesStatusUtils.STATUS_UNSET);
+                .isEqualTo(FIELD_UNSET);
         assertThat(runAdBiddingProcessReportedStats.getTotalAdBiddingStageLatencyInMillis())
                 .isEqualTo(TOTAL_BIDDING_STAGE_LATENCY_IN_MS);
     }
@@ -953,17 +950,17 @@ public class AdSelectionExecutionLoggerTest {
         assertThat(runAdBiddingProcessReportedStats.getNumBuyersFetched())
                 .isEqualTo(NUM_BUYERS_FETCHED);
         assertThat(runAdBiddingProcessReportedStats.getNumOfAdsEnteringBidding())
-                .isEqualTo(AdServicesStatusUtils.STATUS_UNSET);
+                .isEqualTo(FIELD_UNSET);
         assertThat(runAdBiddingProcessReportedStats.getNumOfCasEnteringBidding())
-                .isEqualTo(AdServicesStatusUtils.STATUS_UNSET);
+                .isEqualTo(FIELD_UNSET);
         assertThat(runAdBiddingProcessReportedStats.getNumOfCasPostBidding())
-                .isEqualTo(AdServicesStatusUtils.STATUS_UNSET);
+                .isEqualTo(FIELD_UNSET);
         assertThat(runAdBiddingProcessReportedStats.getRatioOfCasSelectingRmktAds())
                 .isEqualTo(RATIO_OF_CAS_UNSET);
         assertThat(runAdBiddingProcessReportedStats.getRunAdBiddingLatencyInMillis())
-                .isEqualTo(AdServicesStatusUtils.STATUS_UNSET);
+                .isEqualTo(FIELD_UNSET);
         assertThat(runAdBiddingProcessReportedStats.getRunAdBiddingResultCode())
-                .isEqualTo(AdServicesStatusUtils.STATUS_UNSET);
+                .isEqualTo(FIELD_UNSET);
         assertThat(runAdBiddingProcessReportedStats.getTotalAdBiddingStageLatencyInMillis())
                 .isEqualTo(TOTAL_BIDDING_STAGE_LATENCY_IN_MS);
     }
@@ -1008,7 +1005,7 @@ public class AdSelectionExecutionLoggerTest {
         assertThat(runAdBiddingProcessReportedStats.getNumOfCasEnteringBidding())
                 .isEqualTo(NUM_OF_CAS_ENTERING_BIDDING);
         assertThat(runAdBiddingProcessReportedStats.getNumOfCasPostBidding())
-                .isEqualTo(AdServicesStatusUtils.STATUS_UNSET);
+                .isEqualTo(FIELD_UNSET);
         assertThat(runAdBiddingProcessReportedStats.getRatioOfCasSelectingRmktAds())
                 .isEqualTo(RATIO_OF_CAS_UNSET);
         assertThat(runAdBiddingProcessReportedStats.getRunAdBiddingLatencyInMillis())
@@ -1552,9 +1549,9 @@ public class AdSelectionExecutionLoggerTest {
         assertThat(runAdSelectionProcessReportedStats.getDBAdSelectionSizeInBytes())
                 .isEqualTo(DB_AD_SELECTION_SIZE_IN_BYTES_UNSET);
         assertThat(runAdSelectionProcessReportedStats.getPersistAdSelectionLatencyInMillis())
-                .isEqualTo(AdServicesStatusUtils.STATUS_UNSET);
+                .isEqualTo(FIELD_UNSET);
         assertThat(runAdSelectionProcessReportedStats.getPersistAdSelectionResultCode())
-                .isEqualTo(AdServicesStatusUtils.STATUS_UNSET);
+                .isEqualTo(FIELD_UNSET);
         assertThat(runAdSelectionProcessReportedStats.getRunAdSelectionLatencyInMillis())
                 .isEqualTo(RUN_AD_SELECTION_INTERNAL_FINAL_LATENCY_MS);
         assertThat(runAdSelectionProcessReportedStats.getRunAdSelectionResultCode())

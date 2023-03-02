@@ -24,6 +24,9 @@ import android.app.job.JobScheduler;
 import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -32,6 +35,8 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.internal.annotations.VisibleForTesting;
+
+import com.google.common.util.concurrent.FutureCallback;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -42,6 +47,8 @@ import java.util.concurrent.TimeoutException;
  * Background fetch for FLEDGE Custom Audience API, executing periodic garbage collection and custom
  * audience updates.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class BackgroundFetchJobService extends JobService {
     @Override
     public boolean onStartJob(JobParameters params) {
@@ -73,30 +80,41 @@ public class BackgroundFetchJobService extends JobService {
         Instant jobStartTime = Clock.systemUTC().instant();
         LogUtil.d("Starting FLEDGE background fetch job at %s", jobStartTime.toString());
 
-        AdServicesExecutors.getBackgroundExecutor()
-                .execute(
-                        () -> {
-                            try {
-                                BackgroundFetchWorker.getInstance(this)
-                                        .runBackgroundFetch(jobStartTime);
-                            } catch (InterruptedException exception) {
-                                LogUtil.e(
-                                        exception,
-                                        "FLEDGE background fetch interrupted while waiting for"
-                                                + " custom audience updates");
-                            } catch (ExecutionException exception) {
-                                LogUtil.e(
-                                        exception,
-                                        "FLEDGE background fetch failed due to internal error");
-                            } catch (TimeoutException exception) {
-                                LogUtil.e(exception, "FLEDGE background fetch timeout exceeded");
-                            }
-
+        BackgroundFetchWorker.getInstance(this)
+                .runBackgroundFetch()
+                .addCallback(
+                        new FutureCallback<Void>() {
                             // Never manually reschedule the background fetch job, since it is
                             // already scheduled periodically and should try again multiple times
                             // per day
-                            jobFinished(params, false);
-                        });
+                            @Override
+                            public void onSuccess(Void result) {
+                                jobFinished(params, false);
+                            }
+
+                            @Override
+                            public void onFailure(Throwable t) {
+                                if (t instanceof InterruptedException) {
+                                    LogUtil.e(
+                                            t,
+                                            "FLEDGE background fetch interrupted while waiting for"
+                                                    + " custom audience updates");
+                                } else if (t instanceof ExecutionException) {
+                                    LogUtil.e(
+                                            t,
+                                            "FLEDGE background fetch failed due to internal error");
+                                } else if (t instanceof TimeoutException) {
+                                    LogUtil.e(t, "FLEDGE background fetch timeout exceeded");
+                                } else {
+                                    LogUtil.e(
+                                            t,
+                                            "FLEDGE background fetch failed due to unexpected"
+                                                    + " error");
+                                }
+                                jobFinished(params, false);
+                            }
+                        },
+                        AdServicesExecutors.getLightWeightExecutor());
 
         return true;
     }

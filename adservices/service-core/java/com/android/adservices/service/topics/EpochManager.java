@@ -19,11 +19,12 @@ package com.android.adservices.service.topics;
 import android.annotation.NonNull;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.Build;
 import android.text.TextUtils;
-import android.util.Dumpable;
 import android.util.Pair;
 
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.DbHelper;
@@ -35,6 +36,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.topics.classifier.Classifier;
 import com.android.adservices.service.topics.classifier.ClassifierManager;
+import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
 
@@ -49,7 +51,9 @@ import java.util.Random;
 import java.util.Set;
 
 /** A class to manage Epoch computation. */
-public class EpochManager implements Dumpable {
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
+public class EpochManager {
     // The tables to do garbage collection for old epochs
     // and its corresponding epoch_id column name.
     // Pair<Table Name, Column Name>
@@ -94,6 +98,9 @@ public class EpochManager implements Dumpable {
     @VisibleForTesting
     public static final String PADDED_TOP_TOPICS_STRING = "no_contributors_due_to_padding!";
 
+    private static final Object SINGLETON_LOCK = new Object();
+
+    @GuardedBy("SINGLETON_LOCK")
     private static EpochManager sSingleton;
 
     private final TopicsDao mTopicsDao;
@@ -123,7 +130,7 @@ public class EpochManager implements Dumpable {
     /** Returns an instance of the EpochManager given a context. */
     @NonNull
     public static EpochManager getInstance(@NonNull Context context) {
-        synchronized (EpochManager.class) {
+        synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
                 sSingleton =
                         new EpochManager(
@@ -523,7 +530,6 @@ public class EpochManager implements Dumpable {
                 && mTopicsDao.supportsTopicContributorsTable();
     }
 
-    @Override
     public void dump(@NonNull PrintWriter writer, @Nullable String[] args) {
         writer.println("==== EpochManager Dump ====");
         long epochId = getCurrentEpochId();

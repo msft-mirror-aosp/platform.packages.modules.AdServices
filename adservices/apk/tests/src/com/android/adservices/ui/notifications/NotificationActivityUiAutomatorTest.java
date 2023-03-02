@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
@@ -44,9 +45,11 @@ import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.common.BackgroundJobsManager;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -73,6 +76,9 @@ public class NotificationActivityUiAutomatorTest {
 
     @Before
     public void setup() throws UiObjectNotFoundException, IOException {
+        // Skip the test if it runs on unsupported platforms.
+        Assume.assumeTrue(ApkTestUtil.isDeviceSupported());
+
         MockitoAnnotations.initMocks(this);
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
@@ -181,10 +187,12 @@ public class NotificationActivityUiAutomatorTest {
         UiObject leftControlButton =
                 getElement(R.string.notificationUI_left_control_button_text_eu);
         UiObject rightControlButton =
-                getElement(R.string.notificationUI_right_control_button_text_eu);
+                getElement(R.string.notificationUI_right_control_button_ga_text_eu);
         UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
 
         verifyControlsAndMoreButtonAreDisplayed(leftControlButton, rightControlButton, moreButton);
+        verify(mConsentManager).getDefaultConsent();
+        verify(mConsentManager).getDefaultAdIdState();
         verifyNoMoreInteractions(mConsentManager);
     }
 
@@ -202,6 +210,8 @@ public class NotificationActivityUiAutomatorTest {
         UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
 
         verifyControlsAndMoreButtonAreDisplayed(leftControlButton, rightControlButton, moreButton);
+        verify(mConsentManager).getDefaultConsent();
+        verify(mConsentManager).getDefaultAdIdState();
         verifyNoMoreInteractions(mConsentManager);
     }
 
@@ -215,7 +225,7 @@ public class NotificationActivityUiAutomatorTest {
         UiObject leftControlButton =
                 getElement(R.string.notificationUI_left_control_button_text_eu);
         UiObject rightControlButton =
-                getElement(R.string.notificationUI_right_control_button_text_eu);
+                getElement(R.string.notificationUI_right_control_button_ga_text_eu);
         UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
 
         verifyControlsAndMoreButtonAreDisplayed(leftControlButton, rightControlButton, moreButton);
@@ -225,6 +235,8 @@ public class NotificationActivityUiAutomatorTest {
         UiObject acceptedTitle = getElement(R.string.notificationUI_fledge_measurement_title);
         assertThat(acceptedTitle.exists()).isTrue();
 
+        verify(mConsentManager, times(2)).getDefaultConsent();
+        verify(mConsentManager, times(2)).getDefaultAdIdState();
         verify(mConsentManager).enable(any(Context.class), eq(AdServicesApiType.TOPICS));
         verify(mConsentManager).enable(any(Context.class), eq(AdServicesApiType.FLEDGE));
         verify(mConsentManager).enable(any(Context.class), eq(AdServicesApiType.MEASUREMENTS));
@@ -241,7 +253,7 @@ public class NotificationActivityUiAutomatorTest {
         UiObject leftControlButton =
                 getElement(R.string.notificationUI_left_control_button_text_eu);
         UiObject rightControlButton =
-                getElement(R.string.notificationUI_right_control_button_text_eu);
+                getElement(R.string.notificationUI_right_control_button_ga_text_eu);
         UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
 
         verifyControlsAndMoreButtonAreDisplayed(leftControlButton, rightControlButton, moreButton);
@@ -251,6 +263,8 @@ public class NotificationActivityUiAutomatorTest {
         UiObject acceptedTitle = getElement(R.string.notificationUI_fledge_measurement_title);
         assertThat(acceptedTitle.exists()).isTrue();
 
+        verify(mConsentManager, times(2)).getDefaultConsent();
+        verify(mConsentManager, times(2)).getDefaultAdIdState();
         verify(mConsentManager).disable(any(Context.class), eq(AdServicesApiType.TOPICS));
         verify(mConsentManager).enable(any(Context.class), eq(AdServicesApiType.FLEDGE));
         verify(mConsentManager).enable(any(Context.class), eq(AdServicesApiType.MEASUREMENTS));

@@ -16,7 +16,10 @@
 
 package com.android.adservices.service.measurement.aggregation;
 
+import android.annotation.Nullable;
+
 import com.android.adservices.service.measurement.FilterMap;
+import com.android.adservices.service.measurement.XNetworkData;
 
 import java.math.BigInteger;
 import java.util.HashSet;
@@ -34,12 +37,14 @@ public class AggregateTriggerData {
     private Set<String> mSourceKeys;
     private Optional<List<FilterMap>> mFilterSet;
     private Optional<List<FilterMap>> mNotFilterSet;
+    private Optional<XNetworkData> mXNetworkData;
 
     private AggregateTriggerData() {
         mKey = null;
         mSourceKeys = new HashSet<>();
         mFilterSet = Optional.empty();
         mNotFilterSet = Optional.empty();
+        mXNetworkData = Optional.empty();
     }
 
     @Override
@@ -51,12 +56,13 @@ public class AggregateTriggerData {
         return Objects.equals(mKey, attributionTriggerData.mKey)
                 && Objects.equals(mSourceKeys, attributionTriggerData.mSourceKeys)
                 && Objects.equals(mFilterSet, attributionTriggerData.mFilterSet)
-                && Objects.equals(mNotFilterSet, attributionTriggerData.mNotFilterSet);
+                && Objects.equals(mNotFilterSet, attributionTriggerData.mNotFilterSet)
+                && Objects.equals(mXNetworkData, attributionTriggerData.mXNetworkData);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mKey, mSourceKeys);
+        return Objects.hash(mKey, mSourceKeys, mFilterSet, mNotFilterSet, mXNetworkData);
     }
 
     /**
@@ -88,6 +94,11 @@ public class AggregateTriggerData {
         return mNotFilterSet;
     }
 
+    /** Returns the serving adtech network object */
+    public Optional<XNetworkData> getXNetworkData() {
+        return mXNetworkData;
+    }
+
     /**
      * Builder for {@link AggregateTriggerData}.
      */
@@ -114,15 +125,21 @@ public class AggregateTriggerData {
             return this;
         }
 
-        /** See {@link AggregateTriggerData#getFilter()}. */
-        public Builder setFilterSet(List<FilterMap> filterSet) {
-            mBuilding.mFilterSet = Optional.of(filterSet);
+        /** See {@link AggregateTriggerData#getFilterSet()}. */
+        public Builder setFilterSet(@Nullable List<FilterMap> filterSet) {
+            mBuilding.mFilterSet = Optional.ofNullable(filterSet);
             return this;
         }
 
-        /** See {@link AggregateTriggerData#getNotFilter()} */
-        public Builder setNotFilterSet(List<FilterMap> notFilterSet) {
-            mBuilding.mNotFilterSet = Optional.of(notFilterSet);
+        /** See {@link AggregateTriggerData#getNotFilterSet()} */
+        public Builder setNotFilterSet(@Nullable List<FilterMap> notFilterSet) {
+            mBuilding.mNotFilterSet = Optional.ofNullable(notFilterSet);
+            return this;
+        }
+
+        /** See {@link AggregateTriggerData#getXNetworkData()} */
+        public Builder setXNetworkData(@Nullable XNetworkData xNetworkData) {
+            mBuilding.mXNetworkData = Optional.ofNullable(xNetworkData);
             return this;
         }
 

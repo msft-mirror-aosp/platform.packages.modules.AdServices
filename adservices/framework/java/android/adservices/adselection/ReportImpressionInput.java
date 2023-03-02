@@ -17,6 +17,7 @@
 package android.adservices.adselection;
 
 import static android.adservices.adselection.AdSelectionOutcome.UNSET_AD_SELECTION_ID;
+import static android.adservices.adselection.AdSelectionOutcome.UNSET_AD_SELECTION_ID_MESSAGE;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
@@ -151,7 +152,7 @@ public final class ReportImpressionInput implements Parcelable {
             Objects.requireNonNull(mCallerPackageName);
 
             Preconditions.checkArgument(
-                    mAdSelectionId != UNSET_AD_SELECTION_ID, "AdSelectionId not set");
+                    mAdSelectionId != UNSET_AD_SELECTION_ID, UNSET_AD_SELECTION_ID_MESSAGE);
 
             return new ReportImpressionInput(
                     mAdSelectionId, mAdSelectionConfig, mCallerPackageName);

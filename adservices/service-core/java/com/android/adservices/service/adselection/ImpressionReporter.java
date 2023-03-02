@@ -16,15 +16,15 @@
 
 package com.android.adservices.service.adselection;
 
-import static android.adservices.adselection.ReportInteractionInput.DESTINATION_BUYER;
-import static android.adservices.adselection.ReportInteractionInput.DESTINATION_SELLER;
+import static android.adservices.adselection.ReportInteractionRequest.FLAG_REPORTING_DESTINATION_BUYER;
+import static android.adservices.adselection.ReportInteractionRequest.FLAG_REPORTING_DESTINATION_SELLER;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
-import android.adservices.adselection.ReportInteractionInput;
+import android.adservices.adselection.ReportInteractionRequest;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
@@ -32,10 +32,13 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
 import android.net.Uri;
+import android.os.Build;
 import android.os.LimitExceededException;
 import android.os.RemoteException;
 import android.os.Trace;
 import android.util.Pair;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
@@ -43,7 +46,6 @@ import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelectionEntry;
 import com.android.adservices.data.adselection.DBRegisteredAdInteraction;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
@@ -52,6 +54,7 @@ import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.FledgeServiceFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.ValidatorUtil;
+import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
@@ -78,6 +81,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 /** Encapsulates the Impression Reporting logic */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class ImpressionReporter {
     public static final String UNABLE_TO_FIND_AD_SELECTION_WITH_GIVEN_ID =
             "Unable to find ad selection with given ID";
@@ -287,6 +292,7 @@ public class ImpressionReporter {
                                         requestParams.getCallerPackageName(),
                                         mFlags
                                                 .getEnforceForegroundStatusForFledgeReportImpression(),
+                                        true,
                                         mCallerUid,
                                         AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
                                         Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS);
@@ -497,8 +503,13 @@ public class ImpressionReporter {
                 .transformAsync(
                         jsOverride -> {
                             if (jsOverride == null) {
-                                return mAdServicesHttpsClient.fetchPayload(
-                                        ctx.mAdSelectionConfig.getDecisionLogicUri());
+                                return FluentFuture.from(
+                                                mAdServicesHttpsClient.fetchPayload(
+                                                        ctx.mAdSelectionConfig
+                                                                .getDecisionLogicUri()))
+                                        .transform(
+                                                response -> response.getResponseBody(),
+                                                mLightweightExecutorService);
                             } else {
                                 LogUtil.i(
                                         "Developer options enabled and an override JS is provided "
@@ -591,7 +602,7 @@ public class ImpressionReporter {
                                     sellerReportingResult.getInteractionReportingUris(),
                                     sellerValidator,
                                     ctx.mDBAdSelectionEntry.getAdSelectionId(),
-                                    DESTINATION_SELLER);
+                                    FLAG_REPORTING_DESTINATION_SELLER);
                             return Pair.create(sellerReportingResult, ctx);
                         }));
     }
@@ -627,7 +638,7 @@ public class ImpressionReporter {
                                             .getInteractionReportingUris(),
                                     buyerValidator,
                                     ctx.mDBAdSelectionEntry.getAdSelectionId(),
-                                    DESTINATION_BUYER);
+                                    FLAG_REPORTING_DESTINATION_BUYER);
                             return Pair.create(
                                     new ReportingUris(
                                             reportingResults.mBuyerReportingResult
@@ -648,7 +659,7 @@ public class ImpressionReporter {
             @NonNull List<InteractionUriRegistrationInfo> interactionUriRegistrationInfos,
             @NonNull AdTechUriValidator validator,
             long adSelectionId,
-            @ReportInteractionInput.Destination int destination) {
+            @ReportInteractionRequest.ReportingDestination int destination) {
         long numSellerEventUriEntries = 0;
         long maxRegisteredAdEventsPerAdTech = mFlags.getReportImpressionMaxEventUriEntriesCount();
 
@@ -669,7 +680,7 @@ public class ImpressionReporter {
                                 .setAdSelectionId(adSelectionId)
                                 .setInteractionKey(uriRegistrationInfo.getInteractionKey())
                                 .setInteractionReportingUri(uriToValidate)
-                                .setDestination(destination)
+                                .setReportingDestination(destination)
                                 .build();
                 adEventsToRegister.add(dbRegisteredAdInteraction);
                 numSellerEventUriEntries++;

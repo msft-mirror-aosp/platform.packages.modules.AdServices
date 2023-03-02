@@ -15,8 +15,10 @@
  */
 package com.android.adservices.ui.settings.activities;
 
+import android.os.Build;
 import android.os.Bundle;
 
+import androidx.annotation.RequiresApi;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.android.adservices.api.R;
@@ -26,6 +28,8 @@ import com.android.adservices.ui.settings.fragments.AdServicesSettingsMeasuremen
 import com.android.adservices.ui.settings.viewmodels.MeasurementViewModel;
 
 /** Android application activity provides functionality to control measurement data and consent. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class MeasurementActivity extends AdServicesBaseActivity {
     private MeasurementActionDelegate mActionDelegate;
 

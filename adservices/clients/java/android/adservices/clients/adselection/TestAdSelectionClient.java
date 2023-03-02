@@ -24,6 +24,7 @@ import android.adservices.adselection.RemoveAdSelectionOverrideRequest;
 import android.adservices.adselection.TestAdSelectionManager;
 import android.annotation.NonNull;
 import android.content.Context;
+import android.os.Build;
 import android.os.OutcomeReceiver;
 
 import androidx.concurrent.futures.CallbackToFutureAdapter;
@@ -44,7 +45,10 @@ public class TestAdSelectionClient {
         mContext = context;
         mExecutor = executor;
         mTestAdSelectionManager =
-                mContext.getSystemService(AdSelectionManager.class).getTestAdSelectionManager();
+                (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                        ? mContext.getSystemService(AdSelectionManager.class)
+                                .getTestAdSelectionManager()
+                        : AdSelectionManager.get(context).getTestAdSelectionManager();
     }
 
     /**

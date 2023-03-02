@@ -40,6 +40,8 @@ import com.android.sdksandbox.IUnloadSdkCallback;
 import com.android.sdksandbox.SandboxLatencyInfo;
 
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
     private long mTimeSystemServerCalledSandbox = -1;
@@ -62,8 +64,11 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
 
     private SharedPreferencesUpdate mLastSyncUpdate = null;
 
+    private final CountDownLatch mLatch;
+
     public FakeSdkSandboxService() {
         mManagerToSdkCallback = new FakeManagerToSdkCallback();
+        mLatch = new CountDownLatch(5);
     }
 
     public void setTimeValues(
@@ -128,6 +133,7 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
             List<String> cePackagePaths,
             List<String> dePackagePaths,
             IComputeSdkStorageCallback callback) {
+        mLatch.countDown();
         mComputeSdkStorageCallback = callback;
     }
 
@@ -161,7 +167,8 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
         return mUnloadSdkCallback != null;
     }
 
-    public void sendStorageInfoToSystemServer() throws RemoteException {
+    public void sendStorageInfoToSystemServer() throws Exception {
+        mLatch.await(5, TimeUnit.SECONDS);
         mComputeSdkStorageCallback.onStorageInfoComputed(0, 0);
     }
 
