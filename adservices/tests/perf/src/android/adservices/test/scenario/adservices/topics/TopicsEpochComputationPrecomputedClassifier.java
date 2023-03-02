@@ -19,6 +19,7 @@ package android.adservices.test.scenario.adservices.topics;
 import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.clients.topics.AdvertisingTopicsClient;
+import android.adservices.test.scenario.adservices.utils.CompatTestUtils;
 import android.adservices.topics.GetTopicsResponse;
 import android.adservices.topics.Topic;
 import android.content.Context;
@@ -32,6 +33,7 @@ import android.util.Log;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.compatibility.common.util.ShellUtils;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Before;
@@ -126,6 +128,7 @@ public class TopicsEpochComputationPrecomputedClassifier {
         GetTopicsResponse sdk1Result = advertisingTopicsClient1.getTopics().get();
         assertThat(sdk1Result.getTopics()).isEmpty();
 
+        Instant startTime = Clock.systemUTC().instant();
         // Now force the Epoch Computation Job. This should be done in the same epoch for
         // callersCanLearnMap to have the entry for processing.
         forceEpochComputationJob();
@@ -133,6 +136,10 @@ public class TopicsEpochComputationPrecomputedClassifier {
         // Wait to the next epoch. We will not need to do this after we implement the fix in
         // go/rb-topics-epoch-scheduling
         Thread.sleep(TEST_EPOCH_JOB_PERIOD_MS);
+
+        // calculate and log epoch computation duration after some delay so that epoch
+        // computation job is finished.
+        logEpochComputationDuration(startTime);
 
         // Since the sdk1 called the Topics API in the previous Epoch, it should receive some topic.
         sdk1Result = advertisingTopicsClient1.getTopics().get();
@@ -183,6 +190,12 @@ public class TopicsEpochComputationPrecomputedClassifier {
 
         // Use bundled files for classifier
         overrideClassifierForceUseBundledFiles(true);
+
+        // Extra flags need to be set when test is executed on S- for service to run (e.g.
+        // to avoid invoking system-server related code).
+        if (!SdkLevel.isAtLeastT()) {
+            CompatTestUtils.setFlags();
+        }
     }
 
     private void overridingAfterTest() {
@@ -192,6 +205,9 @@ public class TopicsEpochComputationPrecomputedClassifier {
         disableMddBackgroundTasks(false);
         overrideClassifierForceUseBundledFiles(false);
         overridingAdservicesLoggingLevel("INFO");
+        if (!SdkLevel.isAtLeastT()) {
+            CompatTestUtils.resetFlagsToDefault();
+        }
     }
 
     // Switch on/off for MDD service. Default value is false, which means MDD is enabled.
@@ -226,10 +242,12 @@ public class TopicsEpochComputationPrecomputedClassifier {
     }
 
     /** Forces JobScheduler to run the Epoch Computation job */
-    private void forceEpochComputationJob() throws Exception {
-        Instant startTime = Clock.systemUTC().instant();
+    private void forceEpochComputationJob() {
         ShellUtils.runShellCommand(
                 "cmd jobscheduler run -f" + " " + ADSERVICES_PACKAGE_NAME + " " + EPOCH_JOB_ID);
+    }
+
+    private void logEpochComputationDuration(Instant startTime) throws Exception {
         long epoch_computation_duration =
                 processLogCatStreamToGetMetricMap(getMetricsEvents(startTime));
         Log.i(TAG, "(" + EPOCH_COMPUTATION_DURATION + ": " + epoch_computation_duration + ")");

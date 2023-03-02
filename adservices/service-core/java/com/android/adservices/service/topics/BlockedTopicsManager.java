@@ -21,6 +21,9 @@ import android.app.adservices.AdServicesManager;
 import android.app.adservices.topics.TopicParcel;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.topics.Topic;
@@ -37,6 +40,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 /** Class to manage blocked {@link Topic}s. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class BlockedTopicsManager {
     private static BlockedTopicsManager sSingleton;
     @VisibleForTesting static final String SHARED_PREFS_BLOCKED_TOPICS = "PPAPI_Blocked_Topics";
@@ -240,7 +245,6 @@ public class BlockedTopicsManager {
         if (blockedTopicsSourceOfTruth != Flags.PPAPI_ONLY) {
             Objects.requireNonNull(adServicesManager);
         }
-
 
         switch (blockedTopicsSourceOfTruth) {
             case Flags.PPAPI_ONLY:

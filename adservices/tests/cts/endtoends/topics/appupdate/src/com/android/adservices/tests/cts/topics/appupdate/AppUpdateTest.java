@@ -145,7 +145,9 @@ public class AppUpdateTest {
     public void setup() throws InterruptedException {
         // Skip the test if it runs on unsupported platforms.
         Assume.assumeTrue(AdservicesCtsHelper.isDeviceSupported());
-
+        // Kill AdServices process so that background jobs don't get skipped due to starting
+        // with same params.
+        killAdservicesProcess();
         // We need to skip 3 epochs so that if there is any usage from other test runs, it will
         // not be used for epoch retrieval.
         Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
@@ -300,6 +302,12 @@ public class AppUpdateTest {
     private void overrideEpochPeriod(long overrideEpochPeriod) {
         ShellUtils.runShellCommand(
                 "setprop debug.adservices.topics_epoch_job_period_ms " + overrideEpochPeriod);
+    }
+
+    // Force stop AdServices API.
+    public void killAdservicesProcess() {
+        // adb shell am force-stop com.google.android.adservices.api
+        ShellUtils.runShellCommand("am force-stop" + " " + ADSERVICES_PACKAGE_NAME);
     }
 
     // Override the Percentage For Random Topic in the test.

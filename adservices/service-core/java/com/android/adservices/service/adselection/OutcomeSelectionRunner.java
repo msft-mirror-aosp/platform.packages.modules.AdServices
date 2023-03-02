@@ -29,8 +29,11 @@ import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
+import android.os.Build;
 import android.os.RemoteException;
 import android.os.Trace;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -70,6 +73,8 @@ import java.util.concurrent.TimeoutException;
  *
  * <p>Class takes in an executor on which it runs the OutcomeSelection logic
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class OutcomeSelectionRunner {
     @VisibleForTesting static final String AD_SELECTION_FROM_OUTCOMES_ERROR_PATTERN = "%s: %s";
 
@@ -219,6 +224,7 @@ public class OutcomeSelectionRunner {
                                             inputParams.getCallerPackageName(),
                                             mFlags
                                                     .getEnforceForegroundStatusForFledgeRunAdSelection(),
+                                            true,
                                             mCallerUid,
                                             AdServicesStatsLog
                                                     .AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,

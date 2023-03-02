@@ -18,6 +18,7 @@ package com.android.adservices.ui.ganotifications;
 import static com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity.FROM_NOTIFICATION_KEY;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,6 +27,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 
 import com.android.adservices.api.R;
@@ -38,6 +40,8 @@ import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActiv
  * Fragment for the confirmation view after accepting or rejecting to be part of Privacy Sandbox
  * Beta.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class ConsentNotificationConfirmationGaFragment extends Fragment {
     public static final String IS_FlEDGE_MEASUREMENT_INFO_VIEW_EXPANDED_KEY =
             "is_fledge_measurement_info_view_expanded";

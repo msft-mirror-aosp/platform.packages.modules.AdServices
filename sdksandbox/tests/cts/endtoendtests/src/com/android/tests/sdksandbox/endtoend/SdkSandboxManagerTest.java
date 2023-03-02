@@ -141,6 +141,14 @@ public class SdkSandboxManagerTest {
     }
 
     @Test
+    public void testGetOpPackageName() throws Exception {
+        ICtsSdkProviderApi sdk = loadSdk();
+        final PackageManager pm =
+                InstrumentationRegistry.getInstrumentation().getContext().getPackageManager();
+        assertThat(sdk.getOpPackageName()).isEqualTo(pm.getSdkSandboxPackageName());
+    }
+
+    @Test
     public void testRetryLoadSameSdkShouldFail() {
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
 
@@ -516,6 +524,17 @@ public class SdkSandboxManagerTest {
     public void testSandboxedSdkDescribeContents() throws Exception {
         final SandboxedSdk sandboxedSdk = new SandboxedSdk(new Binder());
         assertThat(sandboxedSdk.describeContents()).isEqualTo(0);
+    }
+
+    // Helper method to load SDK_NAME_1
+    private ICtsSdkProviderApi loadSdk() {
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(SDK_NAME_1, new Bundle(), Runnable::run, callback);
+        callback.assertLoadSdkIsSuccessful();
+
+        final SandboxedSdk sandboxedSdk = callback.getSandboxedSdk();
+        assertNotNull(sandboxedSdk);
+        return ICtsSdkProviderApi.Stub.asInterface(callback.getSandboxedSdk().getInterface());
     }
 
     private Bundle getRequestSurfacePackageParams() {
