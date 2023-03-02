@@ -79,6 +79,9 @@ public class BroadcastRestrictionsTestApp {
                             ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS, /*defaultValue=*/ false);
         }
         mRule.getScenario();
+
+        // Greedily unload SDK to reduce flakiness
+        mSdkSandboxManager.unloadSdk(SDK_PACKAGE);
     }
 
     @After
@@ -97,6 +100,9 @@ public class BroadcastRestrictionsTestApp {
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
                 .dropShellPermissionIdentity();
+
+        // Greedily unload SDK to reduce flakiness
+        mSdkSandboxManager.unloadSdk(SDK_PACKAGE);
     }
 
     /**
