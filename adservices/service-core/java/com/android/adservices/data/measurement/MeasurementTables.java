@@ -79,7 +79,6 @@ public final class MeasurementTables {
         String PUBLISHER_TYPE = "publisher_type";
         String APP_DESTINATION = "app_destination";
         String WEB_DESTINATION = "web_destination";
-        String DEDUP_KEYS = "dedup_keys";
         String EVENT_REPORT_DEDUP_KEYS = "event_report_dedup_keys";
         String AGGREGATE_REPORT_DEDUP_KEYS = "aggregate_report_dedup_keys";
         String EVENT_TIME = "event_time";
@@ -310,7 +309,7 @@ public final class MeasurementTables {
                     + " INTEGER, "
                     + SourceContract.STATUS
                     + " INTEGER, "
-                    + SourceContract.DEDUP_KEYS
+                    + MeasurementTablesDeprecated.Source.DEDUP_KEYS
                     + " TEXT, "
                     + SourceContract.SOURCE_TYPE
                     + " TEXT, "

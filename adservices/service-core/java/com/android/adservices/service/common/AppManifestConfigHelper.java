@@ -21,6 +21,9 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.content.res.XmlResourceParser;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.exception.XmlParseException;
@@ -33,6 +36,8 @@ import java.util.Objects;
 /** Helper class for parsing and checking the app manifest config (<ad-services-config>). */
 // TODO(b/213488783): Add persistence, so that lookup/parse is not on every request.
 // Also consider if this should execute in the background.
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class AppManifestConfigHelper {
     public static final String AD_SERVICES_CONFIG_PROPERTY =
             "android.adservices.AD_SERVICES_CONFIG";

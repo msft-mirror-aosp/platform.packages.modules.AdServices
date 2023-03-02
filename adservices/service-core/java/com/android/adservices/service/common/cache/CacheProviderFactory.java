@@ -63,7 +63,11 @@ public class CacheProviderFactory {
 
         /** puts nothing into the cache */
         @Override
-        public void put(URL url, String body, Map<String, List<String>> requestPropertiesMap) {}
+        public void put(
+                URL url,
+                String body,
+                Map<String, List<String>> requestPropertiesMap,
+                Map<String, List<String>> responseHeaders) {}
 
         /** @return 0 */
         @Override

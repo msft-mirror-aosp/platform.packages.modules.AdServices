@@ -63,6 +63,7 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppImportanceFilter;
+import com.android.adservices.service.common.CustomAudienceServiceFilter;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.Throttler;
@@ -175,15 +176,25 @@ public class CustomAudienceServiceEndToEndTest {
                                 CONTEXT.getPackageManager(),
                                 EnrollmentDao.getInstance(CONTEXT),
                                 mAdServicesLogger),
-                        new FledgeAllowListsFilter(CommonFixture.FLAGS_FOR_TEST, mAdServicesLogger),
                         mConsentManagerMock,
                         mDevContextFilter,
                         MoreExecutors.newDirectExecutorService(),
                         mAdServicesLogger,
                         mAppImportanceFilter,
                         CommonFixture.FLAGS_FOR_TEST,
-                        mThrottlerSupplier,
-                        CallingAppUidSupplierProcessImpl.create());
+                        CallingAppUidSupplierProcessImpl.create(),
+                        new CustomAudienceServiceFilter(
+                                CONTEXT,
+                                mConsentManagerMock,
+                                CommonFixture.FLAGS_FOR_TEST,
+                                mAppImportanceFilter,
+                                new FledgeAuthorizationFilter(
+                                        CONTEXT.getPackageManager(),
+                                        EnrollmentDao.getInstance(CONTEXT),
+                                        mAdServicesLogger),
+                                new FledgeAllowListsFilter(
+                                        CommonFixture.FLAGS_FOR_TEST, mAdServicesLogger),
+                                mThrottlerSupplier));
 
         Mockito.lenient()
                 .when(mMockThrottler.tryAcquire(eq(FLEDGE_API_JOIN_CUSTOM_AUDIENCE), anyString()))
@@ -220,15 +231,25 @@ public class CustomAudienceServiceEndToEndTest {
                                 CONTEXT.getPackageManager(),
                                 EnrollmentDao.getInstance(CONTEXT),
                                 mAdServicesLogger),
-                        new FledgeAllowListsFilter(CommonFixture.FLAGS_FOR_TEST, mAdServicesLogger),
                         mConsentManagerMock,
                         mDevContextFilter,
                         MoreExecutors.newDirectExecutorService(),
                         mAdServicesLogger,
                         mAppImportanceFilter,
                         CommonFixture.FLAGS_FOR_TEST,
-                        mThrottlerSupplier,
-                        CallingAppUidSupplierFailureImpl.create());
+                        CallingAppUidSupplierFailureImpl.create(),
+                        new CustomAudienceServiceFilter(
+                                CONTEXT,
+                                mConsentManagerMock,
+                                CommonFixture.FLAGS_FOR_TEST,
+                                mAppImportanceFilter,
+                                new FledgeAuthorizationFilter(
+                                        CONTEXT.getPackageManager(),
+                                        EnrollmentDao.getInstance(CONTEXT),
+                                        mAdServicesLogger),
+                                new FledgeAllowListsFilter(
+                                        CommonFixture.FLAGS_FOR_TEST, mAdServicesLogger),
+                                mThrottlerSupplier));
 
         ResultCapturingCallback callback = new ResultCapturingCallback();
         assertThrows(
@@ -358,15 +379,25 @@ public class CustomAudienceServiceEndToEndTest {
                                 CONTEXT.getPackageManager(),
                                 EnrollmentDao.getInstance(CONTEXT),
                                 mAdServicesLogger),
-                        new FledgeAllowListsFilter(CommonFixture.FLAGS_FOR_TEST, mAdServicesLogger),
                         mConsentManagerMock,
                         mDevContextFilter,
                         MoreExecutors.newDirectExecutorService(),
                         mAdServicesLogger,
                         mAppImportanceFilter,
                         CommonFixture.FLAGS_FOR_TEST,
-                        mThrottlerSupplier,
-                        CallingAppUidSupplierFailureImpl.create());
+                        CallingAppUidSupplierFailureImpl.create(),
+                        new CustomAudienceServiceFilter(
+                                CONTEXT,
+                                mConsentManagerMock,
+                                CommonFixture.FLAGS_FOR_TEST,
+                                mAppImportanceFilter,
+                                new FledgeAuthorizationFilter(
+                                        CONTEXT.getPackageManager(),
+                                        EnrollmentDao.getInstance(CONTEXT),
+                                        mAdServicesLogger),
+                                new FledgeAllowListsFilter(
+                                        CommonFixture.FLAGS_FOR_TEST, mAdServicesLogger),
+                                mThrottlerSupplier));
 
         ResultCapturingCallback callback = new ResultCapturingCallback();
         assertThrows(
@@ -951,16 +982,25 @@ public class CustomAudienceServiceEndToEndTest {
                                         CONTEXT.getPackageManager(),
                                         EnrollmentDao.getInstance(CONTEXT),
                                         mAdServicesLogger),
-                                new FledgeAllowListsFilter(
-                                        CommonFixture.FLAGS_FOR_TEST, mAdServicesLogger),
                                 mConsentManagerMock,
                                 mDevContextFilter,
                                 MoreExecutors.newDirectExecutorService(),
                                 mAdServicesLogger,
                                 mAppImportanceFilter,
                                 CommonFixture.FLAGS_FOR_TEST,
-                                () -> Throttler.getInstance(CommonFixture.FLAGS_FOR_TEST),
-                                CallingAppUidSupplierProcessImpl.create());
+                                CallingAppUidSupplierProcessImpl.create(),
+                                new CustomAudienceServiceFilter(
+                                        CONTEXT,
+                                        mConsentManagerMock,
+                                        CommonFixture.FLAGS_FOR_TEST,
+                                        mAppImportanceFilter,
+                                        new FledgeAuthorizationFilter(
+                                                CONTEXT.getPackageManager(),
+                                                EnrollmentDao.getInstance(CONTEXT),
+                                                mAdServicesLogger),
+                                        new FledgeAllowListsFilter(
+                                                CommonFixture.FLAGS_FOR_TEST, mAdServicesLogger),
+                                        () -> Throttler.getInstance(CommonFixture.FLAGS_FOR_TEST)));
 
         // The first call should succeed
         ResultCapturingCallback callbackFirstCall = new ResultCapturingCallback();

@@ -57,6 +57,9 @@ public class Throttler {
         // Key to throttle Select Ads API
         FLEDGE_API_SELECT_ADS,
 
+        // Key to throttle Set App Install Advertisers API
+        FLEDGE_API_SET_APP_INSTALL_ADVERTISERS,
+
         // Key to throttle Measurement Deletion Registration API
         MEASUREMENT_API_DELETION_REGISTRATION,
 

@@ -191,6 +191,7 @@ public class OutcomeSelectionRunnerTest {
                         SAMPLE_SELLER,
                         MY_APP_PACKAGE_NAME,
                         true,
+                        true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
                         Throttler.ApiKey.FLEDGE_API_SELECT_ADS);
@@ -280,6 +281,7 @@ public class OutcomeSelectionRunnerTest {
                 .filterRequest(
                         SAMPLE_SELLER,
                         MY_APP_PACKAGE_NAME,
+                        true,
                         true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
