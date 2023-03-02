@@ -102,6 +102,7 @@ public final class PhFlags implements Flags {
     static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS =
             "measurement_enforce_foreground_status_get_status";
     static final String KEY_MEASUREMENT_ENABLE_XNA = "measurement_enable_xna";
+    static final String KEY_MEASUREMENT_DATA_EXPIRY_WINDOW_MS = "measurement_data_expiry_window_ms";
 
     // FLEDGE Custom Audience keys
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = "fledge_custom_audience_max_count";
@@ -307,18 +308,6 @@ public final class PhFlags implements Flags {
 
     // Consent Notification debug mode keys.
     static final String KEY_CONSENT_NOTIFICATION_DEBUG_MODE = "consent_notification_debug_mode";
-
-    // Consent Notification interval begin ms.
-    static final String KEY_CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS =
-            "consent_notification_interval_begin_ms";
-
-    // Consent Notification interval end ms.
-    static final String KEY_CONSENT_NOTIFICATION_INTERVAL_END_MS =
-            "consent_notification_interval_end_ms";
-
-    // Consent Notification minimal delay before interval ms.
-    static final String KEY_CONSENT_NOTIFICATION_MINIMAL_DELAY_BEFORE_INTERVAL_ENDS =
-            "consent_notification_minimal_delay_before_interval_ends";
 
     // Consent Manager debug mode keys.
     static final String KEY_CONSENT_MANAGER_DEBUG_MODE = "consent_manager_debug_mode";
@@ -703,6 +692,14 @@ public final class PhFlags implements Flags {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_ENABLE_XNA,
                 /* defaultValue */ MEASUREMENT_ENABLE_XNA);
+    }
+
+    @Override
+    public long getMeasurementDataExpiryWindowMs() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_DATA_EXPIRY_WINDOW_MS,
+                /* defaultValue */ MEASUREMENT_DATA_EXPIRY_WINDOW_MS);
     }
 
     @Override
@@ -1816,30 +1813,6 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public long getConsentNotificationIntervalBeginMs() {
-        return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS,
-                /* defaultValue */ CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS);
-    }
-
-    @Override
-    public long getConsentNotificationIntervalEndMs() {
-        return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_CONSENT_NOTIFICATION_INTERVAL_END_MS,
-                /* defaultValue */ CONSENT_NOTIFICATION_INTERVAL_END_MS);
-    }
-
-    @Override
-    public long getConsentNotificationMinimalDelayBeforeIntervalEnds() {
-        return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_CONSENT_NOTIFICATION_MINIMAL_DELAY_BEFORE_INTERVAL_ENDS,
-                /* defaultValue */ CONSENT_NOTIFICATION_MINIMAL_DELAY_BEFORE_INTERVAL_ENDS);
-    }
-
-    @Override
     public boolean getConsentManagerDebugMode() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(KEY_CONSENT_MANAGER_DEBUG_MODE),
@@ -2145,6 +2118,11 @@ public final class PhFlags implements Flags {
                         + " = "
                         + getEnforceForegroundStatusForMeasurementRegisterWebTrigger());
         writer.println("\t" + KEY_MEASUREMENT_ENABLE_XNA + " = " + getMeasurementEnableXNA());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_DATA_EXPIRY_WINDOW_MS
+                        + " = "
+                        + getMeasurementDataExpiryWindowMs());
         writer.println(
                 "\t"
                         + KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH

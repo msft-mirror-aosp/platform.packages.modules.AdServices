@@ -19,6 +19,7 @@ package android.adservices.test.scenario.adservices.topics;
 import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.clients.topics.AdvertisingTopicsClient;
+import android.adservices.test.scenario.adservices.utils.CompatTestUtils;
 import android.adservices.topics.GetTopicsResponse;
 import android.adservices.topics.Topic;
 import android.content.Context;
@@ -32,6 +33,7 @@ import android.util.Log;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.compatibility.common.util.ShellUtils;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Before;
@@ -165,10 +167,10 @@ public class TopicsEpochComputationOnDeviceClassifier {
         assertThat(sdk3Result.getTopics()).hasSize(1);
         Topic topic = sdk3Result.getTopics().get(0);
 
-        // Top 5 classifications for empty string with v2 model are [10230, 10253, 10227, 10250,
-        // 10257]. This is computed by running the model on the device for empty string.
+        // Top 5 classifications for empty string with v3 model are [10230, 10228, 10253, 10232,
+        // 10140]. This is computed by running the model on the device for empty string.
         // topic is one of the 5 classification topics of the Test App.
-        assertThat(topic.getTopicId()).isIn(Arrays.asList(10230, 10253, 10227, 10250, 10257));
+        assertThat(topic.getTopicId()).isIn(Arrays.asList(10230, 10228, 10253, 10232, 10140));
 
         assertThat(topic.getModelVersion()).isAtLeast(1L);
         assertThat(topic.getTaxonomyVersion()).isAtLeast(1L);
@@ -188,9 +190,6 @@ public class TopicsEpochComputationOnDeviceClassifier {
         // We need to turn the Consent Manager into debug mode
         overrideConsentManagerDebugMode();
 
-        // Turn off MDD to avoid model mismatching
-        disableMddBackgroundTasks(true);
-
         // Set classifier flag to use on-device classifier.
         overrideClassifierType(TEST_CLASSIFIER_TYPE);
 
@@ -198,13 +197,18 @@ public class TopicsEpochComputationOnDeviceClassifier {
         overrideClassifierNumberOfTopLabels(TEST_CLASSIFIER_NUMBER_OF_TOP_LABELS);
         // Remove classifier threshold by setting it to 0.
         overrideClassifierThreshold(TEST_CLASSIFIER_THRESHOLD);
+
+        // Extra flags need to be set when test is executed on S- for service to run (e.g.
+        // to avoid invoking system-server related code).
+        if (!SdkLevel.isAtLeastT()) {
+            CompatTestUtils.setFlags();
+        }
     }
 
     private void overridingAfterTest() {
         overrideDisableTopicsEnrollmentCheck("0");
         overrideEpochPeriod(DEFAULT_TOPICS_EPOCH_JOB_PERIOD_MS);
         overridePercentageForRandomTopic(DEFAULT_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
-        disableMddBackgroundTasks(false);
         overridingAdservicesLoggingLevel("INFO");
 
         // Set classifier flag back to default.
@@ -213,12 +217,10 @@ public class TopicsEpochComputationOnDeviceClassifier {
         overrideClassifierNumberOfTopLabels(DEFAULT_CLASSIFIER_NUMBER_OF_TOP_LABELS);
         // Set classifier threshold back to default.
         overrideClassifierThreshold(DEFAULT_CLASSIFIER_THRESHOLD);
-    }
 
-    // Switch on/off for MDD service. Default value is false, which means MDD is enabled.
-    private void disableMddBackgroundTasks(boolean isSwitchedOff) {
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.mdd_background_task_kill_switch " + isSwitchedOff);
+        if (!SdkLevel.isAtLeastT()) {
+            CompatTestUtils.resetFlagsToDefault();
+        }
     }
 
     // Override the flag to disable Topics enrollment check.

@@ -22,6 +22,8 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.IBinder;
 
+import androidx.annotation.RequiresApi;
+
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.download.MddJobService;
@@ -46,6 +48,8 @@ import java.io.PrintWriter;
 import java.util.Objects;
 
 /** Topics Service */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class TopicsService extends Service {
 
     /** The binder service. This field must only be accessed on the main thread. */

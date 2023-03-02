@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.common;
+package com.android.adservices.service.common.httpclient;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -46,6 +46,8 @@ import com.android.adservices.service.common.cache.FledgeHttpCache;
 import com.android.adservices.service.common.cache.HttpCache;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.mockwebserver.Dispatcher;
@@ -78,6 +80,11 @@ public class AdServicesHttpsClientTest {
     @Spy private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final String CACHE_HEADER = "Cache-Control: max-age=60";
     private static final String NO_CACHE_HEADER = "Cache-Control: no-cache";
+    private static final String RESPONSE_HEADER_KEY = "fake_response_header_key";
+    private static final String RESPONSE_HEADER_VALUE_1 = "fake_response_header_value_1";
+    private static final String RESPONSE_HEADER_VALUE_2 = "fake_response_header_value_2";
+    private static final String REQUEST_PROPERTY_KEY = "X_REQUEST_KEY";
+    private static final String REQUEST_PROPERTY_VALUE = "Dummy_Value";
     private static final long MAX_AGE_SECONDS = 120;
     private static final long MAX_ENTRIES = 20;
     private final ExecutorService mExecutorService = MoreExecutors.newDirectExecutorService();
@@ -173,8 +180,8 @@ public class AdServicesHttpsClientTest {
                         ImmutableList.of(new MockResponse().setBody(mJsScript)));
         URL url = server.getUrl(mFetchPayloadPath);
 
-        String result = fetchPayload(Uri.parse(url.toString()));
-        assertEquals(mJsScript, result);
+        AdServicesHttpClientResponse result = fetchPayload(Uri.parse(url.toString()));
+        assertEquals(mJsScript, result.getResponseBody());
     }
 
     @Test
@@ -286,7 +293,8 @@ public class AdServicesHttpsClientTest {
                 .when(mURLConnectionMock)
                 .getResponseCode();
 
-        ListenableFuture<String> futureResponse = mClient.fetchPayload(Uri.parse((mFakeUrl)));
+        ListenableFuture<AdServicesHttpClientResponse> futureResponse =
+                mClient.fetchPayload(Uri.parse((mFakeUrl)));
 
         // There could be some lag between fetch call and connection opening
         verify(mUrlMock, timeout(delayMs)).openConnection();
@@ -320,7 +328,8 @@ public class AdServicesHttpsClientTest {
         doReturn(mInputStreamMock).when(mURLConnectionMock).getInputStream();
         doReturn(202).when(mURLConnectionMock).getResponseCode();
 
-        ListenableFuture<String> futureResponse = mClient.fetchPayload(Uri.parse((mFakeUrl)));
+        ListenableFuture<AdServicesHttpClientResponse> futureResponse =
+                mClient.fetchPayload(Uri.parse((mFakeUrl)));
 
         // There could be some lag between fetch call and connection opening
         verify(mUrlMock, timeout(delayMs)).openConnection();
@@ -341,11 +350,19 @@ public class AdServicesHttpsClientTest {
                             public MockResponse dispatch(RecordedRequest request) {
                                 return new MockResponse()
                                         .setBody(mJsScript)
-                                        .addHeader(CACHE_HEADER);
+                                        .addHeader(CACHE_HEADER)
+                                        .addHeader(RESPONSE_HEADER_KEY, RESPONSE_HEADER_VALUE_1)
+                                        .addHeader(RESPONSE_HEADER_KEY, RESPONSE_HEADER_VALUE_2);
                             }
                         });
         URL url = server.getUrl(mFetchPayloadPath);
-        mClient.fetchPayload(Uri.parse(url.toString()), true).get();
+        mClient.fetchPayload(
+                        AdServicesHttpClientRequest.builder()
+                                .setUri(Uri.parse(url.toString()))
+                                .setUseCache(true)
+                                .setResponseHeaderKeys(ImmutableSet.of(RESPONSE_HEADER_KEY))
+                                .build())
+                .get();
         RecordedRequest request1 = server.takeRequest();
         assertEquals(mFetchPayloadPath, request1.getPath());
         assertEquals("GET", request1.getMethod());
@@ -354,9 +371,76 @@ public class AdServicesHttpsClientTest {
         // Flake proofing : In rare but possible scenario where the cache is not done persisting, we
         // will get cache miss, no point asserting further
         assumeTrue(mCache.getCachedEntriesCount() == 1);
-        String response = mClient.fetchPayload(Uri.parse(url.toString()), true).get();
-        assertEquals(mJsScript, response);
+        AdServicesHttpClientResponse response =
+                mClient.fetchPayload(
+                                AdServicesHttpClientRequest.builder()
+                                        .setUri(Uri.parse(url.toString()))
+                                        .setUseCache(true)
+                                        .setResponseHeaderKeys(ImmutableSet.of(RESPONSE_HEADER_KEY))
+                                        .build())
+                        .get();
+        assertEquals(mJsScript, response.getResponseBody());
+        assertTrue(
+                response.getResponseHeaders()
+                        .get(RESPONSE_HEADER_KEY)
+                        .contains(RESPONSE_HEADER_VALUE_1));
+        assertTrue(
+                response.getResponseHeaders()
+                        .get(RESPONSE_HEADER_KEY)
+                        .contains(RESPONSE_HEADER_VALUE_2));
+        assertEquals(
+                "Only one header should have been cached", 1, response.getResponseHeaders().size());
         assertEquals("This call should have been cached", 1, server.getRequestCount());
+    }
+
+    @Test
+    public void testFetchPayloadResponsesSkipsHeaderIfAbsent() throws Exception {
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        new Dispatcher() {
+                            @Override
+                            public MockResponse dispatch(RecordedRequest request) {
+                                return new MockResponse().setBody(mJsScript);
+                            }
+                        });
+        URL url = server.getUrl(mFetchPayloadPath);
+        AdServicesHttpClientResponse response =
+                mClient.fetchPayload(
+                                AdServicesHttpClientRequest.builder()
+                                        .setUri(Uri.parse(url.toString()))
+                                        .setUseCache(false)
+                                        .setResponseHeaderKeys(ImmutableSet.of(RESPONSE_HEADER_KEY))
+                                        .build())
+                        .get();
+        assertEquals(mJsScript, response.getResponseBody());
+        assertEquals(
+                "No one header should have been returned", 0, response.getResponseHeaders().size());
+    }
+
+    @Test
+    public void testFetchPayloadContainsRequestProperties() throws Exception {
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        new Dispatcher() {
+                            @Override
+                            public MockResponse dispatch(RecordedRequest request) {
+                                assertEquals(
+                                        "Request header mismatch",
+                                        REQUEST_PROPERTY_VALUE,
+                                        request.getHeader(REQUEST_PROPERTY_KEY));
+                                return new MockResponse().setBody(mJsScript);
+                            }
+                        });
+        URL url = server.getUrl(mFetchPayloadPath);
+        mClient.fetchPayload(
+                        AdServicesHttpClientRequest.builder()
+                                .setUri(Uri.parse(url.toString()))
+                                .setUseCache(false)
+                                .setRequestProperties(
+                                        ImmutableMap.of(
+                                                REQUEST_PROPERTY_KEY, REQUEST_PROPERTY_VALUE))
+                                .build())
+                .get();
     }
 
     @Test
@@ -380,8 +464,9 @@ public class AdServicesHttpsClientTest {
         assertEquals("GET", request1.getMethod());
         assertEquals(1, server.getRequestCount());
 
-        String response = mClient.fetchPayload(Uri.parse(url.toString())).get();
-        assertEquals(mJsScript, response);
+        AdServicesHttpClientResponse response =
+                mClient.fetchPayload(Uri.parse(url.toString())).get();
+        assertEquals(mJsScript, response.getResponseBody());
         assertEquals("This call should not have been cached", 2, server.getRequestCount());
     }
 
@@ -406,8 +491,9 @@ public class AdServicesHttpsClientTest {
         assertEquals("GET", request1.getMethod());
         assertEquals(1, server.getRequestCount());
 
-        String response = mClient.fetchPayload(Uri.parse(url.toString())).get();
-        assertEquals(mJsScript, response);
+        AdServicesHttpClientResponse response =
+                mClient.fetchPayload(Uri.parse(url.toString())).get();
+        assertEquals(mJsScript, response.getResponseBody());
         assertEquals("This call should not have been cached", 2, server.getRequestCount());
     }
 
@@ -435,15 +521,25 @@ public class AdServicesHttpsClientTest {
         HttpCache cache = CacheProviderFactory.create(CONTEXT, disableCacheFlags);
         AdServicesHttpsClient client = new AdServicesHttpsClient(mExecutorService, cache);
 
-        client.fetchPayload(Uri.parse(url.toString()), true);
+        client.fetchPayload(
+                AdServicesHttpClientRequest.builder()
+                        .setUri(Uri.parse(url.toString()))
+                        .setUseCache(true)
+                        .build());
 
         RecordedRequest request1 = server.takeRequest();
         assertEquals(mFetchPayloadPath, request1.getPath());
         assertEquals("GET", request1.getMethod());
         assertEquals(1, server.getRequestCount());
 
-        String response = client.fetchPayload(Uri.parse(url.toString()), true).get();
-        assertEquals(mJsScript, response);
+        AdServicesHttpClientResponse response =
+                client.fetchPayload(
+                                AdServicesHttpClientRequest.builder()
+                                        .setUri(Uri.parse(url.toString()))
+                                        .setUseCache(true)
+                                        .build())
+                        .get();
+        assertEquals(mJsScript, response.getResponseBody());
         assertEquals("This call should not have been cached", 2, server.getRequestCount());
     }
 
@@ -512,7 +608,7 @@ public class AdServicesHttpsClientTest {
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
-    private String fetchPayload(Uri uri) throws Exception {
+    private AdServicesHttpClientResponse fetchPayload(Uri uri) throws Exception {
         return mClient.fetchPayload(uri).get();
     }
 

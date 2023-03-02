@@ -31,7 +31,8 @@ import android.net.Uri;
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.common.AdServicesHttpsClient;
+import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
+import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.profiling.Tracing;
@@ -213,13 +214,21 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                                 () ->
                                         mAdSelectionDevOverridesHelper.getDecisionLogicOverride(
                                                 adSelectionConfig)));
+        AdServicesHttpClientRequest jsRequest =
+                AdServicesHttpClientRequest.builder()
+                        .setUri(decisionLogicUri)
+                        .setUseCache(mFlags.getFledgeHttpJsCachingEnabled())
+                        .build();
         return jsOverrideFuture
                 .transformAsync(
                         jsOverride -> {
                             if (jsOverride == null) {
                                 LogUtil.v("Fetching Ad Scoring Logic from the server");
-                                return mAdServicesHttpsClient.fetchPayload(
-                                        decisionLogicUri, mFlags.getFledgeHttpJsCachingEnabled());
+                                return FluentFuture.from(
+                                                mAdServicesHttpsClient.fetchPayload(jsRequest))
+                                        .transform(
+                                                response -> response.getResponseBody(),
+                                                mLightweightExecutorService);
                             } else {
                                 LogUtil.d(
                                         "Developer options enabled and an override JS is provided "
@@ -352,7 +361,11 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                                 return Futures.transform(
                                         mAdServicesHttpsClient.fetchPayload(
                                                 trustedScoringSignalsUri),
-                                        s -> s == null ? null : AdSelectionSignals.fromString(s),
+                                        s ->
+                                                s == null
+                                                        ? null
+                                                        : AdSelectionSignals.fromString(
+                                                                s.getResponseBody()),
                                         mLightweightExecutorService);
                             } else {
                                 LogUtil.d(
