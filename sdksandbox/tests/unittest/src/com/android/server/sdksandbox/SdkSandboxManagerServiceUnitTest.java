@@ -1091,6 +1091,22 @@ public class SdkSandboxManagerServiceUnitTest {
 
         assertThat(sdkSandboxInfo.processName).isEqualTo(TEST_PACKAGE + "_sdk_sandbox_instr");
         assertThat(sdkSandboxInfo.packageName).isEqualTo(pm.getSdkSandboxPackageName());
+        assertThat(sdkSandboxInfo.sourceDir).startsWith("/apex/com.android.adservices");
+    }
+
+    @Test
+    public void test_getSdkInstrumentationInfo_sdkInSandbox() throws Exception {
+        final PackageManager pm =
+                InstrumentationRegistry.getInstrumentation().getContext().getPackageManager();
+        ApplicationInfo clientAppInfo = pm.getApplicationInfo(TEST_PACKAGE, 0);
+
+        ApplicationInfo sdkSandboxInfo =
+                sSdkSandboxManagerLocal.getSdkSandboxApplicationInfoForInstrumentation(
+                        clientAppInfo, /* userId= */ 0, /* isSdkInSandbox= */ true);
+
+        assertThat(sdkSandboxInfo.processName).isEqualTo(TEST_PACKAGE + "_sdk_sandbox_instr");
+        assertThat(sdkSandboxInfo.packageName).isEqualTo(pm.getSdkSandboxPackageName());
+        assertThat(sdkSandboxInfo.sourceDir).startsWith("/data/app");
     }
 
     /** Tests expected behavior when broadcast receiver restrictions are not available. */

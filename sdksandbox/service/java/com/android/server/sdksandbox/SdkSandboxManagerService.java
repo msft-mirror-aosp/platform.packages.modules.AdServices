@@ -1801,11 +1801,18 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             ApplicationInfo clientAppInfo, int userId, boolean isSdkInSandbox)
             throws PackageManager.NameNotFoundException {
         PackageManager pm = mContext.getPackageManager();
-        ApplicationInfo sdkSandboxInfo =
-                pm.getApplicationInfoAsUser(
-                        pm.getSdkSandboxPackageName(),
-                        /* flags= */ 0,
-                        UserHandle.getUserHandleForUid(userId));
+        ApplicationInfo sdkSandboxInfo;
+        if (isSdkInSandbox) {
+            sdkSandboxInfo = new ApplicationInfo(clientAppInfo);
+            sdkSandboxInfo.packageName = pm.getSdkSandboxPackageName();
+        } else {
+            sdkSandboxInfo =
+                    pm.getApplicationInfoAsUser(
+                            pm.getSdkSandboxPackageName(),
+                            /* flags= */ 0,
+                            UserHandle.getUserHandleForUid(userId));
+        }
+
         sdkSandboxInfo.uid = Process.toSdkSandboxUid(clientAppInfo.uid);
         sdkSandboxInfo.processName =
                 getLocalManager().getSdkSandboxProcessNameForInstrumentation(clientAppInfo);
