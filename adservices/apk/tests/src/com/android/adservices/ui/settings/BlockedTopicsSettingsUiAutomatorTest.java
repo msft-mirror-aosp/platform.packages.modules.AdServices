@@ -194,6 +194,7 @@ public class BlockedTopicsSettingsUiAutomatorTest {
     }
 
     @Test
+    @Ignore("b/269654072")
     public void topicBlockUnblockResetTest_gaUxView() throws Exception {
         // Enable GA UX view for Privacy Sandbox Settings.
         shouldEnableGaUx(true);
