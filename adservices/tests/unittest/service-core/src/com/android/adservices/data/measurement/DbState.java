@@ -26,6 +26,7 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.reporting.DebugReport;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONArray;
@@ -48,6 +49,7 @@ public class DbState {
     List<Attribution> mAttrRateLimitList;
     List<AggregateEncryptionKey> mAggregateEncryptionKeyList;
     List<AggregateReport> mAggregateReportList;
+    List<DebugReport> mDebugReportList;
 
     public DbState() {
         mSourceList = new ArrayList<>();
@@ -56,6 +58,7 @@ public class DbState {
         mAttrRateLimitList = new ArrayList<>();
         mAggregateEncryptionKeyList = new ArrayList<>();
         mAggregateReportList = new ArrayList<>();
+        mDebugReportList = new ArrayList<>();
     }
 
     public DbState(JSONObject testInput) throws JSONException {
@@ -118,6 +121,16 @@ public class DbState {
                 JSONObject rJSON = aggregateReports.getJSONObject(i);
                 AggregateReport aggregateReport = getAggregateReportFrom(rJSON);
                 mAggregateReportList.add(aggregateReport);
+            }
+        }
+
+        if (testInput.has("debug_reports")) {
+            // DebugReports
+            JSONArray debugReports = testInput.getJSONArray("debug_reports");
+            for (int i = 0; i < debugReports.length(); i++) {
+                JSONObject rJSON = debugReports.getJSONObject(i);
+                DebugReport debugReport = getDebugReportFrom(rJSON);
+                mDebugReportList.add(debugReport);
             }
         }
     }
@@ -189,6 +202,22 @@ public class DbState {
                     SqliteObjectMapper.constructAggregateEncryptionKeyFromCursor(keyCursor));
         }
         keyCursor.close();
+
+        // Read DebugReport table
+        Cursor debugReportCursor =
+                readerDB.query(
+                        MeasurementTables.DebugReportContract.TABLE,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        MeasurementTables.DebugReportContract.ID);
+        while (debugReportCursor.moveToNext()) {
+            mDebugReportList.add(
+                    SqliteObjectMapper.constructDebugReportFromCursor(debugReportCursor));
+        }
+        debugReportCursor.close();
     }
 
     public void sortAll() {
@@ -211,6 +240,8 @@ public class DbState {
         mAggregateReportList.sort(
                 Comparator.comparing(AggregateReport::getScheduledReportTime)
                         .thenComparing(AggregateReport::getSourceRegistrationTime));
+
+        mDebugReportList.sort(Comparator.comparing(DebugReport::getId));
     }
 
     public List<AggregateEncryptionKey> getAggregateEncryptionKeyList() {
@@ -226,13 +257,15 @@ public class DbState {
                                 sJSON.getString("sourceType").toUpperCase(Locale.ENGLISH)))
                 .setPublisher(Uri.parse(sJSON.getString("publisher")))
                 .setPublisherType(sJSON.optInt("publisherType"))
-                .setAppDestination(parseIfNonNull(sJSON.optString("appDestination", null)))
-                .setWebDestination(parseIfNonNull(sJSON.optString("webDestination", null)))
+                .setAppDestinations(parseIfNonNull(sJSON.optString("appDestination", null)))
+                .setWebDestinations(parseIfNonNull(sJSON.optString("webDestination", null)))
                 .setAggregateSource(sJSON.optString("aggregationKeys", null))
                 .setAggregateContributions(sJSON.optInt("aggregateContributions"))
                 .setEnrollmentId(sJSON.getString("enrollmentId"))
                 .setEventTime(sJSON.getLong("eventTime"))
                 .setExpiryTime(sJSON.getLong("expiryTime"))
+                .setEventReportWindow(sJSON.getLong("eventReportWindow"))
+                .setAggregatableReportWindow(sJSON.optLong("aggregatableReportWindow"))
                 .setPriority(sJSON.getLong("priority"))
                 .setStatus(sJSON.getInt("status"))
                 .setRegistrant(Uri.parse(sJSON.getString("registrant")))
@@ -267,7 +300,8 @@ public class DbState {
         return new EventReport.Builder()
                 .setId(rJSON.getString("id"))
                 .setSourceEventId(new UnsignedLong(rJSON.getString("sourceEventId")))
-                .setAttributionDestination(Uri.parse(rJSON.getString("attributionDestination")))
+                .setAttributionDestinations(List.of(
+                        Uri.parse(rJSON.getString("attributionDestination"))))
                 .setEnrollmentId(rJSON.getString("enrollmentId"))
                 .setTriggerData(new UnsignedLong(rJSON.getString("triggerData")))
                 .setTriggerTime(rJSON.getLong("triggerTime"))
@@ -370,10 +404,18 @@ public class DbState {
                 .build();
     }
 
-    private Uri parseIfNonNull(String s) {
+    private DebugReport getDebugReportFrom(JSONObject rJSON) throws JSONException {
+        return new DebugReport.Builder()
+                .setId(rJSON.getString("id"))
+                .setType(rJSON.getString("type"))
+                .setBody(rJSON.getString("body"))
+                .build();
+    }
+
+    private List<Uri> parseIfNonNull(String s) {
         if (s == null) {
             return null;
         }
-        return Uri.parse(s);
+        return List.of(Uri.parse(s));
     }
 }

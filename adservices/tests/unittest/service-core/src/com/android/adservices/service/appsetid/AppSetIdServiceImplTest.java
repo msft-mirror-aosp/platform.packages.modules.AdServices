@@ -19,6 +19,8 @@ package com.android.adservices.service.appsetid;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__APPSETID;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_APPSETID;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -50,17 +52,24 @@ import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApp
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -140,7 +149,8 @@ public class AppSetIdServiceImplTest {
         when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
         // Empty allow list.
         when(mMockFlags.getPpapiAppAllowList()).thenReturn("");
-        invokeGetAppSetIdAndVerifyError(mContext, STATUS_CALLER_NOT_ALLOWED);
+        invokeGetAppSetIdAndVerifyError(
+                mContext, STATUS_CALLER_NOT_ALLOWED, /* checkLoggingStatus */ true);
     }
 
     @Test
@@ -156,11 +166,15 @@ public class AppSetIdServiceImplTest {
         when(mMockThrottler.tryAcquire(
                         eq(Throttler.ApiKey.APPSETID_API_APP_PACKAGE_NAME), anyString()))
                 .thenReturn(false);
-        invokeGetAppSetIdAndVerifyError(mContext, STATUS_RATE_LIMIT_REACHED, request);
+        // We don't log STATUS_RATE_LIMIT_REACHED for getAppSetId API.
+        invokeGetAppSetIdAndVerifyError(
+                mContext, STATUS_RATE_LIMIT_REACHED, request, /* checkLoggingStatus */ false);
     }
 
     @Test
     public void testEnforceForeground_sandboxCaller() throws Exception {
+        Assume.assumeTrue(SdkLevel.isAtLeastT()); // Sandbox caller is only applicable on T+
+
         // Mock AppImportanceFilter to throw Exception when invoked. This is to verify getAppSetId()
         // doesn't throw if caller is via Sandbox.
         doThrow(new WrongCallingApplicationStateException())
@@ -236,45 +250,38 @@ public class AppSetIdServiceImplTest {
                         .setSdkPackageName(SOME_SDK_NAME)
                         .build();
 
-        mGetAppSetIdCallbackLatch = new CountDownLatch(1);
-
-        appSetIdService.getAppSetId(
-                mRequest,
-                mCallerMetadata,
-                new IGetAppSetIdCallback() {
-                    @Override
-                    public void onResult(GetAppSetIdResult responseParcel) {
-                        Assert.fail();
-                    }
-
-                    @Override
-                    public void onError(int resultCode) {
-                        assertThat(resultCode).isEqualTo(STATUS_CALLER_NOT_ALLOWED);
-                        mGetAppSetIdCallbackLatch.countDown();
-                    }
-
-                    @Override
-                    public IBinder asBinder() {
-                        return null;
-                    }
-                });
-
-        // This ensures that the callback was called.
-        assertThat(
-                        mGetAppSetIdCallbackLatch.await(
-                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-                .isTrue();
-    }
-
-    private void invokeGetAppSetIdAndVerifyError(Context context, int expectedResultCode)
-            throws InterruptedException {
-        invokeGetAppSetIdAndVerifyError(context, expectedResultCode, mRequest);
+        invokeGetAppSetIdAndVerifyError(
+                mContext, STATUS_CALLER_NOT_ALLOWED, mRequest, /* checkLoggingStatus */ true);
     }
 
     private void invokeGetAppSetIdAndVerifyError(
-            Context context, int expectedResultCode, GetAppSetIdParam request)
+            Context context, int expectedResultCode, boolean checkLoggingStatus)
+            throws InterruptedException {
+        invokeGetAppSetIdAndVerifyError(context, expectedResultCode, mRequest, checkLoggingStatus);
+    }
+
+    private void invokeGetAppSetIdAndVerifyError(
+            Context context,
+            int expectedResultCode,
+            GetAppSetIdParam request,
+            boolean checkLoggingStatus)
             throws InterruptedException {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
+
+        CountDownLatch logOperationCalledLatch = new CountDownLatch(1);
+        Mockito.doAnswer(
+                        new Answer<Object>() {
+                            @Override
+                            public Object answer(InvocationOnMock invocation) throws Throwable {
+                                // The method logAPiCallStats is called.
+                                invocation.callRealMethod();
+                                logOperationCalledLatch.countDown();
+                                return null;
+                            }
+                        })
+                .when(mAdServicesLogger)
+                .logApiCallStats(ArgumentMatchers.any(ApiCallStats.class));
+
         mAppSetIdServiceImpl =
                 new AppSetIdServiceImpl(
                         context,
@@ -306,6 +313,25 @@ public class AppSetIdServiceImplTest {
                     }
                 });
         jobFinishedCountDown.await();
+
+        if (checkLoggingStatus) {
+            // getAppSetId method finished executing.
+            logOperationCalledLatch.await();
+
+            ArgumentCaptor<ApiCallStats> argument = ArgumentCaptor.forClass(ApiCallStats.class);
+
+            verify(mAdServicesLogger).logApiCallStats(argument.capture());
+            assertThat(argument.getValue().getCode()).isEqualTo(AD_SERVICES_API_CALLED);
+            assertThat(argument.getValue().getApiClass())
+                    .isEqualTo(AD_SERVICES_API_CALLED__API_CLASS__APPSETID);
+            assertThat(argument.getValue().getApiName())
+                    .isEqualTo(AD_SERVICES_API_CALLED__API_NAME__GET_APPSETID);
+            assertThat(argument.getValue().getResultCode()).isEqualTo(expectedResultCode);
+            assertThat(argument.getValue().getAppPackageName())
+                    .isEqualTo(request.getAppPackageName());
+            assertThat(argument.getValue().getSdkPackageName())
+                    .isEqualTo(request.getSdkPackageName());
+        }
     }
 
     private void runGetAppSetId(AppSetIdServiceImpl appSetIdServiceImpl) throws Exception {

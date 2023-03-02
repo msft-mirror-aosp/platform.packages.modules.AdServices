@@ -16,23 +16,27 @@
 
 package com.android.adservices.service.measurement;
 
+import android.annotation.NonNull;
+
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.util.UnsignedLong;
+import com.android.adservices.service.measurement.util.Validation;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
 /** Event trigger containing trigger data, priority, de-deup key and filters info. */
 public class EventTrigger {
-    private UnsignedLong mTriggerData;
+    @NonNull private UnsignedLong mTriggerData;
     private long mTriggerPriority;
     private UnsignedLong mDedupKey;
-    private Optional<FilterData> mFilter;
-    private Optional<FilterData> mNotFilter;
+    private Optional<List<FilterMap>> mFilterSet;
+    private Optional<List<FilterMap>> mNotFilterSet;
 
     private EventTrigger() {
-        mFilter = Optional.empty();
-        mNotFilter = Optional.empty();
+        mFilterSet = Optional.empty();
+        mNotFilterSet = Optional.empty();
     }
 
     @Override
@@ -44,13 +48,13 @@ public class EventTrigger {
         return Objects.equals(mTriggerData, eventTrigger.mTriggerData)
                 && mTriggerPriority == eventTrigger.mTriggerPriority
                 && Objects.equals(mDedupKey, eventTrigger.mDedupKey)
-                && Objects.equals(mFilter, eventTrigger.mFilter)
-                && Objects.equals(mNotFilter, eventTrigger.mNotFilter);
+                && Objects.equals(mFilterSet, eventTrigger.mFilterSet)
+                && Objects.equals(mNotFilterSet, eventTrigger.mNotFilterSet);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mTriggerData, mTriggerPriority, mDedupKey, mFilter, mNotFilter);
+        return Objects.hash(mTriggerData, mTriggerPriority, mDedupKey, mFilterSet, mNotFilterSet);
     }
 
     /** Returns trigger_data for the event. */
@@ -69,27 +73,23 @@ public class EventTrigger {
     }
 
     /** Filters that should match with source's. */
-    public Optional<FilterData> getFilterData() {
-        return mFilter;
+    public Optional<List<FilterMap>> getFilterSet() {
+        return mFilterSet;
     }
 
     /** Filters that should not match with source's. */
-    public Optional<FilterData> getNotFilterData() {
-        return mNotFilter;
+    public Optional<List<FilterMap>> getNotFilterSet() {
+        return mNotFilterSet;
     }
 
     /** Builder for {@link AggregatableAttributionTrigger}. */
     public static final class Builder {
         private final EventTrigger mBuilding;
 
-        public Builder() {
+        public Builder(@NonNull UnsignedLong triggerData) {
+            Validation.validateNonNull(triggerData);
             mBuilding = new EventTrigger();
-        }
-
-        /** See {@link EventTrigger#getTriggerData()}. */
-        public EventTrigger.Builder setTriggerData(UnsignedLong triggerData) {
             mBuilding.mTriggerData = triggerData;
-            return this;
         }
 
         /** See {@link EventTrigger#getTriggerPriority()}. */
@@ -104,15 +104,15 @@ public class EventTrigger {
             return this;
         }
 
-        /** See {@link EventTrigger#getFilterData()}. */
-        public EventTrigger.Builder setFilter(FilterData filterData) {
-            mBuilding.mFilter = Optional.ofNullable(filterData);
+        /** See {@link EventTrigger#getFilterSet()}. */
+        public EventTrigger.Builder setFilterSet(List<FilterMap> filterSet) {
+            mBuilding.mFilterSet = Optional.ofNullable(filterSet);
             return this;
         }
 
-        /** See {@link EventTrigger#getNotFilterData()} ()}. */
-        public EventTrigger.Builder setNotFilter(FilterData notFilterData) {
-            mBuilding.mNotFilter = Optional.ofNullable(notFilterData);
+        /** See {@link EventTrigger#getNotFilterSet()}. */
+        public EventTrigger.Builder setNotFilterSet(List<FilterMap> notFilterSet) {
+            mBuilding.mNotFilterSet = Optional.ofNullable(notFilterSet);
             return this;
         }
 

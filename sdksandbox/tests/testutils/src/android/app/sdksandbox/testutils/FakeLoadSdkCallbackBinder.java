@@ -41,8 +41,12 @@ public class FakeLoadSdkCallbackBinder extends ILoadSdkCallback.Stub {
         mFakeLoadSdkCallback.onError(exception);
     }
 
-    public boolean isLoadSdkSuccessful() {
-        return mFakeLoadSdkCallback.isLoadSdkSuccessful();
+    public void assertLoadSdkIsSuccessful() {
+        mFakeLoadSdkCallback.assertLoadSdkIsSuccessful();
+    }
+
+    public void assertLoadSdkIsUnsuccessful() {
+        mFakeLoadSdkCallback.assertLoadSdkIsUnsuccessful();
     }
 
     public int getLoadSdkErrorCode() {
@@ -51,5 +55,9 @@ public class FakeLoadSdkCallbackBinder extends ILoadSdkCallback.Stub {
 
     public String getLoadSdkErrorMsg() {
         return mFakeLoadSdkCallback.getLoadSdkErrorMsg();
+    }
+
+    public LoadSdkException getLoadSdkException() {
+        return mFakeLoadSdkCallback.getLoadSdkException();
     }
 }

@@ -15,11 +15,16 @@
  */
 package com.android.adservices.tests.appsetid;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import android.adservices.appsetid.AppSetId;
 import android.adservices.appsetid.AppSetIdManager;
 import android.content.Context;
+import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
 
+import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.runner.AndroidJUnit4;
 
@@ -32,8 +37,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @RunWith(AndroidJUnit4.class)
 public class AppSetIdManagerTest {
@@ -48,6 +56,8 @@ public class AppSetIdManagerTest {
     @After
     public void tearDown() throws Exception {
         overrideAppSetIdKillSwitch(false);
+        // Cool-off rate limiter
+        TimeUnit.SECONDS.sleep(1);
     }
 
     // Override appsetid related kill switch to ignore the effect of actual PH values.
@@ -62,7 +72,7 @@ public class AppSetIdManagerTest {
 
     @Test
     public void testAppSetIdManager() throws Exception {
-        AppSetIdManager appSetIdManager = sContext.getSystemService(AppSetIdManager.class);
+        AppSetIdManager appSetIdManager = AppSetIdManager.get(sContext);
         CompletableFuture<AppSetId> future = new CompletableFuture<>();
         OutcomeReceiver<AppSetId, Exception> callback =
                 new OutcomeReceiver<AppSetId, Exception>() {
@@ -80,5 +90,55 @@ public class AppSetIdManagerTest {
         AppSetId resultAppSetId = future.get();
         Assert.assertNotNull(resultAppSetId.getId());
         Assert.assertNotNull(resultAppSetId.getScope());
+    }
+
+    @Test
+    public void testAppSetIdManager_verifyRateLimitReached() throws Exception {
+        final AppSetIdManager appSetIdManager = AppSetIdManager.get(sContext);
+
+        // Rate limit hasn't reached yet
+        assertFalse(getAppSetIdAndVerifyRateLimitReached(appSetIdManager));
+        assertFalse(getAppSetIdAndVerifyRateLimitReached(appSetIdManager));
+        assertFalse(getAppSetIdAndVerifyRateLimitReached(appSetIdManager));
+        assertFalse(getAppSetIdAndVerifyRateLimitReached(appSetIdManager));
+        assertFalse(getAppSetIdAndVerifyRateLimitReached(appSetIdManager));
+
+        // Due to bursting, we could reach the limit at the exact limit or limit + 1. Therefore,
+        // triggering one more call without checking the outcome.
+        getAppSetIdAndVerifyRateLimitReached(appSetIdManager);
+
+        // Verify limit reached
+        assertTrue(getAppSetIdAndVerifyRateLimitReached(appSetIdManager));
+    }
+
+    private boolean getAppSetIdAndVerifyRateLimitReached(AppSetIdManager manager)
+            throws InterruptedException {
+        final AtomicBoolean reachedLimit = new AtomicBoolean(false);
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+
+        manager.getAppSetId(
+                CALLBACK_EXECUTOR,
+                createCallbackWithCountdownOnLimitExceeded(countDownLatch, reachedLimit));
+
+        countDownLatch.await();
+        return reachedLimit.get();
+    }
+
+    private OutcomeReceiver<AppSetId, Exception> createCallbackWithCountdownOnLimitExceeded(
+            CountDownLatch countDownLatch, AtomicBoolean reachedLimit) {
+        return new OutcomeReceiver<AppSetId, Exception>() {
+            @Override
+            public void onResult(@NonNull AppSetId result) {
+                countDownLatch.countDown();
+            }
+
+            @Override
+            public void onError(@NonNull Exception error) {
+                if (error instanceof LimitExceededException) {
+                    reachedLimit.set(true);
+                }
+                countDownLatch.countDown();
+            }
+        };
     }
 }

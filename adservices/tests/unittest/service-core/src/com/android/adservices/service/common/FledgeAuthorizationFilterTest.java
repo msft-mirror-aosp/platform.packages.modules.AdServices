@@ -190,6 +190,45 @@ public class FledgeAuthorizationFilterTest {
     }
 
     @Test
+    public void testAssertAppHasAppInstallPermission_appHasPermission() {
+        when(PermissionHelper.hasAppInstallPermission(CONTEXT)).thenReturn(true);
+
+        mChecker.assertAppDeclaredAppInstallPermission(CONTEXT, API_NAME_LOGGING_ID);
+
+        verifyZeroInteractions(mPackageManager, mEnrollmentDao, mAdServicesLoggerMock);
+    }
+
+    @Test
+    public void testAssertAppHasAppInstallPermission_appDoesNotHavePermission_throwException() {
+        when(PermissionHelper.hasAppInstallPermission(CONTEXT)).thenReturn(false);
+
+        SecurityException exception =
+                assertThrows(
+                        SecurityException.class,
+                        () ->
+                                mChecker.assertAppDeclaredAppInstallPermission(
+                                        CONTEXT, API_NAME_LOGGING_ID));
+
+        assertEquals(
+                AdServicesStatusUtils.SECURITY_EXCEPTION_PERMISSION_NOT_REQUESTED_ERROR_MESSAGE,
+                exception.getMessage());
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(API_NAME_LOGGING_ID), eq(STATUS_PERMISSION_NOT_REQUESTED), anyInt());
+        verifyNoMoreInteractions(mAdServicesLoggerMock);
+        verifyZeroInteractions(mPackageManager, mEnrollmentDao);
+    }
+
+    @Test
+    public void testAssertAppHasAppInstallPermission_nullContext_throwNpe() {
+        assertThrows(
+                NullPointerException.class,
+                () -> mChecker.assertAppDeclaredAppInstallPermission(null, API_NAME_LOGGING_ID));
+
+        verifyZeroInteractions(mPackageManager, mEnrollmentDao, mAdServicesLoggerMock);
+    }
+
+    @Test
     public void testAssertAdTechHasPermission_hasPermission() {
         when(mEnrollmentDao.getEnrollmentDataForFledgeByAdTechIdentifier(
                         CommonFixture.VALID_BUYER_1))

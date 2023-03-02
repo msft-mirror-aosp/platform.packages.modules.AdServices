@@ -14,6 +14,8 @@
      limitations under the License.
  -->
 
+<!--  IMPORTANT! If adding new strings, then run generate_adservices_public_xml.py  -->
+
 <resources xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="permlab_accessAdServicesTopics" msgid="1108993892369517728">"AdServices Topics API অ্যাক্সেস করুন"</string>
@@ -36,6 +38,8 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"অ্যাপ্লিকেশানকে AdService এনাবেলমেন্ট স্টেট মডিফিকেশন API অ্যাক্সেস করার অনুমতি দেয়।"</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"AdService এনাবেলমেন্ট স্টেট API-এ অ্যাক্সেস করা"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"অ্যাপ্লিকেশনকে AdService এনাবেলমেন্ট স্টেট API অ্যাক্সেস করার অনুমতি দেয়।"</string>
+    <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"AdServicesManager’s API-এ অ্যাক্সেস করা"</string>
+    <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"AdServicesManager’s API অ্যাক্সেস করার জন্য কোনও একটি অ্যাপ্লিকেশনকে অনুমতি দেয়।"</string>
     <string name="app_label" msgid="5985320129629013968">"Android সিস্টেম"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Android-এর বিজ্ঞাপন সম্পর্কিত গোপনীয়তা বিটাতে যোগ দিন"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"আপনাকে বিজ্ঞাপন দেখাতে Android অ্যাপের জন্য আরও ব্যক্তিগত উপায় এক্সপ্লোর করছে"</string>
@@ -65,12 +69,59 @@
     <string name="notificationUI_how_it_works_expanded_text4" msgid="3910573920883580609">"আপনার ব্যবহার করা অ্যাপের উপর নির্ভর করে Android নির্দিষ্ট সময় অন্তর আপনার সেরা আগ্রহের অনুমান করে, যেমন, \"খেলাধূলা\" বা \"ভ্রমণ\"।\n\nএরপরে, আপনাকে আরও প্রাসঙ্গিক বিজ্ঞাপন দেখানোর জন্য কোনও অ্যাপ Android-কে সেইসব আগ্রহ ব্যবহার করতে বলতে পারে।\n\nআপনি নিজের গোপনীয়তা সেটিংসে বর্তমান আগ্রহের তালিকা দেখতে এবং আপনি পছন্দ করেন না এমন যেকোনও আগ্রহ ব্লক করতে পারবেন।"</string>
     <string name="notificationUI_how_it_works_expanded_text5" msgid="7257714040472055781">"•  অ্যাপের মাধ্যমে অনুমান করা আগ্রহ"</string>
     <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"অ্যাপ আপনার আগ্রহ অনুমান করতে পারে এবং Android-এ সাময়িকভাবে এগুলি সেভ করতে পারে। যেমন, আপনি দৌড়ানোর জুতো কেনার জন্য ব্যবহার করেন এমন কোনও অ্যাপ, আপনার আগ্রহ \"ম্যারাথনে দৌড়ানো\" হিসেবে অনুমান করতে পারে।\n\nএরপরে, এই আগ্রহের উপর ভিত্তি করে, আলাদা কোনও অ্যাপ ম্যারাথন সম্পর্কিত বিজ্ঞাপন দেখাতে পারে।\n\nআপনার গোপনীয়তা সেটিংসে, যেসব অ্যাপ আপনার আগ্রহ সেভ করেছে তার তালিকা ম্যানেজ করতে পারবেন।"</string>
+    <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"বিজ্ঞাপন সংক্রান্ত গোপনীয়তার বিভিন্ন নতুন ফিচার"</string>
+    <string name="notificationUI_notification_ga_content" msgid="3483979694272908942">"বিজ্ঞাপনের বিষয় এবং নতুন নিয়ন্ত্রণ, আপনি কী ধরনের বিজ্ঞাপন দেখবেন তা বেছে নেওয়ার আরও বেশি বিকল্প প্রদান করে"</string>
+    <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"সম্প্রতি ব্যবহার করা অ্যাপের উপরে ভিত্তি করে Android আপনার আগ্রহের বিষয়গুলি নোট করে। এছাড়াও আপনি কী পছন্দ করেন তা আপনার ব্যবহার করা অ্যাপ নির্ধারণ করতে পারে। পরে, অ্যাপগুলি আপনাকে পছন্দমতো বিজ্ঞাপন দেখানোর জন্য এই তথ্য চাইতে পারে। আপনাকে বিজ্ঞাপন দেখানোর জন্য কোন কোন বিষয় ও অ্যাপ ব্যবহার করা হবে আপনি তা বেছে নিতে পারবেন।"</string>
+    <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"বিজ্ঞাপনের পারফর্ম্যান্স পরিমাপ করতে, অ্যাপগুলির মধ্যে সীমিত ধরনের ডেটা শেয়ার করা হয়।"</string>
+    <string name="notificationUI_ga_container1_control_text" msgid="2711321174550177509">"Android-এ বিজ্ঞাপন সম্পর্কে আরও তথ্য"</string>
+    <string name="notificationUI_how_it_works_row_subtitle1" msgid="8685034725335826096">"আরও উপযোগী বিজ্ঞাপন"</string>
+    <string name="notificationUI_how_it_works_row_body1" msgid="5865369599951938718">"আপনি দেখেন এমন বিজ্ঞাপন পছন্দমতো সাজিয়ে নিতে সাহায্য করার জন্য অ্যাপ Android-এর কাছে তথ্য চাইতে পারে।"</string>
+    <string name="notificationUI_how_it_works_row_body2" msgid="6601773212442110369">"•  সম্প্রতি ব্যবহার করেছেন এমন অ্যাপের উপর নির্ভর করে Android আগ্রহের বিষয়গুলি সম্পর্কে নোট করে রাখে।"</string>
+    <string name="notificationUI_how_it_works_row_body3" msgid="3692457397642529055">"•  তাছাড়া, অ্যাপ কীভাবে ব্যবহার করছেন তার উপরে ভিত্তি করেও, আপনার ব্যবহার করা অ্যাপ পছন্দের বিষয়গুলি নির্ধারণ করতে পারে। উদাহরণস্বরূপ, দূরপাল্লার দৌড়ে ব্যবহৃত জুতো বিক্রি করা কোনও অ্যাপ ব্যবহার করলে, অ্যাপটি আপনাকে ম্যারাথন দৌড়ের ব্যাপারে উৎসাহী বলে মনে করতে পারে।"</string>
+    <string name="notificationUI_how_it_works_row_body4" msgid="8731138074016839243">"পরে, আপনি ব্যবহার করেন এমন কোনও অ্যাপ এই তথ্য জানতে চাইতে পারে — আপনার বিজ্ঞাপনের বিষয় অথবা আপনার ব্যবহৃত অ্যাপের সাজেস্ট করা বিজ্ঞাপন।"</string>
+    <string name="notificationUI_how_it_works_row_body5" msgid="4524382869577899661">"নিয়মিতভাবে Android অটোমেটিক বিষয় ও বিজ্ঞাপনের সাজেস্ট করা ডেটা মুছে দেয়। তাছাড়া, আপনি নির্দিষ্ট বিষয় ও অ্যাপ ব্লক করতে পারেন যেগুলির সাজেশন আপনি দেখতে চান না।"</string>
+    <string name="notificationUI_how_it_works_subtitle2" msgid="2203542887026049927">"একটি বিজ্ঞাপন কতটা ভালো পারফর্ম করে তা পরিমাপ করা"</string>
+    <string name="notificationUI_how_it_works_row_body6" msgid="5368364880910986588">"আপনার ব্যবহার করা সব অ্যাপ Android-এর কাছে তথ্য চাইতে পারে, যাতে সেগুলি বিজ্ঞাপনের পারফর্ম্যান্স পরিমাপ করতে সাহায্য করে। Android সব অ্যাপকে সীমিত ধরনের ডেটা সংগ্রহ করতে দেয়, যেমন দিনের কোন সময় আপনাকে বিজ্ঞাপন দেখানো হয়েছিল।"</string>
+    <!-- no translation found for notificationUI_how_it_works_row_body7 (8158317350415462142) -->
+    <skip />
+    <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"বিজ্ঞাপন সংক্রান্ত গোপনীয়তার বিভিন্ন নতুন ফিচার ব্যবহার করে দেখুন"</string>
+    <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"বিজ্ঞাপনের বিষয়, আপনি যেসব বিজ্ঞাপন দেখেন তার মধ্যে থেকে বেছে নেওয়ার জন্য আরও বেশি বিকল্প প্রদান করে"</string>
+    <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"বিবরণ দেখুন"</string>
+    <string name="notificationUI_header_ga_title_eu" msgid="4461095539795574989">"Android-এ উন্নত বিজ্ঞাপন সংক্রান্ত গোপনীয়তা"</string>
+    <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android নতুন গোপনীয়তা ফিচার চালু করছে, যা আপনি যে বিজ্ঞাপনগুলি দেখেন সেগুলি থেকে বেছে নেওয়ার জন্য আপনাকে আরও বিকল্প দেয়।"</string>
+    <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"বিজ্ঞাপনের বিষয়গুলি, অ্যাপকে আপনার পরিচয় ও অ্যাপ ব্যবহার সংক্রান্ত তথ্য সুরক্ষিত রেখে প্রাসঙ্গিক বিজ্ঞাপন দেখাতে সাহায্য করে। Android সম্প্রতি ব্যবহার করা অ্যাপের উপর ভিত্তি করে আপনার আগ্রহের বিষয় মনে রাখতে পারে। পরে, আপনি যেসব অ্যাপ ব্যবহার করেন সেগুলি আপনাকে পছন্দমতো বিজ্ঞাপন দেখানোর জন্য প্রাসঙ্গিক বিষয় সম্পর্কে Android-এর কাছে জানতে চাইতে পারে।"</string>
+    <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"আপনি নিজের ডিভাইস সেটিংসে বিজ্ঞাপনের বিষয়গুলি দেখতে পারেন এবং অ্যাপের সাথে শেয়ার করতে চান না এমন বিষয়গুলি ব্লক করতে পারেন। নিয়মিত বিজ্ঞাপনের বিষয়গুলিও Android অটোমেটিক মুছে দেয়।"</string>
+    <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"আপনি \'গোপনীয়তা\' সেটিংস থেকে যেকোনও সময় সিদ্ধান্ত পরিবর্তন করতে পারবেন।"</string>
+    <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"বিজ্ঞাপনের বিষয় সম্পর্কে আরও তথ্য"</string>
+    <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"Android কীভাবে আপনার ডেটা সুরক্ষিত রাখে সেই সম্পর্কে আমাদের গোপনীয়তা নীতি থেকে আরও জানুন।"</string>
+    <string name="notificationUI_right_control_button_ga_text_eu" msgid="2022252072760042013">"হ্যাঁ, আমি যোগ দেব"</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  কোন ডেটা ব্যবহার করা হয়"</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"আপনার বিজ্ঞাপনের বিষয়, এই ডিভাইসে সম্প্রতি ব্যবহার করা অ্যাপ ও কত ঘনঘন সেগুলি ব্যবহার করা হয়, তার উপর ভিত্তি করে নির্ধারণ করা হয়।"</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text5" msgid="5976468008939416198">"•  এই তথ্য আমরা কীভাবে ব্যবহার করি"</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text6" msgid="6318275524155409408">"আপনি অ্যাপ ব্যবহার করার সাথে সাথে Android আগ্রহের বিষয় নোট করে। বিষয়ের লেবেলগুলি আগে থেকে ঠিক করা থাকে এবং এতে শিল্প ও বিনোদন, কেনাকাটা এবং খেলাধুলার মতো জিনিস অন্তর্ভুক্ত থাকে। পরে, আপনি দেখেন এমন বিজ্ঞাপন পছন্দমতো করার জন্য আপনার ব্যবহার করা অ্যাপ, Android-এর কাছে আপনার আগ্রহের বিষয় সম্পর্কে কয়েকটির (তবে আপনার অ্যাপ ব্যবহার বা পরিচয় সম্পর্কিত তথ্য নয়) তথ্য চাইতে পারে।"</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text7" msgid="4275126336833782389">"•  আপনি কীভাবে ডেটা ম্যানেজ করতে পারেন"</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"নিয়মিতভাবে, Android আপনার দেখা বিষয়গুলি অটোমেটিক মুছে দেয়। আপনি অ্যাপ ব্যবহার করা চালিয়ে গেলে, তালিকায় একই বিষয় আবার দেখানো হতে পারে। এমন কোনও বিষয় যেটি আপনি চান না যে অ্যাপের মাধ্যমে Android শেয়ার করুক, সেটি ব্লক করতে পারবেন এবং গোপনীয়তা সেটিংস থেকে বিজ্ঞাপনের বিষয় বন্ধ করতে পারবেন।"</string>
+    <string name="notificationUI_you_can_change_in_privacy_settings" msgid="4781410091509838647">"আপনি গোপনীয়তা সেটিংসে পরিবর্তন করতে পারবেন।"</string>
+    <string name="notificationUI_fledge_measurement_title" msgid="5279119450359078459">"অন্যান্য ফিচার যা বিজ্ঞাপনগুলিকে আরও ব্যক্তিগত করে তোলে"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="6943787406043534689">"অ্যাপগুলি যখন আপনাকে পছন্দমতো বিজ্ঞাপন দেখায় তখন অ্যাপগুলি আপনার সম্পর্কে কী জানতে পারে তা সীমিত করার জন্য Android নতুন উপায় চালু করছে।"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text2" msgid="601600895880486962">"•  প্রাসঙ্গিক বিজ্ঞাপনগুলি দেখানোর জন্য অ্যাপ চালু করার সাথে সাথে অ্যাপ-প্রস্তাবিত বিজ্ঞাপনগুলি আপনার পরিচয় ও অ্যাপ ব্যবহার সম্পর্কিত তথ্য সুরক্ষিত রাখতে সাহায্য করে। আপনার অ্যাক্টিভিটির উপর নির্ভর করে, যে অ্যাপ ব্যবহার করেন সেটি অন্যান্য অ্যাপে সম্পর্কিত বিজ্ঞাপন সাজেস্ট করতে পারে। আপনি গোপনীয়তা সেটিংস থেকে অ্যাপের তালিকা দেখতে ও সাজেশন দেওয়া থেকে সেগুলিকে আটকাতে পারবেন।"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"•  বিজ্ঞাপন পরিমাপের মাধ্যমে, অ্যাপের বিজ্ঞাপনের পারফর্ম্যান্স পরিমাপ করার জন্য সীমিত ধরনের ডেটা শেয়ার করা হয়, যেমন দিনের কোন সময় আপনাকে বিজ্ঞাপন দেখানো হয়েছিল।"</string>
+    <string name="notificationUI_fledge_measurement_control_ga_text_eu" msgid="2346851728118443500">"অ্যাপ-প্রস্তাবিত বিজ্ঞাপন এবং বিজ্ঞাপন পরিমাপ সম্পর্কে আরও অনেক কিছু"</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text0" msgid="2456923104551938349">"অ্যাপ-প্রস্তাবিত বিজ্ঞাপন"</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text1" msgid="5606895535548790900">"•  কোন ডেটা ব্যবহার করা হয়"</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text2" msgid="6309052819494439288">"এই ডিভাইসে ব্যবহার করা অ্যাপে আপনার অ্যাক্টিভিটি।"</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text3" msgid="5347980571056638783">"•  এই ডেটা অ্যাপ কীভাবে ব্যবহার করে"</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text4" msgid="4738335469671465639">"আপনি যেসব বিষয় পছন্দ করেন তার ব্যাপারে তথ্য অ্যাপ Android-এর মাধ্যমে স্টোর করতে পারে। উদাহরণস্বরূপ, ম্যারাথন দৌড়ের প্রশিক্ষণের ব্যাপারে কোনও অ্যাপ ব্যবহার করলে, অ্যাপটি আপনাকে দৌড়ানোর জুতোর ব্যাপারে আগ্রহী বলেও মনে করতে পারে। পরবর্তী সময়ে, আলাদা কোনও অ্যাপ ব্যবহার করলে, সেই অ্যাপটি আপনাকে প্রথম অ্যাপের সাজেস্ট করা দৌড়ানোর জুতোর বিজ্ঞাপন দেখাতে পারে।"</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text5" msgid="8737925570089314631">"•  আপনি কীভাবে নিজের ডেটা ম্যানেজ করতে পারেন"</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"অ্যাপের সাজেস্ট করা ডেটা Android নিয়মিত অটোমেটিক মুছে দেয়। আপনি কোনও অ্যাপ আবার ব্যবহার করলে তা আবার তালিকায় দেখানো হতে পারে।"</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"এছাড়াও, আপনি গোপনীয়তা সেটিংসে যেকোনও সময় আপনার জন্য বিজ্ঞাপন সাজেস্ট করা থেকে কোনও অ্যাপকে ব্লক করতে, সমস্ত বিজ্ঞাপন-সাজেশন ডেটা রিসেট করতে বা অ্যাপের সাজেস্ট করা বিজ্ঞাপন বন্ধ করে দিতে পারেন।"</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"আপনি যে অ্যাপগুলি ব্যবহার করেন সেগুলি Android-এর কাছে তাদের বিজ্ঞাপনের পারফর্ম্যান্স পরিমাপ করতে সাহায্য করে এমন তথ্য চাইতে পারে। অ্যাপগুলি একে অপরের সাথে শেয়ার করতে পারে এমন তথ্য সীমিত করে Android আপনার গোপনীয়তা রক্ষা করে।"</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"প্রাইভেসি স্যান্ডবক্স"</string>
     <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"Android-এর বিজ্ঞাপন গোপনীয়তা সম্পর্কিত বিটাতে অংশগ্রহণ করুন"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"প্রাইভেসি স্যান্ডবক্স"</string>
     <string name="settingsUI_topics_title" msgid="5996189869721397937">"Android-এর মাধ্যমে অনুমান করা আগ্রহ"</string>
     <string name="settingsUI_apps_title" msgid="2772289096915264175">"যেসব অ্যাপ আপনার আগ্রহ অনুমান করে"</string>
-    <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"বিজ্ঞাপন সম্পর্কিত পরিমাপ"</string>
+    <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"বিজ্ঞাপন পরিমাপ"</string>
     <string name="settingsUI_main_view_info_text9" msgid="5431131706102562540">"অ্যাপ তার বিজ্ঞাপনের কার্যকারিতা পরিমাপ করতে প্রাইভেসি স্যান্ডবক্স ব্যবহার করতে পারে। এটি করার জন্য, বিজ্ঞাপনদাতারা তাদের বিজ্ঞাপন ও অ্যাপের মধ্যে আপনার ইন্টার‌্যাকশন সম্পর্কিত ডেটা সাময়িকভাবে Android-এ সেভ করতে পারে। তারা কতটা পরিমাণ ডেটা সেভ করতে পারেন তা সীমাবদ্ধ করা আছে এবং নিয়মিত মুছে ফেলা হবে।\n\nআপনি প্রাইভেসি স্যান্ডবক্স বন্ধ করার মাধ্যমে এই ডেটা যেকোনও সময় মুছে ফেলতে পারবেন।"</string>
     <string name="settingsUI_topics_view_subtitle" msgid="6608135144119617292">"আপনার ব্যবহার করা অ্যাপের উপর নির্ভর করে Android নির্দিষ্ট সময় অন্তর আপনার সেরা আগ্রহের অনুমান করে। আপনাকে আরও প্রাসঙ্গিক বিজ্ঞাপন দেখানোর জন্য অ্যাপ, Android-কে সেইসব আগ্রহ ব্যবহার করতে বলতে পারে।\n\nআপনি কোনও আগ্রহ ব্লক করলে, সেটি আপনি আনব্লক না করা পর্যন্ত এটি আবার তালিকায় যোগ করা যাবে না। আপনি এখনও হয়ত এই সম্পর্কিত কিছু বিজ্ঞাপন দেখতে পাবেন।"</string>
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"ব্লক করুন"</string>
@@ -78,35 +129,79 @@
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"আপনার ব্লক করা আগ্রহের বিষয়"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"সব আগ্রহের বিষয় রিসেট করুন"</string>
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"এই মুহূর্তে দেখানোর মতো কোনও আগ্রহ নেই"</string>
+    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"এই মুহূর্তে দেখানোর মতো কোনও বিষয় নেই"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"প্রাইভেসি স্যান্ডবক্স"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android-এর বিজ্ঞাপন সম্পর্কিত গোপনীয়তা বিটা নতুন ফিচার প্রদান করে যা, আপনার পছন্দ হতে পারে এমন বিজ্ঞাপন আপনাকে দেখানোর জন্য অ্যাপ ব্যবহার করতে পারে। এইসব প্রযুক্তি ডিভাইস শনাক্তকারী ব্যবহার করে না।\n\nAndroid অনুমান করতে পারে যে কী ধরনের বিজ্ঞাপনে আপনি আগ্রহী হতে পারেন, এবং আপনার ডিভাইসে সাময়িকভাবে এইসব বিজ্ঞাপন সেভ করতে পারে। এটি অন্যান্য ডেভেলপারদের ওয়েবসাইট ও অ্যাপ জুড়ে আপনার অ্যাক্টিভিটি ট্র্যাক না করেই, এই সম্পর্কিত বিজ্ঞাপন দেখানোর জন্য অ্যাপকে অনুমতি দেয়।"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"আপনার কোনও ব্লক করা আগ্রহ নেই"</string>
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"আপনার কোনও ব্লক করা আগ্রহের বিষয় নেই"</string>
+    <string name="settingsUI_no_blocked_topics_ga_text" msgid="377459829879121256">"কোনও বিষয় ব্লক করা হয়নি"</string>
+    <string name="settingsUI_view_blocked_topics_title" msgid="3705333677440361392">"ব্লক করা বিষয়গুলি দেখুন"</string>
+    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"আগ্রহের বিষয় রিসেট করা হয়েছে"</string>
+    <string name="settingsUI_topics_are_reset_ga" msgid="5250296990870048195">"বিষয়গুলি রিসেট করা হয়েছিল"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"অ্যাপ আপনার আগ্রহ অনুমান করতে পারে এবং Android-এ সাময়িকভাবে এগুলি সেভ করতে পারে। এরপরে, এইসব বিজ্ঞাপনের উপর নির্ভর করে অ্যাপ বিজ্ঞাপন দেখাতে পারে।\n\nআপনি কোনও অ্যাপ ব্লক করলে, এটি আর কোনও আগ্রহ অনুমান করবে না। আপনি আনব্লক না করা পর্যন্ত অ্যাপের এই তালিকায় এটি আর যোগ করা হবে না। ইতিমধ্যেই অ্যাপের মাধ্যমে অনুমান করা আগ্রহ সম্পর্কিত ডেটা মুছে ফেলা হবে, তবে আপনি হয়ত এই সম্পর্কিত বিজ্ঞাপন এখনও দেখতে পাবেন।"</string>
-    <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"আপনার ব্লক করা অ্যাপ"</string>
+    <string name="settingsUI_blocked_apps_title" msgid="1260257485713408637">"আপনার ব্লক করা অ্যাপ"</string>
+    <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"ব্লক করা অ্যাপগুলি দেখুন"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"অ্যাপের মাধ্যমে অনুমান করা আগ্রহ রিসেট করুন"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"কোনও অ্যাপ এই মুহূর্তে আপনার জন্য বিজ্ঞাপন তৈরি করছে না"</string>
+    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="8540919050517478161">"এই মুহূর্তে দেখানোর মতো কোনও অ্যাপ নেই"</string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"প্রাইভেসি স্যান্ডবক্স"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android-এর বিজ্ঞাপন সম্পর্কিত গোপনীয়তা বিটা নতুন ফিচার প্রদান করে যা, আপনার পছন্দ হতে পারে এমন বিজ্ঞাপন আপনাকে দেখানোর জন্য অ্যাপ ব্যবহার করতে পারে। এইসব প্রযুক্তি ডিভাইস শনাক্তকারী ব্যবহার করে না।\n\nঅ্যাপ অনুমান করতে পারে যে কী ধরনের বিজ্ঞাপনে আপনি আগ্রহী হতে পারেন, এবং আপনার ডিভাইসে সাময়িকভাবে এইসব বিজ্ঞাপন সেভ করতে পারবে। এটি অন্যান্য ডেভেলপারদের ওয়েবসাইট ও অ্যাপ জুড়ে আপনার অ্যাক্টিভিটি ট্র্যাক না করেই, এই সম্পর্কিত বিজ্ঞাপন দেখানোর জন্য অ্যাপকে অনুমতি দেয়।"</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"আপনার কাছে কোনও ব্লক করা অ্যাপ নেই"</string>
+    <string name="settingsUI_no_blocked_apps_ga_text" msgid="7488680173653861943">"কোনও ব্লক করা অ্যাপ নেই"</string>
+    <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"বিজ্ঞাপন সম্পর্কিত পরিমাপের অনুমতি দিন"</string>
+    <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"অ্যাপ ও বিজ্ঞাপনদাতা Android-এর থেকে তথ্য অনুরোধ করতে পারে যা তাদের বিজ্ঞাপনের পারফর্ম্যান্স পরিমাপ করতে সাহায্য করে।\n\nআপনার ডিভাইস থেকে নিয়মিতভাবে বিজ্ঞাপন পরিমাপ সংক্রান্ত ডেটা মুছে ফেলা হয়।"</string>
+    <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"পরিমাপ সংক্রান্ত ডেটা রিসেট করুন"</string>
+    <string name="settingsUI_measurement_view_footer_text" msgid="3296828552097878309">"বিভিন্ন অ্যাপ একে অপরের সাথে শেয়ার করতে পারে এমন তথ্য সীমিত করার মাধ্যমে Android আপনার গোপনীয়তা রক্ষা করে। আপনার পরিচয় সুরক্ষিত রাখার জন্য কিছুক্ষণ দেরিতে রিপোর্ট পাঠানো হয়।\n\nআপনার ব্রাউজারে একই রকম সেটিংস থাকতে পারে। Android ও আপনার ব্রাউজার দুটির জন্যই বিজ্ঞাপন পরিমাপ চালু করা থাকলে, কোনও কোম্পানি হয়ত আপনার ব্যবহার করা অ্যাপ ও আপনি যেসব সাইট দেখেন তার মধ্যে বিজ্ঞাপনের উপযোগিতা পরিমাপ করতে পারবে। আপনার ডিভাইসে ব্রাউজিং ইতিহাস ব্যক্তিগত করে রাখা হয়।\n\nAndroid কীভাবে আপনার ডেটা সুরক্ষিত রাখে সেই ব্যাপারে আমাদের গোপনীয়তা নীতি থেকে আরও জানুন।"</string>
+    <string name="settingsUI_measurement_are_reset" msgid="4375330550418573499">"বিজ্ঞাপন পরিমাপ করার ডেটা রিসেট করা হয়েছে"</string>
     <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"বাতিল করুন"</string>
     <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"প্রাইভেসি স্যান্ডবক্স বন্ধ করে দেবেন?"</string>
-    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"আপনি মত পরিবর্তন করে Android-এর বিজ্ঞাপন গোপনীয়তা বেটা সম্পর্কে আরও জানতে চাইলে, আপনার \'গোপনীয়তা সেটিংস\' বিকল্পে যান"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"আপনার মত পরিবর্তন হলে বা Android-এর বিজ্ঞাপন সংক্রান্ত গোপনীয়তা বিটা সম্পর্কে আরও জানতে চাইলে, আপনার \'গোপনীয়তা সেটিংস\' বিকল্পে যান"</string>
     <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"বন্ধ করুন"</string>
     <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"<xliff:g id="TOPIC">%1$s</xliff:g> ব্লক করবেন?"</string>
-    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"এই আগ্রহ ব্লক করে দেওয়া হবে এবং আপনি নতুন করে যোগ না করা পর্যন্ত, আর আপনার তালিকায় যোগ করা হবে না। এরপরেও, এই সম্পর্কিত কিছু বিজ্ঞাপন আপনি হয়ত এখনও দেখতে পাবেন।"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2581824495438333677">"এই বিষয় ব্লক করে দেওয়া হবে এবং আপনি নতুন করে যোগ না করা পর্যন্ত, আর সেটি আপনার তালিকায় যোগ করা হবে না। আপনি এখনও হয়ত এই বিষয় সম্পর্কিত কিছু বিজ্ঞাপন দেখতে পাবেন।"</string>
     <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"ব্লক করুন"</string>
-    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"<xliff:g id="TOPIC">%1$s</xliff:g> আনব্লক করা আছে"</string>
-    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android আপনার আগ্রহের এই বিষয়টিকে আবার যোগ করতে পারে তবে, এটি সাথে সাথে তালিকায় উপস্থিত নাও হতে পারে"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"<xliff:g id="TOPIC">%1$s</xliff:g> আনব্লক করা হয়েছে"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="1090743551997420666">"Android, এই বিষয়টি আবার তালিকায় যোগ করতে পারে, তবে এগুলি সঙ্গে সঙ্গে আপনার তালিকায় দেখা নাও যেতে পারে"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"ঠিক আছে"</string>
-    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"আপনার সব আগ্রহ রিসেট করবেন?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"আপনার তালিকা মুছে দেওয়া হবে এবং এখন থেকে নতুন আগ্রহ অনুমান করা হবে। এরপরেও, আপনার মুছে দেওয়া আগ্রহের সাথে সম্পর্কিত কিছু বিজ্ঞাপন দেখতে পেতে পারেন।"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="8025836207966712435">"বিজ্ঞাপনের সবকটি বিষয় রিসেট করবেন?"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="4243744527757134000">"আপনার তালিকা মুছে দেওয়া হবে এবং এর পর থেকে নতুন বিষয় যোগ করা হবে। রিসেট করেছেন এমন বিষয় সম্পর্কে আপনি এখনও হয়ত প্রাসঙ্গিক কিছু বিজ্ঞাপন দেখতে পাবেন।"</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"রিসেট করুন"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g> ব্লক করবেন?"</string>
-    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"এই অ্যাপ প্রাইভেসি স্যান্ডবক্সের জন্য আগ্রহ কতটা তা অনুমান করবে না, আপনি এটি আনব্লক না করা পর্যন্ত আরেকবার আপনার তালিকায় এটি যোগ করা হবে না।\n\nআগে থেকেই এই অ্যাপের করা আগ্রহের অনুমান মুছে দেওয়া হবে, তবুও আপনি কিছু সংশ্লিষ্ট বিজ্ঞাপন দেখতে পাবেন।"</string>
-    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> আনব্লক করা আছে"</string>
-    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"এই অ্যাপ আবার আপনার আগ্রহ অনুমান করতে পারে, তবে এগুলি সাথে সাথে আপনার তালিকায় উপলভ্য নাও হতে পারে। আপনি কিছুক্ষণ পরে একই ধরনের বিজ্ঞাপন দেখতে পেতে পারেন।"</string>
-    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"অ্যাপের জেনারেট করা আগ্রহ রিসেট করবেন?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"আপনার তালিকার অ্যাপগুলির মাধ্যমে অনুমান করা আগ্রহ প্রাইভেসি স্যান্ডবক্স থেকে মুছে দেওয়া হবে, এখন থেকে অ্যাপ নতুন আগ্রহের অনুমান করবে। এরপরেও, এই সম্পর্কিত কিছু বিজ্ঞাপন আপনি হয়তো দেখতে পাবেন।"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="758788973278770119">"আপনি আনব্লক না করা পর্যন্ত এই অ্যাপ বিজ্ঞাপন সম্পর্কে সাজেশন দেবে না এবং আপনার লিস্টে আবার এটি যোগ করা হবে না। আপনি এখনও হয়ত প্রাসঙ্গিক কিছু বিজ্ঞাপন দেখতে পাবেন।"</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> আনব্লক করা হয়েছে"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="5758218424845642060">"এই অ্যাপ আপনাকে আবার বিজ্ঞাপন সংক্রান্ত সাজেশন দিতে পারবে, তবে এগুলি সঙ্গে সঙ্গে আপনার তালিকায় দেখা নাও যেতে পারে। একই ধরনের বিজ্ঞাপন দেখার ক্ষেত্রে আপনার কিছুটা সময় লাগতে পারে।"</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"অ্যাপের সাজেস্ট করা বিজ্ঞাপন রিসেট করবেন?"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"আপনার তালিকায় থাকা অ্যাপ থেকে বিজ্ঞাপন-সাজেশন ডেটা মুছে ফেলা হবে এবং অ্যাপগুলি এর পর থেকে নতুন বিজ্ঞাপন সাজেস্ট করবে। আপনি এখনও হয়ত প্রাসঙ্গিক কিছু বিজ্ঞাপন দেখতে পাবেন।"</string>
+    <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"অ্যাপ ডেটা রিসেট করা হয়েছে"</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"সবকটি বিষয় রিসেট করবেন?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"অ্যাপের সাজেস্ট করা বিজ্ঞাপন রিসেট করবেন?"</string>
+    <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"বিজ্ঞাপন সংক্রান্ত গোপনীয়তা"</string>
+    <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"বিজ্ঞাপনের বিষয়"</string>
+    <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"অ্যাপের সাজেস্ট করা বিজ্ঞাপন"</string>
+    <!-- no translation found for settingsUI_measurement_ga_title (2255921375701745943) -->
+    <skip />
+    <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"সম্প্রতি ব্যবহার করা অ্যাপ এবং সেইসব অ্যাপ কত ঘনঘন ব্যবহার করেন তার ভিত্তিতে Android আপনার আগ্রহের বিষয় মনে রাখে"</string>
+    <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"তাছাড়া, অ্যাপ কীভাবে ব্যবহার করছেন তার উপরে ভিত্তি করেও আপনার ব্যবহার করা অ্যাপ পছন্দের বিষয়গুলি নির্ধারণ করতে পারে।"</string>
+    <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"আপনার ব্যবহার করা অ্যাপ যাতে নিজের বিজ্ঞাপনের পারফর্ম্যান্স পরিমাপ করতে পারে তার জন্য সাহায্য করতে Android-এর কাছে তথ্য চাইতে পারে। Android অ্যাপকে সীমিত ধরনের ডেটা সংগ্রহ করার অনুমতি দেয়।"</string>
+    <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"চালু আছে / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g>টি বিষয়"</string>
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{চালু আছে / #টি বিষয়}one{চালু আছে / #টি বিষয়}other{চালু আছে / #টি বিষয়}}"</string>
+    <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"চালু আছে / <xliff:g id="APPS_COUNT">%1$d</xliff:g>টি অ্যাপ"</string>
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{চালু আছে / #টি অ্যাপ}one{চালু আছে / #টি অ্যাপ}other{চালু আছে / #টি অ্যাপ}}"</string>
+    <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"চালু আছে"</string>
+    <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"বন্ধ আছে"</string>
+    <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"সম্প্রতি ব্যবহার করা অ্যাপের উপর ভিত্তি করে আগ্রহের বিষয় নির্ধারণ করা হয় এবং অ্যাপ পছন্দ অনুযায়ী বিজ্ঞাপন দেখাতে সেগুলি ব্যবহার করে।\n\nআপনি সেইসব বিষয় ব্লক করতে পারবেন, যেগুলি অ্যাপের সাথে শেয়ার করতে চান না। তাছাড়াও, Android নিয়মিত বিষয়গুলিকে নিজে থেকেই মুছে দেয়।"</string>
+    <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"বিজ্ঞাপন সম্পর্কিত বিষয়ে অনুমতি দিন"</string>
+    <string name="settingsUI_blocked_topics_ga_title" msgid="7163366621282449273">"আপনার ব্লক করা বিজ্ঞাপনের বিষয়"</string>
+    <string name="settingsUI_reset_topics_ga_title" msgid="5365554894399951300">"বিজ্ঞাপনের সবকটি বিষয় রিসেট করুন"</string>
+    <string name="settingsU_topics_view_footer" msgid="4769146330248953561">"গত কয়েক সপ্তাহে আপনার ব্যবহার করা অ্যাপের উপর ভিত্তি করে Android আপনার আগ্রহের বিষয়গুলি বুঝতে পারে।\n\nপরবর্তী সময়ে, আপনার ব্যবহার করা কোনও অ্যাপ, Android-এর কাছে আপনার পছন্দের বিষয়ের ব্যাপারে জানতে চাইতে পারে, যাতে আপনার পছন্দ অনুযায়ী বিজ্ঞাপন দেখাতে পারে। Android সর্বাধিক ৩টি বিষয় অ্যাপের সাথে শেয়ার করে, তবে আপনার পরিচিতি ও অ্যাপ ব্যবহার সম্পর্কিত তথ্য সুরক্ষিত রাখা হয়।\n\nনিয়মিতভাবে Android নিজে থেকেই বিষয়গুলি মুছে দেয়। অ্যাপ ব্যবহার করা চালিয়ে গেলে, কোনও বিষয় আবারও তালিকায় দেখানো হতে পারে। অথবা, আপনি সেইসব বিষয় ব্লক করতে পারবেন, যেগুলি আপনি চান না যে Android অ্যাপের সাথে শেয়ার করুক।\n\nএই সেটিং, অ্যাপের সাজেস্ট করা বিজ্ঞাপন সেটিং, বিজ্ঞাপন আইডি সেটিং ও আপনার ব্যবহার করা অ্যাপের ক্ষেত্রে পছন্দ অনুযায়ী বিজ্ঞাপন ব্যবহার করা হচ্ছে কিনা, এই বিভিন্ন বিষয়ের উপর ভিত্তি করে আপনাকে আপনার পছন্দ অনুযায়ী বিজ্ঞাপন দেখানো হতে পারে।"</string>
+    <string name="settingsUI_apps_switch_title" msgid="1308209012769248890">"অ্যাপের সাজেস্ট করা বিজ্ঞাপন দেখানোর অনুমতি দিন"</string>
+    <string name="settingsUI_apps_view_ga_subtitle" msgid="1911743837387384160">"আপনি কী কী পছন্দ করেন, আপনার ব্যবহার করা অ্যাপ তা নির্ধারণ করতে পারে এবং তারপরে অন্যান্য অ্যাপে বিজ্ঞাপন সাজেস্ট করতে পারে।\n\nসাজেশন পাওয়া বন্ধ করতে আপনি অ্যাপ ব্লক করতে পারবেন। এছাড়া, অ্যাপের সাজেস্ট করা ডেটা Android নিয়মিত অটোমেটিক মুছে দেয়।"</string>
+    <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"আপনার ব্লক করা অ্যাপ"</string>
+    <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"অ্যাপের সাজেস্ট করা ডেটা রিসেট করুন"</string>
+    <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"সাধারণত, আপনি যে অ্যাপ ব্যবহার করেন তা পছন্দমতো অভিজ্ঞতা দিতে আপনার আগ্রহের বিষয়গুলি মনে রাখে। এছাড়াও আপনার আগ্রহের বিষয়গুলি সম্পর্কে Android-এর মাধ্যমে অ্যাপ তথ্য সেভ করতে পারে।\n\nযেমন, আপনি ম্যারাথন প্রশিক্ষণ সম্পর্কে কোনও অ্যাপ ব্যবহার করলে, অ্যাপ সিদ্ধান্ত নিতে পারে যে আপনি দৌড়ানোর জুতোর বিষয়ে আগ্রহী। পরে, আপনি আলাদা কোনও অ্যাপ ব্যবহার করলে, সেই অ্যাপটি প্রথম অ্যাপের মাধ্যমে সাজেস্ট করা দৌড়ানোর জুতো সম্পর্কিত বিজ্ঞাপন দেখাতে পারে।\n\nAndroid নিয়মিত অ্যাপের মাধ্যমে সাজেস্ট করা ডেটা অটোমেটিক মুছে দেয়। আপনি অ্যাপ ব্যবহার করা চালিয়ে গেলে তবে এর ডেটা আবার তালিকায় অন্তর্ভুক্ত করা যেতে পারে। বা আপনার জন্য বিজ্ঞাপনের সাজেশন দেওয়া থেকে কোনও অ্যাপকে আটকাতে পারবেন।\n\nএই সেটিং, বিজ্ঞাপনের বিষয়ের সেটিং, আপনার বিজ্ঞাপন আইডি সেটিংস ও আপনার ব্যবহার করা অ্যাপের ক্ষেত্রে পছন্দ অনুযায়ী বিজ্ঞাপন ব্যবহার করা হচ্ছে কিনা, এই বিভিন্ন বিষয়ের উপর ভিত্তি করে আপনাকে আপনার পছন্দ অনুযায়ী বিজ্ঞাপন দেখানো হতে পারে।"</string>
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"মিউজিক, খবর এবং খেলাধুলার মতো আকর্ষণীয় বিষয়গুলি তুলে ধরে এমন চিহ্নগুলির রঙিন ছবি"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"একটি বৃত্তের ভিতরে একটি তালার রঙিন চিত্র"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"একটি বর্গক্ষেত্র গঠন করে এমন নয়টি বিন্দুর একটি ছোট কালো এবং সাদা চিত্র"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"হার্ট, ত্রিভুজ এবং বর্গক্ষেত্রের মতো সাধারণ আকারের একটি ছোট কালো-সাদা চিত্র"</string>
     <string name="topic10001" msgid="1636806320891333775">"শিল্পকলা ও বিনোদন"</string>
     <string name="topic10002" msgid="1226367977754287428">"অভিনয় ও থিয়েটার"</string>
     <string name="topic10003" msgid="6949890838957814881">"অ্যানিমে এবং মাঙ্গা"</string>

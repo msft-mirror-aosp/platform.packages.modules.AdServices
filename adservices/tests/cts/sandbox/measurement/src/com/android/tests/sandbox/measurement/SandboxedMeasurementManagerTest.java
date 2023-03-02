@@ -16,7 +16,6 @@
 
 package com.android.tests.sandbox.measurement;
 
-import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
@@ -25,9 +24,11 @@ import android.os.Bundle;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.AdservicesCtsHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -51,6 +52,9 @@ public class SandboxedMeasurementManagerTest {
 
     @Before
     public void setup() throws TimeoutException {
+        // Skip the test if it runs on unsupported platforms.
+        Assume.assumeTrue(AdservicesCtsHelper.isDeviceSupported());
+
         // Start a foreground activity
         SimpleActivity.startAndWaitForSimpleActivity(sContext, Duration.ofMillis(1000));
 
@@ -95,13 +99,7 @@ public class SandboxedMeasurementManagerTest {
         sdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), CALLBACK_EXECUTOR, callback);
 
         // This verifies SdkMeasurement finished without errors.
-        // callback.isLoadSdkSuccessful returns true if there were no errors.
-        assertWithMessage(
-                        callback.isLoadSdkSuccessful()
-                                ? "Callback was successful"
-                                : "Callback failed with message " + callback.getLoadSdkErrorMsg())
-                .that(callback.isLoadSdkSuccessful())
-                .isTrue();
+        callback.assertLoadSdkIsSuccessful();
     }
 
     private void enforceMeasurementEnrollmentCheck(boolean shouldEnforce) {

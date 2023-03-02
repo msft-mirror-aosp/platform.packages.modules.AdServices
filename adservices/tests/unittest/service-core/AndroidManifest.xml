@@ -24,6 +24,7 @@
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID" />
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_TOPICS" />
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_CUSTOM_AUDIENCE" />
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_APP_INSTALL" />
 
     <!-- Needed to resolve Intent to ComponentName for measurement verifiedDestination -->
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>
@@ -59,6 +60,10 @@
         </service>
         <service android:name=
                      "com.android.adservices.service.MaintenanceJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+        <!-- Measurement debug report upload job. -->
+        <service android:name="com.android.adservices.service.measurement.reporting.DebugReportingJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
         <!-- MDD Service Job. Must be defined here in order to schedule them in Tests. -->

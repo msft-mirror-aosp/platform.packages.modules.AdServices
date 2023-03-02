@@ -117,7 +117,8 @@ public class SdkSandboxController {
         enforceSandboxedSdkContextInitialization();
 
         // TODO(b/248214708): We should store synced data in a separate internal storage directory.
-        return mContext.getSharedPreferences(CLIENT_SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE);
+        return mContext.getApplicationContext()
+                .getSharedPreferences(CLIENT_SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE);
     }
 
     private void enforceSandboxedSdkContextInitialization() {

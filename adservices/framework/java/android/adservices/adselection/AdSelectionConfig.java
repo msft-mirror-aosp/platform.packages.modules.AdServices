@@ -19,12 +19,12 @@ import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.net.Uri;
-import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.android.adservices.AdServicesParcelableUtil;
+
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -86,7 +86,9 @@ public final class AdSelectionConfig implements Parcelable {
         mCustomAudienceBuyers = in.createTypedArrayList(AdTechIdentifier.CREATOR);
         mAdSelectionSignals = AdSelectionSignals.CREATOR.createFromParcel(in);
         mSellerSignals = AdSelectionSignals.CREATOR.createFromParcel(in);
-        mPerBuyerSignals = bundleToAdTechSignalMap(Bundle.CREATOR.createFromParcel(in));
+        mPerBuyerSignals =
+                AdServicesParcelableUtil.readMapFromParcel(
+                        in, AdTechIdentifier::fromString, AdSelectionSignals.class);
         mTrustedScoringSignalsUri = Uri.CREATOR.createFromParcel(in);
     }
 
@@ -104,39 +106,8 @@ public final class AdSelectionConfig implements Parcelable {
         dest.writeTypedList(mCustomAudienceBuyers);
         mAdSelectionSignals.writeToParcel(dest, flags);
         mSellerSignals.writeToParcel(dest, flags);
-        dest.writeBundle(adTechSignalMapToBundle(mPerBuyerSignals));
+        AdServicesParcelableUtil.writeMapToParcel(dest, mPerBuyerSignals);
         mTrustedScoringSignalsUri.writeToParcel(dest, flags);
-    }
-
-    /**
-     * Converts {@code Map<AdTechIdentifier, AdSelectionSignals>} to {@link Bundle} for {@link
-     * #writeToParcel(Parcel, int)}.
-     */
-    private static Bundle adTechSignalMapToBundle(
-            @NonNull Map<AdTechIdentifier, AdSelectionSignals> map) {
-        Objects.requireNonNull(map);
-        Bundle result = new Bundle();
-        for (Map.Entry<AdTechIdentifier, AdSelectionSignals> entry : map.entrySet()) {
-            result.putParcelable(entry.getKey().toString(), entry.getValue());
-        }
-        return result;
-    }
-
-    /**
-     * Converts {@link Bundle} to {@code Map<AdTechIdentifier, AdSelectionSignals>} for constructing
-     * an {@link AdSelectionConfig} object from a {@link Parcel}.
-     */
-    private static Map<AdTechIdentifier, AdSelectionSignals> bundleToAdTechSignalMap(
-            @NonNull Bundle bundle) {
-        Objects.requireNonNull(bundle);
-
-        Map<AdTechIdentifier, AdSelectionSignals> result = new HashMap<>();
-        for (String key : bundle.keySet()) {
-            result.put(
-                    AdTechIdentifier.fromString(key),
-                    bundle.getParcelable(key, AdSelectionSignals.class));
-        }
-        return result;
     }
 
     @Override

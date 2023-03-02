@@ -48,8 +48,8 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
     private static final String VIEW_TYPE_KEY = "view-type";
     private static final String VIDEO_VIEW_VALUE = "video-view";
     private static final String VIDEO_URL_KEY = "video-url";
-    // TODO(b/253202014): Add toggle button
-    private static final boolean SDK_SDK_COMM_ENABLED = true;
+    private static final String EXTRA_SDK_SDK_ENABLED_KEY = "sdkSdkCommEnabled";
+    private boolean mSdkSdkCommEnabled = false;
 
     @Override
     public SandboxedSdk onLoadSdk(Bundle params) {
@@ -68,17 +68,20 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
             String videoUrl = params.getString(VIDEO_URL_KEY, "");
             return new TestVideoView(windowContext, videoUrl);
         }
-        return new TestView(windowContext, getContext());
+        mSdkSdkCommEnabled = params.getBoolean(EXTRA_SDK_SDK_ENABLED_KEY, false);
+        return new TestView(windowContext, getContext(), mSdkSdkCommEnabled);
     }
 
     private static class TestView extends View {
 
         private static final CharSequence MEDIATEE_SDK = "com.android.sdksandboxcode_mediatee";
         private Context mSdkContext;
+        private boolean mSdkSdkCommEnabled;
 
-        TestView(Context windowContext, Context sdkContext) {
+        TestView(Context windowContext, Context sdkContext, boolean sdkSdkCommEnabled) {
             super(windowContext);
             mSdkContext = sdkContext;
+            mSdkSdkCommEnabled = sdkSdkCommEnabled;
         }
 
         @Override
@@ -91,7 +94,8 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
             paint.setTextSize(50);
             Random random = new Random();
             String message;
-            if (SDK_SDK_COMM_ENABLED) {
+
+            if (mSdkSdkCommEnabled) {
                 SandboxedSdk mediateeSdk;
                 try {
                     // get message from another sandboxed SDK

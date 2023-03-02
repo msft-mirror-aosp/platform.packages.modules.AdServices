@@ -23,6 +23,9 @@ import android.adservices.customaudience.CustomAudienceFixture;
 import com.android.adservices.common.DBAdDataFixture;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 public class DBCustomAudienceFixture {
 
     public static DBCustomAudience.Builder getValidBuilderByBuyer(AdTechIdentifier buyer) {
@@ -39,5 +42,12 @@ public class DBCustomAudienceFixture {
                         DBTrustedBiddingDataFixture.getValidBuilderByBuyer(buyer).build())
                 .setBiddingLogicUri(CustomAudienceFixture.getValidBiddingLogicUriByBuyer(buyer))
                 .setAds(DBAdDataFixture.getValidDbAdDataListByBuyer(buyer));
+    }
+
+    public static List<DBCustomAudience> getListOfBuyersCustomAudiences(
+            List<AdTechIdentifier> buyers) {
+        return buyers.stream()
+                .map(a -> DBCustomAudienceFixture.getValidBuilderByBuyer(a).build())
+                .collect(Collectors.toList());
     }
 }

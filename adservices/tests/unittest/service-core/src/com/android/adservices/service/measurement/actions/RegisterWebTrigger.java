@@ -39,6 +39,8 @@ public final class RegisterWebTrigger implements Action {
     public final WebTriggerRegistrationRequestInternal mRegistrationRequest;
     public final Map<String, List<Map<String, List<String>>>> mUriToResponseHeadersMap;
     public final long mTimestamp;
+    public final boolean mDebugReporting;
+    public final boolean mAdIdPermission;
 
     public RegisterWebTrigger(JSONObject obj) throws JSONException {
         JSONObject regParamsJson =
@@ -60,14 +62,15 @@ public final class RegisterWebTrigger implements Action {
 
         mRegistrationRequest =
                 new WebTriggerRegistrationRequestInternal.Builder(
-                                registrationRequest, attributionSource.getPackageName())
-                        .setAdIdPermissionGranted(
-                                regParamsJson.optBoolean(
-                                        TestFormatJsonMapping.IS_ADID_PERMISSION_GRANTED_KEY, true))
+                                registrationRequest,
+                                attributionSource.getPackageName(),
+                                /* sdkPackageName = */ "")
                         .build();
 
         mUriToResponseHeadersMap = getUriToResponseHeadersMap(obj);
         mTimestamp = obj.getLong(TestFormatJsonMapping.TIMESTAMP_KEY);
+        mDebugReporting = regParamsJson.optBoolean(TestFormatJsonMapping.DEBUG_REPORTING_KEY);
+        mAdIdPermission = regParamsJson.optBoolean(TestFormatJsonMapping.HAS_AD_ID_PERMISSION);
     }
 
     @Override
@@ -86,7 +89,9 @@ public final class RegisterWebTrigger implements Action {
                                     Uri.parse(
                                             triggerParams.getString(
                                                     TestFormatJsonMapping.REGISTRATION_URI_KEY)))
-                            .setDebugKeyAllowed(true)
+                            .setDebugKeyAllowed(
+                                    triggerParams.optBoolean(
+                                            TestFormatJsonMapping.DEBUG_KEY, false))
                             .build());
         }
 

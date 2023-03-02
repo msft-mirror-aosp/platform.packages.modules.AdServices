@@ -23,6 +23,7 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DbState;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.adservices.service.measurement.WebUtil;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -42,7 +43,7 @@ import java.util.Objects;
 public class EventReportingJobHandlerIntegrationTest extends AbstractDbIntegrationTest {
 
     private static final EnrollmentData ENROLLMENT = new EnrollmentData.Builder()
-            .setAttributionReportingUrl(List.of("https://ad-tech.com"))
+            .setAttributionReportingUrl(List.of(WebUtil.validUrl("https://ad-tech.test")))
             .build();
     private final JSONObject mParam;
     private final EnrollmentDao mEnrollmentDao;

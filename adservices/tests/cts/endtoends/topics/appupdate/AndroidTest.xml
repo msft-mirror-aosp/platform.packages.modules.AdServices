@@ -35,13 +35,14 @@
 
     <target_preparer class="com.android.tradefed.targetprep.DeviceSetup" >
         <option name="force-skip-system-props" value="true" />
-        <option name="disable-device-config-sync" value="true" />
     </target_preparer>
 
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
         <!-- Disable global/topics kill_switch to ignore the effect of actual PH values. -->
         <option name="run-command" value="device_config put adservices global_kill_switch false" />
         <option name="run-command" value="device_config put adservices topics_kill_switch false" />
+        <!-- Enable adservices system service-->
+        <option name="run-command" value="device_config put adservices adservice_system_service_enabled true" />
         <!-- Override Consent Manager to debug mode to grant user consent -->
         <option name="run-command" value="setprop debug.adservices.consent_manager_debug_mode true" />
         <option name="run-command" value="setprop log.tag.adservices VERBOSE" />
@@ -51,6 +52,8 @@
         <option name="run-command" value="mkdir -p /data/local/tmp/cts/install" />
         <!-- Forces using bundled model files. -->
         <option name="run-command" value="device_config put adservices classifier_force_use_bundled_files true" />
+        <!-- Temporarily disable Device Config sync -->
+        <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />
 
         <option name="teardown-command" value="setprop debug.adservices.consent_manager_debug_mode false"/>
         <option name="teardown-command" value="setprop debug.adservices.disable_topics_enrollment_check false" />
@@ -60,6 +63,8 @@
         <!-- Uninstall the test app anyway in case failed test skips the uninstallation -->
         <option name="teardown-command"
                 value="pm uninstall --user 0 com.android.adservices.tests.cts.topics.testapp1" />
+        <option name="teardown-command" value="device_config put adservices adservice_system_service_enabled false" />
+        <option name="teardown-command" value="device_config set_sync_disabled_for_tests none" />
     </target_preparer>
 
     <!-- Create place to store tests apks that will be installed/uninstalled in the test. -->

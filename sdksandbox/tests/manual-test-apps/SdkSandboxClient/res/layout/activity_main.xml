@@ -55,6 +55,13 @@
             android:text="@string/create_file" />
 
         <Button
+            android:id="@+id/enable_sdk_sdk_button"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            style="?android:attr/buttonBarButtonStyle"
+            android:text="@string/enable_sdk_sdk" />
+
+        <Button
                 android:id="@+id/sync_keys_button"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"

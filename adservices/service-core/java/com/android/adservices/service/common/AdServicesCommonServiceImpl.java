@@ -32,12 +32,16 @@ import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.RemoteException;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.consent.DeviceRegionProvider;
 
 import java.util.concurrent.Executor;
 
@@ -46,8 +50,9 @@ import java.util.concurrent.Executor;
  *
  * @hide
  */
-public class AdServicesCommonServiceImpl extends
-        IAdServicesCommonService.Stub {
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
+public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
 
     private final Context mContext;
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
@@ -72,6 +77,7 @@ public class AdServicesCommonServiceImpl extends
                             callback.onFailure(STATUS_UNAUTHORIZED);
                             return;
                         }
+                        reconsentIfNeededForEU();
                         callback.onResult(
                                 new IsAdServicesEnabledResult.Builder()
                                         .setAdServicesEnabled(mFlags.getAdServicesEnabled())
@@ -101,14 +107,13 @@ public class AdServicesCommonServiceImpl extends
                     try {
                         if (!hasModifyAdServicesStatePermission) {
                             // TODO(b/242578032): handle the security exception in a better way
-                            LogUtil.i("Caller is not authorized to control AdServices state");
+                            LogUtil.d("Caller is not authorized to control AdServices state");
                             return;
                         }
 
                         SharedPreferences preferences =
                                 mContext.getSharedPreferences(
-                                        ADSERVICES_STATUS_SHARED_PREFERENCE,
-                                        Context.MODE_MULTI_PROCESS);
+                                        ADSERVICES_STATUS_SHARED_PREFERENCE, Context.MODE_PRIVATE);
 
                         int adServiceEntryPointStatusInt =
                                 adServicesEntryPointEnabled
@@ -118,18 +123,29 @@ public class AdServicesCommonServiceImpl extends
                         editor.putInt(
                                 KEY_ADSERVICES_ENTRY_POINT_STATUS, adServiceEntryPointStatusInt);
                         editor.apply();
-                        LogUtil.i(
+                        LogUtil.d(
                                 "adid status is "
                                         + adIdEnabled
                                         + ", adservice status is "
                                         + mFlags.getAdServicesEnabled());
+                        LogUtil.d("entry point: " + adServicesEntryPointEnabled);
                         if (mFlags.getAdServicesEnabled() && adServicesEntryPointEnabled) {
-                            ConsentNotificationJobService.schedule(mContext, adIdEnabled);
+                            // Check if it is reconsent for ROW.
+                            if (reconsentIfNeededForROW()) {
+                                LogUtil.d("Reconsent for ROW.");
+                                ConsentNotificationJobService.schedule(mContext, adIdEnabled, true);
+                            } else if (getFirstConsentStatus()) {
+                                LogUtil.d("First consent.");
+                                // Otherwise we send to schedule when it is first consent.
+                                ConsentNotificationJobService.schedule(
+                                        mContext, adIdEnabled, false);
+                            }
                             if (ConsentManager.getInstance(mContext).getConsent().isGiven()) {
                                 PackageChangedReceiver.enableReceiver(mContext);
                                 BackgroundJobsManager.scheduleAllBackgroundJobs(mContext);
                             }
                         }
+
                     } catch (Exception e) {
                         LogUtil.e(
                                 "unable to save the adservices entry point status of "
@@ -140,4 +156,46 @@ public class AdServicesCommonServiceImpl extends
 
     /** Init the AdServices Status Service. */
     public void init() {}
+
+    /** Check EU device and reconsent logic and schedule the notification if needed. */
+    public void reconsentIfNeededForEU() {
+        boolean adserviceEnabled = mFlags.getAdServicesEnabled();
+        if (adserviceEnabled
+                && mFlags.getGaUxFeatureEnabled()
+                && DeviceRegionProvider.isEuDevice(mContext, mFlags)) {
+            // Check if GA UX was notice before
+            ConsentManager consentManager = ConsentManager.getInstance(mContext);
+            if (!consentManager.wasGaUxNotificationDisplayed()) {
+                // Check Beta notification displayed and user opt-in, we will re-consent
+                SharedPreferences preferences =
+                        mContext.getSharedPreferences(
+                                ADSERVICES_STATUS_SHARED_PREFERENCE, Context.MODE_PRIVATE);
+                // Check the setAdServicesEnabled was called before
+                if (preferences.contains(KEY_ADSERVICES_ENTRY_POINT_STATUS)
+                        && consentManager.getConsent().isGiven()) {
+                    // AdidEnabled status does not matter here as this is only for EU device, it
+                    // will override by the EU in the scheduler
+                    ConsentNotificationJobService.schedule(mContext, false, true);
+                }
+            }
+        }
+    }
+
+    /** Check if user is first time consent */
+    public boolean getFirstConsentStatus() {
+        ConsentManager consentManager = ConsentManager.getInstance(mContext);
+        return (!consentManager.wasGaUxNotificationDisplayed()
+                        && !consentManager.wasNotificationDisplayed())
+                || mFlags.getConsentNotificationDebugMode();
+    }
+
+    /** Check ROW device and see if it fit reconset */
+    public boolean reconsentIfNeededForROW() {
+        ConsentManager consentManager = ConsentManager.getInstance(mContext);
+        return mFlags.getGaUxFeatureEnabled()
+                && !DeviceRegionProvider.isEuDevice(mContext, mFlags)
+                && !consentManager.wasGaUxNotificationDisplayed()
+                && consentManager.wasNotificationDisplayed()
+                && consentManager.getConsent().isGiven();
+    }
 }

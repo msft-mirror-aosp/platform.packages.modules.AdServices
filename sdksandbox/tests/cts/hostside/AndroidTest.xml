@@ -21,11 +21,6 @@
     <option name="config-descriptor:metadata" key="parameter" value="not_multi_abi"/>
     <option name="config-descriptor:metadata" key="parameter" value="secondary_user"/>
 
-    <target_preparer class="com.android.tradefed.targetprep.DeviceSetup">
-        <!-- Disable syncing to prevent overwriting flags during testing. -->
-        <option name="disable-device-config-sync" value="true" />
-    </target_preparer>
-
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true" />
         <option name="test-file-name" value="SdkSandboxDataIsolationTestProvider.apk" />
@@ -36,8 +31,20 @@
         <option name="test-file-name" value="SdkSandboxStorageTestProvider.apk" />
     </target_preparer>
 
+    <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
+        <option name="cleanup-apks" value="true" />
+        <option name="test-file-name" value="SdkSandboxMediationTestProvider.apk" />
+    </target_preparer>
+
+    <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
+        <option name="cleanup-apks" value="true" />
+        <option name="test-file-name" value="SdkSandboxMultiUserTestProvider.apk" />
+    </target_preparer>
+
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
         <option name="run-command" value="cmd sdk_sandbox set-state --enabled" />
+        <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />
+        <option name="teardown-command" value="device_config set_sync_disabled_for_tests none" />
         <option name="teardown-command" value="cmd sdk_sandbox set-state --reset" />
     </target_preparer>
 
@@ -48,7 +55,17 @@
 
     <test class="com.android.tradefed.testtype.HostTest" >
         <option name="class"
-                value="com.android.sdksandbox.cts.host.SdkSandboxStorageHostTest" />
+                value="com.android.sdksandbox.cts.host.CtsSdkSandboxStorageHostTest" />
+    </test>
+
+    <test class="com.android.tradefed.testtype.HostTest" >
+        <option name="class"
+                value="com.android.sdksandbox.cts.host.SdkSandboxMediationHostTest" />
+    </test>
+
+    <test class="com.android.tradefed.testtype.HostTest" >
+        <option name="class"
+                value="com.android.sdksandbox.cts.host.SdkSandboxMultiUserHostTest" />
     </test>
 
     <object type="module_controller"

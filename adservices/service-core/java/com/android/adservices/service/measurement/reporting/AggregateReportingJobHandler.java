@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.measurement.reporting;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__EVENT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__AGGREGATE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MESUREMENT_REPORTS_UPLOADED;
 
 import android.adservices.common.AdServicesStatusUtils;
@@ -51,7 +51,7 @@ public class AggregateReportingJobHandler {
     private final EnrollmentDao mEnrollmentDao;
     private final DatastoreManager mDatastoreManager;
     private final AggregateEncryptionKeyManager mAggregateEncryptionKeyManager;
-    private boolean mIsDebugReport;
+    private boolean mIsDebugInstance;
 
     AggregateReportingJobHandler(EnrollmentDao enrollmentDao, DatastoreManager datastoreManager) {
         mEnrollmentDao = enrollmentDao;
@@ -70,13 +70,13 @@ public class AggregateReportingJobHandler {
     }
 
     /**
-     * Set Debug Report
+     * Set isDebugInstance
      *
-     * @param isDebugReport
+     * @param isDebugInstance indicates a debug aggregate report
      * @return the instance of AggregateReportingJobHandler
      */
-    public AggregateReportingJobHandler setDebugReport(boolean isDebugReport) {
-        mIsDebugReport = isDebugReport;
+    public AggregateReportingJobHandler setIsDebugInstance(boolean isDebugInstance) {
+        mIsDebugInstance = isDebugInstance;
         return this;
     }
 
@@ -94,7 +94,7 @@ public class AggregateReportingJobHandler {
         Optional<List<String>> pendingAggregateReportsInWindowOpt =
                 mDatastoreManager.runInTransactionWithResult(
                         (dao) -> {
-                            if (mIsDebugReport) {
+                            if (mIsDebugInstance) {
                                 return dao.getPendingAggregateDebugReportIds();
                             } else {
                                 return dao.getPendingAggregateReportIdsInWindow(
@@ -138,16 +138,18 @@ public class AggregateReportingJobHandler {
                 mDatastoreManager.runInTransactionWithResult((dao)
                         -> dao.getAggregateReport(aggregateReportId));
         if (!aggregateReportOpt.isPresent()) {
+            LogUtil.d("Aggregate report not found");
             return AdServicesStatusUtils.STATUS_IO_ERROR;
         }
         AggregateReport aggregateReport = aggregateReportOpt.get();
 
-        if (mIsDebugReport
+        if (mIsDebugInstance
                 && aggregateReport.getDebugReportStatus()
                         != AggregateReport.DebugReportStatus.PENDING) {
+            LogUtil.d("Debugging status is not pending");
             return AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
         }
-        if (!mIsDebugReport && aggregateReport.getStatus() != AggregateReport.Status.PENDING) {
+        if (!mIsDebugInstance && aggregateReport.getStatus() != AggregateReport.Status.PENDING) {
             return AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
         }
         try {
@@ -156,6 +158,7 @@ public class AggregateReportingJobHandler {
             if (!reportingOrigin.isPresent()) {
                 // We do not know here what the cause is of the failure to retrieve the reporting
                 // origin. INTERNAL_ERROR seems the closest to a "catch-all" error code.
+                LogUtil.d("Report origin not present");
                 return AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
             }
             JSONObject aggregateReportJsonBody = createReportJsonPayload(
@@ -167,7 +170,7 @@ public class AggregateReportingJobHandler {
                 boolean success =
                         mDatastoreManager.runInTransaction(
                                 (dao) -> {
-                                    if (mIsDebugReport) {
+                                    if (mIsDebugInstance) {
                                         dao.markAggregateDebugReportDelivered(aggregateReportId);
                                     } else {
                                         dao.markAggregateReportStatus(
@@ -218,16 +221,16 @@ public class AggregateReportingJobHandler {
     @VisibleForTesting
     public int makeHttpPostRequest(Uri adTechDomain, JSONObject aggregateReportBody)
             throws IOException {
-        AggregateReportSender aggregateReportSender = new AggregateReportSender(mIsDebugReport);
+        AggregateReportSender aggregateReportSender = new AggregateReportSender(mIsDebugInstance);
         return aggregateReportSender.sendReport(adTechDomain, aggregateReportBody);
     }
 
-    private static void logReportingStats(int resultCode) {
+    private void logReportingStats(int resultCode) {
         AdServicesLoggerImpl.getInstance()
                 .logMeasurementReports(
                         new MeasurementReportsStats.Builder()
                                 .setCode(AD_SERVICES_MESUREMENT_REPORTS_UPLOADED)
-                                .setType(AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__EVENT)
+                                .setType(AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__AGGREGATE)
                                 .setResultCode(resultCode)
                                 .build());
     }

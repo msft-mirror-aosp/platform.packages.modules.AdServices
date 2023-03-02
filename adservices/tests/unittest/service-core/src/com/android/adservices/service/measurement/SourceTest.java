@@ -39,11 +39,13 @@ import org.json.JSONObject;
 import org.junit.Test;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
@@ -57,7 +59,8 @@ public class SourceTest {
     @Test
     public void testDefaults() {
         Source source = SourceFixture.getValidSourceBuilder().build();
-        assertEquals(0, source.getDedupKeys().size());
+        assertEquals(0, source.getEventReportDedupKeys().size());
+        assertEquals(0, source.getAggregateReportDedupKeys().size());
         assertEquals(Source.Status.ACTIVE, source.getStatus());
         assertEquals(Source.SourceType.EVENT, source.getSourceType());
         assertEquals(Source.AttributionMode.UNASSIGNED, source.getAttributionMode());
@@ -67,94 +70,110 @@ public class SourceTest {
     public void testEqualsPass() throws JSONException {
         assertEquals(SourceFixture.getValidSourceBuilder().build(),
                 SourceFixture.getValidSourceBuilder().build());
-        JSONArray aggregateSource = new JSONArray();
-        JSONObject jsonObject1 = new JSONObject();
-        jsonObject1.put("id", "campaignCounts");
-        jsonObject1.put("key_piece", "0x159");
-        JSONObject jsonObject2 = new JSONObject();
-        jsonObject2.put("id", "geoValue");
-        jsonObject2.put("key_piece", "0x5");
-        aggregateSource.put(jsonObject1);
-        aggregateSource.put(jsonObject2);
+        JSONObject aggregateSource = new JSONObject();
+        aggregateSource.put("campaignCounts", "0x159");
+        aggregateSource.put("geoValue", "0x5");
 
-        JSONObject filterData = new JSONObject();
-        filterData.put(
+        JSONObject filterMap = new JSONObject();
+        filterMap.put(
                 "conversion_subdomain", Collections.singletonList("electronics.megastore"));
-        filterData.put("product", Arrays.asList("1234", "2345"));
+        filterMap.put("product", Arrays.asList("1234", "2345"));
+
+        String sharedAggregateKeys = "[\"campaignCounts\"]";
+        String parentId = "parent-id";
         assertEquals(
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
-                        .setAppDestination(Uri.parse("android-app://example.com/aD1"))
-                        .setWebDestination(Uri.parse("https://example.com/aD2"))
-                        .setPublisher(Uri.parse("https://example.com/aS"))
+                        .setAppDestinations(List.of(Uri.parse("android-app://example.test/aD1")))
+                        .setWebDestinations(List.of(Uri.parse("https://example.test/aD2")))
+                        .setPublisher(Uri.parse("https://example.test/aS"))
                         .setPublisherType(EventSurfaceType.WEB)
                         .setId("1")
                         .setEventId(new UnsignedLong(2L))
                         .setPriority(3L)
                         .setEventTime(5L)
                         .setExpiryTime(5L)
-                        .setDedupKeys(LongStream.range(0, 2)
-                                .boxed()
-                                .map(UnsignedLong::new)
-                                .collect(Collectors.toList()))
+                        .setEventReportWindow(55L)
+                        .setAggregatableReportWindow(555L)
+                        .setIsDebugReporting(true)
+                        .setEventReportDedupKeys(
+                                LongStream.range(0, 2)
+                                        .boxed()
+                                        .map(UnsignedLong::new)
+                                        .collect(Collectors.toList()))
+                        .setAggregateReportDedupKeys(
+                                LongStream.range(0, 2)
+                                        .boxed()
+                                        .map(UnsignedLong::new)
+                                        .collect(Collectors.toList()))
                         .setStatus(Source.Status.ACTIVE)
                         .setSourceType(Source.SourceType.EVENT)
                         .setRegistrant(Uri.parse("android-app://com.example.abc"))
-                        .setFilterData(filterData.toString())
+                        .setFilterData(filterMap.toString())
                         .setAggregateSource(aggregateSource.toString())
                         .setAggregateContributions(50001)
                         .setDebugKey(DEBUG_KEY_1)
-                        .setAggregatableAttributionSource(
-                                SourceFixture.getValidSource().getAggregatableAttributionSource())
+                        .setRegistrationId("R1")
+                        .setSharedAggregationKeys(sharedAggregateKeys)
+                        .setInstallTime(100L)
+                        .setParentId(parentId)
                         .build(),
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
-                        .setAppDestination(Uri.parse("android-app://example.com/aD1"))
-                        .setWebDestination(Uri.parse("https://example.com/aD2"))
-                        .setPublisher(Uri.parse("https://example.com/aS"))
+                        .setAppDestinations(List.of(Uri.parse("android-app://example.test/aD1")))
+                        .setWebDestinations(List.of(Uri.parse("https://example.test/aD2")))
+                        .setPublisher(Uri.parse("https://example.test/aS"))
                         .setPublisherType(EventSurfaceType.WEB)
                         .setId("1")
                         .setEventId(new UnsignedLong(2L))
                         .setPriority(3L)
                         .setEventTime(5L)
                         .setExpiryTime(5L)
-                        .setDedupKeys(LongStream.range(0, 2)
-                                .boxed()
-                                .map(UnsignedLong::new)
-                                .collect(Collectors.toList()))
+                        .setEventReportWindow(55L)
+                        .setAggregatableReportWindow(555L)
+                        .setIsDebugReporting(true)
+                        .setEventReportDedupKeys(
+                                LongStream.range(0, 2)
+                                        .boxed()
+                                        .map(UnsignedLong::new)
+                                        .collect(Collectors.toList()))
+                        .setAggregateReportDedupKeys(
+                                LongStream.range(0, 2)
+                                        .boxed()
+                                        .map(UnsignedLong::new)
+                                        .collect(Collectors.toList()))
                         .setStatus(Source.Status.ACTIVE)
                         .setSourceType(Source.SourceType.EVENT)
                         .setRegistrant(Uri.parse("android-app://com.example.abc"))
-                        .setFilterData(filterData.toString())
+                        .setFilterData(filterMap.toString())
                         .setAggregateSource(aggregateSource.toString())
                         .setAggregateContributions(50001)
                         .setDebugKey(DEBUG_KEY_1)
-                        .setAggregatableAttributionSource(
-                                SourceFixture.getValidSource().getAggregatableAttributionSource())
+                        .setRegistrationId("R1")
+                        .setSharedAggregationKeys(sharedAggregateKeys)
+                        .setInstallTime(100L)
+                        .setParentId(parentId)
                         .build());
     }
 
     @Test
     public void testEqualsFail() throws JSONException {
         assertNotEquals(
-                SourceFixture.getValidSourceBuilder().setId("1").build(),
-                SourceFixture.getValidSourceBuilder().setId("2").build());
-        assertNotEquals(
                 SourceFixture.getValidSourceBuilder().setEventId(new UnsignedLong(1L)).build(),
                 SourceFixture.getValidSourceBuilder().setEventId(new UnsignedLong(2L)).build());
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder()
-                        .setAppDestination(Uri.parse("android-app://1.com"))
+                        .setAppDestinations(List.of(Uri.parse("android-app://1.test")))
                         .build(),
                 SourceFixture.getValidSourceBuilder()
-                        .setAppDestination(Uri.parse("android-app://2.com"))
+                        .setAppDestinations(List.of(Uri.parse("android-app://2.test")))
                         .build());
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder()
-                        .setWebDestination(Uri.parse("https://1.com"))
+                        .setWebDestinations(List.of(Uri.parse("https://1.test")))
                         .build(),
                 SourceFixture.getValidSourceBuilder()
-                        .setWebDestination(Uri.parse("https://2.com"))
+                        .setWebDestinations(List.of(Uri.parse("https://2.test")))
                         .build());
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder()
@@ -165,9 +184,12 @@ public class SourceTest {
                         .build());
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder()
-                        .setPublisher(Uri.parse("https://1.com")).build(),
+                        .setPublisher(Uri.parse("https://1.test")).build(),
                 SourceFixture.getValidSourceBuilder()
-                        .setPublisher(Uri.parse("https://2.com")).build());
+                        .setPublisher(Uri.parse("https://2.test")).build());
+        assertNotEquals(
+                SourceFixture.getValidSourceBuilder().setParentId("parent-id-1").build(),
+                SourceFixture.getValidSourceBuilder().setParentId("parent-id-2").build());
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder()
                         .setPublisherType(EventSurfaceType.APP).build(),
@@ -183,6 +205,12 @@ public class SourceTest {
                 SourceFixture.getValidSourceBuilder().setExpiryTime(1L).build(),
                 SourceFixture.getValidSourceBuilder().setExpiryTime(2L).build());
         assertNotEquals(
+                SourceFixture.getValidSourceBuilder().setEventReportWindow(1L).build(),
+                SourceFixture.getValidSourceBuilder().setEventReportWindow(2L).build());
+        assertNotEquals(
+                SourceFixture.getValidSourceBuilder().setAggregatableReportWindow(1L).build(),
+                SourceFixture.getValidSourceBuilder().setAggregatableReportWindow(2L).build());
+        assertNotEquals(
                 SourceFixture.getValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT).build(),
                 SourceFixture.getValidSourceBuilder()
@@ -194,12 +222,33 @@ public class SourceTest {
                         .setStatus(Source.Status.IGNORED).build());
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder()
-                        .setDedupKeys(LongStream.range(0, 2).boxed().map(UnsignedLong::new)
-                                .collect(Collectors.toList()))
+                        .setEventReportDedupKeys(
+                                LongStream.range(0, 2)
+                                        .boxed()
+                                        .map(UnsignedLong::new)
+                                        .collect(Collectors.toList()))
                         .build(),
                 SourceFixture.getValidSourceBuilder()
-                        .setDedupKeys(LongStream.range(1, 3).boxed().map(UnsignedLong::new)
-                                .collect(Collectors.toList()))
+                        .setEventReportDedupKeys(
+                                LongStream.range(1, 3)
+                                        .boxed()
+                                        .map(UnsignedLong::new)
+                                        .collect(Collectors.toList()))
+                        .build());
+        assertNotEquals(
+                SourceFixture.getValidSourceBuilder()
+                        .setAggregateReportDedupKeys(
+                                LongStream.range(0, 2)
+                                        .boxed()
+                                        .map(UnsignedLong::new)
+                                        .collect(Collectors.toList()))
+                        .build(),
+                SourceFixture.getValidSourceBuilder()
+                        .setAggregateReportDedupKeys(
+                                LongStream.range(1, 3)
+                                        .boxed()
+                                        .map(UnsignedLong::new)
+                                        .collect(Collectors.toList()))
                         .build());
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder()
@@ -214,17 +263,11 @@ public class SourceTest {
                         .setAggregatableAttributionSource(
                                 new AggregatableAttributionSource.Builder().build())
                         .build());
-        JSONArray aggregateSource1 = new JSONArray();
-        JSONObject jsonObject1 = new JSONObject();
-        jsonObject1.put("id", "campaignCounts");
-        jsonObject1.put("key_piece", "0x159");
-        aggregateSource1.put(jsonObject1);
+        JSONObject aggregateSource1 = new JSONObject();
+        aggregateSource1.put("campaignCounts", "0x159");
 
-        JSONArray aggregateSource2 = new JSONArray();
-        JSONObject jsonObject2 = new JSONObject();
-        jsonObject2.put("id", "geoValue");
-        jsonObject2.put("key_piece", "0x5");
-        aggregateSource2.put(jsonObject2);
+        JSONObject aggregateSource2 = new JSONObject();
+        aggregateSource2.put("geoValue", "0x5");
 
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder()
@@ -233,14 +276,31 @@ public class SourceTest {
                         .setAggregateSource(aggregateSource2.toString()).build());
 
         assertNotEquals(
-                SourceFixture.getValidSourceBuilder()
-                        .setAggregateContributions(4000).build(),
-                SourceFixture.getValidSourceBuilder()
-                        .setAggregateContributions(4055).build());
+                SourceFixture.getValidSourceBuilder().setAggregateContributions(4000).build(),
+                SourceFixture.getValidSourceBuilder().setAggregateContributions(4055).build());
 
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder().setDebugKey(DEBUG_KEY_1).build(),
                 SourceFixture.getValidSourceBuilder().setDebugKey(DEBUG_KEY_2).build());
+
+        assertNotEquals(
+                SourceFixture.getValidSourceBuilder().setRegistrationId("R1").build(),
+                SourceFixture.getValidSourceBuilder().setRegistrationId("R2").build());
+
+        String sharedAggregationKeys1 = "[\"key1\"]";
+        String sharedAggregationKeys2 = "[\"key2\"]";
+
+        assertNotEquals(
+                SourceFixture.getValidSourceBuilder()
+                        .setSharedAggregationKeys(sharedAggregationKeys1)
+                        .build(),
+                SourceFixture.getValidSourceBuilder()
+                        .setSharedAggregationKeys(sharedAggregationKeys2)
+                        .build());
+
+        assertNotEquals(
+                SourceFixture.getValidSourceBuilder().setInstallTime(100L).build(),
+                SourceFixture.getValidSourceBuilder().setInstallTime(101L).build());
     }
 
     @Test
@@ -248,8 +308,8 @@ public class SourceTest {
         assertInvalidSourceArguments(
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
                 null,
-                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION,
-                SourceFixture.ValidSourceParams.WEB_DESTINATION,
+                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS,
+                SourceFixture.ValidSourceParams.WEB_DESTINATIONS,
                 SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                 SourceFixture.ValidSourceParams.REGISTRANT,
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME,
@@ -261,13 +321,16 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
-                SourceFixture.ValidSourceParams.buildFilterData());
+                SourceFixture.ValidSourceParams.buildFilterData(),
+                SourceFixture.ValidSourceParams.REGISTRATION_ID,
+                SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.INSTALL_TIME);
 
         assertInvalidSourceArguments(
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
                 Uri.parse("com.source"),
-                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION,
-                SourceFixture.ValidSourceParams.WEB_DESTINATION,
+                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS,
+                SourceFixture.ValidSourceParams.WEB_DESTINATIONS,
                 SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                 SourceFixture.ValidSourceParams.REGISTRANT,
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME,
@@ -279,7 +342,10 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
-                SourceFixture.ValidSourceParams.buildFilterData());
+                SourceFixture.ValidSourceParams.buildFilterData(),
+                SourceFixture.ValidSourceParams.REGISTRATION_ID,
+                SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.INSTALL_TIME);
     }
 
     @Test
@@ -300,13 +366,17 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
-                SourceFixture.ValidSourceParams.buildFilterData());
+                SourceFixture.ValidSourceParams.buildFilterData(),
+                SourceFixture.ValidSourceParams.REGISTRATION_ID,
+                SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.INSTALL_TIME);
 
+        // Invalid app Uri
         assertInvalidSourceArguments(
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
                 SourceFixture.ValidSourceParams.PUBLISHER,
-                Uri.parse("com.destination"),
-                SourceFixture.ValidSourceParams.WEB_DESTINATION,
+                List.of(Uri.parse("com.destination")),
+                SourceFixture.ValidSourceParams.WEB_DESTINATIONS,
                 SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                 SourceFixture.ValidSourceParams.REGISTRANT,
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME,
@@ -318,13 +388,17 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
-                SourceFixture.ValidSourceParams.buildFilterData());
+                SourceFixture.ValidSourceParams.buildFilterData(),
+                SourceFixture.ValidSourceParams.REGISTRATION_ID,
+                SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.INSTALL_TIME);
 
+        // Invalid web Uri
         assertInvalidSourceArguments(
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
                 SourceFixture.ValidSourceParams.PUBLISHER,
-                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION,
-                Uri.parse("com.destination"),
+                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS,
+                List.of(Uri.parse("com.destination")),
                 SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                 SourceFixture.ValidSourceParams.REGISTRANT,
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME,
@@ -336,7 +410,78 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
-                SourceFixture.ValidSourceParams.buildFilterData());
+                SourceFixture.ValidSourceParams.buildFilterData(),
+                SourceFixture.ValidSourceParams.REGISTRATION_ID,
+                SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.INSTALL_TIME);
+
+        // Empty app destinations list
+        assertInvalidSourceArguments(
+                SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
+                SourceFixture.ValidSourceParams.PUBLISHER,
+                new ArrayList<>(),
+                SourceFixture.ValidSourceParams.WEB_DESTINATIONS,
+                SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                SourceFixture.ValidSourceParams.REGISTRANT,
+                SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME,
+                SourceFixture.ValidSourceParams.EXPIRY_TIME,
+                SourceFixture.ValidSourceParams.PRIORITY,
+                SourceFixture.ValidSourceParams.SOURCE_TYPE,
+                SourceFixture.ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW,
+                SourceFixture.ValidSourceParams.INSTALL_COOLDOWN_WINDOW,
+                SourceFixture.ValidSourceParams.DEBUG_KEY,
+                SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
+                SourceFixture.ValidSourceParams.buildAggregateSource(),
+                SourceFixture.ValidSourceParams.buildFilterData(),
+                SourceFixture.ValidSourceParams.REGISTRATION_ID,
+                SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.INSTALL_TIME);
+
+        // Empty web destinations list
+        assertInvalidSourceArguments(
+                SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
+                SourceFixture.ValidSourceParams.PUBLISHER,
+                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS,
+                new ArrayList<>(),
+                SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                SourceFixture.ValidSourceParams.REGISTRANT,
+                SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME,
+                SourceFixture.ValidSourceParams.EXPIRY_TIME,
+                SourceFixture.ValidSourceParams.PRIORITY,
+                SourceFixture.ValidSourceParams.SOURCE_TYPE,
+                SourceFixture.ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW,
+                SourceFixture.ValidSourceParams.INSTALL_COOLDOWN_WINDOW,
+                SourceFixture.ValidSourceParams.DEBUG_KEY,
+                SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
+                SourceFixture.ValidSourceParams.buildAggregateSource(),
+                SourceFixture.ValidSourceParams.buildFilterData(),
+                SourceFixture.ValidSourceParams.REGISTRATION_ID,
+                SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.INSTALL_TIME);
+
+        // Too many app destinations
+        assertInvalidSourceArguments(
+                SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
+                SourceFixture.ValidSourceParams.PUBLISHER,
+                List.of(
+                        Uri.parse("android-app://com.destination"),
+                        Uri.parse("android-app://com.destination2")),
+                SourceFixture.ValidSourceParams.WEB_DESTINATIONS,
+                SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                SourceFixture.ValidSourceParams.REGISTRANT,
+                SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME,
+                SourceFixture.ValidSourceParams.EXPIRY_TIME,
+                SourceFixture.ValidSourceParams.PRIORITY,
+                SourceFixture.ValidSourceParams.SOURCE_TYPE,
+                SourceFixture.ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW,
+                SourceFixture.ValidSourceParams.INSTALL_COOLDOWN_WINDOW,
+                SourceFixture.ValidSourceParams.DEBUG_KEY,
+                SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
+                SourceFixture.ValidSourceParams.buildAggregateSource(),
+                SourceFixture.ValidSourceParams.buildFilterData(),
+                SourceFixture.ValidSourceParams.REGISTRATION_ID,
+                SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.INSTALL_TIME);
     }
 
     @Test
@@ -344,8 +489,8 @@ public class SourceTest {
         assertInvalidSourceArguments(
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
                 SourceFixture.ValidSourceParams.PUBLISHER,
-                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION,
-                SourceFixture.ValidSourceParams.WEB_DESTINATION,
+                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS,
+                SourceFixture.ValidSourceParams.WEB_DESTINATIONS,
                 null,
                 SourceFixture.ValidSourceParams.REGISTRANT,
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME,
@@ -357,7 +502,10 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
-                SourceFixture.ValidSourceParams.buildFilterData());
+                SourceFixture.ValidSourceParams.buildFilterData(),
+                SourceFixture.ValidSourceParams.REGISTRATION_ID,
+                SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.INSTALL_TIME);
     }
 
     @Test
@@ -365,8 +513,8 @@ public class SourceTest {
         assertInvalidSourceArguments(
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
                 SourceFixture.ValidSourceParams.PUBLISHER,
-                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION,
-                SourceFixture.ValidSourceParams.WEB_DESTINATION,
+                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS,
+                SourceFixture.ValidSourceParams.WEB_DESTINATIONS,
                 SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                 null,
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME,
@@ -378,13 +526,16 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
-                SourceFixture.ValidSourceParams.buildFilterData());
+                SourceFixture.ValidSourceParams.buildFilterData(),
+                SourceFixture.ValidSourceParams.REGISTRATION_ID,
+                SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.INSTALL_TIME);
 
         assertInvalidSourceArguments(
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
                 SourceFixture.ValidSourceParams.PUBLISHER,
-                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION,
-                SourceFixture.ValidSourceParams.WEB_DESTINATION,
+                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS,
+                SourceFixture.ValidSourceParams.WEB_DESTINATIONS,
                 SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                 Uri.parse("com.registrant"),
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME,
@@ -396,7 +547,10 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
-                SourceFixture.ValidSourceParams.buildFilterData());
+                SourceFixture.ValidSourceParams.buildFilterData(),
+                SourceFixture.ValidSourceParams.REGISTRATION_ID,
+                SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.INSTALL_TIME);
     }
 
     @Test
@@ -404,8 +558,8 @@ public class SourceTest {
         assertInvalidSourceArguments(
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
                 SourceFixture.ValidSourceParams.PUBLISHER,
-                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION,
-                SourceFixture.ValidSourceParams.WEB_DESTINATION,
+                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS,
+                SourceFixture.ValidSourceParams.WEB_DESTINATIONS,
                 SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                 SourceFixture.ValidSourceParams.REGISTRANT,
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME,
@@ -417,7 +571,10 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
-                SourceFixture.ValidSourceParams.buildFilterData());
+                SourceFixture.ValidSourceParams.buildFilterData(),
+                SourceFixture.ValidSourceParams.REGISTRATION_ID,
+                SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.INSTALL_TIME);
     }
 
     @Test
@@ -428,7 +585,7 @@ public class SourceTest {
         Source source =
                 SourceFixture.getValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
-                        .setExpiryTime(expiryTime)
+                        .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
                         .build();
         assertEquals(
@@ -444,7 +601,7 @@ public class SourceTest {
         Source source =
                 SourceFixture.getValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
-                        .setExpiryTime(expiryTime)
+                        .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
                         .setInstallAttributed(true)
                         .build();
@@ -463,7 +620,7 @@ public class SourceTest {
         Source source =
                 SourceFixture.getValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
-                        .setExpiryTime(expiryTime)
+                        .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
                         .setInstallAttributed(true)
                         .build();
@@ -480,7 +637,7 @@ public class SourceTest {
         Source source =
                 SourceFixture.getValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
-                        .setExpiryTime(expiryTime)
+                        .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
                         .setInstallAttributed(true)
                         .build();
@@ -497,7 +654,7 @@ public class SourceTest {
         Source source =
                 SourceFixture.getValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
-                        .setExpiryTime(expiryTime)
+                        .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
                         .setInstallAttributed(true)
                         .build();
@@ -514,7 +671,7 @@ public class SourceTest {
         Source source =
                 SourceFixture.getValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
-                        .setExpiryTime(expiryTime)
+                        .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
                         .build();
         assertEquals(
@@ -530,7 +687,7 @@ public class SourceTest {
         Source source =
                 SourceFixture.getValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
-                        .setExpiryTime(sourceExpiryTime)
+                        .setEventReportWindow(sourceExpiryTime)
                         .setEventTime(sourceEventTime)
                         .build();
         assertEquals(
@@ -548,7 +705,7 @@ public class SourceTest {
         Source source =
                 SourceFixture.getValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
-                        .setExpiryTime(sourceExpiryTime)
+                        .setEventReportWindow(sourceExpiryTime)
                         .setEventTime(sourceEventTime)
                         .build();
         assertEquals(
@@ -566,7 +723,7 @@ public class SourceTest {
         Source source =
                 SourceFixture.getValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
-                        .setExpiryTime(sourceExpiryTime)
+                        .setEventReportWindow(sourceExpiryTime)
                         .setEventTime(sourceEventTime)
                         .build();
         assertEquals(
@@ -582,7 +739,7 @@ public class SourceTest {
         Source source =
                 SourceFixture.getValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
-                        .setExpiryTime(sourceExpiryTime)
+                        .setEventReportWindow(sourceExpiryTime)
                         .setEventTime(sourceEventTime)
                         .build();
         assertEquals(
@@ -592,13 +749,14 @@ public class SourceTest {
 
     @Test
     public void testAggregatableAttributionSource() throws Exception {
-        final Map<String, BigInteger> aggregatableSource = Map.of("2", new BigInteger("71"));
+        final TreeMap<String, BigInteger> aggregatableSource = new TreeMap<>();
+        aggregatableSource.put("2", new BigInteger("71"));
         final Map<String, List<String>> filterMap = Map.of("x", List.of("1"));
         final AggregatableAttributionSource attributionSource =
                 new AggregatableAttributionSource.Builder()
                         .setAggregatableSource(aggregatableSource)
-                        .setFilterData(
-                                new FilterData.Builder()
+                        .setFilterMap(
+                                new FilterMap.Builder()
                                         .setAttributionFilterMap(filterMap)
                                         .build())
                         .build();
@@ -608,16 +766,18 @@ public class SourceTest {
                         .setAggregatableAttributionSource(attributionSource)
                         .build();
 
-        assertNotNull(source.getAggregatableAttributionSource());
-        assertNotNull(source.getAggregatableAttributionSource().getAggregatableSource());
-        assertNotNull(source.getAggregatableAttributionSource().getFilterData());
+        assertNotNull(source.getAggregatableAttributionSource().orElse(null));
+        assertNotNull(
+                source.getAggregatableAttributionSource().orElse(null).getAggregatableSource());
+        assertNotNull(source.getAggregatableAttributionSource().orElse(null).getFilterMap());
         assertEquals(
                 aggregatableSource,
-                source.getAggregatableAttributionSource().getAggregatableSource());
+                source.getAggregatableAttributionSource().orElse(null).getAggregatableSource());
         assertEquals(
                 filterMap,
                 source.getAggregatableAttributionSource()
-                        .getFilterData()
+                        .orElse(null)
+                        .getFilterMap()
                         .getAttributionFilterMap());
     }
 
@@ -697,7 +857,8 @@ public class SourceTest {
                 PrivacyParams.EVENT_NOISE_PROBABILITY,
                 SourceFixture.getValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
-                        .setAppDestination(SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
+                        .setAppDestinations(
+                                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
                         .build()
                         .getRandomAttributionProbability(),
                 ZERO_DELTA);
@@ -705,7 +866,8 @@ public class SourceTest {
                 PrivacyParams.NAVIGATION_NOISE_PROBABILITY,
                 SourceFixture.getValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
-                        .setAppDestination(SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
+                        .setAppDestinations(
+                                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
                         .build()
                         .getRandomAttributionProbability(),
                 ZERO_DELTA);
@@ -714,7 +876,8 @@ public class SourceTest {
                 PrivacyParams.INSTALL_ATTR_EVENT_NOISE_PROBABILITY,
                 SourceFixture.getValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
-                        .setAppDestination(SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
+                        .setAppDestinations(
+                                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
                         .setInstallCooldownWindow(1)
                         .build()
                         .getRandomAttributionProbability(),
@@ -724,7 +887,8 @@ public class SourceTest {
                 PrivacyParams.INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY,
                 SourceFixture.getValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
-                        .setAppDestination(SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
+                        .setAppDestinations(
+                                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
                         .setInstallCooldownWindow(1)
                         .build()
                         .getRandomAttributionProbability(),
@@ -734,8 +898,9 @@ public class SourceTest {
                 PrivacyParams.INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY,
                 SourceFixture.getValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
-                        .setAppDestination(SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
-                        .setWebDestination(SourceFixture.ValidSourceParams.WEB_DESTINATION)
+                        .setAppDestinations(
+                                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
+                        .setWebDestinations(SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
                         .setInstallCooldownWindow(1)
                         .build()
                         .getRandomAttributionProbability(),
@@ -745,8 +910,9 @@ public class SourceTest {
                 PrivacyParams.INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY,
                 SourceFixture.getValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
-                        .setAppDestination(SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
-                        .setWebDestination(SourceFixture.ValidSourceParams.WEB_DESTINATION)
+                        .setAppDestinations(
+                                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
+                        .setWebDestinations(SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
                         .setInstallCooldownWindow(1)
                         .build()
                         .getRandomAttributionProbability(),
@@ -756,8 +922,9 @@ public class SourceTest {
                 PrivacyParams.DUAL_DESTINATION_EVENT_NOISE_PROBABILITY,
                 SourceFixture.getValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
-                        .setAppDestination(SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
-                        .setWebDestination(SourceFixture.ValidSourceParams.WEB_DESTINATION)
+                        .setAppDestinations(
+                                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
+                        .setWebDestinations(SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
                         .build()
                         .getRandomAttributionProbability(),
                 ZERO_DELTA);
@@ -766,8 +933,9 @@ public class SourceTest {
                 PrivacyParams.DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY,
                 SourceFixture.getValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
-                        .setAppDestination(SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
-                        .setWebDestination(SourceFixture.ValidSourceParams.WEB_DESTINATION)
+                        .setAppDestinations(
+                                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
+                        .setWebDestinations(SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
                         .build()
                         .getRandomAttributionProbability(),
                 ZERO_DELTA);
@@ -781,10 +949,10 @@ public class SourceTest {
                 spy(
                         SourceFixture.getValidSourceBuilder()
                                 .setSourceType(Source.SourceType.EVENT)
-                                .setAppDestination(
-                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
-                                .setWebDestination(null)
-                                .setExpiryTime(expiry)
+                                .setAppDestinations(
+                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
+                                .setWebDestinations(null)
+                                .setEventReportWindow(expiry)
                                 .build()),
                 PrivacyParams.EVENT_TRIGGER_DATA_CARDINALITY);
 
@@ -793,10 +961,10 @@ public class SourceTest {
                 spy(
                         SourceFixture.getValidSourceBuilder()
                                 .setSourceType(Source.SourceType.EVENT)
-                                .setAppDestination(
-                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
-                                .setWebDestination(null)
-                                .setExpiryTime(expiry)
+                                .setAppDestinations(
+                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
+                                .setWebDestinations(null)
+                                .setEventReportWindow(expiry)
                                 .build()),
                 PrivacyParams.getNavigationTriggerDataCardinality());
 
@@ -805,9 +973,10 @@ public class SourceTest {
                 spy(
                         SourceFixture.getValidSourceBuilder()
                                 .setSourceType(Source.SourceType.EVENT)
-                                .setExpiryTime(expiry)
-                                .setAppDestination(null)
-                                .setWebDestination(SourceFixture.ValidSourceParams.WEB_DESTINATION)
+                                .setEventReportWindow(expiry)
+                                .setAppDestinations(null)
+                                .setWebDestinations(
+                                        SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
                                 .build()),
                 PrivacyParams.EVENT_TRIGGER_DATA_CARDINALITY);
 
@@ -816,9 +985,10 @@ public class SourceTest {
                 spy(
                         SourceFixture.getValidSourceBuilder()
                                 .setSourceType(Source.SourceType.EVENT)
-                                .setExpiryTime(expiry)
-                                .setAppDestination(null)
-                                .setWebDestination(SourceFixture.ValidSourceParams.WEB_DESTINATION)
+                                .setEventReportWindow(expiry)
+                                .setAppDestinations(null)
+                                .setWebDestinations(
+                                        SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
                                 .build()),
                 PrivacyParams.getNavigationTriggerDataCardinality());
 
@@ -827,10 +997,11 @@ public class SourceTest {
                 spy(
                         SourceFixture.getValidSourceBuilder()
                                 .setSourceType(Source.SourceType.EVENT)
-                                .setExpiryTime(expiry)
-                                .setAppDestination(
-                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
-                                .setWebDestination(SourceFixture.ValidSourceParams.WEB_DESTINATION)
+                                .setEventReportWindow(expiry)
+                                .setAppDestinations(
+                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
+                                .setWebDestinations(
+                                        SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
                                 .build()),
                 PrivacyParams.EVENT_TRIGGER_DATA_CARDINALITY);
 
@@ -839,10 +1010,11 @@ public class SourceTest {
                 spy(
                         SourceFixture.getValidSourceBuilder()
                                 .setSourceType(Source.SourceType.EVENT)
-                                .setExpiryTime(expiry)
-                                .setAppDestination(
-                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
-                                .setWebDestination(SourceFixture.ValidSourceParams.WEB_DESTINATION)
+                                .setEventReportWindow(expiry)
+                                .setAppDestinations(
+                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
+                                .setWebDestinations(
+                                        SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
                                 .build()),
                 PrivacyParams.getNavigationTriggerDataCardinality());
 
@@ -851,10 +1023,10 @@ public class SourceTest {
                 spy(
                         SourceFixture.getValidSourceBuilder()
                                 .setSourceType(Source.SourceType.EVENT)
-                                .setExpiryTime(expiry)
-                                .setAppDestination(
-                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
-                                .setWebDestination(null)
+                                .setEventReportWindow(expiry)
+                                .setAppDestinations(
+                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
+                                .setWebDestinations(null)
                                 .setInstallCooldownWindow(
                                         SourceFixture.ValidSourceParams.INSTALL_COOLDOWN_WINDOW)
                                 .build()),
@@ -868,8 +1040,9 @@ public class SourceTest {
                 spy(
                         SourceFixture.getValidSourceBuilder()
                                 .setSourceType(Source.SourceType.EVENT)
-                                .setWebDestination(SourceFixture.ValidSourceParams.WEB_DESTINATION)
-                                .setExpiryTime(expiry)
+                                .setWebDestinations(
+                                        SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
+                                .setEventReportWindow(expiry)
                                 .setInstallCooldownWindow(
                                         SourceFixture.ValidSourceParams.INSTALL_COOLDOWN_WINDOW)
                                 .build());
@@ -900,12 +1073,23 @@ public class SourceTest {
     }
 
     @Test
+    public void testGetAttributionDestinations() {
+        Source source = SourceFixture.getValidSource();
+        assertEquals(
+                source.getAttributionDestinations(EventSurfaceType.APP),
+                source.getAppDestinations());
+        assertEquals(
+                source.getAttributionDestinations(EventSurfaceType.WEB),
+                source.getWebDestinations());
+    }
+
+    @Test
     public void impressionNoiseParamGeneration() {
         long eventTime = System.currentTimeMillis();
         Source eventSource30dExpiry = SourceFixture.getValidSourceBuilder()
                 .setSourceType(Source.SourceType.EVENT)
                 .setEventTime(eventTime)
-                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(30))
+                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(30))
                 .build();
         assertEquals(
                 new ImpressionNoiseParams(
@@ -918,7 +1102,7 @@ public class SourceTest {
         Source eventSource7dExpiry = SourceFixture.getValidSourceBuilder()
                 .setSourceType(Source.SourceType.EVENT)
                 .setEventTime(eventTime)
-                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(30))
+                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(30))
                 .build();
         assertEquals(
                 new ImpressionNoiseParams(
@@ -931,7 +1115,7 @@ public class SourceTest {
         Source eventSource2dExpiry = SourceFixture.getValidSourceBuilder()
                 .setSourceType(Source.SourceType.EVENT)
                 .setEventTime(eventTime)
-                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(30))
+                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(30))
                 .build();
         assertEquals(
                 new ImpressionNoiseParams(
@@ -944,7 +1128,7 @@ public class SourceTest {
         Source navigationSource30dExpiry = SourceFixture.getValidSourceBuilder()
                 .setSourceType(Source.SourceType.NAVIGATION)
                 .setEventTime(eventTime)
-                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(30))
+                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(30))
                 .build();
         assertEquals(
                 new ImpressionNoiseParams(
@@ -957,7 +1141,7 @@ public class SourceTest {
         Source navigationSource7dExpiry = SourceFixture.getValidSourceBuilder()
                 .setSourceType(Source.SourceType.NAVIGATION)
                 .setEventTime(eventTime)
-                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(7))
+                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(7))
                 .build();
         assertEquals(
                 new ImpressionNoiseParams(
@@ -970,7 +1154,7 @@ public class SourceTest {
         Source navigationSource2dExpiry = SourceFixture.getValidSourceBuilder()
                 .setSourceType(Source.SourceType.NAVIGATION)
                 .setEventTime(eventTime)
-                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(2))
+                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(2))
                 .build();
         assertEquals(
                 new ImpressionNoiseParams(
@@ -990,7 +1174,7 @@ public class SourceTest {
                 .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(2))
                 .setInstallAttributionWindow(TimeUnit.DAYS.toMillis(10))
                 .setEventTime(eventTime)
-                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(30))
+                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(30))
                 .build();
         assertEquals(
                 new ImpressionNoiseParams(
@@ -1005,7 +1189,7 @@ public class SourceTest {
                 .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(2))
                 .setInstallAttributionWindow(TimeUnit.DAYS.toMillis(10))
                 .setEventTime(eventTime)
-                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(7))
+                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(7))
                 .build();
         assertEquals(
                 new ImpressionNoiseParams(
@@ -1020,7 +1204,7 @@ public class SourceTest {
                 .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(2))
                 .setInstallAttributionWindow(TimeUnit.DAYS.toMillis(10))
                 .setEventTime(eventTime)
-                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(2))
+                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(2))
                 .build();
         assertEquals(
                 new ImpressionNoiseParams(
@@ -1035,7 +1219,7 @@ public class SourceTest {
                 .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(2))
                 .setInstallAttributionWindow(TimeUnit.DAYS.toMillis(10))
                 .setEventTime(eventTime)
-                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(30))
+                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(30))
                 .build();
         assertEquals(
                 new ImpressionNoiseParams(
@@ -1050,7 +1234,7 @@ public class SourceTest {
                 .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(2))
                 .setInstallAttributionWindow(TimeUnit.DAYS.toMillis(10))
                 .setEventTime(eventTime)
-                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(7))
+                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(7))
                 .build();
         assertEquals(
                 new ImpressionNoiseParams(
@@ -1065,7 +1249,7 @@ public class SourceTest {
                 .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(2))
                 .setInstallAttributionWindow(TimeUnit.DAYS.toMillis(10))
                 .setEventTime(eventTime)
-                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(2))
+                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(2))
                 .build();
         assertEquals(
                 new ImpressionNoiseParams(
@@ -1076,12 +1260,12 @@ public class SourceTest {
                 navigationSource2dExpiry.getImpressionNoiseParams());
         Source eventSourceWith2Destinations30dExpiry =
                 SourceFixture.getValidSourceBuilder()
-                        .setWebDestination(SourceFixture.ValidSourceParams.WEB_DESTINATION)
+                        .setWebDestinations(SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
                         .setSourceType(Source.SourceType.EVENT)
                         .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(2))
                         .setInstallAttributionWindow(TimeUnit.DAYS.toMillis(10))
                         .setEventTime(eventTime)
-                        .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(30))
+                        .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(30))
                         .build();
         assertEquals(
                 new ImpressionNoiseParams(
@@ -1101,7 +1285,7 @@ public class SourceTest {
         Source eventSource10d = SourceFixture.getValidSourceBuilder()
                 .setSourceType(Source.SourceType.EVENT)
                 .setEventTime(eventTime)
-                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(10))
+                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(10))
                 .build();
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(10) + oneHourInMillis,
@@ -1113,7 +1297,7 @@ public class SourceTest {
         Source eventSource7d = SourceFixture.getValidSourceBuilder()
                 .setSourceType(Source.SourceType.EVENT)
                 .setEventTime(eventTime)
-                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(7))
+                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(7))
                 .build();
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(7) + oneHourInMillis,
@@ -1125,7 +1309,7 @@ public class SourceTest {
         Source eventSource2d = SourceFixture.getValidSourceBuilder()
                 .setSourceType(Source.SourceType.EVENT)
                 .setEventTime(eventTime)
-                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(2))
+                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(2))
                 .build();
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(2) + oneHourInMillis,
@@ -1145,7 +1329,7 @@ public class SourceTest {
                 .setSourceType(Source.SourceType.EVENT)
                 .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(1))
                 .setEventTime(eventTime)
-                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(10))
+                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(10))
                 .build();
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(2) + oneHourInMillis,
@@ -1159,7 +1343,7 @@ public class SourceTest {
         Source eventSource2d = SourceFixture.getValidSourceBuilder()
                 .setSourceType(Source.SourceType.EVENT)
                 .setEventTime(eventTime)
-                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(2))
+                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(2))
                 .build();
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(2) + oneHourInMillis,
@@ -1177,7 +1361,7 @@ public class SourceTest {
         Source navigationSource20d = SourceFixture.getValidSourceBuilder()
                 .setSourceType(Source.SourceType.NAVIGATION)
                 .setEventTime(eventTime)
-                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(20))
+                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(20))
                 .build();
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(2) + oneHourInMillis,
@@ -1191,7 +1375,7 @@ public class SourceTest {
         Source navigationSource7d = SourceFixture.getValidSourceBuilder()
                 .setSourceType(Source.SourceType.NAVIGATION)
                 .setEventTime(eventTime)
-                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(7))
+                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(7))
                 .build();
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(2) + oneHourInMillis,
@@ -1205,7 +1389,7 @@ public class SourceTest {
         Source navigationSource2d = SourceFixture.getValidSourceBuilder()
                 .setSourceType(Source.SourceType.NAVIGATION)
                 .setEventTime(eventTime)
-                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(2))
+                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(2))
                 .build();
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(2) + oneHourInMillis,
@@ -1224,7 +1408,7 @@ public class SourceTest {
                 .setSourceType(Source.SourceType.NAVIGATION)
                 .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(1))
                 .setEventTime(eventTime)
-                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(20))
+                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(20))
                 .build();
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(2) + oneHourInMillis,
@@ -1239,7 +1423,7 @@ public class SourceTest {
                 .setSourceType(Source.SourceType.NAVIGATION)
                 .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(1))
                 .setEventTime(eventTime)
-                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(7))
+                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(7))
                 .build();
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(2) + oneHourInMillis,
@@ -1254,7 +1438,7 @@ public class SourceTest {
                 .setSourceType(Source.SourceType.NAVIGATION)
                 .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(1))
                 .setEventTime(eventTime)
-                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(2))
+                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(2))
                 .build();
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(2) + oneHourInMillis,
@@ -1265,21 +1449,21 @@ public class SourceTest {
 
     @Test
     public void testParseFilterData_nonEmpty() throws JSONException {
-        JSONObject filterDataJson = new JSONObject();
-        filterDataJson.put("conversion", new JSONArray(Collections.singletonList("electronics")));
-        filterDataJson.put("product", new JSONArray(Arrays.asList("1234", "2345")));
+        JSONObject filterMapJson = new JSONObject();
+        filterMapJson.put("conversion", new JSONArray(Collections.singletonList("electronics")));
+        filterMapJson.put("product", new JSONArray(Arrays.asList("1234", "2345")));
         Source source = SourceFixture.getValidSourceBuilder()
                 .setSourceType(Source.SourceType.NAVIGATION)
-                .setFilterData(filterDataJson.toString())
+                .setFilterData(filterMapJson.toString())
                 .build();
-        FilterData filterData = source.parseFilterData();
-        assertEquals(filterData.getAttributionFilterMap().size(), 3);
+        FilterMap filterMap = source.getFilterData();
+        assertEquals(filterMap.getAttributionFilterMap().size(), 3);
         assertEquals(Collections.singletonList("electronics"),
-                filterData.getAttributionFilterMap().get("conversion"));
+                filterMap.getAttributionFilterMap().get("conversion"));
         assertEquals(Arrays.asList("1234", "2345"),
-                filterData.getAttributionFilterMap().get("product"));
+                filterMap.getAttributionFilterMap().get("product"));
         assertEquals(Collections.singletonList("navigation"),
-                filterData.getAttributionFilterMap().get("source_type"));
+                filterMap.getAttributionFilterMap().get("source_type"));
     }
 
     @Test
@@ -1287,10 +1471,10 @@ public class SourceTest {
         Source source = SourceFixture.getValidSourceBuilder()
                 .setSourceType(Source.SourceType.EVENT)
                 .build();
-        FilterData filterData = source.parseFilterData();
-        assertEquals(filterData.getAttributionFilterMap().size(), 1);
+        FilterMap filterMap = source.getFilterData();
+        assertEquals(filterMap.getAttributionFilterMap().size(), 1);
         assertEquals(Collections.singletonList("event"),
-                filterData.getAttributionFilterMap().get("source_type"));
+                filterMap.getAttributionFilterMap().get("source_type"));
     }
 
     @Test
@@ -1299,10 +1483,10 @@ public class SourceTest {
                 .setSourceType(Source.SourceType.EVENT)
                 .setFilterData("")
                 .build();
-        FilterData filterData = source.parseFilterData();
-        assertEquals(filterData.getAttributionFilterMap().size(), 1);
+        FilterMap filterMap = source.getFilterData();
+        assertEquals(filterMap.getAttributionFilterMap().size(), 1);
         assertEquals(Collections.singletonList("event"),
-                filterData.getAttributionFilterMap().get("source_type"));
+                filterMap.getAttributionFilterMap().get("source_type"));
     }
 
     @Test
@@ -1311,24 +1495,33 @@ public class SourceTest {
         aggregatableSource.put("campaignCounts", "0x159");
         aggregatableSource.put("geoValue", "0x5");
 
-        JSONObject filterData = new JSONObject();
-        filterData.put("conversion_subdomain",
+        JSONObject filterMap = new JSONObject();
+        filterMap.put("conversion_subdomain",
                 new JSONArray(Collections.singletonList("electronics.megastore")));
-        filterData.put("product", new JSONArray(Arrays.asList("1234", "2345")));
+        filterMap.put("product", new JSONArray(Arrays.asList("1234", "2345")));
 
         Source source = SourceFixture.getValidSourceBuilder()
                 .setSourceType(Source.SourceType.NAVIGATION)
                 .setAggregateSource(aggregatableSource.toString())
-                .setFilterData(filterData.toString()).build();
+                .setFilterData(filterMap.toString()).build();
         Optional<AggregatableAttributionSource> aggregatableAttributionSource =
-                source.parseAggregateSource();
+                source.getAggregatableAttributionSource();
         assertTrue(aggregatableAttributionSource.isPresent());
         AggregatableAttributionSource aggregateSource = aggregatableAttributionSource.get();
         assertEquals(aggregateSource.getAggregatableSource().size(), 2);
         assertEquals(
                 aggregateSource.getAggregatableSource().get("campaignCounts").longValue(), 345L);
         assertEquals(aggregateSource.getAggregatableSource().get("geoValue").longValue(), 5L);
-        assertEquals(aggregateSource.getFilterData().getAttributionFilterMap().size(), 3);
+        assertEquals(aggregateSource.getFilterMap().getAttributionFilterMap().size(), 3);
+    }
+
+    @Test
+    public void fromBuilder_equalsComparison_success() {
+        // Setup
+        Source fromSource = SourceFixture.getValidSource();
+
+        // Assertion
+        assertEquals(fromSource, Source.Builder.from(fromSource).build());
     }
 
     private void verifyAlgorithmicFakeReportGeneration(Source source, int expectedCardinality) {
@@ -1345,7 +1538,7 @@ public class SourceTest {
                 assertNotEquals(0, fakeReports.size());
                 for (Source.FakeReport report : fakeReports) {
                     assertTrue(
-                            source.getExpiryTime() + TimeUnit.HOURS.toMillis(1)
+                            source.getEventReportWindow() + TimeUnit.HOURS.toMillis(1)
                                     >= report.getReportingTime());
                     Long triggerData = report.getTriggerData().getValue();
                     assertTrue(0 <= triggerData && triggerData < expectedCardinality);
@@ -1378,16 +1571,16 @@ public class SourceTest {
                                         new UnsignedLong(Long.valueOf(reportState[0])),
                                         source.getReportingTimeForNoising(reportState[1]),
                                         reportState[2] == 0
-                                                ? source.getAppDestination()
-                                                : source.getWebDestination()))
+                                                ? source.getAppDestinations()
+                                                : source.getWebDestinations()))
                 .collect(Collectors.toList());
     }
 
     private void assertInvalidSourceArguments(
             UnsignedLong sourceEventId,
             Uri publisher,
-            Uri appDestination,
-            Uri webDestination,
+            List<Uri> appDestinations,
+            List<Uri> webDestinations,
             String enrollmentId,
             Uri registrant,
             Long sourceEventTime,
@@ -1399,15 +1592,18 @@ public class SourceTest {
             @Nullable UnsignedLong debugKey,
             @Source.AttributionMode int attributionMode,
             @Nullable String aggregateSource,
-            @Nullable String filterData) {
+            @Nullable String filterData,
+            @Nullable String registrationId,
+            @Nullable String sharedAggregationKeys,
+            @Nullable Long installTime) {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
                         new Source.Builder()
                                 .setEventId(sourceEventId)
                                 .setPublisher(publisher)
-                                .setAppDestination(appDestination)
-                                .setWebDestination(webDestination)
+                                .setAppDestinations(appDestinations)
+                                .setWebDestinations(webDestinations)
                                 .setEnrollmentId(enrollmentId)
                                 .setRegistrant(registrant)
                                 .setEventTime(sourceEventTime)
@@ -1420,6 +1616,9 @@ public class SourceTest {
                                 .setAggregateSource(aggregateSource)
                                 .setFilterData(filterData)
                                 .setDebugKey(debugKey)
+                                .setRegistrationId(registrationId)
+                                .setSharedAggregationKeys(sharedAggregationKeys)
+                                .setInstallTime(installTime)
                                 .build());
     }
 }

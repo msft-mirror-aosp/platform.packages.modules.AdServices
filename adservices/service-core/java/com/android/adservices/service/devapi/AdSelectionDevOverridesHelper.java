@@ -17,6 +17,7 @@
 package com.android.adservices.service.devapi;
 
 import android.adservices.adselection.AdSelectionConfig;
+import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
@@ -24,6 +25,7 @@ import android.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.data.adselection.DBAdSelectionFromOutcomesOverride;
 import com.android.adservices.data.adselection.DBAdSelectionOverride;
 
 import com.google.common.hash.HashFunction;
@@ -78,6 +80,20 @@ public class AdSelectionDevOverridesHelper {
                             hasher.putUnencodedChars(buyerAndSignals.getKey().toString())
                                     .putUnencodedChars(buyerAndSignals.getValue().toString());
                         });
+        return hasher.hash().toString();
+    }
+
+    /**
+     * @return a low-collision ID for the given {@link AdSelectionConfig} instance. We are accepting
+     *     collision since this is a developer targeted feature and the collision should be low rate
+     *     enough not to constitute a serious issue.
+     */
+    public static String calculateAdSelectionFromOutcomesConfigId(
+            @NonNull AdSelectionFromOutcomesConfig adSelectionFromOutcomesConfig) {
+        // See go/hashing#java
+        Hasher hasher = sHashFunction.newHasher();
+        hasher.putUnencodedChars(adSelectionFromOutcomesConfig.getSelectionLogicUri().toString())
+                .putUnencodedChars(adSelectionFromOutcomesConfig.getSelectionSignals().toString());
         return hasher.hash().toString();
     }
 
@@ -178,5 +194,110 @@ public class AdSelectionDevOverridesHelper {
         }
 
         mAdSelectionEntryDao.removeAllAdSelectionOverrides(mDevContext.getCallingAppPackageName());
+    }
+
+    /**
+     * Looks for an override for the given {@link AdSelectionFromOutcomesConfig}. Will return {@code
+     * null} if {@link DevContext#getDevOptionsEnabled()} returns false for the {@link DevContext}
+     * passed in the constructor or if there is no override created by the app with package name
+     * specified in {@link DevContext#getCallingAppPackageName()}.
+     */
+    @Nullable
+    public String getSelectionLogicOverride(@NonNull AdSelectionFromOutcomesConfig config) {
+        Objects.requireNonNull(config);
+
+        if (!mDevContext.getDevOptionsEnabled()) {
+            return null;
+        }
+        return mAdSelectionEntryDao.getSelectionLogicOverride(
+                calculateAdSelectionFromOutcomesConfigId(config),
+                mDevContext.getCallingAppPackageName());
+    }
+
+    /**
+     * Looks for an override for the given {@link AdSelectionFromOutcomesConfig}. Will return {@code
+     * null} if {@link DevContext#getDevOptionsEnabled()} returns false for the {@link DevContext}
+     * passed in the constructor or if there is no override created by the app with package name
+     * specified in {@link DevContext#getCallingAppPackageName()}.
+     */
+    @Nullable
+    public AdSelectionSignals getSelectionSignalsOverride(
+            @NonNull AdSelectionFromOutcomesConfig config) {
+        Objects.requireNonNull(config);
+
+        if (!mDevContext.getDevOptionsEnabled()) {
+            return null;
+        }
+        String overrideSignals =
+                mAdSelectionEntryDao.getSelectionSignalsOverride(
+                        calculateAdSelectionFromOutcomesConfigId(config),
+                        mDevContext.getCallingAppPackageName());
+        return overrideSignals == null ? null : AdSelectionSignals.fromString(overrideSignals);
+    }
+
+    /**
+     * Adds an override of the {@code decisionLogicJS} along with {@link
+     * DevContext#getCallingAppPackageName()} for the given {@link AdSelectionConfig}.
+     *
+     * @throws SecurityException if{@link DevContext#getDevOptionsEnabled()} returns false for the
+     *     {@link DevContext}
+     */
+    public void addAdSelectionOutcomeSelectorOverride(
+            @NonNull AdSelectionFromOutcomesConfig adSelectionFromOutcomesConfig,
+            @NonNull String selectionLogicJs,
+            @NonNull AdSelectionSignals selectionSignals) {
+        Objects.requireNonNull(adSelectionFromOutcomesConfig);
+        Objects.requireNonNull(selectionLogicJs);
+        Objects.requireNonNull(selectionSignals);
+
+        if (!mDevContext.getDevOptionsEnabled()) {
+            throw new SecurityException(API_NOT_AUTHORIZED_MSG);
+        }
+        mAdSelectionEntryDao.persistAdSelectionFromOutcomesOverride(
+                DBAdSelectionFromOutcomesOverride.builder()
+                        .setAdSelectionFromOutcomesConfigId(
+                                calculateAdSelectionFromOutcomesConfigId(
+                                        adSelectionFromOutcomesConfig))
+                        .setAppPackageName(mDevContext.getCallingAppPackageName())
+                        .setSelectionLogicJs(selectionLogicJs)
+                        .setSelectionSignals(selectionSignals.toString())
+                        .build());
+    }
+
+    /**
+     * Removes an override for the given {@link AdSelectionFromOutcomesConfig}.
+     *
+     * @throws SecurityException if{@link DevContext#getDevOptionsEnabled()} returns false for the
+     *     {@link DevContext}
+     */
+    public void removeAdSelectionOutcomeSelectorOverride(
+            @NonNull AdSelectionFromOutcomesConfig config) {
+        Objects.requireNonNull(config);
+
+        if (!mDevContext.getDevOptionsEnabled()) {
+            throw new SecurityException(API_NOT_AUTHORIZED_MSG);
+        }
+
+        String adSelectionConfigId = calculateAdSelectionFromOutcomesConfigId(config);
+        String appPackageName = mDevContext.getCallingAppPackageName();
+
+        mAdSelectionEntryDao.removeAdSelectionFromOutcomesOverrideByIdAndPackageName(
+                adSelectionConfigId, appPackageName);
+    }
+
+    /**
+     * Removes all ad selection from outcomes overrides that match {@link DevContext
+     * #getCallingAppPackageName()}.
+     *
+     * @throws SecurityException if{@link DevContext#getDevOptionsEnabled()} returns false for the
+     *     {@link DevContext}
+     */
+    public void removeAllSelectionLogicOverrides() {
+        if (!mDevContext.getDevOptionsEnabled()) {
+            throw new SecurityException(API_NOT_AUTHORIZED_MSG);
+        }
+
+        mAdSelectionEntryDao.removeAllAdSelectionFromOutcomesOverrides(
+                mDevContext.getCallingAppPackageName());
     }
 }

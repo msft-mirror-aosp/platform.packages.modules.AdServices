@@ -21,13 +21,14 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import android.content.Context;
 import android.content.Intent;
 
-import androidx.lifecycle.ViewModelProvider;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -41,20 +42,25 @@ import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.common.BackgroundJobsManager;
+import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.App;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mockito;
+import org.mockito.Mock;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
@@ -67,14 +73,16 @@ public class SettingsActivityUiAutomatorTest {
     private static final String PRIVACY_SANDBOX_TEST_PACKAGE = "android.test.adservices.ui.MAIN";
     private static final int LAUNCH_TIMEOUT = 5000;
     private static UiDevice sDevice;
-    static ViewModelProvider sViewModelProvider = Mockito.mock(ViewModelProvider.class);
-    static ConsentManager sConsentManager;
     private MockitoSession mStaticMockSession;
     private PhFlags mPhFlags;
     private ConsentManager mConsentManager;
+    @Mock Flags mMockFlags;
 
     @Before
     public void setup() throws UiObjectNotFoundException, IOException {
+        // Skip the test if it runs on unsupported platforms.
+        Assume.assumeTrue(ApkTestUtil.isDeviceSupported());
+
         // Static mocking
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
@@ -85,11 +93,10 @@ public class SettingsActivityUiAutomatorTest {
                         .strictness(Strictness.WARN)
                         .initMocks(this)
                         .startMocking();
-        ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
-
+        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         // prepare objects used by static mocking
-        mConsentManager =
-                spy(ConsentManager.getInstance(ApplicationProvider.getApplicationContext()));
+        mConsentManager = mock(ConsentManager.class);
         List<Topic> tempList = new ArrayList<>();
         tempList.add(Topic.create(10001, 1, 1));
         tempList.add(Topic.create(10002, 1, 1));
@@ -135,7 +142,23 @@ public class SettingsActivityUiAutomatorTest {
         ExtendedMockito.doReturn(mPhFlags).when(PhFlags::getInstance);
         ExtendedMockito.doReturn(mConsentManager)
                 .when(() -> ConsentManager.getInstance(any(Context.class)));
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(mConsentManager)
+                .getConsent(AdServicesApiType.TOPICS);
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(mConsentManager)
+                .getConsent(AdServicesApiType.FLEDGE);
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(mConsentManager)
+                .getConsent(AdServicesApiType.MEASUREMENTS);
 
+        doNothing().when(mConsentManager).enable(any(Context.class));
+        doNothing().when(mConsentManager).disable(any(Context.class));
+        startActivityFromHomeAndCheckMainSwitch();
+    }
+
+    private void startActivityFromHomeAndCheckMainSwitch() throws UiObjectNotFoundException {
         // Initialize UiDevice instance
         sDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
@@ -156,13 +179,6 @@ public class SettingsActivityUiAutomatorTest {
         // Wait for the app to appear
         sDevice.wait(
                 Until.hasObject(By.pkg(PRIVACY_SANDBOX_TEST_PACKAGE).depth(0)), LAUNCH_TIMEOUT);
-
-        // set consent to true if not
-        UiObject mainSwitch =
-                sDevice.findObject(new UiSelector().className("android.widget.Switch"));
-        assertThat(mainSwitch.exists()).isTrue();
-        if (!mainSwitch.isChecked()) mainSwitch.click();
-        assertThat(mainSwitch.isChecked()).isTrue();
     }
 
     @After
@@ -210,11 +226,6 @@ public class SettingsActivityUiAutomatorTest {
 
         // confirm
         positiveText.click();
-        assertThat(mainSwitch.isChecked()).isFalse();
-
-        // reset to opted in
-        mainSwitch.click();
-        assertThat(mainSwitch.isChecked()).isTrue();
 
         // click switch
         mainSwitch.click();
@@ -225,7 +236,6 @@ public class SettingsActivityUiAutomatorTest {
 
         // cancel
         negativeText.click();
-        assertThat(mainSwitch.isChecked()).isTrue();
     }
 
     @Test
@@ -282,6 +292,23 @@ public class SettingsActivityUiAutomatorTest {
         verify(mConsentManager).restoreConsentForTopic(any(Topic.class));
         unblockTopicText = getElement(R.string.settingsUI_unblock_topic_title, 0);
         assertThat(unblockTopicText.exists()).isTrue();
+    }
+
+    @Test
+    public void resetMeasurementDialogTest() throws UiObjectNotFoundException {
+        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
+
+        startActivityFromHomeAndCheckMainSwitch();
+        // open measurement view
+        scrollToAndClick(R.string.settingsUI_measurement_view_title);
+
+        // click reset
+        scrollToAndClick(R.string.settingsUI_measurement_view_reset_title);
+
+        // click reset again
+        scrollToAndClick(R.string.settingsUI_measurement_view_reset_title);
+
+        verify(mConsentManager, times(2)).resetMeasurement();
     }
 
     @Test
@@ -397,6 +424,16 @@ public class SettingsActivityUiAutomatorTest {
     }
 
     @Test
+    public void disableMeasurementTest() throws UiObjectNotFoundException {
+        doReturn(false).when(mMockFlags).getGaUxFeatureEnabled();
+        // start the activity again to reflect the GaUxFeature flag change
+        startActivityFromHomeAndCheckMainSwitch();
+        // the entry point of ads measurement should be hidden
+        UiObject adsMeasurementTitle = getElement(R.string.settingsUI_measurement_view_title);
+        assertThat(adsMeasurementTitle.exists()).isFalse();
+    }
+
+    @Test
     public void disableDialogFeatureTest() throws UiObjectNotFoundException {
         doReturn(false).when(mPhFlags).getUIDialogsFeatureEnabled();
         UiObject mainSwitch =
@@ -407,11 +444,6 @@ public class SettingsActivityUiAutomatorTest {
         mainSwitch.click();
         UiObject dialogTitle = getElement(R.string.settingsUI_dialog_opt_out_title);
         assertThat(dialogTitle.exists()).isFalse();
-        assertThat(mainSwitch.isChecked()).isFalse();
-
-        // click switch again
-        mainSwitch.click();
-        assertThat(mainSwitch.isChecked()).isTrue();
 
         // open topics view
         scrollToAndClick(R.string.settingsUI_topics_title);

@@ -17,7 +17,9 @@
 package com.android.adservices.service.topics.classifier;
 
 import android.annotation.NonNull;
+import android.content.Context;
 import android.content.res.AssetManager;
+import android.util.JsonReader;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.topics.Topic;
@@ -27,6 +29,7 @@ import com.android.internal.util.Preconditions;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -38,13 +41,14 @@ import java.util.Random;
 import java.util.stream.Collectors;
 
 /** Helper methods for shared implementations of {@link Classifier}. */
-class CommonClassifierHelper {
+public class CommonClassifierHelper {
     // The key name of asset metadata property in classifier_assets_metadata.json
     private static final String ASSET_PROPERTY_NAME = "property";
     // The key name of asset element in classifier_assets_metadata.json
     private static final String ASSET_ELEMENT_NAME = "asset_name";
     // The algorithm name of checksum
     private static final String SHA256_DIGEST_ALGORITHM_NAME = "SHA-256";
+    private static final String BUILD_ID_FIELD = "build_id";
 
     /**
      * Compute the SHA256 checksum of classifier asset.
@@ -52,15 +56,12 @@ class CommonClassifierHelper {
      * @return A string of classifier asset's SHA256 checksum.
      */
     static String computeClassifierAssetChecksum(
-            @NonNull AssetManager assetManager,
-            @NonNull String classifierAssetsMetadataPath) {
+            @NonNull AssetManager assetManager, @NonNull String classifierAssetsMetadataPath) {
         StringBuilder assetSha256CheckSum = new StringBuilder();
         try {
-            MessageDigest sha256Digest =
-                    MessageDigest.getInstance(SHA256_DIGEST_ALGORITHM_NAME);
+            MessageDigest sha256Digest = MessageDigest.getInstance(SHA256_DIGEST_ALGORITHM_NAME);
 
-            try (InputStream inputStream =
-                         assetManager.open(classifierAssetsMetadataPath)) {
+            try (InputStream inputStream = assetManager.open(classifierAssetsMetadataPath)) {
 
                 // Create byte array to read data in chunks
                 byte[] byteArray = new byte[8192];
@@ -211,5 +212,43 @@ class CommonClassifierHelper {
         }
 
         return returnedTopics;
+    }
+
+    /**
+     * Gets bundled model build_id from classifierAssetsMetadata file. Returns the default value of
+     * -1 if there is no build_id available.
+     *
+     * @return bundled model build_id
+     */
+    public static long getBundledModelBuildId(
+            @NonNull Context context, @NonNull String classifierAssetsMetadataPath) {
+        InputStream inputStream = null; // InputStream.nullInputStream() is not available on S-.
+        try {
+            inputStream = context.getAssets().open(classifierAssetsMetadataPath);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read bundled metadata file", e);
+        }
+        JsonReader reader = new JsonReader(new InputStreamReader(inputStream));
+        try {
+            reader.beginArray();
+            while (reader.hasNext()) {
+                // Read through each JSONObject.
+                reader.beginObject();
+                while (reader.hasNext()) {
+                    // Read through version info object and find build_id.
+                    String elementKeyName = reader.nextName();
+                    if (BUILD_ID_FIELD.equals(elementKeyName)) {
+                        return reader.nextLong();
+                    } else {
+                        reader.skipValue();
+                    }
+                }
+                reader.endObject();
+            }
+            reader.endArray();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to parse classifier assets metadata file", e);
+        }
+        return -1;
     }
 }

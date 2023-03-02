@@ -14,6 +14,8 @@
      limitations under the License.
  -->
 
+<!--  IMPORTANT! If adding new strings, then run generate_adservices_public_xml.py  -->
+
 <resources xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="permlab_accessAdServicesTopics" msgid="1108993892369517728">"mengakses AdServices Topics API"</string>
@@ -36,6 +38,8 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"Mengizinkan aplikasi mengakses enablement state modification API AdService."</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"Akses ke enablement state API AdService"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Mengizinkan aplikasi mengakses enablement state API AdService."</string>
+    <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Akses ke API AdServicesManager"</string>
+    <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Mengizinkan aplikasi mengakses API AdServicesManager."</string>
     <string name="app_label" msgid="5985320129629013968">"Sistem Android"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Bergabung ke privasi iklan Android beta"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android sedang mengembangkan cara yang lebih pribadi bagi aplikasi untuk menampilkan iklan kepada Anda"</string>
@@ -65,6 +69,53 @@
     <string name="notificationUI_how_it_works_expanded_text4" msgid="3910573920883580609">"Android secara berkala memperkirakan minat teratas Anda berdasarkan aplikasi yang Anda gunakan, misalnya, \"Olahraga\" atau \"Wisata\".\n\nSelanjutnya, aplikasi dapat meminta Android untuk menggunakan minat tersebut guna menampilkan iklan yang lebih relevan kepada Anda.\n\nAnda dapat melihat daftar minat saat ini di setelan privasi, dan memblokir minat yang tidak Anda sukai."</string>
     <string name="notificationUI_how_it_works_expanded_text5" msgid="7257714040472055781">"•  Minat yang diperkirakan oleh aplikasi"</string>
     <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"Aplikasi dapat memperkirakan minat dan menyimpan minat ini untuk sementara dengan Android. Misalnya, aplikasi yang Anda gunakan untuk membeli sepatu lari dapat memperkirakan minat Anda sebagai \"lari maraton\".\n\nSelanjutnya, aplikasi lain dapat menampilkan iklan terkait maraton kepada Anda berdasarkan minat ini.\n\nDi setelan privasi, Anda dapat mengelola daftar aplikasi yang telah menyimpan minat."</string>
+    <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"Fitur privasi iklan baru"</string>
+    <string name="notificationUI_notification_ga_content" msgid="3483979694272908942">"Topik iklan dan kontrol baru memberikan lebih banyak pilihan atas iklan yang Anda lihat"</string>
+    <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"Android mencatat minat berdasarkan aplikasi yang Anda gunakan baru-baru ini. Selain itu, aplikasi yang Anda gunakan dapat menentukan hal-hal yang Anda sukai. Kemudian, aplikasi lain dapat meminta informasi ini untuk menampilkan iklan yang dipersonalisasi kepada Anda. Anda dapat memilih topik dan aplikasi yang digunakan untuk menampilkan iklan kepada Anda."</string>
+    <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"Untuk mengukur performa iklan, beberapa jenis data tertentu dibagikan aplikasi kepada satu sama lain."</string>
+    <string name="notificationUI_ga_container1_control_text" msgid="2711321174550177509">"Selengkapnya tentang iklan di Android"</string>
+    <string name="notificationUI_how_it_works_row_subtitle1" msgid="8685034725335826096">"Iklan yang lebih berguna"</string>
+    <string name="notificationUI_how_it_works_row_body1" msgid="5865369599951938718">"Aplikasi dapat meminta informasi dari Android untuk membantu mempersonalisasi iklan yang Anda lihat."</string>
+    <string name="notificationUI_how_it_works_row_body2" msgid="6601773212442110369">"•  Android mencatat topik minat berdasarkan aplikasi yang Anda gunakan baru-baru ini."</string>
+    <string name="notificationUI_how_it_works_row_body3" msgid="3692457397642529055">"•  Aplikasi yang Anda gunakan juga dapat menyimpulkan minat Anda berdasarkan cara Anda menggunakannya. Misalnya, jika Anda menggunakan aplikasi yang menjual sepatu lari jarak jauh, aplikasi tersebut mungkin akan menyimpulkan bahwa Anda tertarik berlari maraton."</string>
+    <string name="notificationUI_how_it_works_row_body4" msgid="8731138074016839243">"Kemudian, aplikasi yang Anda gunakan dapat meminta informasi ini — baik topik iklan atau iklan yang disarankan oleh aplikasi yang telah Anda gunakan."</string>
+    <string name="notificationUI_how_it_works_row_body5" msgid="4524382869577899661">"Android otomatis menghapus topik dan data yang disarankan aplikasi secara rutin. Anda juga dapat memblokir topik dan aplikasi tertentu agar tidak memberikan saran iklan."</string>
+    <string name="notificationUI_how_it_works_subtitle2" msgid="2203542887026049927">"Mengukur seberapa baik performa iklan"</string>
+    <string name="notificationUI_how_it_works_row_body6" msgid="5368364880910986588">"Aplikasi yang Anda gunakan dapat meminta informasi dari Android untuk membantunya mengukur performa iklan. Android mengizinkan aplikasi mengumpulkan beberapa jenis data tertentu, misalnya jam berapa iklan ditampilkan kepada Anda."</string>
+    <!-- no translation found for notificationUI_how_it_works_row_body7 (8158317350415462142) -->
+    <skip />
+    <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"Coba fitur privasi iklan baru"</string>
+    <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"Topik iklan memberikan lebih banyak pilihan atas iklan yang Anda lihat"</string>
+    <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"Lihat Detail"</string>
+    <string name="notificationUI_header_ga_title_eu" msgid="4461095539795574989">"Privasi iklan yang lebih baik di Android"</string>
+    <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android meluncurkan fitur privasi baru yang memberi Anda lebih banyak pilihan atas iklan yang Anda lihat."</string>
+    <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"Topik iklan membantu aplikasi menampilkan iklan yang relevan, sambil tetap melindungi identitas Anda dan informasi tentang penggunaan aplikasi oleh Anda. Android dapat mencatat topik yang Anda minati berdasarkan aplikasi yang Anda gunakan baru-baru ini. Kemudian, aplikasi dapat meminta topik yang relevan dari Android untuk mempersonalisasi iklan yang Anda lihat."</string>
+    <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"Anda dapat melihat topik iklan di setelan perangkat dan memblokir topik yang tidak ingin Anda bagikan kepada aplikasi. Selain itu, Android juga menghapus otomatis topik iklan secara rutin."</string>
+    <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"Anda dapat mengubahnya kapan saja di setelan privasi."</string>
+    <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"Selengkapnya tentang topik iklan"</string>
+    <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"Pelajari lebih lanjut cara Android melindungi data Anda dalam Kebijakan Privasi kami."</string>
+    <string name="notificationUI_right_control_button_ga_text_eu" msgid="2022252072760042013">"Ya"</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  Data yang digunakan"</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"Topik iklan didasarkan pada aplikasi yang Anda gunakan baru-baru ini di perangkat ini dan seberapa sering Anda menggunakannya."</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text5" msgid="5976468008939416198">"•  Cara kami menggunakan data ini"</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text6" msgid="6318275524155409408">"Android mencatat topik minat saat Anda menggunakan aplikasi. Label topik sudah ditentukan sebelumnya dan mencakup hal-hal seperti Seni &amp; Hiburan, Belanja, dan Olahraga. Kemudian, aplikasi yang Anda gunakan dapat meminta beberapa topik Anda (tetapi bukan data tentang penggunaan aplikasi atau identitas Anda) dari Android untuk mempersonalisasi iklan yang Anda lihat."</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text7" msgid="4275126336833782389">"•  Cara Anda dapat mengelola data Anda"</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"Android otomatis menghapus topik secara rutin. Suatu topik dapat muncul kembali di dalam daftar, sesuai dengan penggunaan aplikasi Anda. Anda juga dapat memblokir topik dari Android yang Anda tidak ingin bagikan kepada aplikasi dan menonaktifkan topik iklan kapan saja di setelan privasi."</string>
+    <string name="notificationUI_you_can_change_in_privacy_settings" msgid="4781410091509838647">"Anda dapat membuat perubahan di setelan privasi."</string>
+    <string name="notificationUI_fledge_measurement_title" msgid="5279119450359078459">"Fitur lain yang membuat iklan menjadi lebih pribadi"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="6943787406043534689">"Android meluncurkan cara baru untuk membatasi informasi yang dapat dipelajari aplikasi tentang Anda saat menampilkan iklan yang dipersonalisasi."</string>
+    <string name="notificationUI_fledge_measurement_introduction_text2" msgid="601600895880486962">"•  Iklan yang disarankan aplikasi membantu melindungi identitas dan informasi Anda tentang penggunaan aplikasi sekaligus memungkinkan aplikasi menampilkan iklan yang relevan kepada Anda. Berdasarkan aktivitas Anda, aplikasi yang Anda gunakan dapat menyarankan iklan yang terkait untuk ditampilkan di aplikasi lain. Anda dapat melihat daftar aplikasi dan memblokirnya agar tidak memberikan saran seperti ini di setelan privasi."</string>
+    <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"•  Dengan pengukuran iklan, beberapa jenis data tertentu dibagikan oleh aplikasi kepada satu sama lain untuk mengukur performa iklan mereka, misalnya jam berapa iklan ditampilkan kepada Anda."</string>
+    <string name="notificationUI_fledge_measurement_control_ga_text_eu" msgid="2346851728118443500">"Selengkapnya tentang iklan yang disarankan aplikasi dan pengukuran iklan"</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text0" msgid="2456923104551938349">"Iklan yang disarankan aplikasi"</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text1" msgid="5606895535548790900">"•  Data yang digunakan"</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text2" msgid="6309052819494439288">"Aktivitas Anda di aplikasi yang digunakan di perangkat ini."</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text3" msgid="5347980571056638783">"•  Cara aplikasi menggunakan data ini"</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text4" msgid="4738335469671465639">"Aplikasi dapat menyimpan informasi dengan Android tentang hal-hal yang Anda suka. Misalnya, jika Anda menggunakan aplikasi tentang latihan maraton, aplikasi mungkin akan menyimpulkan bahwa Anda tertarik dengan sepatu lari. Kemudian, jika Anda menggunakan aplikasi lain, aplikasi tersebut dapat menampilkan iklan sepatu lari yang disarankan oleh aplikasi pertama."</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text5" msgid="8737925570089314631">"•  Cara untuk mengelola data Anda"</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android rutin menghapus otomatis data yang disarankan aplikasi. Aplikasi yang Anda gunakan lagi mungkin akan muncul kembali di daftar."</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"Anda juga dapat memblokir aplikasi agar tidak menyarankan iklan untuk Anda, mereset semua data rekomendasi iklan, atau menonaktifkan iklan yang disarankan aplikasi kapan saja di setelan privasi."</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"Aplikasi yang Anda gunakan dapat meminta informasi dari Android untuk membantunya mengukur performa iklan. Android melindungi privasi Anda dengan membatasi informasi yang dapat dibagikan aplikasi kepada satu sama lain."</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Privacy Sandbox"</string>
     <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"Berpartisipasi dalam privasi iklan Android beta"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"Privacy Sandbox"</string>
@@ -78,35 +129,79 @@
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Minat yang Anda blokir"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Reset semua minat"</string>
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Tidak ada minat untuk ditampilkan sekarang"</string>
+    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"Saat ini tidak ada topik untuk ditampilkan"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Privasi iklan Android beta memberikan fitur baru yang dapat digunakan aplikasi untuk menampilkan iklan yang mungkin Anda sukai. Teknologi ini tidak menggunakan ID perangkat.\n\nAndroid dapat memperkirakan jenis iklan yang mungkin menarik bagi Anda, dan menyimpan minat ini untuk sementara di perangkat Anda. Hal ini memungkinkan aplikasi menampilkan iklan yang relevan, tanpa melacak aktivitas Anda di seluruh situs dan aplikasi dari developer lainnya."</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Anda tidak memiliki minat yang diblokir"</string>
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Tidak ada minat yang diblokir"</string>
+    <string name="settingsUI_no_blocked_topics_ga_text" msgid="377459829879121256">"Tidak ada topik yang diblokir"</string>
+    <string name="settingsUI_view_blocked_topics_title" msgid="3705333677440361392">"Lihat topik yang diblokir"</string>
+    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Minat direset"</string>
+    <string name="settingsUI_topics_are_reset_ga" msgid="5250296990870048195">"Topik telah direset"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Aplikasi dapat memperkirakan minat dan menyimpan minat ini untuk sementara dengan Android. Selanjutnya, aplikasi lain dapat menampilkan iklan kepada Anda berdasarkan minat ini.\n\nJika Anda memblokir suatu aplikasi, aplikasi tersebut tidak akan memperkirakan minat lagi. Aplikasi tidak akan ditambahkan ke daftar aplikasi ini lagi kecuali jika Anda berhenti memblokirnya. Minat yang telah diperkirakan oleh aplikasi akan dihapus, tetapi Anda mungkin masih melihat beberapa iklan terkait."</string>
-    <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Aplikasi yang Anda blokir"</string>
+    <string name="settingsUI_blocked_apps_title" msgid="1260257485713408637">"Aplikasi yang Anda blokir"</string>
+    <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"Lihat aplikasi yang diblokir"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Reset minat yang diperkirakan oleh aplikasi"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"Saat ini tidak ada aplikasi yang memperkirakan minat untuk Anda"</string>
+    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="8540919050517478161">"Saat ini tidak ada aplikasi untuk ditampilkan"</string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Privasi iklan Android beta memberikan fitur baru yang dapat digunakan aplikasi untuk menampilkan iklan yang mungkin Anda sukai. Teknologi ini tidak menggunakan ID perangkat.\n\nAplikasi dapat memperkirakan jenis iklan yang mungkin menarik bagi Anda, dan menyimpan minat ini untuk sementara di perangkat Anda. Hal ini memungkinkan aplikasi menampilkan iklan yang relevan, tanpa melacak aktivitas Anda di seluruh situs dan aplikasi dari developer lainnya."</string>
-    <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Anda tidak memiliki aplikasi yang diblokir"</string>
+    <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Tidak ada aplikasi yang diblokir"</string>
+    <string name="settingsUI_no_blocked_apps_ga_text" msgid="7488680173653861943">"Tidak ada aplikasi yang diblokir"</string>
+    <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"Izinkan pengukuran iklan"</string>
+    <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"Aplikasi dan pengiklan dapat meminta informasi dari Android yang membantu mereka mengukur performa iklan mereka.\n\nData pengukuran iklan dihapus secara rutin dari perangkat Anda."</string>
+    <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"Reset data pengukuran"</string>
+    <string name="settingsUI_measurement_view_footer_text" msgid="3296828552097878309">"Android melindungi privasi Anda dengan membatasi informasi yang dapat dibagikan aplikasi kepada satu sama lain. Demi melindungi identitas Anda, laporan tidak dikirim secara realtime.\n\nBrowser Anda mungkin memiliki setelan yang mirip. Jika pengukuran iklan diaktifkan untuk Android dan browser, suatu perusahaan mungkin dapat mengukur efektivitas iklan di antara aplikasi yang Anda gunakan dan situs yang Anda buka. Privasi histori penjelajahan Anda tetap dijaga di perangkat Anda.\n\nPelajari lebih lanjut cara Android melindungi data Anda di Kebijakan Privasi kami."</string>
+    <string name="settingsUI_measurement_are_reset" msgid="4375330550418573499">"Data pengukuran iklan telah direset"</string>
     <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Batal"</string>
     <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Nonaktifkan Privacy Sandbox?"</string>
     <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Jika Anda berubah pikiran atau ingin mempelajari privasi iklan Android beta lebih lanjut, buka setelan privasi"</string>
     <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Nonaktifkan"</string>
     <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Blokir <xliff:g id="TOPIC">%1$s</xliff:g>?"</string>
-    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"Minat ini akan diblokir dan tidak akan ditambahkan ke daftar Anda lagi, kecuali jika Anda menambahkannya kembali. Anda mungkin masih melihat beberapa iklan terkait minat tersebut."</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2581824495438333677">"Topik ini akan diblokir dan tidak akan ditambahkan ke daftar Anda lagi, kecuali jika Anda menambahkannya kembali. Anda mungkin masih melihat beberapa iklan terkait."</string>
     <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Blokir"</string>
     <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"<xliff:g id="TOPIC">%1$s</xliff:g> berhenti diblokir"</string>
-    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android dapat menambahkan minat ini lagi ke daftar Anda, tetapi minat mungkin tidak langsung muncul"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="1090743551997420666">"Android dapat menambahkan topik ini lagi ke daftar Anda, tetapi topik mungkin tidak langsung muncul"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"Oke"</string>
-    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Reset semua minat?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"Daftar Anda akan dihapus dan minat baru akan diperkirakan ke depannya. Anda mungkin masih melihat beberapa iklan terkait minat yang dihapus."</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="8025836207966712435">"Reset semua topik iklan?"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="4243744527757134000">"Daftar Anda akan dihapus dan topik baru akan ditambahkan ke depannya. Anda mungkin masih melihat beberapa iklan terkait topik yang telah Anda reset."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Reset"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Blokir <xliff:g id="APP">%1$s</xliff:g>?"</string>
-    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Aplikasi ini tidak akan memperkirakan minat untuk Privacy Sandbox dan tidak akan ditambahkan ke daftar Anda lagi, kecuali jika Anda berhenti memblokirnya.\n\nMinat yang sudah diperkirakan oleh aplikasi ini akan dihapus, tetapi Anda mungkin masih melihat beberapa iklan terkait minat tersebut."</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="758788973278770119">"Aplikasi ini tidak akan menyarankan iklan dan tidak akan ditambahkan ke daftar Anda lagi, kecuali jika Anda berhenti memblokirnya. Anda mungkin masih melihat beberapa iklan terkait."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> berhenti diblokir"</string>
-    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Aplikasi ini dapat memperkirakan minat lagi untuk Anda, tetapi minat mungkin tidak langsung muncul di daftar. Mungkin perlu waktu agak lama untuk melihat iklan terkait minat tersebut."</string>
-    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Reset minat yang dibuat oleh aplikasi?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"Minat yang diperkirakan oleh aplikasi dalam daftar Anda akan dihapus dari Privacy Sandbox, dan aplikasi akan memperkirakan minat baru ke depannya. Anda mungkin masih melihat beberapa iklan terkait minat tersebut."</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="5758218424845642060">"Aplikasi ini dapat menyarankan iklan lagi untuk Anda, tetapi mungkin tidak langsung muncul di daftar Anda. Mungkin perlu waktu agak lama bagi Anda untuk melihat iklan terkait."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"Reset iklan yang disarankan oleh aplikasi?"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Data rekomendasi iklan dari aplikasi dalam daftar Anda akan dihapus dan aplikasi tersebut akan menyarankan iklan baru ke depannya. Anda mungkin masih melihat beberapa iklan terkait."</string>
+    <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Data aplikasi telah direset"</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"Reset semua topik?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"Reset iklan yang disarankan oleh aplikasi?"</string>
+    <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Privasi iklan"</string>
+    <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Topik iklan"</string>
+    <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Iklan yang disarankan aplikasi"</string>
+    <!-- no translation found for settingsUI_measurement_ga_title (2255921375701745943) -->
+    <skip />
+    <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android mencatat topik minat berdasarkan aplikasi yang Anda gunakan baru-baru ini dan seberapa sering Anda menggunakannya."</string>
+    <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Aplikasi yang Anda gunakan juga dapat menyimpulkan minat Anda berdasarkan cara Anda menggunakannya."</string>
+    <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Aplikasi yang Anda gunakan dapat meminta informasi dari Android untuk membantu mereka mengukur performa iklan. Android mengizinkan aplikasi mengumpulkan beberapa jenis data tertentu."</string>
+    <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Aktif / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> topik"</string>
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Aktif/# topik}other{Aktif/# topik}}"</string>
+    <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Aktif / <xliff:g id="APPS_COUNT">%1$d</xliff:g> aplikasi"</string>
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{Aktif/# aplikasi}other{Aktif/# aplikasi}}"</string>
+    <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"Aktif"</string>
+    <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Nonaktif"</string>
+    <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Minat topik didasarkan pada aplikasi yang digunakan baru-baru ini dan digunakan oleh aplikasi untuk menampilkan iklan yang dipersonalisasi kepada Anda.\n\nAnda dapat memblokir topik yang tidak ingin dibagikan kepada aplikasi. Android juga menghapus otomatis topik secara rutin."</string>
+    <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"Izinkan topik iklan"</string>
+    <string name="settingsUI_blocked_topics_ga_title" msgid="7163366621282449273">"Topik iklan yang Anda blokir"</string>
+    <string name="settingsUI_reset_topics_ga_title" msgid="5365554894399951300">"Reset semua topik iklan"</string>
+    <string name="settingsU_topics_view_footer" msgid="4769146330248953561">"Android mencatat topik minat berdasarkan aplikasi yang Anda gunakan dalam beberapa minggu terakhir.\n\nNantinya, aplikasi yang Anda gunakan dapat meminta topik dari Android untuk mempersonalisasi iklan yang Anda lihat. Android membagikan hingga 3 topik sekaligus melindungi identitas dan informasi Anda tentang penggunaan aplikasi.\n\nAndroid menghapus otomatis topik secara rutin. Saat Anda melanjutkan menggunakan aplikasi, topik dapat muncul kembali dalam daftar. Atau, Anda dapat memblokir topik yang tidak ingin dibagikan ke aplikasi dari Android.\n\nDi aplikasi Anda, iklan yang Anda lihat mungkin dipersonalisasikan, berdasarkan setelan ini, setelan iklan yang disarankan aplikasi, setelan ID iklan Anda, dan apakah aplikasi yang Anda gunakan mempersonalisasi iklan."</string>
+    <string name="settingsUI_apps_switch_title" msgid="1308209012769248890">"Izinkan iklan yang disarankan aplikasi"</string>
+    <string name="settingsUI_apps_view_ga_subtitle" msgid="1911743837387384160">"Aplikasi yang Anda gunakan dapat menyimpulkan minat Anda lalu menyarankan iklan untuk ditampilkan di aplikasi lain.\n\nAnda dapat memblokir aplikasi agar tidak memberikan saran iklan. Selain itu, Android juga menghapus otomatis data yang disarankan aplikasi secara rutin."</string>
+    <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Aplikasi yang Anda blokir"</string>
+    <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Reset data yang disarankan aplikasi"</string>
+    <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Aplikasi yang Anda gunakan biasanya mengingat hal-hal yang Anda minati untuk mempersonalisasi pengalaman Anda. Aplikasi juga dapat menyimpan informasi dengan Android tentang topik yang Anda suka.\n\nMisalnya, jika Anda menggunakan aplikasi untuk latihan maraton, aplikasi mungkin akan menyimpulkan bahwa Anda tertarik dengan sepatu lari. Nantinya, jika Anda menggunakan aplikasi lain, aplikasi tersebut dapat menampilkan iklan sepatu lari yang disarankan oleh aplikasi pertama.\n\nAndroid akan rutin menghapus otomatis data yang disarankan aplikasi. Aplikasi yang Anda gunakan lagi mungkin akan muncul kembali di daftar. Atau, Anda dapat memblokir aplikasi agar tidak menyarankan iklan untuk Anda.\n\nDi aplikasi, iklan yang Anda lihat mungkin telah dipersonalisasi, bergantung pada setelan ini, setelan topik iklan, setelan ID iklan Anda, dan apakah aplikasi Anda menggunakan iklan yang dipersonalisasi."</string>
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Ilustrasi simbol penuh warna yang menampilkan topik minat seperti musik, berita, dan olahraga"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Ilustrasi kunci dalam lingkaran yang penuh warna"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Ilustrasi hitam putih kecil yang menggambarkan sembilan titik membentuk persegi"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"Ilustrasi hitam putih kecil yang menggambarkan bentuk sederhana seperti hati, segitiga, dan persegi"</string>
     <string name="topic10001" msgid="1636806320891333775">"Seni &amp; Hiburan"</string>
     <string name="topic10002" msgid="1226367977754287428">"Akting &amp; Teater"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime &amp; Manga"</string>

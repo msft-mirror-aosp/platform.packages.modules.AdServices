@@ -36,7 +36,8 @@ public final class DeletionParam implements Parcelable {
     private final List<Uri> mDomainUris;
     private final Instant mStart;
     private final Instant mEnd;
-    private final String mPackageName;
+    private final String mAppPackageName;
+    private final String mSdkPackageName;
     @DeletionRequest.DeletionMode private final int mDeletionMode;
     @DeletionRequest.MatchBehavior private final int mMatchBehavior;
 
@@ -47,12 +48,14 @@ public final class DeletionParam implements Parcelable {
         mMatchBehavior = builder.mMatchBehavior;
         mStart = builder.mStart;
         mEnd = builder.mEnd;
-        mPackageName = builder.mPackageName;
+        mAppPackageName = builder.mAppPackageName;
+        mSdkPackageName = builder.mSdkPackageName;
     }
 
     /** Unpack an DeletionRequest from a Parcel. */
     private DeletionParam(Parcel in) {
-        mPackageName = in.readString();
+        mAppPackageName = in.readString();
+        mSdkPackageName = in.readString();
 
         mDomainUris = new ArrayList<>();
         in.readTypedList(mDomainUris, Uri.CREATOR);
@@ -78,7 +81,7 @@ public final class DeletionParam implements Parcelable {
         mMatchBehavior = in.readInt();
     }
 
-    /** Creator for Paracelable (via reflection). */
+    /** Creator for Parcelable (via reflection). */
     @NonNull
     public static final Parcelable.Creator<DeletionParam> CREATOR =
             new Parcelable.Creator<DeletionParam>() {
@@ -101,7 +104,8 @@ public final class DeletionParam implements Parcelable {
     /** For Parcelable, write out to a Parcel in particular order. */
     public void writeToParcel(@NonNull Parcel out, int flags) {
         Objects.requireNonNull(out);
-        out.writeString(mPackageName);
+        out.writeString(mAppPackageName);
+        out.writeString(mSdkPackageName);
 
         out.writeTypedList(mDomainUris);
 
@@ -173,36 +177,59 @@ public final class DeletionParam implements Parcelable {
         return mEnd;
     }
 
-    /** Client's package name used for the deletion. */
+    /** Package name of the app used for the deletion. */
     @NonNull
-    public String getPackageName() {
-        return mPackageName;
+    public String getAppPackageName() {
+        return mAppPackageName;
+    }
+
+    /** Package name of the sdk used for the deletion. */
+    @NonNull
+    public String getSdkPackageName() {
+        return mSdkPackageName;
     }
 
     /** A builder for {@link DeletionParam}. */
     public static final class Builder {
-        private List<Uri> mOriginUris;
-        private List<Uri> mDomainUris;
-        private Instant mStart;
-        private Instant mEnd;
-        private String mPackageName;
+        private final List<Uri> mOriginUris;
+        private final List<Uri> mDomainUris;
+        private final Instant mStart;
+        private final Instant mEnd;
+        private final String mAppPackageName;
+        private final String mSdkPackageName;
         @DeletionRequest.DeletionMode private int mDeletionMode;
         @DeletionRequest.MatchBehavior private int mMatchBehavior;
 
-        public Builder() {}
+        /**
+         * Builder constructor for {@link DeletionParam}.
+         *
+         * @param originUris see {@link DeletionParam#getOriginUris()}
+         * @param domainUris see {@link DeletionParam#getDomainUris()}
+         * @param start see {@link DeletionParam#getStart()}
+         * @param end see {@link DeletionParam#getEnd()}
+         * @param appPackageName see {@link DeletionParam#getAppPackageName()}
+         * @param sdkPackageName see {@link DeletionParam#getSdkPackageName()}
+         */
+        public Builder(
+                @NonNull List<Uri> originUris,
+                @NonNull List<Uri> domainUris,
+                @NonNull Instant start,
+                @NonNull Instant end,
+                @NonNull String appPackageName,
+                @NonNull String sdkPackageName) {
+            Objects.requireNonNull(originUris);
+            Objects.requireNonNull(domainUris);
+            Objects.requireNonNull(start);
+            Objects.requireNonNull(end);
+            Objects.requireNonNull(appPackageName);
+            Objects.requireNonNull(sdkPackageName);
 
-        /** See {@link DeletionParam#getOriginUris()}. */
-        @NonNull
-        public Builder setOriginUris(@NonNull List<Uri> originUris) {
             mOriginUris = originUris;
-            return this;
-        }
-
-        /** See {@link DeletionParam#getDomainUris()}. */
-        @NonNull
-        public Builder setDomainUris(@NonNull List<Uri> domainUris) {
             mDomainUris = domainUris;
-            return this;
+            mStart = start;
+            mEnd = end;
+            mAppPackageName = appPackageName;
+            mSdkPackageName = sdkPackageName;
         }
 
         /** See {@link DeletionParam#getDeletionMode()}. */
@@ -219,39 +246,9 @@ public final class DeletionParam implements Parcelable {
             return this;
         }
 
-        /** See {@link DeletionParam#getStart}. */
-        @NonNull
-        public Builder setStart(@NonNull Instant start) {
-            mStart = start;
-            return this;
-        }
-
-        /** See {@link DeletionParam#getEnd}. */
-        @NonNull
-        public Builder setEnd(@NonNull Instant end) {
-            mEnd = end;
-            return this;
-        }
-
-        /** See {@link DeletionParam#getPackageName()}. */
-        @NonNull
-        public Builder setPackageName(@NonNull String packageName) {
-            Objects.requireNonNull(packageName);
-            mPackageName = packageName;
-            return this;
-        }
-
         /** Build the DeletionRequest. */
         @NonNull
         public DeletionParam build() {
-            if (mPackageName == null
-                    || mOriginUris == null
-                    || mDomainUris == null
-                    || mStart == null
-                    || mEnd == null) {
-                throw new IllegalArgumentException(
-                        "PackageName, OriginUris, DomainUris, Start, or End is null");
-            }
             return new DeletionParam(this);
         }
     }

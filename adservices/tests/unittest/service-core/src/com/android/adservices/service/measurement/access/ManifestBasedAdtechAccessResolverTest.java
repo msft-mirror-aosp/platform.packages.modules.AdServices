@@ -34,6 +34,7 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.enrollment.EnrollmentFixture;
+import com.android.adservices.service.measurement.WebUtil;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
@@ -51,12 +52,13 @@ public class ManifestBasedAdtechAccessResolverTest {
     private static final String ERROR_MESSAGE = "Caller is not authorized.";
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final String PACKAGE = "package";
-    private static final Uri ENROLLED_AD_TECH_URL = Uri.parse("https://test.com/source");
+    private static final Uri ENROLLED_AD_TECH_URL = WebUtil.validUri("https://test.test/source");
     private static final Uri ENROLLED_AD_TECH_URL_WITH_QUERY =
-            Uri.parse("https://test.com/source?hello");
+            WebUtil.validUri("https://test.test/source?hello");
     private static final Uri ENROLLED_AD_TECH_URL_WITH_QUERY_FRAGMENT =
-            Uri.parse("https://test.com/source?hello#now");
-    private static final Uri UNENROLLED_AD_TECH_URL = Uri.parse("https://notatest.com/source");
+            WebUtil.validUri("https://test.test/source?hello#now");
+    private static final Uri UNENROLLED_AD_TECH_URL =
+            WebUtil.validUri("https://notatest.test/source");
     private static final Uri EMPTY_URL = Uri.parse("");
     private ManifestBasedAdtechAccessResolver mClassUnderTest;
     private EnrollmentDao mMockEnrollmentDao;

@@ -89,8 +89,13 @@ public class BackgroundJobsManagerTest {
 
                     assertMeasurementJobsScheduled(1);
                     assertTopicsJobsScheduled(1);
-                    assertMaintenanceJobScheduled(1);
-                    assertMddJobsScheduled(1);
+                    // maintenance job is needed for both Fledge and Topics
+                    // since those APIs in the GA UX can be controlled separately, maintenance job
+                    // will be schedule for both Fledge and Topics. If there is a need to schedule
+                    // all the jobs, there will be two attempts to schedule the maintenance job, but
+                    // in fact only one maintenance job will be scheduled (due to deduplication)
+                    assertMaintenanceJobScheduled(2);
+                    assertMddJobsScheduled(3);
                 });
     }
 
@@ -109,8 +114,13 @@ public class BackgroundJobsManagerTest {
 
                     assertMeasurementJobsScheduled(0);
                     assertTopicsJobsScheduled(1);
-                    assertMaintenanceJobScheduled(1);
-                    assertMddJobsScheduled(1);
+                    // maintenance job is needed for both Fledge and Topics
+                    // since those APIs in the GA UX can be controlled separately, maintenance job
+                    // will be schedule for both Fledge and Topics. If there is a need to schedule
+                    // all the jobs, there will be two attempts to schedule the maintenance job, but
+                    // in fact only one maintenance job will be scheduled (due to deduplication)
+                    assertMaintenanceJobScheduled(2);
+                    assertMddJobsScheduled(2);
                 });
     }
 
@@ -130,7 +140,7 @@ public class BackgroundJobsManagerTest {
                     assertMeasurementJobsScheduled(1);
                     assertTopicsJobsScheduled(0);
                     assertMaintenanceJobScheduled(1);
-                    assertMddJobsScheduled(1);
+                    assertMddJobsScheduled(2);
                 });
     }
 
@@ -149,7 +159,12 @@ public class BackgroundJobsManagerTest {
 
                     assertMeasurementJobsScheduled(1);
                     assertTopicsJobsScheduled(1);
-                    assertMaintenanceJobScheduled(1);
+                    // maintenance job is needed for both Fledge and Topics
+                    // since those APIs in the GA UX can be controlled separately, maintenance job
+                    // will be schedule for both Fledge and Topics. If there is a need to schedule
+                    // all the jobs, there will be two attempts to schedule the maintenance job, but
+                    // in fact only one maintenance job will be scheduled (due to deduplication)
+                    assertMaintenanceJobScheduled(2);
                     assertMddJobsScheduled(0);
                 });
     }
@@ -170,7 +185,7 @@ public class BackgroundJobsManagerTest {
                     assertMeasurementJobsScheduled(1);
                     assertTopicsJobsScheduled(1);
                     assertMaintenanceJobScheduled(1);
-                    assertMddJobsScheduled(1);
+                    assertMddJobsScheduled(3);
                 });
     }
 
@@ -190,7 +205,99 @@ public class BackgroundJobsManagerTest {
                     assertMeasurementJobsScheduled(1);
                     assertTopicsJobsScheduled(0);
                     assertMaintenanceJobScheduled(0);
+                    assertMddJobsScheduled(2);
+                });
+    }
+
+    @Test
+    public void testScheduleMeasurementBackgroundJobs_measurementKillSwitchOn() throws Exception {
+        runWithMocks(
+                () -> {
+                    ExtendedMockito.doReturn(true).when(mMockFlags).getMeasurementKillSwitch();
+
+                    BackgroundJobsManager.scheduleMeasurementBackgroundJobs(
+                            Mockito.mock(Context.class));
+
+                    assertMeasurementJobsScheduled(0);
+                    assertTopicsJobsScheduled(0);
+                    assertMaintenanceJobScheduled(0);
+                    assertMddJobsScheduled(0);
+                });
+    }
+
+    @Test
+    public void testScheduleMeasurementBackgroundJobs_measurementKillSwitchOff() throws Exception {
+        runWithMocks(
+                () -> {
+                    ExtendedMockito.doReturn(false).when(mMockFlags).getMeasurementKillSwitch();
+
+                    BackgroundJobsManager.scheduleMeasurementBackgroundJobs(
+                            Mockito.mock(Context.class));
+
+                    assertMeasurementJobsScheduled(1);
+                    assertTopicsJobsScheduled(0);
+                    assertMaintenanceJobScheduled(0);
                     assertMddJobsScheduled(1);
+                });
+    }
+
+    @Test
+    public void testScheduleTopicsBackgroundJobs_topicsKillSwitchOn() throws Exception {
+        runWithMocks(
+                () -> {
+                    ExtendedMockito.doReturn(true).when(mMockFlags).getTopicsKillSwitch();
+
+                    BackgroundJobsManager.scheduleTopicsBackgroundJobs(Mockito.mock(Context.class));
+
+                    assertMeasurementJobsScheduled(0);
+                    assertTopicsJobsScheduled(0);
+                    assertMaintenanceJobScheduled(0);
+                    assertMddJobsScheduled(0);
+                });
+    }
+
+    @Test
+    public void testScheduleTopicsBackgroundJobs_topicsKillSwitchOff() throws Exception {
+        runWithMocks(
+                () -> {
+                    ExtendedMockito.doReturn(false).when(mMockFlags).getTopicsKillSwitch();
+
+                    BackgroundJobsManager.scheduleTopicsBackgroundJobs(Mockito.mock(Context.class));
+
+                    assertMeasurementJobsScheduled(0);
+                    assertTopicsJobsScheduled(1);
+                    assertMaintenanceJobScheduled(1);
+                    assertMddJobsScheduled(1);
+                });
+    }
+
+    @Test
+    public void testScheduleFledgeBackgroundJobs_selectAdsKillSwitchOn() throws Exception {
+        runWithMocks(
+                () -> {
+                    ExtendedMockito.doReturn(true).when(mMockFlags).getFledgeSelectAdsKillSwitch();
+
+                    BackgroundJobsManager.scheduleFledgeBackgroundJobs(Mockito.mock(Context.class));
+
+                    assertMeasurementJobsScheduled(0);
+                    assertTopicsJobsScheduled(0);
+                    assertMaintenanceJobScheduled(0);
+                    assertMddJobsScheduled(0);
+                });
+    }
+
+    @Test
+    public void testScheduleFledgeBackgroundJobs_selectAdsKillSwitchOff() throws Exception {
+        runWithMocks(
+                () -> {
+                    ExtendedMockito.doReturn(false).when(mMockFlags).getFledgeSelectAdsKillSwitch();
+
+                    BackgroundJobsManager.scheduleFledgeBackgroundJobs(Mockito.mock(Context.class));
+
+                    assertMeasurementJobsScheduled(0);
+                    assertTopicsJobsScheduled(0);
+                    assertMaintenanceJobScheduled(1);
+                    assertMddJobsScheduled(0);
                 });
     }
 

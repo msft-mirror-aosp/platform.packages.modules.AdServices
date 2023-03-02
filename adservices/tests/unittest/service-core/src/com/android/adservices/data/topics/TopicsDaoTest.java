@@ -1141,4 +1141,16 @@ public final class TopicsDaoTest {
         Mockito.when(dbHelper.supportsTopicContributorsTable()).thenReturn(true);
         assertThat(topicsDao.supportsTopicContributorsTable()).isTrue();
     }
+
+    @Test
+    public void testDeleteAllEntriesFromTable() {
+        Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
+
+        mTopicsDao.recordBlockedTopic(topic1);
+        mTopicsDao.recordBlockedTopic(topic2);
+
+        mTopicsDao.deleteAllEntriesFromTable(TopicsTables.BlockedTopicsContract.TABLE);
+        assertThat(mTopicsDao.retrieveAllBlockedTopics()).isEmpty();
+    }
 }

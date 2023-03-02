@@ -53,7 +53,7 @@ import org.mockito.quality.Strictness;
 import java.util.concurrent.TimeUnit;
 
 public class DeleteUninstalledJobServiceTest {
-    private static final long WAIT_IN_MILLIS = 50L;
+    private static final long WAIT_IN_MILLIS = 1_000L;
 
     @Mock private JobScheduler mMockJobScheduler;
     @Mock private MeasurementImpl mMockMeasurementImpl;
@@ -125,8 +125,6 @@ public class DeleteUninstalledJobServiceTest {
                             mockContext, /* forceSchedule = */ false);
 
                     // Validate
-                    // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
                     ExtendedMockito.verify(
                             () -> DeleteUninstalledJobService.schedule(any(), any()), never());
                     verify(mMockJobScheduler, never())
@@ -156,8 +154,6 @@ public class DeleteUninstalledJobServiceTest {
                             mockContext, /* forceSchedule = */ false);
 
                     // Validate
-                    // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
                     ExtendedMockito.verify(
                             () -> DeleteUninstalledJobService.schedule(any(), any()), never());
                     verify(mMockJobScheduler, times(1))
@@ -187,8 +183,6 @@ public class DeleteUninstalledJobServiceTest {
                             mockContext, /* forceSchedule = */ true);
 
                     // Validate
-                    // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
                     ExtendedMockito.verify(
                             () -> DeleteUninstalledJobService.schedule(any(), any()), times(1));
                     verify(mMockJobScheduler, times(1))
@@ -216,8 +210,6 @@ public class DeleteUninstalledJobServiceTest {
                     DeleteUninstalledJobService.scheduleIfNeeded(mockContext, false);
 
                     // Validate
-                    // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
                     ExtendedMockito.verify(
                             () -> DeleteUninstalledJobService.schedule(any(), any()), times(1));
                     verify(mMockJobScheduler, times(1))

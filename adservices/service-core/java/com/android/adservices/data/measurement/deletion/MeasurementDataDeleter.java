@@ -60,7 +60,7 @@ public class MeasurementDataDeleter {
                 (dao) -> {
                     List<String> sourceIds =
                             dao.fetchMatchingSources(
-                                    getRegistrant(deletionParam.getPackageName()),
+                                    getRegistrant(deletionParam.getAppPackageName()),
                                     deletionParam.getStart(),
                                     deletionParam.getEnd(),
                                     deletionParam.getOriginUris(),
@@ -68,7 +68,7 @@ public class MeasurementDataDeleter {
                                     deletionParam.getMatchBehavior());
                     List<String> triggerIds =
                             dao.fetchMatchingTriggers(
-                                    getRegistrant(deletionParam.getPackageName()),
+                                    getRegistrant(deletionParam.getAppPackageName()),
                                     deletionParam.getStart(),
                                     deletionParam.getEnd(),
                                     deletionParam.getOriginUris(),
@@ -122,7 +122,7 @@ public class MeasurementDataDeleter {
 
             Source source = dao.getSource(report.getSourceId());
             int aggregateHistogramContributionsSum =
-                    report.getAggregateAttributionData().getContributions().stream()
+                    report.extractAggregateHistogramContributions().stream()
                             .mapToInt(AggregateHistogramContribution::getValue)
                             .sum();
 
@@ -149,8 +149,8 @@ public class MeasurementDataDeleter {
             }
 
             Source source = dao.getSource(report.getSourceId());
-            source.getDedupKeys().remove(report.getTriggerDedupKey());
-            dao.updateSourceDedupKeys(source);
+            source.getEventReportDedupKeys().remove(report.getTriggerDedupKey());
+            dao.updateSourceEventReportDedupKeys(source);
         }
     }
 

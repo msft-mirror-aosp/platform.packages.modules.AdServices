@@ -18,9 +18,10 @@ package android.app.sdksandbox.testutils;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.fail;
+
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SandboxedSdk;
-import android.app.sdksandbox.SdkSandboxManager;
 import android.os.OutcomeReceiver;
 
 import com.google.common.base.Preconditions;
@@ -56,19 +57,22 @@ public class FakeLoadSdkCallback implements OutcomeReceiver<SandboxedSdk, LoadSd
         mLoadSdkLatch.countDown();
     }
 
-    public boolean isLoadSdkSuccessful() {
-        return isLoadSdkSuccessful(false);
+    public void assertLoadSdkIsUnsuccessful() {
+        mLoadSdkLatch.waitForLatch();
+        if (mLoadSdkException == null) {
+            fail("Load SDK was successful, which was not expected.");
+        }
     }
 
-    public boolean isLoadSdkSuccessful(boolean ignoreSdkAlreadyLoadedError) {
+    public void assertLoadSdkIsSuccessful() {
         mLoadSdkLatch.waitForLatch();
-        if (ignoreSdkAlreadyLoadedError
-                && ((mLoadSdkException == null)
-                        || (mLoadSdkException.getLoadSdkErrorCode()
-                                == SdkSandboxManager.LOAD_SDK_ALREADY_LOADED))) {
-            mLoadSdkSuccess = true;
+        if (mLoadSdkException != null) {
+            fail(
+                    "Load SDK was not successful. errorCode: "
+                            + this.getLoadSdkErrorCode()
+                            + ", errorMsg: "
+                            + this.getLoadSdkErrorMsg());
         }
-        return mLoadSdkSuccess;
     }
 
     public int getLoadSdkErrorCode() {

@@ -56,7 +56,7 @@ public final class EventReportTest {
     private static final String SOURCE_ID = UUID.randomUUID().toString();
     private static final String TRIGGER_ID = UUID.randomUUID().toString();
     private static final Uri APP_DESTINATION = Uri.parse("android-app://example1.app");
-    private static final Uri WEB_DESTINATION = Uri.parse("https://example1.com");
+    private static final Uri WEB_DESTINATION = Uri.parse("https://example1.test");
     private static final String EVENT_TRIGGERS =
             "[\n"
                     + "{\n"
@@ -69,10 +69,10 @@ public final class EventReportTest {
                     + "  \"deduplication_key\": \""
                     + TRIGGER_DEDUP_KEY
                     + "\",\n"
-                    + "  \"filters\": {\n"
+                    + "  \"filters\": [{\n"
                     + "    \"source_type\": [\"navigation\"],\n"
                     + "    \"key_1\": [\"value_1\"] \n"
-                    + "   }\n"
+                    + "   }]\n"
                     + "}"
                     + "]\n";
 
@@ -82,7 +82,8 @@ public final class EventReportTest {
         assertEquals("1", eventReport.getId());
         assertEquals(new UnsignedLong(21L), eventReport.getSourceEventId());
         assertEquals("enrollment-id", eventReport.getEnrollmentId());
-        assertEquals("https://bar.com", eventReport.getAttributionDestination().toString());
+        assertEquals("https://bar.test",
+                eventReport.getAttributionDestinations().get(0).toString());
         assertEquals(1000L, eventReport.getTriggerTime());
         assertEquals(new UnsignedLong(8L), eventReport.getTriggerData());
         assertEquals(2L, eventReport.getTriggerPriority());
@@ -103,7 +104,8 @@ public final class EventReportTest {
         assertEquals("1", eventReport.getId());
         assertEquals(new UnsignedLong(21L), eventReport.getSourceEventId());
         assertEquals("enrollment-id", eventReport.getEnrollmentId());
-        assertEquals("https://bar.com", eventReport.getAttributionDestination().toString());
+        assertEquals("https://bar.test",
+                eventReport.getAttributionDestinations().get(0).toString());
         assertEquals(1000L, eventReport.getTriggerTime());
         assertEquals(new UnsignedLong(8L), eventReport.getTriggerData());
         assertEquals(2L, eventReport.getTriggerPriority());
@@ -124,7 +126,8 @@ public final class EventReportTest {
         assertEquals("1", eventReport.getId());
         assertEquals(new UnsignedLong(21L), eventReport.getSourceEventId());
         assertEquals("enrollment-id", eventReport.getEnrollmentId());
-        assertEquals("https://bar.com", eventReport.getAttributionDestination().toString());
+        assertEquals("https://bar.test",
+                eventReport.getAttributionDestinations().get(0).toString());
         assertEquals(1000L, eventReport.getTriggerTime());
         assertEquals(new UnsignedLong(8L), eventReport.getTriggerData());
         assertEquals(2L, eventReport.getTriggerPriority());
@@ -145,7 +148,7 @@ public final class EventReportTest {
         assertNull(eventReport.getId());
         assertNull(eventReport.getSourceEventId());
         assertNull(eventReport.getEnrollmentId());
-        assertNull(eventReport.getAttributionDestination());
+        assertNull(eventReport.getAttributionDestinations());
         assertEquals(0L, eventReport.getTriggerTime());
         assertNull(eventReport.getTriggerData());
         assertEquals(0L, eventReport.getTriggerPriority());
@@ -167,8 +170,8 @@ public final class EventReportTest {
         Source source =
                 createSourceForTest(
                         baseTime, Source.SourceType.EVENT, false, APP_DESTINATION, null);
-        Trigger trigger =
-                createTriggerForTest(baseTime + TimeUnit.SECONDS.toMillis(10), APP_DESTINATION);
+        Trigger trigger = createTriggerForTest(
+                baseTime + TimeUnit.SECONDS.toMillis(10), APP_DESTINATION, EventSurfaceType.APP);
 
         List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
         EventReport report =
@@ -183,40 +186,9 @@ public final class EventReportTest {
         assertEquals(trigger.getTriggerTime(), report.getTriggerTime());
         assertEquals(source.getEventId(), report.getSourceEventId());
         assertEquals(source.getEnrollmentId(), report.getEnrollmentId());
-        assertEquals(trigger.getAttributionDestination(), report.getAttributionDestination());
-        assertEquals(source.getExpiryTime() + ONE_HOUR_IN_MILLIS, report.getReportTime());
-        assertEquals(source.getSourceType(), report.getSourceType());
-        assertEquals(EVENT_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
-        assertEquals(SOURCE_ID, report.getSourceId());
-        assertEquals(TRIGGER_ID, report.getTriggerId());
-    }
-
-    @Test
-    public void testPopulateFromSourceAndTrigger_shouldSetTriggerData0WhenNull()
-            throws JSONException {
-        long baseTime = System.currentTimeMillis();
-        Source source =
-                createSourceForTest(
-                        baseTime, Source.SourceType.EVENT, false, APP_DESTINATION, null);
-        Trigger trigger =
-                createTriggerForTest(baseTime + TimeUnit.SECONDS.toMillis(10), APP_DESTINATION);
-
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
-        EventTrigger eventTrigger = spy(eventTriggers.get(0));
-        when(eventTrigger.getTriggerData()).thenReturn(null);
-        EventReport report =
-                new EventReport.Builder()
-                        .populateFromSourceAndTrigger(source, trigger, eventTrigger)
-                        .build();
-
-        assertEquals(TRIGGER_PRIORITY, report.getTriggerPriority());
-        assertEquals(TRIGGER_DEDUP_KEY, report.getTriggerDedupKey());
-        assertEquals(new UnsignedLong(0L), report.getTriggerData());
-        assertEquals(trigger.getTriggerTime(), report.getTriggerTime());
-        assertEquals(source.getEventId(), report.getSourceEventId());
-        assertEquals(source.getEnrollmentId(), report.getEnrollmentId());
-        assertEquals(trigger.getAttributionDestination(), report.getAttributionDestination());
-        assertEquals(source.getExpiryTime() + ONE_HOUR_IN_MILLIS, report.getReportTime());
+        assertEquals(trigger.getAttributionDestination(),
+                report.getAttributionDestinations().get(0));
+        assertEquals(source.getEventReportWindow() + ONE_HOUR_IN_MILLIS, report.getReportTime());
         assertEquals(source.getSourceType(), report.getSourceType());
         assertEquals(EVENT_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
         assertEquals(SOURCE_ID, report.getSourceId());
@@ -230,8 +202,8 @@ public final class EventReportTest {
         Source source =
                 createSourceForTest(
                         baseTime, Source.SourceType.NAVIGATION, false, APP_DESTINATION, null);
-        Trigger trigger =
-                createTriggerForTest(baseTime + TimeUnit.SECONDS.toMillis(10), APP_DESTINATION);
+        Trigger trigger = createTriggerForTest(
+                baseTime + TimeUnit.SECONDS.toMillis(10), APP_DESTINATION, EventSurfaceType.APP);
 
         List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
         EventTrigger eventTrigger = spy(eventTriggers.get(0));
@@ -249,7 +221,7 @@ public final class EventReportTest {
         assertEquals(new UnsignedLong(5L), report.getTriggerData());
         assertEquals(source.getEventId(), report.getSourceEventId());
         assertEquals(source.getEnrollmentId(), report.getEnrollmentId());
-        assertEquals(APP_DESTINATION, report.getAttributionDestination());
+        assertEquals(APP_DESTINATION, report.getAttributionDestinations().get(0));
         assertEquals(
                 source.getEventTime()
                         + NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS[0]
@@ -269,8 +241,8 @@ public final class EventReportTest {
         Source source =
                 createSourceForTest(
                         baseTime, Source.SourceType.EVENT, false, null, WEB_DESTINATION);
-        Trigger trigger =
-                createTriggerForTest(baseTime + TimeUnit.SECONDS.toMillis(10), WEB_DESTINATION);
+        Trigger trigger = createTriggerForTest(
+                baseTime + TimeUnit.SECONDS.toMillis(10), WEB_DESTINATION, EventSurfaceType.WEB);
 
         List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
         EventReport report =
@@ -285,8 +257,9 @@ public final class EventReportTest {
         assertEquals(trigger.getTriggerTime(), report.getTriggerTime());
         assertEquals(source.getEventId(), report.getSourceEventId());
         assertEquals(source.getEnrollmentId(), report.getEnrollmentId());
-        assertEquals(trigger.getAttributionDestination(), report.getAttributionDestination());
-        assertEquals(source.getExpiryTime() + ONE_HOUR_IN_MILLIS, report.getReportTime());
+        assertEquals(trigger.getAttributionDestination(),
+                report.getAttributionDestinations().get(0));
+        assertEquals(source.getEventReportWindow() + ONE_HOUR_IN_MILLIS, report.getReportTime());
         assertEquals(Source.SourceType.EVENT, report.getSourceType());
         assertEquals(EVENT_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
         assertEquals(SOURCE_ID, report.getSourceId());
@@ -299,8 +272,8 @@ public final class EventReportTest {
         long baseTime = System.currentTimeMillis();
         Source source =
                 createSourceForTest(baseTime, Source.SourceType.EVENT, true, APP_DESTINATION, null);
-        Trigger trigger =
-                createTriggerForTest(baseTime + TimeUnit.SECONDS.toMillis(10), APP_DESTINATION);
+        Trigger trigger = createTriggerForTest(
+                baseTime + TimeUnit.SECONDS.toMillis(10), APP_DESTINATION, EventSurfaceType.APP);
 
         List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
         EventReport report =
@@ -313,8 +286,9 @@ public final class EventReportTest {
         assertEquals(trigger.getTriggerTime(), report.getTriggerTime());
         assertEquals(source.getEventId(), report.getSourceEventId());
         assertEquals(source.getEnrollmentId(), report.getEnrollmentId());
-        assertEquals(trigger.getAttributionDestination(), report.getAttributionDestination());
-        assertEquals(source.getExpiryTime() + ONE_HOUR_IN_MILLIS, report.getReportTime());
+        assertEquals(trigger.getAttributionDestination(),
+                report.getAttributionDestinations().get(0));
+        assertEquals(source.getEventReportWindow() + ONE_HOUR_IN_MILLIS, report.getReportTime());
         assertEquals(Source.SourceType.EVENT, report.getSourceType());
         assertEquals(
                 INSTALL_ATTR_EVENT_NOISE_PROBABILITY,
@@ -330,8 +304,8 @@ public final class EventReportTest {
         long baseTime = System.currentTimeMillis();
         Source source =
                 createSourceForTest(baseTime, Source.SourceType.EVENT, true, null, WEB_DESTINATION);
-        Trigger trigger =
-                createTriggerForTest(baseTime + TimeUnit.SECONDS.toMillis(10), WEB_DESTINATION);
+        Trigger trigger = createTriggerForTest(
+                baseTime + TimeUnit.SECONDS.toMillis(10), WEB_DESTINATION, EventSurfaceType.WEB);
 
         List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
         EventReport report =
@@ -344,8 +318,9 @@ public final class EventReportTest {
         assertEquals(trigger.getTriggerTime(), report.getTriggerTime());
         assertEquals(source.getEventId(), report.getSourceEventId());
         assertEquals(source.getEnrollmentId(), report.getEnrollmentId());
-        assertEquals(trigger.getAttributionDestination(), report.getAttributionDestination());
-        assertEquals(source.getExpiryTime() + ONE_HOUR_IN_MILLIS, report.getReportTime());
+        assertEquals(trigger.getAttributionDestination(),
+                report.getAttributionDestinations().get(0));
+        assertEquals(source.getEventReportWindow() + ONE_HOUR_IN_MILLIS, report.getReportTime());
         assertEquals(Source.SourceType.EVENT, report.getSourceType());
         assertEquals(EVENT_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
         assertEquals(SOURCE_ID, report.getSourceId());
@@ -359,8 +334,8 @@ public final class EventReportTest {
         Source source =
                 createSourceForTest(
                         baseTime, Source.SourceType.NAVIGATION, false, APP_DESTINATION, null);
-        Trigger trigger =
-                createTriggerForTest(baseTime + TimeUnit.SECONDS.toMillis(10), APP_DESTINATION);
+        Trigger trigger = createTriggerForTest(
+                baseTime + TimeUnit.SECONDS.toMillis(10), APP_DESTINATION, EventSurfaceType.APP);
 
         List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
         EventReport report =
@@ -373,7 +348,7 @@ public final class EventReportTest {
         assertEquals(trigger.getTriggerTime(), report.getTriggerTime());
         assertEquals(source.getEventId(), report.getSourceEventId());
         assertEquals(source.getEnrollmentId(), report.getEnrollmentId());
-        assertEquals(APP_DESTINATION, report.getAttributionDestination());
+        assertEquals(APP_DESTINATION, report.getAttributionDestinations().get(0));
         assertEquals(
                 source.getEventTime()
                         + NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS[0]
@@ -393,8 +368,8 @@ public final class EventReportTest {
         Source source =
                 createSourceForTest(
                         baseTime, Source.SourceType.NAVIGATION, false, null, WEB_DESTINATION);
-        Trigger trigger =
-                createTriggerForTest(baseTime + TimeUnit.SECONDS.toMillis(10), WEB_DESTINATION);
+        Trigger trigger = createTriggerForTest(
+                baseTime + TimeUnit.SECONDS.toMillis(10), WEB_DESTINATION, EventSurfaceType.WEB);
 
         List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
         EventReport report =
@@ -407,7 +382,8 @@ public final class EventReportTest {
         assertEquals(trigger.getTriggerTime(), report.getTriggerTime());
         assertEquals(source.getEventId(), report.getSourceEventId());
         assertEquals(source.getEnrollmentId(), report.getEnrollmentId());
-        assertEquals(trigger.getAttributionDestination(), report.getAttributionDestination());
+        assertEquals(trigger.getAttributionDestination(),
+                report.getAttributionDestinations().get(0));
         assertEquals(
                 source.getReportingTime(trigger.getTriggerTime(), EventSurfaceType.WEB),
                 report.getReportTime());
@@ -425,8 +401,8 @@ public final class EventReportTest {
         Source source =
                 createSourceForTest(
                         baseTime, Source.SourceType.NAVIGATION, true, APP_DESTINATION, null);
-        Trigger trigger =
-                createTriggerForTest(baseTime + TimeUnit.SECONDS.toMillis(10), APP_DESTINATION);
+        Trigger trigger = createTriggerForTest(
+                baseTime + TimeUnit.SECONDS.toMillis(10), APP_DESTINATION, EventSurfaceType.APP);
 
         List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
         EventReport report =
@@ -440,7 +416,8 @@ public final class EventReportTest {
         assertEquals(trigger.getTriggerTime(), report.getTriggerTime());
         assertEquals(source.getEventId(), report.getSourceEventId());
         assertEquals(source.getEnrollmentId(), report.getEnrollmentId());
-        assertEquals(trigger.getAttributionDestination(), report.getAttributionDestination());
+        assertEquals(trigger.getAttributionDestination(),
+                report.getAttributionDestinations().get(0));
         // One hour after install attributed navigation type window
         assertEquals(
                 source.getEventTime()
@@ -463,8 +440,8 @@ public final class EventReportTest {
         Source source =
                 createSourceForTest(
                         baseTime, Source.SourceType.NAVIGATION, true, null, WEB_DESTINATION);
-        Trigger trigger =
-                createTriggerForTest(baseTime + TimeUnit.SECONDS.toMillis(10), WEB_DESTINATION);
+        Trigger trigger = createTriggerForTest(
+                baseTime + TimeUnit.SECONDS.toMillis(10), WEB_DESTINATION, EventSurfaceType.WEB);
 
         List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
         EventReport report =
@@ -478,7 +455,8 @@ public final class EventReportTest {
         assertEquals(trigger.getTriggerTime(), report.getTriggerTime());
         assertEquals(source.getEventId(), report.getSourceEventId());
         assertEquals(source.getEnrollmentId(), report.getEnrollmentId());
-        assertEquals(trigger.getAttributionDestination(), report.getAttributionDestination());
+        assertEquals(trigger.getAttributionDestination(),
+                report.getAttributionDestinations().get(0));
         // One hour after regular navigation type window (without install attribution consideration)
         assertEquals(
                 source.getEventTime()
@@ -511,7 +489,7 @@ public final class EventReportTest {
                         .setId("1")
                         .setSourceEventId(new UnsignedLong(22L))
                         .setEnrollmentId("another-enrollment-id")
-                        .setAttributionDestination(Uri.parse("https://bar.com"))
+                        .setAttributionDestinations(List.of(Uri.parse("https://bar.test")))
                         .setTriggerTime(1000L)
                         .setTriggerData(new UnsignedLong(8L))
                         .setTriggerPriority(2L)
@@ -541,19 +519,21 @@ public final class EventReportTest {
                 .setInstallCooldownWindow(isInstallAttributable ? 100 : 0)
                 .setEventTime(eventTime)
                 .setEnrollmentId("enrollment-id")
-                .setAppDestination(appDestination)
-                .setWebDestination(webDestination)
-                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(10))
+                .setAppDestinations(getNullableUriList(appDestination))
+                .setWebDestinations(getNullableUriList(webDestination))
+                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(10))
                 .build();
     }
 
-    private Trigger createTriggerForTest(long eventTime, Uri destination) {
+    private Trigger createTriggerForTest(
+            long eventTime, Uri destination, @EventSurfaceType int destinationType) {
         return TriggerFixture.getValidTriggerBuilder()
                 .setId(TRIGGER_ID)
                 .setTriggerTime(eventTime)
                 .setEventTriggers(EVENT_TRIGGERS)
                 .setEnrollmentId("enrollment-id")
                 .setAttributionDestination(destination)
+                .setDestinationType(destinationType)
                 .build();
     }
 
@@ -562,7 +542,7 @@ public final class EventReportTest {
                 .setId("1")
                 .setSourceEventId(new UnsignedLong(21L))
                 .setEnrollmentId("enrollment-id")
-                .setAttributionDestination(Uri.parse("https://bar.com"))
+                .setAttributionDestinations(List.of(Uri.parse("https://bar.test")))
                 .setTriggerTime(1000L)
                 .setTriggerData(new UnsignedLong(8L))
                 .setTriggerPriority(2L)
@@ -583,7 +563,7 @@ public final class EventReportTest {
                 .setId("1")
                 .setSourceEventId(new UnsignedLong(21L))
                 .setEnrollmentId("enrollment-id")
-                .setAttributionDestination(Uri.parse("https://bar.com"))
+                .setAttributionDestinations(List.of(Uri.parse("https://bar.test")))
                 .setTriggerTime(1000L)
                 .setTriggerData(new UnsignedLong(8L))
                 .setTriggerPriority(2L)
@@ -603,7 +583,7 @@ public final class EventReportTest {
                 .setId("1")
                 .setSourceEventId(new UnsignedLong(21L))
                 .setEnrollmentId("enrollment-id")
-                .setAttributionDestination(Uri.parse("https://bar.com"))
+                .setAttributionDestinations(List.of(Uri.parse("https://bar.test")))
                 .setTriggerTime(1000L)
                 .setTriggerData(new UnsignedLong(8L))
                 .setTriggerPriority(2L)
@@ -616,5 +596,9 @@ public final class EventReportTest {
                 .setSourceId(SOURCE_ID)
                 .setTriggerId(TRIGGER_ID)
                 .build();
+    }
+
+    private static List<Uri> getNullableUriList(Uri uri) {
+        return uri == null ? null : List.of(uri);
     }
 }

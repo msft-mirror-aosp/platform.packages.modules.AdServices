@@ -84,15 +84,18 @@ public final class MeasurementImplTest {
             new TestableDeviceConfig.TestableDeviceConfigRule();
     private static final Context DEFAULT_CONTEXT = ApplicationProvider.getApplicationContext();
     private static final Uri DEFAULT_URI = Uri.parse("android-app://com.example.abc");
-    private static final Uri REGISTRATION_URI_1 = Uri.parse("https://foo.com/bar?ad=134");
-    private static final Uri REGISTRATION_URI_2 = Uri.parse("https://foo.com/bar?ad=256");
+    private static final Uri REGISTRATION_URI_1 = WebUtil.validUri("https://foo.test/bar?ad=134");
+    private static final Uri REGISTRATION_URI_2 = WebUtil.validUri("https://foo.test/bar?ad=256");
+    private static final String SDK_PACKAGE_NAME = "sdk.package.name";
     private static final String DEFAULT_ENROLLMENT = "enrollment-id";
     private static final Uri INVALID_WEB_DESTINATION = Uri.parse("https://example.not_a_tld");
-    private static final Uri WEB_DESTINATION = Uri.parse("https://web-destination.com");
-    private static final Uri OTHER_WEB_DESTINATION = Uri.parse("https://other-web-destination.com");
+    private static final Uri WEB_DESTINATION = WebUtil.validUri("https://web-destination.test");
+    private static final Uri OTHER_WEB_DESTINATION =
+            WebUtil.validUri("https://other-web-destination.test");
     private static final Uri APP_DESTINATION = Uri.parse("android-app://com.app_destination");
     private static final Uri OTHER_APP_DESTINATION =
             Uri.parse("android-app://com.other_app_destination");
+    private static final boolean DEFAULT_AD_ID_PERMISSION = false;
 
     private static final WebSourceParams INPUT_SOURCE_REGISTRATION_1 =
             new WebSourceParams.Builder(REGISTRATION_URI_1).setDebugKeyAllowed(true).build();
@@ -134,8 +137,8 @@ public final class MeasurementImplTest {
                         .build();
         return new WebTriggerRegistrationRequestInternal.Builder(
                         webTriggerRegistrationRequest,
-                        DEFAULT_CONTEXT.getAttributionSource().getPackageName())
-                .setAdIdPermissionGranted(true)
+                        DEFAULT_CONTEXT.getAttributionSource().getPackageName(),
+                        SDK_PACKAGE_NAME)
                 .build();
     }
     private static WebSourceRegistrationRequestInternal createWebSourceRegistrationRequest(
@@ -157,8 +160,8 @@ public final class MeasurementImplTest {
         return new WebSourceRegistrationRequestInternal.Builder(
                         sourceRegistrationRequest,
                         DEFAULT_CONTEXT.getAttributionSource().getPackageName(),
+                        SDK_PACKAGE_NAME,
                         REQUEST_TIME)
-                .setAdIdPermissionGranted(true)
                 .build();
     }
     @Before
@@ -192,13 +195,13 @@ public final class MeasurementImplTest {
         doReturn(true).when(mMeasurementDataDeleter).delete(any());
         final int result =
                 measurement.deleteRegistrations(
-                        new DeletionParam.Builder()
-                                .setPackageName(
-                                        DEFAULT_CONTEXT.getAttributionSource().getPackageName())
-                                .setDomainUris(Collections.emptyList())
-                                .setOriginUris(Collections.emptyList())
-                                .setStart(Instant.ofEpochMilli(Long.MIN_VALUE))
-                                .setEnd(Instant.ofEpochMilli(Long.MAX_VALUE))
+                        new DeletionParam.Builder(
+                                        Collections.emptyList(),
+                                        Collections.emptyList(),
+                                        Instant.ofEpochMilli(Long.MIN_VALUE),
+                                        Instant.ofEpochMilli(Long.MAX_VALUE),
+                                        DEFAULT_CONTEXT.getAttributionSource().getPackageName(),
+                                        SDK_PACKAGE_NAME)
                                 .build());
         assertEquals(STATUS_SUCCESS, result);
     }
@@ -209,6 +212,7 @@ public final class MeasurementImplTest {
                 mMeasurementImpl.registerWebSource(
                         createWebSourceRegistrationRequest(
                                 APP_DESTINATION, WEB_DESTINATION, OTHER_WEB_DESTINATION),
+                        DEFAULT_AD_ID_PERMISSION,
                         System.currentTimeMillis());
         assertEquals(STATUS_INVALID_ARGUMENT, result);
     }
@@ -218,15 +222,15 @@ public final class MeasurementImplTest {
         doReturn(true).when(mMeasurementDataDeleter).delete(any());
         final int result =
                 mMeasurementImpl.deleteRegistrations(
-                        new DeletionParam.Builder()
-                                .setPackageName(
-                                        DEFAULT_CONTEXT.getAttributionSource().getPackageName())
-                                .setDomainUris(Collections.emptyList())
-                                .setOriginUris(Collections.emptyList())
+                        new DeletionParam.Builder(
+                                        Collections.emptyList(),
+                                        Collections.emptyList(),
+                                        Instant.now().minusSeconds(1),
+                                        Instant.now(),
+                                        DEFAULT_CONTEXT.getAttributionSource().getPackageName(),
+                                        SDK_PACKAGE_NAME)
                                 .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
                                 .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
-                                .setStart(Instant.now().minusSeconds(1))
-                                .setEnd(Instant.now())
                                 .build());
         assertEquals(STATUS_SUCCESS, result);
     }
@@ -234,14 +238,15 @@ public final class MeasurementImplTest {
     @Test
     public void testDeleteRegistrations_successfulWithOrigin() {
         DeletionParam deletionParam =
-                new DeletionParam.Builder()
-                        .setPackageName(DEFAULT_CONTEXT.getAttributionSource().getPackageName())
-                        .setDomainUris(Collections.emptyList())
-                        .setOriginUris(Collections.singletonList(DEFAULT_URI))
+                new DeletionParam.Builder(
+                                Collections.singletonList(DEFAULT_URI),
+                                Collections.emptyList(),
+                                Instant.ofEpochMilli(Long.MIN_VALUE),
+                                Instant.ofEpochMilli(Long.MAX_VALUE),
+                                DEFAULT_CONTEXT.getAttributionSource().getPackageName(),
+                                SDK_PACKAGE_NAME)
                         .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
                         .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
-                        .setStart(Instant.ofEpochMilli(Long.MIN_VALUE))
-                        .setEnd(Instant.ofEpochMilli(Long.MAX_VALUE))
                         .build();
         when(mMeasurementDataDeleter.delete(deletionParam)).thenReturn(true);
         final int result = mMeasurementImpl.deleteRegistrations(deletionParam);
@@ -254,15 +259,15 @@ public final class MeasurementImplTest {
         doReturn(false).when(mMeasurementDataDeleter).delete(any());
         final int result =
                 mMeasurementImpl.deleteRegistrations(
-                        new DeletionParam.Builder()
-                                .setPackageName(
-                                        DEFAULT_CONTEXT.getAttributionSource().getPackageName())
-                                .setDomainUris(Collections.emptyList())
-                                .setOriginUris(Collections.emptyList())
+                        new DeletionParam.Builder(
+                                        Collections.emptyList(),
+                                        Collections.emptyList(),
+                                        Instant.MIN,
+                                        Instant.MAX,
+                                        DEFAULT_CONTEXT.getAttributionSource().getPackageName(),
+                                        SDK_PACKAGE_NAME)
                                 .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
                                 .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
-                                .setStart(Instant.MIN)
-                                .setEnd(Instant.MAX)
                                 .build());
         assertEquals(STATUS_INTERNAL_ERROR, result);
         }
@@ -272,6 +277,7 @@ public final class MeasurementImplTest {
         final int result =
                 mMeasurementImpl.registerWebSource(
                         createWebSourceRegistrationRequest(null, INVALID_WEB_DESTINATION, null),
+                        DEFAULT_AD_ID_PERMISSION,
                         System.currentTimeMillis());
         assertEquals(STATUS_INVALID_ARGUMENT, result);
     }
@@ -281,6 +287,7 @@ public final class MeasurementImplTest {
         final int result =
                 mMeasurementImpl.registerWebTrigger(
                         createWebTriggerRegistrationRequest(INVALID_WEB_DESTINATION),
+                        DEFAULT_AD_ID_PERMISSION,
                         System.currentTimeMillis());
         assertEquals(STATUS_INVALID_ARGUMENT, result);
     }
@@ -290,6 +297,7 @@ public final class MeasurementImplTest {
                 mMeasurementImpl.registerWebSource(
                         createWebSourceRegistrationRequest(
                                 APP_DESTINATION, WEB_DESTINATION, OTHER_APP_DESTINATION),
+                        DEFAULT_AD_ID_PERMISSION,
                         System.currentTimeMillis());
         assertEquals(STATUS_INVALID_ARGUMENT, result);
     }

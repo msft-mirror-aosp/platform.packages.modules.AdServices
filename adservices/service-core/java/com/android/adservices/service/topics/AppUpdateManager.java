@@ -22,7 +22,10 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.os.Build;
 import android.util.Pair;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.DbHelper;
@@ -31,6 +34,7 @@ import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
@@ -52,6 +56,8 @@ import java.util.stream.Collectors;
  *
  * <p>See go/rb-topics-app-update for details.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class AppUpdateManager {
     private static final String EMPTY_SDK = "";
     private static AppUpdateManager sSingleton;
@@ -312,8 +318,8 @@ public class AppUpdateManager {
         Pair<String, String> appOnlyCaller = Pair.create(app, EMPTY_SDK);
         Pair<String, String> appSdkCaller = Pair.create(app, sdk);
 
-        // Get ReturnedTopics and CallerCanLearnTopics  for past epochs in
-        // [epochId - numberOfLookBackEpochs, epochId - 1].
+        // Get ReturnedTopics for past epochs in [currentEpochId - numberOfLookBackEpochs,
+        // currentEpochId - 1].
         // TODO(b/237436146): Create an object class for Returned Topics.
         Map<Long, Map<Pair<String, String>, Topic>> pastReturnedTopics =
                 mTopicsDao.retrieveReturnedTopics(currentEpochId - 1, numberOfLookBackEpochs);
@@ -337,10 +343,13 @@ public class AppUpdateManager {
             // If so, the same topic should be assigned to the sdk.
             if (pastReturnedTopics.get(epochId) != null
                     && pastReturnedTopics.get(epochId).containsKey(appOnlyCaller)) {
+                // This is the top Topic assigned to this app-only caller.
                 Topic appReturnedTopic = pastReturnedTopics.get(epochId).get(appOnlyCaller);
 
-                // For current epoch, check whether sdk can learn this topic for past observed
-                // epochs in [epochId - numberOfLookBackEpochs + 1, epochId]
+                // For this epochId, check whether sdk can learn this topic for past
+                // numberOfLookBackEpochs observed epochs, i.e.
+                // [epochId - numberOfLookBackEpochs + 1, epochId]
+                // pastCallerCanLearnTopicsMap = Map<Topic, Set<Caller>>. Caller = App or Sdk
                 Map<Topic, Set<String>> pastCallerCanLearnTopicsMap =
                         mTopicsDao.retrieveCallerCanLearnTopicsMap(epochId, numberOfLookBackEpochs);
                 List<Topic> pastTopTopic = mTopicsDao.retrieveTopTopics(epochId);
@@ -638,9 +647,8 @@ public class AppUpdateManager {
     Set<String> getCurrentInstalledApps(Context context) {
         PackageManager packageManager = context.getPackageManager();
         List<ApplicationInfo> appInfoList =
-                packageManager.getInstalledApplications(
-                        PackageManager.ApplicationInfoFlags.of(PackageManager.GET_META_DATA));
-
+                PackageManagerCompatUtils.getInstalledApplications(
+                        packageManager, PackageManager.GET_META_DATA);
         return appInfoList.stream().map(appInfo -> appInfo.packageName).collect(Collectors.toSet());
     }
 

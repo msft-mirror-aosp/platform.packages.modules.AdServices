@@ -60,14 +60,14 @@ public class DBAdSelectionTest {
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .build();
 
-        assertEquals(dbAdSelection.getAdSelectionId(), AD_SELECTION_ID);
-        assertEquals(dbAdSelection.getCustomAudienceSignals(), CUSTOM_AUDIENCE_SIGNALS);
-        assertEquals(dbAdSelection.getContextualSignals(), CONTEXTUAL_SIGNALS);
-        assertEquals(dbAdSelection.getBiddingLogicUri(), BIDDING_LOGIC_URI);
-        assertEquals(dbAdSelection.getWinningAdRenderUri(), RENDER_URI);
-        assertEquals(dbAdSelection.getWinningAdBid(), BID, 0);
-        assertEquals(dbAdSelection.getCreationTimestamp(), ACTIVATION_TIME);
-        assertEquals(dbAdSelection.getCallerPackageName(), CALLER_PACKAGE_NAME);
+        assertEquals(AD_SELECTION_ID, dbAdSelection.getAdSelectionId());
+        assertEquals(CUSTOM_AUDIENCE_SIGNALS, dbAdSelection.getCustomAudienceSignals());
+        assertEquals(CONTEXTUAL_SIGNALS, dbAdSelection.getContextualSignals());
+        assertEquals(BIDDING_LOGIC_URI, dbAdSelection.getBiddingLogicUri());
+        assertEquals(RENDER_URI, dbAdSelection.getWinningAdRenderUri());
+        assertEquals(BID, dbAdSelection.getWinningAdBid(), 0);
+        assertEquals(ACTIVATION_TIME, dbAdSelection.getCreationTimestamp());
+        assertEquals(CALLER_PACKAGE_NAME, dbAdSelection.getCallerPackageName());
     }
 
     @Test

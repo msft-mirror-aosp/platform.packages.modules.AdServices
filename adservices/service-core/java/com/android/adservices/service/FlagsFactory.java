@@ -56,7 +56,7 @@ public class FlagsFactory {
             }
 
             @Override
-            public boolean getEnableDatabaseSchemaVersion3() {
+            public boolean getEnableTopicMigration() {
                 return true;
             }
 

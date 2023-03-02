@@ -14,6 +14,8 @@
      limitations under the License.
  -->
 
+<!--  IMPORTANT! If adding new strings, then run generate_adservices_public_xml.py  -->
+
 <resources xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="permlab_accessAdServicesTopics" msgid="1108993892369517728">"dostęp do AdServices Topics API"</string>
@@ -36,11 +38,13 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"Zezwala na dostęp aplikacji do interfejsu API modyfikacji stanu włączenia AdService."</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"Interfejs API stanu włączenia AdService"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Zezwala na dostęp aplikacji do interfejsu API stanu włączenia AdService."</string>
+    <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Dostęp do interfejsu API AdServicesManager"</string>
+    <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Zezwala na dostęp aplikacji do interfejsów API AdServicesManager."</string>
     <string name="app_label" msgid="5985320129629013968">"System Android"</string>
-    <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Weź udział w testach wersji beta ustawień prywatności w reklamach na Androidzie"</string>
+    <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Weź udział w testach wersji beta prywatności w reklamach na Androidzie"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android odkrywa sposoby wyświetlania reklam pozwalające lepiej chronić Twoją prywatność"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Więcej informacji"</string>
-    <string name="notificationUI_header_title_eu" msgid="4955298263079910371">"Testy wersji beta ustawień prywatności w reklamach na Androidzie"</string>
+    <string name="notificationUI_header_title_eu" msgid="4955298263079910371">"Testy wersji beta prywatności w reklamach na Androidzie"</string>
     <string name="notificationUI_container1_title_eu" msgid="8315199862119660570">"Co się zmieniło"</string>
     <string name="notificationUI_container1_body_text_eu" msgid="1700290522706948241">"Dzięki nowym funkcjom prywatności w Piaskownicy prywatności aplikacje mogą pokazywać Ci trafnie dobrane reklamy, ale nie gromadzą zbyt wielu informacji na temat Twojej aktywności na stronach internetowych i w aplikacjach innych deweloperów."</string>
     <string name="notificationUI_container1_control_text_eu" msgid="3158258148321255153">"Jak to działa"</string>
@@ -65,6 +69,53 @@
     <string name="notificationUI_how_it_works_expanded_text4" msgid="3910573920883580609">"Android okresowo szacuje Twoje podstawowe zainteresowania na podstawie aplikacji, których używasz, np. z kategorii „Sport” czy „Podróże”.\n\nNastępnie aplikacja może poprosić Androida o możliwość wykorzystania tych zainteresowań do wyświetlania trafniej dobranych reklam.\n\nListę bieżących zainteresowań znajdziesz w ustawieniach prywatności. Zainteresowania, które Ci nie odpowiadają, możesz zablokować."</string>
     <string name="notificationUI_how_it_works_expanded_text5" msgid="7257714040472055781">"•  Zainteresowania oszacowane przez aplikacje"</string>
     <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"Aplikacje mogą szacować Twoje zainteresowania i tymczasowo zapisywać je na Androidzie. Na przykład aplikacja, której używasz do zakupu butów do biegania, może określić Twoje zainteresowania jako „bieganie maratonów”.\n\nNastępnie, na tej podstawie, inna aplikacja pokaże Ci reklamy odnoszące się do maratonów.\n\nW ustawieniach prywatności możesz zarządzać listą aplikacji zapisujących zainteresowania."</string>
+    <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"Nowe funkcje ochrony prywatności w reklamach"</string>
+    <string name="notificationUI_notification_ga_content" msgid="3483979694272908942">"Tematy reklam i nowe elementy sterujące zapewniają większą kontrolę nad wyświetlanymi reklamami"</string>
+    <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"Android określa interesujące Cię tematy na podstawie ostatnio używanych przez Ciebie aplikacji. Ponadto aplikacje, z których korzystasz, mogą ustalać, co Ci się podoba. Później aplikacje mogą poprosić o takie informacje, aby wyświetlać Ci spersonalizowane reklamy. Możesz wybrać tematy oraz aplikacje, które będą uwzględniane przy wyświetlaniu reklam."</string>
+    <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"Na potrzeby pomiaru skuteczności reklam pewne typy danych są udostępniane przez aplikacje."</string>
+    <string name="notificationUI_ga_container1_control_text" msgid="2711321174550177509">"Więcej informacji o reklamach na Androidzie"</string>
+    <string name="notificationUI_how_it_works_row_subtitle1" msgid="8685034725335826096">"Trafniejsze reklamy"</string>
+    <string name="notificationUI_how_it_works_row_body1" msgid="5865369599951938718">"Aplikacje mogą poprosić Androida o informacje umożliwiające personalizację wyświetlanych Ci reklam."</string>
+    <string name="notificationUI_how_it_works_row_body2" msgid="6601773212442110369">"•  Android określa interesujące Cię tematy na podstawie ostatnio używanych przez Ciebie aplikacji."</string>
+    <string name="notificationUI_how_it_works_row_body3" msgid="3692457397642529055">"•  Aplikacje, których używasz, mogą też określać Twoje zainteresowania na podstawie sposobu, w jaki z nich korzystasz. Na przykład jeśli używasz aplikacji, w której można kupić buty do biegania na długie dystanse, może ona uznać, że interesują Cię maratony."</string>
+    <string name="notificationUI_how_it_works_row_body4" msgid="8731138074016839243">"Później używana przez Ciebie aplikacja może prosić o te informacje (tematy reklam lub reklamy sugerowane przez aplikacje, których używasz)."</string>
+    <string name="notificationUI_how_it_works_row_body5" msgid="4524382869577899661">"Android regularnie automatycznie usuwa tematy i dane proponowane przez aplikacje. Możesz też blokować konkretne tematy i aplikacje, których nie chcesz uwzględniać w propozycjach."</string>
+    <string name="notificationUI_how_it_works_subtitle2" msgid="2203542887026049927">"Pomiar skuteczności reklamy"</string>
+    <string name="notificationUI_how_it_works_row_body6" msgid="5368364880910986588">"Używane przez Ciebie aplikacje mogą prosić Androida o informacje, które pomagają w pomiarze skuteczności wyświetlanych w nich reklam. Android pozwala aplikacjom gromadzić tylko niektóre typy danych, np. dotyczące pory dnia, kiedy reklama została wyświetlona."</string>
+    <!-- no translation found for notificationUI_how_it_works_row_body7 (8158317350415462142) -->
+    <skip />
+    <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"Wypróbuj nowe funkcje ochrony prywatności w reklamach"</string>
+    <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"Tematy reklam zapewniają szerszy wybór wyświetlanych reklam"</string>
+    <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"Wyświetl szczegóły"</string>
+    <string name="notificationUI_header_ga_title_eu" msgid="4461095539795574989">"Większa prywatność w reklamach na Androidzie"</string>
+    <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android wprowadza nowe funkcje ochrony prywatności, dzięki którym masz większą kontrolę nad tym, jakie reklamy Ci się pojawiają."</string>
+    <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"Tematy reklam pomagają aplikacjom wyświetlać trafne reklamy, chroniąc przy tym Twoją tożsamość i informacje o korzystaniu z aplikacji. Android określa interesujące Cię tematy na podstawie ostatnio używanych przez Ciebie aplikacji. Aplikacja, której będziesz później używać, może zapytać Androida o takie tematy, żeby spersonalizować wyświetlane Ci reklamy."</string>
+    <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"W ustawieniach urządzenia możesz wyświetlać tematy reklam i blokować te, których nie chcesz udostępniać aplikacjom. Android automatycznie i regularnie usuwa też tematy reklam."</string>
+    <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"Możesz zmienić to ustawienie w dowolnej chwili w ustawieniach prywatności."</string>
+    <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"Więcej informacji o tematach reklam"</string>
+    <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"Więcej informacji o tym, jak Android chroni Twoje dane, znajdziesz w naszej Polityce prywatności."</string>
+    <string name="notificationUI_right_control_button_ga_text_eu" msgid="2022252072760042013">"Tak"</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  Jakich danych używamy"</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"Tematy reklam są określane na podstawie aplikacji ostatnio używanych przez Ciebie na danym urządzeniu i częstotliwości korzystania z nich."</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text5" msgid="5976468008939416198">"•  Jak używamy tych danych"</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text6" msgid="6318275524155409408">"Android określa interesujące Cię tematy, gdy korzystasz z różnych aplikacji. Etykiety tematów są wstępnie zdefiniowane i obejmują kategorie takie jak Sztuka i rozrywka, Zakupy czy Sport. Później aplikacja, której akurat będziesz używać, będzie mogła zapytać Androida o kilka takich tematów (ale nie o dane o korzystaniu z aplikacji i Twoją tożsamość), aby spersonalizować wyświetlane reklamy."</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text7" msgid="4275126336833782389">"•  W jaki sposób możesz zarządzać swoimi danymi"</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"Android regularnie automatycznie usuwa tematy. Jeśli będziesz nadal używać jakiejś aplikacji, powiązane z nią tematy mogą ponownie pojawić się na liście. W dowolnej chwili w ustawieniach możesz też zablokować tematy, których nie chcesz udostępniać aplikacjom na Androidzie, oraz wyłączyć tematy reklam."</string>
+    <string name="notificationUI_you_can_change_in_privacy_settings" msgid="4781410091509838647">"Możesz wprowadzić zmiany w ustawieniach prywatności."</string>
+    <string name="notificationUI_fledge_measurement_title" msgid="5279119450359078459">"Inne funkcje, które zwiększają ochronę prywatności w reklamach"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="6943787406043534689">"Android wprowadza nowe sposoby ograniczania informacji o Tobie, do których aplikacje mogą uzyskać dostęp podczas wyświetlania spersonalizowanych reklam."</string>
+    <string name="notificationUI_fledge_measurement_introduction_text2" msgid="601600895880486962">"•  Reklamy sugerowane przez aplikacje pomagają chronić Twoją tożsamość i informacje o korzystaniu z aplikacji, umożliwiając jednocześnie aplikacjom wyświetlanie trafnych reklam. Na podstawie Twojej aktywności używana aplikacja może sugerować powiązane reklamy, które zobaczysz w innych aplikacjach. W ustawieniach prywatności możesz wyświetlić listę aplikacji i zablokować wybranym z nich możliwość przekazywania sugestii."</string>
+    <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"•  Na potrzeby pomiaru skuteczności reklam wyświetlanych w aplikacjach udostępniamy między nimi niektóre dane, np. porę dnia, o której reklama została Ci wyświetlona."</string>
+    <string name="notificationUI_fledge_measurement_control_ga_text_eu" msgid="2346851728118443500">"Więcej informacji o reklamach sugerowanych przez aplikacje i pomiarze skuteczności reklam"</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text0" msgid="2456923104551938349">"Reklamy sugerowane przez aplikację"</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text1" msgid="5606895535548790900">"•  Jakich danych używamy"</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text2" msgid="6309052819494439288">"Używamy danych o Twojej aktywności w aplikacji, z której korzystasz na tym urządzeniu."</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text3" msgid="5347980571056638783">"•  Jak aplikacje używają tych danych"</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text4" msgid="4738335469671465639">"Android umożliwia przechowywanie przez aplikacje informacji o Twoich preferencjach. Jeśli np. używasz aplikacji poświęconej trenowaniu przed maratonem, może ona uznać, że zainteresują Cię buty do biegania. Później w innej aplikacji możesz zobaczyć reklamę takich butów zaproponowaną przez pierwszą aplikację."</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text5" msgid="8737925570089314631">"•  W jaki sposób możesz zarządzać swoimi danymi"</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android regularnie automatycznie usuwa dane sugerowane przez aplikacje. Aplikacja, której użyjesz ponownie, może znów pojawić się na liście."</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"W ustawieniach prywatności możesz też w każdej chwili zablokować aplikacji możliwość sugerowania reklam, zresetować wszystkie dane zasugerowane przez aplikacje oraz wyłączyć reklamy sugerowane przez aplikacje."</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"Używane przez Ciebie aplikacje mogą prosić Androida o informacje, które pomogą im zmierzyć skuteczność prezentowanych reklam. Android chroni Twoją prywatność, ograniczając zakres informacji, jakie aplikacje mogą udostępniać sobie nawzajem."</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Piaskownica prywatności"</string>
     <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"Weź udział w testach wersji beta ustawień prywatności w reklamach na Androidzie"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"Piaskownica prywatności"</string>
@@ -78,35 +129,79 @@
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Zablokowane zainteresowania"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Zresetuj wszystkie zainteresowania"</string>
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Obecnie nie można wyświetlić żadnych zainteresowań"</string>
+    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"Obecnie nie ma tematów do wyświetlenia"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Piaskownica prywatności"</string>
-    <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Wersja beta ustawień prywatności w reklamach na Androidzie oferuje nowe funkcje, których aplikacje mogą używać do wyświetlania Ci trafnie dobranych reklam. Te technologie nie korzystają z identyfikatorów urządzeń.\n\nAndroid może oszacować, jakie rodzaje reklam będą Ci odpowiadać, i tymczasowo zapisać Twoje zainteresowania na urządzeniu. Dzięki temu reklamy w aplikacjach będą lepiej dobrane, a Twoja aktywność na stronach internetowych i w aplikacjach innych deweloperów nie będzie śledzona."</string>
+    <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Wersja beta prywatności w reklamach na Androidzie oferuje nowe funkcje, których aplikacje mogą używać do wyświetlania Ci trafnie dobranych reklam. Te technologie nie korzystają z identyfikatorów urządzeń.\n\nAndroid może oszacować, jakie rodzaje reklam będą Ci odpowiadać, i tymczasowo zapisać Twoje zainteresowania na urządzeniu. Dzięki temu reklamy w aplikacjach będą lepiej dobrane, a Twoja aktywność na stronach internetowych i w aplikacjach innych deweloperów nie będzie śledzona."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Nie masz zablokowanych zainteresowań"</string>
+    <string name="settingsUI_no_blocked_topics_ga_text" msgid="377459829879121256">"Brak zablokowanych tematów"</string>
+    <string name="settingsUI_view_blocked_topics_title" msgid="3705333677440361392">"Wyświetl zablokowane tematy"</string>
+    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Zainteresowania zostały zresetowane"</string>
+    <string name="settingsUI_topics_are_reset_ga" msgid="5250296990870048195">"Tematy zostały zresetowane"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Aplikacje mogą szacować Twoje zainteresowania i tymczasowo zapisywać je na Androidzie. Następnie inna aplikacja może pokazać Ci reklamy na tej podstawie.\n\nZablokowane aplikacje nie będą już szacować zainteresowań. Dopóki ich nie odblokujesz, nie pojawią się na liście aplikacji. Zainteresowania określone wcześniej przez te aplikacje zostaną usunięte, ale możliwe, że wciąż będą Ci się wyświetlać reklamy powiązane z tymi obszarami."</string>
-    <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Zablokowane przez Ciebie aplikacje"</string>
+    <string name="settingsUI_blocked_apps_title" msgid="1260257485713408637">"Zablokowane aplikacje"</string>
+    <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"Wyświetl zablokowane aplikacje"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Zresetuj zainteresowania oszacowane przez aplikacje"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"Obecnie żadne aplikacje nie generują informacji o Twoich zainteresowaniach"</string>
+    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="8540919050517478161">"Obecnie nie ma aplikacji do wyświetlenia"</string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Piaskownica prywatności"</string>
-    <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Wersja beta ustawień prywatności w reklamach na Androidzie oferuje nowe funkcje, których aplikacje mogą używać do wyświetlania Ci trafnie dobranych reklam. Te technologie nie korzystają z identyfikatorów urządzeń.\n\nAplikacje mogą oszacować, jakie rodzaje reklam będą Ci odpowiadać, i tymczasowo zapisać Twoje zainteresowania na urządzeniu. Dzięki temu reklamy w aplikacjach będą lepiej dobrane, a Twoja aktywność na stronach internetowych i w aplikacjach innych deweloperów nie będzie śledzona."</string>
+    <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Wersja beta prywatności w reklamach na Androidzie oferuje nowe funkcje, których aplikacje mogą używać do wyświetlania Ci trafnie dobranych reklam. Te technologie nie korzystają z identyfikatorów urządzeń.\n\nAplikacje mogą oszacować, jakie rodzaje reklam będą Ci odpowiadać, i tymczasowo zapisać Twoje zainteresowania na urządzeniu. Dzięki temu reklamy w aplikacjach będą lepiej dobrane, a Twoja aktywność na stronach internetowych i w aplikacjach innych deweloperów nie będzie śledzona."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Nie masz zablokowanych aplikacji"</string>
+    <string name="settingsUI_no_blocked_apps_ga_text" msgid="7488680173653861943">"Brak zablokowanych aplikacji"</string>
+    <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"Zezwalaj na pomiar skuteczności reklam"</string>
+    <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"Aplikacje i reklamodawcy mogą prosić Androida o informacje, które pomogą im mierzyć skuteczność reklam.\n\nDane z pomiaru skuteczności reklam są regularnie usuwane z urządzenia."</string>
+    <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"Zresetuj dane pomiarów"</string>
+    <string name="settingsUI_measurement_view_footer_text" msgid="3296828552097878309">"Android chroni Twoją prywatność, ograniczając zakres informacji, jakie aplikacje mogą udostępniać sobie nawzajem. Raporty są wysyłane z opóźnieniem, co pomaga chronić Twoją tożsamość.\n\nPodobne ustawienie możesz znaleźć w przeglądarce. Jeśli włączysz pomiar skuteczności reklam zarówno na Androidzie, jak i w przeglądarce, firmy będą miały możliwość mierzenia skuteczności swoich reklam w różnych używanych przez Ciebie aplikacjach i na odwiedzanych stronach. Historia przeglądania jest przechowywana na urządzeniu z zachowaniem prywatności.\n\nW Polityce prywatności znajdziesz więcej informacji o tym, jak Android chroni Twoje dane."</string>
+    <string name="settingsUI_measurement_are_reset" msgid="4375330550418573499">"Dane z pomiaru skuteczności reklam zostały zresetowane"</string>
     <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Anuluj"</string>
     <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Wyłączyć Piaskownicę prywatności?"</string>
     <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Jeśli zmienisz zdanie lub zechcesz dowiedzieć się więcej o wersji beta prywatności w reklamach na Androidzie, otwórz ustawienia prywatności"</string>
     <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Wyłącz"</string>
     <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Zablokować temat <xliff:g id="TOPIC">%1$s</xliff:g>?"</string>
-    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"Te zainteresowania zostaną zablokowane i nie zostaną ponownie dodane do listy, chyba że zrobisz to samodzielnie. Wciąż możesz widzieć pewne powiązane reklamy."</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2581824495438333677">"Te tematy zostaną zablokowane i nie będą ponownie dodawane do listy, chyba że sam(a) je dodasz. Wciąż możesz widzieć pewne powiązane reklamy."</string>
     <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Zablokuj"</string>
     <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"Temat <xliff:g id="TOPIC">%1$s</xliff:g> jest odblokowany"</string>
-    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android może ponownie dodać te zainteresowania do Twojej listy, ale możliwe, że nie pojawią się na niej od razu"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="1090743551997420666">"Android może ponownie dodać ten temat do Twojej listy, ale możliwe, że temat nie pojawi się na niej od razu"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
-    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Zresetować wszystkie Twoje zainteresowania?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"Lista zostanie wyczyszczona, a zainteresowania będą teraz szacowane od nowa. Wciąż możesz widzieć pewne reklamy powiązane z usuniętymi zainteresowaniami."</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="8025836207966712435">"Zresetować wszystkie tematy reklam?"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="4243744527757134000">"Lista zostanie wyczyszczona, a nowe tematy będą teraz dodawane od nowa. Wciąż możesz widzieć pewne reklamy powiązane ze zresetowanymi tematami."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Resetuj"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Zablokować aplikację <xliff:g id="APP">%1$s</xliff:g>?"</string>
-    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Ta aplikacja nie będzie szacować Twoich zainteresowań na potrzeby Piaskownicy prywatności i nie zostanie ponownie dodana do listy, dopóki jej nie odblokujesz.\n\nZainteresowania wcześniej oszacowane przez tę aplikację zostaną usunięte, ale wciąż możesz widzieć pewne powiązane reklamy."</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="758788973278770119">"Ta aplikacja nie będzie sugerować reklam i nie zostanie ponownie dodana do listy, dopóki jej nie odblokujesz. Wciąż możesz widzieć pewne powiązane reklamy."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Aplikacja <xliff:g id="APP">%1$s</xliff:g> jest odblokowana"</string>
-    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Ta aplikacja ponownie może szacować Twoje zainteresowania, ale możliwe, że nie pojawi się od razu na liście. Zanim zobaczysz powiązane reklamy, może minąć trochę czasu."</string>
-    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Zresetować zainteresowania wygenerowane przez aplikacje?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"Oszacowane przez aplikacje zainteresowania z listy zostaną usunięte z Piaskownicy prywatności, a aplikacje będą teraz od nowa szacować zainteresowania. Wciąż możesz widzieć pewne powiązane reklamy."</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="5758218424845642060">"Ta aplikacja znów może sugerować reklamy, ale możliwe, że nie pojawi się od razu na liście. Zanim zobaczysz powiązane reklamy, może minąć trochę czasu."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"Zresetować reklamy sugerowane przez aplikacje?"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Dane dotyczące propozycji reklam z aplikacji na liście zostaną usunięte, a te aplikacje będą odtąd proponowały nowe reklamy. Wciąż możesz widzieć pewne powiązane reklamy."</string>
+    <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Dane aplikacji zostały zresetowane"</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"Zresetować wszystkie tematy?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"Zresetować reklamy sugerowane przez aplikacje?"</string>
+    <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Prywatność w reklamach"</string>
+    <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Tematy reklam"</string>
+    <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Reklamy sugerowane przez aplikację"</string>
+    <!-- no translation found for settingsUI_measurement_ga_title (2255921375701745943) -->
+    <skip />
+    <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android określa interesujące Cię tematy na podstawie ostatnio używanych przez Ciebie aplikacji oraz częstotliwości korzystania z nich."</string>
+    <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Aplikacje, których używasz, mogą też określać, co Ci się podoba, na podstawie sposobu, w jaki z nich korzystasz."</string>
+    <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Używane przez Ciebie aplikacje mogą prosić Androida o informacje, które pomogą im zmierzyć skuteczność prezentowanych reklam. Android pozwala aplikacjom gromadzić tylko niektóre typy danych."</string>
+    <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Włączone / Tematy: <xliff:g id="TOPICS_COUNT">%1$d</xliff:g>"</string>
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Włączone / # temat}few{Włączone / # tematy}many{Włączone / # tematów}other{Włączone / # tematu}}"</string>
+    <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Włączone / Aplikacje: <xliff:g id="APPS_COUNT">%1$d</xliff:g>"</string>
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{Włączone / # aplikacja}few{Włączone / # aplikacje}many{Włączone / # aplikacje}other{Włączone / # aplikacji}}"</string>
+    <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"Włączony"</string>
+    <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Wyłączony"</string>
+    <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Interesujące Cię tematy są określane na podstawie ostatnio używanych aplikacji i wykorzystywane do wyświetlania w aplikacjach spersonalizowanych reklam.\n\nMożesz zablokować tematy, których nie chcesz udostępniać aplikacjom. Android również regularnie automatycznie usuwa tematy."</string>
+    <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"Zezwalaj na tematy reklam"</string>
+    <string name="settingsUI_blocked_topics_ga_title" msgid="7163366621282449273">"Zablokowane tematy reklam"</string>
+    <string name="settingsUI_reset_topics_ga_title" msgid="5365554894399951300">"Zresetuj wszystkie tematy reklam"</string>
+    <string name="settingsU_topics_view_footer" msgid="4769146330248953561">"Android określa interesujące Cię tematy na podstawie aplikacji używanych na przestrzeni ostatnich kilku tygodni.\n\nNastępnie aplikacja, której akurat będziesz używać, może poprosić Androida o te tematy, aby spersonalizować wyświetlane reklamy. Android udostępnia maksymalnie 3 tematy, chroniąc Twoją tożsamość i dane o korzystaniu z aplikacji.\n\nAndroid regularnie automatycznie usuwa tematy. Jeśli będziesz nadal używać jakiejś aplikacji, powiązane z nią tematy mogą ponownie pojawić się na liście. Możesz też zablokować tematy, których udostępniania przez Androida sobie nie życzysz.\n\nTo, czy w aplikacjach zobaczysz personalizowane reklamy, będzie zależało od tego ustawienia, ustawienia reklam sugerowanych przez aplikacje, ustawień Twojego identyfikatora wyświetlania reklam, a także obsługi personalizacji reklam przez aplikacje, których używasz."</string>
+    <string name="settingsUI_apps_switch_title" msgid="1308209012769248890">"Zezwól na reklamy sugerowane przez aplikacje"</string>
+    <string name="settingsUI_apps_view_ga_subtitle" msgid="1911743837387384160">"Aplikacje, których używasz, mogą określać, co Ci się podoba, i na tej podstawie sugerować reklamy do wyświetlenia w innych aplikacjach.\n\nMożesz zablokować możliwość generowania sugestii przez wybrane aplikacje. Ponadto Android regularnie automatycznie usuwa dane dotyczące propozycji reklam."</string>
+    <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Zablokowane aplikacje"</string>
+    <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Zresetuj dane dotyczące sugestii aplikacji"</string>
+    <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Aplikacje często zapamiętują, co Cię interesuje, aby móc personalizować Twoje wrażenia. Aplikacje mogą też przechowywać w Androidzie informacje na temat dotyczących Cię tematów.\n\nJeśli np. używasz aplikacji poświęconej trenowaniu przed maratonem, może ona uznać, że zainteresują Cię buty do biegania. Później w innej aplikacji możesz zobaczyć reklamę butów zaproponowanych przez pierwszą aplikację.\n\nAndroid regularnie automatycznie usuwa dane dotyczące propozycji reklam. Aplikacja, której użyjesz ponownie, może znów pojawić się na liście. Możesz też zablokować możliwość sugerowania reklam przez wybrane aplikacje.\n\nTo, czy w aplikacjach zobaczysz personalizowane reklamy, będzie zależało od tego ustawienia, ustawienia tematów reklam, ustawień Twojego identyfikatora wyświetlania reklam, a także obsługi personalizacji reklam przez aplikacje, których używasz"</string>
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Kolorowa ilustracja z symbolami reprezentującymi tematy zainteresowań takie jak muzyka, wiadomości i sport"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Kolorowa ilustracja z kłódką w okręgu"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Mała, czarno-biała ilustracja z 9 kropkami tworzącymi kwadrat"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"Mała, czarno-biała ilustracja z prostymi kształtami, takimi jak serce, trójkąt i kwadrat"</string>
     <string name="topic10001" msgid="1636806320891333775">"Sztuka i rozrywka"</string>
     <string name="topic10002" msgid="1226367977754287428">"Aktorstwo i teatr"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime i manga"</string>

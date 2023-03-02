@@ -14,6 +14,8 @@
      limitations under the License.
  -->
 
+<!--  IMPORTANT! If adding new strings, then run generate_adservices_public_xml.py  -->
+
 <resources xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="permlab_accessAdServicesTopics" msgid="1108993892369517728">"AdServices Topics API\'ə giriş"</string>
@@ -36,6 +38,8 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"Tətbiqə AdService\'in aktivləşdirmə vəziyyətini dəyişdirmə API-sinə giriş icazəsi verir."</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"AdService\'in aktivləşdirmə vəziyyəti API-sinə giriş"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Tətbiqə AdService\'in aktivləşdirmə vəziyyəti API-sinə giriş icazəsi verir."</string>
+    <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"AdServicesManager API\'lərinə giriş"</string>
+    <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Tətbiqin AdServicesManager API\'lərinə girişinə icazə verir."</string>
     <string name="app_label" msgid="5985320129629013968">"Android Sistemi"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Android reklam məxfiliyi beta versiyasına qoşulun"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android tətbiqlərin sizə reklam göstərməsinin daha çox məxfi yollarını araşdırır"</string>
@@ -65,6 +69,53 @@
     <string name="notificationUI_how_it_works_expanded_text4" msgid="3910573920883580609">"Android istifadə etdiyiniz \"İdman\" və ya \"Səyahət\" kimi tətbiqlərin əsasında vaxtaşırı əsas maraqlarınızı təxmin edir.\n\nDaha sonra tətbiq sizə daha uyğun reklamlar göstərmək üçün Android\'dən həmin maraqlardan istifadə etməyi tələb edə bilər.\n\nMəxfilik ayarlarında cari maraqların siyahısını görə və bəyənmədiyiniz hər hansı birini bloklaya bilərsiniz."</string>
     <string name="notificationUI_how_it_works_expanded_text5" msgid="7257714040472055781">"•  Tətbiqlər tərəfindən təxmin edilən maraqlar"</string>
     <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"Tətbiqlər maraqlarınızı təxmin edilə və onları Android\'də müvəqqəti saxlaya bilər. Məsələn, qaçış ayaqqabısı almaq üçün istifadə etdiyiniz tətbiq marağınızı \"qaçış marafonları\" kimi təxmin edə bilər.\n\nDaha sonra bu marağa əsaslanaraq, fərqli tətbiq sizə marafonlarla bağlı reklam göstərə bilər.\n\nMəxfilik ayarlarında maraqları yadda saxlayan tətbiqlərin siyahısını idarə edə bilərsiniz."</string>
+    <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"Yeni reklam məxfiliyi funksiyaları"</string>
+    <string name="notificationUI_notification_ga_content" msgid="3483979694272908942">"Reklam mövzuları və yeni nəzarətlər gördüyünüz reklamlar üzərində sizə daha çox seçim imkanı verir"</string>
+    <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"Android son vaxtlar istifadə etdiyiniz tətbiqlər əsasında maraq doğuran mövzuları qeydə alır. Həmçinin, istifadə etdiyiniz tətbiqlər nəyi bəyəndiyinizi müəyyən edə bilər. Daha sonra tətbiqlər fərdiləşdirilmiş reklamları göstərmək üçün bu məlumatı istəyə bilər. Sizə reklam göstərmək üçün hansı mövzuların və tətbiqlərin istifadə olunacağını seçə bilərsiniz."</string>
+    <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"Reklamın performansını ölçmək üçün tətbiqlər arasında məhdud növ data paylaşılır."</string>
+    <string name="notificationUI_ga_container1_control_text" msgid="2711321174550177509">"Android\'də reklamlar haqqında ətraflı"</string>
+    <string name="notificationUI_how_it_works_row_subtitle1" msgid="8685034725335826096">"Digər faydalı reklamlar"</string>
+    <string name="notificationUI_how_it_works_row_body1" msgid="5865369599951938718">"Tətbiqlər gördüyünüz reklamları fərdiləşdirmək üçün Android\'dən məlumat istəyə bilər."</string>
+    <string name="notificationUI_how_it_works_row_body2" msgid="6601773212442110369">"•  Android son vaxtlar istifadə etdiyiniz tətbiqlər əsasında maraq doğuran mövzuları qeyd edir."</string>
+    <string name="notificationUI_how_it_works_row_body3" msgid="3692457397642529055">"•  İstifadə etdiyiniz tətbiqlər həmçinin onlardan necə istifadə etdiyinizə əsasən nələri bəyəndiyinizi müəyyən edə bilər. Məsələn, uzun məsafəyə qaçış ayaqqabıları satan tətbiqdən istifadə edirsinizsə, tətbiq marafonlarda qaçmaqda maraqlı olduğunuza qərar verə bilər."</string>
+    <string name="notificationUI_how_it_works_row_body4" msgid="8731138074016839243">"Daha sonra istifadə etdiyiniz tətbiq bu məlumatı tələb edə bilər - ya reklam mövzularınız, ya da istifadə etdiyiniz tətbiqlər tərəfindən təklif olunan reklamlar."</string>
+    <string name="notificationUI_how_it_works_row_body5" msgid="4524382869577899661">"Android mövzuları və tətbiq tərəfindən təklif olunan datanı müntəzəm olaraq avtomatik silir. Həmçinin təklif almaq istəmədiyiniz xüsusi mövzuları və tətbiqləri bloklaya bilərsiniz."</string>
+    <string name="notificationUI_how_it_works_subtitle2" msgid="2203542887026049927">"Bir reklamın nə qədər yaxşı performans göstərdiyini ölçmək"</string>
+    <string name="notificationUI_how_it_works_row_body6" msgid="5368364880910986588">"İstifadə etdiyiniz tətbiqlər reklamlarının performansını ölçmək üçün Android\'dən məlumat istəyə bilər. Android tətbiqlərə reklamın sizə göstərildiyi vaxt kimi məhdud növ data toplamaq imkanı verir."</string>
+    <!-- no translation found for notificationUI_how_it_works_row_body7 (8158317350415462142) -->
+    <skip />
+    <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"Yeni reklam məxfiliyi funksiyalarını sınayın"</string>
+    <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"Reklam mövzuları gördüyünüz reklamlar üzərində sizə daha çox seçim imkanı verir"</string>
+    <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"Detallara Baxın"</string>
+    <string name="notificationUI_header_ga_title_eu" msgid="4461095539795574989">"Android\'də təkmilləşdirilmiş reklam məxfiliyi"</string>
+    <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android gördüyünüz reklamlar üzərində daha çox seçim imkanı verən yeni məxfilik funksiyalarını işə salır."</string>
+    <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"Reklam mövzuları kimliyinizi və tətbiqdən istifadəniz haqqında məlumatı qoruyarkən tətbiqlərin sizə uyğun reklamlar göstərməsinə kömək edir. Android son vaxtlar işlətdiyiniz tətbiqlər əsasında maraqlı mövzuları qeydə ala bilər. Daha sonra işlətdiyiniz tətbiq gördüyünüz reklamları fərdiləşdirmək üçün Android\'dən uyğun olan mövzular tələb edə bilər."</string>
+    <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"Cihaz ayarlarında reklam mövzularına baxa və tətbiqlərlə paylaşılmasını istəmədiyiniz mövzuları bloklaya bilərsiniz. Android həmçinin reklam mövzularını müntəzəm olaraq avtomatik silir."</string>
+    <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"İstənilən vaxt məxfilik ayarlarında fikrinizi dəyişə bilərsiniz."</string>
+    <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"Reklam mövzuları haqqında ətraflı"</string>
+    <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"Məxfilik Siyasətimizdə Android\'in datanızı necə qoruduğu haqqında ətraflı məlumat əldə edin."</string>
+    <string name="notificationUI_right_control_button_ga_text_eu" msgid="2022252072760042013">"Bəli, razıyam"</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  Hansı datadan istifadə olunur"</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"Reklam mövzularınız bu cihazda son vaxtlar istifadə etdiyiniz tətbiqlərə və onlardan nə qədər istifadə etdiyinizə əsaslanır."</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text5" msgid="5976468008939416198">"•  Bu datadan necə istifadə edirik"</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text6" msgid="6318275524155409408">"Tətbiqlərinizdən istifadə etdiyiniz zaman Android maraqlı mövzuları qeyd edir. Mövzu etiketləri əvvəlcədən təyin edilir və İncəsənət və Əyləncə, Alış-veriş və İdman kimi sahələri əhatə edir. Daha sonra istifadə etdiyiniz tətbiq gördüyünüz reklamları fərdiləşdirmək üçün Android\'dən bəzi mövzularınızı (lakin tətbiqdən istifadəniz və ya kimliyiniz haqqında datanı deyil) istəyə bilər."</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text7" msgid="4275126336833782389">"•  Datanızı necə idarə edə bilərsiniz"</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"Android mövzuları müntəzəm olaraq avtomatik silir. Tətbiqlərdən istifadə etməyə davam etdikcə mövzu siyahıda yenidən görünə bilər. Həmçinin Android\'in tətbiqlərlə paylaşmasını istəmədiyiniz mövzuları blok edə və istənilən vaxt məxfilik ayarlarında reklam mövzularını deaktiv edə bilərsiniz."</string>
+    <string name="notificationUI_you_can_change_in_privacy_settings" msgid="4781410091509838647">"Məxfilik ayarlarında dəyişikliklər edə bilərsiniz."</string>
+    <string name="notificationUI_fledge_measurement_title" msgid="5279119450359078459">"Reklamları daha məxfi edən digər funksiyalar"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="6943787406043534689">"Android sizə fərdiləşdirilmiş reklamlar göstərən zaman tətbiqlərin sizin haqqınızda nə öyrənə biləcəyini məhdudlaşdırmaq üçün yeni üsulları işə salır."</string>
+    <string name="notificationUI_fledge_measurement_introduction_text2" msgid="601600895880486962">"•  Tətbiq tərəfindən təklif olunan reklamlar, tətbiqlərin sizə müvafiq reklamlar göstərməsinə imkan verərkən kimliyinizi və tətbiqdən istifadəniz haqqında məlumatınızı qorumağa kömək edir. Fəaliyyətinizə əsasən, istifadə etdiyiniz tətbiq digər tətbiqlərdə əlaqəli reklamlar təklif edə bilər. Məxfilik ayarlarında tətbiqlərin siyahısını görə və onların təkliflər verməsini bloklaya bilərsiniz."</string>
+    <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"•  Reklamın ölçülməsi ilə, reklamın sizə göstərildiyi vaxt kimi reklamlarının performansını ölçmək üçün tətbiqlər arasında məhdud növ data paylaşılır."</string>
+    <string name="notificationUI_fledge_measurement_control_ga_text_eu" msgid="2346851728118443500">"Tətbiq tərəfindən təklif olunan reklamlar və reklam ölçüləri haqqında ətraflı məlumat"</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text0" msgid="2456923104551938349">"Tətbiq tərəfindən təklif olunan reklamlar"</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text1" msgid="5606895535548790900">"•  Hansı datadan istifadə olunur"</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text2" msgid="6309052819494439288">"Bu cihazda istifadə etdiyiniz tətbiqdəki fəaliyyətiniz."</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text3" msgid="5347980571056638783">"•  Tətbiqlər bu datadan necə istifadə edir"</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text4" msgid="4738335469671465639">"Tətbiqlər Android\'də bəyəndikləriniz haqqında məlumat saxlaya bilər. Məsələn, marafon təlimi ilə bağlı tətbiqdən istifadə edirsinizsə, tətbiq qaçış ayaqqabıları ilə maraqlandığınıza qərar verə bilər. Daha sonra, başqa tətbiqdən istifadə etsəniz, həmin tətbiq sizə ilk tətbiq tərəfindən təklif olunan qaçış ayaqqabısı reklamı göstərə bilər."</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text5" msgid="8737925570089314631">"•  Datanızı necə idarə edə bilərsiniz"</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android tətbiq tərəfindən təklif olunan məlumatları müntəzəm olaraq avtomatik silir. Təkrar istifadə etdiyiniz tətbiq siyahıda yenidən görünə bilər."</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"Həmçinin istənilən vaxt məxfilik ayarlarında tətbiqin sizə reklam təklif etməsini blok edə, bütün reklam təklifi datasını sıfırlaya və ya tətbiq tərəfindən təklif olunan reklamları deaktiv edə bilərsiniz."</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"İstifadə etdiyiniz tətbiqlər Android\'dən reklamlarının performansını ölçməyə kömək edən məlumat istəyə bilər. Android tətbiqlərin bir-biri ilə paylaşa biləcəyi məlumatları məhdudlaşdırmaqla məxfiliyinizi qoruyur."</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Məxfilik Sendboksu"</string>
     <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"Android reklam məxfiliyi beta proqramında iştirak edin"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"Məxfilik Sendboksu"</string>
@@ -78,35 +129,79 @@
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Blok etdiyiniz maraqlar"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Bütün maraqları sıfırlayın"</string>
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Hazırda göstəriləcək maraq yoxdur"</string>
+    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"Hazırda göstəriləcək mövzu yoxdur"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Məxfilik Sendboksu"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android\'in reklam məxfiliyi beta versiyası bəyəndiyiniz reklamları göstərmək üçün tətbiqlərin istifadə edə biləcəyi yeni funksiyalar təqdim edir. Bu texnologiyalar cihaz identifikatorlarından istifadə etmir.\n\nAndroid sizi maraqlandıra biləcək reklam növlərini təxmin edə və maraqlarınızı müvəqqəti olaraq cihazınızda saxlaya bilər. Bu, tətbiqlərə vebsaytlar və digər tərtibatçıların tətbiqlərində fəaliyyətinizi izləmədən sizə müvafiq reklamlar göstərməyə imkan verir."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Bloklanmış maraqlarınız yoxdur"</string>
+    <string name="settingsUI_no_blocked_topics_ga_text" msgid="377459829879121256">"Bloklanmış mövzu yoxdur"</string>
+    <string name="settingsUI_view_blocked_topics_title" msgid="3705333677440361392">"Bloklanmış mövzulara baxın"</string>
+    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Maraqlar sıfırlanır"</string>
+    <string name="settingsUI_topics_are_reset_ga" msgid="5250296990870048195">"Mövzular sıfırlanıb"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Tətbiqlər maraqlarınızı təxmin edilə və onları Android\'də müvəqqəti saxlaya bilər. Daha sonra fərqli tətbiq sizə bu maraqlara əsaslanan reklam göstərə bilər.\n\nTətbiqi bloklasanız, başqa maraqları təxmin etməyəcək. Onu blokdan çıxarmasanız, yenidən bu tətbiq siyahısına əlavə edilməyəcək. Tətbiq tərəfindən artıq təxmin edilən maraqlar silinəcək, lakin siz hələ də bəzi əlaqəli reklamları görə bilərsiniz."</string>
-    <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Blok etdiyiniz tətbiqlər"</string>
+    <string name="settingsUI_blocked_apps_title" msgid="1260257485713408637">"Blok etdiyiniz tətbiqlər"</string>
+    <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"Bloklanmış tətbiqlərə baxın"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Tətbiqlər tərəfindən təxmin edilən maraqları sıfırlayın"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"Hazırda heç bir tətbiq sizin üçün maraq yaratmır"</string>
+    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="8540919050517478161">"Hazırda göstəriləcək tətbiq yoxdur"</string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Məxfilik Sendboksu"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android\'in reklam məxfiliyi beta versiyası bəyəndiyiniz reklamları göstərmək üçün tətbiqlərin istifadə edə biləcəyi yeni funksiyalar təqdim edir. Bu texnologiyalar cihaz identifikatorlarından istifadə etmir.\n\nTətbiqlər sizi maraqlandıra biləcək reklam növlərini təxmin edə və maraqlarınızı müvəqqəti olaraq cihazınızda saxlaya bilər. Bu, tətbiqlərə vebsaytlar və digər tərtibatçıların tətbiqlərində fəaliyyətinizi izləmədən sizə müvafiq reklamlar göstərməyə imkan verir."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Bloklanmış tətbiqləriniz yoxdur"</string>
+    <string name="settingsUI_no_blocked_apps_ga_text" msgid="7488680173653861943">"Bloklanmış tətbiq yoxdur"</string>
+    <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"Reklamın ölçülməsinə icazə verin"</string>
+    <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"Tətbiqlər və reklamçılar Android\'dən reklamlarının performansını ölçməyə kömək edən məlumat tələb edə bilər.\n\nReklamın ölçülmə datası cihazınızdan müntəzəm olaraq silinir."</string>
+    <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"Ölçmə datasını sıfırlayın"</string>
+    <string name="settingsUI_measurement_view_footer_text" msgid="3296828552097878309">"Android tətbiqlərin bir-biri ilə paylaşa biləcəyi məlumatları məhdudlaşdırmaqla məxfiliyinizi qoruyur. Kimliyinizi qorumaq üçün hesabatlar gecikmə ilə göndərilir.\n\nBrauzerinizdə oxşar ayar ola bilər. Reklam ölçülməsi həm Android, həm də brauzerinizdə aktivdirsə, şirkət istifadə etdiyiniz tətbiqlər və ziyarət etdiyiniz saytlar arasında reklamın effektivliyini ölçə bilər. Baxış tarixçəniz cihazınızda məxfi saxlanılır.\n\nMəxfilik Siyasətimizdə Android\'in məlumatlarınızı necə qoruduğu haqqında ətraflı məlumat əldə edin."</string>
+    <string name="settingsUI_measurement_are_reset" msgid="4375330550418573499">"Reklamın ölçülmə datası sıfırlandı"</string>
     <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Ləğv edin"</string>
     <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Məxfilik Sendboksu deaktiv edilsin?"</string>
     <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Fikrinizi dəyişsəniz və ya Android\'in reklam məxfiliyi beta versiyası haqqında ətraflı öyrənmək istəyirsinizsə, məxfilik ayarlarınıza keçin"</string>
     <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Deaktiv edin"</string>
     <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"<xliff:g id="TOPIC">%1$s</xliff:g> blok edilsin?"</string>
-    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"Bu maraq bloklanacaq və onu geri əlavə etməyincə yenidən siyahınıza əlavə edilməyəcək. Hələ də bəzi əlaqəli reklamları görə bilərsiniz."</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2581824495438333677">"Bu mövzu bloklanacaq və onu geri əlavə etməyincə yenidən siyahınıza əlavə edilməyəcək. Hələ də bəzi əlaqəli reklamları görə bilərsiniz."</string>
     <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Blok edin"</string>
     <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"<xliff:g id="TOPIC">%1$s</xliff:g> blokdan çıxarılıb"</string>
-    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android bu marağı yenidən siyahınıza əlavə edə bilər, lakin o, dərhal görünməyə bilər"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="1090743551997420666">"Android bu mövzunu yenidən siyahınıza əlavə edə bilər, lakin o, dərhal görünməyə bilər"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
-    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Bütün maraqlarınız sıfırlansın?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"Siyahınız təmizlənəcək və irəlidə yeni maraqlar təxmin ediləcək. Hələ də təmizlənmiş maraqlarla əlaqəli bəzi reklamları görə bilərsiniz."</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="8025836207966712435">"Bütün reklam mövzuları sıfırlansın?"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="4243744527757134000">"Siyahınız silinəcək və irəlidə yeni mövzular əlavə olunacaq. Sıfırladığınız mövzularla bağlı bəzi reklamları hələ də görə bilərsiniz."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Sıfırlayın"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g> blok edilsin?"</string>
-    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Bu tətbiq Məxfilik Sendboksu üçün maraqları təxmin etməyəcək və onu blokdan çıxarmayınca yenidən siyahınıza əlavə edilməyəcək.\n\nBu tətbiq tərəfindən artıq təxmin edilən maraqlar silinəcək, lakin siz hələ də bəzi əlaqəli reklamları görə bilərsiniz."</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="758788973278770119">"Blokdan çıxarmasanız, bu tətbiq reklam təklif etməyəcək və yenidən siyahınıza əlavə edilməyəcək. Hələ də bəzi əlaqəli reklamları görə bilərsiniz."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> blokdan çıxarılıb"</string>
-    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Bu tətbiq maraqlarınızı yenidən qiymətləndirə bilər, lakin o, dərhal siyahınızda görünməyə bilər. Əlaqədar reklamları görmək bir qədər çəkə bilər."</string>
-    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Tətbiqlər tərəfindən yaradılan maraqlar sıfırlansın?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"Siyahınızdakı tətbiqlər tərəfindən təxmin edilən maraqlar Məxfilik Sendboksundan silinəcək və tətbiqlər yeni maraqları təxmin edəcək. Hələ də bəzi əlaqəli reklamları görə bilərsiniz."</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="5758218424845642060">"Bu tətbiq yenidən reklamlar təklif edə bilər, lakin o, dərhal siyahınızda görünməyə bilər. Əlaqədar reklamları görmək bir qədər çəkə bilər."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"Tətbiqlər tərəfindən təklif olunan reklamlar sıfırlansın?"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Siyahınızdakı tətbiqlərdən reklam təklifi datası silinəcək və tətbiqlər gələcəkdə yeni reklamlar təklif edəcək. Hələ də bəzi əlaqəli reklamları görə bilərsiniz."</string>
+    <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Tətbiq datası sıfırlanıb"</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"Bütün mövzular sıfırlansın?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"Tətbiqlər tərəfindən təklif olunan reklamlar sıfırlansın?"</string>
+    <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Reklam məxfiliyi"</string>
+    <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Reklam mövzuları"</string>
+    <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Tətbiq tərəfindən təklif olunan reklamlar"</string>
+    <!-- no translation found for settingsUI_measurement_ga_title (2255921375701745943) -->
+    <skip />
+    <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android ən son istifadə etdiyiniz tətbiqlərə və onlardan nə qədər tez-tez istifadə etdiyinizə əsasən maraqlı mövzuları qeyd edir."</string>
+    <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"İstifadə etdiyiniz tətbiqlər həmçinin onlardan necə istifadə etdiyinizə əsasən nələri bəyəndiyinizi müəyyən edə bilər."</string>
+    <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"İstifadə etdiyiniz tətbiqlər reklamlarının performansını ölçmək üçün Android\'dən məlumat istəyə bilər. Android tətbiqlərə məhdud növ data toplamaq imkanı verir."</string>
+    <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Aktiv/ <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> mövzu"</string>
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Yanılı / # mövzu}other{Yanılı / # mövzu}}"</string>
+    <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Aktiv/ <xliff:g id="APPS_COUNT">%1$d</xliff:g> tətbiq"</string>
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{Yanılı / # tətbiq}other{Yanılı / # tətbiq}}"</string>
+    <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"Aktiv"</string>
+    <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Deaktiv"</string>
+    <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Maraqlı mövzular son vaxtlar istifadə etdiyiniz tətbiqlərə əsaslanır və sizə fərdiləşdirilmiş reklamlar göstərmək üçün tətbiqlər tərəfindən istifadə olunur.\n\nTətbiqlərlə paylaşılmasını istəmədiyiniz mövzuları bloklaya bilərsiniz. Android həmçinin mövzuları müntəzəm olaraq avtomatik silir."</string>
+    <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"Reklam mövzularına icazə verin"</string>
+    <string name="settingsUI_blocked_topics_ga_title" msgid="7163366621282449273">"Blok etdiyiniz reklam mövzuları"</string>
+    <string name="settingsUI_reset_topics_ga_title" msgid="5365554894399951300">"Bütün reklam mövzularını sıfırlayın"</string>
+    <string name="settingsU_topics_view_footer" msgid="4769146330248953561">"Android son bir neçə həftə ərzində istifadə etdiyiniz tətbiqlərə əsaslanaraq maraq doğuran mövzuları qeyd edir.\n\nDaha sonra istifadə etdiyiniz tətbiq gördüyünüz reklamları fərdiləşdirmək üçün Android\'dən mövzularınızı tələb edə bilər. Kimliyinizi və tətbiqdən istifadəniz haqqında məlumatınızı qoruyarkən Android 3 mövzunu paylaşır.\n\nAndroid mövzuları müntəzəm olaraq avtomatik silir. Tətbiqlərdən istifadə etməyə davam etdikcə mövzu siyahıda yenidən görünə bilər. Və ya Android\'in tətbiqlərlə paylaşmasını istəmədiyiniz mövzuları blok edə bilərsiniz.\n\nTətbiqlərinizdə gördüyünüz reklam bu ayardan, tətbiq tərəfindən təklif olunan reklam ayarından, reklam ID-si ayarlarından və istifadə etdiyiniz tətbiqin reklamları fərdiləşdirib-fərdiləşdirməməsindən asılı olaraq fərdiləşdirilə bilər."</string>
+    <string name="settingsUI_apps_switch_title" msgid="1308209012769248890">"Tətbiq tərəfindən təklif olunan reklamlara icazə verin"</string>
+    <string name="settingsUI_apps_view_ga_subtitle" msgid="1911743837387384160">"İstifadə etdiyiniz tətbiqlər nəyi bəyəndiyinizi müəyyən edə və sonra digər tətbiqlərdə reklam təklif edə bilər.\n\nSiz tətbiqlərin təkliflər verməsini bloklaya bilərsiniz. Android həmçinin tətbiq tərəfindən təklif olunan məlumatları müntəzəm olaraq avtomatik silir."</string>
+    <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Blok etdiyiniz tətbiqlər"</string>
+    <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Tətbiq tərəfindən təklif olunan datanı sıfırlayın"</string>
+    <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Təcrübənizi fərdiləşdirmək üçün maraqlandığınız şeyləri yadda saxlamaq üçün istifadə etdiyiniz tətbiqlər üçün adi haldır. Tətbiqlər mövzularınız haqqında Android\'də də məlumat saxlaya bilər.\n\nMəsələn, marafon təlimi ilə bağlı tətbiqdən istifadə edirsinizsə, tətbiq qaçış ayaqqabıları ilə maraqlandığınıza qərar verə bilər. Daha sonra, başqa tətbiqdən istifadə etsəniz, həmin tətbiq sizə ilk tətbiq tərəfindən təklif olunan qaçış ayaqqabısı reklamı göstərə bilər.\n\nAndroid tətbiq tərəfindən təklif olunan datanı müntəzəm olaraq avtomatik silir. Təkrar istifadə etdiyiniz tətbiq siyahıda yenidən görünə bilər. Və ya tətbiqin sizin üçün reklam təklif etməsini blok edə bilərsiniz.\n\nTətbiqlərinizdə gördüyünüz reklam bu ayardan, reklam mövzuları ayarından, reklam ID-si ayarlarından və istifadə etdiyiniz tətbiqin reklamları fərdiləşdirib-fərdiləşdirməməsindən asılı olaraq fərdiləşdirilə bilər."</string>
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Musiqi, xəbərlər və idman kimi maraq doğuran mövzuları təmsil edən simvolların rəngli təsviri"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Dairənin içində kilidi göstərən rəngli təsvir"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Kvadrat təşkil edən doqquz nöqtəni göstərən kiçik ağ-qara təsvir"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"Ürək, üçbucaq və kvadrat kimi sadə formaları göstərən kiçik ağ-qara təsvir"</string>
     <string name="topic10001" msgid="1636806320891333775">"İncəsənət &amp; Əyləncə"</string>
     <string name="topic10002" msgid="1226367977754287428">"Aktyorluq &amp; Teatr"</string>
     <string name="topic10003" msgid="6949890838957814881">"Animasiya &amp; Manqa"</string>

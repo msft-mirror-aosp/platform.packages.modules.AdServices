@@ -24,6 +24,7 @@ android_test_helper_app {
     static_libs: ["SdkInterfaces"],
     resource_dirs: ["res"],
     manifest: "AndroidManifest_Client.xml",
+    test_suites: ["general-tests"],
     min_sdk_version: "33",
     target_sdk_version: "33",
 }

@@ -5,6 +5,10 @@
       "name": "AdServicesApkUITests[com.google.android.adservices.apex]"
     },
     {
+      // Install com.google.android.adservices.apex and run AdServicesApkUITests.
+      "name": "AdServicesApkUITestsAppConsent[com.google.android.adservices.apex]"
+    },
+    {
       // Install com.google.android.adservices.apex and run AdServicesApkUnitTests.
       "name": "AdServicesApkUnitTests[com.google.android.adservices.apex]"
     },
@@ -79,6 +83,10 @@
     {
       // Install com.google.android.adservices.apex and run CtsAppSetIdEndToEndTest.
       "name": "CtsAppSetIdEndToEndTest[com.google.android.adservices.apex]"
+    },
+    {
+      // Install com.google.android.adservices.apex and run CtsAdServicesHostTests.
+      "name": "CtsAdServicesHostTests[com.google.android.adservices.apex]"
     }
   ],
   "presubmit": [
@@ -113,6 +121,9 @@
       "name": "AdServicesApkUITests"
     },
     {
+      "name": "AdServicesApkUITestsAppConsent"
+    },
+    {
       "name": "CtsAdServicesEndToEndTests"
     },
     {
@@ -126,6 +137,12 @@
     },
     {
       "name": "CtsAppSetIdEndToEndTest"
+    },
+    {
+      "name": "CtsRootAdServicesUiTest"
+    },
+    {
+      "name": "CtsAdServicesHostTests"
     }
   ]
 }

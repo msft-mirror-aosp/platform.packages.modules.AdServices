@@ -8,11 +8,12 @@
             "id": "old1",
             "eventId": 1,
             "sourceType": "navigation",
-            "publisher": "android-app://example1.com/s1",
-            "appDestination": "android-app://example2.com/d1",
+            "publisher": "android-app://example1.test/s1",
+            "appDestination": "android-app://example2.test/d1",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
+            "eventReportWindow": 8640000030,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -21,11 +22,12 @@
             "id": "young1",
             "eventId": 1,
             "sourceType": "navigation",
-            "publisher": "android-app://example1.com/s1",
-            "appDestination": "android-app://example2.com/d1",
+            "publisher": "android-app://example1.test/s1",
+            "appDestination": "android-app://example2.test/d1",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 33203622330000,
             "expiryTime": 8640000030,
+            "eventReportWindow": 8640000030,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -41,11 +43,12 @@
             "id": "young1",
             "eventId": 1,
             "sourceType": "navigation",
-            "publisher": "android-app://example1.com/s1",
-            "appDestination": "android-app://example2.com/d1",
+            "publisher": "android-app://example1.test/s1",
+            "appDestination": "android-app://example2.test/d1",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 33203622330000,
             "expiryTime": 8640000030,
+            "eventReportWindow": 8640000030,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -63,7 +66,7 @@
         "triggers": [
           {
             "id": "old1",
-            "attributionDestination": "https://www.example2.com/d1",
+            "attributionDestination": "https://www.example2.test/d1",
             "enrollmentId": "enrollment-id-3",
             "priority": 101,
             "status": 0,
@@ -72,9 +75,9 @@
               {
                 "trigger_data": 2,
                 "priority": 101,
-                "filters": {
+                "filters": [{
                   "key_1": ["value_1"]
-                }
+                }]
               }
             ],
             "triggerTime": 8640000002,
@@ -82,7 +85,7 @@
           },
           {
             "id": "young1",
-            "attributionDestination": "https://www.example2.com/d1",
+            "attributionDestination": "https://www.example2.test/d1",
             "enrollmentId": "enrollment-id-3",
             "priority": 101,
             "status": 0,
@@ -91,9 +94,9 @@
               {
                 "trigger_data": 2,
                 "priority": 101,
-                "filters": {
+                "filters": [{
                   "key_1": ["value_1"]
-                }
+                }]
               }
             ],
             "triggerTime": 33203622330000,
@@ -108,7 +111,7 @@
         "triggers": [
           {
             "id": "young1",
-            "attributionDestination": "https://www.example2.com/d1",
+            "attributionDestination": "https://www.example2.test/d1",
             "enrollmentId": "enrollment-id-3",
             "priority": 101,
             "status": 0,
@@ -117,9 +120,9 @@
               {
                 "trigger_data": 2,
                 "priority": 101,
-                "filters": {
+                "filters": [{
                   "key_1": ["value_1"]
-                }
+                }]
               }
             ],
             "triggerTime": 33203622330000,
@@ -139,7 +142,7 @@
           {
             "id": "delivered1",
             "sourceEventId": 1,
-            "attributionDestination": "https://www.example2.com/d1",
+            "attributionDestination": "https://www.example2.test/d1",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8640000002,
@@ -151,7 +154,7 @@
           {
             "id": "young1",
             "sourceEventId": 1,
-            "attributionDestination": "https://www.example2.com/d1",
+            "attributionDestination": "https://www.example2.test/d1",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8640000002,
@@ -170,7 +173,7 @@
           {
             "id": "young1",
             "sourceEventId": 1,
-            "attributionDestination": "https://www.example2.com/d1",
+            "attributionDestination": "https://www.example2.test/d1",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8640000002,

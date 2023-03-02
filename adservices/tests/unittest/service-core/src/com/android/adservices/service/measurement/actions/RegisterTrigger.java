@@ -37,6 +37,8 @@ public final class RegisterTrigger implements Action {
     public final long mTimestamp;
     // Used in interop tests
     public final String mDestination;
+    public final boolean mDebugReporting;
+    public final boolean mAdIdPermission;
 
     public RegisterTrigger(JSONObject obj) throws JSONException {
         JSONObject regParamsJson = obj.getJSONObject(
@@ -49,20 +51,19 @@ public final class RegisterTrigger implements Action {
         mDestination = regParamsJson.optString(TestFormatJsonMapping.TRIGGER_TOP_ORIGIN_URI_KEY);
 
         mRegistrationRequest =
-                new RegistrationRequest.Builder()
-                        .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
-                        .setRegistrationUri(
+                new RegistrationRequest.Builder(
+                                RegistrationRequest.REGISTER_TRIGGER,
                                 Uri.parse(
                                         regParamsJson.getString(
-                                                TestFormatJsonMapping.REGISTRATION_URI_KEY)))
-                        .setAdIdPermissionGranted(
-                                regParamsJson.optBoolean(
-                                        TestFormatJsonMapping.IS_ADID_PERMISSION_GRANTED_KEY, true))
-                        .setPackageName(attributionSource.getPackageName())
+                                                TestFormatJsonMapping.REGISTRATION_URI_KEY)),
+                                attributionSource.getPackageName(),
+                                /* sdkPackageName = */ "")
                         .build();
 
         mUriToResponseHeadersMap = getUriToResponseHeadersMap(obj);
         mTimestamp = obj.getLong(TestFormatJsonMapping.TIMESTAMP_KEY);
+        mDebugReporting = regParamsJson.optBoolean(TestFormatJsonMapping.DEBUG_REPORTING_KEY);
+        mAdIdPermission = regParamsJson.optBoolean(TestFormatJsonMapping.HAS_AD_ID_PERMISSION);
     }
 
     @Override

@@ -16,10 +16,13 @@
 
 package com.android.adservices.service.measurement;
 
+
 import android.net.Uri;
 
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.service.measurement.actions.Action;
+import com.android.adservices.service.measurement.actions.RegisterSource;
+import com.android.adservices.service.measurement.actions.RegisterWebSource;
 import com.android.adservices.service.measurement.actions.ReportObjects;
 
 import org.json.JSONException;
@@ -53,18 +56,17 @@ public class E2EImpressionNoiseMockTest extends E2EMockTest {
 
     @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> getData() throws IOException, JSONException {
-        return data(TEST_DIR_NAME);
+        return data(TEST_DIR_NAME, E2ETest::preprocessTestJson);
     }
 
     public E2EImpressionNoiseMockTest(Collection<Action> actions, ReportObjects expectedOutput,
-            PrivacyParamsProvider privacyParamsProvider, String name) throws DatastoreException {
-        super(actions, expectedOutput, privacyParamsProvider, name);
-        mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager);
+            ParamsProvider paramsProvider, String name) throws DatastoreException {
+        super(actions, expectedOutput, paramsProvider, name);
+        mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager, mFlags);
         mMeasurementImpl =
                 TestObjectProvider.getMeasurementImpl(
                         sDatastoreManager,
                         mClickVerifier,
-                        mFlags,
                         mMeasurementDataDeleter,
                         sEnrollmentDao);
         mAsyncRegistrationQueueRunner =
@@ -73,8 +75,25 @@ public class E2EImpressionNoiseMockTest extends E2EMockTest {
                         sDatastoreManager,
                         mAsyncSourceFetcher,
                         mAsyncTriggerFetcher,
-                        sEnrollmentDao);
+                        sEnrollmentDao,
+                        mDebugReportApi);
         getExpectedTriggerDataDistributions();
+    }
+
+    @Override
+    void processAction(RegisterSource sourceRegistration) throws IOException, JSONException {
+        super.processAction(sourceRegistration);
+        if (sourceRegistration.mDebugReporting) {
+            processDebugReportApiJob();
+        }
+    }
+
+    @Override
+    void processAction(RegisterWebSource sourceRegistration) throws IOException, JSONException {
+        super.processAction(sourceRegistration);
+        if (sourceRegistration.mDebugReporting) {
+            processDebugReportApiJob();
+        }
     }
 
     @Override

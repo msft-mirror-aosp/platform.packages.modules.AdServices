@@ -20,6 +20,7 @@ import static android.view.MotionEvent.ACTION_BUTTON_PRESS;
 import static android.view.MotionEvent.obtain;
 
 import static com.android.adservices.service.measurement.reporting.AggregateReportSender.AGGREGATE_ATTRIBUTION_REPORT_URI_PATH;
+import static com.android.adservices.service.measurement.reporting.DebugReportSender.DEBUG_REPORT_URI_PATH;
 import static com.android.adservices.service.measurement.reporting.EventReportSender.EVENT_ATTRIBUTION_REPORT_URI_PATH;
 
 import android.content.AttributionSource;
@@ -71,6 +72,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 /**
  * End-to-end test from source and trigger registration to attribution reporting. Extensions of
@@ -91,7 +93,8 @@ public abstract class E2ETest {
 
     enum ReportType {
         EVENT,
-        AGGREGATE
+        AGGREGATE,
+        DEBUG_REPORT
     }
 
     private enum OutputType {
@@ -103,6 +106,7 @@ public abstract class E2ETest {
         // Keys used to compare actual with expected output
         List<String> STRINGS = ImmutableList.of(
                 "attribution_destination",
+                "scheduled_report_time",
                 "source_event_id",
                 "trigger_data",
                 "source_type");
@@ -114,6 +118,11 @@ public abstract class E2ETest {
         String HISTOGRAMS = "histograms";
         String SOURCE_DEBUG_KEY = "source_debug_key";
         String TRIGGER_DEBUG_KEY = "trigger_debug_key";
+    }
+
+    interface DebugReportPayloadKeys {
+        String TYPE = "type";
+        String BODY = "body";
     }
 
     interface AggregateHistogramKeys {
@@ -143,12 +152,17 @@ public abstract class E2ETest {
         String SOURCE_WEB_DESTINATION_URI_KEY = "web_destination";
         String SOURCE_VERIFIED_DESTINATION_URI_KEY = "verified_destination";
         String REGISTRATION_URI_KEY = "attribution_src_url";
-        String IS_ADID_PERMISSION_GRANTED_KEY = "is_adid_permission_granted";
+        String HAS_AD_ID_PERMISSION = "has_ad_id_permission";
+        String DEBUG_KEY = "debug_key";
+        String DEBUG_REPORTING_KEY = "debug_reporting";
         String INPUT_EVENT_KEY = "source_type";
         String SOURCE_VIEW_TYPE = "event";
         String TIMESTAMP_KEY = "timestamp";
         String EVENT_REPORT_OBJECTS_KEY = "event_level_results";
         String AGGREGATE_REPORT_OBJECTS_KEY = "aggregatable_results";
+        String DEBUG_EVENT_REPORT_OBJECTS_KEY = "debug_event_level_results";
+        String DEBUG_AGGREGATE_REPORT_OBJECTS_KEY = "debug_aggregatable_results";
+        String DEBUG_REPORT_OBJECTS_KEY = "debug_report_results";
         String INSTALLS_KEY = "installs";
         String UNINSTALLS_KEY = "uninstalls";
         String INSTALLS_URI_KEY = "uri";
@@ -159,6 +173,7 @@ public abstract class E2ETest {
     }
 
     private interface ApiConfigKeys {
+        // Privacy params
         String RATE_LIMIT_MAX_ATTRIBUTIONS = "rate_limit_max_attributions";
         String NAVIGATION_SOURCE_TRIGGER_DATA_CARDINALITY =
                 "navigation_source_trigger_data_cardinality";
@@ -168,16 +183,28 @@ public abstract class E2ETest {
                 "max_destinations_per_source_site_reporting_origin";
         String RATE_LIMIT_MAX_SOURCE_REGISTRATION_REPORTING_ORIGINS =
                 "rate_limit_max_source_registration_reporting_origins";
+        // System health params
+        String MAX_SOURCES_PER_ORIGIN = "max_sources_per_origin";
+        String MAX_EVENT_LEVEL_REPORTS_PER_DESTINATION =
+                "max_event_level_reports_per_destination";
+        String MAX_AGGREGATABLE_REPORTS_PER_DESTINATION =
+                "max_aggregatable_reports_per_destination";
     }
 
-    public static class PrivacyParamsProvider {
+    public static class ParamsProvider {
+        // Privacy params
         private Integer mMaxAttributionPerRateLimitWindow;
         private Integer mNavigationTriggerDataCardinality;
         private Integer mMaxDistinctEnrollmentsPerPublisherXDestinationInAttribution;
         private Integer mMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource;
         private Integer mMaxDistinctEnrollmentsPerPublisherXDestinationInSource;
+        // System health params
+        private Integer mMaxSourcesPerPublisher;
+        private Integer mMaxEventReportsPerDestination;
+        private Integer mMaxAggregateReportsPerDestination;
 
-        public PrivacyParamsProvider(JSONObject json) throws JSONException {
+        public ParamsProvider(JSONObject json) throws JSONException {
+            // Privacy params
             if (!json.isNull(ApiConfigKeys.RATE_LIMIT_MAX_ATTRIBUTIONS)) {
                 mMaxAttributionPerRateLimitWindow = json.getInt(
                         ApiConfigKeys.RATE_LIMIT_MAX_ATTRIBUTIONS);
@@ -219,8 +246,29 @@ public abstract class E2ETest {
                         PrivacyParams
                                 .getMaxDistinctEnrollmentsPerPublisherXDestinationInSource();
             }
+            // System health params
+            if (!json.isNull(ApiConfigKeys.MAX_SOURCES_PER_ORIGIN)) {
+                mMaxSourcesPerPublisher = json.getInt(ApiConfigKeys.MAX_SOURCES_PER_ORIGIN);
+            } else {
+                mMaxSourcesPerPublisher = SystemHealthParams.getMaxSourcesPerPublisher();
+            }
+            if (!json.isNull(ApiConfigKeys.MAX_EVENT_LEVEL_REPORTS_PER_DESTINATION)) {
+                mMaxEventReportsPerDestination = json.getInt(
+                        ApiConfigKeys.MAX_EVENT_LEVEL_REPORTS_PER_DESTINATION);
+            } else {
+                mMaxEventReportsPerDestination =
+                        SystemHealthParams.getMaxEventReportsPerDestination();
+            }
+            if (!json.isNull(ApiConfigKeys.MAX_AGGREGATABLE_REPORTS_PER_DESTINATION)) {
+                mMaxAggregateReportsPerDestination = json.getInt(
+                        ApiConfigKeys.MAX_AGGREGATABLE_REPORTS_PER_DESTINATION);
+            } else {
+                mMaxAggregateReportsPerDestination =
+                        SystemHealthParams.getMaxAggregateReportsPerDestination();
+            }
         }
 
+        // Privacy params
         public Integer getMaxAttributionPerRateLimitWindow() {
             return mMaxAttributionPerRateLimitWindow;
         }
@@ -240,16 +288,30 @@ public abstract class E2ETest {
         public Integer getMaxDistinctEnrollmentsPerPublisherXDestinationInSource() {
             return mMaxDistinctEnrollmentsPerPublisherXDestinationInSource;
         }
+
+        // System health params
+        public Integer getMaxSourcesPerPublisher() {
+            return mMaxSourcesPerPublisher;
+        }
+
+        public Integer getMaxEventReportsPerDestination() {
+            return mMaxEventReportsPerDestination;
+        }
+
+        public Integer getMaxAggregateReportsPerDestination() {
+            return mMaxAggregateReportsPerDestination;
+        }
     }
 
-    static Collection<Object[]> data(String testDirName) throws IOException, JSONException {
+    static Collection<Object[]> data(String testDirName, Function<String, String> preprocessor)
+            throws IOException, JSONException {
         AssetManager assetManager = sContext.getAssets();
         List<InputStream> inputStreams = new ArrayList<>();
         String[] testDirectoryList = assetManager.list(testDirName);
         for (String testFile : testDirectoryList) {
             inputStreams.add(assetManager.open(testDirName + "/" + testFile));
         }
-        return getTestCasesFrom(inputStreams, testDirectoryList);
+        return getTestCasesFrom(inputStreams, testDirectoryList, preprocessor);
     }
 
     public static Map<String, List<Map<String, List<String>>>> getUriToResponseHeadersMap(
@@ -318,11 +380,15 @@ public abstract class E2ETest {
     }
 
     static String getReportUrl(ReportType reportType, String origin) {
-        return origin
-                + "/"
-                + (reportType == ReportType.EVENT
-                        ? EVENT_ATTRIBUTION_REPORT_URI_PATH
-                        : AGGREGATE_ATTRIBUTION_REPORT_URI_PATH);
+        String reportUrl = null;
+        if (reportType == ReportType.EVENT) {
+            reportUrl = EVENT_ATTRIBUTION_REPORT_URI_PATH;
+        } else if (reportType == ReportType.AGGREGATE) {
+            reportUrl = AGGREGATE_ATTRIBUTION_REPORT_URI_PATH;
+        } else if (reportType == ReportType.DEBUG_REPORT) {
+            reportUrl = DEBUG_REPORT_URI_PATH;
+        }
+        return origin + "/" + reportUrl;
     }
 
     static void clearDatabase() {
@@ -429,6 +495,19 @@ public abstract class E2ETest {
         return Arrays.hashCode(objArray);
     }
 
+    private static int hashForDebugReportObject(OutputType outputType, JSONObject obj) {
+        Object[] objArray = new Object[3];
+        String url = obj.optString(TestFormatJsonMapping.REPORT_TO_KEY, "");
+        objArray[0] =
+                outputType == OutputType.EXPECTED
+                        ? url
+                        : getReportUrl(ReportType.DEBUG_REPORT, url);
+        JSONObject payload = obj.optJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
+        objArray[1] = payload.optString(DebugReportPayloadKeys.TYPE, "");
+        objArray[2] = payload.optString(DebugReportPayloadKeys.BODY, "");
+        return Arrays.hashCode(objArray);
+    }
+
     // Used in interop tests, where we have known discrepancies.
     private static double normaliseDouble(double d) {
         return d == 0.0024263D ? 0.0024D : d;
@@ -493,6 +572,25 @@ public abstract class E2ETest {
         return matchReportTimeAndReportTo(ReportType.AGGREGATE, obj1, obj2);
     }
 
+    private static boolean areEqualDebugReportJsons(JSONObject obj1, JSONObject obj2)
+            throws JSONException {
+        JSONObject payload1 = obj1.getJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
+        JSONObject payload2 = obj2.getJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
+        if (!payload1.optString(DebugReportPayloadKeys.TYPE, "")
+                .equals(payload2.optString(DebugReportPayloadKeys.TYPE, ""))) {
+            return false;
+        }
+        if (!payload1.optString(DebugReportPayloadKeys.BODY, "")
+                .equals(payload2.optString(DebugReportPayloadKeys.BODY, ""))) {
+            return false;
+        }
+        return obj1.optString(TestFormatJsonMapping.REPORT_TO_KEY)
+                .equals(
+                        getReportUrl(
+                                ReportType.DEBUG_REPORT,
+                                obj2.optString(TestFormatJsonMapping.REPORT_TO_KEY)));
+    }
+
     private static String getComparableHistograms(@Nullable JSONArray arr) {
         if (arr == null) {
             return "";
@@ -531,9 +629,18 @@ public abstract class E2ETest {
                 Comparator.comparing(obj -> hashForAggregateReportObject(outputType, obj)));
     }
 
+    private static void sortDebugReportObjects(
+            OutputType outputType, List<JSONObject> debugReportObjects) {
+        debugReportObjects.sort(
+                Comparator.comparing(obj -> hashForDebugReportObject(outputType, obj)));
+    }
+
     private static boolean areEqual(ReportObjects p1, ReportObjects p2) throws JSONException {
         if (p1.mEventReportObjects.size() != p2.mEventReportObjects.size()
-                || p1.mAggregateReportObjects.size() != p2.mAggregateReportObjects.size()) {
+                || p1.mAggregateReportObjects.size() != p2.mAggregateReportObjects.size()
+                || p1.mDebugAggregateReportObjects.size() != p2.mDebugAggregateReportObjects.size()
+                || p1.mDebugEventReportObjects.size() != p2.mDebugEventReportObjects.size()
+                || p1.mDebugReportObjects.size() != p2.mDebugReportObjects.size()) {
             return false;
         }
         for (int i = 0; i < p1.mEventReportObjects.size(); i++) {
@@ -548,6 +655,26 @@ public abstract class E2ETest {
                 return false;
             }
         }
+        for (int i = 0; i < p1.mDebugEventReportObjects.size(); i++) {
+            if (!areEqualEventReportJsons(
+                    p1.mDebugEventReportObjects.get(i), p2.mDebugEventReportObjects.get(i))) {
+                return false;
+            }
+        }
+        for (int i = 0; i < p1.mDebugAggregateReportObjects.size(); i++) {
+            if (!areEqualAggregateReportJsons(
+                    p1.mDebugAggregateReportObjects.get(i),
+                    p2.mDebugAggregateReportObjects.get(i))) {
+                return false;
+            }
+        }
+        for (int i = 0; i < p1.mDebugReportObjects.size(); i++) {
+            if (!areEqualDebugReportJsons(
+                    p1.mDebugReportObjects.get(i), p2.mDebugReportObjects.get(i))) {
+                return false;
+            }
+        }
+
         return true;
     }
 
@@ -561,13 +688,26 @@ public abstract class E2ETest {
                             + " known in advance.)\n\n"
                             + "Event report objects:\n"
                             + "%s\n\n"
+                            + "Debug Event report objects:\n"
+                            + "%s\n\n"
                             + "Expected aggregate report objects: %s\n\n"
-                            + "Actual aggregate report objects: %s\n",
+                            + "Actual aggregate report objects: %s\n"
+                            + "Expected debug aggregate report objects: %s\n\n"
+                            + "Actual debug aggregate report objects: %s\n"
+                            + "Expected debug report objects: %s\n\n"
+                            + "Actual debug report objects: %s\n",
                         prettify(
                                 expectedOutput.mEventReportObjects,
                                 actualOutput.mEventReportObjects),
+                        prettify(
+                                expectedOutput.mDebugEventReportObjects,
+                                actualOutput.mDebugEventReportObjects),
                         expectedOutput.mAggregateReportObjects,
-                        actualOutput.mAggregateReportObjects)
+                        actualOutput.mAggregateReportObjects,
+                        expectedOutput.mDebugAggregateReportObjects,
+                        actualOutput.mDebugAggregateReportObjects,
+                        expectedOutput.mDebugReportObjects,
+                        actualOutput.mDebugReportObjects)
                 + getDatastoreState();
     }
 
@@ -697,7 +837,13 @@ public abstract class E2ETest {
         return expiryTimes;
     }
 
-    private static Set<Action> maybeAddEventReportingJobTimes(
+    private static long roundSecondsToWholeDays(long seconds) {
+        long remainder = seconds % TimeUnit.DAYS.toSeconds(1);
+        boolean roundUp = remainder >= TimeUnit.DAYS.toSeconds(1) / 2L;
+        return seconds - remainder + (roundUp ? TimeUnit.DAYS.toSeconds(1) : 0);
+    }
+
+    private static Set<Action> maybeAddEventReportingJobTimes(boolean isEventType,
             long sourceTime, Collection<List<Map<String, List<String>>>> responseHeaders)
             throws JSONException {
         Set<Action> reportingJobsActions = new HashSet<>();
@@ -709,12 +855,22 @@ public abstract class E2ETest {
             } else if (expiry < PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS) {
                 validExpiry = PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
             }
+            if (isEventType) {
+                validExpiry = roundSecondsToWholeDays(validExpiry);
+            }
+
             long jobTime = sourceTime + 1000 * validExpiry + 3600000L;
 
             reportingJobsActions.add(new EventReportingJob(jobTime));
+            // Add a job two days earlier for interop tests
+            reportingJobsActions.add(new EventReportingJob(jobTime - TimeUnit.DAYS.toMillis(2)));
         }
 
         return reportingJobsActions;
+    }
+
+    static String preprocessTestJson(String json) {
+        return json.replaceAll("\\.test(?=[\"\\/])", ".com");
     }
 
     /**
@@ -723,10 +879,11 @@ public abstract class E2ETest {
      *
      * @return A collection of Object arrays, each with
      * {@code [Collection<Object> actions, ReportObjects expectedOutput,
-     * PrivacyParamsProvider privacyParamsProvider, String name]}
+     * ParamsProvider paramsProvider, String name]}
      */
     private static Collection<Object[]> getTestCasesFrom(List<InputStream> inputStreams,
-            String[] filenames) throws IOException, JSONException {
+            String[] filenames, Function<String, String> preprocessor)
+            throws IOException, JSONException {
         List<Object[]> testCases = new ArrayList<>();
 
         for (int i = 0; i < inputStreams.size(); i++) {
@@ -736,7 +893,7 @@ public abstract class E2ETest {
             inputStreams.get(i).close();
             String json = new String(buffer, StandardCharsets.UTF_8);
 
-            JSONObject testObj = new JSONObject(json.replaceAll("\\.test(?=[\"\\/])", ".com"));
+            JSONObject testObj = new JSONObject(preprocessor.apply(json));
             String name = filenames[i];
             JSONObject input = testObj.getJSONObject(TestFormatJsonMapping.TEST_INPUT_KEY);
             JSONObject output = testObj.getJSONObject(TestFormatJsonMapping.TEST_OUTPUT_KEY);
@@ -757,9 +914,9 @@ public abstract class E2ETest {
                     ? new JSONObject()
                     : testObj.getJSONObject(TestFormatJsonMapping.API_CONFIG_KEY);
 
-            PrivacyParamsProvider privacyParamsProvider = new PrivacyParamsProvider(ApiConfigObj);
+            ParamsProvider paramsProvider = new ParamsProvider(ApiConfigObj);
 
-            testCases.add(new Object[] {actions, expectedOutput, privacyParamsProvider, name});
+            testCases.add(new Object[] {actions, expectedOutput, paramsProvider, name});
         }
 
         return testCases;
@@ -779,6 +936,7 @@ public abstract class E2ETest {
                 // Add corresponding reporting job time actions
                 eventReportingJobActions.addAll(
                         maybeAddEventReportingJobTimes(
+                                sourceRegistration.mRegistrationRequest.getInputEvent() == null,
                                 sourceRegistration.mTimestamp,
                                 sourceRegistration.mUriToResponseHeadersMap.values()));
             }
@@ -794,7 +952,10 @@ public abstract class E2ETest {
                 // Add corresponding reporting job time actions
                 eventReportingJobActions.addAll(
                         maybeAddEventReportingJobTimes(
-                                webSource.mTimestamp, webSource.mUriToResponseHeadersMap.values()));
+                                webSource.mRegistrationRequest.getSourceRegistrationRequest()
+                                        .getInputEvent() == null,
+                                webSource.mTimestamp,
+                                webSource.mUriToResponseHeadersMap.values()));
             }
         }
 
@@ -900,7 +1061,41 @@ public abstract class E2ETest {
             }
         }
 
-        return new ReportObjects(eventReportObjects, aggregateReportObjects);
+        List<JSONObject> debugEventReportObjects = new ArrayList<>();
+        if (!output.isNull(TestFormatJsonMapping.DEBUG_EVENT_REPORT_OBJECTS_KEY)) {
+            JSONArray debugEventReportObjectsArray =
+                    output.getJSONArray(TestFormatJsonMapping.DEBUG_EVENT_REPORT_OBJECTS_KEY);
+            for (int i = 0; i < debugEventReportObjectsArray.length(); i++) {
+                JSONObject obj = debugEventReportObjectsArray.getJSONObject(i);
+                String adTechDomain = obj.getString(TestFormatJsonMapping.REPORT_TO_KEY);
+                debugEventReportObjects.add(
+                        obj.put(TestFormatJsonMapping.REPORT_TO_KEY, adTechDomain));
+            }
+        }
+
+        List<JSONObject> debugAggregateReportObjects = new ArrayList<>();
+        if (!output.isNull(TestFormatJsonMapping.DEBUG_AGGREGATE_REPORT_OBJECTS_KEY)) {
+            JSONArray debugAggregateReportObjectsArray =
+                    output.getJSONArray(TestFormatJsonMapping.DEBUG_AGGREGATE_REPORT_OBJECTS_KEY);
+            for (int i = 0; i < debugAggregateReportObjectsArray.length(); i++) {
+                debugAggregateReportObjects.add(debugAggregateReportObjectsArray.getJSONObject(i));
+            }
+        }
+        List<JSONObject> debugReportObjects = new ArrayList<>();
+        if (!output.isNull(TestFormatJsonMapping.DEBUG_REPORT_OBJECTS_KEY)) {
+            JSONArray debugReportObjectsArray =
+                    output.getJSONArray(TestFormatJsonMapping.DEBUG_REPORT_OBJECTS_KEY);
+            for (int i = 0; i < debugReportObjectsArray.length(); i++) {
+                debugReportObjects.add(debugReportObjectsArray.getJSONObject(i));
+            }
+        }
+
+        return new ReportObjects(
+                eventReportObjects,
+                aggregateReportObjects,
+                debugEventReportObjects,
+                debugAggregateReportObjects,
+                debugReportObjects);
     }
 
     /**
@@ -916,13 +1111,17 @@ public abstract class E2ETest {
         db.delete("msmt_async_registration_contract", null, null);
     }
 
-    abstract void processAction(RegisterSource sourceRegistration) throws IOException;
+    abstract void processAction(RegisterSource sourceRegistration)
+            throws IOException, JSONException;
 
-    abstract void processAction(RegisterWebSource sourceRegistration) throws IOException;
+    abstract void processAction(RegisterWebSource sourceRegistration)
+            throws IOException, JSONException;
 
-    abstract void processAction(RegisterTrigger triggerRegistration) throws IOException;
+    abstract void processAction(RegisterTrigger triggerRegistration)
+            throws IOException, JSONException;
 
-    abstract void processAction(RegisterWebTrigger triggerRegistration) throws IOException;
+    abstract void processAction(RegisterWebTrigger triggerRegistration)
+            throws IOException, JSONException;
 
     abstract void processAction(InstallApp installApp);
 
@@ -933,6 +1132,13 @@ public abstract class E2ETest {
         sortEventReportObjects(OutputType.ACTUAL, mActualOutput.mEventReportObjects);
         sortAggregateReportObjects(OutputType.EXPECTED, mExpectedOutput.mAggregateReportObjects);
         sortAggregateReportObjects(OutputType.ACTUAL, mActualOutput.mAggregateReportObjects);
+        sortEventReportObjects(OutputType.EXPECTED, mExpectedOutput.mDebugEventReportObjects);
+        sortEventReportObjects(OutputType.ACTUAL, mActualOutput.mDebugEventReportObjects);
+        sortAggregateReportObjects(
+                OutputType.EXPECTED, mExpectedOutput.mDebugAggregateReportObjects);
+        sortAggregateReportObjects(OutputType.ACTUAL, mActualOutput.mDebugAggregateReportObjects);
+        sortDebugReportObjects(OutputType.EXPECTED, mExpectedOutput.mDebugReportObjects);
+        sortDebugReportObjects(OutputType.ACTUAL, mActualOutput.mDebugReportObjects);
         Assert.assertTrue(getTestFailureMessage(mExpectedOutput, mActualOutput),
                 areEqual(mExpectedOutput, mActualOutput));
     }

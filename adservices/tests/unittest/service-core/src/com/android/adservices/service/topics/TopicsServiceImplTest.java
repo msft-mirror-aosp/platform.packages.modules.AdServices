@@ -25,16 +25,21 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__TARGETING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS_PREVIEW_API;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -42,6 +47,8 @@ import android.adservices.common.CallerMetadata;
 import android.adservices.topics.GetTopicsParam;
 import android.adservices.topics.GetTopicsResult;
 import android.adservices.topics.IGetTopicsCallback;
+import android.app.adservices.AdServicesManager;
+import android.app.adservices.topics.TopicParcel;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
@@ -67,6 +74,7 @@ import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApp
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -74,9 +82,11 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -91,11 +101,13 @@ import org.mockito.stubbing.Answer;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /** Unit test for {@link com.android.adservices.service.topics.TopicsServiceImpl}. */
 public class TopicsServiceImplTest {
@@ -138,6 +150,7 @@ public class TopicsServiceImplTest {
     @Mock private EnrollmentDao mEnrollmentDao;
     @Mock private AppImportanceFilter mMockAppImportanceFilter;
     @Mock AdServicesLogger mLogger;
+    @Mock AdServicesManager mMockAdServicesManager;
 
     @Before
     public void setup() throws Exception {
@@ -148,10 +161,18 @@ public class TopicsServiceImplTest {
 
         DbHelper dbHelper = DbTestUtil.getDbHelperForTest();
         mTopicsDao = new TopicsDao(dbHelper);
+        mBlockedTopicsManager =
+                new BlockedTopicsManager(
+                        mTopicsDao, mMockAdServicesManager, Flags.PPAPI_AND_SYSTEM_SERVER);
         CacheManager cacheManager =
-                new CacheManager(mMockEpochManager, mTopicsDao, mMockFlags, mLogger);
+                new CacheManager(
+                        mTopicsDao,
+                        mMockFlags,
+                        mLogger,
+                        mBlockedTopicsManager,
+                        new GlobalBlockedTopicsManager(
+                                /* globalBlockedTopicsManager = */ new HashSet<>()));
 
-        mBlockedTopicsManager = new BlockedTopicsManager(mTopicsDao);
         AppUpdateManager appUpdateManager =
                 new AppUpdateManager(dbHelper, mTopicsDao, new Random(), mMockFlags);
         mTopicsWorker =
@@ -182,6 +203,8 @@ public class TopicsServiceImplTest {
 
         DbTestUtil.deleteTable(TopicsTables.BlockedTopicsContract.TABLE);
         when(mConsentManager.getConsent()).thenReturn(AdServicesApiConsent.GIVEN);
+        when(mConsentManager.getConsent(AdServicesApiType.TOPICS))
+                .thenReturn(AdServicesApiConsent.GIVEN);
         when(mMockSdkContext.getPackageManager()).thenReturn(mPackageManager);
         when(mPackageManager.getPackageUid(TEST_APP_PACKAGE_NAME, 0)).thenReturn(Process.myUid());
 
@@ -219,9 +242,21 @@ public class TopicsServiceImplTest {
 
     @Test
     public void checkNoUserConsent() throws InterruptedException {
+        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(false);
         when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
         when(mConsentManager.getConsent()).thenReturn(AdServicesApiConsent.REVOKED);
-        invokeGetTopicsAndVerifyError(mContext, STATUS_USER_CONSENT_REVOKED);
+        invokeGetTopicsAndVerifyError(
+                mContext, STATUS_USER_CONSENT_REVOKED, /* checkLoggingStatus */ true);
+    }
+
+    @Test
+    public void checkNoUserConsent_gaUxFeatureEnabled() throws InterruptedException {
+        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
+        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        when(mConsentManager.getConsent(AdServicesApiType.TOPICS))
+                .thenReturn(AdServicesApiConsent.REVOKED);
+        invokeGetTopicsAndVerifyError(
+                mContext, STATUS_USER_CONSENT_REVOKED, /* checkLoggingStatus */ true);
     }
 
     @Test
@@ -242,7 +277,8 @@ public class TopicsServiceImplTest {
         when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
         // Empty allow list and bypass list.
         when(mMockFlags.getPpapiAppSignatureAllowList()).thenReturn("");
-        invokeGetTopicsAndVerifyError(mContext, STATUS_CALLER_NOT_ALLOWED);
+        invokeGetTopicsAndVerifyError(
+                mContext, STATUS_CALLER_NOT_ALLOWED, /* checkLoggingStatus */ true);
     }
 
     @Test
@@ -250,7 +286,9 @@ public class TopicsServiceImplTest {
         // Rate Limit Reached.
         when(mMockThrottler.tryAcquire(eq(Throttler.ApiKey.TOPICS_API_SDK_NAME), anyString()))
                 .thenReturn(false);
-        invokeGetTopicsAndVerifyError(mContext, STATUS_RATE_LIMIT_REACHED);
+        // We don't log STATUS_RATE_LIMIT_REACHED for getTopics API.
+        invokeGetTopicsAndVerifyError(
+                mContext, STATUS_RATE_LIMIT_REACHED, /* checkLoggingStatus */ false);
     }
 
     @Test
@@ -267,11 +305,15 @@ public class TopicsServiceImplTest {
         when(mMockThrottler.tryAcquire(
                         eq(Throttler.ApiKey.TOPICS_API_APP_PACKAGE_NAME), anyString()))
                 .thenReturn(false);
-        invokeGetTopicsAndVerifyError(mContext, STATUS_RATE_LIMIT_REACHED, request);
+        // We don't log STATUS_RATE_LIMIT_REACHED for getTopics API.
+        invokeGetTopicsAndVerifyError(
+                mContext, STATUS_RATE_LIMIT_REACHED, request, /* checkLoggingStatus */ false);
     }
 
     @Test
     public void testEnforceForeground_backgroundCaller() throws InterruptedException {
+        Assume.assumeTrue(SdkLevel.isAtLeastT()); // R/S can't enforce foreground checks.
+
         final int uid = Process.myUid();
         // Mock AppImportanceFilter to throw WrongCallingApplicationStateException
         doThrow(new WrongCallingApplicationStateException())
@@ -284,11 +326,14 @@ public class TopicsServiceImplTest {
         // Mock Flags to true to enable enforcing foreground check.
         doReturn(true).when(mMockFlags).getEnforceForegroundStatusForTopics();
 
-        invokeGetTopicsAndVerifyError(mContext, STATUS_BACKGROUND_CALLER, mRequest);
+        invokeGetTopicsAndVerifyError(
+                mContext, STATUS_BACKGROUND_CALLER, mRequest, /* checkLoggingStatus */ true);
     }
 
     @Test
     public void testEnforceForeground_sandboxCaller() throws Exception {
+        Assume.assumeTrue(SdkLevel.isAtLeastT()); // Only applicable for T+
+
         // Mock AppImportanceFilter to throw Exception when invoked. This is to verify getTopics()
         // doesn't throw if caller is via Sandbox.
         doThrow(new WrongCallingApplicationStateException())
@@ -362,15 +407,18 @@ public class TopicsServiceImplTest {
                         return mPackageManager;
                     }
                 };
-        invokeGetTopicsAndVerifyError(context, STATUS_PERMISSION_NOT_REQUESTED);
+        invokeGetTopicsAndVerifyError(
+                context, STATUS_PERMISSION_NOT_REQUESTED, /* checkLoggingStatus */ true);
     }
 
     @Test
     public void checkSdkNoPermission() throws InterruptedException {
+        Assume.assumeTrue(SdkLevel.isAtLeastT()); // Sdk Sandbox only exists in T+
         when(mPackageManager.checkPermission(ACCESS_ADSERVICES_TOPICS, SDK_PACKAGE_NAME))
                 .thenReturn(PackageManager.PERMISSION_DENIED);
         when(Binder.getCallingUidOrThrow()).thenReturn(SANDBOX_UID);
-        invokeGetTopicsAndVerifyError(mMockSdkContext, STATUS_PERMISSION_NOT_REQUESTED);
+        invokeGetTopicsAndVerifyError(
+                mMockSdkContext, STATUS_PERMISSION_NOT_REQUESTED, /* checkLoggingStatus */ true);
     }
 
     @Test
@@ -380,7 +428,8 @@ public class TopicsServiceImplTest {
                 new EnrollmentData.Builder().setEnrollmentId(null).build();
         when(mEnrollmentDao.getEnrollmentDataFromSdkName(SOME_SDK_NAME))
                 .thenReturn(fakeEnrollmentData);
-        invokeGetTopicsAndVerifyError(mMockSdkContext, STATUS_CALLER_NOT_ALLOWED);
+        invokeGetTopicsAndVerifyError(
+                mMockSdkContext, STATUS_CALLER_NOT_ALLOWED, /* checkLoggingStatus */ true);
     }
 
     @Test
@@ -393,7 +442,8 @@ public class TopicsServiceImplTest {
 
         when(mMockFlags.isEnrollmentBlocklisted(ALLOWED_SDK_ID)).thenReturn(true);
 
-        invokeGetTopicsAndVerifyError(mMockSdkContext, STATUS_CALLER_NOT_ALLOWED);
+        invokeGetTopicsAndVerifyError(
+                mMockSdkContext, STATUS_CALLER_NOT_ALLOWED, /* checkLoggingStatus */ true);
     }
 
     @Test
@@ -403,7 +453,8 @@ public class TopicsServiceImplTest {
                 new EnrollmentData.Builder().setEnrollmentId(DISALLOWED_SDK_ID).build();
         when(mEnrollmentDao.getEnrollmentDataFromSdkName(SOME_SDK_NAME))
                 .thenReturn(fakeEnrollmentData);
-        invokeGetTopicsAndVerifyError(mMockSdkContext, STATUS_CALLER_NOT_ALLOWED);
+        invokeGetTopicsAndVerifyError(
+                mMockSdkContext, STATUS_CALLER_NOT_ALLOWED, /* checkLoggingStatus */ true);
     }
 
     @Test
@@ -423,7 +474,8 @@ public class TopicsServiceImplTest {
         when(mPackageManager.getResourcesForApplication(TEST_APP_PACKAGE_NAME))
                 .thenReturn(resources);
         when(mMockAppContext.getPackageManager()).thenReturn(mPackageManager);
-        invokeGetTopicsAndVerifyError(mMockAppContext, STATUS_CALLER_NOT_ALLOWED);
+        invokeGetTopicsAndVerifyError(
+                mMockAppContext, STATUS_CALLER_NOT_ALLOWED, /* checkLoggingStatus */ true);
     }
 
     @Test
@@ -443,12 +495,20 @@ public class TopicsServiceImplTest {
         when(mPackageManager.getResourcesForApplication(TEST_APP_PACKAGE_NAME))
                 .thenReturn(resources);
         when(mMockAppContext.getPackageManager()).thenReturn(mPackageManager);
-        invokeGetTopicsAndVerifyError(mMockAppContext, STATUS_CALLER_NOT_ALLOWED);
+        invokeGetTopicsAndVerifyError(
+                mMockAppContext, STATUS_CALLER_NOT_ALLOWED, /* checkLoggingStatus */ true);
     }
 
     @Test
     public void getTopics() throws Exception {
         when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        runGetTopics(createTestTopicsServiceImplInstance());
+    }
+
+    @Test
+    public void getTopicsGaUx() throws Exception {
+        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
         runGetTopics(createTestTopicsServiceImplInstance());
     }
 
@@ -476,7 +536,16 @@ public class TopicsServiceImplTest {
         final long currentEpochId = 4L;
         final int numberOfLookBackEpochs = 3;
         List<Topic> topics = prepareAndPersistTopics(numberOfLookBackEpochs);
+        List<TopicParcel> topicParcels =
+                topics.stream()
+                        .map(BlockedTopicsManager::convertTopicToTopicParcel)
+                        .collect(Collectors.toList());
 
+        // Mock IPC calls
+        doNothing().when(mMockAdServicesManager).recordBlockedTopic(List.of(topicParcels.get(0)));
+        doReturn(List.of(topicParcels.get(0)))
+                .when(mMockAdServicesManager)
+                .retrieveAllBlockedTopics();
         // block topic1
         mBlockedTopicsManager.blockTopic(topics.get(0));
 
@@ -519,6 +588,10 @@ public class TopicsServiceImplTest {
         // loadCache() : 1, getTopics(): 1 * 2
         verify(mMockEpochManager, Mockito.times(3)).getCurrentEpochId();
         verify(mMockFlags, Mockito.times(3)).getTopicsNumberOfLookBackEpochs();
+
+        // Verify IPC calls
+        verify(mMockAdServicesManager).recordBlockedTopic(List.of(topicParcels.get(0)));
+        verify(mMockAdServicesManager).retrieveAllBlockedTopics();
     }
 
     @Test
@@ -527,7 +600,14 @@ public class TopicsServiceImplTest {
         final long currentEpochId = 4L;
         final int numberOfLookBackEpochs = 3;
         List<Topic> topics = prepareAndPersistTopics(numberOfLookBackEpochs);
+        List<TopicParcel> topicParcels =
+                topics.stream()
+                        .map(BlockedTopicsManager::convertTopicToTopicParcel)
+                        .collect(Collectors.toList());
 
+        // Mock IPC calls
+        doNothing().when(mMockAdServicesManager).recordBlockedTopic(anyList());
+        doReturn(topicParcels).when(mMockAdServicesManager).retrieveAllBlockedTopics();
         // block all topics
         for (Topic topic : topics) {
             mBlockedTopicsManager.blockTopic(topic);
@@ -568,6 +648,9 @@ public class TopicsServiceImplTest {
         verify(mMockEpochManager, Mockito.times(3)).getCurrentEpochId();
         // getTopics in CacheManager and TopicsWorker calls this mock
         verify(mMockFlags, Mockito.times(3)).getTopicsNumberOfLookBackEpochs();
+        // Verify IPC calls
+        verify(mMockAdServicesManager, times(topics.size())).recordBlockedTopic(anyList());
+        verify(mMockAdServicesManager).retrieveAllBlockedTopics();
     }
 
     @Test
@@ -941,15 +1024,36 @@ public class TopicsServiceImplTest {
                 .isEqualTo(AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS_PREVIEW_API);
     }
 
-    private void invokeGetTopicsAndVerifyError(Context context, int expectedResultCode)
+    private void invokeGetTopicsAndVerifyError(
+            Context context, int expectedResultCode, boolean checkLoggingStatus)
             throws InterruptedException {
-        invokeGetTopicsAndVerifyError(context, expectedResultCode, mRequest);
+        invokeGetTopicsAndVerifyError(context, expectedResultCode, mRequest, checkLoggingStatus);
     }
 
     private void invokeGetTopicsAndVerifyError(
-            Context context, int expectedResultCode, GetTopicsParam request)
+            Context context,
+            int expectedResultCode,
+            GetTopicsParam request,
+            boolean checkLoggingStatus)
             throws InterruptedException {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
+
+        // Topic impl service use a background executor to run the task,
+        // use a countdownLatch and set the countdown in the logging call operation
+        CountDownLatch logOperationCalledLatch = new CountDownLatch(1);
+        Mockito.doAnswer(
+                        new Answer<Object>() {
+                            @Override
+                            public Object answer(InvocationOnMock invocation) throws Throwable {
+                                // The method logAPiCallStats is called.
+                                invocation.callRealMethod();
+                                logOperationCalledLatch.countDown();
+                                return null;
+                            }
+                        })
+                .when(mAdServicesLogger)
+                .logApiCallStats(ArgumentMatchers.any(ApiCallStats.class));
+
         mTopicsServiceImpl =
                 new TopicsServiceImpl(
                         context,
@@ -983,6 +1087,24 @@ public class TopicsServiceImplTest {
                     }
                 });
         jobFinishedCountDown.await();
+
+        if (checkLoggingStatus) {
+            // getTopics method finished executing.
+            logOperationCalledLatch.await();
+
+            ArgumentCaptor<ApiCallStats> argument = ArgumentCaptor.forClass(ApiCallStats.class);
+
+            verify(mAdServicesLogger).logApiCallStats(argument.capture());
+            assertThat(argument.getValue().getCode()).isEqualTo(AD_SERVICES_API_CALLED);
+            assertThat(argument.getValue().getApiClass())
+                    .isEqualTo(AD_SERVICES_API_CALLED__API_CLASS__TARGETING);
+            assertThat(argument.getValue().getApiName())
+                    .isEqualTo(AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS);
+            assertThat(argument.getValue().getResultCode()).isEqualTo(expectedResultCode);
+            assertThat(argument.getValue().getAppPackageName())
+                    .isEqualTo(request.getAppPackageName());
+            assertThat(argument.getValue().getSdkPackageName()).isEqualTo(request.getSdkName());
+        }
     }
 
     private void runGetTopics(TopicsServiceImpl topicsServiceImpl) throws Exception {
@@ -1059,11 +1181,11 @@ public class TopicsServiceImplTest {
     private List<Topic> prepareAndPersistTopics(int numberOfLookBackEpochs) {
         final Pair<String, String> appSdkKey = Pair.create(TEST_APP_PACKAGE_NAME, SOME_SDK_NAME);
         Topic topic1 =
-                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
+                Topic.create(/* topic */ 1, /* taxonomyVersion= */ 1L, /* modelVersion= */ 4L);
         Topic topic2 =
-                Topic.create(/* topic */ 2, /* taxonomyVersion = */ 2L, /* modelVersion = */ 5L);
+                Topic.create(/* topic */ 2, /* taxonomyVersion= */ 2L, /* modelVersion= */ 5L);
         Topic topic3 =
-                Topic.create(/* topic */ 3, /* taxonomyVersion = */ 3L, /* modelVersion = */ 6L);
+                Topic.create(/* topic */ 3, /* taxonomyVersion= */ 3L, /* modelVersion= */ 6L);
         Topic[] topics = {topic1, topic2, topic3};
         // persist returned topics into DB
         for (int numEpoch = 1; numEpoch <= numberOfLookBackEpochs; numEpoch++) {

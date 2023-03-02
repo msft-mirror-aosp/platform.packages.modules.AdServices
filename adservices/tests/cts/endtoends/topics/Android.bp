@@ -16,32 +16,52 @@ package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
-android_test {
-    name: "CtsAdServicesEndToEndTests",
+java_defaults {
+    name: "cts-adservices-endtoend-defaults",
     srcs: [
         "src/**/*.java",
     ],
     static_libs: [
         "androidx.concurrent_concurrent-futures",
-        "compatibility-device-util-axt",
+        "compatibility-device-util-axt", // Needed for ShellUtils.runShellCommand
         "truth-prebuilt",
-        "ub-uiautomator",
-        "adservices-test-fixtures",
         "adservices-clients",
+        "adservices-cts-utility",
     ],
     libs: [
         "android.test.base",
-        "framework-adservices.impl",
+        "framework-adservices",
         "framework-sdksandbox.impl",
     ],
+    sdk_version: "module_current",
+}
+
+android_test {
+    name: "CtsAdServicesEndToEndTests",
+    defaults: ["cts-adservices-endtoend-defaults"],
     test_suites: [
         "cts",
         "general-tests",
         "mts-adservices"
     ],
-    // To fix Pre-submit warning, suggested by farivar@
-    javacflags: ["-parameters"],
-    sdk_version: "module_current",
     min_sdk_version: "Tiramisu",
+    manifest: "CtsAdServicesEndToEndTestsManifest.xml",
+    test_config: "CtsAdServicesEndToEndTests.xml",
     test_mainline_modules: ["com.google.android.adservices.apex"],
 }
+
+android_test {
+    name: "CtsAdExtServicesEndToEndTests",
+    defaults: ["cts-adservices-endtoend-defaults"],
+    test_suites: [
+        "cts",
+        "general-tests",
+        "mts-extservices",
+    ],
+    min_sdk_version: "30",
+    max_sdk_version: "32",
+    manifest: "CtsAdExtServicesEndToEndTestsManifest.xml",
+    test_config: "CtsAdExtServicesEndToEndTests.xml",
+    test_mainline_modules: ["com.google.android.extservices.apex"],
+}
+

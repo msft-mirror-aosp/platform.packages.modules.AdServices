@@ -21,6 +21,7 @@ import android.annotation.SdkConstant;
 import android.annotation.SystemApi;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
+import android.os.IBinder;
 
 /**
  * Exposes APIs to {@code system_server} components outside of the module boundaries.
@@ -113,4 +114,12 @@ public interface SdkSandboxManagerLocal {
      * @hide
      */
     boolean isInstrumentationRunning(@NonNull String clientAppPackageName, int clientAppUid);
+
+    /**
+     * Register the AdServicesManager System Service
+     *
+     * @param iBinder The AdServicesManagerService Binder.
+     * @hide
+     */
+    void registerAdServicesManagerService(IBinder iBinder);
 }

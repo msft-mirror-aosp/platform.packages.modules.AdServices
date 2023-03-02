@@ -32,6 +32,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AllowLists;
+import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.customaudience.CustomAudienceUpdatableData;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -374,9 +375,7 @@ public abstract class CustomAudienceDao {
 
         if (!ownersToRemove.isEmpty()) {
             Set<String> allowedPackages =
-                    packageManager
-                            .getInstalledApplications(PackageManager.ApplicationInfoFlags.of(0))
-                            .stream()
+                    PackageManagerCompatUtils.getInstalledApplications(packageManager, 0).stream()
                             .map(applicationInfo -> applicationInfo.packageName)
                             .collect(Collectors.toSet());
 

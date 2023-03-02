@@ -13,7 +13,7 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-
+<!-- IMPORTANT! If adding new strings, then run generate_adservices_public_xml.py -->
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!-- Title of an application permission that lets it access AdServices Topics API. [CHAR LIMIT=NONE] -->
     <string name="permlab_accessAdServicesTopics">access AdServices Topics API</string>
@@ -65,6 +65,11 @@
     <string name="permlab_accessAdServicesState">Access to AdService’s enablement state API</string>
     <!-- Description of an application permission that lets it access AdService's enablement state API. [CHAR LIMIT=NONE] -->
     <string name="permdesc_accessAdServicesState">Allows an application to access AdService’s enablement state API.</string>
+
+    <!-- Title of an application permission that lets it access AdServicesManager’s APIs. [CHAR LIMIT=NONE] -->
+    <string name="permlab_accessAdServicesManager">Access to AdServicesManager’s APIs</string>
+    <!-- Description of an application permission that lets it access AdServicesManager’s APIs. [CHAR LIMIT=NONE] -->
+    <string name="permdesc_accessAdServicesManager">Allows an application to access AdServicesManager’s APIs.</string>
 
     <!-- Settings App UI strings -->
 
@@ -157,6 +162,120 @@
     <!-- Text that is part of an additional explainer of how the privacy sandbox works. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_how_it_works_expanded_text6">Apps can estimate your interests and temporarily save these with Android. For example, an app you use to buy running shoes might estimate your interest as \"running marathons.\"\n\nLater, based on this interest, a different app can show you an ad related to marathons.\n\nIn your privacy settings, you can manage the list of apps that have saved interests.</string>
 
+    <!-- Text for the GA notification strings ******************************************************-->
+
+    <!-- ROW GA notification strings *****************************-->
+
+    <!-- ROW small notification title in the notification center *****************************-->
+    <!-- ROW small notification title in the notification center *****************************-->
+    <string name="notificationUI_notification_ga_title">New ad privacy features</string>
+    <!-- ROW small notification content in the notification center *****************************-->
+    <string name="notificationUI_notification_ga_content">Ad topics and new controls give you more choice over the ads you see</string>
+
+    <!-- ROW Detailed Ga Notification Activity Landing Page UI strings ******************************************************-->
+    <!-- Text for the title of the ROW notification landing page about ad topics. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_header_ga_title" translatable="false">@string/notificationUI_header_ga_title_eu</string>
+    <string name="notificationUI_container1_ga_introduction" translatable="false">@string/notificationUI_container1_body_ga_text_eu</string>
+    <!-- Text for explanation of apps and topics ad of the ROW notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_container2_ga_introduction">Android notes topics of interest based on apps you’ve used recently. Also, apps you use can determine what you like. Later, apps can ask for this information to show you personalized ads. You can choose which topics and apps are used to show you ads.</string>
+    <!-- Text for explanation of ad measurement of the ROW notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_container3_ga_introduction">To measure the performance of an ad, limited types of data are shared between apps.</string>
+    <!-- Text for button of expanding more information about ads the ROW notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_ga_container1_control_text">More about ads on Android</string>
+    <!-- Text for subtitle in the expander info about ads the ROW notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_row_subtitle1">More useful ads</string>
+    <!-- Text for information explaining ads in the expander of the ROW notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_row_body1">Apps can ask Android for information to help personalize the ads you see.</string>
+    <!-- Text for information explaining ads in the expander of the ROW notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_row_body2">&#8226;&#160;&#160;Android notes topics of interest based on the apps you’ve used recently.</string>
+    <!-- Text for information explaining ads in the expander of the ROW notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_row_body3">&#8226;&#160;&#160;Apps you use can also determine what you like based on how you use them. For example, if you use an app that sells long-distance running shoes, the app might decide that you’re interested in running marathons.</string>
+    <!-- Text for information explaining ads in the expander of the ROW notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_row_body4">Later, an app you use can ask for this information &#8212; either your ad topics or ads suggested by apps you’ve used.</string>
+    <!-- Text for information explaining ads in the expander of the ROW notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_row_body5">Android auto-deletes topics and app-suggested data regularly. You can also block specific topics and apps you don’t want to make suggestions.</string>
+    <!-- Text for information explaining ads in the expander of the ROW notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_subtitle2">Measuring how well an ad performs</string>
+    <!-- Text for information explaining ads in the expander of the ROW notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_row_body6">Apps you use can ask Android for information to help them measure the performance of their ads. Android lets apps collect limited types of data, such as the time of day an ad was shown to you.</string>
+    <!-- Text for information explaining ads in the expander of the ROW notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_row_body7">@string/notificationUI_learn_more_from_privacy_policy</string>
+
+    <!-- EU GA notification strings *****************************-->
+
+    <!-- EU Small Notification in the Notification Center strings ******************************************************-->
+    <!-- Text for the title of the small EU notification in notification center. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_notification_ga_title_eu">Try new ad privacy features</string>
+    <!-- Text for the content of the small EU notification in notification center. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_notification_ga_content_eu">Ad topics give you more choice over the ads you see</string>
+    <!-- Text for the call to action button of the EU notification. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_notification_ga_cta_eu">View Details</string>
+
+    <!-- EU Detailed Ga Notification Activity Landing Page UI strings ******************************************************-->
+    <!-- Text for the title of the EU notification landing page about ad topics. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_header_ga_title_eu">Enhanced ad privacy on Android</string>
+    <!-- Text for the subtitle of the EU notification landing page about ad topics. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_container1_body_ga_text_eu">Android is launching new privacy features that give you more choice over the ads you see.</string>
+    <!-- Text for content of the EU notification landing page about app-suggested ad and ad measurement. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_container2_body_ga_text_eu">Ad topics help apps show you relevant ads while protecting your identity and information about your app usage. Android can note topics of interest based on the apps you’ve used recently. Later, an app you use can ask Android for relevant topics to personalize the ads you see.</string>
+    <!-- Text for content of the EU notification landing page about app-suggested ad and ad measurement. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_container3_body_ga_text_eu">You can see ad topics in your device settings and block the ones you don’t want shared with apps. Android also auto-deletes ad topics regularly.</string>
+    <!-- Text for explanation changing the consent in privacy settings. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_change_any_time_in_privacy_settings_eu">You can change your mind any time in privacy settings.</string>
+    <!-- Text for expander button in the EU notification landing page about ad topics. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_container1_control_ga_text_eu">More about ad topics</string>
+    <!-- Text for content of the EU notification landing page about app-suggested ad and ad measurement. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_learn_more_from_privacy_policy">Learn more about how Android protects your data in our Privacy Policy.</string>
+    <!-- Text for the button to join ad topics in the EU notification landing page about ad topics. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_right_control_button_ga_text_eu">Yes, I\'m in</string>
+    <!-- Text for the explanation of ad topics in the expander in the EU notification landing page about ad topics. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_topics_expanded_text3">&#8226;&#160;&#160;What data is used</string>
+    <!-- Text for the explanation of ad topics in the expander in the EU notification landing page about ad topics. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_topics_expanded_text4">Your ad topics are based on the apps you’ve used recently on this device and how frequently you use them.</string>
+    <!-- Text for the explanation of ad topics in the expander in the EU notification landing page about ad topics. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_topics_expanded_text5">&#8226;&#160;&#160;How we use this data</string>
+    <!-- Text for the explanation of ad topics in the expander in the EU notification landing page about ad topics. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_topics_expanded_text6">Android notes topics of interest as you use your apps. Topic labels are predefined and include things like Arts &amp; Entertainment, Shopping, and Sports. Later, an app you use can ask Android for a few of your topics (but not data about your app usage or identity) to personalize the ads you see.</string>
+    <!-- Text for the explanation of ad topics in the expander in the EU notification landing page about ad topics. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_topics_expanded_text7">&#8226;&#160;&#160;How you can manage your data</string>
+    <!-- Text for the explanation of ad topics in the expander in the EU notification landing page about ad topics. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_topics_expanded_text8">Android auto-deletes topics regularly. As you continue using apps, a topic might reappear on the list. You can also block topics you don’t want Android to share with apps, and turn ad topics off at any time in privacy settings. </string>
+    <!-- Text for explanation about making changes in privacy settings in the EU/Row notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_you_can_change_in_privacy_settings">You can make changes in privacy settings.</string>
+
+    <!--  EU GA Notification Activity Page 2 UI strings ******************************************************-->
+    <!-- Text for title of the EU notification landing page about app-suggested ad and ad measurement. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_fledge_measurement_title">Other features that make ads more private</string>
+    <!-- Text for explanation in the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_fledge_measurement_introduction_text1">Android is launching new ways to limit what apps can learn about you when they show you personalized ads.</string>
+    <!-- Text for explanation in the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_fledge_measurement_introduction_text2">&#8226;&#160;&#160;App-suggested ads help protect your identity and information about your app usage while enabling apps to show you relevant ads. Based on your activity, an app you use can suggest related ads on other apps. You can see a list of apps and block them from making suggestions, in privacy settings.</string>
+    <!-- Text for explanation in the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_fledge_measurement_introduction_text3">&#8226;&#160;&#160;With ad measurement, limited types of data are shared between apps to measure the performance of their ads, such as the time of day an ad was shown to you.</string>
+    <!-- Text for the button in the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_fledge_measurement_control_ga_text_eu">More about app-suggested ads and ad measurement</string>
+    <!-- Text for explanation inside the expander of the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text0">App-suggested ads</string>
+    <!-- Text for explanation inside the expander of the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text1">&#8226;&#160;&#160;What data is used</string>
+    <!-- Text for explanation inside the expander of the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text2">Your activity in an app you use on this device.</string>
+    <!-- Text for explanation inside the expander of the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text3">&#8226;&#160;&#160;How apps use this data</string>
+    <!-- Text for explanation inside the expander of the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text4">Apps can store information with Android about things you like. For example, if you use an app about marathon training, the app might decide that you’re interested in running shoes. Later, if you use a different app, that app can show you an ad for running shoes suggested by the first app.</string>
+    <!-- Text for explanation inside the expander of the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text5">&#8226;&#160;&#160;How you can manage your data</string>
+    <!-- Text for explanation inside the expander of the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6">Android auto-deletes app-suggested data regularly. An app you use again might reappear on the list. </string>
+    <!-- Text for explanation inside the expander of the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7">You can also block an app from suggesting ads for you, reset all ad-suggestion data, or turn app-suggested ads off at any time in privacy settings.</string>
+    <!-- Text for explanation inside the expander of the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text8" translatable="false">@string/settingsUI_main_view_info_text8</string>
+    <!-- Text for explanation inside the expander of the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9">Apps you use can ask Android for information that helps them measure the performance of their ads. Android protects your privacy by limiting the information apps can share with one another.</string>
+
+
     <!-- Settings App UI main view strings ******************************************************-->
     <!-- Title text of the main view. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_main_view_title">Privacy Sandbox</string>
@@ -198,16 +317,29 @@
     <string name="settingsUI_unblock_topic_title">Unblock</string>
     <!-- Text for the button to open blocked topics view and the title of the blocked topics view. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_blocked_topics_title">Interests you’ve blocked</string>
+    <!-- Text for the title of the blocked topics view. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_blocked_topics_ga_view_title" translatable="false">@string/settingsUI_blocked_topics_ga_title</string>
     <!-- Text for the button to reset all topics. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_reset_topics_title">Reset all interests</string>
     <!-- Text to show if there are no topics. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_topics_view_no_topics_text">No interests to show right now</string>
+    <!-- Text to show if there are no topics. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_topics_view_no_topics_ga_text">No topics to show right now</string>
     <!-- Info text at the bottom of the topics view. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_topics_view_info_text1">Privacy Sandbox</string>
     <!-- Info text at the bottom of the topics view. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_topics_view_info_text2">Android’s ads privacy beta provides new features that apps can use to show you ads you might like. These technologies don’t use device identifiers.\n\nAndroid can estimate the kinds of ads you might be interested in, and save these interests temporarily on your device. This allows apps to show you relevant ads, without tracking your activity across websites and apps from other developers.</string>
     <!-- Text to show if there are no topics. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_topics_view_no_blocked_topics_text">You have no blocked interests</string>
+    <!-- Text to show if there are no topics. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_no_blocked_topics_ga_text">No blocked topics</string>
+    <!-- Text to show blocked topics. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_view_blocked_topics_title">View blocked topics</string>
+
+    <!-- Info text for toast displayed after topics are reset. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_topics_are_reset">Interests are reset</string>
+    <!-- Info text for toast displayed after topics are reset. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_topics_are_reset_ga">Topics were reset</string>
 
     <!-- Settings App UI apps view strings ****************************************************-->
     <!-- Title text of the apps view. [CHAR LIMIT=NONE] -->
@@ -219,17 +351,38 @@
     <!-- Text for the button to unblock an app. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_unblock_app_title" translatable="false">@string/settingsUI_unblock_topic_title</string>
     <!-- Text for the button to open blocked apps fragment and the title of the blocked apps view. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_blocked_apps_title">Apps you’ve blocked</string>
+    <string name="settingsUI_blocked_apps_title">Apps you blocked</string>
+    <!-- Text for the button to open blocked apps fragment in ga ux. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_view_blocked_apps_title">View blocked apps</string>
     <!-- Text for the button to reset all apps. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_reset_apps_title">Reset interests estimated by apps</string>
     <!-- Text to show if there are no apps. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_apps_view_no_apps_text">No apps are generating interests for you right now</string>
+    <!-- Text to show if there are no apps. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_apps_view_no_apps_ga_text">No apps to show right now</string>
+
     <!-- Info text at the bottom of the apps view. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_apps_view_info_text1">Privacy Sandbox</string>
     <!-- Info text at the bottom of the apps view. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_apps_view_info_text2">Android’s ads privacy beta provides new features that apps can use to show you ads you might like. These technologies don’t use device identifiers.\n\nApps can estimate the kinds of ads you might be interested in, and save these interests temporarily on your device. This allows apps to show you relevant ads, without tracking your activity across websites and apps from other developers.</string>
     <!-- Text to show if there are no apps. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_apps_view_no_blocked_apps_text">You have no blocked apps</string>
+    <!-- Text to show if there are no apps. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_no_blocked_apps_ga_text">No blocked apps</string>
+    <!-- Settings App UI Measurement View strings *******************************************************-->
+    <!-- Text for the toggle in the measurement page.[CHAR LIMIT=NONE] -->
+    <string name="settingsUI_measurement_switch_title">Allow ad measurement</string>
+    <!-- Text for the introduction to ad measurement data. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_measurement_view_intro_text">Apps and advertisers can request information from Android that helps them measure the performance of their ads.\n\nAd measurement data is deleted regularly from your device.</string>
+    <!-- Text for the button to reset measurement data. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_measurement_view_reset_title">Reset measurement data</string>
+    <!-- Title for the ads measurement view. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_measurement_view_title" translatable="false">@string/settingsUI_main_view_info_text8</string>
+    <!-- Text for the footer of measurement view. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_measurement_view_footer_text">Android protects your privacy by limiting the information apps can share with one another. Reports are sent with a delay to protect your identity.\n\nYour browser may have a similar setting. If ad measurement is on for both Android and your browser, a company may be able to measure the effectiveness of an ad between apps you use and sites you visit. Your browsing history is kept private on your device.\n\nLearn more about how Android protects your data in our Privacy Policy.</string>
+    <!-- Text for the toast message of measurement reset. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_measurement_are_reset">Ad measurement data was reset</string>
+
 
     <!-- Settings App UI dialog strings *******************************************************-->
     <!-- Text for the button to cancel out of a dialog. [CHAR LIMIT=NONE] -->
@@ -243,39 +396,125 @@
     <!-- Title for the dialog to block a topic. This dialog is confirming that the user wants to block the specified topic. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_dialog_block_topic_title">Block <xliff:g id="topic" example="Fashion">%1$s</xliff:g>?</string>
     <!-- Body text for the dialog to block a topic. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_dialog_block_topic_message">This interest will be blocked and won’t be added to your list again, unless you add it back. You may still see some related ads.</string>
+    <string name="settingsUI_dialog_block_topic_message">This topic will be blocked and won’t be added to your list again, unless you add it back. You may still see some related ads.</string>
     <!-- Text for button in a dialog to block a topic. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_dialog_block_topic_positive_text">Block</string>
     <!-- Title for the dialog to unblock a topic. This dialog is notifying that the user has unblocked the specified topic. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_dialog_unblock_topic_title"><xliff:g id="topic" example="Fashion">%1$s</xliff:g> is unblocked</string>
     <!-- Body text for the dialog to unblock a topic. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_dialog_unblock_topic_message">Android may add this interest to your list again, but it might not appear immediately</string>
+    <string name="settingsUI_dialog_unblock_topic_message">Android may add this topic to your list again, but it might not appear immediately</string>
+
     <!-- Text for button in a dialog to unblock a topic. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_dialog_unblock_topic_positive_text">OK</string>
     <!-- Title for the dialog to reset all topics. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_dialog_reset_topic_title">Reset all of your interests?</string>
+    <string name="settingsUI_dialog_reset_topic_title">Reset all ad topics?</string>
     <!-- Body text for the dialog to reset all topics. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_dialog_reset_topic_message">Your list will be cleared and new interests will be estimated going forward. You may still see some ads related to cleared interests.</string>
+    <string name="settingsUI_dialog_reset_topic_message">Your list will be cleared and new topics will be added going forward. You may still see some ads related to topics you’ve reset.</string>
     <!-- Text for the button in a dialog to reset all topics. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_dialog_reset_topic_positive_text">Reset</string>
     <!-- Title for the dialog to block a an app. This dialog is confirming that the user wants to block the specified app from estimating interests. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_dialog_block_app_title">Block <xliff:g id="app" example="AirBnB">%1$s</xliff:g>?</string>
     <!-- Body text for the dialog to block an app. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_dialog_block_app_message">This app won’t estimate interests for the Privacy Sandbox and won’t be added to your list again, unless you unblock it.\n\nInterests already estimated by this app will be deleted, but you might still see some related ads.</string>
+    <string name="settingsUI_dialog_block_app_message">This app won’t suggest ads and won’t be added to your list again, unless you unblock it. You might still see some related ads.</string>
     <!-- Text for button in a dialog to block an app. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_dialog_block_app_positive_text" translatable="false">@string/settingsUI_dialog_block_topic_positive_text</string>
     <!-- Title for the dialog to unblock an app. This dialog is notifying that the user has unblocked the specified app. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_dialog_unblock_app_title"><xliff:g id="app" example="AirBnB">%1$s</xliff:g> is unblocked</string>
     <!-- Body text for the dialog to unblock an app. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_dialog_unblock_app_message">This app can estimate interests for you again, but it might not appear on your list immediately. It might take a while for you to see related ads.</string>
+    <string name="settingsUI_dialog_unblock_app_message">This app can suggest ads for you again, but it might not appear on your list immediately. It might take a while for you to see related ads.</string>
     <!-- Text for button in a dialog to unblock an app. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_dialog_unblock_app_positive_text" translatable="false">@string/settingsUI_dialog_unblock_topic_positive_text</string>
     <!-- Title for the dialog to reset all apps. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_dialog_reset_app_title">Reset interests generated by apps?</string>
+    <string name="settingsUI_dialog_reset_app_title">Reset ads suggested by apps?</string>
     <!-- Body text for the dialog to reset all apps. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_dialog_reset_app_message">Interests estimated by the apps on your list will be deleted from the Privacy Sandbox, and the apps will estimate new interests going forward. You may still see some related ads.</string>
+    <string name="settingsUI_dialog_reset_app_message">Ad-suggestion data from the apps on your list will be deleted and the apps will suggest new ads going forward. You may still see some related ads.</string>
     <!-- Text for the button in a dialog to reset all apps. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_dialog_reset_app_positive_text" translatable="false">@string/settingsUI_dialog_reset_topic_positive_text</string>
+    <!-- Info text for toast displayed after apps are reset. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_apps_are_reset">App data was reset</string>
+    <!-- Text for the speed bump of resetting ad topics.[CHAR LIMIT=NONE] -->
+    <string name="settingsUI_dialog_topics_opt_out_title">Reset all topics?</string>
+    <!-- Text for the speed bump of resetting app-suggested ads data .[CHAR LIMIT=NONE] -->
+    <string name="settingsUI_dialog_apps_opt_out_title">Reset ads suggested by apps?</string>
+    <!--    TODO (b/265360122): remove these strings of the speed bump of resetting ad measurement -->
+    <!--    title for button to reset ads measurement. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_dialog_reset_measurement_title" translatable="false">Clear data for Ads measurement?</string>
+    <!--    Body text for the dialog to reset ads measurement [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_dialog_reset_measurement_message" translatable="false">[Copy for measurement] PlaceHolder of for measurement clear message dialog</string>
+    <string name="settingsUI_dialog_reset_measurement_positive_text" translatable="false">Clear</string>
+
+    <!-- Settings App GA UI main view strings ******************************************************-->
+    <!-- Title text of the main view. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_main_view_ga_title">Ad privacy</string>
+    <!-- Text for the button to open the topics view. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_topics_ga_title">Ad topics</string>
+    <!-- Text for the button to open the apps view. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_apps_ga_title">App-suggested ads</string>
+    <!-- Text for the button to open the measurement view. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_measurement_ga_title">@string/settingsUI_main_view_info_text8</string>
+    <!-- Text for the explanation of ad topics. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_main_view_ad_topics_info">Android notes topics of interest based on the apps you’ve used recently and how frequently you use them.</string>
+    <!-- Text for the explanation of app-suggested ads. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_main_view_apps_info">Apps you use can also determine what you like based on how you use them.</string>
+    <!-- Text for the explanation of ad measurement. [CHAR LIMIT=NONE] -->
+    <string name="settingsU_main_view_measurement_info">Apps you use can ask Android for information to help them measure the performance of their ads. Android lets apps collect limited types of data.</string>
+    <!-- Text for the topic subtitle in the settings UI showing On and the count of topics. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_topics_subtitle">On / <xliff:g id="topics_count" example="7">%1$d</xliff:g> topics</string>
+    <!-- Text for the topic subtitle with plural changes in the settings UI showing On and the count of topics. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_topics_subtitle_plural">{count, plural,
+    =1    {On / # topic}
+    other {On / # topics}
+    }</string>
+    <!-- Text for the apps subtitle in the settings UI showing On and the count of apps. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_apps_subtitle">On / <xliff:g id="apps_count" example="6">%1$d</xliff:g> apps</string>
+    <!-- Text for the apps subtitle with plural changes in the settings UI showing On and the count of apps. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_apps_subtitle_plural">{count, plural,
+    =1    {On / # app}
+    other {On / # apps}
+    }</string>
+    <!-- Text for subtitle in the settings UI showing measurement consent is On.[CHAR LIMIT=NONE] -->
+    <string name="settingsUI_subtitle_consent_on">On</string>
+    <!-- Text for the any subtitle in the settings UI showing whose consent is Off.[CHAR LIMIT=NONE] -->
+    <string name="settingsUI_subtitle_consent_off">Off</string>
+    <string name="settingsUI_dialog_measurement_opt_out_title" translatable="false">Turn off measurement?</string>
+
+    <!-- Settings App UI topics view strings for GA UX ****************************************************-->
+    <!-- Title text of the topics view. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_topics_view_ga_title" translatable="false">@string/settingsUI_topics_ga_title</string>
+    <!-- Sub title text of the topics view. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_topics_view_ga_subtitle">Topics of interest are based on the apps you’ve used recently, and are used by apps to show you personalized ads.\n\nYou can block topics you don’t want shared with apps. Android also auto-deletes topics regularly.</string>
+    <!-- Text for the toggle in the topics page.[CHAR LIMIT=NONE] -->
+    <string name="settingsUI_topics_switch_title">Allow ad topics</string>
+    <!-- Text for the button to open blocked topics view. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_blocked_topics_ga_title">Ad topics you blocked</string>
+    <!-- Text for the button to reset all topics. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_reset_topics_ga_title">Reset all ad topics</string>
+    <!-- Text for the info of ad topics. [CHAR LIMIT=NONE] -->
+    <string name="settingsU_topics_view_footer">Android notes topics of interest based on the apps you’ve used in the last few weeks.\n\nLater, an app you use can ask Android for your topics to personalize the ads you see. Android shares up to 3 topics while protecting your identity and information about your app usage.\n\nAndroid auto-deletes topics regularly. As you continue using apps, a topic might reappear on the list. Or you can block topics you don’t want Android to share with apps.\n\nIn your apps, an ad you see may be personalized, depending on this setting, the app-suggested ads setting, your advertising ID settings, and whether the app you’re using personalizes ads.</string>
+
+    <!-- Settings App UI apps view strings for GA UX****************************************************-->
+    <!-- Title text of the apps view. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_apps_view_ga_title" translatable="false">@string/settingsUI_apps_ga_title</string>
+    <!-- Text for the toggle in the apps page.[CHAR LIMIT=NONE] -->
+    <string name="settingsUI_apps_switch_title">Allow app-suggested ads</string>
+    <!-- Sub title text of the apps view. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_apps_view_ga_subtitle">Apps you use can determine what you like and then suggest ads on other apps.\n\nYou can block apps from making suggestions. Android also auto-deletes app-suggested data regularly.</string>
+    <!-- Text for the button to open blocked apps fragment  [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_blocked_apps_ga_title">Apps you blocked</string>
+    <!-- Text for the button to reset all apps. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_reset_apps_ga_title">Reset app-suggested data</string>
+    <!-- Text for the info of app-suggested ads. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_apps_view_footer">It’s common for apps you use to remember things you’re interested in to personalize your experience. Apps can also store information with Android about your topics.\n\nFor example, if you use an app about marathon training, the app might decide that you’re interested in running shoes. Later, if you use a different app, that app can show you an ad for running shoes suggested by the first app.\n\nAndroid auto-deletes app-suggested data regularly. An app you use again might reappear on the list. Or you can block an app from suggesting ads for you.\n\nIn your apps, an ad you see may be personalized, depending on this setting, the ad topics setting, your advertising ID settings, and whether the app you’re using personalizes ads.</string>
+
+    <!-- Illustration description texts ****************************************************-->
+    <!-- Description for an illustration for accessibility purposes. [CHAR LIMIT=NONE] -->
+    <string name="ic_consent_notification_ga_image_description">Colorful illustration of symbols representing topics of interest like music, news, and sports</string>
+    <!-- Description for an illustration for accessibility purposes. [CHAR LIMIT=NONE] -->
+    <string name="ic_main_view_ga_image_description">Colorful illustration of a lock inside a circle</string>
+    <!-- Description for an illustration for accessibility purposes. [CHAR LIMIT=NONE] -->
+    <string name="ic_placeholder_icon_for_empty_apps_list_description">Small black and white illustration of nine dots forming a square</string>
+    <!-- Description for an illustration for accessibility purposes. [CHAR LIMIT=NONE] -->
+    <string name="ic_placeholder_icon_for_empty_topics_list_description">Small black and white illustration of simple shapes like a heart, triangle, and square</string>
 
     <!-- All Topics strings *********************************************************************-->
     <!-- Text for the topic name for topic Arts &amp; Entertainment. [CHAR LIMIT=NONE] -->
