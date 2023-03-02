@@ -36,8 +36,11 @@ import android.adservices.customaudience.ICustomAudienceCallback;
 import android.adservices.customaudience.ICustomAudienceService;
 import android.annotation.NonNull;
 import android.content.Context;
+import android.os.Build;
 import android.os.LimitExceededException;
 import android.os.RemoteException;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -64,6 +67,8 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
 /** Implementation of the Custom Audience service. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
     @NonNull private final Context mContext;
     @NonNull private final CustomAudienceImpl mCustomAudienceImpl;
@@ -210,6 +215,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                         customAudience.getBuyer(),
                         ownerPackageName,
                         mFlags.getEnforceForegroundStatusForFledgeCustomAudience(),
+                        false,
                         callerUid,
                         apiName,
                         FLEDGE_API_JOIN_CUSTOM_AUDIENCE);
@@ -222,8 +228,6 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                     LogUtil.v("Joining custom audience");
                     mCustomAudienceImpl.joinCustomAudience(customAudience, ownerPackageName);
                     BackgroundFetchJobService.scheduleIfNeeded(mContext, mFlags, false);
-                    // TODO(b/233681870): Investigate implementation of actual failures
-                    //  in logs/metrics
                     resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
                 } else {
                     LogUtil.v("Consent revoked");
@@ -330,6 +334,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                         buyer,
                         ownerPackageName,
                         mFlags.getEnforceForegroundStatusForFledgeCustomAudience(),
+                        false,
                         callerUid,
                         apiName,
                         FLEDGE_API_LEAVE_CUSTOM_AUDIENCE);
@@ -338,8 +343,6 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
 
                 // Fail silently for revoked user consent
                 if (!mConsentManager.isFledgeConsentRevokedForApp(ownerPackageName)) {
-                    // TODO(b/233681870): Investigate implementation of actual failures
-                    //  in logs/metrics
                     mCustomAudienceImpl.leaveCustomAudience(ownerPackageName, buyer, name);
                     resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
                 } else {
@@ -360,8 +363,6 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             }
 
             callback.onSuccess();
-            // TODO(b/233681870): Investigate implementation of actual failures in
-            //  logs/metrics
         } catch (Exception exception) {
             LogUtil.e(exception, "Unable to send result to the callback");
             resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;

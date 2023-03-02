@@ -27,7 +27,10 @@ import android.adservices.common.FledgeErrorResponse;
 import android.adservices.customaudience.CustomAudienceOverrideCallback;
 import android.annotation.NonNull;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.RemoteException;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
@@ -46,6 +49,8 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
 /** Encapsulates the Custom Audience Override Logic */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class CustomAudienceOverrider {
     @NonNull private final DevContext mDevContext;
     @NonNull private final CustomAudienceDao mCustomAudienceDao;

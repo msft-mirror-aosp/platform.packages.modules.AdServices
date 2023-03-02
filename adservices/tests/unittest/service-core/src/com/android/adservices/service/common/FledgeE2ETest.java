@@ -78,12 +78,15 @@ import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.data.adselection.AppInstallDao;
+import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdSelectionServiceImpl;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
+import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
@@ -173,6 +176,7 @@ public class FledgeE2ETest {
     private AdServicesHttpsClient mAdServicesHttpsClient;
     private CustomAudienceDao mCustomAudienceDao;
     private AdSelectionEntryDao mAdSelectionEntryDao;
+    private AppInstallDao mAppInstallDao;
     private ExecutorService mLightweightExecutorService;
     private ExecutorService mBackgroundExecutorService;
     private ScheduledThreadPoolExecutor mScheduledExecutor;
@@ -222,6 +226,10 @@ public class FledgeE2ETest {
                 Room.inMemoryDatabaseBuilder(CONTEXT, AdSelectionDatabase.class)
                         .build()
                         .adSelectionEntryDao();
+        mAppInstallDao =
+                Room.inMemoryDatabaseBuilder(CONTEXT, SharedStorageDatabase.class)
+                        .build()
+                        .appInstallDao();
 
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
@@ -249,7 +257,8 @@ public class FledgeE2ETest {
         when(mMockDBAdSelectionFile.length()).thenReturn(DB_AD_SELECTION_FILE_SIZE);
         doNothing()
                 .when(mFledgeServiceFilter)
-                .filterRequest(any(), anyString(), anyBoolean(), anyInt(), anyInt(), any());
+                .filterRequest(
+                        any(), anyString(), anyBoolean(), anyBoolean(), anyInt(), anyInt(), any());
         when(ConsentManager.getInstance(CONTEXT)).thenReturn(mConsentManagerMock);
         when(AppImportanceFilter.create(any(), anyInt(), any()))
                 .thenReturn(mAppImportanceFilterMock);
@@ -925,6 +934,7 @@ public class FledgeE2ETest {
         mAdSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
@@ -1710,7 +1720,8 @@ public class FledgeE2ETest {
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
         doThrow(new ConsentManager.RevokedConsentException())
                 .when(mFledgeServiceFilter)
-                .filterRequest(any(), anyString(), anyBoolean(), anyInt(), anyInt(), any());
+                .filterRequest(
+                        any(), anyString(), anyBoolean(), anyBoolean(), anyInt(), anyInt(), any());
 
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
@@ -2101,6 +2112,7 @@ public class FledgeE2ETest {
         mAdSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
