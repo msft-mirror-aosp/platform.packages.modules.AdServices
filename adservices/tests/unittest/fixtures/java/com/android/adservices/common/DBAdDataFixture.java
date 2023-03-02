@@ -26,6 +26,12 @@ import java.util.stream.Collectors;
 
 public class DBAdDataFixture {
     public static List<DBAdData> getValidDbAdDataListByBuyer(AdTechIdentifier buyer) {
+        return AdDataFixture.getValidFilterAdsByBuyer(buyer).stream()
+                .map(DBAdData::fromServiceObject)
+                .collect(Collectors.toList());
+    }
+
+    public static List<DBAdData> getValidDbAdDataListByBuyerNoFilters(AdTechIdentifier buyer) {
         return AdDataFixture.getValidAdsByBuyer(buyer).stream()
                 .map(DBAdData::fromServiceObject)
                 .collect(Collectors.toList());
