@@ -61,6 +61,8 @@ public class FledgeServiceFilter extends AbstractFledgeServiceFilter {
      *     enrollment check will not be applied if it is null.
      * @param callerPackageName caller package name to be validated
      * @param enforceForeground whether to enforce a foreground check
+     * @param enforceConsent Checks if the user has revoked global FLEDGE consent if set to true.
+     *     Should only be set to false if the caller is checking FLEDGE consent on their own.
      * @throws FledgeAuthorizationFilter.CallerMismatchException if the {@code callerPackageName} is
      *     not valid
      * @throws AppImportanceFilter.WrongCallingApplicationStateException if the foreground check is
@@ -78,6 +80,7 @@ public class FledgeServiceFilter extends AbstractFledgeServiceFilter {
             @Nullable AdTechIdentifier adTech,
             @NonNull String callerPackageName,
             boolean enforceForeground,
+            boolean enforceConsent,
             int callerUid,
             int apiName,
             @NonNull Throttler.ApiKey apiKey) {
@@ -93,6 +96,8 @@ public class FledgeServiceFilter extends AbstractFledgeServiceFilter {
             assertFledgeEnrollment(adTech, callerPackageName, apiName);
         }
         assertAppInAllowList(callerPackageName, apiName);
-        assertCallerHasUserConsent();
+        if (enforceConsent) {
+            assertCallerHasUserConsent();
+        }
     }
 }

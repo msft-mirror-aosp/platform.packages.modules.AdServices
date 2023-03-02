@@ -143,6 +143,7 @@ public class InteractionReporter {
                                                 callerPackageName,
                                                 mFlags
                                                         .getEnforceForegroundStatusForFledgeReportInteraction(),
+                                                true,
                                                 mCallerUid,
                                                 AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
                                                 Throttler.ApiKey.FLEDGE_API_REPORT_INTERACTION);

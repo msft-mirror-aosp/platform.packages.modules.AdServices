@@ -61,6 +61,7 @@ public class CustomAudienceServiceFilter extends AbstractFledgeServiceFilter {
      *     skipped.
      * @param callerPackageName caller package name to be validated
      * @param enforceForeground whether to enforce a foreground check
+     * @param enforceConsent currently unused in CustomAudienceServiceFilter
      * @param callerUid caller's uid from the Binder thread
      * @param apiName the id of the api being called
      * @param apiKey api-specific throttler key
@@ -79,6 +80,7 @@ public class CustomAudienceServiceFilter extends AbstractFledgeServiceFilter {
             @Nullable AdTechIdentifier adTech,
             @NonNull String callerPackageName,
             boolean enforceForeground,
+            boolean enforceConsent,
             int callerUid,
             int apiName,
             @NonNull Throttler.ApiKey apiKey) {
