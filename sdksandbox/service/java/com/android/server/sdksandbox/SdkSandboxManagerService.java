@@ -759,7 +759,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         // unload.
         if (prevLoadSession == null) {
             // Unloading SDK that is not loaded is a no-op, return.
-            Log.i(TAG, "SDK " + sdkName + " is not loaded for " + callingInfo);
+            Log.w(TAG, "SDK " + sdkName + " is not loaded for " + callingInfo);
             return;
         }
 
