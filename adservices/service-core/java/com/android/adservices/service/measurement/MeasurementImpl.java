@@ -39,7 +39,10 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.view.InputEvent;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.DbHelper;
@@ -73,6 +76,8 @@ import javax.annotation.concurrent.ThreadSafe;
  *
  * @hide
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 @ThreadSafe
 @WorkerThread
 public final class MeasurementImpl {

@@ -25,6 +25,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -43,6 +46,8 @@ import java.util.concurrent.Executor;
  * Receiver to receive a com.android.adservices.PACKAGE_CHANGED broadcast from the AdServices system
  * service when package install/uninstalls occur.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class PackageChangedReceiver extends BroadcastReceiver {
 
     /**

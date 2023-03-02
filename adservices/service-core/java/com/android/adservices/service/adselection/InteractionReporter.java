@@ -30,9 +30,12 @@ import android.adservices.common.FledgeErrorResponse;
 import android.annotation.NonNull;
 import android.content.Context;
 import android.net.Uri;
+import android.os.Build;
 import android.os.LimitExceededException;
 import android.os.RemoteException;
 import android.os.Trace;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
@@ -61,6 +64,8 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
 /** Encapsulates the Interaction Reporting logic */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class InteractionReporter {
     @ReportInteractionRequest.ReportingDestination
     private static final int[] POSSIBLE_DESTINATIONS =
@@ -138,6 +143,7 @@ public class InteractionReporter {
                                                 callerPackageName,
                                                 mFlags
                                                         .getEnforceForegroundStatusForFledgeReportInteraction(),
+                                                true,
                                                 mCallerUid,
                                                 AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
                                                 Throttler.ApiKey.FLEDGE_API_REPORT_INTERACTION);
