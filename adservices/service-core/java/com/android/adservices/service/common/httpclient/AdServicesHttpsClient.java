@@ -194,10 +194,7 @@ public class AdServicesHttpsClient {
             @NonNull AdServicesHttpClientRequest request) {
         Objects.requireNonNull(request.getUri());
         return ClosingFuture.from(
-                        mExecutorService.submit(
-                                () ->
-                                        mUriConverter.toUrl(
-                                                request.getUri(), request.getQueryParams())))
+                        mExecutorService.submit(() -> mUriConverter.toUrl(request.getUri())))
                 .transformAsync(
                         (closer, url) ->
                                 ClosingFuture.from(
@@ -215,16 +212,9 @@ public class AdServicesHttpsClient {
         int traceCookie = Tracing.beginAsyncSection(Tracing.FETCH_PAYLOAD);
         LogUtil.v("Downloading payload from: \"%s\"", url.toString());
         if (request.getUseCache()) {
-            DBCacheEntry cachedEntry = mCache.get(url);
-            if (cachedEntry != null) {
-                LogUtil.v("Cache hit for url: %s", url.toString());
-                return AdServicesHttpClientResponse.builder()
-                        .setResponseBody(cachedEntry.getResponseBody())
-                        .setResponseHeaders(
-                                ImmutableMap.<String, List<String>>builder()
-                                        .putAll(cachedEntry.getResponseHeaders().entrySet())
-                                        .build())
-                        .build();
+            AdServicesHttpClientResponse cachedResponse = getResultsFromCache(url);
+            if (cachedResponse != null) {
+                return cachedResponse;
             }
             LogUtil.v("Cache miss for url: %s", url.toString());
         }
@@ -241,6 +231,9 @@ public class AdServicesHttpsClient {
         try {
             // TODO(b/237342352): Both connect and read timeouts are kludged in this method and if
             //  necessary need to be separated
+            for (Map.Entry<String, String> entry : request.getRequestProperties().entrySet()) {
+                urlConnection.setRequestProperty(entry.getKey(), entry.getValue());
+            }
             Map<String, List<String>> requestPropertiesMap = urlConnection.getRequestProperties();
             inputStream = new BufferedInputStream(urlConnection.getInputStream());
             closer.eventuallyClose(new CloseableConnectionWrapper(urlConnection), mExecutorService);
@@ -289,6 +282,20 @@ public class AdServicesHttpsClient {
         return result;
     }
 
+    private AdServicesHttpClientResponse getResultsFromCache(URL url) {
+        DBCacheEntry cachedEntry = mCache.get(url);
+        if (cachedEntry != null) {
+            LogUtil.v("Cache hit for url: %s", url.toString());
+            return AdServicesHttpClientResponse.builder()
+                    .setResponseBody(cachedEntry.getResponseBody())
+                    .setResponseHeaders(
+                            ImmutableMap.<String, List<String>>builder()
+                                    .putAll(cachedEntry.getResponseHeaders().entrySet())
+                                    .build())
+                    .build();
+        }
+        return null;
+    }
     /**
      * Performs a GET request on a Uri without reading the response.
      *
@@ -551,15 +558,6 @@ public class AdServicesHttpsClient {
                 throw new IllegalArgumentException("Uri is malformed!");
             }
             return url;
-        }
-
-        @NonNull
-        URL toUrl(@NonNull Uri uri, @NonNull Map<String, String> queryParams) {
-            Uri.Builder uriBuilder = uri.buildUpon();
-            for (Map.Entry<String, String> queryParam : queryParams.entrySet()) {
-                uriBuilder.appendQueryParameter(queryParam.getKey(), queryParam.getValue());
-            }
-            return toUrl(uriBuilder.build());
         }
     }
 
