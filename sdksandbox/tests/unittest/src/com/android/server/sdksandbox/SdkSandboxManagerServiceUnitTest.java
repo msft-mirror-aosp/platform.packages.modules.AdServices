@@ -1087,7 +1087,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
         ApplicationInfo sdkSandboxInfo =
                 sSdkSandboxManagerLocal.getSdkSandboxApplicationInfoForInstrumentation(
-                        clientAppInfo, /* userId= */ 0);
+                        clientAppInfo, /* userId= */ 0, /* isSdkInSandbox= */ false);
 
         assertThat(sdkSandboxInfo.processName).isEqualTo(TEST_PACKAGE + "_sdk_sandbox_instr");
         assertThat(sdkSandboxInfo.packageName).isEqualTo(pm.getSdkSandboxPackageName());

@@ -1797,7 +1797,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         return null;
     }
 
-    private ApplicationInfo getSdkSandboxApplicationInfo(ApplicationInfo clientAppInfo, int userId)
+    private ApplicationInfo getSdkSandboxApplicationInfo(
+            ApplicationInfo clientAppInfo, int userId, boolean isSdkInSandbox)
             throws PackageManager.NameNotFoundException {
         PackageManager pm = mContext.getPackageManager();
         ApplicationInfo sdkSandboxInfo =
@@ -2056,10 +2057,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         @NonNull
         @Override
         public ApplicationInfo getSdkSandboxApplicationInfoForInstrumentation(
-                @NonNull ApplicationInfo clientAppInfo, int userId)
+                @NonNull ApplicationInfo clientAppInfo, int userId, boolean isSdkInSandbox)
                 throws PackageManager.NameNotFoundException {
             return SdkSandboxManagerService.this.getSdkSandboxApplicationInfo(
-                    clientAppInfo, userId);
+                    clientAppInfo, userId, isSdkInSandbox);
         }
 
         @Override
