@@ -483,7 +483,6 @@ public final class SdkSandboxManager {
      * background will result in a {@link SecurityException} being thrown.
      *
      * @param sdkName name of the SDK to be unloaded.
-     * @throws IllegalArgumentException if the SDK is not loaded.
      */
     public void unloadSdk(@NonNull String sdkName) {
         Objects.requireNonNull(sdkName, "sdkName should not be null");
