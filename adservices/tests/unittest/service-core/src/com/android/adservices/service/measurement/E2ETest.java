@@ -392,8 +392,10 @@ public abstract class E2ETest {
     }
 
     static void clearDatabase() {
-        SQLiteDatabase db = DbTestUtil.getDbHelperForTest().getWritableDatabase();
+        SQLiteDatabase db = DbTestUtil.getMeasurementDbHelperForTest().getWritableDatabase();
         emptyTables(db);
+
+        DbTestUtil.getDbHelperForTest().getWritableDatabase().delete("enrollment_data", null, null);
     }
 
     // The 'name' parameter is needed for the JUnit parameterized test, although it's ostensibly
@@ -777,7 +779,7 @@ public abstract class E2ETest {
 
     protected static String getDatastoreState() {
         StringBuilder result = new StringBuilder();
-        SQLiteDatabase db = DbTestUtil.getDbHelperForTest().getWritableDatabase();
+        SQLiteDatabase db = DbTestUtil.getMeasurementDbHelperForTest().getWritableDatabase();
         List<String> tableNames =
                 ImmutableList.of(
                         "msmt_source",
@@ -785,11 +787,16 @@ public abstract class E2ETest {
                         "msmt_attribution",
                         "msmt_event_report",
                         "msmt_aggregate_report",
-                        "enrollment_data",
                         "msmt_async_registration_contract");
         for (String tableName : tableNames) {
             result.append("\n" + tableName + ":\n");
             result.append(getTableState(db, tableName));
+        }
+        SQLiteDatabase enrollmentDb = DbTestUtil.getDbHelperForTest().getWritableDatabase();
+        List<String> enrollmentTables = ImmutableList.of("enrollment_data");
+        for (String tableName : enrollmentTables) {
+            result.append("\n" + tableName + ":\n");
+            result.append(getTableState(enrollmentDb, tableName));
         }
         return result.toString();
     }
@@ -1107,7 +1114,6 @@ public abstract class E2ETest {
         db.delete("msmt_event_report", null, null);
         db.delete("msmt_attribution", null, null);
         db.delete("msmt_aggregate_report", null, null);
-        db.delete("enrollment_data", null, null);
         db.delete("msmt_async_registration_contract", null, null);
     }
 
