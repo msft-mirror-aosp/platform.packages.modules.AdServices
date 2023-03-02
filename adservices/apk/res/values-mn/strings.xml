@@ -183,11 +183,9 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Таны ашигладаг аппууд тэдгээрийг хэрхэн ашиглаж байгаад тань тулгуурлан таны юунд дуртайг тодорхойлох боломжтой."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Таны ашигладаг аппууд зарынхаа гүйцэтгэлийг хэмжихэд туслах мэдээллийг Android-с хүсэх боломжтой. Android нь аппуудад хязгаарлагдмал төрлийн өгөгдлийг цуглуулахыг зөвшөөрдөг."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Асаалттай / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> сэдэв"</string>
-    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
-    <skip />
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Асаалттай / # сэдэв}other{Асаалттай / # сэдэв}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Асаалттай / <xliff:g id="APPS_COUNT">%1$d</xliff:g> апп"</string>
-    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
-    <skip />
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{Асаалттай / # апп}other{Асаалттай / # апп}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"Асаалттай"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Унтраалттай"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Сонирхсон сэдвүүд нь таны саяхан ашигласан аппууд дээр тулгуурладаг бөгөөд аппууд үүнийг танд хувийн болгосон зар харуулах зорилгоор ашигладаг.\n\nТа аппуудтай хуваалцахыг хүсэхгүй байгаа сэдвээ блоклож болно. Android мөн сэдвүүдийг тогтмол автоматаар устгадаг."</string>
@@ -200,14 +198,10 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Таны блоклосон аппууд"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Аппын санал болгосон өгөгдлийг шинэчлэх"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Таны хэрэглээг хувийн болгохын тулд таны ашигладаг аппууд таны сонирхдог зүйлсийг санадаг байх нь хэвийн зүйл юм. Мөн аппууд таны сэдвүүдийн тухай мэдээллийг Android дээр хадгалдаг.\n\nЖишээ нь, хэрэв та марафон гүйлтийн сургалтын талаарх апп ашигладаг бол уг апп таныг гүйлтийн гутал сонирхож байна гэж үзэж болох юм. Дараа нь таныг өөр апп ашиглах үед тус апп танд эхний аппаас санал болгосны дагуу гүйлтийн гутлын зар үзүүлэх боломжтой.\n\nAndroid нь аппын санал болгосон өгөгдлийг тогтмол автоматаар устгадаг. Таны дахин ашигласан апп жагсаалтад дахин гарч ирж магадгүй. Эсвэл та апп танд зар санал болгохыг блоклож болно.\n\nТаны аппуудад таны харж буй зарыг хувийн болгох эсэх нь энэ тохиргоо, зарын сэдвийн тохиргоо, таны зар сурталчилгааны ID тохиргоо болон таны ашиглаж буй апп нь зарыг хувийн болгодог зэргээс хамаарна."</string>
-    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
-    <skip />
-    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
-    <skip />
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Хөгжим, мэдээ болон спорт зэрэг сонирхлын сэдвүүдийг төлөөлөх тэмдгийн өнгөлөг зурагт тайлбар"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Тойрог доторх түгжээний өнгөлөг зурагт тайлбар"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Дөрвөлжин дүрс бүрдүүлж буй есөн цэгийн жижиг хар, цагаан зурагт тайлбар"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"Зүрх, гурвалжин болон дөрвөлжин зэрэг энгийн дүрсний жижиг хар, цагаан зурагт тайлбарт"</string>
     <string name="topic10001" msgid="1636806320891333775">"Урлаг &amp; энтертэйнмент"</string>
     <string name="topic10002" msgid="1226367977754287428">"Жүжиглэх &amp; театр"</string>
     <string name="topic10003" msgid="6949890838957814881">"Анимэ &amp; манга"</string>
