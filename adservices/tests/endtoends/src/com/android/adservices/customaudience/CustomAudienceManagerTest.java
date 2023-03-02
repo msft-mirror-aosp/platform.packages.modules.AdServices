@@ -34,6 +34,7 @@ import com.android.adservices.service.PhFlagsFixture;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.concurrent.Executor;
@@ -127,6 +128,7 @@ public class CustomAudienceManagerTest {
      * avoid fluctuation, which works okay for comparing multiple algorithms, but not a good way to
      * get the "actual" number.
      */
+    @Ignore("b/271338417")
     @Test
     public void testCallCustomAudienceAPIAfterKillingService() throws Exception {
         // Kill the service process, if it's already running.

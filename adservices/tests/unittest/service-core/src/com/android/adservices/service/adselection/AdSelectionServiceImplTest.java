@@ -68,7 +68,6 @@ import android.adservices.adselection.ReportImpressionInput;
 import android.adservices.adselection.ReportInteractionCallback;
 import android.adservices.adselection.ReportInteractionInput;
 import android.adservices.adselection.SetAdCounterHistogramOverrideInput;
-import android.adservices.adselection.SetAppInstallAdvertisersCallback;
 import android.adservices.adselection.SetAppInstallAdvertisersInput;
 import android.adservices.adselection.UpdateAdCounterHistogramCallback;
 import android.adservices.adselection.UpdateAdCounterHistogramInput;
@@ -95,22 +94,25 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.DBAdSelectionFromOutcomesOverride;
 import com.android.adservices.data.adselection.DBAdSelectionOverride;
 import com.android.adservices.data.adselection.DBBuyerDecisionLogic;
+import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.common.AdServicesHttpsClient;
+import com.android.adservices.service.adselection.AppInstallAdvertisersSetterTest.SetAppInstallAdvertisersTestCallback;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.FledgeServiceFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
+import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
@@ -245,6 +247,7 @@ public class AdSelectionServiceImplTest {
     @Mock private ConsentManager mConsentManagerMock;
     private CustomAudienceDao mCustomAudienceDao;
     private AdSelectionEntryDao mAdSelectionEntryDao;
+    private AppInstallDao mAppInstallDao;
     private AdSelectionConfig.Builder mAdSelectionConfigBuilder;
 
     private Uri mBiddingLogicUri;
@@ -275,6 +278,13 @@ public class AdSelectionServiceImplTest {
                                 AdSelectionDatabase.class)
                         .build()
                         .adSelectionEntryDao();
+
+        mAppInstallDao =
+                Room.inMemoryDatabaseBuilder(
+                                ApplicationProvider.getApplicationContext(),
+                                SharedStorageDatabase.class)
+                        .build()
+                        .appInstallDao();
 
         mBiddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
 
@@ -312,6 +322,7 @@ public class AdSelectionServiceImplTest {
                 .filterRequest(
                         mSeller,
                         TEST_PACKAGE_NAME,
+                        true,
                         true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
@@ -391,6 +402,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -505,6 +517,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -660,6 +673,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -808,6 +822,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -953,6 +968,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -1090,6 +1106,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -1229,6 +1246,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -1305,6 +1323,7 @@ public class AdSelectionServiceImplTest {
                         mSeller,
                         TEST_PACKAGE_NAME,
                         true,
+                        true,
                         CALLER_UID,
                         AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
                         Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS);
@@ -1354,6 +1373,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -1448,6 +1468,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -1543,6 +1564,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -1644,6 +1666,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -1740,6 +1763,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -1831,6 +1855,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -1921,6 +1946,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -2012,6 +2038,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -2123,6 +2150,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -2253,6 +2281,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -2334,6 +2363,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -2382,6 +2412,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -2425,6 +2456,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -2473,6 +2505,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -2533,6 +2566,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -2589,6 +2623,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -2649,6 +2684,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -2710,6 +2746,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -2812,6 +2849,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -2916,6 +2954,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -3016,6 +3055,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -3113,6 +3153,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -3144,6 +3185,7 @@ public class AdSelectionServiceImplTest {
                         mSeller,
                         TEST_PACKAGE_NAME,
                         true,
+                        true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
                         Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS);
@@ -3151,6 +3193,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -3205,6 +3248,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -3259,6 +3303,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -3304,6 +3349,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -3352,6 +3398,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -3394,6 +3441,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -3440,6 +3488,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -3471,6 +3520,7 @@ public class AdSelectionServiceImplTest {
                 .filterRequest(
                         mSeller,
                         otherPackageName,
+                        true,
                         true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
@@ -3526,6 +3576,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -3567,6 +3618,7 @@ public class AdSelectionServiceImplTest {
                 .filterRequest(
                         mSeller,
                         TEST_PACKAGE_NAME,
+                        true,
                         true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
@@ -3626,6 +3678,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -3672,6 +3725,7 @@ public class AdSelectionServiceImplTest {
                         mSeller,
                         TEST_PACKAGE_NAME,
                         true,
+                        true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
                         Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS);
@@ -3729,6 +3783,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -3825,6 +3880,7 @@ public class AdSelectionServiceImplTest {
                         mSeller,
                         TEST_PACKAGE_NAME,
                         true,
+                        true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
                         Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS);
@@ -3835,6 +3891,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -3925,6 +3982,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -4018,6 +4076,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -4047,6 +4106,7 @@ public class AdSelectionServiceImplTest {
                 .filterRequest(
                         mSeller,
                         TEST_PACKAGE_NAME,
+                        true,
                         true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
@@ -4138,6 +4198,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -4238,6 +4299,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -4340,6 +4402,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -4389,6 +4452,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -4441,6 +4505,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -4487,6 +4552,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -4539,6 +4605,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -4603,6 +4670,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -4661,6 +4729,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -4723,6 +4792,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -4784,6 +4854,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -4894,6 +4965,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -4998,6 +5070,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -5107,6 +5180,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -5233,6 +5307,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mAppInstallDao,
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
@@ -5291,7 +5366,6 @@ public class AdSelectionServiceImplTest {
                         eq(AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS),
                         eq(STATUS_SUCCESS),
                         anyInt());
-        // TODO(b/265469079) Add tests to ensure adtechs were fetched and stored
     }
 
     @Test
@@ -5850,6 +5924,7 @@ public class AdSelectionServiceImplTest {
     private AdSelectionServiceImpl generateAdSelectionServiceImpl() {
         return new AdSelectionServiceImpl(
                 mAdSelectionEntryDao,
+                mAppInstallDao,
                 mCustomAudienceDao,
                 mClient,
                 mDevContextFilter,
@@ -6086,13 +6161,16 @@ public class AdSelectionServiceImplTest {
         return callback;
     }
 
-    private SetAppInstallAdvertisersTestCallback callSetAppInstallAdvertisers(
-            AdSelectionServiceImpl adSelectionService, SetAppInstallAdvertisersInput request)
-            throws Exception {
+    private AppInstallAdvertisersSetterTest.SetAppInstallAdvertisersTestCallback
+            callSetAppInstallAdvertisers(
+                    AdSelectionServiceImpl adSelectionService,
+                    SetAppInstallAdvertisersInput request)
+                    throws Exception {
         // Counted down in 1) callback and 2) logApiCall
         CountDownLatch resultLatch = new CountDownLatch(2);
-        SetAppInstallAdvertisersTestCallback callback =
-                new SetAppInstallAdvertisersTestCallback(resultLatch);
+        AppInstallAdvertisersSetterTest.SetAppInstallAdvertisersTestCallback callback =
+                new AppInstallAdvertisersSetterTest.SetAppInstallAdvertisersTestCallback(
+                        resultLatch);
 
         // Wait for the logging call, which happens after the callback
         Answer<Void> countDownAnswer =
@@ -6246,29 +6324,6 @@ public class AdSelectionServiceImplTest {
         FledgeErrorResponse mFledgeErrorResponse;
 
         public ReportImpressionTestCallback(CountDownLatch countDownLatch) {
-            mCountDownLatch = countDownLatch;
-        }
-
-        @Override
-        public void onSuccess() throws RemoteException {
-            mIsSuccess = true;
-            mCountDownLatch.countDown();
-        }
-
-        @Override
-        public void onFailure(FledgeErrorResponse fledgeErrorResponse) throws RemoteException {
-            mFledgeErrorResponse = fledgeErrorResponse;
-            mCountDownLatch.countDown();
-        }
-    }
-
-    public static class SetAppInstallAdvertisersTestCallback
-            extends SetAppInstallAdvertisersCallback.Stub {
-        private final CountDownLatch mCountDownLatch;
-        boolean mIsSuccess = false;
-        FledgeErrorResponse mFledgeErrorResponse;
-
-        public SetAppInstallAdvertisersTestCallback(CountDownLatch countDownLatch) {
             mCountDownLatch = countDownLatch;
         }
 

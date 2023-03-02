@@ -36,12 +36,15 @@ import androidx.test.uiautomator.UiScrollable;
 import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
+import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
 import com.android.adservices.api.R;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -81,6 +84,9 @@ public class BlockedTopicsSettingsUiAutomatorTest {
 
     @Before
     public void setup() {
+        // Skip the test if it runs on unsupported platforms.
+        Assume.assumeTrue(ApkTestUtil.isDeviceSupported());
+
         // Initialize UiDevice instance.
         sDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
@@ -480,25 +486,8 @@ public class BlockedTopicsSettingsUiAutomatorTest {
         final List<ResolveInfo> resolveInfos =
                 CONTEXT.getPackageManager()
                         .queryIntentServices(intent, PackageManager.MATCH_SYSTEM_ONLY);
-
-        if (resolveInfos == null || resolveInfos.isEmpty()) {
-            LogUtil.e(
-                    LOG_TAG,
-                    "Failed to find resolveInfo for adServices service. Intent action: "
-                            + TOPICS_SERVICE_NAME);
-            return null;
-        }
-
-        if (resolveInfos.size() > 1) {
-            LogUtil.e(
-                    LOG_TAG,
-                    String.format(
-                            "Found multiple services (%1$s) for the same intent action (%2$s)",
-                            TOPICS_SERVICE_NAME, resolveInfos));
-            return null;
-        }
-
-        final ServiceInfo serviceInfo = resolveInfos.get(0).serviceInfo;
+        final ServiceInfo serviceInfo =
+                AdServicesCommon.resolveAdServicesService(resolveInfos, TOPICS_SERVICE_NAME);
         if (serviceInfo == null) {
             LogUtil.e(LOG_TAG, "Failed to find serviceInfo for adServices service");
             return null;

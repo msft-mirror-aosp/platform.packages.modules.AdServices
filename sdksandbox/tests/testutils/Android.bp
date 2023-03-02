@@ -29,6 +29,7 @@ java_library {
         "truth-prebuilt",
         "androidx.test.ext.junit",
         "SdkSandbox-java-lib",
+        "platform-screenshot-diff-core",
     ],
     visibility: [
         // TODO(b/222118402): adjust once code is moved
