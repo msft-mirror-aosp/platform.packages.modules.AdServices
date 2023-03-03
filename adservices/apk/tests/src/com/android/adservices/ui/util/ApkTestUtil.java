@@ -27,6 +27,8 @@ import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiScrollable;
 import androidx.test.uiautomator.UiSelector;
 
+import com.android.compatibility.common.util.ShellUtils;
+
 /** Util class for APK tests. */
 public class ApkTestUtil {
 
@@ -46,12 +48,10 @@ public class ApkTestUtil {
     /** Returns the UiObject corresponding to a resource ID. */
     public static UiObject getElement(UiDevice device, int resId) {
         UiObject obj = device.findObject(new UiSelector().text(getString(resId)));
-        if (obj.exists()) {
-            return obj;
-        } else {
-            // account for UI themes which auto CAPS dialog buttons.
-            return device.findObject(new UiSelector().text(getString(resId).toUpperCase()));
+        if (!obj.exists()) {
+            obj = device.findObject(new UiSelector().text(getString(resId).toUpperCase()));
         }
+        return obj;
     }
 
     /** Returns the string corresponding to a resource ID. */
@@ -62,28 +62,39 @@ public class ApkTestUtil {
     /** Returns the UiObject corresponding to a resource ID after scrolling. */
     public static void scrollToAndClick(UiDevice device, int resId)
             throws UiObjectNotFoundException {
+        UiObject obj = scrollTo(device, resId);
+        // objects may be partially hidden by the status bar and nav bars.
+        obj.clickTopLeft();
+    }
+
+    public static UiObject scrollTo(UiDevice device, int resId) throws UiObjectNotFoundException {
         UiScrollable scrollView =
                 new UiScrollable(
                         new UiSelector().scrollable(true).className("android.widget.ScrollView"));
-        UiObject element = ApkTestUtil.getPageElement(device, resId);
-        scrollView.scrollIntoView(element);
-        element.click();
+
+        UiObject obj = device.findObject(new UiSelector().text(getString(resId)));
+        scrollView.scrollIntoView(obj);
+        return obj;
     }
 
     /** Returns the string corresponding to a resource ID and index. */
     public static UiObject getElement(UiDevice device, int resId, int index) {
         UiObject obj = device.findObject(new UiSelector().text(getString(resId)).instance(index));
-        if (obj.exists()) {
-            return obj;
-        } else {
-            // account for UI themes which auto CAPS dialog buttons.
-            return device.findObject(
-                    new UiSelector().text(getString(resId).toUpperCase()).instance(index));
+        if (!obj.exists()) {
+            obj =
+                    device.findObject(
+                            new UiSelector().text(getString(resId).toUpperCase()).instance(index));
         }
+        return obj;
     }
 
     /** Returns the UiObject corresponding to a resource ID. */
     public static UiObject getPageElement(UiDevice device, int resId) {
         return device.findObject(new UiSelector().text(getString(resId)));
+    }
+
+    public static void killApp() {
+        ShellUtils.runShellCommand("am force-stop com.google.android.adservices.api");
+        ShellUtils.runShellCommand("am force-stop com.android.adservices.api");
     }
 }
