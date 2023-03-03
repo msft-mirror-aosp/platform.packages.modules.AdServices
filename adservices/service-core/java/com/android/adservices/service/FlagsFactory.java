@@ -64,6 +64,11 @@ public class FlagsFactory {
             public boolean getEnableTopicContributorsCheck() {
                 return true;
             }
+
+            @Override
+            public boolean getFledgeRegisterAdBeaconEnabled() {
+                return true;
+            }
         };
     }
 }
