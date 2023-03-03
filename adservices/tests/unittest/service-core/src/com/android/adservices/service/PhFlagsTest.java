@@ -306,6 +306,8 @@ import android.provider.DeviceConfig;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.service.Flags.ClassifierType;
+import com.android.adservices.service.topics.fixture.SysPropForceDefaultValueFixture;
+import com.android.modules.utils.testing.StaticMockFixtureRule;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import com.google.common.collect.ImmutableList;
@@ -323,8 +325,9 @@ import java.util.concurrent.TimeUnit;
 @SmallTest
 public class PhFlagsTest {
     @Rule
-    public final TestableDeviceConfig.TestableDeviceConfigRule mDeviceConfigRule =
-            new TestableDeviceConfig.TestableDeviceConfigRule();
+    public final StaticMockFixtureRule mStaticMockFixtureRule =
+            new StaticMockFixtureRule(
+                    TestableDeviceConfig::new, SysPropForceDefaultValueFixture::new);
 
     @Test
     public void testGetTopicsEpochJobPeriodMs() {
@@ -3942,7 +3945,7 @@ public class PhFlagsTest {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_GLOBAL_BLOCKED_TOPIC_IDS,
                 blockedTopicIds,
-                /* makeDefault = */ false);
+                /* makeDefault= */ false);
     }
 
     private void disableGlobalKillSwitch() {
