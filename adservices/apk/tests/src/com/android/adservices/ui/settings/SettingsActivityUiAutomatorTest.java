@@ -182,6 +182,7 @@ public class SettingsActivityUiAutomatorTest {
 
     @After
     public void teardown() {
+        if (!ApkTestUtil.isDeviceSupported()) return;
         if (mStaticMockSession != null) {
             mStaticMockSession.finishMocking();
         }
