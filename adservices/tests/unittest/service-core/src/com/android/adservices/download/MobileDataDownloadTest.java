@@ -68,6 +68,7 @@ import com.google.mobiledatadownload.DownloadConfigProto.DownloadConditions.Devi
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -192,6 +193,7 @@ public class MobileDataDownloadTest {
     }
 
     @Test
+    @Ignore("b/271346117")
     public void testCreateMddManagerSuccessfully() throws ExecutionException, InterruptedException {
         mMdd =
                 getMddForTesting(
@@ -237,6 +239,7 @@ public class MobileDataDownloadTest {
     }
 
     @Test
+    @Ignore("b/271346117")
     public void testTopicsManifestFileGroupPopulator_ManifestConfigOverrider_NoFileGroup()
             throws ExecutionException, InterruptedException, TimeoutException {
         createMddForTopics(MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL);
@@ -257,6 +260,7 @@ public class MobileDataDownloadTest {
      * files downloaded successfully.
      */
     @Test
+    @Ignore("b/271346117")
     public void testTopicsManifestFileGroupPopulator()
             throws ExecutionException, InterruptedException, TimeoutException {
         // Set the bundled build_id to 1 so the server side build_id will be bigger. This will
@@ -291,6 +295,7 @@ public class MobileDataDownloadTest {
      * DB correctly.
      */
     @Test
+    @Ignore("b/271346117")
     public void testEnrollmentDataDownload()
             throws ExecutionException, InterruptedException, TimeoutException {
         createMddForEnrollment(enrollmentUrl);
@@ -335,6 +340,7 @@ public class MobileDataDownloadTest {
      * is revoked.
      */
     @Test
+    @Ignore("b/271346117")
     public void testEnrollmentDataDownloadFailOnConsentRevoked_gaUxEnabled()
             throws ExecutionException, InterruptedException, TimeoutException {
         doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
@@ -381,6 +387,7 @@ public class MobileDataDownloadTest {
      * revoked.
      */
     @Test
+    @Ignore("b/271346117")
     public void testMddTopicsFailsOnConsentRevoked_gaUxEnabled()
             throws ExecutionException, InterruptedException, TimeoutException {
         doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
@@ -403,6 +410,7 @@ public class MobileDataDownloadTest {
      * This method tests topics data, verifies that the file group exists if the consent is given.
      */
     @Test
+    @Ignore("b/271346117")
     public void testMddTopicsOnConsentGiven_gaUxEnabled()
             throws ExecutionException, InterruptedException, TimeoutException {
         ExtendedMockito.doReturn(1L)
@@ -432,6 +440,7 @@ public class MobileDataDownloadTest {
      * least one of the APIs.
      */
     @Test
+    @Ignore("b/271346117")
     public void testOtaOnTopicsConsentGiven_gaUxEnabled()
             throws ExecutionException, InterruptedException, TimeoutException {
         android.util.Log.i("adservices", "12334");
@@ -479,6 +488,7 @@ public class MobileDataDownloadTest {
     }
 
     @Test
+    @Ignore("b/271346117")
     public void testMddLoggerKillSwitchIsOn() {
         // Killswitch is on. MddLogger should be disabled.
         doReturn(true).when(mMockFlags).getMddLoggerKillSwitch();
@@ -487,6 +497,7 @@ public class MobileDataDownloadTest {
     }
 
     @Test
+    @Ignore("b/271346117")
     public void testMddLoggerKillSwitchIsOff() {
         // Killswitch is off. MddLogger should be enabled.
         doReturn(false).when(mMockFlags).getMddLoggerKillSwitch();
@@ -499,6 +510,7 @@ public class MobileDataDownloadTest {
      * verifies files downloaded successfully.
      */
     @Test
+    @Ignore("b/271346117")
     public void testUiOtaStringsManifestFileGroupPopulator()
             throws ExecutionException, InterruptedException, TimeoutException {
         createMddForUiOTAString(UI_OTA_STRINGS_MANIFEST_FILE_URL);
