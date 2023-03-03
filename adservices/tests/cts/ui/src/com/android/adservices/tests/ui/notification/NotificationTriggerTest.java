@@ -68,6 +68,7 @@ public class NotificationTriggerTest {
 
     @After
     public void tearDown() throws Exception {
+        if (!AdservicesCtsHelper.isDeviceSupported()) return;
         UiUtils.resetInitialParams(mInitialParams);
     }
 
