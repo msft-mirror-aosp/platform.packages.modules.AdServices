@@ -367,6 +367,9 @@ public final class PhFlags implements Flags {
     // Enrollment flags.
     static final String KEY_ENROLLMENT_BLOCKLIST_IDS = "enrollment_blocklist_ids";
 
+    // New Feature Flags
+    static final String KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED = "fledge_register_ad_beacon_enabled";
+
     private static final PhFlags sSingleton = new PhFlags();
 
     /** Returns the singleton instance of the PhFlags. */
@@ -1743,6 +1746,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeRegisterAdBeaconEnabled() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED,
+                /* defaultValue */ FLEDGE_REGISTER_AD_BEACON_ENABLED);
+    }
+
+    @Override
     public boolean getEnforceForegroundStatusForMeasurementDeleteRegistrations() {
         return DeviceConfig.getBoolean(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -2409,6 +2420,12 @@ public final class PhFlags implements Flags {
                         + KEY_UI_OTA_STRINGS_DOWNLOAD_DEADLINE
                         + " = "
                         + getUiOtaStringsDownloadDeadline());
+        writer.println("==== AdServices New Feature Flags ====");
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED
+                        + " = "
+                        + getFledgeRegisterAdBeaconEnabled());
         writer.println("==== AdServices PH Flags Dump STATUS ====");
         writer.println("\t" + KEY_ADSERVICES_ENABLED + " = " + getAdServicesEnabled());
         writer.println(
