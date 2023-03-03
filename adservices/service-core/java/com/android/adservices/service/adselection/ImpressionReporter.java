@@ -680,7 +680,7 @@ public class ImpressionReporter {
                                 .setAdSelectionId(adSelectionId)
                                 .setInteractionKey(uriRegistrationInfo.getInteractionKey())
                                 .setInteractionReportingUri(uriToValidate)
-                                .setReportingDestination(destination)
+                                .setDestination(destination)
                                 .build();
                 adEventsToRegister.add(dbRegisteredAdInteraction);
                 numSellerEventUriEntries++;
