@@ -150,21 +150,16 @@ public class ConsentSettingsUiAutomatorTest {
             throws UiObjectNotFoundException {
         if (dialogsOn && mainSwitch.isChecked()) {
             mainSwitch.click();
-            UiObject dialogTitle = getElement(R.string.settingsUI_dialog_opt_out_title);
-            UiObject positiveText = getElement(R.string.settingsUI_dialog_opt_out_positive_text);
+            UiObject dialogTitle =
+                    ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_opt_out_title);
+            UiObject positiveText =
+                    ApkTestUtil.getElement(
+                            sDevice, R.string.settingsUI_dialog_opt_out_positive_text);
             assertThat(dialogTitle.exists()).isTrue();
             assertThat(positiveText.exists()).isTrue();
             positiveText.click();
         } else {
             mainSwitch.click();
         }
-    }
-
-    private UiObject getElement(int resId) {
-        return sDevice.findObject(new UiSelector().text(getString(resId)));
-    }
-
-    private String getString(int resourceId) {
-        return ApplicationProvider.getApplicationContext().getResources().getString(resourceId);
     }
 }

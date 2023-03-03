@@ -102,7 +102,7 @@ public abstract class E2EMockTest extends E2ETest {
             new EnrollmentDao(
                     ApplicationProvider.getApplicationContext(), DbTestUtil.getDbHelperForTest());
     static DatastoreManager sDatastoreManager =
-            new SQLDatastoreManager(DbTestUtil.getDbHelperForTest());
+            new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
 
     // Class extensions may choose to disable or enable added noise.
     AttributionJobHandlerWrapper mAttributionHelper;

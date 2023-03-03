@@ -25,6 +25,7 @@ import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.TrustedBiddingData;
+import android.adservices.test.scenario.adservices.utils.CompatTestUtils;
 import android.adservices.test.scenario.adservices.utils.MockWebServerRule;
 import android.adservices.test.scenario.adservices.utils.MockWebServerRuleFactory;
 import android.adservices.test.scenario.adservices.utils.SelectAdsFlagRule;
@@ -38,11 +39,13 @@ import android.provider.DeviceConfig;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.modules.utils.build.SdkLevel;
 
 import com.google.mockwebserver.Dispatcher;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.RecordedRequest;
 
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -177,6 +180,18 @@ public class AbstractPerfTest {
                 "fledge_js_isolate_enforce_max_heap_size",
                 "false",
                 true);
+        // Extra flags need to be set when test is executed on S- for service to run (e.g.
+        // to avoid invoking system-server related code).
+        if (!SdkLevel.isAtLeastT()) {
+            CompatTestUtils.setFlags();
+        }
+    }
+
+    @AfterClass
+    public static void tearDownAfterClass() {
+        if (!SdkLevel.isAtLeastT()) {
+            CompatTestUtils.resetFlagsToDefault();
+        }
     }
 
     public static Uri getUri(String name, String path) {
