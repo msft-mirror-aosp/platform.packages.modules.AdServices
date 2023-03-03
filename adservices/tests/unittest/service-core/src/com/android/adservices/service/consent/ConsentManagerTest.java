@@ -25,6 +25,22 @@ import static com.android.adservices.service.consent.ConsentConstants.SHARED_PRE
 import static com.android.adservices.service.consent.ConsentConstants.SHARED_PREFS_KEY_PPAPI_HAS_CLEARED;
 import static com.android.adservices.service.consent.ConsentConstants.TOPICS_CONSENT_PAGE_DISPLAYED;
 import static com.android.adservices.service.consent.ConsentManager.resetSharedPreference;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyBoolean;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyString;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.argThat;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.atLeastOnce;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.spy;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyNoMoreInteractions;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -33,22 +49,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
@@ -81,6 +81,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
 import com.android.adservices.service.common.BackgroundJobsManager;
+import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.measurement.AsyncRegistrationQueueJobService;
 import com.android.adservices.service.measurement.DeleteExpiredJobService;
 import com.android.adservices.service.measurement.DeleteUninstalledJobService;
@@ -131,7 +132,6 @@ public class ConsentManagerTest {
     private EnrollmentDao mEnrollmentDao;
     private AdServicesManager mAdServicesManager;
 
-    @Mock private PackageManager mPackageManagerMock;
     @Mock private TopicsWorker mTopicsWorker;
     @Mock private MeasurementImpl mMeasurementImpl;
     @Mock private AdServicesLoggerImpl mAdServicesLoggerImpl;
@@ -169,6 +169,7 @@ public class ConsentManagerTest {
                         .spyStatic(MaintenanceJobService.class)
                         .spyStatic(MddJobService.class)
                         .spyStatic(UiStatsLogger.class)
+                        .mockStatic(PackageManagerCompatUtils.class)
                         .strictness(Strictness.WARN)
                         .initMocks(this)
                         .startMocking();
@@ -179,7 +180,7 @@ public class ConsentManagerTest {
         // For each file, we should ensure there is only one instance of datastore that is able to
         // access it. (Refer to BooleanFileDatastore.class)
         mConsentDatastore = ConsentManager.createAndInitializeDataStore(mContextSpy);
-        mAppConsentDao = spy(new AppConsentDao(mDatastore, mPackageManagerMock));
+        mAppConsentDao = spy(new AppConsentDao(mDatastore, mContextSpy.getPackageManager()));
         mEnrollmentDao = spy(new EnrollmentDao(mContextSpy, DbTestUtil.getDbHelperForTest()));
         mAdServicesManager = new AdServicesManager(mMockIAdServicesManager);
         doReturn(mAdServicesManager).when(mContextSpy).getSystemService(AdServicesManager.class);
@@ -382,7 +383,6 @@ public class ConsentManagerTest {
 
     @Test
     public void testJobsAreScheduledAfterEnablingKillSwitchOff() {
-        doReturn(mPackageManagerMock).when(mContextSpy).getPackageManager();
         doReturn(false).when(mMockFlags).getTopicsKillSwitch();
         doReturn(false).when(mMockFlags).getFledgeSelectAdsKillSwitch();
         doReturn(false).when(mMockFlags).getMeasurementKillSwitch();
@@ -425,7 +425,6 @@ public class ConsentManagerTest {
 
     @Test
     public void testJobsAreNotScheduledAfterEnablingKillSwitchOn() {
-        doReturn(mPackageManagerMock).when(mContextSpy).getPackageManager();
         doReturn(true).when(mMockFlags).getTopicsKillSwitch();
         doReturn(true).when(mMockFlags).getFledgeSelectAdsKillSwitch();
         doReturn(true).when(mMockFlags).getMeasurementKillSwitch();
@@ -478,7 +477,6 @@ public class ConsentManagerTest {
 
     @Test
     public void testJobsAreUnscheduledAfterDisabling() {
-        doReturn(mPackageManagerMock).when(mContextSpy).getPackageManager();
         doReturn(mJobSchedulerMock).when(mContextSpy).getSystemService(JobScheduler.class);
         mConsentManager.disable(mContextSpy);
 
@@ -511,7 +509,6 @@ public class ConsentManagerTest {
 
     @Test
     public void testDataIsResetAfterConsentIsRevoked() throws IOException {
-        doReturn(mPackageManagerMock).when(mContextSpy).getPackageManager();
         mConsentManager.disable(mContextSpy);
 
         ExtendedMockito.verify(() -> UiStatsLogger.logOptOutSelected(mContextSpy));
@@ -528,7 +525,6 @@ public class ConsentManagerTest {
 
     @Test
     public void testDataIsResetAfterConsentIsGiven() throws IOException {
-        doReturn(mPackageManagerMock).when(mContextSpy).getPackageManager();
         mConsentManager.enable(mContextSpy);
 
         ExtendedMockito.verify(() -> UiStatsLogger.logOptInSelected(mContextSpy));
@@ -760,7 +756,6 @@ public class ConsentManagerTest {
     public void testIsFledgeConsentRevokedForAppWithoutPrivacySandboxConsentGaUxDisabled_ppApiOnly()
             throws PackageManager.NameNotFoundException {
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(false);
-        doReturn(mPackageManagerMock).when(mContextSpy).getPackageManager();
         mConsentManager.disable(mContextSpy);
         assertFalse(mConsentManager.getConsent().isGiven());
 
@@ -818,7 +813,6 @@ public class ConsentManagerTest {
     public void testIsFledgeConsentRevokedForAppWithoutPrivacySandboxConsentGaUxEnabled_ppApiOnly()
             throws PackageManager.NameNotFoundException {
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
-        doReturn(mPackageManagerMock).when(mContextSpy).getPackageManager();
         mConsentManager.disable(mContextSpy, AdServicesApiType.FLEDGE);
         assertFalse(mConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven());
 
@@ -1223,7 +1217,6 @@ public class ConsentManagerTest {
             testIsFledgeConsentRevokedForAppSetFledgeUseNoPrivacySandboxConsentGaUxDisabled_ppApi()
                     throws PackageManager.NameNotFoundException {
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(false);
-        doReturn(mPackageManagerMock).when(mContextSpy).getPackageManager();
         mConsentManager.disable(mContextSpy);
         assertFalse(mConsentManager.getConsent().isGiven());
 
@@ -1284,7 +1277,7 @@ public class ConsentManagerTest {
             testIsFledgeConsentRevokedForAppSetFledgeUseNoPrivacySandboxConsentGaUxEnabled_ppApi()
                     throws PackageManager.NameNotFoundException {
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
-        doReturn(mPackageManagerMock).when(mContextSpy).getPackageManager();
+
         mConsentManager.disable(mContextSpy, AdServicesApiType.FLEDGE);
         assertFalse(mConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven());
 
@@ -2806,20 +2799,24 @@ public class ConsentManagerTest {
 
     private void mockGetPackageUid(@NonNull String packageName, int uid)
             throws PackageManager.NameNotFoundException {
-        doReturn(uid).when(mPackageManagerMock).getPackageUid(eq(packageName), any());
+        doReturn(uid)
+                .when(
+                        () ->
+                                PackageManagerCompatUtils.getPackageUid(
+                                        any(), eq(packageName), anyInt()));
     }
 
     private void mockInstalledApplications(List<ApplicationInfo> applicationsInstalled) {
         doReturn(applicationsInstalled)
-                .when(mPackageManagerMock)
-                .getInstalledApplications(any(PackageManager.ApplicationInfoFlags.class));
+                .when(() -> PackageManagerCompatUtils.getInstalledApplications(any(), anyInt()));
     }
 
-    private void mockThrowExceptionOnGetPackageUid(@NonNull String packageName)
-            throws PackageManager.NameNotFoundException {
+    private void mockThrowExceptionOnGetPackageUid(@NonNull String packageName) {
         doThrow(PackageManager.NameNotFoundException.class)
-                .when(mPackageManagerMock)
-                .getPackageUid(eq(packageName), any());
+                .when(
+                        () ->
+                                PackageManagerCompatUtils.getPackageUid(
+                                        any(), eq(packageName), anyInt()));
     }
 
     private List<ApplicationInfo> createApplicationInfos(String... packageNames) {
