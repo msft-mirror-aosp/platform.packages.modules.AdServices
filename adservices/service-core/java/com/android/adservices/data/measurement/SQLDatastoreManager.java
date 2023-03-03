@@ -29,7 +29,7 @@ import com.android.internal.annotations.VisibleForTesting;
 @VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
 public class SQLDatastoreManager extends DatastoreManager {
 
-    private final DbHelper mDbHelper;
+    private final MeasurementDbHelper mDbHelper;
     private static SQLDatastoreManager sSingleton;
 
     /** Acquire an instance of {@link SQLDatastoreManager}. */
@@ -41,12 +41,12 @@ public class SQLDatastoreManager extends DatastoreManager {
     }
 
     private SQLDatastoreManager(Context context) {
-        mDbHelper = DbHelper.getInstance(context);
+        mDbHelper = MeasurementDbHelper.getInstance(context);
     }
 
     /** Get {@link DatastoreManager} instance with a {@link DbHelper}. */
     @VisibleForTesting
-    public SQLDatastoreManager(@NonNull DbHelper dbHelper) {
+    public SQLDatastoreManager(@NonNull MeasurementDbHelper dbHelper) {
         mDbHelper = dbHelper;
     }
 
