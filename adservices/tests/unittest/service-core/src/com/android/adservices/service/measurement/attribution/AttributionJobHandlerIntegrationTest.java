@@ -53,7 +53,7 @@ public class AttributionJobHandlerIntegrationTest extends AbstractDbIntegrationT
     @Override
     public void runActionToTest() {
         DatastoreManager datastoreManager =
-                new SQLDatastoreManager(DbTestUtil.getDbHelperForTest());
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
         Assert.assertTrue("Attribution failed.",
                 (new AttributionJobHandler(datastoreManager))
                         .performPendingAttributions());

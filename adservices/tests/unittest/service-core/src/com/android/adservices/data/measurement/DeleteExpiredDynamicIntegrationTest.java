@@ -79,7 +79,8 @@ public class DeleteExpiredDynamicIntegrationTest extends AbstractDbIntegrationTe
     // test, although it's ostensibly unused by this constructor.
     public DeleteExpiredDynamicIntegrationTest(DbState input, DbState output, String name) {
         super(input, output);
-        this.mDatastoreManager = new SQLDatastoreManager(DbTestUtil.getDbHelperForTest());
+        this.mDatastoreManager =
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
     }
 
     public void runActionToTest() {
