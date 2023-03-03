@@ -58,9 +58,11 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -171,6 +173,9 @@ public class AdIdServiceImplTest {
 
     @Test
     public void testEnforceForeground_sandboxCaller() throws Exception {
+        // Sandbox is only applicable for T+
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
+
         // Mock AppImportanceFilter to throw Exception when invoked. This is to verify getAdId()
         // doesn't throw if caller is via Sandbox.
         doThrow(new WrongCallingApplicationStateException())
@@ -249,6 +254,9 @@ public class AdIdServiceImplTest {
 
     @Test
     public void checkSdkNoPermission() throws InterruptedException {
+        // Sdk Sandbox only exists in T+
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
+
         when(mPackageManager.checkPermission(ACCESS_ADSERVICES_AD_ID, SDK_PACKAGE_NAME))
                 .thenReturn(PackageManager.PERMISSION_DENIED);
         when(Binder.getCallingUidOrThrow()).thenReturn(SANDBOX_UID);
