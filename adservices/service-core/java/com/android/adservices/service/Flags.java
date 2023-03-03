@@ -622,6 +622,14 @@ public interface Flags {
         return FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S;
     }
 
+    // Filtering feature flag disabled by default
+    boolean FLEDGE_AD_SELECTION_FILTERING_ENABLED = false;
+
+    /** Returns {@code true} if negative filtering of ads during ad selection is enabled. */
+    default boolean getFledgeAdSelectionFilteringEnabled() {
+        return FLEDGE_AD_SELECTION_FILTERING_ENABLED;
+    }
+
     boolean FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED = false;
 
     /** @return whether to call trusted servers for off device ad selection. */

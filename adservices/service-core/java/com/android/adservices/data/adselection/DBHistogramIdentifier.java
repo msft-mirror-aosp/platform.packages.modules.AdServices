@@ -17,6 +17,7 @@
 package com.android.adservices.data.adselection;
 
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.FrequencyCapFilters;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -73,13 +74,13 @@ public abstract class DBHistogramIdentifier {
     /** Returns the owner package name of the custom audience the histogram is associated with. */
     @AutoValue.CopyAnnotations
     @ColumnInfo(name = "custom_audience_owner", index = true)
-    @NonNull
+    @Nullable
     public abstract String getCustomAudienceOwner();
 
     /** Returns the name of the custom audience the histogram is associated with. */
     @AutoValue.CopyAnnotations
     @ColumnInfo(name = "custom_audience_name", index = true)
-    @NonNull
+    @Nullable
     public abstract String getCustomAudienceName();
 
     /** Returns an AutoValue builder for a {@link DBHistogramIdentifier} object. */
@@ -100,8 +101,8 @@ public abstract class DBHistogramIdentifier {
             @Nullable Long histogramIdentifierForeignKey,
             @NonNull String adCounterKey,
             @NonNull AdTechIdentifier buyer,
-            @NonNull String customAudienceOwner,
-            @NonNull String customAudienceName) {
+            @Nullable String customAudienceOwner,
+            @Nullable String customAudienceName) {
         return builder()
                 .setHistogramIdentifierForeignKey(histogramIdentifierForeignKey)
                 .setAdCounterKey(adCounterKey)
@@ -121,12 +122,18 @@ public abstract class DBHistogramIdentifier {
     @NonNull
     public static DBHistogramIdentifier fromHistogramEvent(@NonNull HistogramEvent event) {
         Objects.requireNonNull(event);
-        return builder()
-                .setAdCounterKey(event.getAdCounterKey())
-                .setBuyer(event.getBuyer())
-                .setCustomAudienceOwner(event.getCustomAudienceOwner())
-                .setCustomAudienceName(event.getCustomAudienceName())
-                .build();
+
+        Builder tempBuilder =
+                builder().setAdCounterKey(event.getAdCounterKey()).setBuyer(event.getBuyer());
+
+        // Only win-typed events must be scoped to a custom audience, so leave them null otherwise
+        if (event.getAdEventType() == FrequencyCapFilters.AD_EVENT_TYPE_WIN) {
+            tempBuilder
+                    .setCustomAudienceOwner(event.getCustomAudienceOwner())
+                    .setCustomAudienceName(event.getCustomAudienceName());
+        }
+
+        return tempBuilder.build();
     }
 
     /** Builder class for a {@link DBHistogramIdentifier} object. */
@@ -156,18 +163,18 @@ public abstract class DBHistogramIdentifier {
 
         /** Sets the owner package name of the custom audience the histogram is associated with. */
         @NonNull
-        public abstract Builder setCustomAudienceOwner(@NonNull String value);
+        public abstract Builder setCustomAudienceOwner(@Nullable String value);
 
         /** Sets the name of the custom audience the histogram is associated with. */
         @NonNull
-        public abstract Builder setCustomAudienceName(@NonNull String value);
+        public abstract Builder setCustomAudienceName(@Nullable String value);
 
         /**
          * Builds and returns the {@link DBHistogramIdentifier} object.
          *
-         * @throws IllegalStateException if any field is unset when the object is built
+         * @throws IllegalStateException if any required field is unset when the object is built
          */
         @NonNull
-        protected abstract DBHistogramIdentifier build();
+        public abstract DBHistogramIdentifier build();
     }
 }
