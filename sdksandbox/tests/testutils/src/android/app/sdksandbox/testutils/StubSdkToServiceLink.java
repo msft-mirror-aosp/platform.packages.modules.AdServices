@@ -17,6 +17,7 @@
 package android.app.sdksandbox.testutils;
 
 import android.annotation.NonNull;
+import android.app.sdksandbox.AppOwnedSdkSandboxInterface;
 import android.app.sdksandbox.ISdkToServiceCallback;
 import android.app.sdksandbox.SandboxedSdk;
 import android.os.Binder;
@@ -25,6 +26,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class StubSdkToServiceLink extends ISdkToServiceCallback.Stub {
+
+    @Override
+    @NonNull
+    public List<AppOwnedSdkSandboxInterface> getAppOwnedSdkSandboxInterfaces(String clientName) {
+        return new ArrayList<>();
+    }
 
     @Override
     @NonNull

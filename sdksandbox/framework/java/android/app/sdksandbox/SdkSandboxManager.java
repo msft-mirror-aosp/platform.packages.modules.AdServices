@@ -355,6 +355,53 @@ public final class SdkSandboxManager {
     }
 
     /**
+     * Registers {@link AppOwnedSdkSandboxInterface} for an app process.
+     *
+     * <p>Registering an {@link AppOwnedSdkSandboxInterface} that has same name as a previously
+     * registered interface will result in {@link IllegalStateException}.
+     *
+     * <p>{@link AppOwnedSdkSandboxInterface#getName()} refers to the name of the interface.
+     *
+     * @param appOwnedSdkSandboxInterface the AppOwnedSdkSandboxInterface to be registered
+     */
+    public void registerAppOwnedSdkSandboxInterface(
+            @NonNull AppOwnedSdkSandboxInterface appOwnedSdkSandboxInterface) {
+        try {
+            mService.registerAppOwnedSdkSandboxInterface(
+                    mContext.getPackageName(), appOwnedSdkSandboxInterface);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Unregisters {@link AppOwnedSdkSandboxInterfaces} for an app process.
+     *
+     * @param name the name under which AppOwnedSdkSandboxInterface was registered.
+     */
+    public void unregisterAppOwnedSdkSandboxInterface(@NonNull String name) {
+        try {
+            mService.unregisterAppOwnedSdkSandboxInterface(mContext.getPackageName(), name);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Fetches a list of {@link AppOwnedSdkSandboxInterface} registered for an app
+     *
+     * @return empty list if callingInfo not found in map otherwise a list of {@link
+     *     AppOwnedSdkSandboxInterface}
+     */
+    public @NonNull List<AppOwnedSdkSandboxInterface> getAppOwnedSdkSandboxInterfaces() {
+        try {
+            return mService.getAppOwnedSdkSandboxInterfaces(mContext.getPackageName());
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
      * Loads SDK in an SDK sandbox java process.
      *
      * <p>Loads SDK library with {@code sdkName} to an SDK sandbox process asynchronously. The
