@@ -119,6 +119,7 @@ public class NotificationActivityUiAutomatorTest {
 
     @After
     public void teardown() throws IOException {
+        if (!ApkTestUtil.isDeviceSupported()) return;
         if (mStaticMockSession != null) {
             mStaticMockSession.finishMocking();
         }
