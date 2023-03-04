@@ -150,5 +150,10 @@
     {
       "name": "CtsAdServicesHostTests"
     }
+  ],
+  "postsubmit": [
+    {
+      "name": "AdServicesMddIntegrationTests"
+    }
   ]
 }
