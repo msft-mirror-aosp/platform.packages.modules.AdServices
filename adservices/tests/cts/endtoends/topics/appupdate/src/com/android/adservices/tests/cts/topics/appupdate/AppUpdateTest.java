@@ -41,6 +41,7 @@ import org.junit.Test;
 import java.util.Arrays;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 /**
  * This CTS test is to test app update flow for Topics API. It has two goals:
@@ -268,10 +269,12 @@ public class AppUpdateTest {
                             int[] topics =
                                     intent.getExtras().getIntArray(TOPIC_RESPONSE_BROADCAST_KEY);
 
-                            // topic is one of the 5 classification topics of the Test App.
-                            assertThat(topics.length).isEqualTo(1);
-                            assertThat(topics[0])
-                                    .isIn(Arrays.asList(10147, 10253, 10175, 10254, 10333));
+                            // In current test infra, it has the chance that multiple tests run
+                            // together. Instead of asserting the deterministic result, check if
+                            // the targeted topic exists in the Topics API result.
+                            assertThat(Arrays.stream(topics).boxed().collect(Collectors.toList()))
+                                    .containsAnyIn(
+                                            Arrays.asList(10147, 10253, 10175, 10254, 10333));
                         }
 
                         mExpectedTopicResponseBroadCastIndex++;

@@ -19,6 +19,7 @@ package com.android.adservices.data;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
+import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -39,7 +40,11 @@ import com.android.internal.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Helper to manage the PP API database. Designed as a singleton to make sure that all PP API usages
@@ -90,12 +95,6 @@ public class DbHelper extends SQLiteOpenHelper {
         for (String sql : TopicsTables.CREATE_STATEMENTS) {
             db.execSQL(sql);
         }
-        for (String sql : MeasurementTables.CREATE_STATEMENTS) {
-            db.execSQL(sql);
-        }
-        for (String sql : MeasurementTables.CREATE_INDEXES) {
-            db.execSQL(sql);
-        }
         for (String sql : EnrollmentTables.CREATE_STATEMENTS) {
             db.execSQL(sql);
         }
@@ -135,8 +134,10 @@ public class DbHelper extends SQLiteOpenHelper {
         LogUtil.d(
                 "DbHelper.onUpgrade. Attempting to upgrade version from %d to %d.",
                 oldVersion, newVersion);
-        getOrderedDbMigrators()
-                .forEach(dbMigrator -> dbMigrator.performMigration(db, oldVersion, newVersion));
+        if (hasV1MeasurementTables(db)) {
+            getOrderedDbMigrators()
+                    .forEach(dbMigrator -> dbMigrator.performMigration(db, oldVersion, newVersion));
+        }
         try {
             topicsGetOrderedDbMigrators()
                     .forEach(dbMigrator -> dbMigrator.performMigration(db, oldVersion, newVersion));
@@ -145,6 +146,26 @@ public class DbHelper extends SQLiteOpenHelper {
                     "Topics DB Upgrade is not performed! oldVersion: %d, newVersion: %d.",
                     oldVersion, newVersion);
         }
+    }
+
+    /** Check if V1 measurement tables exist. */
+    @VisibleForTesting
+    public boolean hasV1MeasurementTables(SQLiteDatabase db) {
+        List<String> selectionArgList = new ArrayList<>(Arrays.asList(MeasurementTables.V1_TABLES));
+        selectionArgList.add("table"); // Schema type to match
+        String[] selectionArgs = new String[selectionArgList.size()];
+        selectionArgList.toArray(selectionArgs);
+        return DatabaseUtils.queryNumEntries(
+                        db,
+                        "sqlite_master",
+                        "name IN ("
+                                + Stream.generate(() -> "?")
+                                        .limit(MeasurementTables.V1_TABLES.length)
+                                        .collect(Collectors.joining(","))
+                                + ")"
+                                + " AND type = ?",
+                        selectionArgs)
+                == MeasurementTables.V1_TABLES.length;
     }
 
     @Override
