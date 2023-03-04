@@ -65,12 +65,12 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.CallingAppUidSupplier;
 import com.android.adservices.service.common.CallingAppUidSupplierBinderImpl;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
-import com.android.adservices.service.common.FledgeServiceFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
@@ -112,7 +112,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     @NonNull private final Flags mFlags;
     @NonNull private final CallingAppUidSupplier mCallingAppUidSupplier;
     @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
-    @NonNull private final FledgeServiceFilter mFledgeServiceFilter;
+    @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
 
     private static final String API_NOT_AUTHORIZED_MSG =
             "This API is not enabled for the given app because either dev options are disabled or"
@@ -133,7 +133,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull Flags flags,
             @NonNull CallingAppUidSupplier callingAppUidSupplier,
             @NonNull FledgeAuthorizationFilter fledgeAuthorizationFilter,
-            @NonNull FledgeServiceFilter fledgeServiceFilter) {
+            @NonNull AdSelectionServiceFilter adSelectionServiceFilter) {
         Objects.requireNonNull(context, "Context must be provided.");
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(appInstallDao);
@@ -159,7 +159,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         mFlags = flags;
         mCallingAppUidSupplier = callingAppUidSupplier;
         mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
-        mFledgeServiceFilter = fledgeServiceFilter;
+        mAdSelectionServiceFilter = adSelectionServiceFilter;
     }
 
     /** Creates a new instance of {@link AdSelectionServiceImpl}. */
@@ -185,7 +185,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 FlagsFactory.getFlags(),
                 CallingAppUidSupplierBinderImpl.create(),
                 FledgeAuthorizationFilter.create(context, AdServicesLoggerImpl.getInstance()),
-                new FledgeServiceFilter(
+                new AdSelectionServiceFilter(
                         context,
                         ConsentManager.getInstance(context),
                         FlagsFactory.getFlags(),
@@ -241,7 +241,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 inputParams,
                                 callback,
                                 adSelectionExecutionLogger,
-                                mFledgeServiceFilter,
+                                mAdSelectionServiceFilter,
                                 callingUid);
                     } else {
                         runOnDeviceAdSelection(
@@ -249,7 +249,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 inputParams,
                                 callback,
                                 adSelectionExecutionLogger,
-                                mFledgeServiceFilter,
+                                mAdSelectionServiceFilter,
                                 callingUid);
                     }
                 });
@@ -260,7 +260,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull AdSelectionInput inputParams,
             @NonNull AdSelectionCallback callback,
             @NonNull AdSelectionExecutionLogger adSelectionExecutionLogger,
-            @NonNull FledgeServiceFilter fledgeServiceFilter,
+            @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
             final int callerUid) {
         OnDeviceAdSelectionRunner runner =
                 new OnDeviceAdSelectionRunner(
@@ -275,7 +275,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         devContext,
                         mFlags,
                         adSelectionExecutionLogger,
-                        fledgeServiceFilter,
+                        adSelectionServiceFilter,
                         callerUid);
         runner.runAdSelection(inputParams, callback);
     }
@@ -285,7 +285,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull AdSelectionInput inputParams,
             @NonNull AdSelectionCallback callback,
             @NonNull AdSelectionExecutionLogger adSelectionExecutionLogger,
-            @NonNull FledgeServiceFilter fledgeServiceFilter,
+            @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
             int callerUid) {
         TrustedServerAdSelectionRunner runner =
                 new TrustedServerAdSelectionRunner(
@@ -300,7 +300,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         devContext,
                         mFlags,
                         adSelectionExecutionLogger,
-                        fledgeServiceFilter,
+                        adSelectionServiceFilter,
                         callerUid);
         runner.runAdSelection(inputParams, callback);
     }
@@ -358,7 +358,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                     devContext,
                                     mContext,
                                     mFlags,
-                                    mFledgeServiceFilter,
+                                    mAdSelectionServiceFilter,
                                     callingUid);
                     runner.runOutcomeSelection(inputParams, callback);
                 });
@@ -397,7 +397,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         devContext,
                         mAdServicesLogger,
                         mFlags,
-                        mFledgeServiceFilter,
+                        mAdSelectionServiceFilter,
                         callingUid);
         reporter.reportImpression(requestParams, callback);
     }
@@ -431,7 +431,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mBackgroundExecutor,
                         mAdServicesLogger,
                         mFlags,
-                        mFledgeServiceFilter,
+                        mAdSelectionServiceFilter,
                         callerUid,
                         mFledgeAuthorizationFilter);
 
@@ -463,7 +463,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mBackgroundExecutor,
                         mAdServicesLogger,
                         mFlags,
-                        mFledgeServiceFilter,
+                        mAdSelectionServiceFilter,
                         ConsentManager.getInstance(mContext),
                         getCallingUid(apiName));
         setter.setAppInstallAdvertisers(request, callback);
