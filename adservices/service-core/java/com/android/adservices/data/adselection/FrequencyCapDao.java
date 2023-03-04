@@ -71,16 +71,18 @@ public abstract class FrequencyCapDao {
             "SELECT foreign_key_id FROM fcap_histogram_ids "
                     + "WHERE ad_counter_key = :adCounterKey "
                     + "AND buyer = :buyer "
-                    + "AND custom_audience_owner = :customAudienceOwner "
-                    + "AND custom_audience_name = :customAudienceName "
+                    // Note that the IS operator in SQLite specifically is equivalent to = for value
+                    // matching except that it also matches NULL
+                    + "AND custom_audience_owner IS :customAudienceOwner "
+                    + "AND custom_audience_name IS :customAudienceName "
                     + "ORDER BY foreign_key_id ASC "
                     + "LIMIT 1")
     @Nullable
     protected abstract Long getHistogramIdentifierForeignKeyIfExists(
             @NonNull String adCounterKey,
             @NonNull AdTechIdentifier buyer,
-            @NonNull String customAudienceOwner,
-            @NonNull String customAudienceName);
+            @Nullable String customAudienceOwner,
+            @Nullable String customAudienceName);
 
     /**
      * Attempts to persist a new {@link DBHistogramEventData} to the event data table.
@@ -106,17 +108,18 @@ public abstract class FrequencyCapDao {
     public void insertHistogramEvent(@NonNull HistogramEvent event) throws IllegalStateException {
         Objects.requireNonNull(event);
 
+        // Converting to DBHistogramIdentifier drops custom audience fields if the type is WIN
+        DBHistogramIdentifier identifier = DBHistogramIdentifier.fromHistogramEvent(event);
         Long foreignKeyId =
                 getHistogramIdentifierForeignKeyIfExists(
-                        event.getAdCounterKey(),
-                        event.getBuyer(),
-                        event.getCustomAudienceOwner(),
-                        event.getCustomAudienceName());
+                        identifier.getAdCounterKey(),
+                        identifier.getBuyer(),
+                        identifier.getCustomAudienceOwner(),
+                        identifier.getCustomAudienceName());
+
         if (foreignKeyId == null) {
             try {
-                foreignKeyId =
-                        insertNewHistogramIdentifier(
-                                DBHistogramIdentifier.fromHistogramEvent(event));
+                foreignKeyId = insertNewHistogramIdentifier(identifier);
             } catch (Exception exception) {
                 throw new IllegalStateException("Error inserting histogram identifier", exception);
             }

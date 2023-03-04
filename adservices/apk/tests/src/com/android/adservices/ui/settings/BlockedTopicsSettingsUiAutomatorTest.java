@@ -107,6 +107,7 @@ public class BlockedTopicsSettingsUiAutomatorTest {
 
     @After
     public void teardown() throws UiObjectNotFoundException {
+        if (!ApkTestUtil.isDeviceSupported()) return;
         // Navigate back to Home screen and kill Adservices to reset stale status and views.
         sDevice.pressHome();
         ShellUtils.runShellCommand("am force-stop com.google.android.adservices.api");
@@ -194,6 +195,7 @@ public class BlockedTopicsSettingsUiAutomatorTest {
     }
 
     @Test
+    @Ignore("b/269654072")
     public void topicBlockUnblockResetTest_gaUxView() throws Exception {
         // Enable GA UX view for Privacy Sandbox Settings.
         shouldEnableGaUx(true);

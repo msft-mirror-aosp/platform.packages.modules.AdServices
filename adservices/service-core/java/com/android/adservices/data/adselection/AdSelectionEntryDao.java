@@ -112,21 +112,21 @@ public interface AdSelectionEntryDao {
 
     /**
      * Checks if there is a row in the registered_ad_interactions table that matches the primary key
-     * combination of adSelectionId, interactionKey, and reporting reportingDestination
+     * combination of adSelectionId, interactionKey, and destination
      *
      * @param adSelectionId serves as the primary key denoting the ad selection process this entry
      *     id associated with
      * @param interactionKey the interaction key
-     * @param reportingDestination denotes buyer, seller, etc.
+     * @param destination denotes buyer, seller, etc.
      */
     @Query(
             "SELECT EXISTS(SELECT 1 FROM registered_ad_interactions WHERE ad_selection_id ="
-                + " :adSelectionId AND interaction_key = :interactionKey AND reporting_destination"
-                + " = :reportingDestination LIMIT 1)")
+                    + " :adSelectionId AND interaction_key = :interactionKey AND destination"
+                    + " = :destination LIMIT 1)")
     boolean doesRegisteredAdInteractionExist(
             long adSelectionId,
             String interactionKey,
-            @ReportInteractionRequest.ReportingDestination int reportingDestination);
+            @ReportInteractionRequest.ReportingDestination int destination);
 
     /**
      * Get the ad selection entry by its unique key ad_selection_id.
@@ -236,19 +236,19 @@ public interface AdSelectionEntryDao {
 
     /**
      * Gets the interaction reporting uri that was registered with the primary key combination of
-     * {@code adSelectionId}, {@code interactionKey}, and {@code reportingDestination}.
+     * {@code adSelectionId}, {@code interactionKey}, and {@code destination}.
      *
      * @return interaction reporting uri if exists.
      */
     @Query(
             "SELECT interaction_reporting_uri FROM registered_ad_interactions WHERE"
                     + " ad_selection_id = :adSelectionId AND interaction_key = :interactionKey AND"
-                    + " reporting_destination = :reportingDestination")
+                    + " destination = :destination")
     @Nullable
     Uri getRegisteredAdInteractionUri(
             long adSelectionId,
             String interactionKey,
-            @ReportInteractionRequest.ReportingDestination int reportingDestination);
+            @ReportInteractionRequest.ReportingDestination int destination);
 
     /**
      * Clean up expired adSelection entries if it is older than the given timestamp. If

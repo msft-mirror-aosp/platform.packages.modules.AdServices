@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 2,
-    "identityHash": "e9722e8ee00deb589c11e0ce4406a387",
+    "identityHash": "3d7d3d0f6c1d3f5d6350ed5d31a1f669",
     "entities": [
       {
         "tableName": "app_install",
@@ -109,7 +109,7 @@
       },
       {
         "tableName": "fcap_histogram_ids",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`foreign_key_id` INTEGER PRIMARY KEY AUTOINCREMENT, `ad_counter_key` TEXT NOT NULL, `buyer` TEXT NOT NULL, `custom_audience_owner` TEXT NOT NULL, `custom_audience_name` TEXT NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`foreign_key_id` INTEGER PRIMARY KEY AUTOINCREMENT, `ad_counter_key` TEXT NOT NULL, `buyer` TEXT NOT NULL, `custom_audience_owner` TEXT, `custom_audience_name` TEXT)",
         "fields": [
           {
             "fieldPath": "histogramIdentifierForeignKey",
@@ -133,13 +133,13 @@
             "fieldPath": "customAudienceOwner",
             "columnName": "custom_audience_owner",
             "affinity": "TEXT",
-            "notNull": true
+            "notNull": false
           },
           {
             "fieldPath": "customAudienceName",
             "columnName": "custom_audience_name",
             "affinity": "TEXT",
-            "notNull": true
+            "notNull": false
           }
         ],
         "primaryKey": {
@@ -192,7 +192,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'e9722e8ee00deb589c11e0ce4406a387')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '3d7d3d0f6c1d3f5d6350ed5d31a1f669')"
     ]
   }
 }
