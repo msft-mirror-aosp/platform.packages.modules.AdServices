@@ -52,6 +52,15 @@ public class AdDataFixture {
                 getValidAdDataByBuyer(buyer, 4));
     }
 
+    // TODO(b/266837113) Merge with getValidAdsByBuyer once filters are unhidden
+    public static List<AdData> getValidFilterAdsByBuyer(AdTechIdentifier buyer) {
+        return ImmutableList.of(
+                getValidFilterAdDataByBuyer(buyer, 1),
+                getValidFilterAdDataByBuyer(buyer, 2),
+                getValidAdDataByBuyer(buyer, 3),
+                getValidAdDataByBuyer(buyer, 4));
+    }
+
     public static List<AdData> getInvalidAdsByBuyer(AdTechIdentifier buyer) {
         return ImmutableList.of(
                 new AdData.Builder()
@@ -84,6 +93,14 @@ public class AdDataFixture {
         return new AdData.Builder()
                 .setRenderUri(getValidRenderUriByBuyer(buyer, sequenceNumber))
                 .setMetadata(metadata);
+    }
+
+    // TODO(b/266837113) Merge with getValidAdDataByBuyer once filters are unhidden
+    public static AdData getValidFilterAdDataByBuyer(AdTechIdentifier buyer, int sequenceNumber) {
+        return getValidAdDataBuilderByBuyer(buyer, sequenceNumber)
+                .setAdCounterKeys(AD_COUNTER_KEYS)
+                .setAdFilters(AdFiltersFixture.VALID_AD_FILTERS)
+                .build();
     }
 
     public static AdData getValidAdDataByBuyer(AdTechIdentifier buyer, int sequenceNumber) {
