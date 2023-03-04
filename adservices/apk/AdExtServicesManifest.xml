@@ -333,6 +333,26 @@
             android:exported="false"
         />
 
+        <!-- Boot completed receiver registers package changed event receivers.
+             On T+, we explicitly disable this in the system service, so it runs only on S-. -->
+        <receiver android:name="com.android.adservices.service.common.AdExtBootCompletedReceiver"
+                  android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- On S-, this class handles intents from the system. -->
+        <receiver android:name="com.android.adservices.service.common.PackageChangedReceiver"
+                  android:enabled="false"
+                  android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.PACKAGE_FULLY_REMOVED"/>
+                <action android:name="android.intent.action.PACKAGE_DATA_CLEARED" />
+                <data android:scheme="package" />
+            </intent-filter>
+        </receiver>
+
         <!-- Used and present only on S- -->
         <uses-library android:name="android.ext.adservices" android:required="false"/>
     </application>
