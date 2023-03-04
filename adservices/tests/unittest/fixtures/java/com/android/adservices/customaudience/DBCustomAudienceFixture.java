@@ -44,6 +44,22 @@ public class DBCustomAudienceFixture {
                 .setAds(DBAdDataFixture.getValidDbAdDataListByBuyer(buyer));
     }
 
+    public static DBCustomAudience.Builder getValidBuilderByBuyerNoFilters(AdTechIdentifier buyer) {
+        return new DBCustomAudience.Builder()
+                .setOwner(CustomAudienceFixture.VALID_OWNER)
+                .setBuyer(buyer)
+                .setName(CustomAudienceFixture.VALID_NAME)
+                .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
+                .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
+                .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                .setLastAdsAndBiddingDataUpdatedTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
+                .setTrustedBiddingData(
+                        DBTrustedBiddingDataFixture.getValidBuilderByBuyer(buyer).build())
+                .setBiddingLogicUri(CustomAudienceFixture.getValidBiddingLogicUriByBuyer(buyer))
+                .setAds(DBAdDataFixture.getValidDbAdDataListByBuyerNoFilters(buyer));
+    }
+
     public static List<DBCustomAudience> getListOfBuyersCustomAudiences(
             List<AdTechIdentifier> buyers) {
         return buyers.stream()
