@@ -114,11 +114,7 @@ public class ReportImpressionScriptEngineTest {
         // certain minimum version. Marking that as an assumption that the test is making.
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
-        mReportImpressionScriptEngine =
-                new ReportImpressionScriptEngine(
-                        sContext,
-                        () -> mIsolateSettings.getEnforceMaxHeapSizeFeature(),
-                        () -> mIsolateSettings.getMaxHeapSizeBytes());
+        mReportImpressionScriptEngine = initEngine(true);
     }
 
     @Test
@@ -171,7 +167,33 @@ public class ReportImpressionScriptEngineTest {
     }
 
     @Test
-    public void testReportResultSuccessfulCase() throws Exception {
+    public void testReportResultSuccessfulCaseRegisterAdBeaconEnabled() throws Exception {
+        String jsScript =
+                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
+                        + " \n"
+                        + " return {'status': 0, 'results': {'signals_for_buyer':"
+                        + " '{\"seller\":\"' + ad_selection_config.seller + '\"}', "
+                        + "'reporting_uri': 'https://domain.com/reporting' } };\n"
+                        + "}";
+        AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
+        double bid = 5;
+
+        final SellerReportingResult result =
+                reportResult(jsScript, adSelectionConfig, TEST_DOMAIN_URI, bid, mContextualSignals);
+
+        assertThat(
+                        AdSelectionSignals.fromString(
+                                SELLER_KEY + adSelectionConfig.getSeller() + "\"}"))
+                .isEqualTo(result.getSignalsForBuyer());
+
+        assertEquals(REPORTING_URI, result.getReportingUri());
+    }
+
+    @Test
+    public void testReportResultSuccessfulCaseRegisterAdBeaconDisabled() throws Exception {
+        // Re init engine
+        mReportImpressionScriptEngine = initEngine(false);
+
         String jsScript =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
                         + " \n"
@@ -247,6 +269,39 @@ public class ReportImpressionScriptEngineTest {
                                 CLICK_EVENT_URI_REGISTRATION_INFO,
                                 HOVER_EVENT_URI_REGISTRATION_INFO))
                 .containsExactlyElementsIn(result.getInteractionReportingUris());
+    }
+
+    @Test
+    public void testReportResultFailsWhenCallingRegisterAdBeaconWhenFlagDisabled()
+            throws Exception {
+        // Re init engine
+        mReportImpressionScriptEngine = initEngine(false);
+
+        String jsScript =
+                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) "
+                        + "{\n"
+                        + "    registerAdBeacon('click', 'https://domain.com/click');\n"
+                        + "    registerAdBeacon('hover', 'https://domain.com/hover');\n"
+                        + " return {'status': 0, 'results': {'signals_for_buyer':"
+                        + " '{\"seller\":\"' + ad_selection_config.seller + '\"}', "
+                        + "'reporting_uri': 'https://domain.com/reporting' } };\n"
+                        + "}";
+        AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
+        double bid = 5;
+
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> {
+                            reportResult(
+                                    jsScript,
+                                    adSelectionConfig,
+                                    TEST_DOMAIN_URI,
+                                    bid,
+                                    mContextualSignals);
+                        });
+
+        assertThat(exception.getCause()).isInstanceOf(JSExecutionException.class);
     }
 
     @Test
@@ -482,7 +537,31 @@ public class ReportImpressionScriptEngineTest {
     }
 
     @Test
-    public void testReportWinSuccessfulCase() throws Exception {
+    public void testReportWinSuccessfulCaseRegisterAdBeaconEnabled() throws Exception {
+        String jsScript =
+                "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
+                        + " contextual_signals, custom_audience_signals) { \n"
+                        + " return {'status': 0, 'results': {'reporting_uri':"
+                        + " 'https://domain.com/reporting' } };\n"
+                        + "}";
+        AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
+
+        final BuyerReportingResult result =
+                reportWin(
+                        jsScript,
+                        adSelectionConfig.getAdSelectionSignals(),
+                        adSelectionConfig.getPerBuyerSignals().get(BUYER_1),
+                        mSignalsForBuyer,
+                        adSelectionConfig.getSellerSignals(),
+                        mCustomAudienceSignals);
+        assertEquals(REPORTING_URI, result.getReportingUri());
+    }
+
+    @Test
+    public void testReportWinSuccessfulCaseRegisterAdBeaconEnabledDisabled() throws Exception {
+        // Re init engine
+        mReportImpressionScriptEngine = initEngine(false);
+
         String jsScript =
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
                         + " contextual_signals, custom_audience_signals) { \n"
@@ -551,6 +630,37 @@ public class ReportImpressionScriptEngineTest {
                                 CLICK_EVENT_URI_REGISTRATION_INFO,
                                 HOVER_EVENT_URI_REGISTRATION_INFO))
                 .containsExactlyElementsIn(result.getInteractionReportingUris());
+    }
+
+    @Test
+    public void testReportWinFailsWhenCallingRegisterAdBeaconFlagDisabled() throws Exception {
+        // Re init engine
+        mReportImpressionScriptEngine = initEngine(false);
+
+        String jsScript =
+                "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer ,"
+                        + "contextual_signals, custom_audience_signals) {\n"
+                        + "    registerAdBeacon('click', 'https://domain.com/click');\n"
+                        + "    registerAdBeacon('hover', 'https://domain.com/hover');\n"
+                        + "    return {'status': 0, 'results': {'reporting_uri': 'https://domain"
+                        + ".com/reporting' }};\n"
+                        + "}";
+        AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
+
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> {
+                            reportWin(
+                                    jsScript,
+                                    adSelectionConfig.getAdSelectionSignals(),
+                                    adSelectionConfig.getPerBuyerSignals().get(BUYER_1),
+                                    mSignalsForBuyer,
+                                    adSelectionConfig.getSellerSignals(),
+                                    mCustomAudienceSignals);
+                        });
+
+        assertThat(exception.getCause()).isInstanceOf(JSExecutionException.class);
     }
 
     @Test
@@ -796,5 +906,24 @@ public class ReportImpressionScriptEngineTest {
 
     interface ThrowingSupplier<T> {
         T get() throws Exception;
+    }
+
+    private ReportImpressionScriptEngine initEngine(boolean registerAdBeaconEnabled) {
+        ReportImpressionScriptEngine.RegisterAdBeaconScriptEngineHelper
+                registerAdBeaconScriptEngineHelper;
+
+        if (registerAdBeaconEnabled) {
+            registerAdBeaconScriptEngineHelper =
+                    new ReportImpressionScriptEngine.RegisterAdBeaconScriptEngineHelperEnabled();
+        } else {
+            registerAdBeaconScriptEngineHelper =
+                    new ReportImpressionScriptEngine.RegisterAdBeaconScriptEngineHelperDisabled();
+        }
+
+        return new ReportImpressionScriptEngine(
+                sContext,
+                () -> mIsolateSettings.getEnforceMaxHeapSizeFeature(),
+                () -> mIsolateSettings.getMaxHeapSizeBytes(),
+                registerAdBeaconScriptEngineHelper);
     }
 }

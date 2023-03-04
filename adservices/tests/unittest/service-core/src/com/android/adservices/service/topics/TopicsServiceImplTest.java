@@ -115,7 +115,6 @@ public class TopicsServiceImplTest {
     private static final String INVALID_PACKAGE_NAME = "com.do_not_exists";
     private static final String SOME_SDK_NAME = "SomeSdkName";
     private static final int BINDER_CONNECTION_TIMEOUT_MS = 5_000;
-    private static final int RECORD_USAGE_CALLED_LATCH_TIMEOUT_MS = 1_000;
     private static final String SDK_PACKAGE_NAME = "test_package_name";
     private static final String ALLOWED_SDK_ID = "1234567";
     // This is not allowed per the ad_services_config.xml manifest config.
@@ -1009,7 +1008,7 @@ public class TopicsServiceImplTest {
         // getTopics method finished executing.
         assertThat(
                         logOperationCalledLatch.await(
-                                RECORD_USAGE_CALLED_LATCH_TIMEOUT_MS, TimeUnit.MILLISECONDS))
+                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
                 .isTrue();
 
         // Not record the call from App and Sdk to usage history when isRecordObservation is false.

@@ -169,6 +169,8 @@ public final class PhFlags implements Flags {
             "fledge_ad_selection_from_outcomes_overall_timeout_ms";
     static final String KEY_FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S =
             "fledge_ad_selection_expiration_window_s";
+    static final String KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED =
+            "fledge_ad_selection_filtering_enabled";
     static final String KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS =
             "fledge_report_impression_overall_timeout_ms";
     static final String KEY_FLEDGE_REPORT_IMPRESSION_MAX_EVENT_URI_ENTRIES_COUNT =
@@ -364,6 +366,9 @@ public final class PhFlags implements Flags {
 
     // Enrollment flags.
     static final String KEY_ENROLLMENT_BLOCKLIST_IDS = "enrollment_blocklist_ids";
+
+    // New Feature Flags
+    static final String KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED = "fledge_register_ad_beacon_enabled";
 
     private static final PhFlags sSingleton = new PhFlags();
 
@@ -976,6 +981,14 @@ public final class PhFlags implements Flags {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS,
                 /* defaultValue */ FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS);
+    }
+
+    @Override
+    public boolean getFledgeAdSelectionFilteringEnabled() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED,
+                /* defaultValue */ FLEDGE_AD_SELECTION_FILTERING_ENABLED);
     }
 
     @Override
@@ -1733,6 +1746,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeRegisterAdBeaconEnabled() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED,
+                /* defaultValue */ FLEDGE_REGISTER_AD_BEACON_ENABLED);
+    }
+
+    @Override
     public boolean getEnforceForegroundStatusForMeasurementDeleteRegistrations() {
         return DeviceConfig.getBoolean(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -2317,6 +2338,11 @@ public final class PhFlags implements Flags {
                         + getAdSelectionOffDeviceOverallTimeoutMs());
         writer.println(
                 "\t"
+                        + KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED
+                        + " = "
+                        + getFledgeAdSelectionFilteringEnabled());
+        writer.println(
+                "\t"
                         + KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS
                         + " = "
                         + getReportImpressionOverallTimeoutMs());
@@ -2394,6 +2420,12 @@ public final class PhFlags implements Flags {
                         + KEY_UI_OTA_STRINGS_DOWNLOAD_DEADLINE
                         + " = "
                         + getUiOtaStringsDownloadDeadline());
+        writer.println("==== AdServices New Feature Flags ====");
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED
+                        + " = "
+                        + getFledgeRegisterAdBeaconEnabled());
         writer.println("==== AdServices PH Flags Dump STATUS ====");
         writer.println("\t" + KEY_ADSERVICES_ENABLED + " = " + getAdServicesEnabled());
         writer.println(

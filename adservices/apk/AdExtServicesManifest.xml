@@ -109,6 +109,7 @@
         <activity
             android:name="com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity"
             android:exported="true"
+            android:enabled="false"
             android:theme="@style/Theme.SubSettingsBase">
             <intent-filter android:priority="1">
                 <action android:name="android.adservices.ui.SETTINGS" />
@@ -120,6 +121,7 @@
         <activity
             android:name="com.android.adservices.ui.settings.activities.TopicsActivity"
             android:exported="true"
+            android:enabled="false"
             android:theme="@style/Theme.SubSettingsBase">
             <intent-filter android:priority="1">
                 <action android:name="android.adservices.ui.TOPICS" />
@@ -131,6 +133,7 @@
         <activity
             android:name="com.android.adservices.ui.settings.activities.BlockedTopicsActivity"
             android:exported="true"
+            android:enabled="false"
             android:theme="@style/Theme.SubSettingsBase">
             <intent-filter android:priority="1">
                 <action android:name="android.adservices.ui.BLOCKED_TOPICS" />
@@ -142,6 +145,7 @@
         <activity
             android:name="com.android.adservices.ui.settings.activities.AppsActivity"
             android:exported="true"
+            android:enabled="false"
             android:theme="@style/Theme.SubSettingsBase">
             <intent-filter android:priority="1">
                 <action android:name="android.adservices.ui.APPS" />
@@ -153,6 +157,7 @@
         <activity
             android:name="com.android.adservices.ui.settings.activities.BlockedAppsActivity"
             android:exported="true"
+            android:enabled="false"
             android:theme="@style/Theme.SubSettingsBase">
             <intent-filter android:priority="1">
                 <action android:name="android.adservices.ui.BLOCKED_APPS" />
@@ -164,6 +169,7 @@
         <activity
             android:name="com.android.adservices.ui.settings.activities.MeasurementActivity"
             android:exported="true"
+            android:enabled="false"
             android:theme="@style/Theme.SubSettingsBase">
             <intent-filter android:priority="1">
                 <action android:name="android.adservices.ui.MEASUREMENT" />
@@ -175,6 +181,7 @@
         <activity
             android:name="com.android.adservices.ui.notifications.ConsentNotificationActivity"
             android:exported="true"
+            android:enabled="false"
             android:theme="@style/AdServices.NotificationTheme">
             <intent-filter android:priority="1">
                 <action android:name="android.adservices.ui.NOTIFICATIONS" />

@@ -67,10 +67,10 @@ import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.DBRegisteredAdInteraction;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
-import com.android.adservices.service.common.FledgeServiceFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
@@ -143,7 +143,7 @@ public class InteractionReporterTest {
 
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
 
-    @Mock private FledgeServiceFilter mFledgeServiceFilterMock;
+    @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
 
     private InteractionReporter mInteractionReporter;
 
@@ -176,7 +176,7 @@ public class InteractionReporterTest {
                         mBackgroundExecutorService,
                         mAdServicesLoggerMock,
                         mFlags,
-                        mFledgeServiceFilterMock,
+                        mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock);
 
@@ -206,7 +206,7 @@ public class InteractionReporterTest {
                 DBRegisteredAdInteraction.builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setInteractionKey(CLICK_EVENT)
-                        .setReportingDestination(BUYER_DESTINATION)
+                        .setDestination(BUYER_DESTINATION)
                         .setInteractionReportingUri(
                                 mMockWebServerRule.uriForPath(
                                         BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT))
@@ -216,7 +216,7 @@ public class InteractionReporterTest {
                 DBRegisteredAdInteraction.builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setInteractionKey(CLICK_EVENT)
-                        .setReportingDestination(SELLER_DESTINATION)
+                        .setDestination(SELLER_DESTINATION)
                         .setInteractionReportingUri(
                                 mMockWebServerRule.uriForPath(
                                         SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT))
@@ -389,7 +389,7 @@ public class InteractionReporterTest {
                         mBackgroundExecutorService,
                         mAdServicesLoggerMock,
                         mFlags,
-                        mFledgeServiceFilterMock,
+                        mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock);
 
@@ -472,7 +472,7 @@ public class InteractionReporterTest {
                         mBackgroundExecutorService,
                         mAdServicesLoggerMock,
                         mFlags,
-                        mFledgeServiceFilterMock,
+                        mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock);
 
@@ -522,7 +522,7 @@ public class InteractionReporterTest {
                         mDBRegisteredAdInteractionSellerClick));
 
         doThrow(new FledgeAuthorizationFilter.CallerMismatchException())
-                .when(mFledgeServiceFilterMock)
+                .when(mAdSelectionServiceFilterMock)
                 .filterRequest(
                         null,
                         TEST_PACKAGE_NAME,
@@ -575,7 +575,7 @@ public class InteractionReporterTest {
                         mDBRegisteredAdInteractionSellerClick));
 
         doThrow(new AppImportanceFilter.WrongCallingApplicationStateException())
-                .when(mFledgeServiceFilterMock)
+                .when(mAdSelectionServiceFilterMock)
                 .filterRequest(
                         null,
                         TEST_PACKAGE_NAME,
@@ -656,7 +656,7 @@ public class InteractionReporterTest {
         ReportInteractionTestCallback callbackFirstCall = callReportInteraction(inputParams);
 
         doThrow(new LimitExceededException(RATE_LIMIT_REACHED_ERROR_MESSAGE))
-                .when(mFledgeServiceFilterMock)
+                .when(mAdSelectionServiceFilterMock)
                 .filterRequest(
                         null,
                         TEST_PACKAGE_NAME,
@@ -707,7 +707,7 @@ public class InteractionReporterTest {
                         mDBRegisteredAdInteractionSellerClick));
 
         doThrow(new FledgeAllowListsFilter.AppNotAllowedException())
-                .when(mFledgeServiceFilterMock)
+                .when(mAdSelectionServiceFilterMock)
                 .filterRequest(
                         null,
                         TEST_PACKAGE_NAME,
@@ -756,7 +756,7 @@ public class InteractionReporterTest {
                         mDBRegisteredAdInteractionSellerClick));
 
         doThrow(new ConsentManager.RevokedConsentException())
-                .when(mFledgeServiceFilterMock)
+                .when(mAdSelectionServiceFilterMock)
                 .filterRequest(
                         null,
                         TEST_PACKAGE_NAME,
