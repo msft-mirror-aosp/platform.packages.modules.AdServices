@@ -91,16 +91,17 @@ public class CustomAudienceServiceEndToEndTest {
     protected static final Context CONTEXT = ApplicationProvider.getApplicationContext();
 
     private static final CustomAudience CUSTOM_AUDIENCE_PK1_1 =
-            CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1).build();
+            CustomAudienceFixture.getValidBuilderForBuyerFilters(CommonFixture.VALID_BUYER_1)
+                    .build();
 
     private static final CustomAudience CUSTOM_AUDIENCE_PK1_2 =
-            CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
+            CustomAudienceFixture.getValidBuilderForBuyerFilters(CommonFixture.VALID_BUYER_1)
                     .setActivationTime(CustomAudienceFixture.VALID_DELAYED_ACTIVATION_TIME)
                     .setExpirationTime(CustomAudienceFixture.VALID_DELAYED_EXPIRATION_TIME)
                     .build();
 
     private static final CustomAudience CUSTOM_AUDIENCE_PK1_BEYOND_MAX_EXPIRATION_TIME =
-            CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
+            CustomAudienceFixture.getValidBuilderForBuyerFilters(CommonFixture.VALID_BUYER_1)
                     .setExpirationTime(CustomAudienceFixture.INVALID_BEYOND_MAX_EXPIRATION_TIME)
                     .build();
 
