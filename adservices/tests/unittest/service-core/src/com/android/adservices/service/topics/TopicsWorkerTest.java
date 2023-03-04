@@ -22,7 +22,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.eq;
@@ -643,7 +642,6 @@ public class TopicsWorkerTest {
         mTopicsDao.recordBlockedTopic(topic1);
 
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(epochId);
-        when(mMockEpochManager.supportsTopicContributorFeature()).thenReturn(true);
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
 
         // Real Cache Manager requires loading cache before getTopics() being called.
@@ -718,22 +716,13 @@ public class TopicsWorkerTest {
 
         // Mock AdServicesManager.clearAllBlockedTopics
         doNothing().when(mMockAdServicesManager).clearAllBlockedTopics();
-        // To test feature flag is off
-        doReturn(false).when(mMockEpochManager).supportsTopicContributorFeature();
-        mTopicsWorker.clearAllTopicsData(/* tables to exclude */ new ArrayList<>());
-        // TopicContributors table should remain the same
-        assertThat(mTopicsDao.retrieveTopicToContributorsMap(epochId))
-                .isEqualTo(topicContributorsMap);
-        // Verify AdServicesManager.clearAllBlockedTopics is invoked
-        verify(mMockAdServicesManager).clearAllBlockedTopics();
 
         // To test feature flag is on
-        doReturn(true).when(mMockEpochManager).supportsTopicContributorFeature();
         mTopicsWorker.clearAllTopicsData(/* tables to exclude */ new ArrayList<>());
         // TopicContributors table be cleared.
         assertThat(mTopicsDao.retrieveTopicToContributorsMap(epochId)).isEmpty();
         // Verify AdServicesManager.clearAllBlockedTopics is invoked
-        verify(mMockAdServicesManager, times(2)).clearAllBlockedTopics();
+        verify(mMockAdServicesManager).clearAllBlockedTopics();
     }
 
     @Test
@@ -857,9 +846,6 @@ public class TopicsWorkerTest {
 
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numOfLookBackEpochs);
-        // Enable Topic Contributors Check Feature
-        doReturn(true).when(mDbHelper).supportsTopicContributorsTable();
-        when(mMockFlags.getEnableTopicContributorsCheck()).thenReturn(true);
 
         // Initialize a local TopicsWorker to use mocked AppUpdateManager
         TopicsWorker topicsWorker =
@@ -1117,9 +1103,6 @@ public class TopicsWorkerTest {
         // The results are observed at Epoch4
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(epochId4);
         mTopicsWorker.loadCache();
-        // Enable Topic Contributors check feature
-        doReturn(true).when(mDbHelper).supportsTopicContributorsTable();
-        when(mMockFlags.getEnableTopicContributorsCheck()).thenReturn(true);
 
         // Verify apps are able to get topic before uninstallation happens
         GetTopicsResult topic2GetTopicsResult =
@@ -1232,9 +1215,6 @@ public class TopicsWorkerTest {
         // The results are observed at EpochId = 2
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(epochId2);
         mTopicsWorker.loadCache();
-        // Enable Topic Contributors check feature
-        doReturn(true).when(mDbHelper).supportsTopicContributorsTable();
-        when(mMockFlags.getEnableTopicContributorsCheck()).thenReturn(true);
 
         // An empty getTopics() result to verify
         GetTopicsResult emptyGetTopicsResult =
@@ -1262,33 +1242,6 @@ public class TopicsWorkerTest {
 
         // As topic1 is removed, app3 also has empty result
         assertThat(mTopicsWorker.getTopics(app3, sdk)).isEqualTo(emptyGetTopicsResult);
-    }
-
-    @Test
-    public void testHandleAppUninstallation_disableTopicContributorsCheck() {
-        final String app = "app";
-        Uri packageUri = Uri.parse("package:" + app);
-
-        AppUpdateManager appUpdateManager =
-                spy(new AppUpdateManager(mDbHelper, mTopicsDao, new Random(), mMockFlags));
-        TopicsWorker topicsWorker =
-                new TopicsWorker(
-                        mMockEpochManager,
-                        mCacheManager,
-                        mBlockedTopicsManager,
-                        appUpdateManager,
-                        mMockFlags);
-
-        when(mMockEpochManager.getCurrentEpochId()).thenReturn(/* any value */ 1L);
-        when(appUpdateManager.convertUriToAppName(packageUri)).thenReturn(app);
-
-        // Verify when feature flag is off
-        doReturn(false).when(mDbHelper).supportsTopicContributorsTable();
-        topicsWorker.handleAppUninstallation(packageUri);
-
-        verify(appUpdateManager).convertUriToAppName(packageUri);
-        verify(appUpdateManager, never()).handleTopTopicsWithoutContributors(anyLong(), any());
-        verify(appUpdateManager).deleteAppDataFromTableByApps(List.of(app));
     }
 
     @Test
@@ -1334,9 +1287,6 @@ public class TopicsWorkerTest {
         when(mMockFlags.getTopicsPercentageForRandomTopic())
                 .thenReturn(topicsPercentageForRandomTopic);
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
-        // Enable Topic Contributors check feature
-        doReturn(true).when(mDbHelper).supportsTopicContributorsTable();
-        when(mMockFlags.getEnableTopicContributorsCheck()).thenReturn(true);
 
         Topic topic1 = Topic.create(/* topic */ 1, taxonomyVersion, modelVersion);
         Topic topic2 = Topic.create(/* topic */ 2, taxonomyVersion, modelVersion);

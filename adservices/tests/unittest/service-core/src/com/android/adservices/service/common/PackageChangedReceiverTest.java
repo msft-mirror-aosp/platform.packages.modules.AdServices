@@ -416,9 +416,6 @@ public class PackageChangedReceiverTest {
             // Mock static method FlagsFactory.getFlags() to return Mock Flags.
             when(FlagsFactory.getFlags()).thenReturn(mMockFlags);
 
-            // Enable TopicContributors feature
-            when(mMockEpochManager.supportsTopicContributorFeature()).thenReturn(true);
-
             // Stubbing TopicsWorker.getInstance() to return mocked TopicsWorker instance
             doReturn(mSpyTopicsWorker).when(() -> TopicsWorker.getInstance(any()));
             doReturn(epochId).when(mMockEpochManager).getCurrentEpochId();
