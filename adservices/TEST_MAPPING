@@ -1,10 +1,9 @@
 {
   "mainline-presubmit": [
-//    note: disabling for http://ag/21649017
-//    {
-//      // Install com.google.android.adservices.apex and run AdServicesApkUITests.
-//      "name": "AdServicesApkUITests[com.google.android.adservices.apex]"
-//    },
+    {
+      // Install com.google.android.adservices.apex and run AdServicesApkUITests.
+      "name": "AdServicesApkUITests[com.google.android.adservices.apex]"
+    },
     {
       // Install com.google.android.adservices.apex and run AdServicesApkUITests.
       "name": "AdServicesApkUITestsAppConsent[com.google.android.adservices.apex]"
@@ -124,10 +123,9 @@
     {
       "name": "CtsAdServicesDebuggableDeviceTestCases"
     },
-// note: disabling for http://ag/21649017
-//    {
-//      "name": "AdServicesApkUITests"
-//    },
+    {
+      "name": "AdServicesApkUITests"
+    },
     {
       "name": "AdServicesApkUITestsAppConsent"
     },
