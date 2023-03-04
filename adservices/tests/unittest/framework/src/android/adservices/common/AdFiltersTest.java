@@ -18,10 +18,15 @@ package android.adservices.common;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
+
 import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.Test;
 
 /** Unit tests for {@link AdFilters}. */
@@ -170,5 +175,91 @@ public class AdFiltersTest {
 
         assertThat(originalFilters.getFrequencyCapFilters()).isNull();
         assertThat(originalFilters.getAppInstallFilters()).isNull();
+    }
+
+    @Test
+    public void testGetSizeInBytes() {
+        final AdFilters originalFilters =
+                new AdFilters.Builder()
+                        .setFrequencyCapFilters(
+                                FrequencyCapFiltersFixture.VALID_FREQUENCY_CAP_FILTERS)
+                        .setAppInstallFilters(AppInstallFiltersFixture.VALID_APP_INSTALL_FILTERS)
+                        .build();
+        int size =
+                FrequencyCapFiltersFixture.VALID_FREQUENCY_CAP_FILTERS.getSizeInBytes()
+                        + AppInstallFiltersFixture.VALID_APP_INSTALL_FILTERS.getSizeInBytes();
+        assertEquals(size, originalFilters.getSizeInBytes());
+    }
+
+    @Test
+    public void testJsonSerialization() throws JSONException {
+        final AdFilters originalFilters =
+                new AdFilters.Builder()
+                        .setFrequencyCapFilters(
+                                FrequencyCapFiltersFixture.VALID_FREQUENCY_CAP_FILTERS)
+                        .setAppInstallFilters(AppInstallFiltersFixture.VALID_APP_INSTALL_FILTERS)
+                        .build();
+        assertEquals(originalFilters, AdFilters.fromJson(originalFilters.toJson()));
+    }
+
+    @Test
+    public void testJsonSerializationNullFcap() throws JSONException {
+        final AdFilters originalFilters =
+                new AdFilters.Builder()
+                        .setAppInstallFilters(AppInstallFiltersFixture.VALID_APP_INSTALL_FILTERS)
+                        .build();
+        assertEquals(originalFilters, AdFilters.fromJson(originalFilters.toJson()));
+    }
+
+    @Test
+    public void testJsonSerializationNullAppInstall() throws JSONException {
+        final AdFilters originalFilters =
+                new AdFilters.Builder()
+                        .setFrequencyCapFilters(
+                                FrequencyCapFiltersFixture.VALID_FREQUENCY_CAP_FILTERS)
+                        .build();
+        assertEquals(originalFilters, AdFilters.fromJson(originalFilters.toJson()));
+    }
+
+    @Test
+    public void testJsonSerializationEmpty() throws JSONException {
+        final AdFilters originalFilters = new AdFilters.Builder().build();
+        assertEquals(originalFilters, AdFilters.fromJson(originalFilters.toJson()));
+    }
+
+    @Test
+    public void testJsonSerializationUnrelatedKey() throws JSONException {
+        final AdFilters originalFilters =
+                new AdFilters.Builder()
+                        .setFrequencyCapFilters(
+                                FrequencyCapFiltersFixture.VALID_FREQUENCY_CAP_FILTERS)
+                        .setAppInstallFilters(AppInstallFiltersFixture.VALID_APP_INSTALL_FILTERS)
+                        .build();
+        JSONObject json = originalFilters.toJson();
+        json.put("key", "value");
+        assertEquals(originalFilters, AdFilters.fromJson(json));
+    }
+
+    @Test
+    public void testJsonSerializationFcapWrongType() throws JSONException {
+        final AdFilters originalFilters =
+                new AdFilters.Builder()
+                        .setAppInstallFilters(AppInstallFiltersFixture.VALID_APP_INSTALL_FILTERS)
+                        .build();
+        JSONObject json = originalFilters.toJson();
+        json.put(AdFilters.FREQUENCY_CAP_FIELD_NAME, "value");
+        assertThrows(JSONException.class, () -> AdFilters.fromJson(json));
+    }
+
+    @Test
+    public void testJsonSerializationAppInstallWrongType() throws JSONException {
+        final AdFilters originalFilters =
+                new AdFilters.Builder()
+                        .setFrequencyCapFilters(
+                                FrequencyCapFiltersFixture.VALID_FREQUENCY_CAP_FILTERS)
+                        .build();
+        JSONObject json = originalFilters.toJson();
+        json.put("app_install", "value");
+        assertThrows(JSONException.class, () -> AdFilters.fromJson(json));
     }
 }
