@@ -54,8 +54,10 @@ import com.android.adservices.service.profiling.JSScriptEngineLogConstants;
 import com.android.adservices.service.profiling.Profiler;
 import com.android.adservices.service.profiling.StopWatch;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -74,6 +76,7 @@ import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -897,6 +900,9 @@ public class JSScriptEngineTest {
     }
 
     private byte[] readBinaryAsset(@NonNull String assetName) throws IOException {
-        return sContext.getAssets().open(assetName).readAllBytes();
+        InputStream inputStream = sContext.getAssets().open(assetName);
+        return SdkLevel.isAtLeastT()
+                ? inputStream.readAllBytes()
+                : ByteStreams.toByteArray(inputStream);
     }
 }
