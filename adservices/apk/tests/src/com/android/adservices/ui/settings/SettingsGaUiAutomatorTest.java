@@ -67,6 +67,7 @@ public class SettingsGaUiAutomatorTest {
 
     @After
     public void teardown() {
+        if (!ApkTestUtil.isDeviceSupported()) return;
         ShellUtils.runShellCommand("am force-stop com.google.android.adservices.api");
     }
 

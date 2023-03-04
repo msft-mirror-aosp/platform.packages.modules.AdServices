@@ -36,7 +36,6 @@ import static com.google.common.truth.Truth.assertThat;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -46,6 +45,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.topics.AppUpdateManager;
@@ -792,25 +792,36 @@ public class PackageChangedReceiverTest {
 
     @Test
     public void testIsPackageStillInstalled() {
-        final String packageNamePrefix = "com.example.package";
-        final int count = 4;
-        final List<PackageInfo> packages = new ArrayList<>();
-        for (int i = 0; i < count; i++) {
-            PackageInfo packageInfo = new PackageInfo();
-            packageInfo.packageName = packageNamePrefix + i;
-            packages.add(packageInfo);
+        // Start a mockitoSession to mock static method
+        // Lenient added to allow easy disabling of other APIs' methods
+        MockitoSession session =
+                ExtendedMockito.mockitoSession()
+                        .mockStatic(PackageManagerCompatUtils.class)
+                        .strictness(Strictness.LENIENT)
+                        .initMocks(this)
+                        .startMocking();
+
+        try {
+            final String packageNamePrefix = "com.example.package";
+            final int count = 4;
+            final List<PackageInfo> packages = new ArrayList<>();
+            for (int i = 0; i < count; i++) {
+                PackageInfo packageInfo = new PackageInfo();
+                packageInfo.packageName = packageNamePrefix + i;
+                packages.add(packageInfo);
+            }
+
+            doReturn(packages)
+                    .when(() -> PackageManagerCompatUtils.getInstalledPackages(any(), anyInt()));
+
+            // Initialize package receiver
+            final Context context = ApplicationProvider.getApplicationContext();
+            PackageChangedReceiver receiver = createSpyPackageReceiverForConsent();
+            assertThat(receiver.isPackageStillInstalled(context, packageNamePrefix + 0)).isTrue();
+            assertThat(receiver.isPackageStillInstalled(context, packageNamePrefix + count))
+                    .isFalse();
+        } finally {
+            session.finishMocking();
         }
-
-        PackageManager pm = mock(PackageManager.class);
-        doReturn(packages).when(pm).getInstalledPackages(any());
-
-        Context spyContext = Mockito.spy(sContext);
-        doReturn(pm).when(spyContext).getPackageManager();
-
-        // Initialize package receiver
-        PackageChangedReceiver receiver = createSpyPackageReceiverForConsent();
-        assertThat(receiver.isPackageStillInstalled(spyContext, packageNamePrefix + 0)).isTrue();
-        assertThat(receiver.isPackageStillInstalled(spyContext, packageNamePrefix + count))
-                .isFalse();
     }
 }
