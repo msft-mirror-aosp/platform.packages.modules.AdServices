@@ -17,6 +17,8 @@
 package com.android.adservices.service.customaudience;
 
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.ADS_KEY;
+import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.AD_COUNTERS_KEY;
+import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.AD_FILTERS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.METADATA_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.RENDER_URI_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.TRUSTED_BIDDING_DATA_KEY;
@@ -255,7 +257,12 @@ public class CustomAudienceUpdatableDataFixture {
                             exception.getMessage());
                     adJson.put(METADATA_KEY, ad.getMetadata());
                 }
-
+                if (!ad.getAdCounterKeys().isEmpty()) {
+                    adJson.put(AD_COUNTERS_KEY, new JSONArray(ad.getAdCounterKeys()));
+                }
+                if (ad.getAdFilters() != null) {
+                    adJson.put(AD_FILTERS_KEY, ad.getAdFilters().toJson());
+                }
                 adsJson.put(adJson);
             }
 

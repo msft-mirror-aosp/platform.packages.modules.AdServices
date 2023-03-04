@@ -3710,10 +3710,13 @@ public class AdSelectionE2ETest {
         // Create ads with the buyer name and bid number as the ad URI
         // Add the bid value to the metadata
         for (int i = 0; i < bids.size(); i++) {
+            // TODO(b/266015983) Add real data
             ads.add(
                     new DBAdData(
                             Uri.parse(AD_URI_PREFIX + buyer + "/ad" + (i + 1)),
-                            "{\"result\":" + bids.get(i) + "}"));
+                            "{\"result\":" + bids.get(i) + "}",
+                            Collections.EMPTY_SET,
+                            null));
         }
 
         return new DBCustomAudience.Builder()
