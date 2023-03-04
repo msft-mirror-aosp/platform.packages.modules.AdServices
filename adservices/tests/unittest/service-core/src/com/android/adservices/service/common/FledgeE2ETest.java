@@ -194,7 +194,7 @@ public class FledgeE2ETest {
 
     @Mock private File mMockDBAdSelectionFile;
 
-    @Mock private FledgeServiceFilter mFledgeServiceFilter;
+    @Mock private AdSelectionServiceFilter mAdSelectionServiceFilter;
     @Mock private AppImportanceFilter mAppImportanceFilterMock;
 
     @Before
@@ -256,7 +256,7 @@ public class FledgeE2ETest {
         when(CONTEXT.getDatabasePath(DATABASE_NAME)).thenReturn(mMockDBAdSelectionFile);
         when(mMockDBAdSelectionFile.length()).thenReturn(DB_AD_SELECTION_FILE_SIZE);
         doNothing()
-                .when(mFledgeServiceFilter)
+                .when(mAdSelectionServiceFilter)
                 .filterRequest(
                         any(), anyString(), anyBoolean(), anyBoolean(), anyInt(), anyInt(), any());
         when(ConsentManager.getInstance(CONTEXT)).thenReturn(mConsentManagerMock);
@@ -1107,7 +1107,7 @@ public class FledgeE2ETest {
                         DEFAULT_FLAGS,
                         CallingAppUidSupplierProcessImpl.create(),
                         FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLogger),
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter);
 
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
@@ -1880,7 +1880,7 @@ public class FledgeE2ETest {
                 .when(mConsentManagerMock)
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
         doThrow(new ConsentManager.RevokedConsentException())
-                .when(mFledgeServiceFilter)
+                .when(mAdSelectionServiceFilter)
                 .filterRequest(
                         any(), anyString(), anyBoolean(), anyBoolean(), anyInt(), anyInt(), any());
 
@@ -2285,7 +2285,7 @@ public class FledgeE2ETest {
                         flags,
                         CallingAppUidSupplierProcessImpl.create(),
                         FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLogger),
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter);
     }
 
     private AdSelectionTestCallback invokeRunAdSelection(

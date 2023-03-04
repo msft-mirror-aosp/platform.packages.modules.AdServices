@@ -36,7 +36,7 @@ import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.common.FledgeServiceFilter;
+import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
@@ -81,7 +81,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final DevContext devContext,
             @NonNull final Flags flags,
             @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger,
-            @NonNull final FledgeServiceFilter fledgeServiceFilter,
+            @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             final int callerUid) {
         super(
                 context,
@@ -93,7 +93,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 adServicesLogger,
                 flags,
                 adSelectionExecutionLogger,
-                fledgeServiceFilter,
+                adSelectionServiceFilter,
                 callerUid);
 
         Objects.requireNonNull(adServicesHttpsClient);
@@ -149,7 +149,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final AdServicesLogger adServicesLogger,
             @NonNull final Flags flags,
             int callerUid,
-            @NonNull final FledgeServiceFilter fledgeServiceFilter,
+            @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger,
             @NonNull final PerBuyerBiddingRunner perBuyerBiddingRunner) {
         super(
@@ -164,7 +164,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 adServicesLogger,
                 flags,
                 callerUid,
-                fledgeServiceFilter,
+                adSelectionServiceFilter,
                 adSelectionExecutionLogger);
 
         Objects.requireNonNull(adsScoreGenerator);

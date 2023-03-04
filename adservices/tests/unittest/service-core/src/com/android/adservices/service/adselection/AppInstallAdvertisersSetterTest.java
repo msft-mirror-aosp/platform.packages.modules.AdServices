@@ -41,10 +41,10 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.DBAppInstallPermissions;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
-import com.android.adservices.service.common.FledgeServiceFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -91,7 +91,7 @@ public class AppInstallAdvertisersSetterTest {
     @Mock private AppInstallDao mAppInstallDao;
     @Mock private AdServicesLogger mAdServicesLogger;
     @Mock private Flags mFlags;
-    @Mock private FledgeServiceFilter mFledgeServiceFilter;
+    @Mock private AdSelectionServiceFilter mAdSelectionServiceFilter;
 
     @Mock private ConsentManager mConsentManager;
 
@@ -105,7 +105,7 @@ public class AppInstallAdvertisersSetterTest {
                         mExecutorService,
                         mAdServicesLogger,
                         mFlags,
-                        mFledgeServiceFilter,
+                        mAdSelectionServiceFilter,
                         mConsentManager,
                         UID);
         when(mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(any()))
@@ -116,7 +116,7 @@ public class AppInstallAdvertisersSetterTest {
     public void testSetAppInstallAdvertisersSuccess() throws Exception {
         SetAppInstallAdvertisersTestCallback callback = callSetAppInstallAdvertisers(SAMPLE_INPUT);
 
-        verify(mFledgeServiceFilter)
+        verify(mAdSelectionServiceFilter)
                 .filterRequest(
                         null,
                         CommonFixture.TEST_PACKAGE_NAME_1,
@@ -174,7 +174,7 @@ public class AppInstallAdvertisersSetterTest {
     @Test
     public void testSetAppInstallAdvertisersBackgroundCaller() throws Exception {
         doThrow(new AppImportanceFilter.WrongCallingApplicationStateException())
-                .when(mFledgeServiceFilter)
+                .when(mAdSelectionServiceFilter)
                 .filterRequest(any(), any(), anyBoolean(), anyBoolean(), anyInt(), anyInt(), any());
         SetAppInstallAdvertisersTestCallback callback = callSetAppInstallAdvertisers(SAMPLE_INPUT);
 
@@ -188,7 +188,7 @@ public class AppInstallAdvertisersSetterTest {
     @Test
     public void testSetAppInstallAdvertisersAppNotAllowed() throws Exception {
         doThrow(new FledgeAllowListsFilter.AppNotAllowedException())
-                .when(mFledgeServiceFilter)
+                .when(mAdSelectionServiceFilter)
                 .filterRequest(any(), any(), anyBoolean(), anyBoolean(), anyInt(), anyInt(), any());
         SetAppInstallAdvertisersTestCallback callback = callSetAppInstallAdvertisers(SAMPLE_INPUT);
 
@@ -202,7 +202,7 @@ public class AppInstallAdvertisersSetterTest {
     @Test
     public void testSetAppInstallAdvertisersUidMismatch() throws Exception {
         doThrow(new FledgeAuthorizationFilter.CallerMismatchException())
-                .when(mFledgeServiceFilter)
+                .when(mAdSelectionServiceFilter)
                 .filterRequest(any(), any(), anyBoolean(), anyBoolean(), anyInt(), anyInt(), any());
         SetAppInstallAdvertisersTestCallback callback = callSetAppInstallAdvertisers(SAMPLE_INPUT);
 
@@ -216,7 +216,7 @@ public class AppInstallAdvertisersSetterTest {
     @Test
     public void testSetAppInstallAdvertisersLimitExceeded() throws Exception {
         doThrow(new LimitExceededException())
-                .when(mFledgeServiceFilter)
+                .when(mAdSelectionServiceFilter)
                 .filterRequest(any(), any(), anyBoolean(), anyBoolean(), anyInt(), anyInt(), any());
         SetAppInstallAdvertisersTestCallback callback = callSetAppInstallAdvertisers(SAMPLE_INPUT);
 
