@@ -50,7 +50,6 @@ import com.android.adservices.service.consent.DeviceRegionProvider;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.ui.util.ApkTestUtil;
-import com.android.compatibility.common.util.ShellUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
@@ -115,10 +114,8 @@ public class ConsentNotificationTriggerTest {
     @After
     public void tearDown() throws IOException {
         if (!ApkTestUtil.isDeviceSupported()) return;
-        ShellUtils.runShellCommand("am force-stop com.google.android.adservices.api");
-        Runtime.getRuntime()
-                .exec(new String[] {"am", "force-stop", "com.android.adservices.tests.ui"});
 
+        ApkTestUtil.killApp();
         mStaticMockSession.finishMocking();
     }
 
