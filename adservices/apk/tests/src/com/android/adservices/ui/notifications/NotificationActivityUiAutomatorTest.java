@@ -120,13 +120,11 @@ public class NotificationActivityUiAutomatorTest {
     @After
     public void teardown() throws IOException {
         if (!ApkTestUtil.isDeviceSupported()) return;
+
+        ApkTestUtil.killApp();
         if (mStaticMockSession != null) {
             mStaticMockSession.finishMocking();
         }
-        // kill the previous apps to avoid starting the same locality as the previous activity in
-        // the next test
-        Runtime.getRuntime()
-                .exec(new String[] {"am", "force-stop", "com.android.adservices.tests.ui"});
     }
 
     @Test

@@ -183,6 +183,8 @@ public class SettingsActivityUiAutomatorTest {
     @After
     public void teardown() {
         if (!ApkTestUtil.isDeviceSupported()) return;
+
+        // ApkTestUtil.killApp();
         if (mStaticMockSession != null) {
             mStaticMockSession.finishMocking();
         }
@@ -506,6 +508,8 @@ public class SettingsActivityUiAutomatorTest {
         doReturn(blockedTopicsList).when(mConsentManager).getTopicsWithRevokedConsent();
         // navigate to topics page
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_topics_title);
-        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_blocked_topics_title);
+        UiObject blockedTopicsWhenEmptyStateButton =
+                ApkTestUtil.scrollTo(sDevice, R.string.settingsUI_blocked_topics_title);
+        assertThat(blockedTopicsWhenEmptyStateButton.isEnabled()).isTrue();
     }
 }
