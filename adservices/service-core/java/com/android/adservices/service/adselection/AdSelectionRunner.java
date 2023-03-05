@@ -43,7 +43,7 @@ import com.android.adservices.data.adselection.DBBuyerDecisionLogic;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.common.FledgeServiceFilter;
+import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.js.JSScriptEngine;
@@ -120,7 +120,7 @@ public abstract class AdSelectionRunner {
     @NonNull protected final AdServicesLogger mAdServicesLogger;
     @NonNull protected final Flags mFlags;
     @NonNull protected final AdSelectionExecutionLogger mAdSelectionExecutionLogger;
-    @NonNull private final FledgeServiceFilter mFledgeServiceFilter;
+    @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
     private final int mCallerUid;
 
     /**
@@ -132,7 +132,7 @@ public abstract class AdSelectionRunner {
      * @param scheduledExecutor executor for tasks to be run with a delay or timed executions
      * @param adServicesLogger logger for logging calls to PPAPI
      * @param flags for accessing feature flags
-     * @param fledgeServiceFilter for validating the request
+     * @param adSelectionServiceFilter for validating the request
      */
     public AdSelectionRunner(
             @NonNull final Context context,
@@ -144,7 +144,7 @@ public abstract class AdSelectionRunner {
             @NonNull final AdServicesLogger adServicesLogger,
             @NonNull final Flags flags,
             @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger,
-            @NonNull final FledgeServiceFilter fledgeServiceFilter,
+            @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final int callerUid) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(customAudienceDao);
@@ -153,7 +153,7 @@ public abstract class AdSelectionRunner {
         Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(flags);
-        Objects.requireNonNull(fledgeServiceFilter);
+        Objects.requireNonNull(adSelectionServiceFilter);
 
         Preconditions.checkArgument(
                 JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable(),
@@ -170,7 +170,7 @@ public abstract class AdSelectionRunner {
         mClock = Clock.systemUTC();
         mFlags = flags;
         mAdSelectionExecutionLogger = adSelectionExecutionLogger;
-        mFledgeServiceFilter = fledgeServiceFilter;
+        mAdSelectionServiceFilter = adSelectionServiceFilter;
         mCallerUid = callerUid;
     }
 
@@ -187,7 +187,7 @@ public abstract class AdSelectionRunner {
             @NonNull final AdServicesLogger adServicesLogger,
             @NonNull final Flags flags,
             int callerUid,
-            @NonNull FledgeServiceFilter fledgeServiceFilter,
+            @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(customAudienceDao);
@@ -215,7 +215,7 @@ public abstract class AdSelectionRunner {
         mAdServicesLogger = adServicesLogger;
         mFlags = flags;
         mAdSelectionExecutionLogger = adSelectionExecutionLogger;
-        mFledgeServiceFilter = fledgeServiceFilter;
+        mAdSelectionServiceFilter = adSelectionServiceFilter;
         mCallerUid = callerUid;
     }
 
@@ -239,7 +239,7 @@ public abstract class AdSelectionRunner {
                                 try {
                                     Trace.beginSection(Tracing.VALIDATE_REQUEST);
                                     LogUtil.v("Starting filtering and validation.");
-                                    mFledgeServiceFilter.filterRequest(
+                                    mAdSelectionServiceFilter.filterRequest(
                                             adSelectionConfig.getSeller(),
                                             inputParams.getCallerPackageName(),
                                             mFlags

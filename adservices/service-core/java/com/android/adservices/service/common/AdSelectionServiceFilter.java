@@ -34,8 +34,8 @@ import java.util.function.Supplier;
 /** Utility class to filter FLEDGE requests. */
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
-public class FledgeServiceFilter extends AbstractFledgeServiceFilter {
-    public FledgeServiceFilter(
+public class AdSelectionServiceFilter extends AbstractFledgeServiceFilter {
+    public AdSelectionServiceFilter(
             @NonNull Context context,
             @NonNull ConsentManager consentManager,
             @NonNull Flags flags,

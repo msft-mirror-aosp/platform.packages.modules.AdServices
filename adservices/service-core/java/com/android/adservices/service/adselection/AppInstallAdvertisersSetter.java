@@ -35,11 +35,11 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.DBAppInstallPermissions;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AdTechIdentifierValidator;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
-import com.android.adservices.service.common.FledgeServiceFilter;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLogger;
 
@@ -64,7 +64,7 @@ public class AppInstallAdvertisersSetter {
     @NonNull private final AppInstallDao mAppInstallDao;
     @NonNull private final ListeningExecutorService mExecutorService;
     @NonNull private final AdServicesLogger mAdServicesLogger;
-    @NonNull private final FledgeServiceFilter mFledgeServiceFilter;
+    @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
     @NonNull private final ConsentManager mConsentManager;
     private final int mCallerUid;
 
@@ -73,21 +73,21 @@ public class AppInstallAdvertisersSetter {
             @NonNull ExecutorService executor,
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull final Flags flags,
-            @NonNull final FledgeServiceFilter fledgeServiceFilter,
+            @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final ConsentManager consentManager,
             int callerUid) {
         Objects.requireNonNull(appInstallDao);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(flags);
-        Objects.requireNonNull(fledgeServiceFilter);
+        Objects.requireNonNull(adSelectionServiceFilter);
         Objects.requireNonNull(consentManager);
 
         mAppInstallDao = appInstallDao;
         mExecutorService = MoreExecutors.listeningDecorator(executor);
         mAdServicesLogger = adServicesLogger;
         mCallerUid = callerUid;
-        mFledgeServiceFilter = fledgeServiceFilter;
+        mAdSelectionServiceFilter = adSelectionServiceFilter;
         mConsentManager = consentManager;
     }
 
@@ -210,7 +210,7 @@ public class AppInstallAdvertisersSetter {
 
     private void validateRequest(Set<AdTechIdentifier> advertisers, String callerPackageName) {
         LogUtil.v("Validating setAppInstallAdvertisers Request");
-        mFledgeServiceFilter.filterRequest(
+        mAdSelectionServiceFilter.filterRequest(
                 null,
                 callerPackageName,
                 true,

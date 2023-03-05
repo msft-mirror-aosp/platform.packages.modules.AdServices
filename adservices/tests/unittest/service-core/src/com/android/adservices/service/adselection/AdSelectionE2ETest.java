@@ -99,8 +99,8 @@ import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
-import com.android.adservices.service.common.FledgeServiceFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.cache.FledgeHttpCache;
@@ -284,7 +284,7 @@ public class AdSelectionE2ETest {
     private Dispatcher mDispatcher;
     private AdTechIdentifier mSeller;
 
-    @Mock private FledgeServiceFilter mFledgeServiceFilter;
+    @Mock private AdSelectionServiceFilter mAdSelectionServiceFilter;
 
     @Before
     public void setUp() throws Exception {
@@ -344,7 +344,7 @@ public class AdSelectionE2ETest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter);
 
         // Create a dispatcher that helps map a request -> response in mockWebServer
         mDispatcher =
@@ -408,7 +408,7 @@ public class AdSelectionE2ETest {
         when(mContext.getDatabasePath(DATABASE_NAME)).thenReturn(mMockDBAdSelectionFile);
         when(mMockDBAdSelectionFile.length()).thenReturn(DB_AD_SELECTION_FILE_SIZE);
         doNothing()
-                .when(mFledgeServiceFilter)
+                .when(mAdSelectionServiceFilter)
                 .filterRequest(
                         mSeller,
                         CALLER_PACKAGE_NAME,
@@ -513,7 +513,7 @@ public class AdSelectionE2ETest {
         doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
 
         doThrow(new ConsentManager.RevokedConsentException())
-                .when(mFledgeServiceFilter)
+                .when(mAdSelectionServiceFilter)
                 .filterRequest(
                         mSeller,
                         CALLER_PACKAGE_NAME,
@@ -786,7 +786,7 @@ public class AdSelectionE2ETest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter);
 
         AdSelectionTestCallback resultsCallbackNoCache =
                 invokeSelectAds(adSelectionServiceNoCache, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -892,7 +892,7 @@ public class AdSelectionE2ETest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter);
 
         // We call selectAds again to verify that scoring logic was also cached
         AdSelectionTestCallback resultsCallbackWithCaching =
@@ -1011,7 +1011,7 @@ public class AdSelectionE2ETest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter);
 
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
@@ -2230,7 +2230,7 @@ public class AdSelectionE2ETest {
                         flagsWithSmallerLimits,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter);
 
         String jsWaitMoreThanAllowedForBiddingPerCa =
                 insertJsWait(2 * mFlags.getAdSelectionBiddingTimeoutPerCaMs());
@@ -2471,7 +2471,7 @@ public class AdSelectionE2ETest {
                         flagsWithLenientBuyerBiddingLimits,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -2537,7 +2537,7 @@ public class AdSelectionE2ETest {
                         flagsWithTightBuyerBiddingLimits,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter);
 
         resultsCallback =
                 invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -2654,7 +2654,7 @@ public class AdSelectionE2ETest {
                         flagsWithSmallerLimits,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter);
 
         String jsWaitMoreThanAllowedForScoring =
                 insertJsWait(2 * mFlags.getAdSelectionScoringTimeoutMs());
@@ -2755,7 +2755,7 @@ public class AdSelectionE2ETest {
     @Test
     public void testAdSelectionConfigInvalidInput() throws Exception {
         doThrow(new IllegalArgumentException())
-                .when(mFledgeServiceFilter)
+                .when(mAdSelectionServiceFilter)
                 .filterRequest(
                         mSeller,
                         CALLER_PACKAGE_NAME,
@@ -3144,7 +3144,7 @@ public class AdSelectionE2ETest {
         String invalidPackageName = CALLER_PACKAGE_NAME + "invalidPackageName";
 
         doThrow(new FledgeAuthorizationFilter.CallerMismatchException())
-                .when(mFledgeServiceFilter)
+                .when(mAdSelectionServiceFilter)
                 .filterRequest(
                         mSeller,
                         invalidPackageName,
@@ -3227,7 +3227,7 @@ public class AdSelectionE2ETest {
     public void testRunAdSelectionFailsWhenAppCannotUsePPApi() throws Exception {
         doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
-                .when(mFledgeServiceFilter)
+                .when(mAdSelectionServiceFilter)
                 .filterRequest(
                         mSeller,
                         CALLER_PACKAGE_NAME,
@@ -3321,7 +3321,7 @@ public class AdSelectionE2ETest {
         doReturn(flagsWithEnrollmentCheckEnabled).when(FlagsFactory::getFlags);
 
         doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
-                .when(mFledgeServiceFilter)
+                .when(mAdSelectionServiceFilter)
                 .filterRequest(
                         mSeller,
                         CALLER_PACKAGE_NAME,
@@ -3347,7 +3347,7 @@ public class AdSelectionE2ETest {
                         flagsWithEnrollmentCheckEnabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(1);
@@ -3474,7 +3474,7 @@ public class AdSelectionE2ETest {
                         throttlingFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(1);
@@ -3523,7 +3523,7 @@ public class AdSelectionE2ETest {
                         adSelectionServiceWithThrottling, mAdSelectionConfig, CALLER_PACKAGE_NAME);
 
         doThrow(new LimitExceededException(RATE_LIMIT_REACHED_ERROR_MESSAGE))
-                .when(mFledgeServiceFilter)
+                .when(mAdSelectionServiceFilter)
                 .filterRequest(
                         mSeller,
                         CALLER_PACKAGE_NAME,
@@ -3603,7 +3603,7 @@ public class AdSelectionE2ETest {
                         flagsWithEnrollmentCheckEnabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
@@ -3710,10 +3710,13 @@ public class AdSelectionE2ETest {
         // Create ads with the buyer name and bid number as the ad URI
         // Add the bid value to the metadata
         for (int i = 0; i < bids.size(); i++) {
+            // TODO(b/266015983) Add real data
             ads.add(
                     new DBAdData(
                             Uri.parse(AD_URI_PREFIX + buyer + "/ad" + (i + 1)),
-                            "{\"result\":" + bids.get(i) + "}"));
+                            "{\"result\":" + bids.get(i) + "}",
+                            Collections.EMPTY_SET,
+                            null));
         }
 
         return new DBCustomAudience.Builder()
