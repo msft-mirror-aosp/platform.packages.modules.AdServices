@@ -70,6 +70,8 @@ public class AdSelectionConfigTest {
         assertEquals(config.getAdSelectionSignals(), fromParcel.getAdSelectionSignals());
         assertEquals(config.getSellerSignals(), fromParcel.getSellerSignals());
         assertEquals(config.getPerBuyerSignals(), fromParcel.getPerBuyerSignals());
+        assertEquals(
+                config.getTrustedScoringSignalsUri(), fromParcel.getTrustedScoringSignalsUri());
     }
 
     @Test

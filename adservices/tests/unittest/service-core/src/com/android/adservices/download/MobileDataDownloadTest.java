@@ -434,7 +434,6 @@ public class MobileDataDownloadTest {
     @Test
     public void testOtaOnTopicsConsentGiven_gaUxEnabled()
             throws ExecutionException, InterruptedException, TimeoutException {
-        android.util.Log.i("adservices", "12334");
         doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
         when(mConsentManager.getConsent(AdServicesApiType.TOPICS))
                 .thenReturn(AdServicesApiConsent.GIVEN);

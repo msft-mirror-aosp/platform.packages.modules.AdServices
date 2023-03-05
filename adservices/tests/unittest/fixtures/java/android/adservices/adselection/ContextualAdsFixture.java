@@ -58,4 +58,8 @@ public class ContextualAdsFixture {
     public static ContextualAds aContextualAd() {
         return aContextualAdBuilder().build();
     }
+
+    public static ContextualAds aContextualAd(AdTechIdentifier buyer) {
+        return aContextualAdBuilder().setBuyer(buyer).build();
+    }
 }

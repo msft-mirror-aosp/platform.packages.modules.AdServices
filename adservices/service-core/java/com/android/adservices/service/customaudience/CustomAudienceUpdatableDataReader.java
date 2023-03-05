@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.customaudience;
 
+import android.adservices.common.AdFilters;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
@@ -27,6 +28,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 import com.android.adservices.service.common.AdTechUriValidator;
+import com.android.adservices.service.common.JsonUtils;
 import com.android.adservices.service.common.ValidatorUtil;
 
 import org.json.JSONArray;
@@ -34,9 +36,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * A parser and validator for a JSON response that is fetched during the Custom Audience background
@@ -50,6 +54,8 @@ public class CustomAudienceUpdatableDataReader {
     public static final String ADS_KEY = "ads";
     public static final String RENDER_URI_KEY = "render_uri";
     public static final String METADATA_KEY = "metadata";
+    public static final String AD_COUNTERS_KEY = "ad_counter_keys";
+    public static final String AD_FILTERS_KEY = "ad_filters";
 
     private static final String FIELD_FOUND_LOG_FORMAT = "%s Found %s in JSON response";
     private static final String VALIDATED_FIELD_LOG_FORMAT =
@@ -58,6 +64,7 @@ public class CustomAudienceUpdatableDataReader {
     private static final String SKIP_INVALID_JSON_TYPE_LOG_FORMAT =
             "%s Invalid JSON type while parsing a single item in the %s found in JSON response;"
                     + " ignoring and continuing.  Error message: %s";
+    private static final String STRING_ERROR_FORMAT = "Unexpected format parsing %s in %s";
 
     private final JSONObject mResponseObject;
     private final String mResponseHash;
@@ -150,33 +157,29 @@ public class CustomAudienceUpdatableDataReader {
 
             JSONObject dataJsonObj = mResponseObject.getJSONObject(TRUSTED_BIDDING_DATA_KEY);
 
-            // Note: getString() coerces values to be strings; use get() instead
-            Object uri = dataJsonObj.get(TRUSTED_BIDDING_URI_KEY);
-            if (!(uri instanceof String)) {
-                throw new JSONException(
-                        "Unexpected format parsing "
-                                + TRUSTED_BIDDING_URI_KEY
-                                + " in "
-                                + TRUSTED_BIDDING_DATA_KEY);
-            }
-            Uri parsedUri = Uri.parse(Objects.requireNonNull((String) uri));
+            String uri =
+                    JsonUtils.getStringFromJson(
+                            dataJsonObj,
+                            TRUSTED_BIDDING_URI_KEY,
+                            String.format(
+                                    STRING_ERROR_FORMAT,
+                                    TRUSTED_BIDDING_URI_KEY,
+                                    TRUSTED_BIDDING_DATA_KEY));
+            Uri parsedUri = Uri.parse(uri);
 
             JSONArray keysJsonArray = dataJsonObj.getJSONArray(TRUSTED_BIDDING_KEYS_KEY);
             int keysListLength = keysJsonArray.length();
             List<String> keysList = new ArrayList<>(keysListLength);
             for (int i = 0; i < keysListLength; i++) {
                 try {
-                    // Note: getString() coerces values to be strings; use get() instead
-                    Object key = keysJsonArray.get(i);
-                    if (key instanceof String) {
-                        keysList.add(Objects.requireNonNull((String) key));
-                    } else {
-                        throw new JSONException(
-                                "Unexpected format parsing "
-                                        + TRUSTED_BIDDING_KEYS_KEY
-                                        + " in "
-                                        + TRUSTED_BIDDING_DATA_KEY);
-                    }
+                    keysList.add(
+                            JsonUtils.getStringFromJsonArrayAtIndex(
+                                    keysJsonArray,
+                                    i,
+                                    String.format(
+                                            STRING_ERROR_FORMAT,
+                                            TRUSTED_BIDDING_KEYS_KEY,
+                                            TRUSTED_BIDDING_DATA_KEY)));
                 } catch (JSONException | NullPointerException exception) {
                     // Skip any keys that are malformed and continue to the next in the list; note
                     // that if the entire given list of keys is junk, then any existing trusted
@@ -233,13 +236,12 @@ public class CustomAudienceUpdatableDataReader {
                 try {
                     JSONObject adDataJsonObj = adsJsonArray.getJSONObject(i);
 
-                    // Note: getString() coerces values to be strings; use get() instead
-                    Object uri = adDataJsonObj.get(RENDER_URI_KEY);
-                    if (!(uri instanceof String)) {
-                        throw new JSONException(
-                                "Unexpected format parsing " + RENDER_URI_KEY + " in " + ADS_KEY);
-                    }
-                    Uri parsedUri = Uri.parse(Objects.requireNonNull((String) uri));
+                    String uri =
+                            JsonUtils.getStringFromJson(
+                                    adDataJsonObj,
+                                    RENDER_URI_KEY,
+                                    String.format(STRING_ERROR_FORMAT, RENDER_URI_KEY, ADS_KEY));
+                    Uri parsedUri = Uri.parse(uri);
 
                     // By passing in an empty ad tech identifier string, ad tech identifier host
                     // matching is skipped
@@ -255,10 +257,31 @@ public class CustomAudienceUpdatableDataReader {
                             Objects.requireNonNull(adDataJsonObj.getJSONObject(METADATA_KEY))
                                     .toString();
 
+                    Set<String> adCounterKeys = new HashSet<>();
+                    if (adDataJsonObj.has(AD_COUNTERS_KEY)) {
+                        JSONArray adCounterKeysJson = adDataJsonObj.getJSONArray(AD_COUNTERS_KEY);
+                        for (int j = 0; j < adCounterKeysJson.length(); j++) {
+                            adCounterKeys.add(
+                                    JsonUtils.getStringFromJsonArrayAtIndex(
+                                            adCounterKeysJson,
+                                            j,
+                                            String.format(
+                                                    STRING_ERROR_FORMAT,
+                                                    AD_COUNTERS_KEY,
+                                                    ADS_KEY)));
+                        }
+                    }
+                    AdFilters adFilters = null;
+                    if (adDataJsonObj.has(AD_FILTERS_KEY)) {
+                        adFilters = AdFilters.fromJson(adDataJsonObj.getJSONObject(AD_FILTERS_KEY));
+                    }
+
                     DBAdData adData =
                             new DBAdData.Builder()
                                     .setRenderUri(parsedUri)
                                     .setMetadata(metadata)
+                                    .setAdCounterKeys(adCounterKeys)
+                                    .setAdFilters(adFilters)
                                     .build();
                     adsList.add(adData);
                     adsSize += adData.size();

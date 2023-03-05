@@ -55,6 +55,7 @@ import android.content.ServiceConnection;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.content.pm.ServiceInfo;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.Handler;
@@ -696,7 +697,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         // unload.
         if (prevLoadSession == null) {
             // Unloading SDK that is not loaded is a no-op, return.
-            Log.i(TAG, "SDK " + sdkName + " is not loaded for " + callingInfo);
+            Log.w(TAG, "SDK " + sdkName + " is not loaded for " + callingInfo);
             return;
         }
 
@@ -1604,12 +1605,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                                 | PackageManager.MATCH_DIRECT_BOOT_AWARE
                                 | PackageManager.MATCH_DIRECT_BOOT_UNAWARE,
                         UserHandle.SYSTEM);
-        if (resolveInfos == null || resolveInfos.size() == 0) {
-            Log.e(TAG, "AdServices package could not be resolved");
-        } else if (resolveInfos.size() > 1) {
-            Log.e(TAG, "More than one service matched intent " + serviceIntent.getAction());
-        } else {
-            return resolveInfos.get(0).serviceInfo.packageName;
+        final ServiceInfo serviceInfo =
+                AdServicesCommon.resolveAdServicesService(resolveInfos, serviceIntent.getAction());
+        if (serviceInfo != null) {
+            return serviceInfo.packageName;
         }
         return null;
     }

@@ -102,6 +102,7 @@ public final class PhFlags implements Flags {
     static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS =
             "measurement_enforce_foreground_status_get_status";
     static final String KEY_MEASUREMENT_ENABLE_XNA = "measurement_enable_xna";
+    static final String KEY_MEASUREMENT_DATA_EXPIRY_WINDOW_MS = "measurement_data_expiry_window_ms";
 
     // FLEDGE Custom Audience keys
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = "fledge_custom_audience_max_count";
@@ -168,6 +169,8 @@ public final class PhFlags implements Flags {
             "fledge_ad_selection_from_outcomes_overall_timeout_ms";
     static final String KEY_FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S =
             "fledge_ad_selection_expiration_window_s";
+    static final String KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED =
+            "fledge_ad_selection_filtering_enabled";
     static final String KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS =
             "fledge_report_impression_overall_timeout_ms";
     static final String KEY_FLEDGE_REPORT_IMPRESSION_MAX_EVENT_URI_ENTRIES_COUNT =
@@ -308,18 +311,6 @@ public final class PhFlags implements Flags {
     // Consent Notification debug mode keys.
     static final String KEY_CONSENT_NOTIFICATION_DEBUG_MODE = "consent_notification_debug_mode";
 
-    // Consent Notification interval begin ms.
-    static final String KEY_CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS =
-            "consent_notification_interval_begin_ms";
-
-    // Consent Notification interval end ms.
-    static final String KEY_CONSENT_NOTIFICATION_INTERVAL_END_MS =
-            "consent_notification_interval_end_ms";
-
-    // Consent Notification minimal delay before interval ms.
-    static final String KEY_CONSENT_NOTIFICATION_MINIMAL_DELAY_BEFORE_INTERVAL_ENDS =
-            "consent_notification_minimal_delay_before_interval_ends";
-
     // Consent Manager debug mode keys.
     static final String KEY_CONSENT_MANAGER_DEBUG_MODE = "consent_manager_debug_mode";
 
@@ -375,6 +366,9 @@ public final class PhFlags implements Flags {
 
     // Enrollment flags.
     static final String KEY_ENROLLMENT_BLOCKLIST_IDS = "enrollment_blocklist_ids";
+
+    // New Feature Flags
+    static final String KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED = "fledge_register_ad_beacon_enabled";
 
     private static final PhFlags sSingleton = new PhFlags();
 
@@ -706,6 +700,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public long getMeasurementDataExpiryWindowMs() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_DATA_EXPIRY_WINDOW_MS,
+                /* defaultValue */ MEASUREMENT_DATA_EXPIRY_WINDOW_MS);
+    }
+
+    @Override
     public long getFledgeCustomAudienceMaxCount() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
@@ -979,6 +981,14 @@ public final class PhFlags implements Flags {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS,
                 /* defaultValue */ FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS);
+    }
+
+    @Override
+    public boolean getFledgeAdSelectionFilteringEnabled() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED,
+                /* defaultValue */ FLEDGE_AD_SELECTION_FILTERING_ENABLED);
     }
 
     @Override
@@ -1736,6 +1746,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeRegisterAdBeaconEnabled() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED,
+                /* defaultValue */ FLEDGE_REGISTER_AD_BEACON_ENABLED);
+    }
+
+    @Override
     public boolean getEnforceForegroundStatusForMeasurementDeleteRegistrations() {
         return DeviceConfig.getBoolean(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -1813,30 +1831,6 @@ public final class PhFlags implements Flags {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_CONSENT_NOTIFICATION_DEBUG_MODE,
                 /* defaultValue */ CONSENT_NOTIFICATION_DEBUG_MODE);
-    }
-
-    @Override
-    public long getConsentNotificationIntervalBeginMs() {
-        return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS,
-                /* defaultValue */ CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS);
-    }
-
-    @Override
-    public long getConsentNotificationIntervalEndMs() {
-        return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_CONSENT_NOTIFICATION_INTERVAL_END_MS,
-                /* defaultValue */ CONSENT_NOTIFICATION_INTERVAL_END_MS);
-    }
-
-    @Override
-    public long getConsentNotificationMinimalDelayBeforeIntervalEnds() {
-        return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_CONSENT_NOTIFICATION_MINIMAL_DELAY_BEFORE_INTERVAL_ENDS,
-                /* defaultValue */ CONSENT_NOTIFICATION_MINIMAL_DELAY_BEFORE_INTERVAL_ENDS);
     }
 
     @Override
@@ -2147,6 +2141,11 @@ public final class PhFlags implements Flags {
         writer.println("\t" + KEY_MEASUREMENT_ENABLE_XNA + " = " + getMeasurementEnableXNA());
         writer.println(
                 "\t"
+                        + KEY_MEASUREMENT_DATA_EXPIRY_WINDOW_MS
+                        + " = "
+                        + getMeasurementDataExpiryWindowMs());
+        writer.println(
+                "\t"
                         + KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH
                         + " = "
                         + getMeasurementRollbackDeletionKillSwitch());
@@ -2339,6 +2338,11 @@ public final class PhFlags implements Flags {
                         + getAdSelectionOffDeviceOverallTimeoutMs());
         writer.println(
                 "\t"
+                        + KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED
+                        + " = "
+                        + getFledgeAdSelectionFilteringEnabled());
+        writer.println(
+                "\t"
                         + KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS
                         + " = "
                         + getReportImpressionOverallTimeoutMs());
@@ -2416,6 +2420,12 @@ public final class PhFlags implements Flags {
                         + KEY_UI_OTA_STRINGS_DOWNLOAD_DEADLINE
                         + " = "
                         + getUiOtaStringsDownloadDeadline());
+        writer.println("==== AdServices New Feature Flags ====");
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED
+                        + " = "
+                        + getFledgeRegisterAdBeaconEnabled());
         writer.println("==== AdServices PH Flags Dump STATUS ====");
         writer.println("\t" + KEY_ADSERVICES_ENABLED + " = " + getAdServicesEnabled());
         writer.println(

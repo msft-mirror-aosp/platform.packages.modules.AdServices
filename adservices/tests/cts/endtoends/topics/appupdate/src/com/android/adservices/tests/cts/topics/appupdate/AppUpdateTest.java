@@ -41,6 +41,7 @@ import org.junit.Test;
 import java.util.Arrays;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 /**
  * This CTS test is to test app update flow for Topics API. It has two goals:
@@ -145,7 +146,9 @@ public class AppUpdateTest {
     public void setup() throws InterruptedException {
         // Skip the test if it runs on unsupported platforms.
         Assume.assumeTrue(AdservicesCtsHelper.isDeviceSupported());
-
+        // Kill AdServices process so that background jobs don't get skipped due to starting
+        // with same params.
+        killAdservicesProcess();
         // We need to skip 3 epochs so that if there is any usage from other test runs, it will
         // not be used for epoch retrieval.
         Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
@@ -266,10 +269,12 @@ public class AppUpdateTest {
                             int[] topics =
                                     intent.getExtras().getIntArray(TOPIC_RESPONSE_BROADCAST_KEY);
 
-                            // topic is one of the 5 classification topics of the Test App.
-                            assertThat(topics.length).isEqualTo(1);
-                            assertThat(topics[0])
-                                    .isIn(Arrays.asList(10147, 10253, 10175, 10254, 10333));
+                            // In current test infra, it has the chance that multiple tests run
+                            // together. Instead of asserting the deterministic result, check if
+                            // the targeted topic exists in the Topics API result.
+                            assertThat(Arrays.stream(topics).boxed().collect(Collectors.toList()))
+                                    .containsAnyIn(
+                                            Arrays.asList(10147, 10253, 10175, 10254, 10333));
                         }
 
                         mExpectedTopicResponseBroadCastIndex++;
@@ -300,6 +305,12 @@ public class AppUpdateTest {
     private void overrideEpochPeriod(long overrideEpochPeriod) {
         ShellUtils.runShellCommand(
                 "setprop debug.adservices.topics_epoch_job_period_ms " + overrideEpochPeriod);
+    }
+
+    // Force stop AdServices API.
+    public void killAdservicesProcess() {
+        // adb shell am force-stop com.google.android.adservices.api
+        ShellUtils.runShellCommand("am force-stop" + " " + ADSERVICES_PACKAGE_NAME);
     }
 
     // Override the Percentage For Random Topic in the test.

@@ -387,8 +387,8 @@ public class SqliteObjectMapper {
         setColumnValue(cursor, column, cursor::getString, (x) -> setter.apply(Uri.parse(x)));
     }
 
-    private static <BuilderType> void setIntColumn(Cursor cursor, String column,
-                                                   Function<Integer, BuilderType> setter) {
+    private static <BuilderType> void setIntColumn(
+            Cursor cursor, String column, Function<Integer, BuilderType> setter) {
         setColumnValue(cursor, column, cursor::getInt, setter);
     }
 

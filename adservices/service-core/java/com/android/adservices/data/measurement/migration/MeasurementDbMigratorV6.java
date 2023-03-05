@@ -50,10 +50,10 @@ public class MeasurementDbMigratorV6 extends AbstractMeasurementDbMigrator {
         String.format(
                 "ALTER TABLE %1$s RENAME COLUMN %2$s TO %3$s",
                 MeasurementTables.SourceContract.TABLE,
-                MeasurementTables.SourceContract.DEDUP_KEYS,
+                MeasurementTablesDeprecated.Source.DEDUP_KEYS,
                 MeasurementTables.SourceContract.EVENT_REPORT_DEDUP_KEYS),
         String.format(
-                "ALTER TABLE %1$s ADD %2$s INTEGER",
+                "ALTER TABLE %1$s ADD %2$s TEXT",
                 MeasurementTables.SourceContract.TABLE,
                 MeasurementTables.SourceContract.AGGREGATE_REPORT_DEDUP_KEYS),
         String.format(

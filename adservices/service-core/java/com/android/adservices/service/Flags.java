@@ -296,6 +296,13 @@ public interface Flags {
         return MEASUREMENT_ENABLE_XNA;
     }
 
+    long MEASUREMENT_DATA_EXPIRY_WINDOW_MS = TimeUnit.DAYS.toMillis(37);
+
+    /** Returns the data expiry window in milliseconds. */
+    default long getMeasurementDataExpiryWindowMs() {
+        return MEASUREMENT_DATA_EXPIRY_WINDOW_MS;
+    }
+
     long FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = 4000L;
     long FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT = 1000L;
     long FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT = 1000L;
@@ -613,6 +620,14 @@ public interface Flags {
      */
     default long getAdSelectionExpirationWindowS() {
         return FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S;
+    }
+
+    // Filtering feature flag disabled by default
+    boolean FLEDGE_AD_SELECTION_FILTERING_ENABLED = false;
+
+    /** Returns {@code true} if negative filtering of ads during ad selection is enabled. */
+    default boolean getFledgeAdSelectionFilteringEnabled() {
+        return FLEDGE_AD_SELECTION_FILTERING_ENABLED;
     }
 
     boolean FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED = false;
@@ -1736,5 +1751,13 @@ public interface Flags {
     /** Returns true if backward-compatible logging should be disabled; false otherwise. */
     default boolean getCompatLoggingKillSwitch() {
         return COMPAT_LOGGING_KILL_SWITCH;
+    }
+
+    // New Feature Flags
+    boolean FLEDGE_REGISTER_AD_BEACON_ENABLED = false;
+
+    /** Returns whether the {@code registerAdBeacon} feature is enabled. */
+    default boolean getFledgeRegisterAdBeaconEnabled() {
+        return FLEDGE_REGISTER_AD_BEACON_ENABLED;
     }
 }
