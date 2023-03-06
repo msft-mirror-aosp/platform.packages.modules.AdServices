@@ -29,17 +29,20 @@ import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
+import android.os.Build;
 import android.os.RemoteException;
 import android.os.Trace;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.common.AdServicesHttpsClient;
-import com.android.adservices.service.common.FledgeServiceFilter;
+import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
+import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
@@ -70,6 +73,8 @@ import java.util.concurrent.TimeoutException;
  *
  * <p>Class takes in an executor on which it runs the OutcomeSelection logic
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class OutcomeSelectionRunner {
     @VisibleForTesting static final String AD_SELECTION_FROM_OUTCOMES_ERROR_PATTERN = "%s: %s";
 
@@ -94,7 +99,7 @@ public class OutcomeSelectionRunner {
     @NonNull private final Flags mFlags;
 
     @NonNull private final AdOutcomeSelector mAdOutcomeSelector;
-    @NonNull private final FledgeServiceFilter mFledgeServiceFilter;
+    @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
     private final int mCallerUid;
 
     /**
@@ -106,7 +111,7 @@ public class OutcomeSelectionRunner {
      * @param adServicesLogger logger for logging calls to PPAPI
      * @param context service context
      * @param flags for accessing feature flags
-     * @param fledgeServiceFilter to validate the request
+     * @param adSelectionServiceFilter to validate the request
      */
     public OutcomeSelectionRunner(
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
@@ -118,7 +123,7 @@ public class OutcomeSelectionRunner {
             @NonNull final DevContext devContext,
             @NonNull final Context context,
             @NonNull final Flags flags,
-            @NonNull final FledgeServiceFilter fledgeServiceFilter,
+            @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             final int callerUid) {
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(backgroundExecutorService);
@@ -151,7 +156,7 @@ public class OutcomeSelectionRunner {
                         mAdServicesHttpsClient,
                         new AdSelectionDevOverridesHelper(devContext, adSelectionEntryDao),
                         mFlags);
-        mFledgeServiceFilter = fledgeServiceFilter;
+        mAdSelectionServiceFilter = adSelectionServiceFilter;
         mCallerUid = callerUid;
     }
 
@@ -166,7 +171,7 @@ public class OutcomeSelectionRunner {
             @NonNull final AdServicesLogger adServicesLogger,
             @NonNull final Context context,
             @NonNull final Flags flags,
-            @NonNull final FledgeServiceFilter fledgeServiceFilter) {
+            @NonNull final AdSelectionServiceFilter adSelectionServiceFilter) {
         Objects.requireNonNull(adOutcomeSelector);
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(backgroundExecutorService);
@@ -175,7 +180,7 @@ public class OutcomeSelectionRunner {
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(context);
         Objects.requireNonNull(flags);
-        Objects.requireNonNull(fledgeServiceFilter);
+        Objects.requireNonNull(adSelectionServiceFilter);
 
         mAdSelectionEntryDao = adSelectionEntryDao;
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
@@ -190,7 +195,7 @@ public class OutcomeSelectionRunner {
         mFlags = flags;
 
         mAdOutcomeSelector = adOutcomeSelector;
-        mFledgeServiceFilter = fledgeServiceFilter;
+        mAdSelectionServiceFilter = adSelectionServiceFilter;
         mCallerUid = callerUid;
     }
 
@@ -214,11 +219,12 @@ public class OutcomeSelectionRunner {
                                 try {
                                     Trace.beginSection(Tracing.VALIDATE_REQUEST);
                                     LogUtil.v("Starting filtering and validation.");
-                                    mFledgeServiceFilter.filterRequest(
+                                    mAdSelectionServiceFilter.filterRequest(
                                             adSelectionFromOutcomesConfig.getSeller(),
                                             inputParams.getCallerPackageName(),
                                             mFlags
                                                     .getEnforceForegroundStatusForFledgeRunAdSelection(),
+                                            true,
                                             mCallerUid,
                                             AdServicesStatsLog
                                                     .AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,

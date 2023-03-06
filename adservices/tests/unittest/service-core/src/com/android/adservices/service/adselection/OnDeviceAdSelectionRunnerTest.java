@@ -106,12 +106,13 @@ import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.common.AdServicesHttpsClient;
+import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AppImportanceFilter;
-import com.android.adservices.service.common.FledgeServiceFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
+import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -126,6 +127,7 @@ import com.google.common.util.concurrent.Futures;
 
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.function.ThrowingRunnable;
@@ -233,10 +235,15 @@ public class OnDeviceAdSelectionRunnerTest {
     private AdSelectionRunner mAdSelectionRunner;
     private AdSelectionExecutionLogger mAdSelectionExecutionLogger;
 
-    @Mock FledgeServiceFilter mFledgeServiceFilter;
+    @Mock AdSelectionServiceFilter mAdSelectionServiceFilter;
 
     @Before
     public void setUp() {
+        // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
+        // availability depends on an external component (the system webview) being higher than a
+        // certain minimum version. Marking that as an assumption that the test is making.
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
         // Test applications don't have the required permissions to read config P/H flags, and
         // injecting mocked flags everywhere is annoying and non-trivial for static methods
         mStaticMockSession =
@@ -295,10 +302,11 @@ public class OnDeviceAdSelectionRunnerTest {
         when(mMockDBAdSelectionFile.length()).thenReturn(DB_AD_SELECTION_FILE_SIZE);
 
         doNothing()
-                .when(mFledgeServiceFilter)
+                .when(mAdSelectionServiceFilter)
                 .filterRequest(
                         SELLER_VALID,
                         MY_APP_PACKAGE_NAME,
+                        true,
                         true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
@@ -394,7 +402,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CALLER_UID,
-                        mFledgeServiceFilter,
+                        mAdSelectionServiceFilter,
                         mAdSelectionExecutionLogger,
                         mPerBuyerBiddingRunner);
         assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
@@ -550,7 +558,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CALLER_UID,
-                        mFledgeServiceFilter,
+                        mAdSelectionServiceFilter,
                         mAdSelectionExecutionLogger,
                         mPerBuyerBiddingRunner);
 
@@ -600,10 +608,11 @@ public class OnDeviceAdSelectionRunnerTest {
     public void testRunAdSelectionWithRevokedUserConsentSuccess() throws AdServicesException {
         doReturn(mFlags).when(FlagsFactory::getFlags);
         doThrow(new ConsentManager.RevokedConsentException())
-                .when(mFledgeServiceFilter)
+                .when(mAdSelectionServiceFilter)
                 .filterRequest(
                         SELLER_VALID,
                         MY_APP_PACKAGE_NAME,
+                        true,
                         true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
@@ -639,7 +648,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CALLER_UID,
-                        mFledgeServiceFilter,
+                        mAdSelectionServiceFilter,
                         mAdSelectionExecutionLogger,
                         mPerBuyerBiddingRunner);
 
@@ -747,7 +756,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CALLER_UID,
-                        mFledgeServiceFilter,
+                        mAdSelectionServiceFilter,
                         mAdSelectionExecutionLogger,
                         mPerBuyerBiddingRunner);
 
@@ -815,7 +824,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CALLER_UID,
-                        mFledgeServiceFilter,
+                        mAdSelectionServiceFilter,
                         mAdSelectionExecutionLogger,
                         mPerBuyerBiddingRunner);
         AdSelectionTestCallback resultsCallback =
@@ -846,10 +855,11 @@ public class OnDeviceAdSelectionRunnerTest {
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
         doThrow(new AppImportanceFilter.WrongCallingApplicationStateException())
-                .when(mFledgeServiceFilter)
+                .when(mAdSelectionServiceFilter)
                 .filterRequest(
                         SELLER_VALID,
                         MY_APP_PACKAGE_NAME,
+                        true,
                         true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
@@ -870,7 +880,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CALLER_UID,
-                        mFledgeServiceFilter,
+                        mAdSelectionServiceFilter,
                         mAdSelectionExecutionLogger,
                         mPerBuyerBiddingRunner);
         AdSelectionTestCallback resultsCallback =
@@ -925,7 +935,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mAdServicesLoggerMock,
                         flags,
                         CALLER_UID,
-                        mFledgeServiceFilter,
+                        mAdSelectionServiceFilter,
                         mAdSelectionExecutionLogger,
                         mPerBuyerBiddingRunner);
         AdSelectionTestCallback resultsCallback =
@@ -1005,7 +1015,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CALLER_UID,
-                        mFledgeServiceFilter,
+                        mAdSelectionServiceFilter,
                         mAdSelectionExecutionLogger,
                         mPerBuyerBiddingRunner);
 
@@ -1119,7 +1129,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CALLER_UID,
-                        mFledgeServiceFilter,
+                        mAdSelectionServiceFilter,
                         mAdSelectionExecutionLogger,
                         mPerBuyerBiddingRunner);
 
@@ -1208,7 +1218,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CALLER_UID,
-                        mFledgeServiceFilter,
+                        mAdSelectionServiceFilter,
                         mAdSelectionExecutionLogger,
                         mPerBuyerBiddingRunner);
 
@@ -1302,7 +1312,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CALLER_UID,
-                        mFledgeServiceFilter,
+                        mAdSelectionServiceFilter,
                         mAdSelectionExecutionLogger,
                         mPerBuyerBiddingRunner);
 
@@ -1399,7 +1409,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CALLER_UID,
-                        mFledgeServiceFilter,
+                        mAdSelectionServiceFilter,
                         mAdSelectionExecutionLogger,
                         mPerBuyerBiddingRunner);
 
@@ -1521,7 +1531,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CALLER_UID,
-                        mFledgeServiceFilter,
+                        mAdSelectionServiceFilter,
                         mAdSelectionExecutionLogger,
                         mPerBuyerBiddingRunner);
 
@@ -1629,7 +1639,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mAdServicesLoggerMock,
                         flagsWithSmallerLimits,
                         CALLER_UID,
-                        mFledgeServiceFilter,
+                        mAdSelectionServiceFilter,
                         mAdSelectionExecutionLogger,
                         mPerBuyerBiddingRunner);
 
@@ -1767,7 +1777,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mAdServicesLoggerMock,
                         flagsWithSmallPerBuyerTimeout,
                         CALLER_UID,
-                        mFledgeServiceFilter,
+                        mAdSelectionServiceFilter,
                         mAdSelectionExecutionLogger,
                         mPerBuyerBiddingRunner);
 
@@ -1819,10 +1829,11 @@ public class OnDeviceAdSelectionRunnerTest {
 
         // Throttle Ad Selection request
         doThrow(new LimitExceededException(RATE_LIMIT_REACHED_ERROR_MESSAGE))
-                .when(mFledgeServiceFilter)
+                .when(mAdSelectionServiceFilter)
                 .filterRequest(
                         SELLER_VALID,
                         MY_APP_PACKAGE_NAME,
+                        true,
                         true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
@@ -1845,7 +1856,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CALLER_UID,
-                        mFledgeServiceFilter,
+                        mAdSelectionServiceFilter,
                         mAdSelectionExecutionLogger,
                         mPerBuyerBiddingRunner);
 
@@ -1894,7 +1905,7 @@ public class OnDeviceAdSelectionRunnerTest {
                                 mAdServicesLoggerMock,
                                 mFlags,
                                 CALLER_UID,
-                                mFledgeServiceFilter,
+                                mAdSelectionServiceFilter,
                                 mAdSelectionExecutionLogger,
                                 mPerBuyerBiddingRunner);
         Throwable throwable =
@@ -1953,7 +1964,10 @@ public class OnDeviceAdSelectionRunnerTest {
 
     @After
     public void tearDown() {
-        mAdSelectionEntryDao.removeAdSelectionEntriesByIds(Arrays.asList(AD_SELECTION_ID));
+        if (mAdSelectionEntryDao != null) {
+            mAdSelectionEntryDao.removeAdSelectionEntriesByIds(Arrays.asList(AD_SELECTION_ID));
+        }
+
         if (mStaticMockSession != null) {
             mStaticMockSession.finishMocking();
         }

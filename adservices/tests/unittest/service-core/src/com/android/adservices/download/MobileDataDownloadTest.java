@@ -41,6 +41,7 @@ import com.android.adservices.data.enrollment.EnrollmentTables;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.topics.classifier.CommonClassifierHelper;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -166,7 +167,7 @@ public class MobileDataDownloadTest {
                 .when(mMockFlags)
                 .getDownloaderMaxDownloadThreads();
 
-        doReturn(/* Default value */ false).when(mMockFlags).getEnableDatabaseSchemaVersion5();
+        doReturn(/* Default value */ false).when(mMockFlags).getEnableTopicMigration();
 
         mFileStorage = MobileDataDownloadFactory.getFileStorage(mContext);
         mFileDownloader =
@@ -327,6 +328,153 @@ public class MobileDataDownloadTest {
                 .isEqualTo(SUCCESS);
         assertThat(getNumEntriesInEnrollmentTable()).isEqualTo(numOfEntries);
         assertThat(enrollmentDao.deleteAll()).isTrue();
+    }
+
+    /**
+     * This method tests enrollment data, verifies that the file group doesn't exist if the consent
+     * is revoked.
+     */
+    @Test
+    public void testEnrollmentDataDownloadFailOnConsentRevoked_gaUxEnabled()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
+        when(mConsentManager.getConsent(AdServicesApiType.MEASUREMENTS))
+                .thenReturn(AdServicesApiConsent.REVOKED);
+
+        createMddForEnrollment(enrollmentUrl);
+
+        ClientFileGroup clientFileGroup =
+                mMdd.getFileGroup(
+                                GetFileGroupRequest.newBuilder()
+                                        .setGroupName(ENROLLMENT_FILE_GROUP_NAME)
+                                        .build())
+                        .get();
+
+        assertThat(clientFileGroup).isNull();
+    }
+
+    /**
+     * This method tests enrollment data, verifies that the file group exists if the consent is
+     * given.
+     */
+    @Test
+    public void testEnrollmentDataDownloadOnConsentGiven_gaUxEnabled()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
+        when(mConsentManager.getConsent(AdServicesApiType.MEASUREMENTS))
+                .thenReturn(AdServicesApiConsent.GIVEN);
+
+        createMddForEnrollment(enrollmentUrl);
+
+        ClientFileGroup clientFileGroup =
+                mMdd.getFileGroup(
+                                GetFileGroupRequest.newBuilder()
+                                        .setGroupName(ENROLLMENT_FILE_GROUP_NAME)
+                                        .build())
+                        .get();
+
+        assertThat(clientFileGroup).isNotNull();
+    }
+
+    /**
+     * This method tests topics data, verifies that the file group doesn't exist if the consent is
+     * revoked.
+     */
+    @Test
+    public void testMddTopicsFailsOnConsentRevoked_gaUxEnabled()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
+        when(mConsentManager.getConsent(AdServicesApiType.TOPICS))
+                .thenReturn(AdServicesApiConsent.REVOKED);
+
+        createMddForTopics(TEST_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL);
+
+        ClientFileGroup clientFileGroup =
+                mMdd.getFileGroup(
+                                GetFileGroupRequest.newBuilder()
+                                        .setGroupName(TEST_TOPIC_FILE_GROUP_NAME)
+                                        .build())
+                        .get();
+
+        assertThat(clientFileGroup).isNull();
+    }
+
+    /**
+     * This method tests topics data, verifies that the file group exists if the consent is given.
+     */
+    @Test
+    public void testMddTopicsOnConsentGiven_gaUxEnabled()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        ExtendedMockito.doReturn(1L)
+                .when(
+                        () ->
+                                CommonClassifierHelper.getBundledModelBuildId(
+                                        mContext, BUNDLED_CLASSIFIER_ASSETS_METADATA_PATH));
+
+        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
+        when(mConsentManager.getConsent(AdServicesApiType.TOPICS))
+                .thenReturn(AdServicesApiConsent.GIVEN);
+
+        createMddForTopics(TEST_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL);
+
+        ClientFileGroup clientFileGroup =
+                mMdd.getFileGroup(
+                                GetFileGroupRequest.newBuilder()
+                                        .setGroupName(TEST_TOPIC_FILE_GROUP_NAME)
+                                        .build())
+                        .get();
+
+        assertThat(clientFileGroup).isNotNull();
+    }
+
+    /**
+     * This method tests OTA data, verifies that the file group exists if the consent is given to at
+     * least one of the APIs.
+     */
+    @Test
+    public void testOtaOnTopicsConsentGiven_gaUxEnabled()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
+        when(mConsentManager.getConsent(AdServicesApiType.TOPICS))
+                .thenReturn(AdServicesApiConsent.GIVEN);
+
+        createMddForUiOTAString(UI_OTA_STRINGS_MANIFEST_FILE_URL);
+
+        ClientFileGroup clientFileGroup =
+                mMdd.getFileGroup(
+                                GetFileGroupRequest.newBuilder()
+                                        .setGroupName(UI_OTA_STRINGS_FILE_GROUP_NAME)
+                                        .build())
+                        .get();
+
+        assertThat(clientFileGroup).isNotNull();
+    }
+
+    /**
+     * This method tests OTA data, verifies that the file group doesn't exist if the consent is
+     * revoked for all the APIs.
+     */
+    @Test
+    public void testOtaFailsOnAggregatedConsentRevoked_gaUxEnabled()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
+        when(mConsentManager.getConsent(AdServicesApiType.TOPICS))
+                .thenReturn(AdServicesApiConsent.REVOKED);
+        when(mConsentManager.getConsent(AdServicesApiType.MEASUREMENTS))
+                .thenReturn(AdServicesApiConsent.REVOKED);
+        when(mConsentManager.getConsent(AdServicesApiType.FLEDGE))
+                .thenReturn(AdServicesApiConsent.REVOKED);
+
+        createMddForTopics(TEST_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL);
+
+        ClientFileGroup clientFileGroup =
+                mMdd.getFileGroup(
+                                GetFileGroupRequest.newBuilder()
+                                        .setGroupName(UI_OTA_STRINGS_FILE_GROUP_NAME)
+                                        .build())
+                        .get();
+
+        assertThat(clientFileGroup).isNull();
     }
 
     @Test

@@ -39,7 +39,8 @@ import java.util.Objects;
 public abstract class CacheDatabase extends RoomDatabase {
     private static final Object SINGLETON_LOCK = new Object();
 
-    public static final int DATABASE_VERSION = 1;
+    // TODO(b/270615351): Create migration rollback test for version bump
+    public static final int DATABASE_VERSION = 2;
     public static final String DATABASE_NAME = "fledgehttpcache.db";
 
     @GuardedBy("SINGLETON_LOCK")

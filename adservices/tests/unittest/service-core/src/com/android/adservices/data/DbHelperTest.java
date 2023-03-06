@@ -19,12 +19,14 @@ package com.android.adservices.data;
 import static com.android.adservices.data.DbHelper.CURRENT_DATABASE_VERSION;
 import static com.android.adservices.data.DbHelper.DATABASE_VERSION_V7;
 import static com.android.adservices.data.DbTestUtil.doesIndexExist;
+import static com.android.adservices.data.DbTestUtil.doesTableExist;
 import static com.android.adservices.data.DbTestUtil.doesTableExistAndColumnCountMatch;
 import static com.android.adservices.data.DbTestUtil.getDatabaseNameForTest;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doReturn;
@@ -39,7 +41,8 @@ import android.database.sqlite.SQLiteDatabase;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.measurement.DbHelperV1;
-import com.android.adservices.data.topics.migration.TopicDbMigratorV5;
+import com.android.adservices.data.measurement.MeasurementTables;
+import com.android.adservices.data.topics.migration.TopicDbMigratorV7;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -56,6 +59,7 @@ import org.mockito.MockitoSession;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.quality.Strictness;
 
+import java.util.Arrays;
 import java.util.List;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -93,7 +97,20 @@ public class DbHelperTest {
         assertTrue(doesTableExistAndColumnCountMatch(db, "topics_returned_topics", 7));
         assertTrue(doesTableExistAndColumnCountMatch(db, "topics_usage_history", 3));
         assertTrue(doesTableExistAndColumnCountMatch(db, "topics_app_usage_history", 3));
-        assertMeasurementSchema(db);
+        assertTrue(doesTableExistAndColumnCountMatch(db, "enrollment_data", 8));
+        assertMeasurementTablesDoNotExist(db);
+    }
+
+    public static void assertMeasurementTablesDoNotExist(SQLiteDatabase db) {
+        assertFalse(doesTableExist(db, "msmt_source"));
+        assertFalse(doesTableExist(db, "msmt_trigger"));
+        assertFalse(doesTableExist(db, "msmt_async_registration_contract"));
+        assertFalse(doesTableExist(db, "msmt_event_report"));
+        assertFalse(doesTableExist(db, "msmt_attribution"));
+        assertFalse(doesTableExist(db, "msmt_aggregate_report"));
+        assertFalse(doesTableExist(db, "msmt_aggregate_encryption_key"));
+        assertFalse(doesTableExist(db, "msmt_debug_report"));
+        assertFalse(doesTableExist(db, "msmt_xna_ignored_sources"));
     }
 
     @Test
@@ -130,20 +147,21 @@ public class DbHelperTest {
         SQLiteDatabase db = mock(SQLiteDatabase.class);
 
         // Do not actually perform queries but verify the invocation.
-        TopicDbMigratorV5 topicDbMigratorV5 = Mockito.spy(new TopicDbMigratorV5());
-        Mockito.doNothing().when(topicDbMigratorV5).performMigration(db);
+        TopicDbMigratorV7 topicDbMigratorV7 = Mockito.spy(new TopicDbMigratorV7());
+        Mockito.doNothing().when(topicDbMigratorV7).performMigration(db);
 
         // Ignore Measurement Migrators
+        doReturn(false).when(dbHelper).hasV1MeasurementTables(db);
         doReturn(List.of()).when(dbHelper).getOrderedDbMigrators();
-        doReturn(List.of(topicDbMigratorV5)).when(dbHelper).topicsGetOrderedDbMigrators();
+        doReturn(List.of(topicDbMigratorV7)).when(dbHelper).topicsGetOrderedDbMigrators();
 
         // Negative case - target version 5 is not in (oldVersion, newVersion]
         dbHelper.onUpgrade(db, /* oldVersion */ 1, /* new Version */ CURRENT_DATABASE_VERSION);
-        Mockito.verify(topicDbMigratorV5, Mockito.never()).performMigration(db);
+        Mockito.verify(topicDbMigratorV7, Mockito.never()).performMigration(db);
 
         // Positive case - target version 5 is in (oldVersion, newVersion]
         dbHelper.onUpgrade(db, /* oldVersion */ 1, /* new Version */ DATABASE_VERSION_V7);
-        Mockito.verify(topicDbMigratorV5).performMigration(db);
+        Mockito.verify(topicDbMigratorV7).performMigration(db);
     }
 
     @Test
@@ -173,16 +191,16 @@ public class DbHelperTest {
     @Test
     public void testGetDatabaseVersionToCreate() {
         // Test feature flag is off
-        when(mMockFlags.getEnableDatabaseSchemaVersion5()).thenReturn(false);
+        when(mMockFlags.getEnableTopicMigration()).thenReturn(false);
         assertThat(DbHelper.getDatabaseVersionToCreate()).isEqualTo(CURRENT_DATABASE_VERSION);
 
         // Test feature flag is on
-        when(mMockFlags.getEnableDatabaseSchemaVersion5()).thenReturn(true);
+        when(mMockFlags.getEnableTopicMigration()).thenReturn(true);
         assertThat(DbHelper.getDatabaseVersionToCreate()).isEqualTo(DATABASE_VERSION_V7);
     }
 
     @Test
-    public void testOnUpgrade_measurementMigration() {
+    public void testOnUpgrade_measurementMigration_tablesExist() {
         String dbName = "test_db";
         DbHelperV1 dbHelperV1 = new DbHelperV1(sContext, dbName, 1);
         SQLiteDatabase db = dbHelperV1.safeGetWritableDatabase();
@@ -194,16 +212,35 @@ public class DbHelperTest {
         assertMeasurementSchema(db);
     }
 
+    @Test
+    public void testOnUpgrade_measurementMigration_tablesDoNotExist() {
+        String dbName = "test_db_2";
+        DbHelperV1 dbHelperV1 = new DbHelperV1(sContext, dbName, 1);
+        SQLiteDatabase db = dbHelperV1.safeGetWritableDatabase();
+
+        assertEquals(1, db.getVersion());
+        Arrays.stream(MeasurementTables.V1_TABLES).forEach((table) -> dropTable(db, table));
+
+        DbHelper dbHelper = new DbHelper(sContext, dbName, CURRENT_DATABASE_VERSION);
+        dbHelper.onUpgrade(db, 1, CURRENT_DATABASE_VERSION);
+        assertMeasurementTablesDoNotExist(db);
+    }
+
+    private void dropTable(SQLiteDatabase db, String table) {
+        db.execSQL("DROP TABLE IF EXISTS '" + table + "'");
+    }
+
     private void assertMeasurementSchema(SQLiteDatabase db) {
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_source", 28));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_trigger", 16));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_async_registration_contract", 17));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_source", 31));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_trigger", 19));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_async_registration_contract", 18));
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_event_report", 17));
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_attribution", 10));
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_aggregate_report", 14));
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_aggregate_encryption_key", 4));
         assertTrue(doesTableExistAndColumnCountMatch(db, "enrollment_data", 8));
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_debug_report", 4));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_xna_ignored_sources", 2));
         assertTrue(doesIndexExist(db, "idx_msmt_source_ad_ei_et"));
         assertTrue(doesIndexExist(db, "idx_msmt_source_p_ad_wd_s_et"));
         assertTrue(doesIndexExist(db, "idx_msmt_trigger_ad_ei_tt"));

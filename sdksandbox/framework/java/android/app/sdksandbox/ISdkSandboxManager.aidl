@@ -29,6 +29,7 @@ import android.app.sdksandbox.SharedPreferencesUpdate;
 /** @hide */
 interface ISdkSandboxManager {
     /**
+    * TODO(b/267994332): Add enum for method calls from SDK for latency metrics
     * List of methods for which latencies are logged with logLatencyFromSystemServerToApp
     */
     const String LOAD_SDK = "LOAD_SDK";

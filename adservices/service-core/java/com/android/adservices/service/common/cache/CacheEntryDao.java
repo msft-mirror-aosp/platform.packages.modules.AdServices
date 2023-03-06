@@ -43,7 +43,8 @@ public interface CacheEntryDao {
      */
     @Query(
             "SELECT http_cache.cache_url AS cache_url, http_cache.response_body as response_body,"
-                    + " http_cache.creation_timestamp as creation_timestamp, http_cache.max_age as"
+                    + " http_cache.response_headers as response_headers, http_cache"
+                    + ".creation_timestamp as creation_timestamp, http_cache.max_age as"
                     + " max_age FROM http_cache WHERE (max_age * 1000) + creation_timestamp > "
                     + " :curTime AND cache_url = :url")
     DBCacheEntry getCacheEntry(String url, Instant curTime);

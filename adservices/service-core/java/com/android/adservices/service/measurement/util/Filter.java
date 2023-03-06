@@ -22,6 +22,7 @@ import com.android.adservices.service.measurement.FilterMap;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -98,5 +99,43 @@ public final class Filter {
             filterSet.add(filterMap);
         }
         return filterSet;
+    }
+
+    /**
+     * Builds {@link JSONArray} our of the list of {@link List<FilterMap>} provided by serializing
+     * it recursively.
+     *
+     * @param filterMaps to be serialized
+     * @return serialized filter maps
+     */
+    @NonNull
+    public static JSONArray serializeFilterSet(@NonNull List<FilterMap> filterMaps) {
+        JSONArray serializedFilterMaps = new JSONArray();
+        for (FilterMap sourceNotFilter : filterMaps) {
+            serializedFilterMaps.put(sourceNotFilter.serializeAsJson());
+        }
+        return serializedFilterMaps;
+    }
+
+    /**
+     * Filters can be available in either {@link JSONObject} format or {@link JSONArray} format. For
+     * consistency across the board, this method wraps the {@link JSONObject} into {@link
+     * JSONArray}.
+     *
+     * @param json json where to look for the filter object
+     * @param key key with which the filter object is associated
+     * @return wrapped {@link JSONArray}
+     * @throws JSONException when creation of {@link JSONArray} fails
+     */
+    @NonNull
+    public static JSONArray maybeWrapFilters(@NonNull JSONObject json, @NonNull String key)
+            throws JSONException {
+        JSONObject maybeFilterMap = json.optJSONObject(key);
+        if (maybeFilterMap != null) {
+            JSONArray filterSet = new JSONArray();
+            filterSet.put(maybeFilterMap);
+            return filterSet;
+        }
+        return json.getJSONArray(key);
     }
 }

@@ -26,7 +26,7 @@ import android.util.Pair;
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
-import com.android.adservices.service.common.AdServicesHttpsClient;
+import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 
@@ -166,7 +166,7 @@ public class TrustedBiddingDataFetcher {
                         mLightweightExecutorService)
                 .transform(
                         s ->
-                                Optional.ofNullable(s)
+                                Optional.ofNullable(s.getResponseBody())
                                         .map(
                                                 r -> {
                                                     try {

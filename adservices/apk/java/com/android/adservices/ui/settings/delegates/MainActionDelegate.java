@@ -16,9 +16,12 @@
 package com.android.adservices.ui.settings.delegates;
 
 import android.content.Intent;
+import android.icu.text.MessageFormat;
+import android.os.Build;
 import android.view.View;
 import android.widget.TextView;
 
+import androidx.annotation.RequiresApi;
 import androidx.lifecycle.Observer;
 
 import com.android.adservices.api.R;
@@ -33,9 +36,15 @@ import com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragme
 import com.android.adservices.ui.settings.viewmodels.MainViewModel;
 import com.android.settingslib.widget.MainSwitchBar;
 
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+
 /**
  * Delegate class that helps AdServices Settings fragments to respond to all view model/user events.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class MainActionDelegate extends BaseActionDelegate {
     private final AdServicesSettingsMainActivity mAdServicesSettingsMainActivity;
     private final MainViewModel mMainViewModel;
@@ -120,18 +129,17 @@ public class MainActionDelegate extends BaseActionDelegate {
             mAdServicesSettingsMainActivity.setTitle(R.string.settingsUI_main_view_ga_title);
             setLayoutVisibility(betaLayout, View.GONE);
             setLayoutVisibility(gaUxLayout, View.VISIBLE);
-
-            configureMeasurementButton(fragment);
         } else {
             mAdServicesSettingsMainActivity.setTitle(R.string.settingsUI_main_view_title);
             setLayoutVisibility(betaLayout, View.VISIBLE);
             setLayoutVisibility(gaUxLayout, View.GONE);
-
-            configureConsentSwitch(fragment);
         }
 
+        configureConsentSwitch(fragment);
+        configureMeasurementButton(fragment);
         configureTopicsButton(fragment);
         configureAppsButton(fragment);
+        configureSubtitles(fragment);
     }
 
     private void setLayoutVisibility(int[] layoutList, int visibility) {
@@ -144,6 +152,13 @@ public class MainActionDelegate extends BaseActionDelegate {
         MainSwitchBar mainSwitchBar =
                 mAdServicesSettingsMainActivity.findViewById(R.id.main_switch_bar);
 
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            mainSwitchBar.setVisibility(View.GONE);
+            return;
+        } else {
+            mainSwitchBar.setVisibility(View.VISIBLE);
+        }
+
         mMainViewModel.getConsent().observe(fragment, mainSwitchBar::setChecked);
 
         mainSwitchBar.setOnClickListener(
@@ -151,28 +166,39 @@ public class MainActionDelegate extends BaseActionDelegate {
     }
 
     private void configureTopicsButton(AdServicesSettingsMainFragment fragment) {
+        TextView topicsPreferenceTitle =
+                fragment.requireView().findViewById(R.id.topics_preference_title);
         if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
-            TextView topicsPreferenceTitle =
-                    fragment.requireView().findViewById(R.id.topics_preference_title);
             topicsPreferenceTitle.setText(R.string.settingsUI_topics_ga_title);
+        } else {
+            topicsPreferenceTitle.setText(R.string.settingsUI_topics_title);
         }
+
         View topicsButton = fragment.requireView().findViewById(R.id.topics_preference);
         topicsButton.setOnClickListener(preference -> mMainViewModel.topicsButtonClickHandler());
     }
 
     private void configureAppsButton(AdServicesSettingsMainFragment fragment) {
+        TextView appsPreferenceTitle =
+                fragment.requireView().findViewById(R.id.apps_preference_title);
         if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
-            TextView appsPreferenceTitle =
-                    fragment.requireView().findViewById(R.id.apps_preference_title);
             appsPreferenceTitle.setText(R.string.settingsUI_apps_ga_title);
+        } else {
+            appsPreferenceTitle.setText(R.string.settingsUI_apps_title);
         }
+
         View appsButton = fragment.requireView().findViewById(R.id.apps_preference);
         appsButton.setOnClickListener(preference -> mMainViewModel.appsButtonClickHandler());
     }
 
     private void configureMeasurementButton(AdServicesSettingsMainFragment fragment) {
         View measurementButton = fragment.requireView().findViewById(R.id.measurement_preference);
-        measurementButton.setVisibility(View.VISIBLE);
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            measurementButton.setVisibility(View.VISIBLE);
+        } else {
+            measurementButton.setVisibility(View.GONE);
+            return;
+        }
         measurementButton.setOnClickListener(
                 preference -> mMainViewModel.measurementClickHandler());
     }
@@ -199,6 +225,13 @@ public class MainActionDelegate extends BaseActionDelegate {
     private void configureMeasurementSubtitle(AdServicesSettingsMainFragment fragment) {
         TextView measurementSubtitle =
                 fragment.requireView().findViewById(R.id.measurement_preference_subtitle);
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            measurementSubtitle.setVisibility(View.VISIBLE);
+        } else {
+            measurementSubtitle.setVisibility(View.GONE);
+            return;
+        }
+
         if (mMainViewModel.getMeasurementConsentFromConsentManager()) {
             measurementSubtitle.setText(R.string.settingsUI_subtitle_consent_on);
         } else {
@@ -215,14 +248,17 @@ public class MainActionDelegate extends BaseActionDelegate {
     private void configureTopicsSubtitle(AdServicesSettingsMainFragment fragment) {
         TextView topicsSubtitle =
                 fragment.requireView().findViewById(R.id.topics_preference_subtitle);
-        topicsSubtitle.setVisibility(View.VISIBLE);
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            topicsSubtitle.setVisibility(View.VISIBLE);
+        } else {
+            topicsSubtitle.setVisibility(View.GONE);
+            return;
+        }
         if (mMainViewModel.getTopicsConsentFromConsentManager()) {
             topicsSubtitle.setText(
-                    mAdServicesSettingsMainActivity
-                            .getResources()
-                            .getString(
-                                    R.string.settingsUI_topics_subtitle,
-                                    mMainViewModel.getCountOfTopics()));
+                    getQuantityString(
+                            mMainViewModel.getCountOfTopics(),
+                            R.string.settingsUI_topics_subtitle_plural));
         } else {
             topicsSubtitle.setText(R.string.settingsUI_subtitle_consent_off);
         }
@@ -236,16 +272,38 @@ public class MainActionDelegate extends BaseActionDelegate {
      */
     private void configureAppsSubtitle(AdServicesSettingsMainFragment fragment) {
         TextView appsSubtitle = fragment.requireView().findViewById(R.id.apps_preference_subtitle);
-        appsSubtitle.setVisibility(View.VISIBLE);
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            appsSubtitle.setVisibility(View.VISIBLE);
+        } else {
+            appsSubtitle.setVisibility(View.GONE);
+            return;
+        }
+
         if (mMainViewModel.getAppsConsentFromConsentManager()) {
             appsSubtitle.setText(
-                    mAdServicesSettingsMainActivity
-                            .getResources()
-                            .getString(
-                                    R.string.settingsUI_apps_subtitle,
-                                    mMainViewModel.getCountOfApps()));
+                    getQuantityString(
+                            mMainViewModel.getCountOfApps(),
+                            R.string.settingsUI_apps_subtitle_plural));
         } else {
             appsSubtitle.setText(R.string.settingsUI_subtitle_consent_off);
         }
+    }
+
+    /**
+     * An alternative getQuantity method of Android <plurals> using
+     * Locale.getDefault(Locale.Category.FORMAT)
+     *
+     * @param count the count that determines the format
+     * @param stringId the id of the quantity string
+     * @return String in format (plural or singular) according to the count
+     */
+    private String getQuantityString(int count, int stringId) {
+        MessageFormat msgFormat =
+                new MessageFormat(
+                        mAdServicesSettingsMainActivity.getResources().getString(stringId),
+                        Locale.getDefault(Locale.Category.FORMAT));
+        Map<String, Object> arguments = new HashMap<>();
+        arguments.put("count", count);
+        return msgFormat.format(arguments);
     }
 }

@@ -572,7 +572,7 @@ public class CommonClassifierHelperTest {
         assertThat(
                         CommonClassifierHelper.getBundledModelBuildId(
                                 sContext, PRODUCTION_CLASSIFIER_ASSETS_METADATA_PATH))
-                .isEqualTo(1388);
+                .isEqualTo(1467);
         // Verify test model build_id.
         assertThat(
                         CommonClassifierHelper.getBundledModelBuildId(

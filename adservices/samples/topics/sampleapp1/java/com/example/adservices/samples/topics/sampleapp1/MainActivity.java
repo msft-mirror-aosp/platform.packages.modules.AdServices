@@ -35,8 +35,8 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
-import java.io.StringWriter;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -108,14 +108,27 @@ public class MainActivity extends AppCompatActivity {
         return sb.toString();
     }
 
-    private void getTopics(String sdkName, boolean shouldRecordObservation){
-      mAdvertisingTopicsClient =
-              new AdvertisingTopicsClient.Builder()
-                      .setContext(this)
-                      .setSdkName(sdkName)
-                      .setExecutor(CALLBACK_EXECUTOR)
-                      .setShouldRecordObservation(shouldRecordObservation)
-                      .build();
+    @SuppressWarnings("NewApi")
+    private void getTopics(String sdkName, boolean shouldRecordObservation) {
+        // On R, Privacy Sandbox is initially disabled.
+        try {
+            mAdvertisingTopicsClient =
+                    new AdvertisingTopicsClient.Builder()
+                            .setContext(this)
+                            .setSdkName(sdkName)
+                            .setExecutor(CALLBACK_EXECUTOR)
+                            .setShouldRecordObservation(shouldRecordObservation)
+                            .build();
+        } catch (IllegalStateException e) {
+            mHandler.post(
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            mResultTextView.append("Privacy Sandbox is not available.");
+                        }
+                    });
+            return;
+        }
       ListenableFuture<GetTopicsResponse> getTopicsResponseFuture =
               mAdvertisingTopicsClient.getTopics();
 

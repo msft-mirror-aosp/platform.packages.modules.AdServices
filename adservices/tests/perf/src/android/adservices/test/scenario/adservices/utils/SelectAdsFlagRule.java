@@ -27,7 +27,6 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 public class SelectAdsFlagRule implements TestRule {
-
     @Override
     public Statement apply(Statement base, Description description) {
         return new Statement() {
@@ -47,6 +46,13 @@ public class SelectAdsFlagRule implements TestRule {
         disableApiThrottling();
         disablePhenotypeFlagUpdates();
         extendAuctionTimeouts();
+        // Disable backoff since we will be killing the process between tests
+        disableBackoff();
+    }
+
+    private static void disableBackoff() {
+        ShellUtils.runShellCommand(
+                "am service-restart-backoff disable " + CompatTestUtils.getAdServicesPackageName());
     }
 
     private static void extendAuctionTimeouts() {

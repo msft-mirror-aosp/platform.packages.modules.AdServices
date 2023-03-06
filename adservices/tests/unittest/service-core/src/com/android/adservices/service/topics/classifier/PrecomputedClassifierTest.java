@@ -132,7 +132,7 @@ public class PrecomputedClassifierTest {
                 .isEqualTo(
                         EpochComputationClassifierStats.builder()
                                 .setTopicIds(ImmutableList.of(10222, 10223, 10116, 10243, 10254))
-                                .setBuildId(1388)
+                                .setBuildId(1467)
                                 .setAssetVersion("3")
                                 .setClassifierType(
                                         EpochComputationClassifierStats.ClassifierType
@@ -162,7 +162,7 @@ public class PrecomputedClassifierTest {
                 .isEqualTo(
                         EpochComputationClassifierStats.builder()
                                 .setTopicIds(ImmutableList.of())
-                                .setBuildId(1388)
+                                .setBuildId(1467)
                                 .setAssetVersion("3")
                                 .setClassifierType(
                                         EpochComputationClassifierStats.ClassifierType

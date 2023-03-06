@@ -20,6 +20,7 @@ import static com.android.adservices.ui.settings.activities.AdServicesSettingsMa
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -31,6 +32,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 
 import com.android.adservices.api.R;
@@ -40,6 +42,8 @@ import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
 
 /** Fragment for the topics view of the AdServices Settings App. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class ConsentNotificationGaFragment extends Fragment {
     public static final String IS_EU_DEVICE_ARGUMENT_KEY = "isEUDevice";
     public static final String IS_TOPICS_INFO_VIEW_EXPANDED_KEY = "is_topics_info_view_expanded";
@@ -55,7 +59,7 @@ public class ConsentNotificationGaFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
-        UiStatsLogger.logGaLandingPageDisplayed(getContext());
+        UiStatsLogger.logLandingPageDisplayed(getContext());
         setupListeners(savedInstanceState);
     }
 
@@ -200,7 +204,7 @@ public class ConsentNotificationGaFragment extends Fragment {
                 mLeftControlButton.setVisibility(View.VISIBLE);
                 mRightControlButton.setText(
                         mIsEUDevice
-                                ? R.string.notificationUI_right_control_button_text_eu
+                                ? R.string.notificationUI_right_control_button_ga_text_eu
                                 : R.string.notificationUI_right_control_button_text);
             } else {
                 mLeftControlButton.setVisibility(View.INVISIBLE);

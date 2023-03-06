@@ -33,13 +33,12 @@ import android.provider.DeviceConfig;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.compatibility.common.util.DeviceConfigStateChangerRule;
 import com.android.ctssdkprovider.ICtsSdkProviderApi;
 import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -54,53 +53,17 @@ public class CustomizedSdkContextTest {
     public final ActivityScenarioRule<TestActivity> mRule =
             new ActivityScenarioRule<>(TestActivity.class);
 
+    @Rule
+    public final DeviceConfigStateChangerRule mCustomizedSdkContextEnabledRule =
+            new DeviceConfigStateChangerRule(
+                    androidx.test.platform.app.InstrumentationRegistry.getInstrumentation()
+                            .getTargetContext(),
+                    DeviceConfig.NAMESPACE_ADSERVICES,
+                    "sdksandbox_customized_sdk_context_enabled",
+                    "true");
+
     private SdkSandboxManager mSdkSandboxManager;
     private ICtsSdkProviderApi mSdk;
-    private static boolean sCustomizedSdkContextEnabled;
-
-    @BeforeClass
-    public static void setupClass() {
-        InstrumentationRegistry.getInstrumentation()
-                .getUiAutomation()
-                .adoptShellPermissionIdentity();
-        try {
-            // Collect current value
-            sCustomizedSdkContextEnabled =
-                    DeviceConfig.getBoolean(
-                            DeviceConfig.NAMESPACE_ADSERVICES,
-                            "sdksandbox_customized_sdk_context_enabled",
-                            false);
-
-            // Enable customized context
-            DeviceConfig.setProperty(
-                    DeviceConfig.NAMESPACE_ADSERVICES,
-                    "sdksandbox_customized_sdk_context_enabled",
-                    "true",
-                    false);
-        } finally {
-            InstrumentationRegistry.getInstrumentation()
-                    .getUiAutomation()
-                    .dropShellPermissionIdentity();
-        }
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-        InstrumentationRegistry.getInstrumentation()
-                .getUiAutomation()
-                .adoptShellPermissionIdentity();
-        try {
-            DeviceConfig.setProperty(
-                    DeviceConfig.NAMESPACE_ADSERVICES,
-                    "sdksandbox_customized_sdk_context_enabled",
-                    Boolean.toString(sCustomizedSdkContextEnabled),
-                    false);
-        } finally {
-            InstrumentationRegistry.getInstrumentation()
-                    .getUiAutomation()
-                    .dropShellPermissionIdentity();
-        }
-    }
 
     @Before
     public void setup() {
@@ -113,6 +76,9 @@ public class CustomizedSdkContextTest {
     public void tearDown() {
         try {
             mSdkSandboxManager.unloadSdk(SDK_NAME_1);
+        } catch (Exception ignored) {
+        }
+        try {
             mSdkSandboxManager.unloadSdk(SDK_NAME_2);
         } catch (Exception ignored) {
         }
@@ -194,6 +160,16 @@ public class CustomizedSdkContextTest {
 
         loadSdk();
         mSdk.checkResourcesAndAssets();
+    }
+
+    @Test
+    public void testGetOpPackageName() throws Exception {
+        assumeTrue("Test is meant for U+ devices only", SdkLevel.isAtLeastU());
+
+        loadSdk();
+        final PackageManager pm =
+                InstrumentationRegistry.getInstrumentation().getContext().getPackageManager();
+        assertThat(mSdk.getOpPackageName()).isEqualTo(pm.getSdkSandboxPackageName());
     }
 
     private void loadSdk() {

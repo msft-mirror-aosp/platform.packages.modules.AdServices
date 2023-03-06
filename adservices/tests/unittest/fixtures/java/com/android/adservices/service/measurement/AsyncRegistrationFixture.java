@@ -41,6 +41,7 @@ public class AsyncRegistrationFixture {
                 .setLastProcessingTime(System.currentTimeMillis())
                 .setType(ValidAsyncRegistrationParams.TYPE.ordinal())
                 .setDebugKeyAllowed(ValidAsyncRegistrationParams.DEBUG_KEY_ALLOWED)
+                .setRegistrationId(ValidAsyncRegistrationParams.REGISTRATION_ID)
                 .build();
     }
 
@@ -58,5 +59,6 @@ public class AsyncRegistrationFixture {
         public static final boolean DEBUG_KEY_ALLOWED = true;
         public static final AsyncRegistration.RegistrationType TYPE =
                 AsyncRegistration.RegistrationType.APP_SOURCE;
+        public static final String REGISTRATION_ID = "R1";
     }
 }
