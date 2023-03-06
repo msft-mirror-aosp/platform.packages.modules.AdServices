@@ -20,7 +20,10 @@ import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
+import android.os.Build;
 import android.os.LimitExceededException;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.Flags;
@@ -30,6 +33,8 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 /** Composite filter for CustomAudienceService request. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class CustomAudienceServiceFilter extends AbstractFledgeServiceFilter {
     public CustomAudienceServiceFilter(
             @NonNull Context context,
@@ -56,6 +61,7 @@ public class CustomAudienceServiceFilter extends AbstractFledgeServiceFilter {
      *     skipped.
      * @param callerPackageName caller package name to be validated
      * @param enforceForeground whether to enforce a foreground check
+     * @param enforceConsent currently unused in CustomAudienceServiceFilter
      * @param callerUid caller's uid from the Binder thread
      * @param apiName the id of the api being called
      * @param apiKey api-specific throttler key
@@ -74,6 +80,7 @@ public class CustomAudienceServiceFilter extends AbstractFledgeServiceFilter {
             @Nullable AdTechIdentifier adTech,
             @NonNull String callerPackageName,
             boolean enforceForeground,
+            boolean enforceConsent,
             int callerUid,
             int apiName,
             @NonNull Throttler.ApiKey apiKey) {

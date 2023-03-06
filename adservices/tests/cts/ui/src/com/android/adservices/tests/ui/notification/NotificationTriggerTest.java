@@ -15,6 +15,8 @@
  */
 package com.android.adservices.tests.ui.notification;
 
+import static android.Manifest.permission.POST_NOTIFICATIONS;
+
 import static com.android.adservices.tests.ui.libs.UiConstants.AD_ID_DISABLED;
 import static com.android.adservices.tests.ui.libs.UiConstants.AD_ID_ENABLED;
 import static com.android.adservices.tests.ui.libs.UiConstants.ENTRY_POINT_DISABLED;
@@ -57,6 +59,12 @@ public class NotificationTriggerTest {
 
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
+        // TO-DO (b/271567864): grant the permission in our apk code and remove this in the future.
+        // Grant runtime permission to the AOSP adservices app.
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .grantRuntimePermission("com.android.adservices.api", POST_NOTIFICATIONS);
+
         mCommonManager = AdServicesCommonManager.get(sContext);
 
         // consent debug mode is turned on for this test class as we only care about the
@@ -68,6 +76,7 @@ public class NotificationTriggerTest {
 
     @After
     public void tearDown() throws Exception {
+        if (!AdservicesCtsHelper.isDeviceSupported()) return;
         UiUtils.resetInitialParams(mInitialParams);
     }
 

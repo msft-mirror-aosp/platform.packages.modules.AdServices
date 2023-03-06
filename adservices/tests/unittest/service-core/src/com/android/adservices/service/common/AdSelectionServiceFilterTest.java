@@ -27,6 +27,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
@@ -57,7 +58,7 @@ import org.mockito.quality.Strictness;
 
 import java.util.function.Supplier;
 
-public class FledgeServiceFilterTests {
+public class AdSelectionServiceFilterTest {
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     @Spy private Context mContext = ApplicationProvider.getApplicationContext();
     private static final Flags TEST_FLAGS = FlagsFactory.getFlagsForTest();
@@ -104,7 +105,7 @@ public class FledgeServiceFilterTests {
 
     private MockitoSession mStaticMockSession = null;
 
-    private FledgeServiceFilter mFledgeServiceFilter;
+    private AdSelectionServiceFilter mAdSelectionServiceFilter;
 
     private static final AdTechIdentifier SELLER_VALID =
             AdTechIdentifier.fromString("developer.android.com");
@@ -120,8 +121,8 @@ public class FledgeServiceFilterTests {
                         .initMocks(this)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
-        mFledgeServiceFilter =
-                new FledgeServiceFilter(
+        mAdSelectionServiceFilter =
+                new AdSelectionServiceFilter(
                         mContext,
                         mConsentManagerMock,
                         TEST_FLAGS,
@@ -142,10 +143,11 @@ public class FledgeServiceFilterTests {
     @Test
     public void testFilterRequestSucceedsGaUxDisabled() {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-        mFledgeServiceFilter.filterRequest(
+        mAdSelectionServiceFilter.filterRequest(
                 SELLER_VALID,
                 CALLER_PACKAGE_NAME,
                 false,
+                true,
                 MY_UID,
                 API_NAME,
                 Throttler.ApiKey.UNKNOWN);
@@ -153,8 +155,8 @@ public class FledgeServiceFilterTests {
 
     @Test
     public void testFilterRequestSucceedsGaUxEnabled() {
-        mFledgeServiceFilter =
-                new FledgeServiceFilter(
+        mAdSelectionServiceFilter =
+                new AdSelectionServiceFilter(
                         mContext,
                         mConsentManagerMock,
                         FLAGS_WITH_GA_UX_ENABLED,
@@ -165,10 +167,11 @@ public class FledgeServiceFilterTests {
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
-        mFledgeServiceFilter.filterRequest(
+        mAdSelectionServiceFilter.filterRequest(
                 SELLER_VALID,
                 CALLER_PACKAGE_NAME,
                 false,
+                true,
                 MY_UID,
                 API_NAME,
                 Throttler.ApiKey.UNKNOWN);
@@ -179,10 +182,11 @@ public class FledgeServiceFilterTests {
         assertThrows(
                 FledgeAuthorizationFilter.CallerMismatchException.class,
                 () ->
-                        mFledgeServiceFilter.filterRequest(
+                        mAdSelectionServiceFilter.filterRequest(
                                 SELLER_VALID,
                                 "invalidPackageName",
                                 false,
+                                true,
                                 MY_UID,
                                 API_NAME,
                                 Throttler.ApiKey.UNKNOWN));
@@ -195,10 +199,11 @@ public class FledgeServiceFilterTests {
         assertThrows(
                 LimitExceededException.class,
                 () ->
-                        mFledgeServiceFilter.filterRequest(
+                        mAdSelectionServiceFilter.filterRequest(
                                 SELLER_VALID,
                                 CALLER_PACKAGE_NAME,
                                 false,
+                                true,
                                 MY_UID,
                                 API_NAME,
                                 Throttler.ApiKey.UNKNOWN));
@@ -213,9 +218,10 @@ public class FledgeServiceFilterTests {
         assertThrows(
                 AppImportanceFilter.WrongCallingApplicationStateException.class,
                 () ->
-                        mFledgeServiceFilter.filterRequest(
+                        mAdSelectionServiceFilter.filterRequest(
                                 SELLER_VALID,
                                 CALLER_PACKAGE_NAME,
+                                true,
                                 true,
                                 MY_UID,
                                 API_NAME,
@@ -228,10 +234,11 @@ public class FledgeServiceFilterTests {
                 .when(mAppImportanceFilter)
                 .assertCallerIsInForeground(Process.myUid(), API_NAME, null);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-        mFledgeServiceFilter.filterRequest(
+        mAdSelectionServiceFilter.filterRequest(
                 SELLER_VALID,
                 CALLER_PACKAGE_NAME,
                 false,
+                true,
                 MY_UID,
                 API_NAME,
                 Throttler.ApiKey.UNKNOWN);
@@ -240,9 +247,9 @@ public class FledgeServiceFilterTests {
     @Test
     public void testFilterRequestThrowsAdTechNotAllowedExceptionWhenAdTechNotAuthorized() {
 
-        // Create new FledgeServiceFilter with new flags
-        mFledgeServiceFilter =
-                new FledgeServiceFilter(
+        // Create new AdSelectionServiceFilter with new flags
+        mAdSelectionServiceFilter =
+                new AdSelectionServiceFilter(
                         mContext,
                         mConsentManagerMock,
                         FLAGS_WITH_ENROLLMENT_CHECK,
@@ -257,10 +264,11 @@ public class FledgeServiceFilterTests {
         assertThrows(
                 FledgeAuthorizationFilter.AdTechNotAllowedException.class,
                 () ->
-                        mFledgeServiceFilter.filterRequest(
+                        mAdSelectionServiceFilter.filterRequest(
                                 SELLER_VALID,
                                 CALLER_PACKAGE_NAME,
                                 false,
+                                true,
                                 MY_UID,
                                 API_NAME,
                                 Throttler.ApiKey.UNKNOWN));
@@ -274,10 +282,11 @@ public class FledgeServiceFilterTests {
         assertThrows(
                 FledgeAllowListsFilter.AppNotAllowedException.class,
                 () ->
-                        mFledgeServiceFilter.filterRequest(
+                        mAdSelectionServiceFilter.filterRequest(
                                 SELLER_VALID,
                                 CALLER_PACKAGE_NAME,
                                 false,
+                                true,
                                 MY_UID,
                                 API_NAME,
                                 Throttler.ApiKey.UNKNOWN));
@@ -289,20 +298,35 @@ public class FledgeServiceFilterTests {
         assertThrows(
                 ConsentManager.RevokedConsentException.class,
                 () ->
-                        mFledgeServiceFilter.filterRequest(
+                        mAdSelectionServiceFilter.filterRequest(
                                 SELLER_VALID,
                                 CALLER_PACKAGE_NAME,
                                 false,
+                                true,
                                 MY_UID,
                                 API_NAME,
                                 Throttler.ApiKey.UNKNOWN));
     }
 
     @Test
+    public void testFilterRequestSucceedsConsentRevokedEnforceConsentFalse() {
+        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent();
+        mAdSelectionServiceFilter.filterRequest(
+                SELLER_VALID,
+                CALLER_PACKAGE_NAME,
+                false,
+                false,
+                MY_UID,
+                API_NAME,
+                Throttler.ApiKey.UNKNOWN);
+        verifyNoMoreInteractions(mConsentManagerMock);
+    }
+
+    @Test
     public void testFilterRequestThrowsRevokedConsentExceptionAppDoesNotHaveConsentGaUxEnabled() {
-        // Create new FledgeServiceFilter with new flags
-        mFledgeServiceFilter =
-                new FledgeServiceFilter(
+        // Create new AdSelectionServiceFilter with new flags
+        mAdSelectionServiceFilter =
+                new AdSelectionServiceFilter(
                         mContext,
                         mConsentManagerMock,
                         FLAGS_WITH_GA_UX_ENABLED,
@@ -316,10 +340,11 @@ public class FledgeServiceFilterTests {
         assertThrows(
                 ConsentManager.RevokedConsentException.class,
                 () ->
-                        mFledgeServiceFilter.filterRequest(
+                        mAdSelectionServiceFilter.filterRequest(
                                 SELLER_VALID,
                                 CALLER_PACKAGE_NAME,
                                 false,
+                                true,
                                 MY_UID,
                                 API_NAME,
                                 Throttler.ApiKey.UNKNOWN));
@@ -329,8 +354,8 @@ public class FledgeServiceFilterTests {
     public void testFilterRequestDoesNotDoEnrollmentCheckWhenAdTechParamIsNull() {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
-        mFledgeServiceFilter.filterRequest(
-                null, CALLER_PACKAGE_NAME, false, MY_UID, API_NAME, Throttler.ApiKey.UNKNOWN);
+        mAdSelectionServiceFilter.filterRequest(
+                null, CALLER_PACKAGE_NAME, false, true, MY_UID, API_NAME, Throttler.ApiKey.UNKNOWN);
 
         verify(mFledgeAuthorizationFilterSpy, never())
                 .assertAdTechAllowed(any(), anyString(), any(), anyInt());

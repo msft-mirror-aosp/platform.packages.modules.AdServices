@@ -32,10 +32,14 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
 import android.net.Uri;
+import android.os.Binder;
+import android.os.Build;
 import android.os.LimitExceededException;
 import android.os.RemoteException;
 import android.os.Trace;
 import android.util.Pair;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
@@ -43,12 +47,12 @@ import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelectionEntry;
 import com.android.adservices.data.adselection.DBRegisteredAdInteraction;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
-import com.android.adservices.service.common.FledgeServiceFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.ValidatorUtil;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
@@ -78,6 +82,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 /** Encapsulates the Impression Reporting logic */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class ImpressionReporter {
     public static final String UNABLE_TO_FIND_AD_SELECTION_WITH_GIVEN_ID =
             "Unable to find ad selection with given ID";
@@ -96,7 +102,8 @@ public class ImpressionReporter {
     @NonNull private final AdSelectionDevOverridesHelper mAdSelectionDevOverridesHelper;
     @NonNull private final AdServicesLogger mAdServicesLogger;
     @NonNull private final Flags mFlags;
-    @NonNull private final FledgeServiceFilter mFledgeServiceFilter;
+    @NonNull private final RegisterAdBeaconSupportHelper mRegisterAdBeaconSupportHelper;
+    @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
     private int mCallerUid;
 
     public ImpressionReporter(
@@ -109,7 +116,7 @@ public class ImpressionReporter {
             @NonNull DevContext devContext,
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull final Flags flags,
-            @NonNull final FledgeServiceFilter fledgeServiceFilter,
+            @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             final int callerUid) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(lightweightExecutor);
@@ -120,23 +127,42 @@ public class ImpressionReporter {
         Objects.requireNonNull(devContext);
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(flags);
-        Objects.requireNonNull(fledgeServiceFilter);
+        Objects.requireNonNull(adSelectionServiceFilter);
 
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutor);
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutor);
         mScheduledExecutor = scheduledExecutor;
         mAdSelectionEntryDao = adSelectionEntryDao;
         mAdServicesHttpsClient = adServicesHttpsClient;
+        // Clearing calling identity to check device config permission read by flags on the
+        // local process and not on the process called. Once the device configs are read,
+        // restore calling identity.
+        final long token = Binder.clearCallingIdentity();
+        boolean isRegisterAdBeaconEnabled = flags.getFledgeRegisterAdBeaconEnabled();
+        Binder.restoreCallingIdentity(token);
+
+        ReportImpressionScriptEngine.RegisterAdBeaconScriptEngineHelper
+                registerAdBeaconScriptEngineHelper;
+        if (isRegisterAdBeaconEnabled) {
+            mRegisterAdBeaconSupportHelper = new RegisterAdBeaconSupportHelperEnabled();
+            registerAdBeaconScriptEngineHelper =
+                    new ReportImpressionScriptEngine.RegisterAdBeaconScriptEngineHelperEnabled();
+        } else {
+            mRegisterAdBeaconSupportHelper = new RegisterAdBeaconSupportHelperDisabled();
+            registerAdBeaconScriptEngineHelper =
+                    new ReportImpressionScriptEngine.RegisterAdBeaconScriptEngineHelperDisabled();
+        }
         mJsEngine =
                 new ReportImpressionScriptEngine(
                         context,
                         () -> flags.getEnforceIsolateMaxHeapSize(),
-                        () -> flags.getIsolateMaxHeapSizeBytes());
+                        () -> flags.getIsolateMaxHeapSizeBytes(),
+                        registerAdBeaconScriptEngineHelper);
         mAdSelectionDevOverridesHelper =
                 new AdSelectionDevOverridesHelper(devContext, mAdSelectionEntryDao);
         mAdServicesLogger = adServicesLogger;
         mFlags = flags;
-        mFledgeServiceFilter = fledgeServiceFilter;
+        mAdSelectionServiceFilter = adSelectionServiceFilter;
         mCallerUid = callerUid;
     }
 
@@ -177,17 +203,37 @@ public class ImpressionReporter {
         mScheduledExecutor = scheduledExecutor;
         mAdSelectionEntryDao = adSelectionEntryDao;
         mAdServicesHttpsClient = adServicesHttpsClient;
+        // Clearing calling identity to check device config permission read by flags on the
+        // local process and not on the process called. Once the device configs are read,
+        // restore calling identity.
+        final long token = Binder.clearCallingIdentity();
+        boolean isRegisterAdBeaconEnabled = flags.getFledgeRegisterAdBeaconEnabled();
+        Binder.restoreCallingIdentity(token);
+
+        ReportImpressionScriptEngine.RegisterAdBeaconScriptEngineHelper
+                registerAdBeaconScriptEngineHelper;
+        if (isRegisterAdBeaconEnabled) {
+            mRegisterAdBeaconSupportHelper = new RegisterAdBeaconSupportHelperEnabled();
+            registerAdBeaconScriptEngineHelper =
+                    new ReportImpressionScriptEngine.RegisterAdBeaconScriptEngineHelperEnabled();
+        } else {
+            mRegisterAdBeaconSupportHelper = new RegisterAdBeaconSupportHelperDisabled();
+            registerAdBeaconScriptEngineHelper =
+                    new ReportImpressionScriptEngine.RegisterAdBeaconScriptEngineHelperDisabled();
+        }
         mJsEngine =
                 new ReportImpressionScriptEngine(
                         context,
                         () -> flags.getEnforceIsolateMaxHeapSize(),
-                        () -> flags.getIsolateMaxHeapSizeBytes());
+                        () -> flags.getIsolateMaxHeapSizeBytes(),
+                        registerAdBeaconScriptEngineHelper);
+
         mAdSelectionDevOverridesHelper =
                 new AdSelectionDevOverridesHelper(devContext, mAdSelectionEntryDao);
         mAdServicesLogger = adServicesLogger;
         mFlags = flags;
-        mFledgeServiceFilter =
-                new FledgeServiceFilter(
+        mAdSelectionServiceFilter =
+                new AdSelectionServiceFilter(
                         context,
                         consentManager,
                         flags,
@@ -282,11 +328,12 @@ public class ImpressionReporter {
                             try {
                                 Trace.beginSection(Tracing.VALIDATE_REQUEST);
                                 LogUtil.v("Starting filtering and validation.");
-                                mFledgeServiceFilter.filterRequest(
+                                mAdSelectionServiceFilter.filterRequest(
                                         adSelectionConfig.getSeller(),
                                         requestParams.getCallerPackageName(),
                                         mFlags
                                                 .getEnforceForegroundStatusForFledgeReportImpression(),
+                                        true,
                                         mCallerUid,
                                         AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
                                         Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS);
@@ -447,7 +494,7 @@ public class ImpressionReporter {
                         mLightweightExecutorService)
                 .transformAsync(
                         sellerResultAndCtx ->
-                                commitSellerRegisteredEvents(
+                                mRegisterAdBeaconSupportHelper.commitSellerRegisteredEvents(
                                         sellerResultAndCtx.first, sellerResultAndCtx.second),
                         mLightweightExecutorService)
                 .transformAsync(
@@ -457,7 +504,7 @@ public class ImpressionReporter {
                         mLightweightExecutorService)
                 .transformAsync(
                         reportingResultsAndCtx ->
-                                commitBuyerRegisteredEvents(
+                                mRegisterAdBeaconSupportHelper.commitBuyerRegisteredEvents(
                                         reportingResultsAndCtx.first,
                                         reportingResultsAndCtx.second),
                         mLightweightExecutorService);
@@ -577,72 +624,6 @@ public class ImpressionReporter {
         }
     }
 
-    private FluentFuture<Pair<ReportImpressionScriptEngine.SellerReportingResult, ReportingContext>>
-            commitSellerRegisteredEvents(
-                    ReportImpressionScriptEngine.SellerReportingResult sellerReportingResult,
-                    ReportingContext ctx) {
-        // Validate seller uri before reporting
-        AdTechUriValidator sellerValidator =
-                new AdTechUriValidator(
-                        ValidatorUtil.AD_TECH_ROLE_SELLER,
-                        ctx.mAdSelectionConfig.getSeller().toString(),
-                        this.getClass().getSimpleName(),
-                        EVENT_URI_FIELD_NAME);
-
-        return FluentFuture.from(
-                mBackgroundExecutorService.submit(
-                        () -> {
-                            commitRegisteredAdEventsToDatabase(
-                                    sellerReportingResult.getInteractionReportingUris(),
-                                    sellerValidator,
-                                    ctx.mDBAdSelectionEntry.getAdSelectionId(),
-                                    FLAG_REPORTING_DESTINATION_SELLER);
-                            return Pair.create(sellerReportingResult, ctx);
-                        }));
-    }
-
-    private FluentFuture<Pair<ReportingUris, ReportingContext>> commitBuyerRegisteredEvents(
-            ReportingResults reportingResults, ReportingContext ctx) {
-        if (Objects.isNull(reportingResults.mBuyerReportingResult)) {
-            return FluentFuture.from(
-                    Futures.immediateFuture(
-                            Pair.create(
-                                    new ReportingUris(
-                                            null,
-                                            reportingResults.mSellerReportingResult
-                                                    .getReportingUri()),
-                                    ctx)));
-        }
-
-        CustomAudienceSignals customAudienceSignals =
-                Objects.requireNonNull(ctx.mDBAdSelectionEntry.getCustomAudienceSignals());
-
-        AdTechUriValidator buyerValidator =
-                new AdTechUriValidator(
-                        ValidatorUtil.AD_TECH_ROLE_BUYER,
-                        customAudienceSignals.getBuyer().toString(),
-                        this.getClass().getSimpleName(),
-                        REPORTING_URI_FIELD_NAME);
-
-        return FluentFuture.from(
-                mBackgroundExecutorService.submit(
-                        () -> {
-                            commitRegisteredAdEventsToDatabase(
-                                    reportingResults.mBuyerReportingResult
-                                            .getInteractionReportingUris(),
-                                    buyerValidator,
-                                    ctx.mDBAdSelectionEntry.getAdSelectionId(),
-                                    FLAG_REPORTING_DESTINATION_BUYER);
-                            return Pair.create(
-                                    new ReportingUris(
-                                            reportingResults.mBuyerReportingResult
-                                                    .getReportingUri(),
-                                            reportingResults.mSellerReportingResult
-                                                    .getReportingUri()),
-                                    ctx);
-                        }));
-    }
-
     /**
      * Iterates through each {@link InteractionUriRegistrationInfo}, validates each {@link
      * InteractionUriRegistrationInfo#getInteractionReportingUri()}, and commits it to the {@code
@@ -674,7 +655,7 @@ public class ImpressionReporter {
                                 .setAdSelectionId(adSelectionId)
                                 .setInteractionKey(uriRegistrationInfo.getInteractionKey())
                                 .setInteractionReportingUri(uriToValidate)
-                                .setReportingDestination(destination)
+                                .setDestination(destination)
                                 .build();
                 adEventsToRegister.add(dbRegisteredAdInteraction);
                 numSellerEventUriEntries++;
@@ -732,6 +713,128 @@ public class ImpressionReporter {
 
             mBuyerReportingResult = buyerReportingResult;
             mSellerReportingResult = sellerReportingResult;
+        }
+    }
+
+    private interface RegisterAdBeaconSupportHelper {
+        FluentFuture<Pair<ReportImpressionScriptEngine.SellerReportingResult, ReportingContext>>
+                commitSellerRegisteredEvents(
+                        ReportImpressionScriptEngine.SellerReportingResult sellerReportingResult,
+                        ReportingContext ctx);
+
+        FluentFuture<Pair<ReportingUris, ReportingContext>> commitBuyerRegisteredEvents(
+                ReportingResults reportingResults, ReportingContext ctx);
+    }
+
+    private class RegisterAdBeaconSupportHelperEnabled implements RegisterAdBeaconSupportHelper {
+
+        @Override
+        public FluentFuture<
+                        Pair<ReportImpressionScriptEngine.SellerReportingResult, ReportingContext>>
+                commitSellerRegisteredEvents(
+                        ReportImpressionScriptEngine.SellerReportingResult sellerReportingResult,
+                        ReportingContext ctx) {
+            // Validate seller uri before reporting
+            AdTechUriValidator sellerValidator =
+                    new AdTechUriValidator(
+                            ValidatorUtil.AD_TECH_ROLE_SELLER,
+                            ctx.mAdSelectionConfig.getSeller().toString(),
+                            this.getClass().getSimpleName(),
+                            EVENT_URI_FIELD_NAME);
+
+            return FluentFuture.from(
+                    mBackgroundExecutorService.submit(
+                            () -> {
+                                commitRegisteredAdEventsToDatabase(
+                                        sellerReportingResult.getInteractionReportingUris(),
+                                        sellerValidator,
+                                        ctx.mDBAdSelectionEntry.getAdSelectionId(),
+                                        FLAG_REPORTING_DESTINATION_SELLER);
+                                return Pair.create(sellerReportingResult, ctx);
+                            }));
+        }
+
+        @Override
+        public FluentFuture<Pair<ReportingUris, ReportingContext>> commitBuyerRegisteredEvents(
+                ReportingResults reportingResults, ReportingContext ctx) {
+            if (Objects.isNull(reportingResults.mBuyerReportingResult)) {
+                return FluentFuture.from(
+                        Futures.immediateFuture(
+                                Pair.create(
+                                        new ReportingUris(
+                                                null,
+                                                reportingResults.mSellerReportingResult
+                                                        .getReportingUri()),
+                                        ctx)));
+            }
+
+            CustomAudienceSignals customAudienceSignals =
+                    Objects.requireNonNull(ctx.mDBAdSelectionEntry.getCustomAudienceSignals());
+
+            AdTechUriValidator buyerValidator =
+                    new AdTechUriValidator(
+                            ValidatorUtil.AD_TECH_ROLE_BUYER,
+                            customAudienceSignals.getBuyer().toString(),
+                            this.getClass().getSimpleName(),
+                            REPORTING_URI_FIELD_NAME);
+
+            return FluentFuture.from(
+                    mBackgroundExecutorService.submit(
+                            () -> {
+                                commitRegisteredAdEventsToDatabase(
+                                        reportingResults.mBuyerReportingResult
+                                                .getInteractionReportingUris(),
+                                        buyerValidator,
+                                        ctx.mDBAdSelectionEntry.getAdSelectionId(),
+                                        FLAG_REPORTING_DESTINATION_BUYER);
+                                return Pair.create(
+                                        new ReportingUris(
+                                                reportingResults.mBuyerReportingResult
+                                                        .getReportingUri(),
+                                                reportingResults.mSellerReportingResult
+                                                        .getReportingUri()),
+                                        ctx);
+                            }));
+        }
+    }
+
+    private class RegisterAdBeaconSupportHelperDisabled implements RegisterAdBeaconSupportHelper {
+
+        @Override
+        public FluentFuture<
+                        Pair<ReportImpressionScriptEngine.SellerReportingResult, ReportingContext>>
+                commitSellerRegisteredEvents(
+                        ReportImpressionScriptEngine.SellerReportingResult sellerReportingResult,
+                        ReportingContext ctx) {
+            // Return immediately since registerAdBeacon is disabled
+            return FluentFuture.from(
+                    Futures.immediateFuture(Pair.create(sellerReportingResult, ctx)));
+        }
+
+        @Override
+        public FluentFuture<Pair<ReportingUris, ReportingContext>> commitBuyerRegisteredEvents(
+                ReportingResults reportingResults, ReportingContext ctx) {
+            if (Objects.isNull(reportingResults.mBuyerReportingResult)) {
+                return FluentFuture.from(
+                        Futures.immediateFuture(
+                                Pair.create(
+                                        new ReportingUris(
+                                                null,
+                                                reportingResults.mSellerReportingResult
+                                                        .getReportingUri()),
+                                        ctx)));
+            }
+
+            // Return immediately since registerAdBeacon is disabled
+            return FluentFuture.from(
+                    Futures.immediateFuture(
+                            Pair.create(
+                                    new ReportingUris(
+                                            reportingResults.mBuyerReportingResult
+                                                    .getReportingUri(),
+                                            reportingResults.mSellerReportingResult
+                                                    .getReportingUri()),
+                                    ctx)));
         }
     }
 }

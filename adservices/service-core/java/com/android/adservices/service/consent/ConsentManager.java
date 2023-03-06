@@ -22,6 +22,9 @@ import android.app.adservices.consent.ConsentParcel;
 import android.app.job.JobScheduler;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.common.BooleanFileDatastore;
@@ -65,6 +68,8 @@ import java.util.stream.Collectors;
  * </ul>
  */
 // TODO(b/259791134): Add a CTS/UI test to test the Consent Migration
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class ConsentManager {
     private static volatile ConsentManager sConsentManager;
 

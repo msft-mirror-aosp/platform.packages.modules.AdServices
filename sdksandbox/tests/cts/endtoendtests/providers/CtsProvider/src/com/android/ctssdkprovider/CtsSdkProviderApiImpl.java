@@ -137,6 +137,11 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
         }
     }
 
+    @Override
+    public String getOpPackageName() {
+        return mContext.getOpPackageName();
+    }
+
     /* Sends an error if the expected resource/asset does not match the read value. */
     private String createErrorMessage(String expected, String actual) {
         return new String("Expected " + expected + ", actual " + actual);

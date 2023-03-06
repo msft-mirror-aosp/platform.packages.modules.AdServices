@@ -20,7 +20,10 @@ import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
+import android.os.Build;
 import android.os.LimitExceededException;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.consent.ConsentManager;
@@ -29,8 +32,10 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 /** Utility class to filter FLEDGE requests. */
-public class FledgeServiceFilter extends AbstractFledgeServiceFilter {
-    public FledgeServiceFilter(
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
+public class AdSelectionServiceFilter extends AbstractFledgeServiceFilter {
+    public AdSelectionServiceFilter(
             @NonNull Context context,
             @NonNull ConsentManager consentManager,
             @NonNull Flags flags,
@@ -56,6 +61,8 @@ public class FledgeServiceFilter extends AbstractFledgeServiceFilter {
      *     enrollment check will not be applied if it is null.
      * @param callerPackageName caller package name to be validated
      * @param enforceForeground whether to enforce a foreground check
+     * @param enforceConsent Checks if the user has revoked global FLEDGE consent if set to true.
+     *     Should only be set to false if the caller is checking FLEDGE consent on their own.
      * @throws FledgeAuthorizationFilter.CallerMismatchException if the {@code callerPackageName} is
      *     not valid
      * @throws AppImportanceFilter.WrongCallingApplicationStateException if the foreground check is
@@ -73,6 +80,7 @@ public class FledgeServiceFilter extends AbstractFledgeServiceFilter {
             @Nullable AdTechIdentifier adTech,
             @NonNull String callerPackageName,
             boolean enforceForeground,
+            boolean enforceConsent,
             int callerUid,
             int apiName,
             @NonNull Throttler.ApiKey apiKey) {
@@ -88,6 +96,8 @@ public class FledgeServiceFilter extends AbstractFledgeServiceFilter {
             assertFledgeEnrollment(adTech, callerPackageName, apiName);
         }
         assertAppInAllowList(callerPackageName, apiName);
-        assertCallerHasUserConsent();
+        if (enforceConsent) {
+            assertCallerHasUserConsent();
+        }
     }
 }

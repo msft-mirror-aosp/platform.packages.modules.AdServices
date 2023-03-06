@@ -22,7 +22,10 @@ import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
+import android.os.Build;
 import android.os.LimitExceededException;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.Flags;
@@ -34,6 +37,8 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 /** Utility class to filter FLEDGE requests. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public abstract class AbstractFledgeServiceFilter {
     @NonNull private final Context mContext;
     @NonNull private final ConsentManager mConsentManager;
@@ -166,6 +171,7 @@ public abstract class AbstractFledgeServiceFilter {
      *     enrollment check will not be applied if it is null.
      * @param callerPackageName caller package name to be validated
      * @param enforceForeground whether to enforce a foreground check
+     * @param enforceConsent whether to enforce a consent check
      * @throws FledgeAuthorizationFilter.CallerMismatchException if the {@code callerPackageName} is
      *     not valid
      * @throws AppImportanceFilter.WrongCallingApplicationStateException if the foreground check is
@@ -182,6 +188,7 @@ public abstract class AbstractFledgeServiceFilter {
             @Nullable AdTechIdentifier adTech,
             @NonNull String callerPackageName,
             boolean enforceForeground,
+            boolean enforceConsent,
             int callerUid,
             int apiName,
             @NonNull Throttler.ApiKey apiKey);

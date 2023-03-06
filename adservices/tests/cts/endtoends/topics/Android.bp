@@ -30,8 +30,7 @@ java_defaults {
     ],
     libs: [
         "android.test.base",
-        // TODO(b/246590510): Remove these.
-        "framework-adservices.impl",
+        "framework-adservices",
         "framework-sdksandbox.impl",
     ],
     sdk_version: "module_current",

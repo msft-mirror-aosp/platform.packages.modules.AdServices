@@ -22,7 +22,10 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
 import android.net.Uri;
+import android.os.Build;
 import android.util.Pair;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
@@ -31,7 +34,7 @@ import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.common.FledgeServiceFilter;
+import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
@@ -77,6 +80,8 @@ import io.grpc.okhttp.OkHttpChannelBuilder;
  * Offload execution to Bidding & Auction services. Sends an umbrella request to the Seller Frontend
  * Service.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
     public static final String GZIP = new Codec.Gzip().getMessageEncoding(); // "gzip"
 
@@ -94,7 +99,7 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
             @NonNull final DevContext devContext,
             @NonNull final Flags flags,
             @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger,
-            @NonNull final FledgeServiceFilter fledgeServiceFilter,
+            @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             int callerUid) {
         super(
                 context,
@@ -106,7 +111,7 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
                 adServicesLogger,
                 flags,
                 adSelectionExecutionLogger,
-                fledgeServiceFilter,
+                adSelectionServiceFilter,
                 callerUid);
 
         CustomAudienceDevOverridesHelper mCustomAudienceDevOverridesHelper =
@@ -132,7 +137,7 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
             @NonNull final AdServicesLogger adServicesLogger,
             @NonNull final Flags flags,
             int callerUid,
-            @NonNull final FledgeServiceFilter fledgeServiceFilter,
+            @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final JsFetcher jsFetcher,
             @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger) {
         super(
@@ -147,7 +152,7 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
                 adServicesLogger,
                 flags,
                 callerUid,
-                fledgeServiceFilter,
+                adSelectionServiceFilter,
                 adSelectionExecutionLogger);
 
         this.mJsFetcher = jsFetcher;
