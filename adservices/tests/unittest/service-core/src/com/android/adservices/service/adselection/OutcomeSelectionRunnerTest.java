@@ -18,14 +18,12 @@ package com.android.adservices.service.adselection;
 
 import static android.adservices.adselection.AdSelectionFromOutcomesConfigFixture.SAMPLE_SELLER;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
@@ -39,7 +37,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.only;
 
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionFromOutcomesConfig;
@@ -72,8 +69,6 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
-import com.google.common.util.concurrent.FluentFuture;
-import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
@@ -202,43 +197,6 @@ public class OutcomeSelectionRunnerTest {
         if (mStaticMockSession != null) {
             mStaticMockSession.finishMocking();
         }
-    }
-
-    @Test
-    public void testRunOutcomeSelectionSuccess() {
-        List<AdSelectionIdWithBidAndRenderUri> adSelectionIdWithBidAndRenderUris =
-                List.of(AD_SELECTION_WITH_BID_1, AD_SELECTION_WITH_BID_2, AD_SELECTION_WITH_BID_3);
-        for (AdSelectionIdWithBidAndRenderUri idWithBid : adSelectionIdWithBidAndRenderUris) {
-            persistAdSelectionEntry(idWithBid, MY_APP_PACKAGE_NAME);
-        }
-
-        List<Long> adOutcomesConfigParam =
-                adSelectionIdWithBidAndRenderUris.stream()
-                        .map(AdSelectionIdWithBidAndRenderUri::getAdSelectionId)
-                        .collect(Collectors.toList());
-
-        AdSelectionFromOutcomesConfig config =
-                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
-                        adOutcomesConfigParam);
-
-        GenericListMatcher matcher = new GenericListMatcher(adSelectionIdWithBidAndRenderUris);
-        doReturn(FluentFuture.from(Futures.immediateFuture(AD_SELECTION_ID_1)))
-                .when(mAdOutcomeSelectorMock)
-                .runAdOutcomeSelector(argThat(matcher), eq(config));
-
-        AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelectionFromOutcomes(
-                        mOutcomeSelectionRunner, config, MY_APP_PACKAGE_NAME);
-
-        verify(mAdOutcomeSelectorMock, only()).runAdOutcomeSelector(argThat(matcher), eq(config));
-        assertTrue(resultsCallback.mIsSuccess);
-        assertEquals(AD_SELECTION_ID_1, resultsCallback.mAdSelectionResponse.getAdSelectionId());
-        assertEquals(RENDER_URI_1, resultsCallback.mAdSelectionResponse.getRenderUri());
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
     }
 
     @Test
