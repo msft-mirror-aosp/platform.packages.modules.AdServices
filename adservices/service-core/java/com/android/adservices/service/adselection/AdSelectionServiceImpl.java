@@ -446,7 +446,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         int apiName =
                 AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS;
         // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredAppInstallPermission(mContext, apiName);
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
 
         try {
             Objects.requireNonNull(request);
