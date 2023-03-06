@@ -112,10 +112,10 @@ public class TopicDbMigratorV7Test {
                 .isEqualTo(topicContributorsMap);
 
         // Now downgrade db and upgrade it again.
-        when(mMockFlags.getEnableDatabaseSchemaVersion5()).thenReturn(false);
+        when(mMockFlags.getEnableTopicMigration()).thenReturn(false);
         mTopicsDbHelper.onDowngrade(
                 db, DbHelper.DATABASE_VERSION_V7, DbHelper.CURRENT_DATABASE_VERSION);
-        when(mMockFlags.getEnableDatabaseSchemaVersion5()).thenReturn(true);
+        when(mMockFlags.getEnableTopicMigration()).thenReturn(true);
         new TopicDbMigratorV7().performMigration(db);
         // Commit the schema change
         db.setTransactionSuccessful();

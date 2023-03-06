@@ -149,7 +149,7 @@ public class UserInstanceManager {
             }
 
             // Delete all data in the database that belongs to this user
-            mTopicsDao.deleteAllDataOfUser(userIdentifier);
+            mTopicsDao.clearAllBlockedTopicsOfUser(userIdentifier);
         }
     }
 

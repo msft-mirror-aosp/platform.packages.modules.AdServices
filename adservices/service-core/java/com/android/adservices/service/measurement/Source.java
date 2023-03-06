@@ -39,12 +39,11 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -68,8 +67,8 @@ public class Source {
     private UnsignedLong mEventId;
     private Uri mPublisher;
     @EventSurfaceType private int mPublisherType;
-    private Uri mAppDestination;
-    private Uri mWebDestination;
+    private List<Uri> mAppDestinations;
+    private List<Uri> mWebDestinations;
     private String mEnrollmentId;
     private Uri mRegistrant;
     private SourceType mSourceType;
@@ -152,12 +151,12 @@ public class Source {
     public static class FakeReport {
         private final UnsignedLong mTriggerData;
         private final long mReportingTime;
-        private final Uri mDestination;
+        private final List<Uri> mDestinations;
 
-        public FakeReport(UnsignedLong triggerData, long reportingTime, Uri destination) {
+        public FakeReport(UnsignedLong triggerData, long reportingTime, List<Uri> destinations) {
             mTriggerData = triggerData;
             mReportingTime = reportingTime;
-            mDestination = destination;
+            mDestinations = destinations;
         }
 
         @Override
@@ -167,12 +166,12 @@ public class Source {
             FakeReport that = (FakeReport) o;
             return Objects.equals(mTriggerData, that.mTriggerData)
                     && mReportingTime == that.mReportingTime
-                    && Objects.equals(mDestination, that.mDestination);
+                    && Objects.equals(mDestinations, that.mDestinations);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(mTriggerData, mReportingTime, mDestination);
+            return Objects.hash(mTriggerData, mReportingTime, mDestinations);
         }
 
         public long getReportingTime() {
@@ -183,14 +182,14 @@ public class Source {
             return mTriggerData;
         }
 
-        public Uri getDestination() {
-            return mDestination;
+        public List<Uri> getDestinations() {
+            return mDestinations;
         }
     }
 
     ImpressionNoiseParams getImpressionNoiseParams() {
         int destinationMultiplier =
-                (mAppDestination != null && mWebDestination != null)
+                (mAppDestinations != null && mWebDestinations != null)
                         ? DUAL_DESTINATION_IMPRESSION_NOISE_MULTIPLIER
                         : SINGLE_DESTINATION_IMPRESSION_NOISE_MULTIPLIER;
 
@@ -280,14 +279,14 @@ public class Source {
     /** @return Probability of selecting random state for attribution */
     public double getRandomAttributionProbability() {
         // Both destinations are set and install attribution is supported
-        if (mWebDestination != null && isInstallDetectionEnabled()) {
+        if (mWebDestinations != null && isInstallDetectionEnabled()) {
             return mSourceType == SourceType.EVENT
                     ? PrivacyParams.INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY
                     : PrivacyParams.INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY;
         }
 
         // Both destinations are set but install attribution isn't supported
-        if (mAppDestination != null && mWebDestination != null) {
+        if (mAppDestinations != null && mWebDestinations != null) {
             return mSourceType == SourceType.EVENT
                     ? PrivacyParams.DUAL_DESTINATION_EVENT_NOISE_PROBABILITY
                     : PrivacyParams.DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY;
@@ -307,7 +306,7 @@ public class Source {
     }
 
     private boolean isInstallDetectionEnabled() {
-        return mInstallCooldownWindow > 0 && mAppDestination != null;
+        return mInstallCooldownWindow > 0 && mAppDestinations != null;
     }
 
     @Override
@@ -318,8 +317,8 @@ public class Source {
         Source source = (Source) obj;
         return Objects.equals(mPublisher, source.mPublisher)
                 && mPublisherType == source.mPublisherType
-                && Objects.equals(mAppDestination, source.mAppDestination)
-                && Objects.equals(mWebDestination, source.mWebDestination)
+                && Objects.equals(mAppDestinations, source.mAppDestinations)
+                && Objects.equals(mWebDestinations, source.mWebDestinations)
                 && Objects.equals(mEnrollmentId, source.mEnrollmentId)
                 && mPriority == source.mPriority
                 && mStatus == source.mStatus
@@ -354,8 +353,8 @@ public class Source {
                 mId,
                 mPublisher,
                 mPublisherType,
-                mAppDestination,
-                mWebDestination,
+                mAppDestinations,
+                mWebDestinations,
                 mEnrollmentId,
                 mPriority,
                 mStatus,
@@ -438,12 +437,21 @@ public class Source {
                                             new FakeReport(
                                                     new UnsignedLong(Long.valueOf(reportConfig[0])),
                                                     getReportingTimeForNoising(reportConfig[1]),
-                                                    resolveFakeReportDestination(reportConfig[2])))
+                                                    resolveFakeReportDestinations(reportConfig[2])))
                             .collect(Collectors.toList());
         }
 
         mAttributionMode = fakeReports.isEmpty() ? AttributionMode.NEVER : AttributionMode.FALSELY;
         return fakeReports;
+    }
+
+    /**
+     * Retrieve the attribution destinations corresponding to their destination type.
+     *
+     * @return a list of Uris.
+     */
+    public List<Uri> getAttributionDestinations(@EventSurfaceType int destinationType) {
+        return destinationType == EventSurfaceType.APP ? mAppDestinations : mWebDestinations;
     }
 
     /**
@@ -485,16 +493,16 @@ public class Source {
         return mPublisherType;
     }
 
-    /** Uri for the {@link Trigger}'s app destination. */
+    /** Uris for the {@link Trigger}'s app destinations. */
     @Nullable
-    public Uri getAppDestination() {
-        return mAppDestination;
+    public List<Uri> getAppDestinations() {
+        return mAppDestinations;
     }
 
-    /** Uri for the {@link Trigger}'s web destination. */
+    /** Uris for the {@link Trigger}'s web destinations. */
     @Nullable
-    public Uri getWebDestination() {
-        return mWebDestination;
+    public List<Uri> getWebDestinations() {
+        return mWebDestinations;
     }
 
     /**
@@ -646,7 +654,7 @@ public class Source {
                 return mAggregatableAttributionSource;
             }
             JSONObject jsonObject = new JSONObject(mAggregateSource);
-            Map<String, BigInteger> aggregateSourceMap = new HashMap<>();
+            TreeMap<String, BigInteger> aggregateSourceMap = new TreeMap<>();
             for (String key : jsonObject.keySet()) {
                 // Remove "0x" prefix.
                 String hexString = jsonObject.getString(key).substring(2);
@@ -747,13 +755,13 @@ public class Source {
                                 new FakeReport(
                                         new UnsignedLong(Long.valueOf(reportConfig[0])),
                                         getReportingTimeForNoising(reportConfig[1]),
-                                        resolveFakeReportDestination(reportConfig[2])))
+                                        resolveFakeReportDestinations(reportConfig[2])))
                 .collect(Collectors.toList());
     }
 
     private boolean isVtcDualDestinationModeWithPostInstallEnabled() {
         return mSourceType == SourceType.EVENT
-                && mWebDestination != null
+                && mWebDestinations != null
                 && isInstallDetectionEnabled();
     }
 
@@ -766,15 +774,15 @@ public class Source {
      * @param destinationIdentifier destination identifier, can be 0 (app) or 1 (web)
      * @return app or web destination {@link Uri}
      */
-    private Uri resolveFakeReportDestination(int destinationIdentifier) {
-        if (mAppDestination != null && mWebDestination != null) {
+    private List<Uri> resolveFakeReportDestinations(int destinationIdentifier) {
+        if (mAppDestinations != null && mWebDestinations != null) {
             // It could be a direct destinationIdentifier == 0 check, but
             return destinationIdentifier % DUAL_DESTINATION_IMPRESSION_NOISE_MULTIPLIER == 0
-                    ? mAppDestination
-                    : mWebDestination;
+                    ? mAppDestinations
+                    : mWebDestinations;
         }
 
-        return mAppDestination != null ? mAppDestination : mWebDestination;
+        return mAppDestinations != null ? mAppDestinations : mWebDestinations;
     }
 
     /**
@@ -798,8 +806,8 @@ public class Source {
             builder.setRegistrationId(copyFrom.mRegistrationId);
             builder.setAggregateSource(copyFrom.mAggregateSource);
             builder.setExpiryTime(copyFrom.mExpiryTime);
-            builder.setAppDestination(copyFrom.mAppDestination);
-            builder.setWebDestination(copyFrom.mWebDestination);
+            builder.setAppDestinations(copyFrom.mAppDestinations);
+            builder.setWebDestinations(copyFrom.mWebDestinations);
             builder.setSharedAggregationKeys(copyFrom.mSharedAggregationKeys);
             builder.setEventId(copyFrom.mEventId);
             builder.setRegistrant(copyFrom.mRegistrant);
@@ -857,18 +865,27 @@ public class Source {
             return this;
         }
 
-        /** See {@link Source#getAppDestination()}. */
-        public Builder setAppDestination(Uri appDestination) {
-            Optional.ofNullable(appDestination).ifPresent(Validation::validateUri);
-            mBuilding.mAppDestination = appDestination;
+        /** See {@link Source#getAppDestinations()}. */
+        public Builder setAppDestinations(List<Uri> appDestinations) {
+            Optional.ofNullable(appDestinations).ifPresent(uris -> {
+                Validation.validateNotEmpty(uris);
+                if (uris.size() > 1) {
+                    throw new IllegalArgumentException("Received more than one app destination");
+                }
+                Validation.validateUri(uris.toArray(new Uri[0]));
+            });
+            mBuilding.mAppDestinations = appDestinations;
             return this;
         }
 
-        /** See {@link Source#getWebDestination()}. */
+        /** See {@link Source#getWebDestinations()}. */
         @NonNull
-        public Builder setWebDestination(@Nullable Uri webDestination) {
-            Optional.ofNullable(webDestination).ifPresent(Validation::validateUri);
-            mBuilding.mWebDestination = webDestination;
+        public Builder setWebDestinations(@Nullable List<Uri> webDestinations) {
+            Optional.ofNullable(webDestinations).ifPresent(uris -> {
+                Validation.validateNotEmpty(uris);
+                Validation.validateUri(uris.toArray(new Uri[0]));
+            });
+            mBuilding.mWebDestinations = webDestinations;
             return this;
         }
 
@@ -1069,7 +1086,7 @@ public class Source {
                     mBuilding.mRegistrant,
                     mBuilding.mSourceType);
 
-            if (mBuilding.mAppDestination == null && mBuilding.mWebDestination == null) {
+            if (mBuilding.mAppDestinations == null && mBuilding.mWebDestinations == null) {
                 throw new IllegalArgumentException("At least one destination is required");
             }
 

@@ -48,6 +48,7 @@ import com.android.adservices.service.measurement.actions.RegisterWebTrigger;
 import com.android.adservices.service.measurement.actions.ReportObjects;
 import com.android.adservices.service.measurement.actions.UninstallApp;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
+import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.attribution.AttributionJobHandlerWrapper;
 import com.android.adservices.service.measurement.inputverification.ClickVerifier;
 import com.android.adservices.service.measurement.registration.AsyncSourceFetcher;
@@ -101,7 +102,7 @@ public abstract class E2EMockTest extends E2ETest {
             new EnrollmentDao(
                     ApplicationProvider.getApplicationContext(), DbTestUtil.getDbHelperForTest());
     static DatastoreManager sDatastoreManager =
-            new SQLDatastoreManager(DbTestUtil.getDbHelperForTest());
+            new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
 
     // Class extensions may choose to disable or enable added noise.
     AttributionJobHandlerWrapper mAttributionHelper;
@@ -125,12 +126,12 @@ public abstract class E2EMockTest extends E2ETest {
     E2EMockTest(
             Collection<Action> actions,
             ReportObjects expectedOutput,
-            PrivacyParamsProvider privacyParamsProvider,
+            ParamsProvider paramsProvider,
             String name) {
         super(actions, expectedOutput, name);
         mClickVerifier = mock(ClickVerifier.class);
         mFlags = mock(Flags.class);
-        mE2EMockStaticRule = new E2EMockStatic.E2EMockStaticRule(privacyParamsProvider);
+        mE2EMockStaticRule = new E2EMockStatic.E2EMockStaticRule(paramsProvider);
         mMeasurementDataDeleter = spy(new MeasurementDataDeleter(sDatastoreManager));
 
         mAsyncSourceFetcher =
@@ -297,7 +298,9 @@ public abstract class E2EMockTest extends E2ETest {
                         true);
 
         processDebugAggregateReports(
-                (List<Uri>) aggregateCaptures[0], (List<JSONObject>) aggregateCaptures[1]);
+                (List<AggregateReport>) aggregateCaptures[0],
+                (List<Uri>) aggregateCaptures[1],
+                (List<JSONObject>) aggregateCaptures[2]);
     }
 
     // Triggers debug report api job
@@ -359,8 +362,9 @@ public abstract class E2EMockTest extends E2ETest {
                         false);
 
         processAggregateReports(
-                (List<Uri>) aggregateCaptures[0],
-                (List<JSONObject>) aggregateCaptures[1]);
+                (List<AggregateReport>) aggregateCaptures[0],
+                (List<Uri>) aggregateCaptures[1],
+                (List<JSONObject>) aggregateCaptures[2]);
     }
 
     // Class extensions may need different processing to prepare for result evaluation.
@@ -410,26 +414,28 @@ public abstract class E2EMockTest extends E2ETest {
     }
 
     // Class extensions may need different processing to prepare for result evaluation.
-    void processAggregateReports(List<Uri> destinations, List<JSONObject> payloads)
-            throws JSONException {
-        List<JSONObject> aggregateReportObjects = getAggregateReportObjects(destinations, payloads);
+    void processAggregateReports(List<AggregateReport> aggregateReports,
+            List<Uri> destinations, List<JSONObject> payloads) throws JSONException {
+        List<JSONObject> aggregateReportObjects =
+                getAggregateReportObjects(aggregateReports, destinations, payloads);
         mActualOutput.mAggregateReportObjects.addAll(aggregateReportObjects);
     }
 
-    void processDebugAggregateReports(List<Uri> destinations, List<JSONObject> payloads)
-            throws JSONException {
-        List<JSONObject> aggregateReportObjects = getAggregateReportObjects(destinations, payloads);
+    void processDebugAggregateReports(List<AggregateReport> aggregateReports,
+            List<Uri> destinations, List<JSONObject> payloads) throws JSONException {
+        List<JSONObject> aggregateReportObjects =
+                getAggregateReportObjects(aggregateReports, destinations, payloads);
         mActualOutput.mDebugAggregateReportObjects.addAll(aggregateReportObjects);
     }
 
-    private List<JSONObject> getAggregateReportObjects(List<Uri> destinations,
-            List<JSONObject> payloads) throws JSONException {
+    private List<JSONObject> getAggregateReportObjects(List<AggregateReport> aggregateReports,
+            List<Uri> destinations, List<JSONObject> payloads) throws JSONException {
         List<JSONObject> result = new ArrayList<>();
         for (int i = 0; i < destinations.size(); i++) {
             JSONObject sharedInfo = new JSONObject(payloads.get(i).getString("shared_info"));
             result.add(new JSONObject()
                     .put(TestFormatJsonMapping.REPORT_TIME_KEY, String.valueOf(
-                            sharedInfo.getLong("scheduled_report_time") * 1000))
+                            aggregateReports.get(i).getScheduledReportTime()))
                     .put(TestFormatJsonMapping.REPORT_TO_KEY, destinations.get(i).toString())
                     .put(TestFormatJsonMapping.PAYLOAD_KEY,
                             getAggregatablePayloadForTest(sharedInfo, payloads.get(i))));
@@ -485,6 +491,7 @@ public abstract class E2EMockTest extends E2ETest {
                 Object value =
                         "0x"
                                 + new BigInteger(
+                                                1,
                                                 ((ByteString) m.get(new UnicodeString("bucket")))
                                                         .getBytes())
                                         .toString(16);
@@ -494,6 +501,7 @@ public abstract class E2EMockTest extends E2ETest {
                                 .put(
                                         AggregateHistogramKeys.VALUE,
                                         new BigInteger(
+                                                        1,
                                                         ((ByteString)
                                                                         m.get(
                                                                                 new UnicodeString(

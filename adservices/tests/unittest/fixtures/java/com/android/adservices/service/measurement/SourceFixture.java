@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.UUID;
 
 public final class SourceFixture {
@@ -41,7 +42,7 @@ public final class SourceFixture {
     public static Source.Builder getValidSourceBuilder() {
         return new Source.Builder()
                 .setPublisher(ValidSourceParams.PUBLISHER)
-                .setAppDestination(ValidSourceParams.ATTRIBUTION_DESTINATION)
+                .setAppDestinations(ValidSourceParams.ATTRIBUTION_DESTINATIONS)
                 .setEnrollmentId(ValidSourceParams.ENROLLMENT_ID)
                 .setRegistrant(ValidSourceParams.REGISTRANT);
     }
@@ -53,8 +54,8 @@ public final class SourceFixture {
                 .setId(UUID.randomUUID().toString())
                 .setEventId(ValidSourceParams.SOURCE_EVENT_ID)
                 .setPublisher(ValidSourceParams.PUBLISHER)
-                .setAppDestination(ValidSourceParams.ATTRIBUTION_DESTINATION)
-                .setWebDestination(ValidSourceParams.WEB_DESTINATION)
+                .setAppDestinations(ValidSourceParams.ATTRIBUTION_DESTINATIONS)
+                .setWebDestinations(ValidSourceParams.WEB_DESTINATIONS)
                 .setEnrollmentId(ValidSourceParams.ENROLLMENT_ID)
                 .setRegistrant(ValidSourceParams.REGISTRANT)
                 .setEventTime(ValidSourceParams.SOURCE_EVENT_TIME)
@@ -80,9 +81,9 @@ public final class SourceFixture {
         public static final Long PRIORITY = 100L;
         public static final UnsignedLong SOURCE_EVENT_ID = new UnsignedLong(1L);
         public static final Long SOURCE_EVENT_TIME = 8640000000L;
-        public static final Uri ATTRIBUTION_DESTINATION =
-                Uri.parse("android-app://com.destination");
-        public static Uri WEB_DESTINATION = Uri.parse("https://destination.com");
+        public static final List<Uri> ATTRIBUTION_DESTINATIONS =
+                List.of(Uri.parse("android-app://com.destination"));
+        public static List<Uri> WEB_DESTINATIONS = List.of(Uri.parse("https://destination.com"));
         public static final Uri PUBLISHER = Uri.parse("android-app://com.publisher");
         public static final Uri REGISTRANT = Uri.parse("android-app://com.registrant");
         public static final String ENROLLMENT_ID = "enrollment-id";
@@ -123,8 +124,10 @@ public final class SourceFixture {
         }
 
         public static final AggregatableAttributionSource buildAggregatableAttributionSource() {
+            TreeMap<String, BigInteger> aggregateSourceMap = new TreeMap<>();
+            aggregateSourceMap.put("5", new BigInteger("345"));
             return new AggregatableAttributionSource.Builder()
-                    .setAggregatableSource(Map.of("5", new BigInteger("345")))
+                    .setAggregatableSource(aggregateSourceMap)
                     .setFilterMap(
                             new FilterMap.Builder()
                                     .setAttributionFilterMap(

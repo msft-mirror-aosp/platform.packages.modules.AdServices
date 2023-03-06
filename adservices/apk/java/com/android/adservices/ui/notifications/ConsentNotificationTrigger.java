@@ -24,8 +24,10 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
@@ -37,6 +39,8 @@ import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.ui.OTAResourcesManager;
 
 /** Provides methods which can be used to display Privacy Sandbox consent notification. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class ConsentNotificationTrigger {
     // Random integer for NotificationCompat purposes
     private static final int NOTIFICATION_ID = 67920;
@@ -56,10 +60,9 @@ public class ConsentNotificationTrigger {
         if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()) {
             OTAResourcesManager.applyOTAResources(context.getApplicationContext(), true);
         }
+
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
-
         ConsentManager consentManager = ConsentManager.getInstance(context);
-
         if (!notificationManager.areNotificationsEnabled()) {
             recordNotificationDisplayed(gaUxFeatureEnabled, consentManager);
             UiStatsLogger.logNotificationDisabled(context);
@@ -111,10 +114,18 @@ public class ConsentNotificationTrigger {
             // ROW: all APIs are by default enabled
             // TODO(b/260266623): change consent state to UNDEFINED
             if (isEuDevice) {
+                consentManager.recordTopicsDefaultConsent(false);
+                consentManager.recordFledgeDefaultConsent(false);
+                consentManager.recordMeasurementDefaultConsent(false);
+
                 consentManager.disable(context, AdServicesApiType.TOPICS);
                 consentManager.disable(context, AdServicesApiType.FLEDGE);
                 consentManager.disable(context, AdServicesApiType.MEASUREMENTS);
             } else {
+                consentManager.recordTopicsDefaultConsent(true);
+                consentManager.recordFledgeDefaultConsent(true);
+                consentManager.recordMeasurementDefaultConsent(true);
+
                 consentManager.enable(context, AdServicesApiType.TOPICS);
                 consentManager.enable(context, AdServicesApiType.FLEDGE);
                 consentManager.enable(context, AdServicesApiType.MEASUREMENTS);

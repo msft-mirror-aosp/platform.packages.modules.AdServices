@@ -73,6 +73,7 @@ public class FledgeHttpCacheTest {
     private FledgeHttpCache mCache;
     private ExecutorService mExecutorService;
     private Map<String, List<String>> mCachingPropertiesMap;
+    private ImmutableMap<String, List<String>> mResponseHeadersMap;
 
     @Mock private CacheEntryDao mCacheEntryDaoMock;
     @Mock private HttpCache.CacheObserver mObserver;
@@ -87,10 +88,19 @@ public class FledgeHttpCacheTest {
         mBody = "This is the Google home page";
         mMaxAgeSeconds = 1000;
         mCachingPropertiesMap = new HashMap<>();
+        mResponseHeadersMap =
+                ImmutableMap.<String, List<String>>builder()
+                        .build()
+                        .of(
+                                "header_1",
+                                ImmutableList.of("h1_value1", "h1_value2"),
+                                "header_2",
+                                ImmutableList.of("h2_value1", "h2_value2"));
         mCacheEntry =
                 DBCacheEntry.builder()
                         .setUrl(mUrl.toString())
                         .setResponseBody(mBody)
+                        .setResponseHeaders(mResponseHeadersMap)
                         .setCreationTimestamp(Instant.now())
                         .setMaxAgeSeconds(mMaxAgeSeconds)
                         .build();
@@ -110,7 +120,7 @@ public class FledgeHttpCacheTest {
 
     @Test
     public void test_CachePutEntry_Succeeds() {
-        mCache.put(mUrl, mBody, mCachingPropertiesMap);
+        mCache.put(mUrl, mBody, mCachingPropertiesMap, mResponseHeadersMap);
         verify(mCacheEntryDaoMock).persistCacheEntry(mCacheEntryArgumentCaptor.capture());
         assertEquals(
                 "Cached key should have been same",
@@ -120,6 +130,10 @@ public class FledgeHttpCacheTest {
                 "Cached body should have been same",
                 mBody,
                 mCacheEntryArgumentCaptor.getValue().getResponseBody());
+        assertEquals(
+                "Cached response headers should have been the same",
+                mResponseHeadersMap,
+                mCacheEntryArgumentCaptor.getValue().getResponseHeaders());
         verify(mObserver).update(HttpCache.CacheEventType.PUT);
     }
 
@@ -128,7 +142,7 @@ public class FledgeHttpCacheTest {
         List<String> skipCacheProperties = ImmutableList.of(PROPERTY_NO_CACHE);
         Map<String, List<String>> skipCacheMap =
                 ImmutableMap.of(HttpHeaders.CACHE_CONTROL, skipCacheProperties);
-        mCache.put(mUrl, mBody, skipCacheMap);
+        mCache.put(mUrl, mBody, skipCacheMap, mResponseHeadersMap);
         verify(mCacheEntryDaoMock, times(0)).persistCacheEntry(any(DBCacheEntry.class));
         verify(mObserver, never()).update(HttpCache.CacheEventType.PUT);
     }
@@ -138,7 +152,7 @@ public class FledgeHttpCacheTest {
         List<String> skipCacheProperties = ImmutableList.of(PROPERTY_NO_STORE);
         Map<String, List<String>> skipCacheMap =
                 ImmutableMap.of(HttpHeaders.CACHE_CONTROL, skipCacheProperties);
-        mCache.put(mUrl, mBody, skipCacheMap);
+        mCache.put(mUrl, mBody, skipCacheMap, mResponseHeadersMap);
         verify(mCacheEntryDaoMock, times(0)).persistCacheEntry(any(DBCacheEntry.class));
         verify(mObserver, never()).update(HttpCache.CacheEventType.PUT);
     }
@@ -199,7 +213,7 @@ public class FledgeHttpCacheTest {
                 ImmutableList.of(PROPERTY_MAX_AGE + PROPERTY_MAX_AGE_SEPARATOR + reallyLongMaxAge);
         Map<String, List<String>> cachePropertiesMap =
                 ImmutableMap.of(HttpHeaders.CACHE_CONTROL, maxCacheAgeProperties);
-        mCache.put(mUrl, mBody, cachePropertiesMap);
+        mCache.put(mUrl, mBody, cachePropertiesMap, mResponseHeadersMap);
         verify(mCacheEntryDaoMock).persistCacheEntry(mCacheEntryArgumentCaptor.capture());
         assertEquals(
                 "The max age should not have been more than default max age",
@@ -214,7 +228,7 @@ public class FledgeHttpCacheTest {
                 ImmutableList.of(PROPERTY_MAX_AGE + PROPERTY_MAX_AGE_SEPARATOR + reallySmallMaxAge);
         Map<String, List<String>> cachePropertiesMap =
                 ImmutableMap.of(HttpHeaders.CACHE_CONTROL, maxCacheAgeProperties);
-        mCache.put(mUrl, mBody, cachePropertiesMap);
+        mCache.put(mUrl, mBody, cachePropertiesMap, mResponseHeadersMap);
         verify(mCacheEntryDaoMock).persistCacheEntry(mCacheEntryArgumentCaptor.capture());
         assertEquals(
                 "The max age should have been set to value in the request headers",
@@ -227,7 +241,7 @@ public class FledgeHttpCacheTest {
         List<String> maxCacheAgeProperties = ImmutableList.of("garbled-max-age-param=2000ABC");
         Map<String, List<String>> cachePropertiesMap =
                 ImmutableMap.of(HttpHeaders.CACHE_CONTROL, maxCacheAgeProperties);
-        mCache.put(mUrl, mBody, cachePropertiesMap);
+        mCache.put(mUrl, mBody, cachePropertiesMap, mResponseHeadersMap);
         verify(mCacheEntryDaoMock).persistCacheEntry(mCacheEntryArgumentCaptor.capture());
         assertEquals(
                 "Cached entry max age does not match default",
@@ -237,7 +251,7 @@ public class FledgeHttpCacheTest {
 
     @Test
     public void test_CacheE2ESetDefaultMaxAge_MissingMaxAge() {
-        mCache.put(mUrl, mBody, Collections.emptyMap());
+        mCache.put(mUrl, mBody, Collections.emptyMap(), mResponseHeadersMap);
         verify(mCacheEntryDaoMock).persistCacheEntry(mCacheEntryArgumentCaptor.capture());
         assertEquals(
                 "Cache entry max age does not match default",
@@ -254,7 +268,7 @@ public class FledgeHttpCacheTest {
                         .getCacheEntryDao();
         FledgeHttpCache cache =
                 new FledgeHttpCache(realDao, mExecutorService, MAX_AGE_SECONDS, MAX_ENTRIES);
-        cache.put(mUrl, mBody, mCachingPropertiesMap);
+        cache.put(mUrl, mBody, mCachingPropertiesMap, mResponseHeadersMap);
         assertEquals("Cache should have persisted one entry", 1, cache.getCachedEntriesCount());
         assertEquals(
                 "Cached response does not match original",
@@ -275,7 +289,7 @@ public class FledgeHttpCacheTest {
                 ImmutableList.of(PROPERTY_MAX_AGE + PROPERTY_MAX_AGE_SEPARATOR + reallySmallMaxAge);
         Map<String, List<String>> cachePropertiesMap =
                 ImmutableMap.of(HttpHeaders.CACHE_CONTROL, maxCacheAgeProperties);
-        cache.put(mUrl, mBody, cachePropertiesMap);
+        cache.put(mUrl, mBody, cachePropertiesMap, mResponseHeadersMap);
         assertEquals("Cache should have persisted one entry", 1, cache.getCachedEntriesCount());
         assertNull("Entries past their max-age should not be fetched", cache.get(mUrl));
     }

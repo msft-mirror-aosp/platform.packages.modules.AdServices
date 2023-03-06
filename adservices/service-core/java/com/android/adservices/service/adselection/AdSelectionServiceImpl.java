@@ -35,8 +35,12 @@ import android.adservices.adselection.AdSelectionFromOutcomesInput;
 import android.adservices.adselection.AdSelectionInput;
 import android.adservices.adselection.AdSelectionOverrideCallback;
 import android.adservices.adselection.AdSelectionService;
+import android.adservices.adselection.RemoveAdCounterHistogramOverrideInput;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
+import android.adservices.adselection.ReportInteractionCallback;
+import android.adservices.adselection.ReportInteractionInput;
+import android.adservices.adselection.SetAdCounterHistogramOverrideInput;
 import android.adservices.adselection.SetAppInstallAdvertisersCallback;
 import android.adservices.adselection.SetAppInstallAdvertisersInput;
 import android.adservices.adselection.UpdateAdCounterHistogramCallback;
@@ -46,25 +50,30 @@ import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CallerMetadata;
 import android.annotation.NonNull;
 import android.content.Context;
+import android.os.Build;
 import android.os.RemoteException;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.data.adselection.AppInstallDao;
+import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.common.AdServicesHttpsClient;
+import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.CallingAppUidSupplier;
 import com.android.adservices.service.common.CallingAppUidSupplierBinderImpl;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
-import com.android.adservices.service.common.FledgeServiceFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
+import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.AdSelectionOverrider;
 import com.android.adservices.service.devapi.DevContext;
@@ -86,9 +95,12 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
  *
  * @hide
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
+    @NonNull private final AppInstallDao mAppInstallDao;
     @NonNull private final CustomAudienceDao mCustomAudienceDao;
     @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
     @NonNull private final ExecutorService mLightweightExecutor;
@@ -100,7 +112,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     @NonNull private final Flags mFlags;
     @NonNull private final CallingAppUidSupplier mCallingAppUidSupplier;
     @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
-    @NonNull private final FledgeServiceFilter mFledgeServiceFilter;
+    @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
 
     private static final String API_NOT_AUTHORIZED_MSG =
             "This API is not enabled for the given app because either dev options are disabled or"
@@ -109,6 +121,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     @VisibleForTesting
     public AdSelectionServiceImpl(
             @NonNull AdSelectionEntryDao adSelectionEntryDao,
+            @NonNull AppInstallDao appInstallDao,
             @NonNull CustomAudienceDao customAudienceDao,
             @NonNull AdServicesHttpsClient adServicesHttpsClient,
             @NonNull DevContextFilter devContextFilter,
@@ -120,9 +133,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull Flags flags,
             @NonNull CallingAppUidSupplier callingAppUidSupplier,
             @NonNull FledgeAuthorizationFilter fledgeAuthorizationFilter,
-            @NonNull FledgeServiceFilter fledgeServiceFilter) {
+            @NonNull AdSelectionServiceFilter adSelectionServiceFilter) {
         Objects.requireNonNull(context, "Context must be provided.");
         Objects.requireNonNull(adSelectionEntryDao);
+        Objects.requireNonNull(appInstallDao);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(devContextFilter);
@@ -133,6 +147,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         Objects.requireNonNull(flags);
 
         mAdSelectionEntryDao = adSelectionEntryDao;
+        mAppInstallDao = appInstallDao;
         mCustomAudienceDao = customAudienceDao;
         mAdServicesHttpsClient = adServicesHttpsClient;
         mDevContextFilter = devContextFilter;
@@ -144,7 +159,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         mFlags = flags;
         mCallingAppUidSupplier = callingAppUidSupplier;
         mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
-        mFledgeServiceFilter = fledgeServiceFilter;
+        mAdSelectionServiceFilter = adSelectionServiceFilter;
     }
 
     /** Creates a new instance of {@link AdSelectionServiceImpl}. */
@@ -156,6 +171,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     private AdSelectionServiceImpl(@NonNull Context context) {
         this(
                 AdSelectionDatabase.getInstance(context).adSelectionEntryDao(),
+                SharedStorageDatabase.getInstance(context).appInstallDao(),
                 CustomAudienceDatabase.getInstance(context).customAudienceDao(),
                 new AdServicesHttpsClient(
                         AdServicesExecutors.getBlockingExecutor(),
@@ -169,7 +185,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 FlagsFactory.getFlags(),
                 CallingAppUidSupplierBinderImpl.create(),
                 FledgeAuthorizationFilter.create(context, AdServicesLoggerImpl.getInstance()),
-                new FledgeServiceFilter(
+                new AdSelectionServiceFilter(
                         context,
                         ConsentManager.getInstance(context),
                         FlagsFactory.getFlags(),
@@ -225,7 +241,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 inputParams,
                                 callback,
                                 adSelectionExecutionLogger,
-                                mFledgeServiceFilter,
+                                mAdSelectionServiceFilter,
                                 callingUid);
                     } else {
                         runOnDeviceAdSelection(
@@ -233,7 +249,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 inputParams,
                                 callback,
                                 adSelectionExecutionLogger,
-                                mFledgeServiceFilter,
+                                mAdSelectionServiceFilter,
                                 callingUid);
                     }
                 });
@@ -244,7 +260,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull AdSelectionInput inputParams,
             @NonNull AdSelectionCallback callback,
             @NonNull AdSelectionExecutionLogger adSelectionExecutionLogger,
-            @NonNull FledgeServiceFilter fledgeServiceFilter,
+            @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
             final int callerUid) {
         OnDeviceAdSelectionRunner runner =
                 new OnDeviceAdSelectionRunner(
@@ -259,7 +275,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         devContext,
                         mFlags,
                         adSelectionExecutionLogger,
-                        fledgeServiceFilter,
+                        adSelectionServiceFilter,
                         callerUid);
         runner.runAdSelection(inputParams, callback);
     }
@@ -269,7 +285,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull AdSelectionInput inputParams,
             @NonNull AdSelectionCallback callback,
             @NonNull AdSelectionExecutionLogger adSelectionExecutionLogger,
-            @NonNull FledgeServiceFilter fledgeServiceFilter,
+            @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
             int callerUid) {
         TrustedServerAdSelectionRunner runner =
                 new TrustedServerAdSelectionRunner(
@@ -284,7 +300,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         devContext,
                         mFlags,
                         adSelectionExecutionLogger,
-                        fledgeServiceFilter,
+                        adSelectionServiceFilter,
                         callerUid);
         runner.runAdSelection(inputParams, callback);
     }
@@ -342,7 +358,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                     devContext,
                                     mContext,
                                     mFlags,
-                                    mFledgeServiceFilter,
+                                    mAdSelectionServiceFilter,
                                     callingUid);
                     runner.runOutcomeSelection(inputParams, callback);
                 });
@@ -381,9 +397,45 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         devContext,
                         mAdServicesLogger,
                         mFlags,
-                        mFledgeServiceFilter,
+                        mAdSelectionServiceFilter,
                         callingUid);
         reporter.reportImpression(requestParams, callback);
+    }
+
+    @Override
+    public void reportInteraction(
+            @NonNull ReportInteractionInput inputParams,
+            @NonNull ReportInteractionCallback callback) {
+        int apiName = AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
+
+        // Caller permissions must be checked in the binder thread, before anything else
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
+
+        try {
+            Objects.requireNonNull(inputParams);
+            Objects.requireNonNull(callback);
+        } catch (NullPointerException exception) {
+            mAdServicesLogger.logFledgeApiCallStats(apiName, STATUS_INVALID_ARGUMENT, 0);
+            // Rethrow because we want to fail fast
+            throw exception;
+        }
+
+        int callerUid = getCallingUid(apiName);
+
+        InteractionReporter interactionReporter =
+                new InteractionReporter(
+                        mContext,
+                        mAdSelectionEntryDao,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutor,
+                        mBackgroundExecutor,
+                        mAdServicesLogger,
+                        mFlags,
+                        mAdSelectionServiceFilter,
+                        callerUid,
+                        mFledgeAuthorizationFilter);
+
+        interactionReporter.reportInteraction(inputParams, callback);
     }
 
     @Override
@@ -405,9 +457,16 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             throw exception;
         }
 
-        // TODO(b/265469079): Add Backend, and move logging/callback to backend
-        mAdServicesLogger.logFledgeApiCallStats(apiName, STATUS_SUCCESS, 0);
-        callback.onSuccess();
+        AppInstallAdvertisersSetter setter =
+                new AppInstallAdvertisersSetter(
+                        mAppInstallDao,
+                        mBackgroundExecutor,
+                        mAdServicesLogger,
+                        mFlags,
+                        mAdSelectionServiceFilter,
+                        ConsentManager.getInstance(mContext),
+                        getCallingUid(apiName));
+        setter.setAppInstallAdvertisers(request, callback);
     }
 
     @Override
@@ -751,6 +810,90 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         callingUid);
 
         overrider.removeAllOverridesForAdSelectionFromOutcomes(callback);
+    }
+
+    @Override
+    public void setAdCounterHistogramOverride(
+            @NonNull SetAdCounterHistogramOverrideInput inputParams,
+            @NonNull AdSelectionOverrideCallback callback) {
+        int apiName = AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN;
+
+        // Caller permissions must be checked in the binder thread, before anything else
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
+
+        try {
+            Objects.requireNonNull(inputParams);
+            Objects.requireNonNull(callback);
+        } catch (NullPointerException exception) {
+            mAdServicesLogger.logFledgeApiCallStats(apiName, STATUS_INVALID_ARGUMENT, 0);
+            // Rethrow because we want to fail fast
+            throw exception;
+        }
+
+        // TODO(b/265204820): Implement service
+        int status = STATUS_SUCCESS;
+        try {
+            callback.onSuccess();
+        } catch (RemoteException exception) {
+            status = STATUS_INTERNAL_ERROR;
+        } finally {
+            mAdServicesLogger.logFledgeApiCallStats(apiName, status, 0);
+        }
+    }
+
+    @Override
+    public void removeAdCounterHistogramOverride(
+            @NonNull RemoveAdCounterHistogramOverrideInput inputParams,
+            @NonNull AdSelectionOverrideCallback callback) {
+        int apiName = AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN;
+
+        // Caller permissions must be checked in the binder thread, before anything else
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
+
+        try {
+            Objects.requireNonNull(inputParams);
+            Objects.requireNonNull(callback);
+        } catch (NullPointerException exception) {
+            mAdServicesLogger.logFledgeApiCallStats(apiName, STATUS_INVALID_ARGUMENT, 0);
+            // Rethrow because we want to fail fast
+            throw exception;
+        }
+
+        // TODO(b/265204820): Implement service
+        int status = STATUS_SUCCESS;
+        try {
+            callback.onSuccess();
+        } catch (RemoteException exception) {
+            status = STATUS_INTERNAL_ERROR;
+        } finally {
+            mAdServicesLogger.logFledgeApiCallStats(apiName, status, 0);
+        }
+    }
+
+    @Override
+    public void resetAllAdCounterHistogramOverrides(@NonNull AdSelectionOverrideCallback callback) {
+        int apiName = AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN;
+
+        // Caller permissions must be checked in the binder thread, before anything else
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
+
+        try {
+            Objects.requireNonNull(callback);
+        } catch (NullPointerException exception) {
+            mAdServicesLogger.logFledgeApiCallStats(apiName, STATUS_INVALID_ARGUMENT, 0);
+            // Rethrow because we want to fail fast
+            throw exception;
+        }
+
+        // TODO(b/265204820): Implement service
+        int status = STATUS_SUCCESS;
+        try {
+            callback.onSuccess();
+        } catch (RemoteException exception) {
+            status = STATUS_INTERNAL_ERROR;
+        } finally {
+            mAdServicesLogger.logFledgeApiCallStats(apiName, status, 0);
+        }
     }
 
     /** Close down method to be invoked when the PPAPI process is shut down. */

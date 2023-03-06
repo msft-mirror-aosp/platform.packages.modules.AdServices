@@ -23,6 +23,7 @@ import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.data.measurement.MeasurementDbHelper;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -31,8 +32,10 @@ import java.util.Set;
 public final class DbTestUtil {
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final String DATABASE_NAME_FOR_TEST = "adservices_test.db";
+    private static final String MSMT_DATABASE_NAME_FOR_TEST = "adservices_msmt_test.db";
 
     private static DbHelper sSingleton;
+    private static MeasurementDbHelper sMsmtSingleton;
 
     /** Erases all data from the table rows */
     public static void deleteTable(String tableName) {
@@ -59,6 +62,20 @@ public final class DbTestUtil {
                                 DbHelper.CURRENT_DATABASE_VERSION);
             }
             return sSingleton;
+        }
+    }
+
+    public static MeasurementDbHelper getMeasurementDbHelperForTest() {
+        synchronized (MeasurementDbHelper.class) {
+            if (sMsmtSingleton == null) {
+                sMsmtSingleton =
+                        new MeasurementDbHelper(
+                                sContext,
+                                MSMT_DATABASE_NAME_FOR_TEST,
+                                MeasurementDbHelper.CURRENT_DATABASE_VERSION,
+                                getDbHelperForTest());
+            }
+            return sMsmtSingleton;
         }
     }
 
@@ -95,6 +112,12 @@ public final class DbTestUtil {
     /** Return true if the given index exists in the DB. */
     public static boolean doesIndexExist(SQLiteDatabase db, String index) {
         String query = "SELECT * FROM sqlite_master WHERE type='index' and name='" + index + "'";
+        Cursor cursor = db.rawQuery(query, null);
+        return cursor != null && cursor.getCount() > 0;
+    }
+
+    public static boolean doesTableExist(SQLiteDatabase db, String table) {
+        String query = "SELECT * FROM sqlite_master WHERE type='table' and name='" + table + "'";
         Cursor cursor = db.rawQuery(query, null);
         return cursor != null && cursor.getCount() > 0;
     }

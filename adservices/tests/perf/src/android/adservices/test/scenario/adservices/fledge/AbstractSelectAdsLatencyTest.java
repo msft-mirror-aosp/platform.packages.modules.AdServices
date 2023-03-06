@@ -25,6 +25,7 @@ import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.TrustedBiddingData;
+import android.adservices.test.scenario.adservices.utils.CompatTestUtils;
 import android.adservices.test.scenario.adservices.utils.SelectAdsFlagRule;
 import android.adservices.test.scenario.adservices.utils.StaticAdTechServerUtils;
 import android.content.Context;
@@ -37,14 +38,17 @@ import android.util.Log;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.compatibility.common.util.ShellUtils;
+import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.base.Ticker;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.io.CharStreams;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -52,7 +56,10 @@ import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -69,7 +76,6 @@ public class AbstractSelectAdsLatencyTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
-    private static final String PPAPI_PACKAGE = "com.google.android.adservices.api";
     protected static final int API_RESPONSE_TIMEOUT_SECONDS = 100;
     protected static final AdSelectionClient AD_SELECTION_CLIENT =
             new AdSelectionClient.Builder()
@@ -92,14 +98,26 @@ public class AbstractSelectAdsLatencyTest {
     // Per-test method rules, run in the given order.
     @Rule
     public RuleChain rules =
-            RuleChain.outerRule(new CleanPackageRule(PPAPI_PACKAGE))
-                    .around(new KillAppsRule(PPAPI_PACKAGE))
+            RuleChain.outerRule(new CleanPackageRule(CompatTestUtils.getAdServicesPackageName()))
+                    .around(new KillAppsRule(CompatTestUtils.getAdServicesPackageName()))
                     .around(new SelectAdsFlagRule());
 
     @BeforeClass
     public static void setupBeforeClass() {
         StaticAdTechServerUtils.warmupServers();
         sCustomAudiences = new ArrayList<>();
+        // Extra flags need to be set when test is executed on S- for service to run (e.g.
+        // to avoid invoking system-server related code).
+        if (!SdkLevel.isAtLeastT()) {
+            CompatTestUtils.setFlags();
+        }
+    }
+
+    @AfterClass
+    public static void tearDownAfterClass() throws Exception {
+        if (!SdkLevel.isAtLeastT()) {
+            CompatTestUtils.resetFlagsToDefault();
+        }
     }
 
     protected void runSelectAds(
@@ -155,7 +173,7 @@ public class AbstractSelectAdsLatencyTest {
     private ImmutableList<CustomAudience> readCustomAudiences(String fileName) throws Exception {
         ImmutableList.Builder<CustomAudience> customAudienceBuilder = ImmutableList.builder();
         InputStream is = ApplicationProvider.getApplicationContext().getAssets().open(fileName);
-        JSONArray customAudiencesJson = new JSONArray(new String(is.readAllBytes()));
+        JSONArray customAudiencesJson = new JSONArray(readString(is));
         is.close();
 
         for (int i = 0; i < customAudiencesJson.length(); i++) {
@@ -207,7 +225,7 @@ public class AbstractSelectAdsLatencyTest {
 
     private AdSelectionConfig readAdSelectionConfig(String fileName) throws Exception {
         InputStream is = ApplicationProvider.getApplicationContext().getAssets().open(fileName);
-        JSONObject adSelectionConfigJson = new JSONObject(new String(is.readAllBytes()));
+        JSONObject adSelectionConfigJson = new JSONObject(readString(is));
         JSONArray buyersJson = adSelectionConfigJson.getJSONArray("custom_audience_buyers");
         JSONObject perBuyerSignalsJson = adSelectionConfigJson.getJSONObject("per_buyer_signals");
         is.close();
@@ -257,5 +275,13 @@ public class AbstractSelectAdsLatencyTest {
                 + ": "
                 + elapsedMs
                 + " ms)";
+    }
+
+    private String readString(InputStream inputStream) throws IOException {
+        // readAllBytes() was added in API level 33. As a result, when this test executes on S-, we
+        // will need a workaround to process the InputStream.
+        return SdkLevel.isAtLeastT()
+                ? new String(inputStream.readAllBytes())
+                : CharStreams.toString(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
     }
 }

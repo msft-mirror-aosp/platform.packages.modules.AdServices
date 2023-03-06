@@ -19,7 +19,7 @@ package com.android.adservices.data.adselection;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
-import android.adservices.adselection.ReportInteractionInput;
+import android.adservices.adselection.ReportInteractionRequest;
 import android.net.Uri;
 
 import org.junit.Test;
@@ -28,8 +28,9 @@ public class DBRegisteredAdInteractionTest {
     public static final int AD_SELECTION_ID = 1;
     public static final String INTERACTION_KEY_CLICK = "CLICK";
 
-    @ReportInteractionInput.Destination
-    public static final int DESTINATION_SELLER = ReportInteractionInput.DESTINATION_SELLER;
+    @ReportInteractionRequest.ReportingDestination
+    public static final int DESTINATION_SELLER =
+            ReportInteractionRequest.FLAG_REPORTING_DESTINATION_SELLER;
 
     private static final String BASE_URI = "https://www.seller.com/";
     public static final Uri EVENT_REPORTING_URI = Uri.parse(BASE_URI + INTERACTION_KEY_CLICK);

@@ -106,6 +106,7 @@ public abstract class E2ETest {
         // Keys used to compare actual with expected output
         List<String> STRINGS = ImmutableList.of(
                 "attribution_destination",
+                "scheduled_report_time",
                 "source_event_id",
                 "trigger_data",
                 "source_type");
@@ -172,6 +173,7 @@ public abstract class E2ETest {
     }
 
     private interface ApiConfigKeys {
+        // Privacy params
         String RATE_LIMIT_MAX_ATTRIBUTIONS = "rate_limit_max_attributions";
         String NAVIGATION_SOURCE_TRIGGER_DATA_CARDINALITY =
                 "navigation_source_trigger_data_cardinality";
@@ -181,16 +183,28 @@ public abstract class E2ETest {
                 "max_destinations_per_source_site_reporting_origin";
         String RATE_LIMIT_MAX_SOURCE_REGISTRATION_REPORTING_ORIGINS =
                 "rate_limit_max_source_registration_reporting_origins";
+        // System health params
+        String MAX_SOURCES_PER_ORIGIN = "max_sources_per_origin";
+        String MAX_EVENT_LEVEL_REPORTS_PER_DESTINATION =
+                "max_event_level_reports_per_destination";
+        String MAX_AGGREGATABLE_REPORTS_PER_DESTINATION =
+                "max_aggregatable_reports_per_destination";
     }
 
-    public static class PrivacyParamsProvider {
+    public static class ParamsProvider {
+        // Privacy params
         private Integer mMaxAttributionPerRateLimitWindow;
         private Integer mNavigationTriggerDataCardinality;
         private Integer mMaxDistinctEnrollmentsPerPublisherXDestinationInAttribution;
         private Integer mMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource;
         private Integer mMaxDistinctEnrollmentsPerPublisherXDestinationInSource;
+        // System health params
+        private Integer mMaxSourcesPerPublisher;
+        private Integer mMaxEventReportsPerDestination;
+        private Integer mMaxAggregateReportsPerDestination;
 
-        public PrivacyParamsProvider(JSONObject json) throws JSONException {
+        public ParamsProvider(JSONObject json) throws JSONException {
+            // Privacy params
             if (!json.isNull(ApiConfigKeys.RATE_LIMIT_MAX_ATTRIBUTIONS)) {
                 mMaxAttributionPerRateLimitWindow = json.getInt(
                         ApiConfigKeys.RATE_LIMIT_MAX_ATTRIBUTIONS);
@@ -232,8 +246,29 @@ public abstract class E2ETest {
                         PrivacyParams
                                 .getMaxDistinctEnrollmentsPerPublisherXDestinationInSource();
             }
+            // System health params
+            if (!json.isNull(ApiConfigKeys.MAX_SOURCES_PER_ORIGIN)) {
+                mMaxSourcesPerPublisher = json.getInt(ApiConfigKeys.MAX_SOURCES_PER_ORIGIN);
+            } else {
+                mMaxSourcesPerPublisher = SystemHealthParams.getMaxSourcesPerPublisher();
+            }
+            if (!json.isNull(ApiConfigKeys.MAX_EVENT_LEVEL_REPORTS_PER_DESTINATION)) {
+                mMaxEventReportsPerDestination = json.getInt(
+                        ApiConfigKeys.MAX_EVENT_LEVEL_REPORTS_PER_DESTINATION);
+            } else {
+                mMaxEventReportsPerDestination =
+                        SystemHealthParams.getMaxEventReportsPerDestination();
+            }
+            if (!json.isNull(ApiConfigKeys.MAX_AGGREGATABLE_REPORTS_PER_DESTINATION)) {
+                mMaxAggregateReportsPerDestination = json.getInt(
+                        ApiConfigKeys.MAX_AGGREGATABLE_REPORTS_PER_DESTINATION);
+            } else {
+                mMaxAggregateReportsPerDestination =
+                        SystemHealthParams.getMaxAggregateReportsPerDestination();
+            }
         }
 
+        // Privacy params
         public Integer getMaxAttributionPerRateLimitWindow() {
             return mMaxAttributionPerRateLimitWindow;
         }
@@ -252,6 +287,19 @@ public abstract class E2ETest {
 
         public Integer getMaxDistinctEnrollmentsPerPublisherXDestinationInSource() {
             return mMaxDistinctEnrollmentsPerPublisherXDestinationInSource;
+        }
+
+        // System health params
+        public Integer getMaxSourcesPerPublisher() {
+            return mMaxSourcesPerPublisher;
+        }
+
+        public Integer getMaxEventReportsPerDestination() {
+            return mMaxEventReportsPerDestination;
+        }
+
+        public Integer getMaxAggregateReportsPerDestination() {
+            return mMaxAggregateReportsPerDestination;
         }
     }
 
@@ -344,8 +392,10 @@ public abstract class E2ETest {
     }
 
     static void clearDatabase() {
-        SQLiteDatabase db = DbTestUtil.getDbHelperForTest().getWritableDatabase();
+        SQLiteDatabase db = DbTestUtil.getMeasurementDbHelperForTest().getWritableDatabase();
         emptyTables(db);
+
+        DbTestUtil.getDbHelperForTest().getWritableDatabase().delete("enrollment_data", null, null);
     }
 
     // The 'name' parameter is needed for the JUnit parameterized test, although it's ostensibly
@@ -729,7 +779,7 @@ public abstract class E2ETest {
 
     protected static String getDatastoreState() {
         StringBuilder result = new StringBuilder();
-        SQLiteDatabase db = DbTestUtil.getDbHelperForTest().getWritableDatabase();
+        SQLiteDatabase db = DbTestUtil.getMeasurementDbHelperForTest().getWritableDatabase();
         List<String> tableNames =
                 ImmutableList.of(
                         "msmt_source",
@@ -737,11 +787,16 @@ public abstract class E2ETest {
                         "msmt_attribution",
                         "msmt_event_report",
                         "msmt_aggregate_report",
-                        "enrollment_data",
                         "msmt_async_registration_contract");
         for (String tableName : tableNames) {
             result.append("\n" + tableName + ":\n");
             result.append(getTableState(db, tableName));
+        }
+        SQLiteDatabase enrollmentDb = DbTestUtil.getDbHelperForTest().getWritableDatabase();
+        List<String> enrollmentTables = ImmutableList.of("enrollment_data");
+        for (String tableName : enrollmentTables) {
+            result.append("\n" + tableName + ":\n");
+            result.append(getTableState(enrollmentDb, tableName));
         }
         return result.toString();
     }
@@ -789,7 +844,13 @@ public abstract class E2ETest {
         return expiryTimes;
     }
 
-    private static Set<Action> maybeAddEventReportingJobTimes(
+    private static long roundSecondsToWholeDays(long seconds) {
+        long remainder = seconds % TimeUnit.DAYS.toSeconds(1);
+        boolean roundUp = remainder >= TimeUnit.DAYS.toSeconds(1) / 2L;
+        return seconds - remainder + (roundUp ? TimeUnit.DAYS.toSeconds(1) : 0);
+    }
+
+    private static Set<Action> maybeAddEventReportingJobTimes(boolean isEventType,
             long sourceTime, Collection<List<Map<String, List<String>>>> responseHeaders)
             throws JSONException {
         Set<Action> reportingJobsActions = new HashSet<>();
@@ -801,6 +862,10 @@ public abstract class E2ETest {
             } else if (expiry < PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS) {
                 validExpiry = PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
             }
+            if (isEventType) {
+                validExpiry = roundSecondsToWholeDays(validExpiry);
+            }
+
             long jobTime = sourceTime + 1000 * validExpiry + 3600000L;
 
             reportingJobsActions.add(new EventReportingJob(jobTime));
@@ -821,7 +886,7 @@ public abstract class E2ETest {
      *
      * @return A collection of Object arrays, each with
      * {@code [Collection<Object> actions, ReportObjects expectedOutput,
-     * PrivacyParamsProvider privacyParamsProvider, String name]}
+     * ParamsProvider paramsProvider, String name]}
      */
     private static Collection<Object[]> getTestCasesFrom(List<InputStream> inputStreams,
             String[] filenames, Function<String, String> preprocessor)
@@ -856,9 +921,9 @@ public abstract class E2ETest {
                     ? new JSONObject()
                     : testObj.getJSONObject(TestFormatJsonMapping.API_CONFIG_KEY);
 
-            PrivacyParamsProvider privacyParamsProvider = new PrivacyParamsProvider(ApiConfigObj);
+            ParamsProvider paramsProvider = new ParamsProvider(ApiConfigObj);
 
-            testCases.add(new Object[] {actions, expectedOutput, privacyParamsProvider, name});
+            testCases.add(new Object[] {actions, expectedOutput, paramsProvider, name});
         }
 
         return testCases;
@@ -878,6 +943,7 @@ public abstract class E2ETest {
                 // Add corresponding reporting job time actions
                 eventReportingJobActions.addAll(
                         maybeAddEventReportingJobTimes(
+                                sourceRegistration.mRegistrationRequest.getInputEvent() == null,
                                 sourceRegistration.mTimestamp,
                                 sourceRegistration.mUriToResponseHeadersMap.values()));
             }
@@ -893,7 +959,10 @@ public abstract class E2ETest {
                 // Add corresponding reporting job time actions
                 eventReportingJobActions.addAll(
                         maybeAddEventReportingJobTimes(
-                                webSource.mTimestamp, webSource.mUriToResponseHeadersMap.values()));
+                                webSource.mRegistrationRequest.getSourceRegistrationRequest()
+                                        .getInputEvent() == null,
+                                webSource.mTimestamp,
+                                webSource.mUriToResponseHeadersMap.values()));
             }
         }
 
@@ -1045,7 +1114,6 @@ public abstract class E2ETest {
         db.delete("msmt_event_report", null, null);
         db.delete("msmt_attribution", null, null);
         db.delete("msmt_aggregate_report", null, null);
-        db.delete("enrollment_data", null, null);
         db.delete("msmt_async_registration_contract", null, null);
     }
 

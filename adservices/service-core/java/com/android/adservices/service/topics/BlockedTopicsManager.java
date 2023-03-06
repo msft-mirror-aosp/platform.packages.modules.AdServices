@@ -18,10 +18,12 @@ package com.android.adservices.service.topics;
 
 import android.annotation.NonNull;
 import android.app.adservices.AdServicesManager;
-import android.app.adservices.consent.ConsentParcel;
 import android.app.adservices.topics.TopicParcel;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.topics.Topic;
@@ -38,6 +40,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 /** Class to manage blocked {@link Topic}s. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class BlockedTopicsManager {
     private static BlockedTopicsManager sSingleton;
     @VisibleForTesting static final String SHARED_PREFS_BLOCKED_TOPICS = "PPAPI_Blocked_Topics";
@@ -55,6 +59,9 @@ public class BlockedTopicsManager {
             "Failed to remove the blocked topic.";
     private static final String ERROR_MESSAGE_GET_BLOCKED_TOPICS =
             "Failed to get all blocked topics.";
+
+    private static final String ERROR_MESSAGE_CLEAR_BLOCKED_TOPICS_IN_SYSTEM_SERVER =
+            "Failed to clear all blocked topics in system server.";
     private static final Object LOCK = new Object();
 
     private final TopicsDao mTopicsDao;
@@ -65,7 +72,7 @@ public class BlockedTopicsManager {
     BlockedTopicsManager(
             @NonNull TopicsDao topicsDao,
             @NonNull AdServicesManager adServicesManager,
-            @ConsentParcel.ConsentApiType int blockedTopicsSourceOfTruth) {
+            @Flags.ConsentSourceOfTruth int blockedTopicsSourceOfTruth) {
         mTopicsDao = topicsDao;
         mAdServicesManager = adServicesManager;
         mBlockedTopicsSourceOfTruth = blockedTopicsSourceOfTruth;
@@ -118,7 +125,8 @@ public class BlockedTopicsManager {
                         break;
                     default:
                         throw new RuntimeException(
-                                ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                                ConsentConstants
+                                        .ERROR_MESSAGE_INVALID_BLOCKED_TOPICS_SOURCE_OF_TRUTH);
                 }
             } catch (RuntimeException e) {
                 throw new RuntimeException(ERROR_MESSAGE_RECORD_BLOCKED_TOPIC, e);
@@ -150,7 +158,8 @@ public class BlockedTopicsManager {
                         break;
                     default:
                         throw new RuntimeException(
-                                ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                                ConsentConstants
+                                        .ERROR_MESSAGE_INVALID_BLOCKED_TOPICS_SOURCE_OF_TRUTH);
                 }
             } catch (RuntimeException e) {
                 throw new RuntimeException(ERROR_MESSAGE_REMOVE_BLOCKED_TOPIC);
@@ -179,10 +188,40 @@ public class BlockedTopicsManager {
                                 .collect(Collectors.toList());
                     default:
                         throw new RuntimeException(
-                                ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                                ConsentConstants
+                                        .ERROR_MESSAGE_INVALID_BLOCKED_TOPICS_SOURCE_OF_TRUTH);
                 }
             } catch (RuntimeException e) {
                 throw new RuntimeException(ERROR_MESSAGE_GET_BLOCKED_TOPICS);
+            }
+        }
+    }
+
+    /**
+     * Clear preserved blocked topics in system server when the blocked topic source of truth
+     * contains SYSTEM_SERVER
+     */
+    public void clearAllBlockedTopicsInSystemServiceIfNeeded() {
+        synchronized (LOCK) {
+            try {
+                switch (mBlockedTopicsSourceOfTruth) {
+                    case Flags.PPAPI_ONLY:
+                        // Return directly. PPAPI data is handled by
+                        // mCacheManager.clearAllTopicsData() and this method is to only clear
+                        // preserved blocked topics in system server.
+                        break;
+                    case Flags.SYSTEM_SERVER_ONLY:
+                        // Intentional fallthrough
+                    case Flags.PPAPI_AND_SYSTEM_SERVER:
+                        mAdServicesManager.clearAllBlockedTopics();
+                        break;
+                    default:
+                        throw new RuntimeException(
+                                ConsentConstants
+                                        .ERROR_MESSAGE_INVALID_BLOCKED_TOPICS_SOURCE_OF_TRUTH);
+                }
+            } catch (RuntimeException e) {
+                throw new RuntimeException(ERROR_MESSAGE_CLEAR_BLOCKED_TOPICS_IN_SYSTEM_SERVER);
             }
         }
     }
@@ -199,10 +238,13 @@ public class BlockedTopicsManager {
             @NonNull Context context,
             @NonNull TopicsDao topicsDao,
             @NonNull AdServicesManager adServicesManager,
-            @ConsentParcel.ConsentApiType int blockedTopicsSourceOfTruth) {
+            @Flags.ConsentSourceOfTruth int blockedTopicsSourceOfTruth) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(topicsDao);
-        Objects.requireNonNull(adServicesManager);
+
+        if (blockedTopicsSourceOfTruth != Flags.PPAPI_ONLY) {
+            Objects.requireNonNull(adServicesManager);
+        }
 
         switch (blockedTopicsSourceOfTruth) {
             case Flags.PPAPI_ONLY:

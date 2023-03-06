@@ -27,6 +27,8 @@ import android.util.Log;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.AdServicesCommon;
+
 import java.util.List;
 
 /** Class to place Adservices CTS related helper method. */
@@ -47,25 +49,8 @@ public class AdservicesCtsHelper {
         final List<ResolveInfo> resolveInfos =
                 context.getPackageManager()
                         .queryIntentServices(intent, PackageManager.MATCH_SYSTEM_ONLY);
-
-        if (resolveInfos == null || resolveInfos.isEmpty()) {
-            Log.e(
-                    logTag,
-                    "Failed to find resolveInfo for adServices service. Intent action: "
-                            + TOPICS_SERVICE_NAME);
-            return null;
-        }
-
-        if (resolveInfos.size() > 1) {
-            Log.e(
-                    logTag,
-                    String.format(
-                            "Found multiple services (%1$s) for the same intent action (%2$s)",
-                            TOPICS_SERVICE_NAME, resolveInfos));
-            return null;
-        }
-
-        final ServiceInfo serviceInfo = resolveInfos.get(0).serviceInfo;
+        final ServiceInfo serviceInfo =
+                AdServicesCommon.resolveAdServicesService(resolveInfos, TOPICS_SERVICE_NAME);
         if (serviceInfo == null) {
             Log.e(logTag, "Failed to find serviceInfo for adServices service");
             return null;
@@ -83,6 +68,7 @@ public class AdservicesCtsHelper {
         final Instrumentation inst = InstrumentationRegistry.getInstrumentation();
         PackageManager pm = inst.getContext().getPackageManager();
         return !pm.hasSystemFeature(PackageManager.FEATURE_WATCH)
-                && !pm.hasSystemFeature(PackageManager.FEATURE_AUTOMOTIVE);
+                && !pm.hasSystemFeature(PackageManager.FEATURE_AUTOMOTIVE)
+                && !pm.hasSystemFeature(PackageManager.FEATURE_LEANBACK);
     }
 }

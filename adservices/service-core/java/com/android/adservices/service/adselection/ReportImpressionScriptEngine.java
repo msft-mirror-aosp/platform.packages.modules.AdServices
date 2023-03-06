@@ -26,6 +26,7 @@ import static com.google.common.util.concurrent.Futures.transform;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.common.AdSelectionSignals;
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.content.Context;
 import android.net.Uri;
 
@@ -97,61 +98,58 @@ public class ReportImpressionScriptEngine {
                     + " interaction_reporting_uri});\n"
                     + "}";
 
+    public static final String ADD_INTERACTION_REPORTING_URIS_TO_RESULT_JS =
+            "if(results.hasOwnProperty('results')) {\n"
+                    + "    if(typeof interaction_reporting_uris !== 'undefined') {\n"
+                    + "        results['results']['interaction_reporting_uris'] = "
+                    + "interaction_reporting_uris\n"
+                    + "    }\n"
+                    + "}";
+
     public static final String REPORT_RESULT_ENTRY_JS =
             "function "
                     + REPORT_RESULT_ENTRY_NAME
                     + "(ad_selection_config, render_uri, bid, contextual_signals) {\n"
                     + "    let results = reportResult(ad_selection_config, render_uri, bid,"
-                    + " contextual_signals);\n"
-                    + "\n"
-                    + "if(results.hasOwnProperty('results'))\n"
-                    + "{\n"
-                    + "    results['results']['interaction_reporting_uris'] ="
-                    + " interaction_reporting_uris\n"
-                    + "}\n"
-                    + "    return results;\n"
-                    + "}";
+                    + " contextual_signals);\n";
     public static final String REPORT_WIN_ENTRY_JS =
             "function "
                     + REPORT_WIN_ENTRY_NAME
                     + "(ad_selection_signals, per_buyer_signals, signals_for_buyer"
                     + " ,contextual_signals, custom_audience_signals) {\n"
                     + "    let results = reportWin(ad_selection_signals, per_buyer_signals,"
-                    + " signals_for_buyer ,contextual_signals, custom_audience_signals);\n"
-                    + "\n"
-                    + "if(results.hasOwnProperty('results'))\n"
-                    + "{\n"
-                    + "    results['results']['interaction_reporting_uris'] ="
-                    + " interaction_reporting_uris\n"
-                    + "}\n"
-                    + "    return results;\n"
-                    + "}";
+                    + " signals_for_buyer ,contextual_signals, custom_audience_signals);\n";
+
+    public static final String RETURN_RESULT_JS = "return results;\n" + "}";
 
     private final JSScriptEngine mJsEngine;
     // Used for the Futures.transform calls to compose futures.
     private final Executor mExecutor = MoreExecutors.directExecutor();
     private final Supplier<Boolean> mEnforceMaxHeapSizeFeatureSupplier;
     private final Supplier<Long> mMaxHeapSizeBytesSupplier;
+    private final RegisterAdBeaconScriptEngineHelper mRegisterAdBeaconScriptEngineHelper;
 
     public ReportImpressionScriptEngine(
             Context context,
             Supplier<Boolean> enforceMaxHeapSizeFeatureSupplier,
-            Supplier<Long> maxHeapSizeBytesSupplier) {
+            Supplier<Long> maxHeapSizeBytesSupplier,
+            RegisterAdBeaconScriptEngineHelper registerAdBeaconScriptEngineHelper) {
         mJsEngine = JSScriptEngine.getInstance(context);
         mEnforceMaxHeapSizeFeatureSupplier = enforceMaxHeapSizeFeatureSupplier;
         mMaxHeapSizeBytesSupplier = maxHeapSizeBytesSupplier;
+        mRegisterAdBeaconScriptEngineHelper = registerAdBeaconScriptEngineHelper;
     }
 
     /**
-     * @return The result of invoking the {@code reportResult} function in the given {@code
-     *     decisionLogicJS} JS script for the {@code adSelectionConfig} bid, and signals provided.
-     *     Will return an empty Uri if the script fails for any reason.
      * @param decisionLogicJS Javascript containing the reportResult() function
      * @param adSelectionConfig Configuration object passed by the SDK containing various signals to
      *     be used in ad selection and reporting. See {@link AdSelectionConfig} for more details
      * @param renderUri URI to render the advert, is an input to the reportResult() function
      * @param bid Bid for the winning ad, is an input to the reportResult() function
      * @param contextualSignals another input to reportResult(), contains fields such as appName
+     * @return The result of invoking the {@code reportResult} function in the given {@code
+     *     decisionLogicJS} JS script for the {@code adSelectionConfig} bid, and signals provided.
+     *     Will return an empty Uri if the script fails for any reason.
      * @throws JSONException If any of the signals are not a valid JSON object.
      */
     public ListenableFuture<SellerReportingResult> reportResult(
@@ -179,17 +177,15 @@ public class ReportImpressionScriptEngine {
 
         return transform(
                 runReportingScript(
-                        injectReportingJs(decisionLogicJS, REPORT_RESULT_ENTRY_JS),
+                        mRegisterAdBeaconScriptEngineHelper.injectReportingJs(
+                                decisionLogicJS, REPORT_RESULT_ENTRY_JS),
                         REPORT_RESULT_ENTRY_NAME,
                         arguments),
-                this::handleReportResultOutput,
+                mRegisterAdBeaconScriptEngineHelper::handleReportResultOutput,
                 mExecutor);
     }
 
     /**
-     * @return The result of invoking the {@code reportResult} function in the given {@code
-     *     decisionLogicJS} JS script for the {@code adSelectionConfig} bid, and signals provided.
-     *     Will return an empty Uri if the script fails for any reason.
      * @param biddingLogicJS Javascript containing the reportWin() function
      * @param adSelectionSignals One of the opaque fields of {@link AdSelectionConfig} that is an
      *     input to reportWin()
@@ -200,6 +196,9 @@ public class ReportImpressionScriptEngine {
      * @param contextualSignals another input to reportWin(), contains fields such as appName
      * @param customAudienceSignals an input to reportWin(), which contains information about the
      *     custom audience the winning ad originated from
+     * @return The result of invoking the {@code reportResult} function in the given {@code
+     *     decisionLogicJS} JS script for the {@code adSelectionConfig} bid, and signals provided.
+     *     Will return an empty Uri if the script fails for any reason.
      * @throws JSONException If any of the signals are not a valid JSON object.
      */
     public ListenableFuture<BuyerReportingResult> reportWin(
@@ -232,10 +231,11 @@ public class ReportImpressionScriptEngine {
 
         return transform(
                 runReportingScript(
-                        injectReportingJs(biddingLogicJS, REPORT_WIN_ENTRY_JS),
+                        mRegisterAdBeaconScriptEngineHelper.injectReportingJs(
+                                biddingLogicJS, REPORT_WIN_ENTRY_JS),
                         REPORT_WIN_ENTRY_NAME,
                         arguments),
-                this::handleReportWinOutput,
+                mRegisterAdBeaconScriptEngineHelper::handleReportWinOutput,
                 mExecutor);
     }
 
@@ -275,82 +275,6 @@ public class ReportImpressionScriptEngine {
         return mJsEngine.evaluate(jsScript, args, functionName, isolateSettings);
     }
 
-    /**
-     * Parses the output from the invocation of the {@code reportResult} JS function and converts it
-     * to a {@link SellerReportingResult}. The script output has been pre-parsed into an {@link
-     * ReportingScriptResult} object that will contain the script status code and JSONObject that
-     * holds the {@code reportingUri}, {@code signalsForBuyer}, and {@code
-     * interactionReportingUris}. The method will throw an exception if the status code is not
-     * {@link #JS_SCRIPT_STATUS_SUCCESS} or if there has been any problem parsing the JS response.
-     *
-     * @throws IllegalStateException If the result is unsuccessful or doesn't match the expected
-     *     structure.
-     */
-    @NonNull
-    private SellerReportingResult handleReportResultOutput(
-            @NonNull ReportingScriptResult reportResult) {
-        Objects.requireNonNull(reportResult);
-        LogUtil.v("Handling reporting result output");
-        Preconditions.checkState(
-                reportResult.status == JS_SCRIPT_STATUS_SUCCESS, "Report Result script failed!");
-        try {
-            AdSelectionSignals adSelectionSignals =
-                    AdSelectionSignals.fromString(
-                            getStringFromJson(
-                                    reportResult.results, SIGNALS_FOR_BUYER_RESPONSE_NAME));
-
-            Uri reportingUri =
-                    Uri.parse(getStringFromJson(reportResult.results, REPORTING_URI_RESPONSE_NAME));
-
-            JSONArray interactionUriJsonArray =
-                    reportResult.results.getJSONArray(INTERACTION_REPORTING_URIS_RESPONSE_NAME);
-
-            List<InteractionUriRegistrationInfo> interactionUriRegistrationInfoList =
-                    extractInteractionUriRegistrationInfoFromArray(interactionUriJsonArray);
-
-            return new SellerReportingResult(
-                    adSelectionSignals, reportingUri, interactionUriRegistrationInfoList);
-        } catch (Exception e) {
-            LogUtil.e(e.getMessage());
-            throw new IllegalStateException("Result does not match expected structure!");
-        }
-    }
-
-    /**
-     * Parses the output from the invocation of the {@code reportWin} JS function and convert it to
-     * a {@link BuyerReportingResult}. The script output has been pre-parsed into an {@link
-     * ReportingScriptResult} object that will contain the script status code and JSONObject that
-     * holds both {@code interactionReportingUris} and {@code reportingUri}. The method will throw
-     * an exception if the status code is not {@link #JS_SCRIPT_STATUS_SUCCESS} or if there has been
-     * any problem parsing the JS response.
-     *
-     * @throws IllegalStateException If the result is unsuccessful or doesn't match the expected
-     *     structure.
-     */
-    @NonNull
-    private BuyerReportingResult handleReportWinOutput(
-            @NonNull ReportingScriptResult reportResult) {
-        Objects.requireNonNull(reportResult);
-        LogUtil.v("Handling report win output");
-
-        Preconditions.checkState(
-                reportResult.status == JS_SCRIPT_STATUS_SUCCESS, "Report Result script failed!");
-        try {
-            Uri reportingUri =
-                    Uri.parse(getStringFromJson(reportResult.results, REPORTING_URI_RESPONSE_NAME));
-
-            JSONArray interactionUriJsonArray =
-                    reportResult.results.getJSONArray(INTERACTION_REPORTING_URIS_RESPONSE_NAME);
-
-            List<InteractionUriRegistrationInfo> interactionUriRegistrationInfoList =
-                    extractInteractionUriRegistrationInfoFromArray(interactionUriJsonArray);
-
-            return new BuyerReportingResult(reportingUri, interactionUriRegistrationInfoList);
-        } catch (Exception e) {
-            throw new IllegalStateException("Result does not match expected structure!");
-        }
-    }
-
     @NonNull
     private ReportingScriptResult parseReportingOutput(@NonNull String reportScriptResult) {
         Objects.requireNonNull(reportScriptResult);
@@ -371,27 +295,14 @@ public class ReportImpressionScriptEngine {
     }
 
     /**
-     * Creates the overall script to be evaluated by inserting the JS provided by buyer or seller
-     * into a larger script that contains the entry function as well as {@code registerAdBeacon}
-     *
-     * @param reportingJs JS provided by buyer or seller
-     * @param entryJS {@code REPORT_RESULT_ENTRY_JS} or {@code REPORT_WIN_ENTRY_JS}
-     * @return the overall script to be executed by the {@link JSScriptEngine}
-     */
-    @NonNull
-    private String injectReportingJs(@NonNull String reportingJs, @NonNull String entryJS) {
-        return String.format("%s\n%s\n%s", REGISTER_BEACON_JS, reportingJs, entryJS);
-    }
-
-    /**
      * Parses each entry of {@code interactionUriJsonArray} into an {@link
      * InteractionUriRegistrationInfo} object and adds it to the resulting list. Any entry that
      * fails to parse properly into an {@link InteractionUriRegistrationInfo} object will be skipped
      * and not added to the list.
      */
     @NonNull
-    private List<InteractionUriRegistrationInfo> extractInteractionUriRegistrationInfoFromArray(
-            JSONArray interactionUriJsonArray) {
+    private static List<InteractionUriRegistrationInfo>
+            extractInteractionUriRegistrationInfoFromArray(JSONArray interactionUriJsonArray) {
         ImmutableList.Builder<InteractionUriRegistrationInfo> interactionReportingUris =
                 ImmutableList.builder();
 
@@ -427,7 +338,7 @@ public class ReportImpressionScriptEngine {
         @NonNull private final AdSelectionSignals mSignalsForBuyer;
         @NonNull private final Uri mReportingUri;
 
-        @NonNull
+        @Nullable
         private final List<InteractionUriRegistrationInfo> mInteractionUriRegistrationInfos;
 
         SellerReportingResult(
@@ -458,7 +369,7 @@ public class ReportImpressionScriptEngine {
     static class BuyerReportingResult {
         @NonNull private final Uri mReportingUri;
 
-        @NonNull
+        @Nullable
         private final List<InteractionUriRegistrationInfo> mInteractionUriRegistrationInfos;
 
         BuyerReportingResult(
@@ -474,6 +385,189 @@ public class ReportImpressionScriptEngine {
 
         public List<InteractionUriRegistrationInfo> getInteractionReportingUris() {
             return mInteractionUriRegistrationInfos;
+        }
+    }
+
+    /**
+     * Interface that contains methods that are implemented differently depending on whether the
+     * {@code registerAdBeacon} feature is enabled.
+     */
+    public interface RegisterAdBeaconScriptEngineHelper {
+        /**
+         * Creates the overall script to be evaluated by inserting the JS provided by buyer or
+         * seller into a larger script that contains the entry function and reporting function.
+         *
+         * @param reportingJs JS provided by buyer or seller
+         * @param entryJS {@code REPORT_RESULT_ENTRY_JS} or {@code REPORT_WIN_ENTRY_JS}
+         * @return the overall script to be executed by the {@link JSScriptEngine}
+         */
+        String injectReportingJs(@NonNull String reportingJs, @NonNull String entryJS);
+
+        /**
+         * Parses the output from the invocation of the {@code reportWin} JS function and convert it
+         * to a {@link BuyerReportingResult}. The script output has been pre-parsed into an {@link
+         * ReportingScriptResult} object that will contain the script status code and JSONObject
+         * that holds both {@code interactionReportingUris} and {@code reportingUri}. The method
+         * will throw an exception if the status code is not {@link #JS_SCRIPT_STATUS_SUCCESS} or if
+         * there has been any problem parsing the JS response.
+         *
+         * @throws IllegalStateException If the result is unsuccessful or doesn't match the expected
+         *     structure.
+         */
+        BuyerReportingResult handleReportWinOutput(@NonNull ReportingScriptResult reportResult);
+
+        /**
+         * Parses the output from the invocation of the {@code reportResult} JS function and
+         * converts it to a {@link SellerReportingResult}. The script output has been pre-parsed
+         * into an {@link ReportingScriptResult} object that will contain the script status code and
+         * JSONObject that holds the {@code reportingUri}, {@code signalsForBuyer}, and {@code
+         * interactionReportingUris}. The method will throw an exception if the status code is not
+         * {@link #JS_SCRIPT_STATUS_SUCCESS} or if there has been any problem parsing the JS
+         * response.
+         *
+         * @throws IllegalStateException If the result is unsuccessful or doesn't match the expected
+         *     structure.
+         */
+        SellerReportingResult handleReportResultOutput(@NonNull ReportingScriptResult reportResult);
+    }
+
+    /**
+     * Implements {@link RegisterAdBeaconScriptEngineHelper} with the {@code registerAdBeacon}
+     * emabled.
+     */
+    public static class RegisterAdBeaconScriptEngineHelperEnabled
+            implements RegisterAdBeaconScriptEngineHelper {
+
+        @Override
+        public String injectReportingJs(@NonNull String reportingJs, @NonNull String entryJS) {
+            return String.format(
+                    "%s\n%s\n%s\n%s\n%s",
+                    REGISTER_BEACON_JS,
+                    reportingJs,
+                    entryJS,
+                    ADD_INTERACTION_REPORTING_URIS_TO_RESULT_JS,
+                    RETURN_RESULT_JS);
+        }
+
+        @Override
+        public BuyerReportingResult handleReportWinOutput(
+                @NonNull ReportingScriptResult reportResult) {
+            Objects.requireNonNull(reportResult);
+            LogUtil.v("Handling report win output");
+
+            Preconditions.checkState(
+                    reportResult.status == JS_SCRIPT_STATUS_SUCCESS,
+                    "Report Result script failed!");
+            try {
+                Uri reportingUri =
+                        Uri.parse(
+                                getStringFromJson(
+                                        reportResult.results, REPORTING_URI_RESPONSE_NAME));
+
+                JSONArray interactionUriJsonArray =
+                        reportResult.results.getJSONArray(INTERACTION_REPORTING_URIS_RESPONSE_NAME);
+
+                List<InteractionUriRegistrationInfo> interactionUriRegistrationInfoList =
+                        extractInteractionUriRegistrationInfoFromArray(interactionUriJsonArray);
+
+                return new BuyerReportingResult(reportingUri, interactionUriRegistrationInfoList);
+            } catch (Exception e) {
+                throw new IllegalStateException("Result does not match expected structure!");
+            }
+        }
+
+        @Override
+        public SellerReportingResult handleReportResultOutput(
+                @NonNull ReportingScriptResult reportResult) {
+            Objects.requireNonNull(reportResult);
+            LogUtil.v("Handling reporting result output");
+            Preconditions.checkState(
+                    reportResult.status == JS_SCRIPT_STATUS_SUCCESS,
+                    "Report Result script failed!");
+            try {
+                AdSelectionSignals adSelectionSignals =
+                        AdSelectionSignals.fromString(
+                                getStringFromJson(
+                                        reportResult.results, SIGNALS_FOR_BUYER_RESPONSE_NAME));
+
+                Uri reportingUri =
+                        Uri.parse(
+                                getStringFromJson(
+                                        reportResult.results, REPORTING_URI_RESPONSE_NAME));
+
+                JSONArray interactionUriJsonArray =
+                        reportResult.results.getJSONArray(INTERACTION_REPORTING_URIS_RESPONSE_NAME);
+
+                List<InteractionUriRegistrationInfo> interactionUriRegistrationInfoList =
+                        extractInteractionUriRegistrationInfoFromArray(interactionUriJsonArray);
+
+                return new SellerReportingResult(
+                        adSelectionSignals, reportingUri, interactionUriRegistrationInfoList);
+            } catch (Exception e) {
+                LogUtil.e(e.getMessage());
+                throw new IllegalStateException("Result does not match expected structure!");
+            }
+        }
+    }
+
+    /**
+     * Implements {@link RegisterAdBeaconScriptEngineHelper} with the {@code registerAdBeacon}
+     * disabled.
+     */
+    public static class RegisterAdBeaconScriptEngineHelperDisabled
+            implements RegisterAdBeaconScriptEngineHelper {
+
+        @Override
+        public String injectReportingJs(@NonNull String reportingJs, @NonNull String entryJS) {
+            return String.format("%s\n%s\n%s", reportingJs, entryJS, RETURN_RESULT_JS);
+        }
+
+        @Override
+        public BuyerReportingResult handleReportWinOutput(
+                @NonNull ReportingScriptResult reportResult) {
+            Objects.requireNonNull(reportResult);
+            LogUtil.v("Handling report win output");
+
+            Preconditions.checkState(
+                    reportResult.status == JS_SCRIPT_STATUS_SUCCESS,
+                    "Report Result script failed!");
+            try {
+                Uri reportingUri =
+                        Uri.parse(
+                                getStringFromJson(
+                                        reportResult.results, REPORTING_URI_RESPONSE_NAME));
+
+                // Do not parse beacons since flag is disabled
+                return new BuyerReportingResult(reportingUri, null);
+            } catch (Exception e) {
+                throw new IllegalStateException("Result does not match expected structure!");
+            }
+        }
+
+        @Override
+        public SellerReportingResult handleReportResultOutput(
+                @NonNull ReportingScriptResult reportResult) {
+            Objects.requireNonNull(reportResult);
+            LogUtil.v("Handling reporting result output");
+            Preconditions.checkState(
+                    reportResult.status == JS_SCRIPT_STATUS_SUCCESS,
+                    "Report Result script failed!");
+            try {
+                AdSelectionSignals adSelectionSignals =
+                        AdSelectionSignals.fromString(
+                                getStringFromJson(
+                                        reportResult.results, SIGNALS_FOR_BUYER_RESPONSE_NAME));
+
+                Uri reportingUri =
+                        Uri.parse(
+                                getStringFromJson(
+                                        reportResult.results, REPORTING_URI_RESPONSE_NAME));
+
+                return new SellerReportingResult(adSelectionSignals, reportingUri, null);
+            } catch (Exception e) {
+                LogUtil.e(e.getMessage());
+                throw new IllegalStateException("Result does not match expected structure!");
+            }
         }
     }
 }

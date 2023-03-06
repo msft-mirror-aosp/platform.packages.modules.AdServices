@@ -79,14 +79,14 @@ public abstract class AbstractDbIntegrationTest {
                         .startMocking();
         ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
 
-        SQLiteDatabase db = DbTestUtil.getDbHelperForTest().getWritableDatabase();
+        SQLiteDatabase db = DbTestUtil.getMeasurementDbHelperForTest().getWritableDatabase();
         emptyTables(db);
         seedTables(db, mInput);
     }
 
     @After
     public void after() {
-        SQLiteDatabase db = DbTestUtil.getDbHelperForTest().getWritableDatabase();
+        SQLiteDatabase db = DbTestUtil.getMeasurementDbHelperForTest().getWritableDatabase();
         emptyTables(db);
 
         mStaticMockSession.finishMocking();
@@ -105,10 +105,11 @@ public abstract class AbstractDbIntegrationTest {
     @Test
     public void runTest() throws DatastoreException, JSONException {
         runActionToTest();
-        SQLiteDatabase readerDb = DbTestUtil.getDbHelperForTest().getReadableDatabase();
+        SQLiteDatabase readerDb = DbTestUtil.getMeasurementDbHelperForTest().getReadableDatabase();
         DbState dbState = new DbState(readerDb);
         mOutput.sortAll();
         dbState.sortAll();
+
         Assert.assertTrue("Event report mismatch",
                 areEqual(mOutput.mEventReportList, dbState.mEventReportList));
         // Custom matching for AggregateReport due to non-deterministic reporting random number
@@ -300,10 +301,14 @@ public abstract class AbstractDbIntegrationTest {
                 source.getPublisherType());
         values.put(
                 MeasurementTables.SourceContract.APP_DESTINATION,
-                source.getAppDestination() == null ? null : source.getAppDestination().toString());
+                source.getAppDestinations() == null
+                ? null
+                : source.getAppDestinations().get(0).toString());
         values.put(
                 MeasurementTables.SourceContract.WEB_DESTINATION,
-                source.getWebDestination() == null ? null : source.getWebDestination().toString());
+                source.getWebDestinations() == null
+                ? null
+                : source.getWebDestinations().get(0).toString());
         values.put(MeasurementTables.SourceContract.AGGREGATE_SOURCE, source.getAggregateSource());
         values.put(MeasurementTables.SourceContract.ENROLLMENT_ID, source.getEnrollmentId());
         values.put(MeasurementTables.SourceContract.STATUS, source.getStatus());
@@ -381,7 +386,7 @@ public abstract class AbstractDbIntegrationTest {
                 report.getSourceEventId().getValue());
         values.put(MeasurementTables.EventReportContract.ENROLLMENT_ID, report.getEnrollmentId());
         values.put(MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
-                report.getAttributionDestination().toString());
+                report.getAttributionDestinations().get(0).toString());
         values.put(MeasurementTables.EventReportContract.REPORT_TIME, report.getReportTime());
         values.put(MeasurementTables.EventReportContract.TRIGGER_DATA,
                 report.getTriggerData().getValue());

@@ -27,6 +27,7 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.data.measurement.IMeasurementDao;
+import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -101,7 +102,34 @@ public final class DebugReportApiTest {
     public void testScheduleSourceNoisedDebugReport_success() throws Exception {
         runWithMocks(
                 () -> {
-                    Source source = SourceFixture.getValidSource();
+                    Source source =
+                            SourceFixture.getValidSourceBuilder()
+                                    .setEventId(SOURCE_EVENT_ID)
+                                    .setAdIdPermission(true)
+                                    .build();
+                    ExtendedMockito.doNothing()
+                            .when(
+                                    () ->
+                                            DebugReportingJobService.scheduleIfNeeded(
+                                                    any(), anyBoolean(), anyBoolean()));
+
+                    mDebugReportApi.scheduleSourceNoisedDebugReport(source, mMeasurementDao);
+                    verify(mMeasurementDao, times(1)).insertDebugReport(any());
+                });
+    }
+
+    @Test
+    public void testScheduleWebSourceNoisedDebugReport_success() throws Exception {
+        runWithMocks(
+                () -> {
+                    Source source =
+                            SourceFixture.getValidSourceBuilder()
+                                    .setEventId(SOURCE_EVENT_ID)
+                                    .setPublisherType(EventSurfaceType.WEB)
+                                    .setWebDestinations(
+                                            SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
+                                    .setArDebugPermission(true)
+                                    .build();
                     ExtendedMockito.doNothing()
                             .when(
                                     () ->
@@ -121,7 +149,29 @@ public final class DebugReportApiTest {
                     Source source =
                             SourceFixture.getValidSourceBuilder()
                                     .setEventId(SOURCE_EVENT_ID)
+                                    .setAdIdPermission(true)
                                     .setEnrollmentId("")
+                                    .build();
+                    ExtendedMockito.doNothing()
+                            .when(
+                                    () ->
+                                            DebugReportingJobService.scheduleIfNeeded(
+                                                    any(), anyBoolean(), anyBoolean()));
+
+                    mDebugReportApi.scheduleSourceNoisedDebugReport(source, mMeasurementDao);
+                    verify(mMeasurementDao, never()).insertDebugReport(any());
+                });
+    }
+
+    @Test
+    public void testScheduleSourceNoisedDebugReport_noAdIdPermission_dontSchedule()
+            throws Exception {
+        runWithMocks(
+                () -> {
+                    Source source =
+                            SourceFixture.getValidSourceBuilder()
+                                    .setEventId(SOURCE_EVENT_ID)
+                                    .setAdIdPermission(false)
                                     .build();
                     ExtendedMockito.doNothing()
                             .when(

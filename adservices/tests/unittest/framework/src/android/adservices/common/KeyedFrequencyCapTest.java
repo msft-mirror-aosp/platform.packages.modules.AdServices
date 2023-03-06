@@ -18,12 +18,15 @@ package android.adservices.common;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.Test;
 
 import java.time.Duration;
@@ -204,5 +207,71 @@ public class KeyedFrequencyCapTest {
     @Test
     public void testBuildNoSetters_throws() {
         assertThrows(NullPointerException.class, () -> new KeyedFrequencyCap.Builder().build());
+    }
+
+    @Test
+    public void testGetSizeInBytes() {
+        assertEquals(
+                KeyedFrequencyCapFixture.KEY1.getBytes().length + 16,
+                KeyedFrequencyCapFixture.getValidKeyedFrequencyCapBuilderOncePerDay(
+                                KeyedFrequencyCapFixture.KEY1)
+                        .build()
+                        .getSizeInBytes());
+    }
+
+    @Test
+    public void testJsonSerialization() throws JSONException {
+        KeyedFrequencyCap toSerialize =
+                KeyedFrequencyCapFixture.getValidKeyedFrequencyCapBuilderOncePerDay(
+                                KeyedFrequencyCapFixture.KEY1)
+                        .build();
+        assertEquals(toSerialize, KeyedFrequencyCap.fromJson(toSerialize.toJson()));
+    }
+
+    @Test
+    public void testJsonSerializationNonStringKey() throws JSONException {
+        KeyedFrequencyCap toSerialize =
+                KeyedFrequencyCapFixture.getValidKeyedFrequencyCapBuilderOncePerDay(
+                                KeyedFrequencyCapFixture.KEY1)
+                        .build();
+        JSONObject json = toSerialize.toJson();
+        json.put(KeyedFrequencyCap.AD_COUNTER_KEY_FIELD_NAME, new Object());
+        assertThrows(
+                KeyedFrequencyCap.AD_COUNTER_KEY_FIELD_NAME + KeyedFrequencyCap.JSON_ERROR_POSTFIX,
+                JSONException.class,
+                () -> KeyedFrequencyCap.fromJson(json));
+    }
+
+    @Test
+    public void testJsonSerializationMissingAdCounterKey() throws JSONException {
+        KeyedFrequencyCap toSerialize =
+                KeyedFrequencyCapFixture.getValidKeyedFrequencyCapBuilderOncePerDay(
+                                KeyedFrequencyCapFixture.KEY1)
+                        .build();
+        JSONObject json = toSerialize.toJson();
+        json.remove(KeyedFrequencyCap.AD_COUNTER_KEY_FIELD_NAME);
+        assertThrows(JSONException.class, () -> KeyedFrequencyCap.fromJson(json));
+    }
+
+    @Test
+    public void testJsonSerializationMissingMaxCount() throws JSONException {
+        KeyedFrequencyCap toSerialize =
+                KeyedFrequencyCapFixture.getValidKeyedFrequencyCapBuilderOncePerDay(
+                                KeyedFrequencyCapFixture.KEY1)
+                        .build();
+        JSONObject json = toSerialize.toJson();
+        json.remove(KeyedFrequencyCap.MAX_COUNT_FIELD_NAME);
+        assertThrows(JSONException.class, () -> KeyedFrequencyCap.fromJson(json));
+    }
+
+    @Test
+    public void testJsonSerializationMissingIntervalInSeconds() throws JSONException {
+        KeyedFrequencyCap toSerialize =
+                KeyedFrequencyCapFixture.getValidKeyedFrequencyCapBuilderOncePerDay(
+                                KeyedFrequencyCapFixture.KEY1)
+                        .build();
+        JSONObject json = toSerialize.toJson();
+        json.remove(KeyedFrequencyCap.INTERVAL_FIELD_NAME);
+        assertThrows(JSONException.class, () -> KeyedFrequencyCap.fromJson(json));
     }
 }
