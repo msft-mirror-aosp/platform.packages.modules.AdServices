@@ -38,7 +38,6 @@ import com.android.compatibility.common.util.ShellUtils;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -68,7 +67,8 @@ public class SettingsGaUiAutomatorTest {
     @After
     public void teardown() {
         if (!ApkTestUtil.isDeviceSupported()) return;
-        ShellUtils.runShellCommand("am force-stop com.google.android.adservices.api");
+
+        ApkTestUtil.killApp();
     }
 
     @Test
@@ -214,7 +214,6 @@ public class SettingsGaUiAutomatorTest {
     }
 
     @Test
-    @Ignore("b/268351419")
     public void measurementDialogTest() throws UiObjectNotFoundException {
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
         ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled true");
