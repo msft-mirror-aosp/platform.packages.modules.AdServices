@@ -57,6 +57,10 @@
         <!-- Temporarily disable Device Config sync -->
         <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />
         <option name="teardown-command" value="device_config set_sync_disabled_for_tests none" />
+
+        <!-- Revert the classifier type to the default value. This is to avoid skipping the in-test
+        reverting when the on-device classifier test fails. -->
+        <option name="teardown-command" value="device_config put adservices classifier_type 3" />
     </target_preparer>
 
     <object type="module_controller"
