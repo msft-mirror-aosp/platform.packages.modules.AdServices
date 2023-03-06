@@ -25,11 +25,11 @@ import static com.android.adservices.service.adselection.OutcomeSelectionRunner.
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.DB_AD_SELECTION_FILE_SIZE;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.when;
 
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionFromOutcomesConfig;
@@ -178,6 +178,7 @@ public class AdSelectionFromOutcomesE2ETest {
     private AdServicesHttpsClient mAdServicesHttpsClient;
     private AdSelectionServiceImpl mAdSelectionService;
     private Dispatcher mDispatcher;
+    private AdFilterer mAdFilterer = new AdFiltererNoOpImpl();
 
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilter;
 
@@ -238,7 +239,8 @@ public class AdSelectionFromOutcomesE2ETest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
-                        mAdSelectionServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         // Create a dispatcher that helps map a request -> response in mockWebServer
         mDispatcher =

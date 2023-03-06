@@ -113,6 +113,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     @NonNull private final CallingAppUidSupplier mCallingAppUidSupplier;
     @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
+    @NonNull protected final AdFilterer mAdFilterer;
 
     private static final String API_NOT_AUTHORIZED_MSG =
             "This API is not enabled for the given app because either dev options are disabled or"
@@ -133,7 +134,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull Flags flags,
             @NonNull CallingAppUidSupplier callingAppUidSupplier,
             @NonNull FledgeAuthorizationFilter fledgeAuthorizationFilter,
-            @NonNull AdSelectionServiceFilter adSelectionServiceFilter) {
+            @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
+            @NonNull AdFilterer adFilterer) {
         Objects.requireNonNull(context, "Context must be provided.");
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(appInstallDao);
@@ -145,6 +147,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         Objects.requireNonNull(scheduledExecutor);
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(flags);
+        Objects.requireNonNull(adFilterer);
 
         mAdSelectionEntryDao = adSelectionEntryDao;
         mAppInstallDao = appInstallDao;
@@ -160,6 +163,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         mCallingAppUidSupplier = callingAppUidSupplier;
         mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
         mAdSelectionServiceFilter = adSelectionServiceFilter;
+        mAdFilterer = adFilterer;
     }
 
     /** Creates a new instance of {@link AdSelectionServiceImpl}. */
@@ -199,7 +203,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 context, AdServicesLoggerImpl.getInstance()),
                         new FledgeAllowListsFilter(
                                 FlagsFactory.getFlags(), AdServicesLoggerImpl.getInstance()),
-                        () -> Throttler.getInstance(FlagsFactory.getFlags())));
+                        () -> Throttler.getInstance(FlagsFactory.getFlags())),
+                AdFiltererFactory.getAdFilterer(context, FlagsFactory.getFlags()));
     }
 
     // TODO(b/233116758): Validate all the fields inside the adSelectionConfig.
@@ -276,6 +281,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mFlags,
                         adSelectionExecutionLogger,
                         adSelectionServiceFilter,
+                        mAdFilterer,
                         callerUid);
         runner.runAdSelection(inputParams, callback);
     }
