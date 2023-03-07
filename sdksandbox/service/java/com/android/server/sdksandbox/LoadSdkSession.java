@@ -204,8 +204,7 @@ class LoadSdkSession {
     // Asks the given sandbox service to load this SDK.
     void load(
             ISdkSandboxService service,
-            String ceDataDir,
-            String deDataDir,
+            ApplicationInfo customizedInfo,
             long timeSystemServerCalledSandbox,
             long timeSystemServerReceivedCallFromApp) {
         final SandboxLatencyInfo sandboxLatencyInfo =
@@ -239,8 +238,7 @@ class LoadSdkSession {
                     mSdkProviderInfo.getApplicationInfo(),
                     mSdkProviderInfo.getSdkInfo().getName(),
                     mSdkProviderInfo.getSdkProviderClassName(),
-                    ceDataDir,
-                    deDataDir,
+                    customizedInfo,
                     mLoadParams,
                     mRemoteSdkLink,
                     sandboxLatencyInfo);
@@ -844,6 +842,10 @@ class LoadSdkSession {
         } catch (PackageManager.NameNotFoundException e) {
             return null;
         }
+    }
+
+    ApplicationInfo getApplicationInfo() {
+        return mSdkProviderInfo.getApplicationInfo();
     }
 
     /** Class which retrieves and stores the sdkName, sdkProviderClassName, and ApplicationInfo */

@@ -17,7 +17,6 @@
 package com.android.sdksandbox;
 
 import android.annotation.NonNull;
-import android.annotation.Nullable;
 import android.app.Service;
 import android.app.sdksandbox.FileUtil;
 import android.app.sdksandbox.ISdkToServiceCallback;
@@ -177,8 +176,7 @@ public class SdkSandboxServiceImpl extends Service {
             ApplicationInfo applicationInfo,
             String sdkName,
             String sdkProviderClassName,
-            String sdkCeDataDir,
-            String sdkDeDataDir,
+            ApplicationInfo customizedApplicationInfo,
             Bundle params,
             ILoadSdkInSandboxCallback callback,
             SandboxLatencyInfo sandboxLatencyInfo) {
@@ -190,8 +188,7 @@ public class SdkSandboxServiceImpl extends Service {
                     applicationInfo,
                     sdkName,
                     sdkProviderClassName,
-                    sdkCeDataDir,
-                    sdkDeDataDir,
+                    customizedApplicationInfo,
                     params,
                     callback,
                     sandboxLatencyInfo);
@@ -364,8 +361,7 @@ public class SdkSandboxServiceImpl extends Service {
             @NonNull ApplicationInfo applicationInfo,
             @NonNull String sdkName,
             @NonNull String sdkProviderClassName,
-            @Nullable String sdkCeDataDir,
-            @Nullable String sdkDeDataDir,
+            @NonNull ApplicationInfo customizedApplicationInfo,
             @NonNull Bundle params,
             @NonNull ILoadSdkInSandboxCallback callback,
             @NonNull SandboxLatencyInfo sandboxLatencyInfo) {
@@ -382,7 +378,7 @@ public class SdkSandboxServiceImpl extends Service {
 
         Context baseContext;
         try {
-            baseContext = createBaseContext(applicationInfo, sdkCeDataDir, sdkDeDataDir);
+            baseContext = createBaseContext(customizedApplicationInfo);
         } catch (PackageManager.NameNotFoundException e) {
             sendLoadError(
                     callback,
@@ -404,8 +400,8 @@ public class SdkSandboxServiceImpl extends Service {
                         callingPackageName,
                         applicationInfo,
                         sdkName,
-                        sdkCeDataDir,
-                        sdkDeDataDir,
+                        customizedApplicationInfo.credentialProtectedDataDir,
+                        customizedApplicationInfo.deviceProtectedDataDir,
                         mCustomizedSdkContextEnabled);
 
         final SandboxedSdkHolder sandboxedSdkHolder = new SandboxedSdkHolder();
@@ -435,31 +431,21 @@ public class SdkSandboxServiceImpl extends Service {
      *
      * <p>This method ensures we return a new instance of ContextImpl.
      */
-    private Context createBaseContext(
-            ApplicationInfo applicationInfo, String sdkCeDataDir, String sdkDeDataDir)
+    private Context createBaseContext(ApplicationInfo customizedInfo)
             throws PackageManager.NameNotFoundException {
 
         // In order to create per-SandboxedSdkContext instances in getSystemService, each
         // SandboxedSdkContext needs to have its own instance of ContextImpl as a base context. The
         // instance should have sdk-specific information infused so that system services get the
         // correct information from the base context.
+        // customizedInfo has already been infused with sdk-specific information on the server-side.
         if (SdkLevel.isAtLeastU() && mCustomizedSdkContextEnabled) {
-            final ApplicationInfo ai = new ApplicationInfo(applicationInfo);
-            // Create customized context by modifying ApplicationInfo accordingly
-            ai.dataDir = sdkCeDataDir;
-            ai.credentialProtectedDataDir = sdkCeDataDir;
-            ai.deviceProtectedDataDir = sdkDeDataDir;
-
-            // Package name still needs to be that of the sandbox because permissions are defined
-            // for the sandbox app.
-            ai.packageName = mInjector.getContext().getPackageName();
-
             // Context.CONTEXT_INCLUDE_CODE ensures SDK code is loaded in sandbox process along with
             // its class loaders. There is a security check to ensure an app loads code that belongs
             // to it only, but the check can be bypassed using Context.Context_IGNORE_SECURITY.
             int flag = Context.CONTEXT_INCLUDE_CODE | Context.CONTEXT_IGNORE_SECURITY;
 
-            return mInjector.getContext().createContextForSdkInSandbox(ai, flag);
+            return mInjector.getContext().createContextForSdkInSandbox(customizedInfo, flag);
         } else {
             return mInjector.getContext().createCredentialProtectedStorageContext();
         }
@@ -522,8 +508,7 @@ public class SdkSandboxServiceImpl extends Service {
                 @NonNull ApplicationInfo applicationInfo,
                 @NonNull String sdkName,
                 @NonNull String sdkProviderClassName,
-                @Nullable String sdkCeDataDir,
-                @Nullable String sdkDeDataDir,
+                @NonNull ApplicationInfo customizedApplicationInfo,
                 @NonNull Bundle params,
                 @NonNull ILoadSdkInSandboxCallback callback,
                 @NonNull SandboxLatencyInfo sandboxLatencyInfo) {
@@ -534,6 +519,8 @@ public class SdkSandboxServiceImpl extends Service {
             Objects.requireNonNull(applicationInfo, "applicationInfo should not be null");
             Objects.requireNonNull(sdkName, "sdkName should not be null");
             Objects.requireNonNull(sdkProviderClassName, "sdkProviderClassName should not be null");
+            Objects.requireNonNull(
+                    customizedApplicationInfo, "customized applicationInfo should not be null");
             Objects.requireNonNull(params, "params should not be null");
             Objects.requireNonNull(callback, "callback should not be null");
             if (TextUtils.isEmpty(sdkProviderClassName)) {
@@ -545,8 +532,7 @@ public class SdkSandboxServiceImpl extends Service {
                     applicationInfo,
                     sdkName,
                     sdkProviderClassName,
-                    sdkCeDataDir,
-                    sdkDeDataDir,
+                    customizedApplicationInfo,
                     params,
                     callback,
                     sandboxLatencyInfo);

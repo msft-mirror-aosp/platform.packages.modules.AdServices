@@ -200,8 +200,7 @@ public class SdkSandboxTest {
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
-                null,
-                null,
+                new ApplicationInfo(),
                 new Bundle(),
                 loadSdkCallback,
                 SANDBOX_LATENCY_INFO);
@@ -256,8 +255,7 @@ public class SdkSandboxTest {
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
-                null,
-                null,
+                new ApplicationInfo(),
                 new Bundle(),
                 loadSdkCallback1,
                 SANDBOX_LATENCY_INFO);
@@ -269,8 +267,7 @@ public class SdkSandboxTest {
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
-                null,
-                null,
+                new ApplicationInfo(),
                 new Bundle(),
                 loadSdkCallback2,
                 SANDBOX_LATENCY_INFO);
@@ -289,8 +286,7 @@ public class SdkSandboxTest {
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
-                null,
-                null,
+                new ApplicationInfo(),
                 new Bundle(),
                 loadSdkCallback,
                 SANDBOX_LATENCY_INFO);
@@ -321,8 +317,7 @@ public class SdkSandboxTest {
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
-                null,
-                null,
+                new ApplicationInfo(),
                 new Bundle(),
                 loadSdkCallback,
                 SANDBOX_LATENCY_INFO);
@@ -363,8 +358,7 @@ public class SdkSandboxTest {
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
-                null,
-                null,
+                new ApplicationInfo(),
                 new Bundle(),
                 callback,
                 SANDBOX_LATENCY_INFO);
@@ -493,8 +487,7 @@ public class SdkSandboxTest {
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
-                null,
-                null,
+                new ApplicationInfo(),
                 new Bundle(),
                 loadSdkCallback,
                 SANDBOX_LATENCY_INFO);
@@ -540,8 +533,7 @@ public class SdkSandboxTest {
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
-                null,
-                null,
+                new ApplicationInfo(),
                 new Bundle(),
                 loadSdkCallback,
                 SANDBOX_LATENCY_INFO);
@@ -587,8 +579,7 @@ public class SdkSandboxTest {
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
-                null,
-                null,
+                new ApplicationInfo(),
                 new Bundle(),
                 loadSdkCallback,
                 SANDBOX_LATENCY_INFO);
@@ -663,8 +654,7 @@ public class SdkSandboxTest {
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
-                null,
-                null,
+                new ApplicationInfo(),
                 params,
                 mCallback,
                 SANDBOX_LATENCY_INFO);
@@ -676,8 +666,7 @@ public class SdkSandboxTest {
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
-                null,
-                null,
+                new ApplicationInfo(),
                 new Bundle(),
                 mCallback,
                 SANDBOX_LATENCY_INFO);

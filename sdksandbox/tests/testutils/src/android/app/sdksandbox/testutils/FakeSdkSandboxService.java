@@ -44,6 +44,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
+    private final ISdkSandboxManagerToSdkSandboxCallback mManagerToSdkCallback;
+    private final CountDownLatch mLatch;
+
     private long mTimeSystemServerCalledSandbox = -1;
     private long mTimeSandboxReceivedCallFromSystemServer = -1;
     private long mTimeSandboxCalledSdk = -1;
@@ -51,10 +54,10 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
     private long mTimeSandboxCalledSystemServer = -1;
 
     private ILoadSdkInSandboxCallback mLoadSdkInSandboxCallback;
-    private final ISdkSandboxManagerToSdkSandboxCallback mManagerToSdkCallback;
     private IRequestSurfacePackageFromSdkCallback mRequestSurfacePackageFromSdkCallback = null;
     private IUnloadSdkCallback mUnloadSdkCallback = null;
     private IComputeSdkStorageCallback mComputeSdkStorageCallback = null;
+    private ApplicationInfo mCustomizedInfo;
 
     private boolean mSurfacePackageRequested = false;
     private int mInitializationCount = 0;
@@ -64,7 +67,6 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
 
     private SharedPreferencesUpdate mLastSyncUpdate = null;
 
-    private final CountDownLatch mLatch;
 
     public FakeSdkSandboxService() {
         mManagerToSdkCallback = new FakeManagerToSdkCallback();
@@ -96,8 +98,7 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
             ApplicationInfo info,
             String sdkName,
             String sdkProviderClass,
-            String ceDataDir,
-            String deDataDir,
+            ApplicationInfo customizedInfo,
             Bundle params,
             ILoadSdkInSandboxCallback callback,
             SandboxLatencyInfo sandboxLatencyInfo)
@@ -106,6 +107,7 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
             throw new DeadObjectException();
         }
         mLoadSdkInSandboxCallback = callback;
+        mCustomizedInfo = customizedInfo;
     }
 
     @Override
@@ -208,6 +210,10 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
 
     public void setIsDisabledResponse(boolean response) {
         mIsDisabledResponse = response;
+    }
+
+    public ApplicationInfo getCustomizedInfo() {
+        return mCustomizedInfo;
     }
 
     private SandboxLatencyInfo createSandboxLatencyInfo() {
