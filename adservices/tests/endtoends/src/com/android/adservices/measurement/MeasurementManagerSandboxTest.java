@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-
-package com.android.adservices.tests.cts.measurement;
+package com.android.adservices.measurement;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
@@ -61,7 +60,7 @@ import java.util.concurrent.Executor;
 
 @SmallTest
 @RunWith(AndroidJUnit4.class)
-public class MeasurementManagerSandboxCtsTest {
+public class MeasurementManagerSandboxTest {
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     protected static final Context sSandboxedSdkContext =
             new SandboxedSdkContext(
