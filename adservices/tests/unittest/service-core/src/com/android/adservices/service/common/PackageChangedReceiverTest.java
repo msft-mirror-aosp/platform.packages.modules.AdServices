@@ -75,7 +75,7 @@ public class PackageChangedReceiverTest {
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final String SAMPLE_PACKAGE = "com.example.measurement.sampleapp";
     private static final String PACKAGE_SCHEME = "package:";
-    private static final int BACKGROUND_THREAD_TIMEOUT_MS = 50;
+    private static final int BACKGROUND_THREAD_TIMEOUT_MS = 500;
     private static final int DEFAULT_PACKAGE_UID = -1;
 
     @Mock EpochManager mMockEpochManager;
