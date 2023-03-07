@@ -39,6 +39,7 @@ import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.PhFlags;
@@ -121,7 +122,7 @@ public class NotificationActivityUiAutomatorTest {
     public void teardown() throws IOException {
         if (!ApkTestUtil.isDeviceSupported()) return;
 
-        ApkTestUtil.killApp();
+        AdservicesTestHelper.killAdservicesProcess(sContext);
         if (mStaticMockSession != null) {
             mStaticMockSession.finishMocking();
         }
