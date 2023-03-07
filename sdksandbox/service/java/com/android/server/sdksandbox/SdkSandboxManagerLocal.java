@@ -144,12 +144,15 @@ public interface SdkSandboxManagerLocal {
      *
      * @param clientAppInfo {@link ApplicationInfo} of the client app
      * @param userId the target user ID
+     * @param isSdkInSandbox specifies whether to create an application info for the sandbox or for
+     *     an Sdk running inside the sandbox.
      * @return {@link ApplicationInfo} of the sdk sandbox process to be instrumented
      * @throws NameNotFoundException if the sandbox package name cannot be found.
      */
     @NonNull
     ApplicationInfo getSdkSandboxApplicationInfoForInstrumentation(
-            @NonNull ApplicationInfo clientAppInfo, int userId) throws NameNotFoundException;
+            @NonNull ApplicationInfo clientAppInfo, int userId, boolean isSdkInSandbox)
+            throws NameNotFoundException;
 
     /**
      * Called by the {@code ActivityManagerService} to notify that instrumentation of the
