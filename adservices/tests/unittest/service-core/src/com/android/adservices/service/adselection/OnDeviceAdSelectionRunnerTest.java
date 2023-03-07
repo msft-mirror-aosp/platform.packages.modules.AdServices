@@ -53,9 +53,7 @@ import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTes
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.sCallerMetadata;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyLong;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
@@ -117,6 +115,7 @@ import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -144,7 +143,6 @@ import org.mockito.Spy;
 import org.mockito.internal.stubbing.answers.AnswersWithDelay;
 import org.mockito.internal.stubbing.answers.Returns;
 import org.mockito.quality.Strictness;
-import org.mockito.stubbing.Answer;
 
 import java.io.File;
 import java.time.Clock;
@@ -587,7 +585,7 @@ public class OnDeviceAdSelectionRunnerTest {
     @Test
     public void testRunAdSelectionWithRevokedUserConsentSuccess() throws AdServicesException {
         doReturn(mFlags).when(FlagsFactory::getFlags);
-        doThrow(new ConsentManager.RevokedConsentException())
+        doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
                 .when(mAdSelectionServiceFilter)
                 .filterRequest(
                         SELLER_VALID,
@@ -650,7 +648,9 @@ public class OnDeviceAdSelectionRunnerTest {
 
         verifyLogForFailurePriorPersistAdSelection(STATUS_USER_CONSENT_REVOKED);
 
-        verify(mAdServicesLoggerMock)
+        // Confirm a duplicate log entry does not exist.
+        // AdSelectionServiceFilter ensures the failing assertion is logged internally.
+        verify(mAdServicesLoggerMock, never())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         eq(STATUS_USER_CONSENT_REVOKED),
@@ -837,7 +837,9 @@ public class OnDeviceAdSelectionRunnerTest {
         // Creating ad selection config for happy case with all the buyers in place
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        doThrow(new AppImportanceFilter.WrongCallingApplicationStateException())
+        doThrow(
+                        new FilterException(
+                                new AppImportanceFilter.WrongCallingApplicationStateException()))
                 .when(mAdSelectionServiceFilter)
                 .filterRequest(
                         SELLER_VALID,
@@ -877,7 +879,9 @@ public class OnDeviceAdSelectionRunnerTest {
 
         verifyLogForFailurePriorPersistAdSelection(STATUS_BACKGROUND_CALLER);
 
-        verify(mAdServicesLoggerMock)
+        // Confirm a duplicate log entry does not exist.
+        // AdSelectionServiceFilter ensures the failing assertion is logged internally.
+        verify(mAdServicesLoggerMock, never())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         eq(STATUS_BACKGROUND_CALLER),
@@ -1821,7 +1825,7 @@ public class OnDeviceAdSelectionRunnerTest {
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
         // Throttle Ad Selection request
-        doThrow(new LimitExceededException(RATE_LIMIT_REACHED_ERROR_MESSAGE))
+        doThrow(new FilterException(new LimitExceededException(RATE_LIMIT_REACHED_ERROR_MESSAGE)))
                 .when(mAdSelectionServiceFilter)
                 .filterRequest(
                         SELLER_VALID,
@@ -1865,7 +1869,10 @@ public class OnDeviceAdSelectionRunnerTest {
                 STATUS_RATE_LIMIT_REACHED,
                 response.getStatusCode());
         verifyLogForFailurePriorPersistAdSelection(STATUS_RATE_LIMIT_REACHED);
-        verify(mAdServicesLoggerMock)
+
+        // Confirm a duplicate log entry does not exist.
+        // AdSelectionServiceFilter ensures the failing assertion is logged internally.
+        verify(mAdServicesLoggerMock, never())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         eq(STATUS_RATE_LIMIT_REACHED),
@@ -2066,19 +2073,9 @@ public class OnDeviceAdSelectionRunnerTest {
             String callerPackageName) {
 
         // Counted down in 1) callback and 2) logApiCall
-        CountDownLatch countDownLatch = new CountDownLatch(2);
+        CountDownLatch countDownLatch = new CountDownLatch(1);
         AdSelectionTestCallback adSelectionTestCallback =
                 new AdSelectionTestCallback(countDownLatch);
-
-        // Wait for the logging call, which happens after the callback
-        Answer<Void> countDownAnswer =
-                unused -> {
-                    countDownLatch.countDown();
-                    return null;
-                };
-        doAnswer(countDownAnswer)
-                .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
 
         AdSelectionInput input =
                 new AdSelectionInput.Builder()
