@@ -295,32 +295,8 @@ public class ImpressionReporter {
             @NonNull ReportImpressionInput requestParams,
             @NonNull ReportImpressionCallback callback) {
         LogUtil.v("Executing reportImpression API");
-        // Getting PH flags in a non binder thread
-        FluentFuture<Long> timeoutFuture =
-                FluentFuture.from(
-                        mLightweightExecutorService.submit(
-                                mFlags::getReportImpressionOverallTimeoutMs));
-
-        timeoutFuture.addCallback(
-                new FutureCallback<Long>() {
-                    @Override
-                    public void onSuccess(Long timeout) {
-                        invokeReporting(requestParams, callback);
-                    }
-
-                    @Override
-                    public void onFailure(Throwable t) {
-                        LogUtil.e(t, "Report Impression failed!");
-                        notifyFailureToCaller(callback, t);
-                    }
-                },
-                mLightweightExecutorService);
-    }
-
-    private void invokeReporting(
-            @NonNull ReportImpressionInput requestParams,
-            @NonNull ReportImpressionCallback callback) {
         long adSelectionId = requestParams.getAdSelectionId();
+        long timeoutMs = readFlagInBinderThread(mFlags::getReportImpressionOverallTimeoutMs);
         AdSelectionConfig adSelectionConfig = requestParams.getAdSelectionConfig();
         ListenableFuture<Void> filterAndValidateRequestFuture =
                 Futures.submit(
@@ -361,7 +337,7 @@ public class ImpressionReporter {
                                         reportingUrisAndContext.second),
                         mLightweightExecutorService)
                 .withTimeout(
-                        mFlags.getReportImpressionOverallTimeoutMs(),
+                        timeoutMs,
                         TimeUnit.MILLISECONDS,
                         // TODO(b/237103033): Comply with thread usage policy for AdServices;
                         //  use a global scheduled executor
@@ -680,6 +656,13 @@ public class ImpressionReporter {
             throws IllegalArgumentException {
         AdSelectionConfigValidator adSelectionConfigValidator = new AdSelectionConfigValidator();
         adSelectionConfigValidator.validate(adSelectionConfig);
+    }
+
+    private <T> T readFlagInBinderThread(Supplier<T> flagReadLambda) {
+        final long token = Binder.clearCallingIdentity();
+        T result = flagReadLambda.get();
+        Binder.restoreCallingIdentity(token);
+        return result;
     }
 
     private static class ReportingContext {
