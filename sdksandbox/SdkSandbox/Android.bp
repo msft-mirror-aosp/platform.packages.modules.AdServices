@@ -38,7 +38,7 @@ android_app {
     libs: [
         "framework-annotations-lib",
         // TODO(b/212577961): switch to stubs
-        "framework-sdksandbox",
+        "framework-sdksandbox.impl",
     ],
     static_libs: [], //do not add static libs to SdkSandbox
     visibility: [
