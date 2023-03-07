@@ -119,6 +119,9 @@ public class TopicsManagerTest {
 
     @Test
     public void testTopicsManager_runDefaultClassifier() throws Exception {
+        // Set classifier flag to use precomputed-then-on-device classifier.
+        overrideClassifierType(DEFAULT_CLASSIFIER_TYPE);
+
         // Default classifier uses the precomputed list first, then on-device classifier.
         // The Test App has 2 SDKs: sdk1 calls the Topics API and sdk2 does not.
         // Sdk1 calls the Topics API.
