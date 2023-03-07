@@ -276,9 +276,6 @@ public class BlockedTopicsSettingsUiAutomatorTest {
         // Disable user consent.
         consentSwitch.click();
         assertThat(consentSwitch.isChecked()).isFalse();
-
-        // Reset GA UX Flag.
-        shouldEnableGaUx(false);
     }
 
     // Launch Privacy Sandbox Setting View.
@@ -402,12 +399,6 @@ public class BlockedTopicsSettingsUiAutomatorTest {
         return sDevice.findObject(new UiSelector().className("android.widget.Switch"));
     }
 
-    // Scroll to a UI object and click it.
-    private void scrollToAndClick(int resId) throws UiObjectNotFoundException {
-        UiObject element = scrollTo(resId);
-        element.click();
-    }
-
     // Scroll to a UI object.
     private UiObject scrollTo(int resId) throws UiObjectNotFoundException {
         UiScrollable scrollView =
@@ -423,11 +414,6 @@ public class BlockedTopicsSettingsUiAutomatorTest {
     // Get a UI object by its resource id.
     private UiObject getElement(int resId) {
         return sDevice.findObject(new UiSelector().text(getString(resId)));
-    }
-
-    // Get a UI object by its resource id and return the first instance of it.
-    private UiObject getElement(int resId, int index) {
-        return sDevice.findObject(new UiSelector().text(getString(resId)).instance(index));
     }
 
     private String getString(int resourceId) {
@@ -448,11 +434,7 @@ public class BlockedTopicsSettingsUiAutomatorTest {
 
     // Toggles GA UX.
     private void shouldEnableGaUx(boolean isEnabled) {
-        if (isEnabled) {
-            ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
-        } else {
-            ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled false");
-        }
+        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled " + isEnabled);
     }
 
     // Overrides Prerequisite flags before the test.
@@ -488,6 +470,7 @@ public class BlockedTopicsSettingsUiAutomatorTest {
                 "setprop debug.adservices.disable_topics_enrollment_check false");
         ShellUtils.runShellCommand(
                 "device_config delete adservices classifier_force_use_bundled_files");
+        ShellUtils.runShellCommand("device_config delete adservices ga_ux_enabled");
     }
 
     // Get the adservices package name. Copied over from com.android.adservices.AdServicesCommon

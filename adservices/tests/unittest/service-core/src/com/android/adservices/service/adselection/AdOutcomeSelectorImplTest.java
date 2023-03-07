@@ -17,6 +17,9 @@
 package com.android.adservices.service.adselection;
 
 import static com.android.adservices.service.adselection.AdOutcomeSelectorImpl.OUTCOME_SELECTION_TIMED_OUT;
+import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_OUTCOME_SELECTION_WATERFALL_MEDIATION_TRUNCATION;
+import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_FROM_OUTCOMES_USE_CASE;
+import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_PREBUILT_SCHEMA;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -313,6 +316,59 @@ public class AdOutcomeSelectorImplTest {
                 1, // Gets one call that causes the timeout
                 Collections.singletonList(SELECTION_LOGIC_JS_PATH),
                 mRequestMatcherExactMatch);
+    }
+
+    @Test
+    public void testAdOutcomeSelectorWithPrebuiltUriReturnsOutcomeSuccess() throws Exception {
+        MockWebServer server = mMockWebServerRule.startMockWebServer(mDefaultDispatcher);
+
+        String paramKey = "bidFloor";
+        String paramValue = "bid_floor";
+        Uri prebuiltUri =
+                Uri.parse(
+                        String.format(
+                                "%s://%s/%s/?%s=%s",
+                                AD_SELECTION_PREBUILT_SCHEMA,
+                                AD_SELECTION_FROM_OUTCOMES_USE_CASE,
+                                AD_OUTCOME_SELECTION_WATERFALL_MEDIATION_TRUNCATION,
+                                paramKey,
+                                paramValue));
+
+        AdSelectionSignals selectionSignals =
+                AdSelectionSignals.fromString(String.format("{%s: %s}", paramValue, AD_BID + 1));
+
+        List<AdSelectionIdWithBidAndRenderUri> adverts =
+                Collections.singletonList(
+                        AdSelectionIdWithBidAndRenderUri.builder()
+                                .setAdSelectionId(AD_SELECTION_ID)
+                                .setBid(AD_BID)
+                                .setRenderUri(AD_RENDER_URI)
+                                .build());
+
+        AdSelectionFromOutcomesConfig config =
+                new AdSelectionFromOutcomesConfig.Builder()
+                        .setSeller(SELLER)
+                        .setAdSelectionIds(Collections.singletonList(AD_SELECTION_ID))
+                        .setSelectionSignals(selectionSignals)
+                        .setSelectionLogicUri(prebuiltUri)
+                        .build();
+
+        Mockito.when(
+                        mMockAdSelectionScriptEngine.selectOutcome(
+                                Mockito.anyString(),
+                                Mockito.eq(adverts),
+                                Mockito.eq(selectionSignals)))
+                .thenReturn(Futures.immediateFuture(AD_SELECTION_ID));
+
+        Long selectedOutcomeId =
+                waitForFuture(() -> mAdOutcomeSelector.runAdOutcomeSelector(adverts, config));
+
+        mMockWebServerRule.verifyMockServerRequests(
+                server,
+                0, // Shouldn't get any requests
+                Collections.emptyList(),
+                (actualRequest, expectedRequest) -> true); // Count any request
+        assertEquals(AD_SELECTION_ID, (long) selectedOutcomeId);
     }
 
     private ListenableFuture<Long> getOutcomeWithDelay(Long outcomeId, @NonNull Flags flags) {

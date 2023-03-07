@@ -67,7 +67,6 @@ import java.util.concurrent.Executors;
 @RunWith(JUnit4.class)
 public class AbstractPerfTest {
 
-    private static final String PPAPI_PACKAGE = "com.google.android.adservices.api";
     public static final Duration CUSTOM_AUDIENCE_EXPIRE_IN = Duration.ofDays(1);
     public static final Instant VALID_ACTIVATION_TIME = Instant.now();
     public static final Instant VALID_EXPIRATION_TIME =
@@ -165,8 +164,8 @@ public class AbstractPerfTest {
     // Per-test method rules, run in the given order.
     @Rule
     public RuleChain rules =
-            RuleChain.outerRule(new KillAppsRule(PPAPI_PACKAGE))
-                    .around(new CleanPackageRule(PPAPI_PACKAGE))
+            RuleChain.outerRule(new KillAppsRule(CompatTestUtils.getAdServicesPackageName()))
+                    .around(new CleanPackageRule(CompatTestUtils.getAdServicesPackageName()))
                     .around(new SelectAdsFlagRule());
 
     @BeforeClass
