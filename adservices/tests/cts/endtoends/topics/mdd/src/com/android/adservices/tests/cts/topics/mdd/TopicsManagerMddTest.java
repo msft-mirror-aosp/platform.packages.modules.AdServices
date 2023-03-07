@@ -25,7 +25,7 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.AdservicesCtsHelper;
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
@@ -79,17 +79,17 @@ public class TopicsManagerMddTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
     private static final String ADSERVICES_PACKAGE_NAME =
-            AdservicesCtsHelper.getAdServicesPackageName(sContext, TAG);
+            AdservicesTestHelper.getAdServicesPackageName(sContext, TAG);
 
     private String mDefaultMddManifestFileUrl;
 
     @Before
     public void setup() throws Exception {
         // Skip the test if it runs on unsupported platforms.
-        Assume.assumeTrue(AdservicesCtsHelper.isDeviceSupported());
+        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
 
         // Kill AdServices process.
-        killAd();
+        AdservicesTestHelper.killAdservicesProcess(ADSERVICES_PACKAGE_NAME);
 
         // We need to skip 3 epochs so that if there is any usage from other test runs, it will
         // not be used for epoch retrieval.
@@ -136,7 +136,7 @@ public class TopicsManagerMddTest {
         triggerAndWaitForMddToFinishDownload();
 
         // Kill AdServices API to unbind TOPICS_SERVICE.
-        killAd();
+        AdservicesTestHelper.killAdservicesProcess(ADSERVICES_PACKAGE_NAME);
 
         // Wait for AdvertisingTopicsClient to unbind.
         Thread.sleep(TEST_UNBIND_WAIT_TIME);
@@ -180,12 +180,6 @@ public class TopicsManagerMddTest {
         // http://google3/wireless/android/adservices/mdd/topics_classifier/cts_test_1/
         assertThat(topic.getModelVersion()).isEqualTo(0L);
         assertThat(topic.getTaxonomyVersion()).isEqualTo(0L);
-    }
-
-    // Force stop AdServices API.
-    public void killAd() {
-        // adb shell am force-stop com.google.android.adservices.api
-        ShellUtils.runShellCommand("am force-stop" + " " + ADSERVICES_PACKAGE_NAME);
     }
 
     private String getDefaultMddManifestFileUrl() {
