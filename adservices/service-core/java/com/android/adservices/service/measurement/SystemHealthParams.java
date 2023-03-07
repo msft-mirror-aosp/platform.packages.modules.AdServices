@@ -27,13 +27,15 @@ public class SystemHealthParams {
     private SystemHealthParams() {
     }
 
-    /**
-     * Max number of triggers an app can register.
-     */
-    public static final int MAX_TRIGGER_REGISTERS_PER_REGISTRANT = 1000; // placeholder value
+    /** Max number of triggers a destination can register. */
+    public static final long MAX_TRIGGER_REGISTERS_PER_DESTINATION = 1024L;
 
     /** Max number of sources per publisher. */
-    public static final long MAX_SOURCES_PER_PUBLISHER = 1024L;
+    private static final int MAX_SOURCES_PER_PUBLISHER = 1024;
+
+    public static int getMaxSourcesPerPublisher() {
+        return MAX_SOURCES_PER_PUBLISHER;
+    }
 
     /** Max number of redirects per registration. */
     public static final int MAX_REDIRECTS_PER_REGISTRATION = 5;
@@ -47,10 +49,18 @@ public class SystemHealthParams {
     public static final int MAX_ATTRIBUTIONS_PER_INVOCATION = 100;
 
     /** Max number of aggregate reports in storage per destination */
-    public static final long MAX_AGGREGATE_REPORTS_PER_DESTINATION = 1024;
+    private static final int MAX_AGGREGATE_REPORTS_PER_DESTINATION = 1024;
+
+    public static int getMaxAggregateReportsPerDestination() {
+        return MAX_AGGREGATE_REPORTS_PER_DESTINATION;
+    }
 
     /** Max number of event reports in storage per destination */
-    public static final long MAX_EVENT_REPORTS_PER_DESTINATION = 1024;
+    private static final int MAX_EVENT_REPORTS_PER_DESTINATION = 1024;
+
+    public static int getMaxEventReportsPerDestination() {
+        return MAX_EVENT_REPORTS_PER_DESTINATION;
+    }
 
     /**
      * Maximum event report upload retry window.
@@ -68,6 +78,11 @@ public class SystemHealthParams {
      * Maximum number of bytes allowed in an attribution filter string.
      */
     public static final int MAX_BYTES_PER_ATTRIBUTION_FILTER_STRING = 25;
+
+    /**
+     * Maximum number of filter maps allowed in an attribution filter set.
+     */
+    public static final int MAX_FILTER_MAPS_PER_FILTER_SET = 5;
 
     /**
      * Maximum number of values allowed in an attribution filter.
@@ -88,6 +103,9 @@ public class SystemHealthParams {
      * Maximum number of aggregation keys allowed during source or trigger registration.
      */
     public static final int MAX_AGGREGATE_KEYS_PER_REGISTRATION = 50;
+
+    /** Maximum number of aggregate deduplication keys allowed during trigger registration. */
+    public static final int MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION = 50;
 
     /**
      * Maximum number of aggregatable trigger data allowed in a trigger registration.

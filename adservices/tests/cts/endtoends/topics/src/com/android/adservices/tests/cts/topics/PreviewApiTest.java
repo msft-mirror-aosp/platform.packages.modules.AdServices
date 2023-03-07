@@ -19,20 +19,19 @@ package com.android.adservices.tests.cts.topics;
 import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.clients.topics.AdvertisingTopicsClient;
+import android.adservices.topics.GetTopicsRequest;
 import android.adservices.topics.GetTopicsResponse;
 import android.adservices.topics.Topic;
 import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
-import android.content.pm.ServiceInfo;
-import android.util.Log;
+import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdservicesCtsHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -63,12 +62,14 @@ public class PreviewApiTest {
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
-    // Used to get the package name. Copied over from com.android.adservices.AdServicesCommon
-    private static final String TOPICS_SERVICE_NAME = "android.adservices.TOPICS_SERVICE";
-    private static final String ADSERVICES_PACKAGE_NAME = getAdServicesPackageName();
+    private static final String ADSERVICES_PACKAGE_NAME =
+            AdservicesCtsHelper.getAdServicesPackageName(sContext, TAG);
 
     @Before
     public void setup() throws Exception {
+        // Skip the test if it runs on unsupported platforms.
+        Assume.assumeTrue(AdservicesCtsHelper.isDeviceSupported());
+
         // We need to skip 3 epochs so that if there is any usage from other test runs, it will
         // not be used for epoch retrieval.
         Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
@@ -76,12 +77,17 @@ public class PreviewApiTest {
         overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
         // We need to turn off random topic so that we can verify the returned topic.
         overridePercentageForRandomTopic(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+        // TODO(b/263297331): Handle rollback support for R and S.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            overrideConsentSourceOfTruth(/* PPAPI_ONLY */ 1);
+        }
     }
 
     @After
     public void teardown() {
         overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
         overridePercentageForRandomTopic(TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+        overrideConsentSourceOfTruth(null);
     }
 
     @Test
@@ -144,6 +150,27 @@ public class PreviewApiTest {
         assertThat(sdk2Result.getTopics()).isEmpty();
     }
 
+    // This test is to add test/line coverage for Topics API. There is no specific logic to test.
+    @Test
+    public void testForTopicsAPITestCoverage() {
+        String sdkName = "sdk1";
+        boolean shouldRecordObservation = false; // default value is true
+        GetTopicsRequest.Builder builder = new GetTopicsRequest.Builder();
+        builder.setAdsSdkName(sdkName);
+        builder.setShouldRecordObservation(shouldRecordObservation);
+
+        GetTopicsRequest request = builder.build();
+        assertThat(request.getAdsSdkName()).isEqualTo(sdkName);
+        assertThat(request.shouldRecordObservation()).isEqualTo(shouldRecordObservation);
+
+        // Below are for test coverage purpose. There is no assertion against them.
+        Topic mockedTopic =
+                new Topic(/* taxonomyVersion */ 1L, /* modelVersion*/ 1L, /* topicId */ 1);
+        GetTopicsResponse.Builder mockedBuilder =
+                new GetTopicsResponse.Builder(List.of(mockedTopic));
+        mockedBuilder.build();
+    }
+
     // Override the Epoch Period to shorten the Epoch Length in the test.
     private void overrideEpochPeriod(long overrideEpochPeriod) {
         ShellUtils.runShellCommand(
@@ -163,36 +190,7 @@ public class PreviewApiTest {
                 "cmd jobscheduler run -f" + " " + ADSERVICES_PACKAGE_NAME + " " + EPOCH_JOB_ID);
     }
 
-    // Used to get the package name. Copied over from com.android.adservices.AndroidServiceBinder
-    private static String getAdServicesPackageName() {
-        final Intent intent = new Intent(TOPICS_SERVICE_NAME);
-        final List<ResolveInfo> resolveInfos =
-                sContext.getPackageManager()
-                        .queryIntentServices(intent, PackageManager.MATCH_SYSTEM_ONLY);
-
-        if (resolveInfos == null || resolveInfos.isEmpty()) {
-            Log.e(
-                    TAG,
-                    "Failed to find resolveInfo for adServices service. Intent action: "
-                            + TOPICS_SERVICE_NAME);
-            return null;
-        }
-
-        if (resolveInfos.size() > 1) {
-            Log.e(
-                    TAG,
-                    String.format(
-                            "Found multiple services (%1$s) for the same intent action (%2$s)",
-                            TOPICS_SERVICE_NAME, resolveInfos));
-            return null;
-        }
-
-        final ServiceInfo serviceInfo = resolveInfos.get(0).serviceInfo;
-        if (serviceInfo == null) {
-            Log.e(TAG, "Failed to find serviceInfo for adServices service");
-            return null;
-        }
-
-        return serviceInfo.packageName;
+    private void overrideConsentSourceOfTruth(Integer value) {
+        ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth " + value);
     }
 }

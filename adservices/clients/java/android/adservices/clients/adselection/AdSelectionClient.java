@@ -22,6 +22,7 @@ import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.ReportImpressionRequest;
 import android.annotation.NonNull;
 import android.content.Context;
+import android.os.Build;
 import android.os.OutcomeReceiver;
 
 import androidx.concurrent.futures.CallbackToFutureAdapter;
@@ -37,6 +38,7 @@ import java.util.concurrent.Executor;
  */
 // TODO: This should be in JetPack code.
 public class AdSelectionClient {
+
     private AdSelectionManager mAdSelectionManager;
     private Context mContext;
     private Executor mExecutor;
@@ -44,7 +46,10 @@ public class AdSelectionClient {
     private AdSelectionClient(@NonNull Context context, @NonNull Executor executor) {
         mContext = context;
         mExecutor = executor;
-        mAdSelectionManager = mContext.getSystemService(AdSelectionManager.class);
+        mAdSelectionManager =
+                (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                        ? mContext.getSystemService(AdSelectionManager.class)
+                        : AdSelectionManager.get(context);
     }
 
     /**

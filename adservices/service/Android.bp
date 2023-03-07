@@ -35,8 +35,17 @@ java_sdk_library {
     permitted_packages: ["com.android.server.adservices"],
     libs: [
         "framework-adservices.impl",
+        // Workaround for b/262282035. Needed to access the SdkSandboxManagerLocal.
+        "service-sdksandbox.impl",
     ],
-    defaults: ["framework-system-server-module-defaults"],
+    static_libs: [
+        "modules-utils-preconditions",
+    ],
+    defaults: [
+        "framework-system-server-module-defaults",
+        "framework-system-server-module-optimize-defaults",
+    ],
+    jarjar_rules: "jarjar-rules.txt",
     visibility: [
         "//packages/modules/AdServices/tests:__subpackages__",
     ],

@@ -818,6 +818,169 @@ public final class TopicsDaoTest {
     }
 
     @Test
+    public void testDeleteEntriesFromTableByColumnWithEqualCondition() {
+        final long epochId1 = 1L;
+        final long epochId2 = 2L;
+        final String app = "app";
+        final String sdk = "sdk";
+
+        Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
+
+        // Verify ReturnedTopicContract
+        mTopicsDao.persistReturnedAppTopicsMap(epochId1, Map.of(Pair.create(app, sdk), topic1));
+        mTopicsDao.persistReturnedAppTopicsMap(epochId2, Map.of(Pair.create(app, sdk), topic2));
+
+        // Verify equalConditionValue is double by deleting with epochID = epoch2
+        mTopicsDao.deleteEntriesFromTableByColumnWithEqualCondition(
+                List.of(
+                        Pair.create(
+                                TopicsTables.ReturnedTopicContract.TABLE,
+                                TopicsTables.ReturnedTopicContract.APP)),
+                List.of(app),
+                TopicsTables.ReturnedTopicContract.EPOCH_ID,
+                String.valueOf(epochId2),
+                /* isStringEqualConditionColumnValue */ false);
+        assertThat(mTopicsDao.retrieveReturnedTopics(epochId1, /* numberOfLookBackEpochs */ 1))
+                .isEqualTo(Map.of(epochId1, Map.of(Pair.create(app, sdk), topic1)));
+        assertThat(mTopicsDao.retrieveReturnedTopics(epochId2, /* numberOfLookBackEpochs */ 1))
+                .isEmpty();
+
+        // Verify equalConditionValue is String by deleting sdk
+        mTopicsDao.deleteEntriesFromTableByColumnWithEqualCondition(
+                List.of(
+                        Pair.create(
+                                TopicsTables.ReturnedTopicContract.TABLE,
+                                TopicsTables.ReturnedTopicContract.APP)),
+                List.of(app),
+                TopicsTables.ReturnedTopicContract.SDK,
+                sdk,
+                /* isStringEqualConditionColumnValue */ true);
+        assertThat(mTopicsDao.retrieveReturnedTopics(epochId1, /* numberOfLookBackEpochs */ 1))
+                .isEmpty();
+    }
+
+    @Test
+    public void testDeleteEntriesFromTableByColumnWithEqualCondition_nullArguments() {
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        mTopicsDao.deleteEntriesFromTableByColumnWithEqualCondition(
+                                /* tableNamesAndColumnNamePairs */ null,
+                                /* Values to Delete */ List.of("app"),
+                                TopicsTables.ReturnedTopicContract.EPOCH_ID,
+                                /* epoch Id */ String.valueOf(1L),
+                                /* isStringEqualConditionColumnValue */ false));
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        mTopicsDao.deleteEntriesFromTableByColumnWithEqualCondition(
+                                List.of(
+                                        Pair.create(
+                                                TopicsTables.ReturnedTopicContract.TABLE,
+                                                TopicsTables.ReturnedTopicContract.APP)),
+                                /* Values to Delete */ null,
+                                TopicsTables.ReturnedTopicContract.EPOCH_ID,
+                                /* epoch Id */ String.valueOf(1L),
+                                /* isStringEqualConditionColumnValue */ false));
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        mTopicsDao.deleteEntriesFromTableByColumnWithEqualCondition(
+                                List.of(
+                                        Pair.create(
+                                                TopicsTables.ReturnedTopicContract.TABLE,
+                                                TopicsTables.ReturnedTopicContract.APP)),
+                                /* Values to Delete */ List.of("app"),
+                                /* equalConditionColumnName */ null,
+                                /* epoch Id */ String.valueOf(1L),
+                                /* isStringEqualConditionColumnValue */ false));
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        mTopicsDao.deleteEntriesFromTableByColumnWithEqualCondition(
+                                List.of(
+                                        Pair.create(
+                                                TopicsTables.ReturnedTopicContract.TABLE,
+                                                TopicsTables.ReturnedTopicContract.APP)),
+                                /* Values to Delete */ List.of("app"),
+                                TopicsTables.ReturnedTopicContract.EPOCH_ID,
+                                /* equalConditionColumnValue */ null,
+                                /* isStringEqualConditionColumnValue */ false));
+    }
+
+    @Test
+    public void testDeleteEntriesFromTableByColumnWithEqualCondition_nonExistingArguments() {
+        // Persist an entry to Returned Topics Table
+        final long epochId1 = 1L;
+        final int numberOfLookBackEpochs = 1;
+        final String app = "app";
+        final String sdk = "sdk";
+        Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
+        mTopicsDao.persistReturnedAppTopicsMap(epochId1, Map.of(Pair.create(app, sdk), topic1));
+        Map<Long, Map<Pair<String, String>, Topic>> expectedReturnedTopicsMap =
+                Map.of(epochId1, Map.of(Pair.create(app, sdk), topic1));
+
+        // To test passing in a non-existing table name
+        mTopicsDao.deleteEntriesFromTableByColumnWithEqualCondition(
+                List.of(Pair.create("Some Table", TopicsTables.ReturnedTopicContract.APP)),
+                /* Values to Delete */ List.of(app),
+                TopicsTables.ReturnedTopicContract.EPOCH_ID,
+                /* epoch Id */ String.valueOf(epochId1),
+                /* isStringEqualConditionColumnValue */ false);
+        assertThat(mTopicsDao.retrieveReturnedTopics(epochId1, numberOfLookBackEpochs))
+                .isEqualTo(expectedReturnedTopicsMap);
+
+        // To test passing in a non-existing Column name
+        mTopicsDao.deleteEntriesFromTableByColumnWithEqualCondition(
+                List.of(Pair.create(TopicsTables.ReturnedTopicContract.TABLE, "Some Column")),
+                /* Values to Delete */ List.of(app),
+                TopicsTables.ReturnedTopicContract.EPOCH_ID,
+                /* epoch Id */ String.valueOf(epochId1),
+                /* isStringEqualConditionColumnValue */ false);
+        assertThat(mTopicsDao.retrieveReturnedTopics(epochId1, numberOfLookBackEpochs))
+                .isEqualTo(expectedReturnedTopicsMap);
+
+        // To tests passing in a non-existing Column name for Equal Condition
+        mTopicsDao.deleteEntriesFromTableByColumnWithEqualCondition(
+                List.of(
+                        Pair.create(
+                                TopicsTables.ReturnedTopicContract.TABLE,
+                                TopicsTables.ReturnedTopicContract.APP)),
+                /* Values to Delete */ List.of(app),
+                "Some Column Name",
+                /* epoch Id */ String.valueOf(epochId1),
+                /* isStringEqualConditionColumnValue */ false);
+        assertThat(mTopicsDao.retrieveReturnedTopics(epochId1, numberOfLookBackEpochs))
+                .isEqualTo(expectedReturnedTopicsMap);
+    }
+
+    @Test
+    public void testDeleteEntriesFromTableByColumnWithEqualCondition_emptyValuesToDelete() {
+        // Persist an entry to Returned Topics Table
+        final long epochId1 = 1L;
+        final int numberOfLookBackEpochs = 1;
+        final String app = "app";
+        final String sdk = "sdk";
+        Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
+        mTopicsDao.persistReturnedAppTopicsMap(epochId1, Map.of(Pair.create(app, sdk), topic1));
+        Map<Long, Map<Pair<String, String>, Topic>> expectedReturnedTopicsMap =
+                Map.of(epochId1, Map.of(Pair.create(app, sdk), topic1));
+
+        mTopicsDao.deleteEntriesFromTableByColumnWithEqualCondition(
+                List.of(
+                        Pair.create(
+                                TopicsTables.ReturnedTopicContract.TABLE,
+                                TopicsTables.ReturnedTopicContract.APP)),
+                /* Values to Delete */ List.of(),
+                TopicsTables.ReturnedTopicContract.EPOCH_ID,
+                /* epoch Id */ String.valueOf(epochId1),
+                /* isStringEqualConditionColumnValue */ false);
+        assertThat(mTopicsDao.retrieveReturnedTopics(epochId1, numberOfLookBackEpochs))
+                .isEqualTo(expectedReturnedTopicsMap);
+    }
+
+    @Test
     public void testDeleteFromTableByColumn_mismatchedTableAndColumnName() {
         // Test with AppClassificationTopics Contract
         final long taxonomyVersion = 1L;
@@ -968,14 +1131,26 @@ public final class TopicsDaoTest {
     }
 
     @Test
-    public void testSupportsTopContributorsTable() {
+    public void testSupportsTopicContributorsTable() {
         DbHelper dbHelper = Mockito.mock(DbHelper.class);
         TopicsDao topicsDao = new TopicsDao(dbHelper);
 
-        Mockito.when(dbHelper.supportsTopContributorsTable()).thenReturn(false);
-        assertThat(topicsDao.supportsTopContributorsTable()).isFalse();
+        Mockito.when(dbHelper.supportsTopicContributorsTable()).thenReturn(false);
+        assertThat(topicsDao.supportsTopicContributorsTable()).isFalse();
 
-        Mockito.when(dbHelper.supportsTopContributorsTable()).thenReturn(true);
-        assertThat(topicsDao.supportsTopContributorsTable()).isTrue();
+        Mockito.when(dbHelper.supportsTopicContributorsTable()).thenReturn(true);
+        assertThat(topicsDao.supportsTopicContributorsTable()).isTrue();
+    }
+
+    @Test
+    public void testDeleteAllEntriesFromTable() {
+        Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
+
+        mTopicsDao.recordBlockedTopic(topic1);
+        mTopicsDao.recordBlockedTopic(topic2);
+
+        mTopicsDao.deleteAllEntriesFromTable(TopicsTables.BlockedTopicsContract.TABLE);
+        assertThat(mTopicsDao.retrieveAllBlockedTopics()).isEmpty();
     }
 }

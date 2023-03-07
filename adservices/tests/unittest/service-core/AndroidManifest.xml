@@ -61,6 +61,10 @@
                      "com.android.adservices.service.MaintenanceJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
+        <!-- Measurement debug report upload job. -->
+        <service android:name="com.android.adservices.service.measurement.reporting.DebugReportingJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
         <!-- MDD Service Job. Must be defined here in order to schedule them in Tests. -->
         <service android:name=
             "com.android.adservices.download.MddJobService"

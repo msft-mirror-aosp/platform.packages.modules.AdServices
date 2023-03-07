@@ -30,8 +30,10 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.reporting.DebugReport;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -104,12 +106,20 @@ public interface IMeasurementDao {
      */
     long getNumTriggersPerRegistrant(Uri registrant) throws DatastoreException;
 
+    /** Gets the number of triggers associated to a destination. */
+    long getNumTriggersPerDestination(Uri destination, @EventSurfaceType int destinationType)
+            throws DatastoreException;
+
     /**
-     * Gets the count of distinct IDs of enrollments in the Attribution table in a time window
-     * with matching publisher and destination, excluding a given enrollment ID.
+     * Gets the count of distinct IDs of enrollments in the Attribution table in a time window with
+     * matching publisher and destination, excluding a given enrollment ID.
      */
-    Integer countDistinctEnrollmentsPerPublisherXDestinationInAttribution(Uri sourceSite,
-            Uri destination, String excludedEnrollmentId, long windowStartTime, long windowEndTime)
+    Integer countDistinctEnrollmentsPerPublisherXDestinationInAttribution(
+            Uri sourceSite,
+            Uri destination,
+            String excludedEnrollmentId,
+            long windowStartTime,
+            long windowEndTime)
             throws DatastoreException;
 
     /**
@@ -141,6 +151,8 @@ public interface IMeasurementDao {
 
     /**
      * Add an entry to the Source datastore.
+     *
+     * @param source Source data to be inserted.
      */
     void insertSource(Source source) throws DatastoreException;
 
@@ -165,7 +177,14 @@ public interface IMeasurementDao {
      *
      * @param source the {@link Source} object.
      */
-    void updateSourceDedupKeys(@NonNull Source source) throws DatastoreException;
+    void updateSourceEventReportDedupKeys(@NonNull Source source) throws DatastoreException;
+
+    /**
+     * Update the set of Aggregate dedup keys contained in the provided {@link Source}
+     *
+     * @param source the {@link Source} object.
+     */
+    void updateSourceAggregateReportDedupKeys(@NonNull Source source) throws DatastoreException;
 
     /**
      * Updates the value of aggregate contributions for the corresponding {@link Source}
@@ -199,6 +218,15 @@ public interface IMeasurementDao {
     @Nullable
     AggregateReport getAggregateReport(String aggregateReportId)
             throws DatastoreException;
+
+    /**
+     * Queries and returns the {@link DebugReport}
+     *
+     * @param debugReportId of the request Debug Report
+     * @return the request Debug Report; Null in case of SQL failure
+     */
+    @Nullable
+    DebugReport getDebugReport(String debugReportId) throws DatastoreException;
 
     /**
      * Change the status of an event report to DELIVERED
@@ -242,6 +270,9 @@ public interface IMeasurementDao {
      */
     void deleteEventReport(EventReport eventReport) throws DatastoreException;
 
+    /** Deletes the {@link DebugReport} from datastore. */
+    void deleteDebugReport(String debugReportId) throws DatastoreException;
+
     /**
      * Returns list of all event reports that have a scheduled reporting time in the given window.
      */
@@ -276,7 +307,7 @@ public interface IMeasurementDao {
     void deleteAppRecords(Uri uri) throws DatastoreException;
 
     /** Deletes all expired records in measurement tables. */
-    void deleteExpiredRecords() throws DatastoreException;
+    void deleteExpiredRecords(long expiryWindowMs) throws DatastoreException;
 
     /**
      * Mark relevant source as install attributed.
@@ -316,6 +347,9 @@ public interface IMeasurementDao {
      */
     void insertAggregateReport(AggregateReport payload) throws DatastoreException;
 
+    /** Save debug report payload to datastore. */
+    void insertDebugReport(DebugReport payload) throws DatastoreException;
+
     /**
      * Returns list of all aggregate reports that have a scheduled reporting time in the given
      * window.
@@ -325,6 +359,9 @@ public interface IMeasurementDao {
 
     /** Returns list of all aggregate debug reports. */
     List<String> getPendingAggregateDebugReportIds() throws DatastoreException;
+
+    /** Returns list of all debug reports. */
+    List<String> getDebugReportIds() throws DatastoreException;
 
     /**
      * Returns list of all pending aggregate reports for a given app right away.
@@ -475,5 +512,29 @@ public interface IMeasurementDao {
             @NonNull List<Uri> origins,
             @NonNull List<Uri> domains,
             @DeletionRequest.MatchBehavior int matchBehavior)
+            throws DatastoreException;
+
+    /**
+     * Fetches the XNA relevant sources. It includes sources associated to the trigger's enrollment
+     * ID as well as the sources associated to the provided SAN enrollment IDs.
+     *
+     * @param trigger trigger to match
+     * @param xnaEnrollmentIds SAN enrollment IDs to match
+     * @return XNA relevant sources
+     * @throws DatastoreException when SQLite issue occurs
+     */
+    List<Source> fetchTriggerMatchingSourcesForXna(
+            @NonNull Trigger trigger, @NonNull Collection<String> xnaEnrollmentIds)
+            throws DatastoreException;
+
+    /**
+     * Insert an entry of source ID with enrollment ID into the {@link
+     * MeasurementTables.XnaIgnoredSourcesContract#TABLE}. It means that the provided source should
+     * be ignored to be picked up for doing XNA based attribution on the provided enrollment.
+     *
+     * @param sourceId source ID
+     * @param enrollmentId enrollment ID
+     */
+    void insertIgnoredSourceForEnrollment(@NonNull String sourceId, @NonNull String enrollmentId)
             throws DatastoreException;
 }

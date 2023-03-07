@@ -30,6 +30,8 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.Process;
 import android.os.UserHandle;
+import android.support.test.uiautomator.UiDevice;
+import android.view.KeyEvent;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
@@ -67,6 +69,7 @@ public class SdkSandboxStorageTestApp {
     private Context mContext;
     private SdkSandboxManager mSdkSandboxManager;
     private IStorageTestSdk1Api mSdk;
+    private UiDevice mUiDevice;
 
     @Before
     public void setup() {
@@ -74,16 +77,34 @@ public class SdkSandboxStorageTestApp {
         mSdkSandboxManager = mContext.getSystemService(SdkSandboxManager.class);
         assertThat(mSdkSandboxManager).isNotNull();
         mRule.getScenario();
+        mUiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
     }
 
     @Test
     public void loadSdk() throws Exception {
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        callback.assertLoadSdkIsSuccessful();
 
         // Store the returned SDK interface so that we can interact with it later.
         mSdk = IStorageTestSdk1Api.Stub.asInterface(callback.getSandboxedSdk().getInterface());
+    }
+
+    @Test
+    public void unlockDevice() throws Exception {
+        mUiDevice.wakeUp();
+        mUiDevice.waitForIdle();
+        mUiDevice.pressMenu();
+        mUiDevice.waitForIdle();
+        mUiDevice.pressKeyCode(KeyEvent.KEYCODE_1);
+        mUiDevice.pressKeyCode(KeyEvent.KEYCODE_2);
+        mUiDevice.pressKeyCode(KeyEvent.KEYCODE_3);
+        mUiDevice.pressKeyCode(KeyEvent.KEYCODE_4);
+        mUiDevice.waitForIdle();
+        mUiDevice.pressEnter();
+        mUiDevice.waitForIdle();
+        mUiDevice.pressHome();
+        mUiDevice.waitForIdle();
     }
 
     @Test
@@ -133,16 +154,16 @@ public class SdkSandboxStorageTestApp {
         final long appSizeAppStats = finalAppStats.getDataBytes() - initialAppStats.getDataBytes();
         final long appSizeUserStats =
                 finalUserStats.getDataBytes() - initialUserStats.getDataBytes();
-        assertMostlyEquals(deltaAppSize, appSizeAppStats);
-        assertMostlyEquals(deltaAppSize, appSizeUserStats);
+        assertMostlyEquals(deltaAppSize, appSizeAppStats, 5);
+        assertMostlyEquals(deltaAppSize, appSizeUserStats, 10);
 
         // Assert cache size is same
         final long cacheSizeAppStats =
                 finalAppStats.getCacheBytes() - initialAppStats.getCacheBytes();
         final long cacheSizeUserStats =
                 finalUserStats.getCacheBytes() - initialUserStats.getCacheBytes();
-        assertMostlyEquals(deltaCacheSize, cacheSizeAppStats);
-        assertMostlyEquals(deltaCacheSize, cacheSizeUserStats);
+        assertMostlyEquals(deltaCacheSize, cacheSizeAppStats, 5);
+        assertMostlyEquals(deltaCacheSize, cacheSizeUserStats, 10);
     }
 
     private static void assertDirIsNotAccessible(String path) {
@@ -157,10 +178,18 @@ public class SdkSandboxStorageTestApp {
         assertThat(new File(path).canExecute()).isFalse();
     }
 
-    private static void assertMostlyEquals(long expected, long actual) {
-        final long errorMarginSize = expected / 20; // 5%
-        if (Math.abs(expected - actual) > errorMarginSize) {
-            throw new AssertionFailedError("Expected roughly " + expected + " but was " + actual);
+    private static void assertMostlyEquals(
+            long expected, long actual, long errorMarginInPercentage) {
+        final double diffInSize = Math.abs(expected - actual);
+        final double diffInPercentage = (diffInSize / expected) * 100;
+        if (diffInPercentage > errorMarginInPercentage) {
+            throw new AssertionFailedError(
+                    "Expected roughly "
+                            + expected
+                            + " but was "
+                            + actual
+                            + ". Diff in percentage: "
+                            + Math.round(diffInPercentage * 100) / 100.00);
         }
     }
 }

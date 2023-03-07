@@ -25,9 +25,13 @@ import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.internal.annotations.VisibleForTesting;
@@ -35,6 +39,8 @@ import com.android.internal.annotations.VisibleForTesting;
 import java.util.Objects;
 
 /** Verify caller of FLEDGE API has the permission of performing certain behaviour. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class FledgeAuthorizationFilter {
     @NonNull private final PackageManager mPackageManager;
     @NonNull private final EnrollmentDao mEnrollmentDao;
@@ -144,6 +150,16 @@ public class FledgeAuthorizationFilter {
 
         if (!AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
                 context, appPackageName, enrollmentData.getEnrollmentId())) {
+            LogUtil.v(
+                    "App package name \"%s\" with ad tech identifier \"%s\" not authorized to call"
+                            + " API %d",
+                    appPackageName, adTechIdentifier.toString(), apiNameLoggingId);
+            mAdServicesLogger.logFledgeApiCallStats(apiNameLoggingId, STATUS_CALLER_NOT_ALLOWED, 0);
+            throw new AdTechNotAllowedException();
+        }
+
+        // Check if enrollment is in blocklist.
+        if (PhFlags.getInstance().isEnrollmentBlocklisted(enrollmentData.getEnrollmentId())) {
             LogUtil.v(
                     "App package name \"%s\" with ad tech identifier \"%s\" not authorized to call"
                             + " API %d",

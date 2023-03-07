@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement.registration;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_ATTRIBUTION_FILTERS;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_BYTES_PER_ATTRIBUTION_AGGREGATE_KEY_ID;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_BYTES_PER_ATTRIBUTION_FILTER_STRING;
+import static com.android.adservices.service.measurement.SystemHealthParams.MAX_FILTER_MAPS_PER_FILTER_SET;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_REDIRECTS_PER_REGISTRATION;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_VALUES_PER_ATTRIBUTION_FILTER;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS;
@@ -102,6 +103,19 @@ class FetcherUtil {
         return id != null && id.getBytes().length <= MAX_BYTES_PER_ATTRIBUTION_AGGREGATE_KEY_ID;
     }
 
+    /** Validate aggregate deduplication key. */
+    static boolean isValidAggregateDeduplicationKey(String deduplicationKey) {
+        if (deduplicationKey == null) {
+            return false;
+        }
+        try {
+            Long.parseUnsignedLong(deduplicationKey);
+        } catch (NumberFormatException exception) {
+            return false;
+        }
+        return true;
+    }
+
     /**
      * Validate aggregate key-piece.
      */
@@ -117,7 +131,22 @@ class FetcherUtil {
     }
 
     /**
-     * Validate attribution filters JSON.
+     * Validate attribution filters JSONArray.
+     */
+    static boolean areValidAttributionFilters(@NonNull JSONArray filterSet) {
+        if (filterSet.length() > MAX_FILTER_MAPS_PER_FILTER_SET) {
+            return false;
+        }
+        for (int i = 0; i < filterSet.length(); i++) {
+            if (!areValidAttributionFilters(filterSet.optJSONObject(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Validate attribution filters JSONObject.
      */
     static boolean areValidAttributionFilters(JSONObject filtersObj) {
         if (filtersObj == null || filtersObj.length() > MAX_ATTRIBUTION_FILTERS) {

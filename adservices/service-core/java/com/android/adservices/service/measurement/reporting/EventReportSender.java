@@ -56,8 +56,7 @@ public class EventReportSender extends MeasurementReportSender {
      */
     URL createReportingFullUrl(Uri adTechDomain)
             throws MalformedURLException {
-        Uri reportingFullUrl = Uri.withAppendedPath(adTechDomain,
-                EVENT_ATTRIBUTION_REPORT_URI_PATH);
+        Uri reportingFullUrl = Uri.withAppendedPath(adTechDomain, mReportUriPath);
         return new URL(reportingFullUrl.toString());
     }
 }

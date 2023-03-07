@@ -19,8 +19,11 @@ package com.android.adservices.data;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
+
+import com.android.adservices.data.measurement.MeasurementDbHelper;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -29,8 +32,10 @@ import java.util.Set;
 public final class DbTestUtil {
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final String DATABASE_NAME_FOR_TEST = "adservices_test.db";
+    private static final String MSMT_DATABASE_NAME_FOR_TEST = "adservices_msmt_test.db";
 
     private static DbHelper sSingleton;
+    private static MeasurementDbHelper sMsmtSingleton;
 
     /** Erases all data from the table rows */
     public static void deleteTable(String tableName) {
@@ -60,10 +65,26 @@ public final class DbTestUtil {
         }
     }
 
+    public static MeasurementDbHelper getMeasurementDbHelperForTest() {
+        synchronized (MeasurementDbHelper.class) {
+            if (sMsmtSingleton == null) {
+                sMsmtSingleton =
+                        new MeasurementDbHelper(
+                                sContext,
+                                MSMT_DATABASE_NAME_FOR_TEST,
+                                MeasurementDbHelper.CURRENT_DATABASE_VERSION,
+                                getDbHelperForTest());
+            }
+            return sMsmtSingleton;
+        }
+    }
+
     /** Return true if table exists in the DB and column count matches. */
     public static boolean doesTableExistAndColumnCountMatch(
             SQLiteDatabase db, String tableName, int columnCount) {
         final Set<String> tableColumns = getTableColumns(db, tableName);
+        int actualCol = tableColumns.size();
+        Log.d("DbTestUtil_log_test,", " table name: " + tableName + " column count: " + actualCol);
         return tableColumns.size() == columnCount;
     }
 
@@ -91,6 +112,12 @@ public final class DbTestUtil {
     /** Return true if the given index exists in the DB. */
     public static boolean doesIndexExist(SQLiteDatabase db, String index) {
         String query = "SELECT * FROM sqlite_master WHERE type='index' and name='" + index + "'";
+        Cursor cursor = db.rawQuery(query, null);
+        return cursor != null && cursor.getCount() > 0;
+    }
+
+    public static boolean doesTableExist(SQLiteDatabase db, String table) {
+        String query = "SELECT * FROM sqlite_master WHERE type='table' and name='" + table + "'";
         Cursor cursor = db.rawQuery(query, null);
         return cursor != null && cursor.getCount() > 0;
     }

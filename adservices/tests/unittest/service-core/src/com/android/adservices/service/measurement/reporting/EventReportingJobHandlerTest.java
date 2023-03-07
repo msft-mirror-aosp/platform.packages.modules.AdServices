@@ -61,7 +61,7 @@ public class EventReportingJobHandlerTest {
     private static final UnsignedLong TRIGGER_DEBUG_KEY = new UnsignedLong(928762L);
 
     private static final EnrollmentData ENROLLMENT = new EnrollmentData.Builder()
-            .setAttributionReportingUrl(List.of("https://ad-tech.com"))
+            .setAttributionReportingUrl(List.of("https://ad-tech.test"))
             .build();
 
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
@@ -98,7 +98,7 @@ public class EventReportingJobHandlerTest {
         mSpyDebugEventReportingJobHandler =
                 Mockito.spy(
                         new EventReportingJobHandler(mEnrollmentDao, mDatastoreManager)
-                                .setDebugReport(true));
+                                .setIsDebugInstance(true));
     }
 
     @Test

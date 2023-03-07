@@ -70,7 +70,7 @@ import static com.android.adservices.service.stats.RunAdScoringProcessReportedSt
 import static com.android.adservices.service.stats.RunAdScoringProcessReportedStatsTest.RUN_AD_SCORING_LATENCY_IN_MILLIS;
 import static com.android.adservices.service.stats.RunAdScoringProcessReportedStatsTest.RUN_AD_SCORING_RESULT_CODE;
 import static com.android.adservices.service.stats.RunAdScoringProcessReportedStatsTest.SCORE_ADS_LATENCY_IN_MILLIS;
-import static com.android.adservices.service.stats.RunAdSelectionProcessReportedStatsTest.AD_SELECTION_ENTRY_SIZE_IN_BYTES;
+import static com.android.adservices.service.stats.RunAdSelectionProcessReportedStatsTest.DB_AD_SELECTION_SIZE_IN_BYTES;
 import static com.android.adservices.service.stats.RunAdSelectionProcessReportedStatsTest.IS_RMKT_ADS_WON;
 import static com.android.adservices.service.stats.RunAdSelectionProcessReportedStatsTest.PERSIST_AD_SELECTION_LATENCY_IN_MILLIS;
 import static com.android.adservices.service.stats.RunAdSelectionProcessReportedStatsTest.PERSIST_AD_SELECTION_RESULT_CODE;
@@ -116,7 +116,7 @@ public class AdServicesLoggerImplTest {
         RunAdSelectionProcessReportedStats stats =
                 RunAdSelectionProcessReportedStats.builder()
                         .setIsRemarketingAdsWon(IS_RMKT_ADS_WON)
-                        .setAdSelectionEntrySizeInBytes(AD_SELECTION_ENTRY_SIZE_IN_BYTES)
+                        .setDBAdSelectionSizeInBytes(DB_AD_SELECTION_SIZE_IN_BYTES)
                         .setPersistAdSelectionLatencyInMillis(
                                 PERSIST_AD_SELECTION_LATENCY_IN_MILLIS)
                         .setPersistAdSelectionResultCode(PERSIST_AD_SELECTION_RESULT_CODE)
@@ -130,8 +130,8 @@ public class AdServicesLoggerImplTest {
         verify(mStatsdLoggerMock).logRunAdSelectionProcessReportedStats(argumentCaptor.capture());
         assertEquals(argumentCaptor.getValue().getIsRemarketingAdsWon(), IS_RMKT_ADS_WON);
         assertEquals(
-                argumentCaptor.getValue().getAdSelectionEntrySizeInBytes(),
-                AD_SELECTION_ENTRY_SIZE_IN_BYTES);
+                argumentCaptor.getValue().getDBAdSelectionSizeInBytes(),
+                DB_AD_SELECTION_SIZE_IN_BYTES);
         assertEquals(
                 argumentCaptor.getValue().getPersistAdSelectionLatencyInMillis(),
                 PERSIST_AD_SELECTION_LATENCY_IN_MILLIS);

@@ -24,7 +24,7 @@ import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 
 public class SecondaryUserUtils {
 
-    private static final long NUMBER_OF_POLLS = 2 * 60;
+    private static final long NUMBER_OF_POLLS = 5 * 60;
     private static final long POLL_INTERVAL_IN_MILLIS = 1000;
 
     private final BaseHostJUnit4Test mTest;
@@ -34,6 +34,10 @@ public class SecondaryUserUtils {
 
     public SecondaryUserUtils(BaseHostJUnit4Test test) {
         mTest = test;
+    }
+
+    public boolean isMultiUserSupported() throws Exception {
+        return mTest.getDevice().isMultiUserSupported();
     }
 
     public int createAndStartSecondaryUser() throws Exception {

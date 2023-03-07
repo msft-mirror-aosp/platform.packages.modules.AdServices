@@ -16,11 +16,31 @@
   -->
 <configuration description="Config for Ad Services Settings App test cases">
     <option name="test-tag" value="AdServicesApkUITests" />
+    <option name="config-descriptor:metadata" key="parameter" value="not_secondary_user" />
+    <!-- disable device config sync during test -->
+    <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />
+    <option name="teardown-command" value="device_config set_sync_disabled_for_tests none" />
 
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true"/>
         <option name="test-file-name" value="AdServicesApkUITests.apk"/>
     </target_preparer>
+
+    <!-- Create place to store tests apks that will be installed/uninstalled in the test. -->
+    <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
+        <option name="run-command" value="mkdir -p /data/local/tmp/cts/install" />
+        <option name="teardown-command" value="rm -rf /data/local/tmp/cts"/>
+        <!-- Uninstall the test app anyway in case failed test skips the uninstallation -->
+        <option name="teardown-command"
+                value="pm uninstall --user 0 com.example.adservices.samples.ui.consenttestapp" />
+    </target_preparer>
+
+    <!-- Push compiled APK file of test apps to a local place for installation -->
+    <target_preparer class="com.android.compatibility.common.tradefed.targetprep.FilePusher">
+        <option name="push"
+                value="com.example.adservices.samples.ui.consenttestapp.apk->/data/local/tmp/cts/install/com.example.adservices.samples.ui.consenttestapp.apk" />
+    </target_preparer>
+
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">
         <option name="hidden-api-checks" value="false" /> <!-- Allow hidden API uses -->
         <option name="package" value="com.android.adservices.tests.ui"/>

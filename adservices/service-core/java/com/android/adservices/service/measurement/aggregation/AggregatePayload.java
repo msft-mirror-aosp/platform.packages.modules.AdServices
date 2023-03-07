@@ -74,18 +74,13 @@ public class AggregatePayload {
             mAggregateReport = new AggregatePayload();
         }
 
-        /**
-         * See {@link AggregatePayload#getPayloads()} ()}.
-         */
-        public Builder setAggregationServicePayload(
-                List<AggregationServicePayload> payloads) {
+        /** See {@link AggregatePayload#getPayloads()}. */
+        public Builder setAggregationServicePayload(List<AggregationServicePayload> payloads) {
             mAggregateReport.mPayloads = payloads;
             return this;
         }
 
-        /**
-         * See {@link AggregatePayload#getSharedInfo()} ()}.
-         */
+        /** See {@link AggregatePayload#getSharedInfo()}. */
         public Builder setSharedInfo(String sharedInfo) {
             mAggregateReport.mSharedInfo = sharedInfo;
             return this;

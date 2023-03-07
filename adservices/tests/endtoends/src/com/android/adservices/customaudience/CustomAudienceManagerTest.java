@@ -27,6 +27,7 @@ import android.content.Context;
 import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.LogUtil;
@@ -127,6 +128,8 @@ public class CustomAudienceManagerTest {
      * avoid fluctuation, which works okay for comparing multiple algorithms, but not a good way to
      * get the "actual" number.
      */
+    // TODO(b/271338417): Remove @FlakyTest after stabilizing test
+    @FlakyTest(bugId = 271338417)
     @Test
     public void testCallCustomAudienceAPIAfterKillingService() throws Exception {
         // Kill the service process, if it's already running.

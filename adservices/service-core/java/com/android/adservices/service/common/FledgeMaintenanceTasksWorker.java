@@ -48,7 +48,8 @@ public class FledgeMaintenanceTasksWorker {
 
     /**
      * Clears all entries in the {@code ad_selection} table that are older than {@code
-     * expirationTime}. Then, clears all expired entries in the {@code buyer_decision_logic}.
+     * expirationTime}. Then, clears all expired entries in the {@code buyer_decision_logic} as well
+     * as the {@code registered_ad_interactions} table.
      */
     public void clearExpiredAdSelectionData() {
         Instant expirationTime =
@@ -60,5 +61,8 @@ public class FledgeMaintenanceTasksWorker {
 
         LogUtil.v("Clearing expired Buyer Decision Logic data ");
         mAdSelectionEntryDao.removeExpiredBuyerDecisionLogic();
+
+        LogUtil.v("Clearing expired Registered Ad Interaction data ");
+        mAdSelectionEntryDao.removeExpiredRegisteredAdInteractions();
     }
 }

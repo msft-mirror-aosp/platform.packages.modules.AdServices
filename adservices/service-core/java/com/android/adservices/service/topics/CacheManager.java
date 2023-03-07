@@ -18,8 +18,10 @@ package com.android.adservices.service.topics;
 
 import android.annotation.NonNull;
 import android.content.Context;
-import android.util.Dumpable;
+import android.os.Build;
 import android.util.Pair;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.topics.Topic;
@@ -29,6 +31,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.GetTopicsReportedStats;
+import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
@@ -46,16 +49,28 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
-/** A class to manage Topics Cache. */
-public class CacheManager implements Dumpable {
+import javax.annotation.concurrent.ThreadSafe;
+
+/**
+ * A class to manage Topics Cache.
+ *
+ * <p>This class is thread safe.
+ */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
+@ThreadSafe
+public class CacheManager {
     // The verbose level for dumpsys usage
     private static final int VERBOSE = 1;
+    private static final Object SINGLETON_LOCK = new Object();
+
+    @GuardedBy("SINGLETON_LOCK")
     private static CacheManager sSingleton;
     // Lock for Read and Write on the cached topics map.
     // This allows concurrent reads but exclusive update to the cache.
     private final ReadWriteLock mReadWriteLock = new ReentrantReadWriteLock();
-    private final EpochManager mEpochManager;
     private final TopicsDao mTopicsDao;
+    private final BlockedTopicsManager mBlockedTopicsManager;
     private final Flags mFlags;
     // Map<EpochId, Map<Pair<App, Sdk>, Topic>
     private Map<Long, Map<Pair<String, String>, Topic>> mCachedTopics = new HashMap<>();
@@ -64,28 +79,37 @@ public class CacheManager implements Dumpable {
     private HashSet<Topic> mCachedBlockedTopics = new HashSet<>();
     // HashSet<TopicId>
     private HashSet<Integer> mCachedBlockedTopicIds = new HashSet<>();
+
+    // Set containing Global Blocked Topic Ids
+    private HashSet<Integer> mCachedGlobalBlockedTopicIds;
     private final AdServicesLogger mLogger;
 
     @VisibleForTesting
     CacheManager(
-            EpochManager epochManager, TopicsDao topicsDao, Flags flags, AdServicesLogger logger) {
-        mEpochManager = epochManager;
+            TopicsDao topicsDao,
+            Flags flags,
+            AdServicesLogger logger,
+            BlockedTopicsManager blockedTopicsManager,
+            GlobalBlockedTopicsManager globalBlockedTopicsManager) {
         mTopicsDao = topicsDao;
         mFlags = flags;
         mLogger = logger;
+        mBlockedTopicsManager = blockedTopicsManager;
+        mCachedGlobalBlockedTopicIds = globalBlockedTopicsManager.getGlobalBlockedTopicIds();
     }
 
     /** Returns an instance of the CacheManager given a context. */
     @NonNull
     public static CacheManager getInstance(Context context) {
-        synchronized (CacheManager.class) {
+        synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
                 sSingleton =
                         new CacheManager(
-                                EpochManager.getInstance(context),
                                 TopicsDao.getInstance(context),
                                 FlagsFactory.getFlags(),
-                                AdServicesLoggerImpl.getInstance());
+                                AdServicesLoggerImpl.getInstance(),
+                                BlockedTopicsManager.getInstance(context),
+                                GlobalBlockedTopicsManager.getInstance());
             }
             return sSingleton;
         }
@@ -95,17 +119,18 @@ public class CacheManager implements Dumpable {
      * Load the cache from DB.
      *
      * <p>When first created, the Cache is empty. We will need to retrieve the cache from DB.
+     *
+     * @param currentEpochId current Epoch ID
      */
-    public void loadCache() {
+    public void loadCache(long currentEpochId) {
         // Retrieve the cache from DB.
-        long currentEpoch = mEpochManager.getCurrentEpochId();
         int lookbackEpochs = mFlags.getTopicsNumberOfLookBackEpochs();
         // Map<EpochId, Map<Pair<App, Sdk>, Topic>
         Map<Long, Map<Pair<String, String>, Topic>> cacheFromDb =
-                mTopicsDao.retrieveReturnedTopics(currentEpoch, lookbackEpochs + 1);
+                mTopicsDao.retrieveReturnedTopics(currentEpochId, lookbackEpochs + 1);
         // HashSet<BlockedTopic>
         HashSet<Topic> blockedTopicsCacheFromDb =
-                new HashSet<>(mTopicsDao.retrieveAllBlockedTopics());
+                new HashSet<>(mBlockedTopicsManager.retrieveAllBlockedTopics());
         HashSet<Integer> blockedTopicIdsFromDb =
                 blockedTopicsCacheFromDb.stream()
                         .map(Topic::getTopic)
@@ -116,8 +141,8 @@ public class CacheManager implements Dumpable {
                         + cacheFromDb.size()
                         + ", CachedBlockedTopics mapping size is "
                         + blockedTopicsCacheFromDb.size());
+        mReadWriteLock.writeLock().lock();
         try {
-            mReadWriteLock.writeLock().lock();
             mCachedTopics = cacheFromDb;
             mCachedBlockedTopics = blockedTopicsCacheFromDb;
             mCachedBlockedTopicIds = blockedTopicIdsFromDb;
@@ -131,6 +156,7 @@ public class CacheManager implements Dumpable {
      * numberOfLookBackEpochs + 1, epochId] that were not blocked by the user.
      *
      * @param numberOfLookBackEpochs how many epochs to look back.
+     * @param currentEpochId current Epoch ID
      * @param app the app
      * @param sdk the sdk. In case the app calls the Topics API directly, the sdk == empty string.
      * @param random a {@link Random} instance for shuffling
@@ -138,15 +164,19 @@ public class CacheManager implements Dumpable {
      */
     @NonNull
     public List<Topic> getTopics(
-            int numberOfLookBackEpochs, String app, String sdk, Random random) {
+            int numberOfLookBackEpochs,
+            long currentEpochId,
+            String app,
+            String sdk,
+            Random random) {
         // We will need to look at the 3 historical epochs starting from last epoch.
-        long epochId = mEpochManager.getCurrentEpochId() - 1;
+        long epochId = currentEpochId - 1;
         List<Topic> topics = new ArrayList<>();
         // To deduplicate returned topics
         Set<Integer> topicsSet = new HashSet<>();
 
-        mReadWriteLock.readLock().lock();
         int duplicateTopicCount = 0, blockedTopicCount = 0;
+        mReadWriteLock.readLock().lock();
         try {
             for (int numEpoch = 0; numEpoch < numberOfLookBackEpochs; numEpoch++) {
                 if (mCachedTopics.containsKey(epochId - numEpoch)) {
@@ -156,7 +186,7 @@ public class CacheManager implements Dumpable {
                             duplicateTopicCount++;
                             continue;
                         }
-                        if (mCachedBlockedTopicIds.contains(topic.getTopic())) {
+                        if (isTopicIdBlocked(topic.getTopic())) {
                             blockedTopicCount++;
                             continue;
                         }
@@ -178,9 +208,9 @@ public class CacheManager implements Dumpable {
         }
         mLogger.logGetTopicsReportedStats(
                 GetTopicsReportedStats.builder()
-                        .setTopicIds(topicIds.build())
                         .setDuplicateTopicCount(duplicateTopicCount)
                         .setFilteredBlockedTopicCount(blockedTopicCount)
+                        .setTopicIdsCount(topics.size())
                         .build());
 
         return topics;
@@ -190,13 +220,15 @@ public class CacheManager implements Dumpable {
      * Overloading getTopics() method to pass in an initialized Random object.
      *
      * @param numberOfLookBackEpochs how many epochs to look back.
+     * @param currentEpochId current Epoch ID
      * @param app the app
      * @param sdk the sdk. In case the app calls the Topics API directly, the sdk == empty string.
      * @return {@link List<Topic>} a list of Topics
      */
     @NonNull
-    public List<Topic> getTopics(int numberOfLookBackEpochs, String app, String sdk) {
-        return getTopics(numberOfLookBackEpochs, app, sdk, new Random());
+    public List<Topic> getTopics(
+            int numberOfLookBackEpochs, long currentEpochId, String app, String sdk) {
+        return getTopics(numberOfLookBackEpochs, currentEpochId, app, sdk, new Random());
     }
 
     /**
@@ -240,12 +272,13 @@ public class CacheManager implements Dumpable {
      * numberOfLookBackEpochs epochs. Does not include the current epoch, so range is
      * [currentEpochId - numberOfLookBackEpochs, currentEpochId - 1].
      *
+     * @param currentEpochId current Epoch ID
      * @return The list of Topics.
      */
     @NonNull
-    public ImmutableList<Topic> getKnownTopicsWithConsent() {
+    public ImmutableList<Topic> getKnownTopicsWithConsent(long currentEpochId) {
         // We will need to look at the 3 historical epochs starting from last epoch.
-        long epochId = mEpochManager.getCurrentEpochId() - 1;
+        long epochId = currentEpochId - 1;
         HashSet<Topic> topics = new HashSet<>();
         mReadWriteLock.readLock().lock();
         try {
@@ -255,10 +288,7 @@ public class CacheManager implements Dumpable {
                 if (mCachedTopics.containsKey(epochId - numEpoch)) {
                     topics.addAll(
                             mCachedTopics.get(epochId - numEpoch).values().stream()
-                                    .filter(
-                                            topic ->
-                                                    !mCachedBlockedTopicIds.contains(
-                                                            topic.getTopic()))
+                                    .filter(topic -> !isTopicIdBlocked(topic.getTopic()))
                                     .collect(Collectors.toList()));
                 }
             }
@@ -266,6 +296,12 @@ public class CacheManager implements Dumpable {
             mReadWriteLock.readLock().unlock();
         }
         return ImmutableList.copyOf(topics);
+    }
+
+    /** Returns true if topic id is a global blocked topic or user blocked topic. */
+    private boolean isTopicIdBlocked(int topicId) {
+        return mCachedBlockedTopicIds.contains(topicId)
+                || mCachedGlobalBlockedTopicIds.contains(topicId);
     }
 
     /**
@@ -297,7 +333,6 @@ public class CacheManager implements Dumpable {
         }
     }
 
-    @Override
     public void dump(@NonNull PrintWriter writer, String[] args) {
         boolean isVerbose =
                 args != null
@@ -305,6 +340,7 @@ public class CacheManager implements Dumpable {
                         && Integer.parseInt(args[0].toLowerCase()) == VERBOSE;
         writer.println("==== CacheManager Dump ====");
         writer.println(String.format("mCachedTopics size: %d", mCachedTopics.size()));
+        writer.println(String.format("mCachedBlockedTopics size: %d", mCachedBlockedTopics.size()));
         if (isVerbose) {
             for (Long epochId : mCachedTopics.keySet()) {
                 writer.println(String.format("Epoch Id: %d \n", epochId));

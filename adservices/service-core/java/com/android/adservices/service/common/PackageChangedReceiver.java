@@ -25,17 +25,20 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.topics.TopicsWorker;
 import com.android.internal.annotations.VisibleForTesting;
 
-import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
@@ -43,6 +46,8 @@ import java.util.concurrent.Executor;
  * Receiver to receive a com.android.adservices.PACKAGE_CHANGED broadcast from the AdServices system
  * service when package install/uninstalls occur.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class PackageChangedReceiver extends BroadcastReceiver {
 
     /**
@@ -65,6 +70,8 @@ public class PackageChangedReceiver extends BroadcastReceiver {
 
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
 
+    private static final int DEFAULT_PACKAGE_UID = -1;
+
     /** Enable the PackageChangedReceiver */
     public static boolean enableReceiver(@NonNull Context context) {
         try {
@@ -86,7 +93,7 @@ public class PackageChangedReceiver extends BroadcastReceiver {
         switch (intent.getAction()) {
             case PACKAGE_CHANGED_BROADCAST:
                 Uri packageUri = Uri.parse(intent.getData().getSchemeSpecificPart());
-                int packageUid = intent.getIntExtra(Intent.EXTRA_UID, -1);
+                int packageUid = intent.getIntExtra(Intent.EXTRA_UID, DEFAULT_PACKAGE_UID);
                 switch (intent.getStringExtra(ACTION_KEY)) {
                     case PACKAGE_FULLY_REMOVED:
                         measurementOnPackageFullyRemoved(context, packageUri);
@@ -128,7 +135,9 @@ public class PackageChangedReceiver extends BroadcastReceiver {
 
         LogUtil.d("Package Data Cleared: " + packageUri);
         sBackgroundExecutor.execute(
-                () -> MeasurementImpl.getInstance(context).deletePackageRecords(packageUri));
+                () -> {
+                    MeasurementImpl.getInstance(context).deletePackageRecords(packageUri);
+                });
     }
 
     @VisibleForTesting
@@ -152,9 +161,10 @@ public class PackageChangedReceiver extends BroadcastReceiver {
             return;
         }
 
-        LogUtil.d("Deleting topics data for package: " + packageUri.toString());
+        LogUtil.d(
+                "Handling App Uninstallation in Topics API for package: " + packageUri.toString());
         sBackgroundExecutor.execute(
-                () -> TopicsWorker.getInstance(context).deletePackageData(packageUri));
+                () -> TopicsWorker.getInstance(context).handleAppUninstallation(packageUri));
     }
 
     @VisibleForTesting
@@ -184,25 +194,69 @@ public class PackageChangedReceiver extends BroadcastReceiver {
                                 .deleteCustomAudienceDataByOwner(packageUri.toString()));
     }
 
-    /** Deletes a consent setting for the given application and UID. */
+    /**
+     * Deletes a consent setting for the given application and UID. If the UID is equal to
+     * DEFAULT_PACKAGE_UID, all consent data is deleted.
+     */
     @VisibleForTesting
     void consentOnPackageFullyRemoved(
             @NonNull Context context, @NonNull Uri packageUri, int packageUid) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(packageUri);
 
-        LogUtil.d(
-                "Deleting consent data for package %s with UID %d",
-                packageUri.toString(), packageUid);
+        String packageName = packageUri.toString();
+        LogUtil.d("Deleting consent data for package %s with UID %d", packageName, packageUid);
         sBackgroundExecutor.execute(
                 () -> {
-                    try {
-                        AppConsentDao.getInstance(context)
-                                .clearConsentForUninstalledApp(packageUri.toString(), packageUid);
-                    } catch (IOException e) {
-                        LogUtil.e("Failed to initialize or write to the app consent datastore");
+                    ConsentManager instance = ConsentManager.getInstance(context);
+                    if (packageUid == DEFAULT_PACKAGE_UID) {
+                        // There can be multiple instances of PackageChangedReceiver, e.g. in
+                        // different user profiles. The system broadcasts a package change
+                        // notification when any package is installed/uninstalled/cleared on any
+                        // profile, to all PackageChangedReceivers. However, if the
+                        // uninstallation is in a different user profile than the one this
+                        // instance of PackageChangedReceiver is in, it should ignore that
+                        // notification.
+                        // Because the Package UID is absent, we need to figure out
+                        // if this package was deleted in the current profile or a different one.
+                        // We can do that by querying the list of installed packages and checking
+                        // if the package name appears there. If it does, then this package was
+                        // uninstalled in a different profile, and so the method should no-op.
+
+                        if (!isPackageStillInstalled(context, packageName)) {
+                            instance.clearConsentForUninstalledApp(packageName);
+                            LogUtil.d("Deleted all consent data for package %s", packageName);
+                        } else {
+                            LogUtil.d(
+                                    "Uninstalled package %s is present in list of installed"
+                                            + " packages; ignoring",
+                                    packageName);
+                        }
+                    } else {
+                        instance.clearConsentForUninstalledApp(packageName, packageUid);
+                        LogUtil.d(
+                                "Deleted consent data for package %s with UID %d",
+                                packageName, packageUid);
                     }
                 });
+    }
+
+    /**
+     * Checks if the removed package name is still present in the list of installed packages
+     *
+     * @param context the context passed along with the package notification
+     * @param packageName the name of the package that was removed
+     * @return {@code true} if the removed package name still exists in the list of installed
+     *     packages on the system retrieved from {@code PackageManager.getInstalledPackages}; {@code
+     *     false} otherwise.
+     */
+    @VisibleForTesting
+    boolean isPackageStillInstalled(@NonNull Context context, @NonNull String packageName) {
+        Objects.requireNonNull(context);
+        Objects.requireNonNull(packageName);
+        PackageManager packageManager = context.getPackageManager();
+        return PackageManagerCompatUtils.getInstalledPackages(packageManager, 0).stream()
+                .anyMatch(s -> packageName.equals(s.packageName));
     }
 
     /**

@@ -20,7 +20,6 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
 
-
 import com.android.internal.util.Preconditions;
 
 import java.util.Objects;
@@ -29,12 +28,29 @@ import java.util.Objects;
  * This class represents a field in the {@code OutcomeReceiver}, which is an input to the {@link
  * AdSelectionManager#selectAds} in the {@link AdSelectionManager}. This field is populated in the
  * case of a successful {@link AdSelectionManager#selectAds} call.
+ *
  */
 public class AdSelectionOutcome {
-    private static final int UNSET = 0;
+    /**
+     * Represents an AdSelectionOutcome with empty results.
+     *
+     * @hide
+     */
+    @NonNull public static final AdSelectionOutcome NO_OUTCOME = new AdSelectionOutcome();
+
+    /** @hide */
+    public static final String UNSET_AD_SELECTION_ID_MESSAGE = "Ad selection ID must be set";
+
+    /** @hide */
+    public static final int UNSET_AD_SELECTION_ID = 0;
 
     private final long mAdSelectionId;
     @NonNull private final Uri mRenderUri;
+
+    private AdSelectionOutcome() {
+        mAdSelectionId = UNSET_AD_SELECTION_ID;
+        mRenderUri = Uri.EMPTY;
+    }
 
     private AdSelectionOutcome(long adSelectionId, @NonNull Uri renderUri) {
         Objects.requireNonNull(renderUri);
@@ -53,6 +69,16 @@ public class AdSelectionOutcome {
     @NonNull
     public long getAdSelectionId() {
         return mAdSelectionId;
+    }
+
+    /**
+     * Returns whether the outcome contains results or empty. Empty outcomes' {@code render uris}
+     * shouldn't be used.
+     *
+     * @hide
+     */
+    public boolean hasOutcome() {
+        return !this.equals(NO_OUTCOME);
     }
 
     @Override
@@ -74,7 +100,7 @@ public class AdSelectionOutcome {
      * Builder for {@link AdSelectionOutcome} objects.
      */
     public static final class Builder {
-        private long mAdSelectionId = UNSET;
+        private long mAdSelectionId = UNSET_AD_SELECTION_ID;
         @Nullable private Uri mRenderUri;
 
         public Builder() {}
@@ -106,7 +132,7 @@ public class AdSelectionOutcome {
             Objects.requireNonNull(mRenderUri);
 
             Preconditions.checkArgument(
-                    mAdSelectionId != UNSET, "AdSelectionId has not been set!");
+                    mAdSelectionId != UNSET_AD_SELECTION_ID, UNSET_AD_SELECTION_ID_MESSAGE);
 
             return new AdSelectionOutcome(mAdSelectionId, mRenderUri);
         }

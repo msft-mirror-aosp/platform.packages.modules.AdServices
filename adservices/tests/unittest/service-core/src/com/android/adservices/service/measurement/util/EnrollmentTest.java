@@ -37,11 +37,11 @@ import java.util.Optional;
 @SmallTest
 public final class EnrollmentTest {
 
-    private static final Uri REGISTRATION_URI = Uri.parse("https://ad-tech.com/register");
+    private static final Uri REGISTRATION_URI = Uri.parse("https://ad-tech.test/register");
     private static final String ENROLLMENT_ID = "enrollment-id";
     private static final EnrollmentData ENROLLMENT = new EnrollmentData.Builder()
             .setEnrollmentId("enrollment-id")
-            .setAttributionReportingUrl(List.of("https://origin1.com", "https://origin2.com"))
+            .setAttributionReportingUrl(List.of("https://origin1.test", "https://origin2.test"))
             .build();
     @Mock private EnrollmentDao mEnrollmentDao;
 
@@ -72,7 +72,7 @@ public final class EnrollmentTest {
     public void testMaybeGetReportingOrigin_success() {
         when(mEnrollmentDao.getEnrollmentData(eq(ENROLLMENT_ID))).thenReturn(ENROLLMENT);
         assertEquals(
-                Optional.of(Uri.parse("https://origin1.com")),
+                Optional.of(Uri.parse("https://origin1.test")),
                 Enrollment.maybeGetReportingOrigin(ENROLLMENT_ID, mEnrollmentDao));
     }
 

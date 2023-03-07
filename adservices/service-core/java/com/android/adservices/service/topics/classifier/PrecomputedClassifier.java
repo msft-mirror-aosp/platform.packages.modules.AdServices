@@ -16,20 +16,22 @@
 
 package com.android.adservices.service.topics.classifier;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__PRECOMPUTED_CLASSIFIER;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_NOT_INVOKED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_FAILURE;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_SUCCESS;
-
 import android.annotation.NonNull;
+import android.os.Build;
 
-import com.android.adservices.LogUtil;
+import androidx.annotation.RequiresApi;
+
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.EpochComputationClassifierStats;
+import com.android.adservices.service.stats.EpochComputationClassifierStats.ClassifierType;
+import com.android.adservices.service.stats.EpochComputationClassifierStats.OnDeviceClassifierStatus;
+import com.android.adservices.service.stats.EpochComputationClassifierStats.PrecomputedClassifierStatus;
+import com.android.adservices.service.topics.CacheManager;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.primitives.Ints;
 
 import java.util.HashMap;
 import java.util.List;
@@ -48,6 +50,8 @@ import javax.annotation.concurrent.NotThreadSafe;
  *
  * <p>This class is not thread safe.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 @NotThreadSafe
 public class PrecomputedClassifier implements Classifier {
 
@@ -60,19 +64,25 @@ public class PrecomputedClassifier implements Classifier {
     private static final String BUILD_ID_FIELD = "build_id";
 
     private final ModelManager mModelManager;
+    private final CacheManager mCacheManager;
 
     // Used to mark whether the assets are loaded
     private boolean mLoaded;
     private ImmutableList<Integer> mLabels;
     // The app topics map Map<App, List<Topic>>
     private Map<String, List<Integer>> mAppTopics = new HashMap<>();
+    private List<Integer> mBlockedTopicIds;
     private long mModelVersion;
     private long mLabelsVersion;
     private int mBuildId;
     private final AdServicesLogger mLogger;
 
-    PrecomputedClassifier(@NonNull ModelManager modelManager, @NonNull AdServicesLogger logger) {
+    PrecomputedClassifier(
+            @NonNull ModelManager modelManager,
+            @NonNull CacheManager cacheManager,
+            @NonNull AdServicesLogger logger) {
         mModelManager = modelManager;
+        mCacheManager = cacheManager;
         mLoaded = false;
         mLogger = logger;
     }
@@ -89,26 +99,36 @@ public class PrecomputedClassifier implements Classifier {
         for (String app : apps) {
             if (app != null && !app.isEmpty()) {
                 List<Integer> topicIds = mAppTopics.getOrDefault(app, ImmutableList.of());
-                List<Topic> topics =
-                        topicIds.stream().map(this::createTopic).collect(Collectors.toList());
+                ImmutableList.Builder<Integer> topicIdsToReturn = ImmutableList.builder();
+                ImmutableList.Builder<Topic> topicsToReturn = ImmutableList.builder();
+
+                for (int topicId : topicIds) {
+                    if (mBlockedTopicIds.contains(topicId)) {
+                        continue;
+                    }
+                    topicIdsToReturn.add(topicId);
+                    topicsToReturn.add(createTopic(topicId));
+                }
 
                 // Log atom for getTopTopics call.
                 mLogger.logEpochComputationClassifierStats(
                         EpochComputationClassifierStats.builder()
-                                .setTopicIds(ImmutableList.copyOf(topicIds))
+                                .setTopicIds(topicIdsToReturn.build())
                                 .setBuildId(mBuildId)
                                 .setAssetVersion(Long.toString(mModelVersion))
-                                .setClassifierType(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__PRECOMPUTED_CLASSIFIER)
+                                .setClassifierType(ClassifierType.PRECOMPUTED_CLASSIFIER)
                                 .setOnDeviceClassifierStatus(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_NOT_INVOKED)
+                                        OnDeviceClassifierStatus
+                                                .ON_DEVICE_CLASSIFIER_STATUS_NOT_INVOKED)
                                 .setPrecomputedClassifierStatus(
                                         topicIds.isEmpty()
-                                                ? AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_FAILURE
-                                                : AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_SUCCESS)
+                                                ? PrecomputedClassifierStatus
+                                                        .PRECOMPUTED_CLASSIFIER_STATUS_FAILURE
+                                                : PrecomputedClassifierStatus
+                                                        .PRECOMPUTED_CLASSIFIER_STATUS_SUCCESS)
                                 .build());
 
-                appsToClassifiedTopics.put(app, topics);
+                appsToClassifiedTopics.put(app, topicsToReturn.build());
             }
         }
         return appsToClassifiedTopics;
@@ -156,6 +176,12 @@ public class PrecomputedClassifier implements Classifier {
         mLabels = mModelManager.retrieveLabels();
         mAppTopics = mModelManager.retrieveAppClassificationTopics();
 
+        // Load blocked topic IDs.
+        mBlockedTopicIds =
+                mCacheManager.getTopicsWithRevokedConsent().stream()
+                        .map(Topic::getTopic)
+                        .collect(Collectors.toList());
+
         // Load classifier assets metadata.
         ImmutableMap<String, ImmutableMap<String, String>> classifierAssetsMetadata =
                 mModelManager.retrieveClassifierAssetsMetadata();
@@ -165,15 +191,7 @@ public class PrecomputedClassifier implements Classifier {
         mLabelsVersion =
                 Long.parseLong(
                         classifierAssetsMetadata.get(LABELS_ASSET_FIELD).get(ASSET_VERSION_FIELD));
-        try {
-            mBuildId =
-                    Integer.parseInt(
-                            classifierAssetsMetadata.get(VERSION_INFO_FIELD).get(BUILD_ID_FIELD));
-        } catch (NumberFormatException e) {
-            // No build id is available.
-            LogUtil.d(e, "Build id is not available");
-            mBuildId = -1;
-        }
+        mBuildId = Ints.saturatedCast(mModelManager.getBuildId());
         mLoaded = true;
     }
 

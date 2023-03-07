@@ -50,18 +50,15 @@ import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdSelectionRunner.AdSelectionOrchestrationResult;
-import com.android.adservices.service.common.AppImportanceFilter;
-import com.android.adservices.service.common.FledgeAllowListsFilter;
-import com.android.adservices.service.common.FledgeAuthorizationFilter;
-import com.android.adservices.service.common.Throttler;
-import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.common.AdSelectionServiceFilter;
+import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.proto.SellerFrontEndGrpc;
 import com.android.adservices.service.proto.SellerFrontEndGrpc.SellerFrontEndFutureStub;
 import com.android.adservices.service.proto.SellerFrontendService.SelectWinningAdRequest;
 import com.android.adservices.service.proto.SellerFrontendService.SelectWinningAdRequest.SelectWinningAdRawRequest;
 import com.android.adservices.service.proto.SellerFrontendService.SelectWinningAdResponse;
+import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.adservices.service.stats.ApiServiceLatencyCalculator;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
@@ -71,6 +68,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -84,7 +82,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 
 import io.grpc.ManagedChannel;
 import io.grpc.okhttp.OkHttpChannelBuilder;
@@ -139,13 +136,8 @@ public class TrustedServerAdSelectionRunnerTest {
             };
     private TrustedServerAdSelectionRunner mAdSelectionRunner;
 
-    @Mock private AppImportanceFilter mAppImportanceFilter;
     @Mock private Clock mClock;
-    @Mock private ConsentManager mConsentManagerMock;
-    @Mock private Supplier<Throttler> mThrottlerSupplier;
     @Mock private AdServicesLogger mAdServicesLoggerSpy;
-    @Mock private FledgeAuthorizationFilter mFledgeAuthorizationFilter;
-    @Mock private FledgeAllowListsFilter mFledgeAllowListsFilter;
     @Mock private CustomAudienceDao mCustomAudienceDao;
     @Mock private AdSelectionEntryDao mAdSelectionEntryDao;
     @Mock private JsFetcher mJsFetcher;
@@ -155,10 +147,17 @@ public class TrustedServerAdSelectionRunnerTest {
     @Mock private SellerFrontEndFutureStub mStub;
     private SellerFrontEndFutureStub mStubWithCompression =
             Mockito.mock(SellerFrontEndFutureStub.class, "mStubWithCompression");
-    @Mock private ApiServiceLatencyCalculator mApiServiceLatencyCalculator;
+    @Mock private AdSelectionExecutionLogger mAdSelectionExecutionLogger;
+
+    @Mock AdSelectionServiceFilter mAdSelectionServiceFilter;
 
     @Before
     public void setUp() {
+        // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
+        // availability depends on an external component (the system webview) being higher than a
+        // certain minimum version. Marking that as an assumption that the test is making.
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(FlagsFactory.class)
@@ -202,18 +201,14 @@ public class TrustedServerAdSelectionRunnerTest {
                         sLightweightExecutorService,
                         sBackgroundExecutorService,
                         sScheduledExecutor,
-                        mConsentManagerMock,
                         mMockAdSelectionIdGenerator,
                         mClock,
                         mAdServicesLoggerSpy,
-                        mAppImportanceFilter,
                         mFlags,
-                        mThrottlerSupplier,
                         CALLER_UID,
-                        mFledgeAuthorizationFilter,
-                        mFledgeAllowListsFilter,
+                        mAdSelectionServiceFilter,
                         mJsFetcher,
-                        mApiServiceLatencyCalculator);
+                        mAdSelectionExecutionLogger);
         AdSelectionOrchestrationResult adSelectionOrchestrationResult =
                 invokeRunAdSelection(
                         mAdSelectionRunner,
@@ -263,18 +258,14 @@ public class TrustedServerAdSelectionRunnerTest {
                         sLightweightExecutorService,
                         sBackgroundExecutorService,
                         sScheduledExecutor,
-                        mConsentManagerMock,
                         mMockAdSelectionIdGenerator,
                         mClock,
                         mAdServicesLoggerSpy,
-                        mAppImportanceFilter,
                         mFlags,
-                        mThrottlerSupplier,
                         CALLER_UID,
-                        mFledgeAuthorizationFilter,
-                        mFledgeAllowListsFilter,
+                        mAdSelectionServiceFilter,
                         mJsFetcher,
-                        mApiServiceLatencyCalculator);
+                        mAdSelectionExecutionLogger);
 
         // Add CA name to bidding data keys and later verify we don't send it to the server.
         DBCustomAudience customAudience = createDBCustomAudience(BUYER_1);
@@ -326,18 +317,14 @@ public class TrustedServerAdSelectionRunnerTest {
                         sLightweightExecutorService,
                         sBackgroundExecutorService,
                         sScheduledExecutor,
-                        mConsentManagerMock,
                         mMockAdSelectionIdGenerator,
                         mClock,
                         mAdServicesLoggerSpy,
-                        mAppImportanceFilter,
                         mFlags,
-                        mThrottlerSupplier,
                         CALLER_UID,
-                        mFledgeAuthorizationFilter,
-                        mFledgeAllowListsFilter,
+                        mAdSelectionServiceFilter,
                         mJsFetcher,
-                        mApiServiceLatencyCalculator);
+                        mAdSelectionExecutionLogger);
 
         // Add CA name to bidding data keys and later verify we don't send it to the server.
         DBCustomAudience customAudience = createDBCustomAudience(BUYER_1);
@@ -394,18 +381,14 @@ public class TrustedServerAdSelectionRunnerTest {
                         sLightweightExecutorService,
                         sBackgroundExecutorService,
                         sScheduledExecutor,
-                        mConsentManagerMock,
                         mMockAdSelectionIdGenerator,
                         mClock,
                         mAdServicesLoggerSpy,
-                        mAppImportanceFilter,
                         mFlags,
-                        mThrottlerSupplier,
                         CALLER_UID,
-                        mFledgeAuthorizationFilter,
-                        mFledgeAllowListsFilter,
+                        mAdSelectionServiceFilter,
                         mJsFetcher,
-                        mApiServiceLatencyCalculator);
+                        mAdSelectionExecutionLogger);
 
         invokeRunAdSelection(
                 mAdSelectionRunner,
@@ -446,18 +429,14 @@ public class TrustedServerAdSelectionRunnerTest {
                         sLightweightExecutorService,
                         sBackgroundExecutorService,
                         sScheduledExecutor,
-                        mConsentManagerMock,
                         mMockAdSelectionIdGenerator,
                         mClock,
                         mAdServicesLoggerSpy,
-                        mAppImportanceFilter,
                         flags,
-                        mThrottlerSupplier,
                         CALLER_UID,
-                        mFledgeAuthorizationFilter,
-                        mFledgeAllowListsFilter,
+                        mAdSelectionServiceFilter,
                         mJsFetcher,
-                        mApiServiceLatencyCalculator);
+                        mAdSelectionExecutionLogger);
         invokeRunAdSelection(
                 mAdSelectionRunner,
                 adSelectionConfig,

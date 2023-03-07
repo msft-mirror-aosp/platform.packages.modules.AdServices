@@ -16,15 +16,11 @@
 
 package com.android.adservices.service.topics.classifier;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__PRECOMPUTED_CLASSIFIER;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_NOT_INVOKED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_FAILURE;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_SUCCESS;
-
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import android.content.Context;
 
@@ -34,10 +30,12 @@ import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.EpochComputationClassifierStats;
+import com.android.adservices.service.topics.CacheManager;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.android.libraries.mobiledatadownload.file.SynchronousFileStorage;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.mobiledatadownload.ClientConfigProto.ClientFile;
 
 import org.junit.After;
@@ -68,6 +66,7 @@ public class PrecomputedClassifierTest {
     private static final String MODEL_FILE_PATH = "classifier/model.tflite";
     private PrecomputedClassifier sPrecomputedClassifier;
     private ModelManager mModelManager;
+    @Mock private CacheManager mCacheManager;
     private MockitoSession mMockitoSession = null;
     @Mock private SynchronousFileStorage mMockFileStorage;
     @Mock Map<String, ClientFile> mMockDownloadedFiles;
@@ -97,7 +96,8 @@ public class PrecomputedClassifierTest {
                         MODEL_FILE_PATH,
                         mMockFileStorage,
                         mMockDownloadedFiles);
-        sPrecomputedClassifier = new PrecomputedClassifier(mModelManager, mLogger);
+        sPrecomputedClassifier = new PrecomputedClassifier(mModelManager, mCacheManager, mLogger);
+        when(mCacheManager.getTopicsWithRevokedConsent()).thenReturn(ImmutableList.of());
     }
 
     @After
@@ -113,7 +113,7 @@ public class PrecomputedClassifierTest {
                 ArgumentCaptor.forClass(EpochComputationClassifierStats.class);
         // Using sample App. This app has 5 classification topic.
         List<Topic> expectedSampleAppTopics =
-                createTopics(Arrays.asList(10222, 10223, 10116, 10243, 10254));
+                createRealTopics(Arrays.asList(10222, 10223, 10116, 10243, 10254));
 
         Map<String, List<Topic>> expectedAppTopicsResponse = new HashMap<>();
         expectedAppTopicsResponse.put(
@@ -132,14 +132,17 @@ public class PrecomputedClassifierTest {
                 .isEqualTo(
                         EpochComputationClassifierStats.builder()
                                 .setTopicIds(ImmutableList.of(10222, 10223, 10116, 10243, 10254))
-                                .setBuildId(2)
-                                .setAssetVersion("2")
+                                .setBuildId(1467)
+                                .setAssetVersion("3")
                                 .setClassifierType(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__PRECOMPUTED_CLASSIFIER)
+                                        EpochComputationClassifierStats.ClassifierType
+                                                .PRECOMPUTED_CLASSIFIER)
                                 .setOnDeviceClassifierStatus(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_NOT_INVOKED)
+                                        EpochComputationClassifierStats.OnDeviceClassifierStatus
+                                                .ON_DEVICE_CLASSIFIER_STATUS_NOT_INVOKED)
                                 .setPrecomputedClassifierStatus(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_SUCCESS)
+                                        EpochComputationClassifierStats.PrecomputedClassifierStatus
+                                                .PRECOMPUTED_CLASSIFIER_STATUS_SUCCESS)
                                 .build());
     }
 
@@ -159,15 +162,68 @@ public class PrecomputedClassifierTest {
                 .isEqualTo(
                         EpochComputationClassifierStats.builder()
                                 .setTopicIds(ImmutableList.of())
-                                .setBuildId(2)
-                                .setAssetVersion("2")
+                                .setBuildId(1467)
+                                .setAssetVersion("3")
                                 .setClassifierType(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__PRECOMPUTED_CLASSIFIER)
+                                        EpochComputationClassifierStats.ClassifierType
+                                                .PRECOMPUTED_CLASSIFIER)
                                 .setOnDeviceClassifierStatus(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_NOT_INVOKED)
+                                        EpochComputationClassifierStats.OnDeviceClassifierStatus
+                                                .ON_DEVICE_CLASSIFIER_STATUS_NOT_INVOKED)
                                 .setPrecomputedClassifierStatus(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_FAILURE)
+                                        EpochComputationClassifierStats.PrecomputedClassifierStatus
+                                                .PRECOMPUTED_CLASSIFIER_STATUS_FAILURE)
                                 .build());
+    }
+
+    @Test
+    public void testClassify_appWithBlockedTopic() {
+        // This sample app has five app classification topics, one of which will be blocked.
+        String sampleAppPackageName = "com.example.adservices.samples.topics.sampleapp";
+        int blockedTopicId = 10222;
+        List<Integer> nonBlockedTopicIds = ImmutableList.of(10223, 10116, 10243, 10254);
+        List<Integer> sampleAppTopicIds =
+                ImmutableList.<Integer>builder()
+                        .add(blockedTopicId)
+                        .addAll(nonBlockedTopicIds)
+                        .build();
+
+        // Check that all five topics are initially present.
+        assertThat(mModelManager.retrieveAppClassificationTopics().get(sampleAppPackageName))
+                .containsExactlyElementsIn(sampleAppTopicIds);
+
+        // Block one of the five topics.
+        when(mCacheManager.getTopicsWithRevokedConsent())
+                .thenReturn(ImmutableList.of(createDummyTopic(blockedTopicId)));
+
+        List<Topic> expectedAppClassificationTopics = createRealTopics(nonBlockedTopicIds);
+        Map<String, List<Topic>> classifications =
+                sPrecomputedClassifier.classify(ImmutableSet.of(sampleAppPackageName));
+
+        // The correct response should contain only the non-blocked topics.
+        assertThat(classifications.get(sampleAppPackageName))
+                .containsExactlyElementsIn(expectedAppClassificationTopics);
+    }
+
+    @Test
+    public void testClassify_appWithAllTopicsBlocked() {
+        // This sample app has five app classification topics, all of which will be blocked.
+        String sampleAppPackageName = "com.example.adservices.samples.topics.sampleapp";
+        List<Integer> sampleAppTopicIds = ImmutableList.of(10222, 10223, 10116, 10243, 10254);
+
+        // Check that all five topics are initially present.
+        assertThat(mModelManager.retrieveAppClassificationTopics().get(sampleAppPackageName))
+                .containsExactlyElementsIn(sampleAppTopicIds);
+
+        // Block all five topics.
+        when(mCacheManager.getTopicsWithRevokedConsent())
+                .thenReturn(ImmutableList.copyOf(createDummyTopics(sampleAppTopicIds)));
+
+        Map<String, List<Topic>> classifications =
+                sPrecomputedClassifier.classify(ImmutableSet.of(sampleAppPackageName));
+
+        // The correct response should contain no topics.
+        assertThat(classifications.get(sampleAppPackageName)).isEmpty();
     }
 
     @Test
@@ -196,36 +252,49 @@ public class PrecomputedClassifierTest {
         // the order of topics are:
         // topic1, topic2, topic3, topic4, topic5, ...,
         Map<String, List<Topic>> appTopics = new HashMap<>();
-        appTopics.put("app1", createTopics(Arrays.asList(1, 2, 3, 4, 5)));
-        appTopics.put("app2", createTopics(Arrays.asList(1, 2, 3, 4, 5)));
-        appTopics.put("app3", createTopics(Arrays.asList(1, 2, 3, 4, 16)));
-        appTopics.put("app4", createTopics(Arrays.asList(1, 2, 3, 13, 17)));
-        appTopics.put("app5", createTopics(Arrays.asList(1, 2, 11, 14, 18)));
-        appTopics.put("app6", createTopics(Arrays.asList(1, 10, 12, 15, 19)));
+        appTopics.put("app1", createRealTopics(Arrays.asList(1, 2, 3, 4, 5)));
+        appTopics.put("app2", createRealTopics(Arrays.asList(1, 2, 3, 4, 5)));
+        appTopics.put("app3", createRealTopics(Arrays.asList(1, 2, 3, 4, 16)));
+        appTopics.put("app4", createRealTopics(Arrays.asList(1, 2, 3, 13, 17)));
+        appTopics.put("app5", createRealTopics(Arrays.asList(1, 2, 11, 14, 18)));
+        appTopics.put("app6", createRealTopics(Arrays.asList(1, 10, 12, 15, 19)));
 
         // This test case should return top 5 topics from appTopics and 1 random topic
         List<Topic> testResponse =
                 sPrecomputedClassifier.getTopTopics(
                         appTopics, /* numberOfTopTopics = */ 5, /* numberOfRandomTopics = */ 1);
 
-        assertThat(testResponse.get(0)).isEqualTo(createTopic(1));
-        assertThat(testResponse.get(1)).isEqualTo(createTopic(2));
-        assertThat(testResponse.get(2)).isEqualTo(createTopic(3));
-        assertThat(testResponse.get(3)).isEqualTo(createTopic(4));
-        assertThat(testResponse.get(4)).isEqualTo(createTopic(5));
+        assertThat(testResponse.get(0)).isEqualTo(createRealTopic(1));
+        assertThat(testResponse.get(1)).isEqualTo(createRealTopic(2));
+        assertThat(testResponse.get(2)).isEqualTo(createRealTopic(3));
+        assertThat(testResponse.get(3)).isEqualTo(createRealTopic(4));
+        assertThat(testResponse.get(4)).isEqualTo(createRealTopic(5));
         // Check the random topic is not empty
         // The random topic is at the end
         assertThat(testResponse.get(5)).isNotNull();
     }
 
-    private Topic createTopic(int topicId) {
+    // Creates a dummy topic.  Not suitable for tests where
+    // label/model version are verified, but suitable for mocks
+    // where classifier methods cannot first be called.
+    private static Topic createDummyTopic(int topicId) {
+        return Topic.create(topicId, 0, 0);
+    }
+
+    private static List<Topic> createDummyTopics(List<Integer> topicIds) {
+        return topicIds.stream()
+                .map(PrecomputedClassifierTest::createDummyTopic)
+                .collect(Collectors.toList());
+    }
+
+    private Topic createRealTopic(int topicId) {
         return Topic.create(
                 topicId,
                 sPrecomputedClassifier.getLabelsVersion(),
                 sPrecomputedClassifier.getModelVersion());
     }
 
-    private List<Topic> createTopics(List<Integer> topicIds) {
-        return topicIds.stream().map(this::createTopic).collect(Collectors.toList());
+    private List<Topic> createRealTopics(List<Integer> topicIds) {
+        return topicIds.stream().map(this::createRealTopic).collect(Collectors.toList());
     }
 }

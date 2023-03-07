@@ -38,6 +38,7 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
 import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.adservices.service.measurement.WebUtil;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
@@ -65,13 +66,13 @@ import java.util.List;
 @RunWith(MockitoJUnitRunner.class)
 public class AggregateReportingJobHandlerTest {
     private static final EnrollmentData ENROLLMENT = new EnrollmentData.Builder()
-            .setAttributionReportingUrl(List.of("https://ad-tech.com"))
+            .setAttributionReportingUrl(List.of(WebUtil.validUrl("https://ad-tech.test")))
             .build();
-    private static final Uri REPORTING_URI = Uri.parse("https://ad-tech.com");
+    private static final Uri REPORTING_URI = WebUtil.validUri("https://ad-tech.test");
     private static final String ENROLLMENT_ID = "enrollment-id";
 
     private static final String CLEARTEXT_PAYLOAD =
-            "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1,\"value\":2}]}";
+            "{\"operation\":\"histogram\",\"data\":[{\"bucket\":\"1\",\"value\":2}]}";
 
     private static final UnsignedLong SOURCE_DEBUG_KEY = new UnsignedLong(237865L);
     private static final UnsignedLong TRIGGER_DEBUG_KEY = new UnsignedLong(928762L);
@@ -124,7 +125,7 @@ public class AggregateReportingJobHandlerTest {
                 Mockito.spy(
                         new AggregateReportingJobHandler(
                                         mEnrollmentDao, mDatastoreManager, mockKeyManager)
-                                .setDebugReport(true));
+                                .setIsDebugInstance(true));
     }
 
     @Test

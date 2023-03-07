@@ -11,6 +11,7 @@
         "enrollmentId": "enrollment-id",
         "eventTime": 8640000001,
         "expiryTime": 8640000030,
+        "eventReportWindow": 8640000030,
         "priority": 100,
         "status": 0,
         "registrant": "android-app://com.registrant.deleteCandidate"
@@ -24,6 +25,7 @@
         "enrollmentId": "enrollment-id",
         "eventTime": 8640000001,
         "expiryTime": 8640000030,
+        "eventReportWindow": 8640000030,
         "priority": 100,
         "status": 0,
         "registrant": "android-app://com.registrant.deleteCandidate"
@@ -159,6 +161,7 @@
         "enrollmentId": "enrollment-id",
         "eventTime": 8640000001,
         "expiryTime": 8640000030,
+        "eventReportWindow": 8640000030,
         "priority": 100,
         "status": 0,
         "registrant": "android-app://com.registrant.deleteCandidate"

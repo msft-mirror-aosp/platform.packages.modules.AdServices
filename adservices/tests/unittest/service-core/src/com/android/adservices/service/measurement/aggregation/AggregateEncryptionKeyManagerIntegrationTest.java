@@ -49,7 +49,7 @@ import javax.net.ssl.HttpsURLConnection;
 public class AggregateEncryptionKeyManagerIntegrationTest extends AbstractDbIntegrationTest {
     private static final int NUM_KEYS_REQUESTED = 5;
     private static final Uri MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL =
-            Uri.parse("https://not-going-to-be-visited.com");
+            Uri.parse("https://not-going-to-be-visited.test");
 
     @Mock Clock mClock;
     @Spy AggregateEncryptionKeyFetcher mFetcher;
@@ -76,7 +76,7 @@ public class AggregateEncryptionKeyManagerIntegrationTest extends AbstractDbInte
     @Override
     public void runActionToTest() {
         DatastoreManager datastoreManager =
-                new SQLDatastoreManager(DbTestUtil.getDbHelperForTest());
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
         AggregateEncryptionKeyManager aggregateEncryptionKeyManager =
                 new AggregateEncryptionKeyManager(datastoreManager, mFetcher, mClock,
                         MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL);

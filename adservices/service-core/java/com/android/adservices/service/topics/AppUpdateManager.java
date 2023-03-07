@@ -20,18 +20,22 @@ import android.annotation.NonNull;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.os.Build;
 import android.util.Pair;
 
+import androidx.annotation.RequiresApi;
+
 import com.android.adservices.LogUtil;
+import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.internal.annotations.VisibleForTesting;
-
-import com.google.common.base.Preconditions;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -52,8 +56,10 @@ import java.util.stream.Collectors;
  *
  * <p>See go/rb-topics-app-update for details.
  */
-// TODO(b/239553255): Use transaction for methods have both read and write to the database.
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class AppUpdateManager {
+    private static final String EMPTY_SDK = "";
     private static AppUpdateManager sSingleton;
 
     // Tables that needs to be wiped out for application data
@@ -78,11 +84,17 @@ public class AppUpdateManager {
                         TopicsTables.AppUsageHistoryContract.APP)
             };
 
+    private final DbHelper mDbHelper;
     private final TopicsDao mTopicsDao;
     private final Random mRandom;
     private final Flags mFlags;
 
-    AppUpdateManager(@NonNull TopicsDao topicsDao, @NonNull Random random, @NonNull Flags flags) {
+    AppUpdateManager(
+            @NonNull DbHelper dbHelper,
+            @NonNull TopicsDao topicsDao,
+            @NonNull Random random,
+            @NonNull Flags flags) {
+        mDbHelper = dbHelper;
         mTopicsDao = topicsDao;
         mRandom = random;
         mFlags = flags;
@@ -100,6 +112,7 @@ public class AppUpdateManager {
             if (sSingleton == null) {
                 sSingleton =
                         new AppUpdateManager(
+                                DbHelper.getInstance(context),
                                 TopicsDao.getInstance(context),
                                 new Random(),
                                 FlagsFactory.getFlags());
@@ -110,37 +123,77 @@ public class AppUpdateManager {
     }
 
     /**
-     * Delete application data for a specific application.
+     * Handle application uninstallation for Topics API.
      *
-     * <p>This method allows other usages besides daily maintenance job, such as real-time data
-     * wiping for an app uninstallation.
+     * <ul>
+     *   <li>Delete all derived data for an uninstalled app.
+     *   <li>When the feature is enabled, remove a topic if it has the uninstalled app as the only
+     *       contributor in an epoch.
+     * </ul>
      *
-     * @param apps a {@link List} of applications to wipe data for
+     * @param packageUri The {@link Uri} got from Broadcast Intent
+     * @param currentEpochId the epoch id of current Epoch
      */
-    public void deleteAppDataFromTableByApps(@NonNull List<String> apps) {
-        List<Pair<String, String>> tableToEraseData =
-                Arrays.stream(TABLE_INFO_TO_ERASE_APP_DATA).collect(Collectors.toList());
-        if (supportsTopicContributorFeature()) {
-            tableToEraseData.add(
-                    Pair.create(
-                            TopicsTables.TopicContributorsContract.TABLE,
-                            TopicsTables.TopicContributorsContract.APP));
+    public void handleAppUninstallationInRealTime(@NonNull Uri packageUri, long currentEpochId) {
+        String packageName = convertUriToAppName(packageUri);
+
+        SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
+        if (db == null) {
+            LogUtil.e(
+                    "Database is not available, Stop processing app uninstallation for %s!",
+                    packageName);
+            return;
         }
 
-        mTopicsDao.deleteFromTableByColumn(
-                /* tableNamesAndColumnNamePairs */ tableToEraseData, /* valuesToDelete */ apps);
+        // This cross db and java boundaries multiple times, so we need to have a db transaction.
+        db.beginTransaction();
 
-        LogUtil.v("Have deleted data for application " + apps);
+        try {
+            if (supportsTopicContributorFeature()) {
+                handleTopTopicsWithoutContributors(currentEpochId, packageName);
+            }
+
+            deleteAppDataFromTableByApps(List.of(packageName));
+
+            // Mark the transaction successful.
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+            LogUtil.d("End of processing app uninstallation for %s", packageName);
+        }
     }
 
     /**
-     * Delete application data for a specific application.
+     * Handle application installation for Topics API.
+     *
+     * <p>Assign topics to past epochs for the installed app.
      *
      * @param packageUri The {@link Uri} got from Broadcast Intent
+     * @param currentEpochId the epoch id of current Epoch
      */
-    public void deleteAppDataByUri(@NonNull Uri packageUri) {
-        String appName = convertUriToAppName(packageUri);
-        deleteAppDataFromTableByApps(List.of(appName));
+    public void handleAppInstallationInRealTime(@NonNull Uri packageUri, long currentEpochId) {
+        String packageName = convertUriToAppName(packageUri);
+
+        SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
+        if (db == null) {
+            LogUtil.e(
+                    "Database is not available, Stop processing app installation for %s",
+                    packageName);
+            return;
+        }
+
+        // This cross db and java boundaries multiple times, so we need to have a db transaction.
+        db.beginTransaction();
+
+        try {
+            assignTopicsToNewlyInstalledApps(packageName, currentEpochId);
+
+            // Mark the transaction successful.
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+            LogUtil.d("End of processing app installation for %s", packageName);
+        }
     }
 
     /**
@@ -157,8 +210,9 @@ public class AppUpdateManager {
      * </ul>
      *
      * @param context the context
+     * @param currentEpochId epoch ID of current epoch
      */
-    public void reconcileUninstalledApps(@NonNull Context context) {
+    public void reconcileUninstalledApps(@NonNull Context context, long currentEpochId) {
         Set<String> currentInstalledApps = getCurrentInstalledApps(context);
         Set<String> unhandledUninstalledApps = getUnhandledUninstalledApps(currentInstalledApps);
         if (unhandledUninstalledApps.isEmpty()) {
@@ -168,8 +222,25 @@ public class AppUpdateManager {
         LogUtil.v(
                 "Detect below unhandled mismatched applications: %s",
                 unhandledUninstalledApps.toString());
-        handleUninstalledApps(unhandledUninstalledApps);
-        LogUtil.v("App uninstallation reconciliation is finished!");
+
+        SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
+        if (db == null) {
+            LogUtil.e("Database is not available, Stop reconciling app uninstallation in Topics!");
+            return;
+        }
+
+        // This cross db and java boundaries multiple times, so we need to have a db transaction.
+        db.beginTransaction();
+
+        try {
+            handleUninstalledAppsInReconciliation(unhandledUninstalledApps, currentEpochId);
+
+            // Mark the transaction successful.
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+            LogUtil.v("App uninstallation reconciliation in Topics is finished!");
+        }
     }
 
     /**
@@ -199,25 +270,30 @@ public class AppUpdateManager {
         LogUtil.v(
                 "Detect below unhandled installed applications: %s",
                 unhandledInstalledApps.toString());
-        handleInstalledApps(unhandledInstalledApps, currentEpochId);
-        LogUtil.v("App installation reconciliation is finished!");
+
+        SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
+        if (db == null) {
+            LogUtil.e("Database is not available, Stop reconciling app installation in Topics!");
+            return;
+        }
+
+        // This cross db and java boundaries multiple times, so we need to have a db transaction.
+        db.beginTransaction();
+
+        try {
+            handleInstalledAppsInReconciliation(unhandledInstalledApps, currentEpochId);
+
+            // Mark the transaction successful.
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+            LogUtil.v("App installation reconciliation in Topics is finished!");
+        }
     }
 
-    /**
-     * An overloading method to allow passing in Uri instead of app name in string format.
-     *
-     * <p>For newly installed app, to allow it get topics in current epoch, one of top topics in
-     * past epochs will be assigned to this app.
-     *
-     * <p>See more details in go/rb-topics-app-update
-     *
-     * @param packageUri the Uri of newly installed application
-     * @param currentEpochId current epoch id
-     */
-    public void assignTopicsToNewlyInstalledApps(@NonNull Uri packageUri, long currentEpochId) {
-        assignTopicsToNewlyInstalledApps(convertUriToAppName(packageUri), currentEpochId);
-    }
-
+    // TODO(b/256703300): Currently we handled app-sdk topic assignments in serving flow. Move the
+    //                    logic back to app installation after we can get all SDKs when an app is
+    //                    installed.
     /**
      * For a newly installed app, in case SDKs that this app uses are not known when the app is
      * installed, the returned topic for an SDK can only be assigned when user calls getTopic().
@@ -239,11 +315,11 @@ public class AppUpdateManager {
         }
 
         int numberOfLookBackEpochs = mFlags.getTopicsNumberOfLookBackEpochs();
-        Pair<String, String> appOnlyCaller = Pair.create(app, /* sdk */ "");
+        Pair<String, String> appOnlyCaller = Pair.create(app, EMPTY_SDK);
         Pair<String, String> appSdkCaller = Pair.create(app, sdk);
 
-        // Get ReturnedTopics and CallerCanLearnTopics  for past epochs in
-        // [epochId - numberOfLookBackEpochs, epochId - 1].
+        // Get ReturnedTopics for past epochs in [currentEpochId - numberOfLookBackEpochs,
+        // currentEpochId - 1].
         // TODO(b/237436146): Create an object class for Returned Topics.
         Map<Long, Map<Pair<String, String>, Topic>> pastReturnedTopics =
                 mTopicsDao.retrieveReturnedTopics(currentEpochId - 1, numberOfLookBackEpochs);
@@ -267,10 +343,13 @@ public class AppUpdateManager {
             // If so, the same topic should be assigned to the sdk.
             if (pastReturnedTopics.get(epochId) != null
                     && pastReturnedTopics.get(epochId).containsKey(appOnlyCaller)) {
+                // This is the top Topic assigned to this app-only caller.
                 Topic appReturnedTopic = pastReturnedTopics.get(epochId).get(appOnlyCaller);
 
-                // For current epoch, check whether sdk can learn this topic for past observed
-                // epochs in [epochId - numberOfLookBackEpochs + 1, epochId]
+                // For this epochId, check whether sdk can learn this topic for past
+                // numberOfLookBackEpochs observed epochs, i.e.
+                // [epochId - numberOfLookBackEpochs + 1, epochId]
+                // pastCallerCanLearnTopicsMap = Map<Topic, Set<Caller>>. Caller = App or Sdk
                 Map<Topic, Set<String>> pastCallerCanLearnTopicsMap =
                         mTopicsDao.retrieveCallerCanLearnTopicsMap(epochId, numberOfLookBackEpochs);
                 List<Topic> pastTopTopic = mTopicsDao.retrieveTopTopics(epochId);
@@ -294,42 +373,220 @@ public class AppUpdateManager {
     /**
      * Generating a random topic from given top topic list
      *
-     * @param topTopics a {@link List} of top topics in current epoch
-     * @param numberOfTopTopics the number of regular top topics
-     * @param numberOfRandomTopics the number of random top topics
+     * @param regularTopics a {@link List} of non-random topics in current epoch, excluding those
+     *     which have no contributors
+     * @param randomTopics a {@link List} of random top topics
      * @param percentageForRandomTopic the probability to select random object
      * @return a selected {@link Topic} to be assigned to newly installed app
      */
+    @VisibleForTesting
     @NonNull
-    public Topic selectAssignedTopicFromTopTopics(
-            @NonNull List<Topic> topTopics,
-            int numberOfTopTopics,
-            int numberOfRandomTopics,
+    Topic selectAssignedTopicFromTopTopics(
+            @NonNull List<Topic> regularTopics,
+            @NonNull List<Topic> randomTopics,
             int percentageForRandomTopic) {
-        // Validate the Top Topics are combined with correct number of topics and random topics
-        Preconditions.checkArgument(numberOfTopTopics + numberOfRandomTopics == topTopics.size());
-
         // If random number is in [0, randomPercentage - 1], a random topic will be selected.
         boolean shouldSelectRandomTopic = mRandom.nextInt(100) < percentageForRandomTopic;
 
-        if (shouldSelectRandomTopic) {
-            // Generate a random number to pick one of random topics.
-            // Random topics' index starts from numberOfTopTopics
-            return topTopics.get(numberOfTopTopics + mRandom.nextInt(numberOfRandomTopics));
-        }
-
-        // Regular top topics start from index 0
-        return topTopics.get(mRandom.nextInt(numberOfTopTopics));
+        return shouldSelectRandomTopic
+                ? randomTopics.get(mRandom.nextInt(randomTopics.size()))
+                : regularTopics.get(mRandom.nextInt(regularTopics.size()));
     }
 
     /**
-     * Check whether TopContributors Feature is enabled. It's enabled only when TopicCOntributors
+     * Delete application data for a specific application.
+     *
+     * <p>This method allows other usages besides daily maintenance job, such as real-time data
+     * wiping for an app uninstallation.
+     *
+     * @param apps a {@link List} of applications to wipe data for
+     */
+    @VisibleForTesting
+    void deleteAppDataFromTableByApps(@NonNull List<String> apps) {
+        List<Pair<String, String>> tableToEraseData =
+                Arrays.stream(TABLE_INFO_TO_ERASE_APP_DATA).collect(Collectors.toList());
+        if (supportsTopicContributorFeature()) {
+            tableToEraseData.add(
+                    Pair.create(
+                            TopicsTables.TopicContributorsContract.TABLE,
+                            TopicsTables.TopicContributorsContract.APP));
+        }
+
+        mTopicsDao.deleteFromTableByColumn(
+                /* tableNamesAndColumnNamePairs */ tableToEraseData, /* valuesToDelete */ apps);
+
+        LogUtil.v("Have deleted data for application " + apps);
+    }
+
+    /**
+     * Assign a top Topic for the newly installed app. This allows SDKs in the newly installed app
+     * to get the past 3 epochs' topics if they did observe the topic in the past.
+     *
+     * <p>See more details in go/rb-topics-app-update
+     *
+     * @param app the app package name of newly installed application
+     * @param currentEpochId current epoch id
+     */
+    @VisibleForTesting
+    void assignTopicsToNewlyInstalledApps(@NonNull String app, long currentEpochId) {
+        Objects.requireNonNull(app);
+
+        final int numberOfEpochsToAssignTopics = mFlags.getTopicsNumberOfLookBackEpochs();
+        final int numberOfTopTopics = mFlags.getTopicsNumberOfTopTopics();
+        final int topicsPercentageForRandomTopic = mFlags.getTopicsPercentageForRandomTopic();
+
+        Pair<String, String> appOnlyCaller = Pair.create(app, EMPTY_SDK);
+
+        // For each past epoch, assign a random topic to this newly installed app.
+        // The assigned topic should align the probability with rule to generate top topics.
+        for (long epochId = currentEpochId - 1;
+                epochId >= currentEpochId - numberOfEpochsToAssignTopics && epochId >= 0;
+                epochId--) {
+            List<Topic> topTopics = mTopicsDao.retrieveTopTopics(epochId);
+
+            if (topTopics.isEmpty()) {
+                LogUtil.v(
+                        "Empty top topic list in Epoch %d, do not assign topic to App %s.",
+                        epochId, app);
+                continue;
+            }
+
+            // Regular Topics are placed at the beginning of top topic list.
+            List<Topic> regularTopics = topTopics.subList(0, numberOfTopTopics);
+            // If enabled, filter out topics without contributors.
+            if (supportsTopicContributorFeature()) {
+                regularTopics = filterRegularTopicsWithoutContributors(regularTopics, epochId);
+            }
+            List<Topic> randomTopics = topTopics.subList(numberOfTopTopics, topTopics.size());
+
+            if (regularTopics.isEmpty() && randomTopics.isEmpty()) {
+                LogUtil.v(
+                        "No topic is available to assign in Epoch %d, do not assign topic to App"
+                                + " %s.",
+                        epochId, app);
+                continue;
+            }
+
+            Topic assignedTopic =
+                    selectAssignedTopicFromTopTopics(
+                            regularTopics, randomTopics, topicsPercentageForRandomTopic);
+
+            // Persist this topic to database as returned topic in this epoch
+            mTopicsDao.persistReturnedAppTopicsMap(epochId, Map.of(appOnlyCaller, assignedTopic));
+
+            LogUtil.v(
+                    "Topic %s has been assigned to newly installed App %s in Epoch %d",
+                    assignedTopic.getTopic(), app, epochId);
+        }
+    }
+
+    /**
+     * When an app is uninstalled, we need to check whether any of its classified topics has no
+     * contributors on epoch basis for past epochs to look back. Note in an epoch, an app is a
+     * contributor to a topic if the app has called Topics API in this epoch and is classified to
+     * the topic.
+     *
+     * <p>If such topic exists, remove this topic from ReturnedTopicsTable in the epoch. This method
+     * is invoked before {@code deleteAppDataFromTableByApps}, so the uninstalled app will be
+     * cleared in TopicContributors Table there.
+     *
+     * <p>NOTE: We are only interested in the epochs which will be used for getTopics(), i.e. past
+     * numberOfLookBackEpochs epochs.
+     *
+     * @param currentEpochId the id of epoch when the method gets invoked
+     * @param uninstalledApp the newly uninstalled app
+     */
+    @VisibleForTesting
+    void handleTopTopicsWithoutContributors(long currentEpochId, @NonNull String uninstalledApp) {
+        // This check is on epoch basis for past epochs to look back
+        for (long epochId = currentEpochId - 1;
+                epochId >= currentEpochId - mFlags.getTopicsNumberOfLookBackEpochs()
+                        && epochId >= 0;
+                epochId--) {
+            Map<String, List<Topic>> appClassificationTopics =
+                    mTopicsDao.retrieveAppClassificationTopics(epochId);
+            List<Topic> topTopics = mTopicsDao.retrieveTopTopics(epochId);
+            Map<Integer, Set<String>> topTopicsToContributorsMap =
+                    mTopicsDao.retrieveTopicToContributorsMap(epochId);
+
+            List<Topic> classifiedTopics =
+                    appClassificationTopics.getOrDefault(uninstalledApp, new ArrayList<>());
+            // Collect all top topics to delete to make only one Db Update
+            List<String> topTopicsToDelete =
+                    classifiedTopics.stream()
+                            .filter(
+                                    classifiedTopic ->
+                                            topTopics.contains(classifiedTopic)
+                                                    && topTopicsToContributorsMap.containsKey(
+                                                            classifiedTopic.getTopic())
+                                                    // Filter out the topic that has ONLY
+                                                    // the uninstalled app as a contributor
+                                                    && topTopicsToContributorsMap
+                                                                    .get(classifiedTopic.getTopic())
+                                                                    .size()
+                                                            == 1
+                                                    && topTopicsToContributorsMap
+                                                            .get(classifiedTopic.getTopic())
+                                                            .contains(uninstalledApp))
+                            .map(Topic::getTopic)
+                            .map(String::valueOf)
+                            .collect(Collectors.toList());
+
+            if (!topTopicsToDelete.isEmpty()) {
+                LogUtil.v(
+                        "Topics %s will not have contributors at epoch %d. Delete them in"
+                                + " epoch %d",
+                        topTopicsToDelete, epochId, epochId);
+            }
+
+            mTopicsDao.deleteEntriesFromTableByColumnWithEqualCondition(
+                    List.of(
+                            Pair.create(
+                                    TopicsTables.ReturnedTopicContract.TABLE,
+                                    TopicsTables.ReturnedTopicContract.TOPIC)),
+                    topTopicsToDelete,
+                    TopicsTables.ReturnedTopicContract.EPOCH_ID,
+                    String.valueOf(epochId),
+                    /* isStringEqualConditionColumnValue */ false);
+        }
+    }
+
+    /**
+     * Filter out regular topics without any contributors. Note in an epoch, an app is a contributor
+     * to a topic if the app has called Topics API in this epoch and is classified to the topic.
+     *
+     * <p>For padded Topics (Classifier randomly pads top topics if they are not enough), as we put
+     * {@link EpochManager#PADDED_TOP_TOPICS_STRING} into TopicContributors Map, padded topics
+     * actually have "contributor" PADDED_TOP_TOPICS_STRING. Therefore, they won't be filtered out.
+     *
+     * @param regularTopics non-random top topics
+     * @param epochId epochId of current epoch
+     * @return the filtered regular topics
+     */
+    @NonNull
+    @VisibleForTesting
+    List<Topic> filterRegularTopicsWithoutContributors(
+            @NonNull List<Topic> regularTopics, long epochId) {
+        Map<Integer, Set<String>> topicToContributorMap =
+                mTopicsDao.retrieveTopicToContributorsMap(epochId);
+        return regularTopics.stream()
+                .filter(
+                        regularTopic ->
+                                topicToContributorMap.containsKey(regularTopic.getTopic())
+                                        && !topicToContributorMap
+                                                .get(regularTopic.getTopic())
+                                                .isEmpty())
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Check whether TopContributors Feature is enabled. It's enabled only when TopicContributors
      * table is supported and the feature flag is on.
      */
     @VisibleForTesting
     boolean supportsTopicContributorFeature() {
         return mFlags.getEnableTopicContributorsCheck()
-                && mTopicsDao.supportsTopContributorsTable();
+                && mDbHelper.supportsTopicContributorsTable();
     }
 
     // An app will be regarded as an unhandled uninstalled app if it has an entry in any epoch of
@@ -386,82 +643,55 @@ public class AppUpdateManager {
 
     // Get current installed applications from package manager
     @NonNull
-    private Set<String> getCurrentInstalledApps(Context context) {
+    @VisibleForTesting
+    Set<String> getCurrentInstalledApps(Context context) {
         PackageManager packageManager = context.getPackageManager();
         List<ApplicationInfo> appInfoList =
-                packageManager.getInstalledApplications(
-                        PackageManager.ApplicationInfoFlags.of(PackageManager.GET_META_DATA));
-
+                PackageManagerCompatUtils.getInstalledApplications(
+                        packageManager, PackageManager.GET_META_DATA);
         return appInfoList.stream().map(appInfo -> appInfo.packageName).collect(Collectors.toSet());
+    }
+
+    /**
+     * Get App Package Name from a Uri.
+     *
+     * <p>Across PPAPI, package Uri is in the form of "package:com.example.adservices.sampleapp".
+     * "package" is a scheme of Uri and "com.example.adservices.sampleapp" is the app package name.
+     * Topics API persists app package name into database so this method extracts it from a Uri.
+     *
+     * @param packageUri the {@link Uri} of a package
+     * @return the app package name
+     */
+    @VisibleForTesting
+    @NonNull
+    String convertUriToAppName(@NonNull Uri packageUri) {
+        return packageUri.getSchemeSpecificPart();
     }
 
     // Handle Uninstalled applications that still have derived data in database
     //
-    // Currently, simply wipe out these data in the database for an app. i.e. Deleting all
-    // derived data from all tables that are related to app (has app column)
-    private void handleUninstalledApps(@NonNull Set<String> newlyUninstalledApps) {
-        deleteAppDataFromTableByApps(new ArrayList<>(newlyUninstalledApps));
+    // 1) Delete all derived data for an uninstalled app.
+    // 2) Remove a topic if it has the uninstalled app as the only contributor in an epoch. In an
+    // epoch, an app is a contributor to a topic if the app has called Topics API in this epoch and
+    // is classified to the topic.
+    private void handleUninstalledAppsInReconciliation(
+            @NonNull Set<String> newlyUninstalledApps, long currentEpochId) {
+        for (String app : newlyUninstalledApps) {
+            if (supportsTopicContributorFeature()) {
+                handleTopTopicsWithoutContributors(currentEpochId, app);
+            }
+
+            deleteAppDataFromTableByApps(List.of(app));
+        }
     }
 
     // Handle newly installed applications
     //
     // Assign topics as real-time service to the app only, if the app isn't assigned with topics.
-    private void handleInstalledApps(@NonNull Set<String> newlyInstalledApps, long currentEpochId) {
+    private void handleInstalledAppsInReconciliation(
+            @NonNull Set<String> newlyInstalledApps, long currentEpochId) {
         for (String newlyInstalledApp : newlyInstalledApps) {
             assignTopicsToNewlyInstalledApps(newlyInstalledApp, currentEpochId);
         }
-    }
-
-    //
-    // For newly installed app, to allow it get topics in current epoch, one of top topics in past
-    // epochs will be assigned to this app.
-    //
-    // See more details in go/rb-topics-app-update
-    private void assignTopicsToNewlyInstalledApps(@NonNull String app, long currentEpochId) {
-        Objects.requireNonNull(app);
-
-        // Read topics related configurations from Flags
-        final int numberOfEpochsToAssignTopics = mFlags.getTopicsNumberOfLookBackEpochs();
-        final int topicsNumberOfTopTopics = mFlags.getTopicsNumberOfTopTopics();
-        final int topicsNumberOfRandomTopics = mFlags.getTopicsNumberOfRandomTopics();
-        final int topicsPercentageForRandomTopic = mFlags.getTopicsPercentageForRandomTopic();
-
-        Pair<String, String> appOnlyCaller = Pair.create(app, /* sdk */ "");
-
-        // For each past epoch, assign a random topic to this newly installed app.
-        // The assigned topic should align the probability with rule to generate top topics.
-        for (long epochId = currentEpochId - 1;
-                epochId >= currentEpochId - numberOfEpochsToAssignTopics && epochId >= 0;
-                epochId--) {
-            List<Topic> topTopics = mTopicsDao.retrieveTopTopics(epochId);
-
-            if (topTopics.isEmpty()) {
-                LogUtil.v(
-                        "Empty top topic list in Epoch %d, do not assign topic to App %s in Epoch"
-                                + "%d.",
-                        epochId, app, epochId);
-                continue;
-            }
-
-            Topic assignedTopic =
-                    selectAssignedTopicFromTopTopics(
-                            topTopics,
-                            topicsNumberOfTopTopics,
-                            topicsNumberOfRandomTopics,
-                            topicsPercentageForRandomTopic);
-
-            // Persist this topic to database as returned topic in this epoch
-            mTopicsDao.persistReturnedAppTopicsMap(epochId, Map.of(appOnlyCaller, assignedTopic));
-
-            LogUtil.v(
-                    "Topic %s has been assigned to newly installed App %s in Epoch %d",
-                    assignedTopic.getTopic(), app, epochId);
-        }
-    }
-
-    // packageUri.toString() has only app name, without "package:" in the front, i.e. it'll be like
-    // "com.example.adservices.sampleapp".
-    private String convertUriToAppName(@NonNull Uri packageUri) {
-        return packageUri.getSchemeSpecificPart();
     }
 }

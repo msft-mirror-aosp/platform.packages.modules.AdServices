@@ -37,18 +37,17 @@ public class E2EDenoisedMockTest extends E2EMockTest {
 
     @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> getData() throws IOException, JSONException {
-        return data(TEST_DIR_NAME);
+        return data(TEST_DIR_NAME, E2ETest::preprocessTestJson);
     }
 
     public E2EDenoisedMockTest(Collection<Action> actions, ReportObjects expectedOutput,
-            PrivacyParamsProvider privacyParamsProvider, String name) throws DatastoreException {
-        super(actions, expectedOutput, privacyParamsProvider, name);
-        mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager);
+            ParamsProvider paramsProvider, String name) throws DatastoreException {
+        super(actions, expectedOutput, paramsProvider, name);
+        mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager, mFlags);
         mMeasurementImpl =
                 TestObjectProvider.getMeasurementImpl(
                         sDatastoreManager,
                         mClickVerifier,
-                        mFlags,
                         mMeasurementDataDeleter,
                         sEnrollmentDao);
 
@@ -58,6 +57,7 @@ public class E2EDenoisedMockTest extends E2EMockTest {
                         sDatastoreManager,
                         mAsyncSourceFetcher,
                         mAsyncTriggerFetcher,
-                        sEnrollmentDao);
+                        sEnrollmentDao,
+                        mDebugReportApi);
     }
 }

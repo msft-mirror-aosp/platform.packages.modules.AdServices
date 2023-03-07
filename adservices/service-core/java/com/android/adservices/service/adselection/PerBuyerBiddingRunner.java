@@ -20,16 +20,27 @@ import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
+import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.Clock;
+import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
+import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ExecutionSequencer;
+import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
+
+import org.json.JSONObject;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -40,24 +51,31 @@ import java.util.stream.Collectors;
  * ones that were already completed
  */
 public class PerBuyerBiddingRunner {
-    @NonNull private AdBidGenerator mAdBidGenerator;
-    @NonNull private ScheduledThreadPoolExecutor mScheduledExecutor;
-    @NonNull private ListeningExecutorService mBackgroundExecutorService;
+    @NonNull private final AdBidGenerator mAdBidGenerator;
+    @NonNull private final TrustedBiddingDataFetcher mTrustedBiddingDataFetcher;
+    @NonNull private final ScheduledThreadPoolExecutor mScheduledExecutor;
+    @NonNull private final ExecutorService mBackgroundExecutorService;
+    @NonNull private final Flags mFlags;
 
     public PerBuyerBiddingRunner(
             @NonNull AdBidGenerator adBidGenerator,
+            @NonNull TrustedBiddingDataFetcher trustedBiddingDataFetcher,
             @NonNull ScheduledThreadPoolExecutor scheduledExecutor,
-            @NonNull ListeningExecutorService backgroundExecutorService) {
+            @NonNull ExecutorService backgroundExecutor,
+            @NonNull Flags flags) {
         mAdBidGenerator = adBidGenerator;
+        mTrustedBiddingDataFetcher = trustedBiddingDataFetcher;
         mScheduledExecutor = scheduledExecutor;
-        mBackgroundExecutorService = backgroundExecutorService;
+        mBackgroundExecutorService = backgroundExecutor;
+        mFlags = flags;
     }
     /**
-     * This method executes bidding sequentially on the list of CustomAudience for a buyer. By
-     * leveraging the sequential executor, the bidding for subsequent Custom Audience is not even
-     * started until the previous bidding completes. This leads to significant saving of resources
-     * as without sequence, all the CAs begin bidding async and start downloading JS and consuming
-     * other resources. This ensures that at any point, only one bidding would be in progress.
+     * This method executes bidding in chunks on a list of CustomAudience for a buyer. Using the
+     * configurable flag we divide the custom audience list into sub-lists. These lists are bid in
+     * parallel with each other. Whereas each item in the list is bid sequentially. This leads to
+     * significant saving of resources as without sequence, all the CAs begin bidding async and
+     * start downloading JS and consuming other resources. This ensures that at any point, only one
+     * bidding would be in progress.
      *
      * @param buyerTimeoutMs timeout value, post which incomplete CA bids are cancelled
      * @param adSelectionConfig for the current Ad Selection
@@ -72,29 +90,62 @@ public class PerBuyerBiddingRunner {
                 "Running bid for #%d Custom Audiences for buyer: %s",
                 customAudienceList.size(), buyer);
 
-        /*
-         * We require a unique sequencer per buyer, as using a global sequencer enforces sequence
-         * across buyers, where a buyer can starve other buyers' CAs from bidding.
-         */
-        ExecutionSequencer sequencer = ExecutionSequencer.create();
+        List<List<DBCustomAudience>> biddingWorkPartitions =
+                partitionList(customAudienceList, getMaxConcurrentBiddingCount());
+
+        LogUtil.v("Fetching trusted bidding data for buyer: %s", buyer);
+        FluentFuture<Map<Uri, JSONObject>> trustedBiddingDataMap =
+                mTrustedBiddingDataFetcher.getTrustedBiddingDataForBuyer(customAudienceList);
+
         List<ListenableFuture<AdBiddingOutcome>> buyerBiddingOutcomes =
-                customAudienceList.stream()
+                biddingWorkPartitions.stream()
                         .map(
                                 (customAudience) ->
-                                        sequencer.submitAsync(
-                                                () ->
-                                                        runBiddingPerCA(
-                                                                customAudience, adSelectionConfig),
-                                                mBackgroundExecutorService))
+                                        runBidPerCAWorkPartition(
+                                                customAudience,
+                                                adSelectionConfig,
+                                                trustedBiddingDataMap))
+                        .flatMap(List::stream)
                         .collect(Collectors.toList());
-
         eventuallyTimeoutIncompleteTasks(buyerTimeoutMs, buyerBiddingOutcomes);
         return buyerBiddingOutcomes;
     }
 
+    /**
+     * Runs bidding for custom Audience in a strict sequence. By leveraging the sequential executor,
+     * the bidding for subsequent Custom Audience is not even started until the previous bidding
+     * completes.
+     *
+     * @param customAudienceSubList only a part of Custom Audience List
+     * @param adSelectionConfig for the current Ad Selection
+     * @return list of futures with bidding outcomes
+     */
+    private List<ListenableFuture<AdBiddingOutcome>> runBidPerCAWorkPartition(
+            List<DBCustomAudience> customAudienceSubList,
+            AdSelectionConfig adSelectionConfig,
+            FluentFuture<Map<Uri, JSONObject>> trustedBiddingDataMap) {
+        ExecutionSequencer sequencer = ExecutionSequencer.create();
+        LogUtil.v("Bidding partition chunk size: %d", customAudienceSubList.size());
+        return customAudienceSubList.stream()
+                .map(
+                        (customAudience) ->
+                                sequencer.submitAsync(
+                                        () ->
+                                                trustedBiddingDataMap.transformAsync(
+                                                        map ->
+                                                                runBiddingPerCA(
+                                                                        customAudience,
+                                                                        adSelectionConfig,
+                                                                        map),
+                                                        mBackgroundExecutorService),
+                                        mBackgroundExecutorService))
+                .collect(Collectors.toList());
+    }
+
     private ListenableFuture<AdBiddingOutcome> runBiddingPerCA(
             @NonNull final DBCustomAudience customAudience,
-            @NonNull final AdSelectionConfig adSelectionConfig) {
+            @NonNull final AdSelectionConfig adSelectionConfig,
+            @NonNull final Map<Uri, JSONObject> trustedBiddingDataByBaseUri) {
         LogUtil.v(String.format("Invoking bidding for CA: %s", customAudience.getName()));
 
         // TODO(b/233239475) : Validate Buyer signals in Ad Selection Config
@@ -106,9 +157,12 @@ public class PerBuyerBiddingRunner {
                         .orElse(AdSelectionSignals.EMPTY);
         return mAdBidGenerator.runAdBiddingPerCA(
                 customAudience,
+                trustedBiddingDataByBaseUri,
                 adSelectionConfig.getAdSelectionSignals(),
                 buyerSignal,
-                AdSelectionSignals.EMPTY);
+                AdSelectionSignals.EMPTY,
+                new RunAdBiddingPerCAExecutionLogger(
+                        Clock.SYSTEM_CLOCK, AdServicesLoggerImpl.getInstance()));
     }
 
     /**
@@ -125,7 +179,6 @@ public class PerBuyerBiddingRunner {
                 () -> {
                     int incompleteTaskCount = 0;
                     for (ListenableFuture<T> runningTask : runningTasks) {
-                        // TODO(b/254176437): use Closing futures to free up resources
                         if (runningTask.cancel(true)) {
                             incompleteTaskCount++;
                         }
@@ -135,5 +188,22 @@ public class PerBuyerBiddingRunner {
                             runningTasks.size(), incompleteTaskCount);
                 };
         mScheduledExecutor.schedule(cancelOngoingTasks, timeoutMs, TimeUnit.MILLISECONDS);
+    }
+
+    @VisibleForTesting
+    <T> List<List<T>> partitionList(final List<T> list, int numPartitions) {
+        // Negative partitions not possible
+        numPartitions = Math.abs(numPartitions);
+        // 0 partition is equivalent to the original list itself, so 1 partition
+        if (numPartitions == 0) {
+            numPartitions = 1;
+        }
+        int chunkSize =
+                (list.size() / numPartitions) + (((list.size() % numPartitions) == 0) ? 0 : 1);
+        return Lists.partition(list, chunkSize);
+    }
+
+    private int getMaxConcurrentBiddingCount() {
+        return mFlags.getAdSelectionMaxConcurrentBiddingCount();
     }
 }

@@ -27,20 +27,11 @@
                 "id"
               ]
             },
-            "aggregation_keys": [
-              {
-                "id": "campaignCounts",
-                "key_piece": "0x159"
-              },
-              {
-                "id": "geoValue",
-                "key_piece": "0x5"
-              },
-              {
-                "id": "thirdSource",
-                "key_piece": "0x100"
-              }
-            ]
+            "aggregation_keys": {
+              "campaignCounts": "0x159",
+              "geoValue": "0x5",
+              "thirdSource": "0x100"
+            }
           },
           "Location": null,
           "Attribution-Reporting-Redirect": null
@@ -110,6 +101,7 @@
       "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
       "payload": {
         "attribution_destination": "android-app://example.2d1.test",
+        "scheduled_report_time": "800176400",
         "source_event_id": "1",
         "trigger_data": "2",
         "source_type": "navigation",
@@ -125,7 +117,7 @@
         "histograms": [
           {"key": "0x559", "value": 32768},
           {"key": "0xa85", "value": 1664},
-	  {"key":"0x100", "value":"100"}
+          {"key":"0x100", "value":"100"}
         ]
       }
     }]

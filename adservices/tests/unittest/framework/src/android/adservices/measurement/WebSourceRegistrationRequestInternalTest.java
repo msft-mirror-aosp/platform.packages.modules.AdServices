@@ -39,6 +39,7 @@ public class WebSourceRegistrationRequestInternalTest {
             InstrumentationRegistry.getInstrumentation().getContext();
     private static final Uri REGISTRATION_URI_1 = Uri.parse("https://foo1.com");
     private static final Uri REGISTRATION_URI_2 = Uri.parse("https://foo2.com");
+    private static final String SDK_PACKAGE_NAME = "sdk.package.name";
     private static final Uri TOP_ORIGIN_URI = Uri.parse("https://top-origin.com");
     private static final Uri OS_DESTINATION_URI = Uri.parse("android-app://com.os-destination");
     private static final Uri WEB_DESTINATION_URI = Uri.parse("https://web-destination.com");
@@ -80,21 +81,41 @@ public class WebSourceRegistrationRequestInternalTest {
     }
 
     @Test
-    public void build_nullParameters_throwsException() {
+    public void build_nullSourceRegistrationRequest_throwsException() {
         assertThrows(
                 NullPointerException.class,
                 () ->
                         new WebSourceRegistrationRequestInternal.Builder(
                                         null,
                                         CONTEXT.getAttributionSource().getPackageName(),
+                                        SDK_PACKAGE_NAME,
                                         REQUEST_TIME)
                                 .build());
+    }
 
+    @Test
+    public void build_nullAppPackageName_throwsException() {
         assertThrows(
                 NullPointerException.class,
                 () ->
                         new WebSourceRegistrationRequestInternal.Builder(
-                                        EXAMPLE_EXTERNAL_SOURCE_REG_REQUEST, null, REQUEST_TIME)
+                                        EXAMPLE_EXTERNAL_SOURCE_REG_REQUEST,
+                                        /* appPackageName = */ null,
+                                        SDK_PACKAGE_NAME,
+                                        REQUEST_TIME)
+                                .build());
+    }
+
+    @Test
+    public void build_nullSdkPackageName_throwsException() {
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        new WebSourceRegistrationRequestInternal.Builder(
+                                        EXAMPLE_EXTERNAL_SOURCE_REG_REQUEST,
+                                        CONTEXT.getAttributionSource().getPackageName(),
+                                        /* sdkPackageName = */ null,
+                                        REQUEST_TIME)
                                 .build());
     }
 
@@ -119,7 +140,10 @@ public class WebSourceRegistrationRequestInternalTest {
         final WebSourceRegistrationRequestInternal request1 = createExampleRegistrationRequest();
         final WebSourceRegistrationRequestInternal request2 =
                 new WebSourceRegistrationRequestInternal.Builder(
-                                EXAMPLE_EXTERNAL_SOURCE_REG_REQUEST, "com.foo", REQUEST_TIME)
+                                EXAMPLE_EXTERNAL_SOURCE_REG_REQUEST,
+                                "com.foo",
+                                SDK_PACKAGE_NAME,
+                                REQUEST_TIME)
                         .build();
 
         final Set<WebSourceRegistrationRequestInternal> requestSet1 = Set.of(request1);
@@ -133,6 +157,7 @@ public class WebSourceRegistrationRequestInternalTest {
         return new WebSourceRegistrationRequestInternal.Builder(
                         EXAMPLE_EXTERNAL_SOURCE_REG_REQUEST,
                         CONTEXT.getAttributionSource().getPackageName(),
+                        SDK_PACKAGE_NAME,
                         REQUEST_TIME)
                 .setAdIdPermissionGranted(true)
                 .build();
@@ -140,7 +165,8 @@ public class WebSourceRegistrationRequestInternalTest {
 
     private void verifyExampleRegistrationInternal(WebSourceRegistrationRequestInternal request) {
         verifyExampleRegistration(request.getSourceRegistrationRequest());
-        assertEquals(CONTEXT.getAttributionSource().getPackageName(), request.getPackageName());
+        assertEquals(CONTEXT.getAttributionSource().getPackageName(), request.getAppPackageName());
+        assertEquals(SDK_PACKAGE_NAME, request.getSdkPackageName());
         assertTrue(request.isAdIdPermissionGranted());
     }
 

@@ -32,14 +32,10 @@ import java.time.Instant;
 import java.util.Objects;
 
 /**
- * This POJO represents the AdSelection data in the ad_selection table entity. TODO(b/228114258):
- * Add foreign key on the bidding_logic_uri column to enforce the mapping between AdSelection and
- * BuyerDecisionLogic, so that entries in the buyer_decision_logic table will not be deleted as long
- * as there is mapping exists in the ad_selection table.
+ * This POJO represents the AdSelection data in the ad_selection table entity.
  *
  * @hide
  */
-// TODO (b/229660121): Ad unit tests for this class
 @Entity(
         tableName = "ad_selection",
         indices = {@Index(value = {"bidding_logic_uri"})})

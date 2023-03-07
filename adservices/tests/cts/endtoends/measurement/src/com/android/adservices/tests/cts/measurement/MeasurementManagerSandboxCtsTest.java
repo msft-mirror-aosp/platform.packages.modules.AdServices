@@ -37,7 +37,6 @@ import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.adservices.measurement.WebTriggerRegistrationRequestInternal;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
-import android.content.pm.ApplicationInfo;
 import android.net.Uri;
 import android.os.OutcomeReceiver;
 import android.test.suitebuilder.annotation.SmallTest;
@@ -45,10 +44,12 @@ import android.test.suitebuilder.annotation.SmallTest;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.runner.AndroidJUnit4;
 
+import com.android.adservices.common.AdservicesCtsHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -67,10 +68,11 @@ public class MeasurementManagerSandboxCtsTest {
                     /* baseContext = */ sContext,
                     /* classLoader = */ sContext.getClassLoader(),
                     /* clientPackageName = */ sContext.getPackageName(),
-                    /* info = */ new ApplicationInfo(),
+                    /* info = */ sContext.getApplicationInfo(),
                     /* sdkName = */ "sdkName",
                     /* sdkCeDataDir = */ null,
-                    /* sdkDeDataDir = */ null);
+                    /* sdkDeDataDir = */ null,
+                    /* isCustomizedSdkContext = */ false);
 
     private Executor mMockCallbackExecutor;
     private OutcomeReceiver mMockOutcomeReceiver;
@@ -80,6 +82,9 @@ public class MeasurementManagerSandboxCtsTest {
 
     @Before
     public void setUp() {
+        // Skip the test if it runs on unsupported platforms.
+        Assume.assumeTrue(AdservicesCtsHelper.isDeviceSupported());
+
         mMockCallbackExecutor = mock(Executor.class);
         mMockOutcomeReceiver = mock(OutcomeReceiver.class);
         mMockMeasurementService = mock(IMeasurementService.class);
@@ -115,7 +120,7 @@ public class MeasurementManagerSandboxCtsTest {
 
         verify(mMockMeasurementService, timeout(2000)).register(captor.capture(), any(), any());
         Assert.assertNotNull(captor.getValue());
-        Assert.assertEquals(sContext.getPackageName(), captor.getValue().getPackageName());
+        Assert.assertEquals(sContext.getPackageName(), captor.getValue().getAppPackageName());
     }
 
     @Test
@@ -132,7 +137,7 @@ public class MeasurementManagerSandboxCtsTest {
 
         verify(mMockMeasurementService, timeout(2000)).register(captor.capture(), any(), any());
         Assert.assertNotNull(captor.getValue());
-        Assert.assertEquals(sContext.getPackageName(), captor.getValue().getPackageName());
+        Assert.assertEquals(sContext.getPackageName(), captor.getValue().getAppPackageName());
     }
 
     @Test
@@ -165,7 +170,7 @@ public class MeasurementManagerSandboxCtsTest {
         verify(mMockMeasurementService, timeout(2000))
                 .registerWebSource(captor.capture(), any(), any());
         Assert.assertNotNull(captor.getValue());
-        Assert.assertEquals(sContext.getPackageName(), captor.getValue().getPackageName());
+        Assert.assertEquals(sContext.getPackageName(), captor.getValue().getAppPackageName());
     }
 
     @Test
@@ -191,7 +196,7 @@ public class MeasurementManagerSandboxCtsTest {
         verify(mMockMeasurementService, timeout(2000))
                 .registerWebTrigger(captor.capture(), any(), any());
         Assert.assertNotNull(captor.getValue());
-        Assert.assertEquals(sContext.getPackageName(), captor.getValue().getPackageName());
+        Assert.assertEquals(sContext.getPackageName(), captor.getValue().getAppPackageName());
     }
 
     @Test
@@ -213,7 +218,7 @@ public class MeasurementManagerSandboxCtsTest {
         verify(mMockMeasurementService, timeout(2000))
                 .deleteRegistrations(captor.capture(), any(), any());
         Assert.assertNotNull(captor.getValue());
-        Assert.assertEquals(sContext.getPackageName(), captor.getValue().getPackageName());
+        Assert.assertEquals(sContext.getPackageName(), captor.getValue().getAppPackageName());
     }
 
     @Test

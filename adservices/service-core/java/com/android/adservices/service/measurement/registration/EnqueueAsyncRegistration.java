@@ -22,9 +22,10 @@ import android.adservices.measurement.WebSourceRegistrationRequest;
 import android.adservices.measurement.WebTriggerParams;
 import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.net.Uri;
-import android.view.InputEvent;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
@@ -33,7 +34,6 @@ import com.android.adservices.service.measurement.AsyncRegistration;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.util.Enrollment;
 
-import com.google.common.annotations.VisibleForTesting;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -41,8 +41,6 @@ import java.util.UUID;
 
 /** Class containing static functions for enqueueing AsyncRegistrations */
 public class EnqueueAsyncRegistration {
-    private static final String ANDROID_APP_SCHEME = "android-app";
-
     /**
      * Inserts an App Source or Trigger Registration request into the Async Registration Queue
      * table.
@@ -51,8 +49,10 @@ public class EnqueueAsyncRegistration {
      */
     public static boolean appSourceOrTriggerRegistrationRequest(
             RegistrationRequest registrationRequest,
+            boolean adIdPermission,
             Uri registrant,
             long requestTime,
+            @Nullable Source.SourceType sourceType,
             @NonNull EnrollmentDao enrollmentDao,
             @NonNull DatastoreManager datastoreManager) {
         Objects.requireNonNull(enrollmentDao);
@@ -63,6 +63,7 @@ public class EnqueueAsyncRegistration {
                             Enrollment.maybeGetEnrollmentId(
                                     registrationRequest.getRegistrationUri(), enrollmentDao);
                     if (enrollmentData == null || enrollmentData.isEmpty()) {
+                        LogUtil.d("no enrollment data");
                         return;
                     }
                     String enrollmentId = enrollmentData.get();
@@ -79,15 +80,13 @@ public class EnqueueAsyncRegistration {
                                             == RegistrationRequest.REGISTER_SOURCE
                                     ? AsyncRegistration.RegistrationType.APP_SOURCE
                                     : AsyncRegistration.RegistrationType.APP_TRIGGER,
-                            registrationRequest.getRegistrationType()
-                                            == RegistrationRequest.REGISTER_TRIGGER
-                                    ? null
-                                    : getSourceType(registrationRequest.getInputEvent()),
+                            sourceType,
                             requestTime,
                             /* mRetryCount */ 0,
                             System.currentTimeMillis(),
                             AsyncRegistration.RedirectType.ANY,
-                            registrationRequest.isAdIdPermissionGranted(),
+                            false,
+                            adIdPermission,
                             dao);
                 });
     }
@@ -99,8 +98,10 @@ public class EnqueueAsyncRegistration {
      */
     public static boolean webSourceRegistrationRequest(
             WebSourceRegistrationRequest webSourceRegistrationRequest,
+            boolean adIdPermission,
             Uri registrant,
             long requestTime,
+            @Nullable Source.SourceType sourceType,
             @NonNull EnrollmentDao enrollmentDao,
             @NonNull DatastoreManager datastoreManager) {
         Objects.requireNonNull(enrollmentDao);
@@ -113,10 +114,10 @@ public class EnqueueAsyncRegistration {
                                 Enrollment.maybeGetEnrollmentId(
                                         webSourceParams.getRegistrationUri(), enrollmentDao);
                         if (enrollmentData == null || enrollmentData.isEmpty()) {
+                            LogUtil.d("no enrollment data");
                             return;
                         }
                         String enrollmentId = enrollmentData.get();
-
                         insertAsyncRegistration(
                                 UUID.randomUUID().toString(),
                                 enrollmentId,
@@ -127,12 +128,13 @@ public class EnqueueAsyncRegistration {
                                 webSourceRegistrationRequest.getVerifiedDestination(),
                                 webSourceRegistrationRequest.getTopOriginUri(),
                                 AsyncRegistration.RegistrationType.WEB_SOURCE,
-                                getSourceType(webSourceRegistrationRequest.getInputEvent()),
+                                sourceType,
                                 requestTime,
                                 /* mRetryCount */ 0,
                                 System.currentTimeMillis(),
                                 AsyncRegistration.RedirectType.NONE,
                                 webSourceParams.isDebugKeyAllowed(),
+                                adIdPermission,
                                 dao);
                     }
                 });
@@ -145,6 +147,7 @@ public class EnqueueAsyncRegistration {
      */
     public static boolean webTriggerRegistrationRequest(
             WebTriggerRegistrationRequest webTriggerRegistrationRequest,
+            boolean adIdPermission,
             Uri registrant,
             long requestTime,
             @NonNull EnrollmentDao enrollmentDao,
@@ -159,10 +162,10 @@ public class EnqueueAsyncRegistration {
                                 Enrollment.maybeGetEnrollmentId(
                                         webTriggerParams.getRegistrationUri(), enrollmentDao);
                         if (enrollmentData == null || enrollmentData.isEmpty()) {
+                            LogUtil.d("no enrollment data");
                             return;
                         }
                         String enrollmentId = enrollmentData.get();
-
                         insertAsyncRegistration(
                                 UUID.randomUUID().toString(),
                                 enrollmentId,
@@ -179,6 +182,7 @@ public class EnqueueAsyncRegistration {
                                 System.currentTimeMillis(),
                                 AsyncRegistration.RedirectType.NONE,
                                 webTriggerParams.isDebugKeyAllowed(),
+                                adIdPermission,
                                 dao);
                     }
                 });
@@ -200,6 +204,7 @@ public class EnqueueAsyncRegistration {
             long mLastProcessingTime,
             @AsyncRegistration.RedirectType int redirectType,
             boolean debugKeyAllowed,
+            boolean adIdPermission,
             @NonNull IMeasurementDao dao)
             throws DatastoreException {
         AsyncRegistration asyncRegistration =
@@ -219,13 +224,9 @@ public class EnqueueAsyncRegistration {
                         .setLastProcessingTime(mLastProcessingTime)
                         .setRedirectType(redirectType)
                         .setDebugKeyAllowed(debugKeyAllowed)
+                        .setAdIdPermission(adIdPermission)
                         .build();
 
         dao.insertAsyncRegistration(asyncRegistration);
-    }
-
-    @VisibleForTesting
-    static Source.SourceType getSourceType(InputEvent inputEvent) {
-        return inputEvent == null ? Source.SourceType.EVENT : Source.SourceType.NAVIGATION;
     }
 }

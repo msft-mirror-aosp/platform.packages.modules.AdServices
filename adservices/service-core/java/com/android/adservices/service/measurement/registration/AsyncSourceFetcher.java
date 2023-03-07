@@ -23,7 +23,10 @@ import static com.android.adservices.service.measurement.PrivacyParams.MIN_POST_
 import static com.android.adservices.service.measurement.PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATE_KEYS_PER_REGISTRATION;
 import static com.android.adservices.service.measurement.util.BaseUriExtractor.getBaseUri;
+import static com.android.adservices.service.measurement.util.MathUtils.extractValidNumberInRange;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__SOURCE;
+
+import static java.lang.Math.min;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
@@ -70,18 +73,21 @@ import java.util.concurrent.TimeUnit;
  */
 public class AsyncSourceFetcher {
 
+    private static final long ONE_DAY_IN_SECONDS = TimeUnit.DAYS.toSeconds(1);
     private final String mDefaultAndroidAppScheme = "android-app";
     private final String mDefaultAndroidAppUriPrefix = mDefaultAndroidAppScheme + "://";
     private final MeasurementHttpClient mNetworkConnection = new MeasurementHttpClient();
     private final EnrollmentDao mEnrollmentDao;
     private final Flags mFlags;
     private final AdServicesLogger mLogger;
+
     public AsyncSourceFetcher(Context context) {
         this(
                 EnrollmentDao.getInstance(context),
                 FlagsFactory.getFlags(),
                 AdServicesLoggerImpl.getInstance());
     }
+
     @VisibleForTesting
     public AsyncSourceFetcher(EnrollmentDao enrollmentDao, Flags flags, AdServicesLogger logger) {
         mEnrollmentDao = enrollmentDao;
@@ -91,41 +97,79 @@ public class AsyncSourceFetcher {
 
     private boolean parseCommonSourceParams(
             @NonNull JSONObject json,
+            @NonNull Source.SourceType sourceType,
             @Nullable Uri appDestinationFromRequest,
             @Nullable Uri webDestinationFromRequest,
             long sourceEventTime,
-            boolean shouldValidateDestination,
+            boolean shouldValidateDestinationWebSource,
+            boolean shouldOverrideDestinationAppSource,
             Source.Builder result,
-            boolean isWebSource,
-            boolean isAllowDebugKey,
-            boolean isAdIdPermissionGranted)
+            boolean isWebSource)
             throws JSONException {
-        final boolean hasRequiredParams = hasRequiredParams(json, shouldValidateDestination);
+        final boolean hasRequiredParams =
+                hasRequiredParams(json, shouldValidateDestinationWebSource);
         if (!hasRequiredParams) {
             throw new JSONException(
                     String.format(
                             "Expected %s and a destination", SourceHeaderContract.SOURCE_EVENT_ID));
         }
-        result.setEventId(new UnsignedLong(json.getString(SourceHeaderContract.SOURCE_EVENT_ID)));
+        UnsignedLong eventId = new UnsignedLong(0L);
+        if (!json.isNull(SourceHeaderContract.SOURCE_EVENT_ID)) {
+            try {
+                eventId = new UnsignedLong(json.getString(SourceHeaderContract.SOURCE_EVENT_ID));
+            } catch (NumberFormatException e) {
+                LogUtil.d(e, "parseCommonSourceParams: parsing source_event_id failed.");
+            }
+        }
+        result.setEventId(eventId);
+        long expiry;
         if (!json.isNull(SourceHeaderContract.EXPIRY)) {
-            long expiry =
+            expiry =
                     extractValidNumberInRange(
                             json.getLong(SourceHeaderContract.EXPIRY),
                             MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
                             MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
-            result.setExpiryTime(sourceEventTime + TimeUnit.SECONDS.toMillis(expiry));
+            if (sourceType == Source.SourceType.EVENT) {
+                expiry = roundSecondsToWholeDays(expiry);
+            }
         } else {
-            result.setExpiryTime(
-                    sourceEventTime
-                            + TimeUnit.SECONDS.toMillis(
-                                    MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS));
+            expiry = MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
         }
+        result.setExpiryTime(sourceEventTime + TimeUnit.SECONDS.toMillis(expiry));
+        long eventReportWindow;
+        if (!json.isNull(SourceHeaderContract.EVENT_REPORT_WINDOW)) {
+            eventReportWindow =
+                    Math.min(
+                            expiry,
+                            extractValidNumberInRange(
+                                    json.getLong(SourceHeaderContract.EVENT_REPORT_WINDOW),
+                                    MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
+                                    MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS));
+        } else {
+            eventReportWindow = expiry;
+        }
+        result.setEventReportWindow(sourceEventTime + TimeUnit.SECONDS.toMillis(eventReportWindow));
+        long aggregateReportWindow;
+        if (!json.isNull(SourceHeaderContract.AGGREGATABLE_REPORT_WINDOW)) {
+            aggregateReportWindow =
+                    min(
+                            expiry,
+                            extractValidNumberInRange(
+                                    json.getLong(SourceHeaderContract.AGGREGATABLE_REPORT_WINDOW),
+                                    MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
+                                    MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS));
+        } else {
+            aggregateReportWindow = expiry;
+        }
+        result.setAggregatableReportWindow(
+                sourceEventTime + TimeUnit.SECONDS.toMillis(aggregateReportWindow));
         if (!json.isNull(SourceHeaderContract.PRIORITY)) {
             result.setPriority(json.getLong(SourceHeaderContract.PRIORITY));
         }
-        boolean isWebAllow = isWebSource && isAllowDebugKey && isAdIdPermissionGranted;
-        boolean isAppAllow = !isWebSource && isAdIdPermissionGranted;
-        if (!json.isNull(SourceHeaderContract.DEBUG_KEY) && (isWebAllow || isAppAllow)) {
+        if (!json.isNull(SourceHeaderContract.DEBUG_REPORTING)) {
+            result.setIsDebugReporting(json.optBoolean(SourceHeaderContract.DEBUG_REPORTING));
+        }
+        if (!json.isNull(SourceHeaderContract.DEBUG_KEY)) {
             try {
                 result.setDebugKey(
                         new UnsignedLong(json.getString(SourceHeaderContract.DEBUG_KEY)));
@@ -165,8 +209,10 @@ public class AsyncSourceFetcher {
             result.setFilterData(
                     json.getJSONObject(SourceHeaderContract.FILTER_DATA).toString());
         }
+
+        Uri appUri = null;
         if (!json.isNull(SourceHeaderContract.DESTINATION)) {
-            Uri appUri = Uri.parse(json.getString(SourceHeaderContract.DESTINATION));
+            appUri = Uri.parse(json.getString(SourceHeaderContract.DESTINATION));
             if (appUri.getScheme() == null) {
                 LogUtil.d("App destination is missing app scheme, adding.");
                 appUri = Uri.parse(mDefaultAndroidAppUriPrefix + appUri);
@@ -177,16 +223,24 @@ public class AsyncSourceFetcher {
                         appUri.getScheme());
                 return false;
             }
-            if (appDestinationFromRequest != null && !appDestinationFromRequest.equals(appUri)) {
-                LogUtil.d("Expected destination to match with the supplied one!");
-                return false;
-            }
-            result.setAppDestination(getBaseUri(appUri));
         }
-        if (shouldValidateDestination
+
+        if (shouldValidateDestinationWebSource
+                && appDestinationFromRequest != null // Only validate when non-null in request
+                && !appDestinationFromRequest.equals(appUri)) {
+            LogUtil.d("Expected destination to match with the supplied one!");
+            return false;
+        }
+
+        if (appUri != null) {
+            result.setAppDestinations(List.of(getBaseUri(appUri)));
+        }
+
+        if (shouldValidateDestinationWebSource
+                && webDestinationFromRequest != null // Only validate when non-null in request
                 && !doUriFieldsMatch(
                         json, SourceHeaderContract.WEB_DESTINATION, webDestinationFromRequest)) {
-            LogUtil.d("Expected web_destination to match with ths supplied one!");
+            LogUtil.d("Expected web_destination to match with the supplied one!");
             return false;
         }
         if (!json.isNull(SourceHeaderContract.WEB_DESTINATION)) {
@@ -196,32 +250,44 @@ public class AsyncSourceFetcher {
                 LogUtil.d("Unable to extract top private domain and scheme from web destination.");
                 return false;
             } else {
-                result.setWebDestination(topPrivateDomainAndScheme.get());
+                result.setWebDestinations(List.of(topPrivateDomainAndScheme.get()));
             }
+        }
+        if (shouldOverrideDestinationAppSource && !isWebSource
+                && appDestinationFromRequest != null) {
+            result.setAppDestinations(List.of(appDestinationFromRequest));
         }
         return true;
     }
 
-    private boolean parseSource(
+    /** Parse a {@code Source}, given response headers, adding the {@code Source} to a given list */
+    @VisibleForTesting
+    public boolean parseSource(
+            @NonNull String registrationId,
             @NonNull Uri publisher,
             @NonNull String enrollmentId,
             @Nullable Uri appDestination,
             @Nullable Uri webDestination,
             @Nullable Uri registrant,
             long eventTime,
-            @Nullable Source.SourceType sourceType,
-            boolean shouldValidateDestination,
+            @NonNull Source.SourceType sourceType,
+            boolean shouldValidateDestinationWebSource,
+            boolean shouldOverrideDestinationAppSource,
             @NonNull Map<String, List<String>> headers,
             @NonNull List<Source> sources,
             boolean isWebSource,
-            boolean isAllowDebugKey,
-            boolean isAdIdPermissionGranted) {
+            boolean adIdPermission,
+            boolean arDebugPermission) {
         Source.Builder result = new Source.Builder();
+        result.setRegistrationId(registrationId);
         result.setPublisher(publisher);
         result.setEnrollmentId(enrollmentId);
         result.setRegistrant(registrant);
         result.setSourceType(sourceType);
         result.setAttributionMode(Source.AttributionMode.TRUTHFULLY);
+        result.setEventTime(eventTime);
+        result.setAdIdPermission(adIdPermission);
+        result.setArDebugPermission(arDebugPermission);
         result.setEventTime(eventTime);
         result.setPublisherType(isWebSource ? EventSurfaceType.WEB : EventSurfaceType.APP);
         List<String> field = headers.get("Attribution-Reporting-Register-Source");
@@ -236,23 +302,30 @@ public class AsyncSourceFetcher {
             boolean isValid =
                     parseCommonSourceParams(
                             json,
+                            sourceType,
                             appDestination,
                             webDestination,
                             eventTime,
-                            shouldValidateDestination,
+                            shouldValidateDestinationWebSource,
+                            shouldOverrideDestinationAppSource,
                             result,
-                            isWebSource,
-                            isAllowDebugKey,
-                            isAdIdPermissionGranted);
+                            isWebSource);
             if (!isValid) {
                 return false;
             }
             if (!json.isNull(SourceHeaderContract.AGGREGATION_KEYS)) {
                 if (!areValidAggregationKeys(
-                        json.getJSONArray(SourceHeaderContract.AGGREGATION_KEYS))) {
+                        json.getJSONObject(SourceHeaderContract.AGGREGATION_KEYS))) {
                     return false;
                 }
                 result.setAggregateSource(json.getString(SourceHeaderContract.AGGREGATION_KEYS));
+            }
+            if (mFlags.getMeasurementEnableXNA()
+                    && !json.isNull(SourceHeaderContract.SHARED_AGGREGATION_KEYS)) {
+                // Parsed as JSONArray for validation
+                JSONArray sharedAggregationKeys =
+                        json.getJSONArray(SourceHeaderContract.SHARED_AGGREGATION_KEYS);
+                result.setSharedAggregationKeys(sharedAggregationKeys.toString());
             }
             sources.add(result.build());
             return true;
@@ -267,7 +340,7 @@ public class AsyncSourceFetcher {
         if (shouldValidateDestinations) {
             isDestinationAvailable |= !json.isNull(SourceHeaderContract.WEB_DESTINATION);
         }
-        return !json.isNull(SourceHeaderContract.SOURCE_EVENT_ID) && isDestinationAvailable;
+        return isDestinationAvailable;
     }
 
     private static boolean doUriFieldsMatch(JSONObject json, String fieldName, Uri expectedValue)
@@ -279,20 +352,13 @@ public class AsyncSourceFetcher {
                 && Objects.equals(expectedValue, Uri.parse(json.getString(fieldName)));
     }
 
-    private static long extractValidNumberInRange(long value, long lowerLimit, long upperLimit) {
-        if (value < lowerLimit) {
-            return lowerLimit;
-        } else if (value > upperLimit) {
-            return upperLimit;
-        }
-        return value;
-    }
     /** Provided a testing hook. */
     @NonNull
     @VisibleForTesting
     public URLConnection openUrl(@NonNull URL url) throws IOException {
         return mNetworkConnection.setup(url);
     }
+
     /**
      * Fetch a source type registration.
      *
@@ -305,6 +371,7 @@ public class AsyncSourceFetcher {
             AsyncRedirect asyncRedirect) {
         List<Source> out = new ArrayList<>();
         fetchSource(
+                asyncRegistration.getId(),
                 asyncRegistration.getTopOrigin(),
                 asyncRegistration.getRegistrationUri(),
                 asyncRegistration.getOsDestination(),
@@ -312,14 +379,15 @@ public class AsyncSourceFetcher {
                 asyncRegistration.getRegistrant(),
                 asyncRegistration.getRequestTime(),
                 asyncRegistration.getType() == AsyncRegistration.RegistrationType.WEB_SOURCE,
+                asyncRegistration.getRedirectType() != AsyncRegistration.RedirectType.ANY,
                 asyncRegistration.getSourceType(),
                 out,
                 asyncRegistration.shouldProcessRedirects(),
                 asyncRegistration.getRedirectType(),
                 asyncRedirect,
                 asyncRegistration.getType() == AsyncRegistration.RegistrationType.WEB_SOURCE,
-                asyncRegistration.getDebugKeyAllowed(),
                 asyncFetchStatus,
+                asyncRegistration.hasAdIdPermission(),
                 asyncRegistration.getDebugKeyAllowed());
         if (out.isEmpty()) {
             return Optional.empty();
@@ -329,22 +397,24 @@ public class AsyncSourceFetcher {
     }
 
     private void fetchSource(
+            @NonNull String registrationId,
             @NonNull Uri publisher,
             @NonNull Uri registrationUri,
             @Nullable Uri appDestination,
             @Nullable Uri webDestination,
             @Nullable Uri registrant,
             long eventTime,
-            boolean shouldValidateDestination,
+            boolean shouldValidateDestinationWebSource,
+            boolean shouldOverrideDestinationAppSource,
             @NonNull Source.SourceType sourceType,
             @NonNull List<Source> sourceOut,
             boolean shouldProcessRedirects,
             @AsyncRegistration.RedirectType int redirectType,
             @NonNull AsyncRedirect asyncRedirect,
             boolean isWebSource,
-            boolean isAllowDebugKey,
             @Nullable AsyncFetchStatus asyncFetchStatus,
-            boolean isAdIdPermissionGranted) {
+            boolean adIdPermission,
+            boolean arDebugPermission) {
         // Require https.
         if (!registrationUri.getScheme().equals("https")) {
             asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.PARSING_ERROR);
@@ -394,6 +464,7 @@ public class AsyncSourceFetcher {
             asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
             final boolean parsed =
                     parseSource(
+                            registrationId,
                             publisher,
                             enrollmentId.get(),
                             appDestination,
@@ -401,12 +472,13 @@ public class AsyncSourceFetcher {
                             registrant,
                             eventTime,
                             sourceType,
-                            shouldValidateDestination,
+                            shouldValidateDestinationWebSource,
+                            shouldOverrideDestinationAppSource,
                             headers,
                             sourceOut,
                             isWebSource,
-                            isAllowDebugKey,
-                            isAdIdPermissionGranted);
+                            adIdPermission,
+                            arDebugPermission);
             if (!parsed) {
                 asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.PARSING_ERROR);
                 LogUtil.d("Failed to parse");
@@ -427,25 +499,19 @@ public class AsyncSourceFetcher {
         }
     }
 
-    private boolean areValidAggregationKeys(JSONArray aggregationKeys) {
+    private boolean areValidAggregationKeys(JSONObject aggregationKeys) {
         if (aggregationKeys.length() > MAX_AGGREGATE_KEYS_PER_REGISTRATION) {
             LogUtil.d(
                     "Aggregation-keys have more entries than permitted. %s",
                     aggregationKeys.length());
             return false;
         }
-        for (int i = 0; i < aggregationKeys.length(); i++) {
-            JSONObject keyObj = aggregationKeys.optJSONObject(i);
-            if (keyObj == null) {
-                LogUtil.d("SourceFetcher: aggregation key failed to parse.");
-                return false;
-            }
-            String id = keyObj.optString("id");
+        for (String id : aggregationKeys.keySet()) {
             if (!FetcherUtil.isValidAggregateKeyId(id)) {
                 LogUtil.d("SourceFetcher: aggregation key ID is invalid. %s", id);
                 return false;
             }
-            String keyPiece = keyObj.optString("key_piece");
+            String keyPiece = aggregationKeys.optString(id);
             if (!FetcherUtil.isValidAggregateKeyPiece(keyPiece)) {
                 LogUtil.d("SourceFetcher: aggregation key-piece is invalid. %s", keyPiece);
                 return false;
@@ -454,16 +520,26 @@ public class AsyncSourceFetcher {
         return true;
     }
 
+    private static long roundSecondsToWholeDays(long seconds) {
+        long remainder = seconds % ONE_DAY_IN_SECONDS;
+        boolean roundUp = remainder >= ONE_DAY_IN_SECONDS / 2L;
+        return seconds - remainder + (roundUp ? ONE_DAY_IN_SECONDS : 0);
+    }
+
     private interface SourceHeaderContract {
         String SOURCE_EVENT_ID = "source_event_id";
         String DEBUG_KEY = "debug_key";
         String DESTINATION = "destination";
         String EXPIRY = "expiry";
+        String EVENT_REPORT_WINDOW = "event_report_window";
+        String AGGREGATABLE_REPORT_WINDOW = "aggregatable_report_window";
         String PRIORITY = "priority";
         String INSTALL_ATTRIBUTION_WINDOW_KEY = "install_attribution_window";
         String POST_INSTALL_EXCLUSIVITY_WINDOW_KEY = "post_install_exclusivity_window";
         String FILTER_DATA = "filter_data";
         String WEB_DESTINATION = "web_destination";
         String AGGREGATION_KEYS = "aggregation_keys";
+        String SHARED_AGGREGATION_KEYS = "shared_aggregation_keys";
+        String DEBUG_REPORTING = "debug_reporting";
     }
 }

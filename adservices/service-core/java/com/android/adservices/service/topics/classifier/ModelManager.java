@@ -21,10 +21,12 @@ import android.content.Context;
 import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
 import android.net.Uri;
+import android.os.Build;
 import android.util.ArrayMap;
 import android.util.JsonReader;
 
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.download.MobileDataDownloadFactory;
@@ -65,20 +67,16 @@ import java.util.concurrent.ExecutionException;
  *
  * <p>ModelManager will select the right model to serve Classifier.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class ModelManager {
-    private static final String FILE_GROUP_NAME = "topics-classifier-model";
-
-    @VisibleForTesting
-    static final String BUNDLED_LABELS_FILE_PATH = "classifier/labels_topics.txt";
-
-    @VisibleForTesting
-    static final String BUNDLED_TOP_APP_FILE_PATH = "classifier/precomputed_app_list.csv";
-
-    @VisibleForTesting
-    static final String BUNDLED_CLASSIFIER_ASSETS_METADATA_PATH =
+    public static final String BUNDLED_LABELS_FILE_PATH = "classifier/labels_topics.txt";
+    public static final String BUNDLED_TOP_APP_FILE_PATH = "classifier/precomputed_app_list.csv";
+    public static final String BUNDLED_CLASSIFIER_ASSETS_METADATA_PATH =
             "classifier/classifier_assets_metadata.json";
+    public static final String BUNDLED_MODEL_FILE_PATH = "classifier/model.tflite";
 
-    @VisibleForTesting static final String BUNDLED_MODEL_FILE_PATH = "classifier/model.tflite";
+    private static final String FILE_GROUP_NAME = "topics-classifier-model";
 
     // Use "\t" as a delimiter to read the precomputed app topics file
     private static final String LIST_COLUMN_DELIMITER = "\t";
@@ -104,6 +102,7 @@ public class ModelManager {
     private static final String DOWNLOADED_MODEL_FILE_ID = "model.tflite";
 
     private static ModelManager sSingleton;
+    private final Context mContext;
     private final AssetManager mAssetManager;
     private final String mLabelsFilePath;
     private final String mTopAppsFilePath;
@@ -121,6 +120,7 @@ public class ModelManager {
             @NonNull String modelFilePath,
             @NonNull SynchronousFileStorage fileStorage,
             @Nullable Map<String, ClientFile> downloadedFiles) {
+        mContext = context;
         mAssetManager = context.getAssets();
         mLabelsFilePath = labelsFilePath;
         mTopAppsFilePath = topAppsFilePath;
@@ -158,6 +158,22 @@ public class ModelManager {
      */
     @VisibleForTesting
     static @Nullable Map<String, ClientFile> getDownloadedFiles(@NonNull Context context) {
+        ClientFileGroup fileGroup = getClientFileGroup(context);
+        if (fileGroup == null) {
+            LogUtil.d("ClientFileGroup is null.");
+            return null;
+        }
+        Map<String, ClientFile> downloadedFiles = new ArrayMap<>();
+        LogUtil.v("Populating downloadFiles map.");
+        fileGroup.getFileList().stream()
+                .forEach(file -> downloadedFiles.put(file.getFileId(), file));
+        return downloadedFiles;
+    }
+
+    /** Returns topics-classifier-model ClientFileGroup */
+    @VisibleForTesting
+    @Nullable
+    static ClientFileGroup getClientFileGroup(@NonNull Context context) {
         MobileDataDownload mobileDataDownload =
                 MobileDataDownloadFactory.getMdd(context, FlagsFactory.getFlags());
         GetFileGroupRequest getFileGroupRequest =
@@ -170,21 +186,51 @@ public class ModelManager {
             LogUtil.e(e, "Unable to load MDD file group.");
             return null;
         }
-        Map<String, ClientFile> downloadedFiles = new ArrayMap<>();
-        if (fileGroup != null) {
-            LogUtil.v("Populating downloadFiles map.");
-            for (ClientFile file : fileGroup.getFileList()) {
-                downloadedFiles.put(file.getFileId(), file);
-            }
-        }
-        return downloadedFiles;
+        return fileGroup;
+    }
+
+    /**
+     * Returns the build id of model that will be used for classification. This function will
+     * compare the build id from bundled asset and the downloaded model and choose the newer build
+     * id.
+     */
+    public long getBuildId() {
+        return useDownloadedFiles()
+                ? getDownloadedModelBuildId()
+                : CommonClassifierHelper.getBundledModelBuildId(
+                        mContext, mClassifierAssetsMetadataPath);
     }
 
     // Return true if Model Manager should use downloaded model. Otherwise, use bundled model.
-    private boolean useDownloadedFiles() {
-        return mDownloadedFiles != null
-                && mDownloadedFiles.size() > 0
-                && !FlagsFactory.getFlags().getClassifierForceUseBundledFiles();
+    @VisibleForTesting
+    boolean useDownloadedFiles() {
+        if (FlagsFactory.getFlags().getClassifierForceUseBundledFiles()) {
+            LogUtil.d(
+                    "ModelManager uses bundled model because flag"
+                            + " classifier_force_use_bundled_files is enabled");
+            return false;
+        } else if (mDownloadedFiles == null || mDownloadedFiles.size() == 0) {
+            // Use bundled model if no downloaded files available.
+            LogUtil.d(
+                    "ModelManager uses bundled model because there is no downloaded files"
+                            + " available");
+            return false;
+        }
+
+        long downloadedModelBuildId = getDownloadedModelBuildId();
+        long bundledModelBuildId =
+                CommonClassifierHelper.getBundledModelBuildId(
+                        mContext, mClassifierAssetsMetadataPath);
+        if (downloadedModelBuildId <= bundledModelBuildId) {
+            // Mdd has not downloaded new version of model. Use bundled model.
+            LogUtil.d(
+                    "ModelManager uses bundled model build id = %d because downloaded model build"
+                            + " id = %d is not the latest version",
+                    bundledModelBuildId, downloadedModelBuildId);
+            return false;
+        }
+        LogUtil.d("ModelManager uses downloaded model build id = %d", downloadedModelBuildId);
+        return true;
     }
 
     /**
@@ -250,7 +296,7 @@ public class ModelManager {
     @NonNull
     public ImmutableList<Integer> retrieveLabels() {
         ImmutableList.Builder<Integer> labels = new ImmutableList.Builder();
-        InputStream inputStream = InputStream.nullInputStream();
+        InputStream inputStream = null; // InputStream.nullInputStream() is not available on S-.
         if (useDownloadedFiles()) {
             inputStream = readDownloadedFile(DOWNLOADED_LABEL_FILE_ID);
         } else {
@@ -261,7 +307,7 @@ public class ModelManager {
                 LogUtil.e(e, "Failed to read labels file");
             }
         }
-        return getLabelsList(labels, inputStream);
+        return inputStream == null ? labels.build() : getLabelsList(labels, inputStream);
     }
 
     @NonNull
@@ -300,7 +346,7 @@ public class ModelManager {
 
         // The immutable set of the topics from labels file
         ImmutableList<Integer> validTopics = retrieveLabels();
-        InputStream inputStream = InputStream.nullInputStream();
+        InputStream inputStream = null;
         if (useDownloadedFiles()) {
             inputStream = readDownloadedFile(DOWNLOADED_TOP_APPS_FILE_ID);
         } else {
@@ -311,7 +357,9 @@ public class ModelManager {
                 LogUtil.e(e, "Failed to read top apps file");
             }
         }
-        return getAppsTopicMap(appTopicsMap, validTopics, inputStream);
+        return inputStream == null
+                ? appTopicsMap
+                : getAppsTopicMap(appTopicsMap, validTopics, inputStream);
     }
 
     @NonNull
@@ -386,7 +434,7 @@ public class ModelManager {
         // classifierAssetsMetadata = ImmutableMap<AssetName, ImmutableMap<MetadataName, Value>>
         ImmutableMap.Builder<String, ImmutableMap<String, String>> classifierAssetsMetadata =
                 new ImmutableMap.Builder<>();
-        InputStream inputStream = InputStream.nullInputStream();
+        InputStream inputStream = null;
         if (useDownloadedFiles()) {
             inputStream = readDownloadedFile(DOWNLOADED_CLASSIFIER_ASSETS_METADATA_ID);
         } else {
@@ -397,7 +445,9 @@ public class ModelManager {
                 LogUtil.e(e, "Failed to read bundled metadata file");
             }
         }
-        return getAssetsMetadataMap(classifierAssetsMetadata, inputStream);
+        return inputStream == null
+                ? classifierAssetsMetadata.build()
+                : getAssetsMetadataMap(classifierAssetsMetadata, inputStream);
     }
 
     @NonNull
@@ -490,7 +540,7 @@ public class ModelManager {
     // ClientFile.file_id.
     @NonNull
     private InputStream readDownloadedFile(String fileId) {
-        InputStream inputStream = InputStream.nullInputStream();
+        InputStream inputStream = null;
         ClientFile downloadedFile = mDownloadedFiles.get(fileId);
         if (downloadedFile == null) {
             LogUtil.e("Failed to find downloaded %s file", fileId);
@@ -504,5 +554,19 @@ public class ModelManager {
             LogUtil.e(e, "Failed to load fileId = %s", fileId);
         }
         return inputStream;
+    }
+
+    /**
+     * Gets downloaded model build id from topics-classifier-model ClientFileGroup. Returns 0 if
+     * there is no downloaded file.
+     *
+     * @return downloaded model build id.
+     */
+    private long getDownloadedModelBuildId() {
+        ClientFileGroup clientFileGroup = getClientFileGroup(mContext);
+        if (clientFileGroup == null) {
+            return 0;
+        }
+        return clientFileGroup.getBuildId();
     }
 }

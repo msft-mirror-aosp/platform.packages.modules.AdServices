@@ -32,6 +32,7 @@ import com.android.adservices.service.measurement.attribution.AttributionJobHand
 import com.android.adservices.service.measurement.inputverification.ClickVerifier;
 import com.android.adservices.service.measurement.registration.AsyncSourceFetcher;
 import com.android.adservices.service.measurement.registration.AsyncTriggerFetcher;
+import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.mockito.stubbing.Answer;
@@ -55,14 +56,13 @@ class TestObjectProvider {
     }
 
     static AttributionJobHandlerWrapper getAttributionJobHandler(
-            DatastoreManager datastoreManager) {
-        return new AttributionJobHandlerWrapper(datastoreManager);
+            DatastoreManager datastoreManager, Flags flags) {
+        return new AttributionJobHandlerWrapper(datastoreManager, flags);
     }
 
     static MeasurementImpl getMeasurementImpl(
             DatastoreManager datastoreManager,
             ClickVerifier clickVerifier,
-            Flags flags,
             MeasurementDataDeleter measurementDataDeleter,
             EnrollmentDao enrollmentDao) {
         return spy(
@@ -79,7 +79,8 @@ class TestObjectProvider {
             DatastoreManager datastoreManager,
             AsyncSourceFetcher asyncSourceFetcher,
             AsyncTriggerFetcher asyncTriggerFetcher,
-            EnrollmentDao enrollmentDao) {
+            EnrollmentDao enrollmentDao,
+            DebugReportApi debugReportApi) {
         if (type == Type.DENOISED) {
             AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                     spy(
@@ -88,7 +89,8 @@ class TestObjectProvider {
                                     asyncSourceFetcher,
                                     asyncTriggerFetcher,
                                     enrollmentDao,
-                                    datastoreManager));
+                                    datastoreManager,
+                                    debugReportApi));
             // Disable Impression Noise
             doReturn(Collections.emptyList())
                     .when(asyncRegistrationQueueRunner)
@@ -102,7 +104,8 @@ class TestObjectProvider {
                                     asyncSourceFetcher,
                                     asyncTriggerFetcher,
                                     enrollmentDao,
-                                    datastoreManager));
+                                    datastoreManager,
+                                    debugReportApi));
             // Create impression noise with 100% probability
             Answer<?> answerSourceEventReports =
                     invocation -> {
@@ -113,7 +116,7 @@ class TestObjectProvider {
                                         .setSourceEventId(source.getEventId())
                                         .setReportTime(source.getExpiryTime() + ONE_HOUR_IN_MILLIS)
                                         .setTriggerData(new UnsignedLong(0L))
-                                        .setAttributionDestination(source.getAppDestination())
+                                        .setAttributionDestinations(source.getAppDestinations())
                                         .setEnrollmentId(source.getEnrollmentId())
                                         .setTriggerTime(0)
                                         .setTriggerPriority(0L)
@@ -133,6 +136,7 @@ class TestObjectProvider {
                 asyncSourceFetcher,
                 asyncTriggerFetcher,
                 enrollmentDao,
-                datastoreManager);
+                datastoreManager,
+                debugReportApi);
     }
 }

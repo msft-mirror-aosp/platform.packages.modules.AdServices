@@ -50,6 +50,20 @@ public class DBCustomAudienceTest {
         assertEquals(
                 DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1).build(),
                 DBCustomAudience.fromServiceObject(
+                        CustomAudienceFixture.getValidBuilderForBuyerFilters(
+                                        CommonFixture.VALID_BUYER_1)
+                                .build(),
+                        CustomAudienceFixture.VALID_OWNER,
+                        CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
+                        DEFAULT_EXPIRE_IN));
+    }
+
+    @Test
+    public void testFromServiceObject_successNoFilters() {
+        assertEquals(
+                DBCustomAudienceFixture.getValidBuilderByBuyerNoFilters(CommonFixture.VALID_BUYER_1)
+                        .build(),
+                DBCustomAudience.fromServiceObject(
                         CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                                 .build(),
                         CustomAudienceFixture.VALID_OWNER,
@@ -119,7 +133,8 @@ public class DBCustomAudienceTest {
                         .setAds(null)
                         .build(),
                 DBCustomAudience.fromServiceObject(
-                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
+                        CustomAudienceFixture.getValidBuilderForBuyerFilters(
+                                        CommonFixture.VALID_BUYER_1)
                                 .setAds(null)
                                 .build(),
                         CustomAudienceFixture.VALID_OWNER,
@@ -134,7 +149,8 @@ public class DBCustomAudienceTest {
                         .setActivationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
                         .build(),
                 DBCustomAudience.fromServiceObject(
-                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
+                        CustomAudienceFixture.getValidBuilderForBuyerFilters(
+                                        CommonFixture.VALID_BUYER_1)
                                 .setActivationTime(
                                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.minusSeconds(
                                                 200))
@@ -151,7 +167,8 @@ public class DBCustomAudienceTest {
                         .setActivationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
                         .build(),
                 DBCustomAudience.fromServiceObject(
-                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
+                        CustomAudienceFixture.getValidBuilderForBuyerFilters(
+                                        CommonFixture.VALID_BUYER_1)
                                 .setActivationTime(null)
                                 .build(),
                         CustomAudienceFixture.VALID_OWNER,
@@ -167,7 +184,8 @@ public class DBCustomAudienceTest {
                                 CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.plus(DEFAULT_EXPIRE_IN))
                         .build(),
                 DBCustomAudience.fromServiceObject(
-                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
+                        CustomAudienceFixture.getValidBuilderForBuyerFilters(
+                                        CommonFixture.VALID_BUYER_1)
                                 .setExpirationTime(null)
                                 .build(),
                         CustomAudienceFixture.VALID_OWNER,

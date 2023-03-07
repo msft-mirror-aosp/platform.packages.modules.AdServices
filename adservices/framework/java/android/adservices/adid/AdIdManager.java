@@ -19,15 +19,19 @@ import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_
 
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CallerMetadata;
+import android.adservices.common.SandboxedSdkContextUtils;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
+import android.os.Build;
 import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
 import android.os.SystemClock;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
@@ -42,6 +46,8 @@ import java.util.concurrent.Executor;
  * provides developers with a simple, standard system to continue to monetize their apps via
  * personalized ads (formerly known as interest-based ads).
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class AdIdManager {
     /**
      * Service used for registering AdIdManager in the system service registry.
@@ -55,6 +61,20 @@ public class AdIdManager {
 
     private Context mContext;
     private ServiceBinder<IAdIdService> mServiceBinder;
+
+    /**
+     * Factory method for creating an instance of AdIdManager.
+     *
+     * @param context The {@link Context} to use
+     * @return A {@link AdIdManager} instance
+     */
+    @NonNull
+    public static AdIdManager get(@NonNull Context context) {
+        // On T+, context.getSystemService() does more than just call constructor.
+        return (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                ? context.getSystemService(AdIdManager.class)
+                : new AdIdManager(context);
+    }
 
     /**
      * Create AdIdManager
@@ -126,8 +146,9 @@ public class AdIdManager {
         String sdkPackageName = "";
         // First check if context is SandboxedSdkContext or not
         Context getAdIdRequestContext = getContext();
-        if (getAdIdRequestContext instanceof SandboxedSdkContext) {
-            SandboxedSdkContext requestContext = ((SandboxedSdkContext) getAdIdRequestContext);
+        SandboxedSdkContext requestContext =
+                SandboxedSdkContextUtils.getAsSandboxedSdkContext(getAdIdRequestContext);
+        if (requestContext != null) {
             sdkPackageName = requestContext.getSdkPackageName();
             appPackageName = requestContext.getClientPackageName();
         } else { // This is the case without the Sandbox.

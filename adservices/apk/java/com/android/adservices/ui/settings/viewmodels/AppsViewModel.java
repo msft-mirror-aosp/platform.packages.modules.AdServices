@@ -16,16 +16,22 @@
 package com.android.adservices.ui.settings.viewmodels;
 
 import android.app.Application;
+import android.os.Build;
 import android.util.Pair;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.App;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsAppsFragment;
+import com.android.settingslib.widget.MainSwitchBar;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -37,6 +43,8 @@ import java.io.IOException;
  * model is responsible for serving apps to the apps view and blocked apps view, and interacting
  * with the {@link ConsentManager} that persists and changes the apps data in a storage.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class AppsViewModel extends AndroidViewModel {
 
     private final MutableLiveData<Pair<AppsViewModelUiEvent, App>> mEventTrigger =
@@ -44,9 +52,12 @@ public class AppsViewModel extends AndroidViewModel {
     private final MutableLiveData<ImmutableList<App>> mApps;
     private final MutableLiveData<ImmutableList<App>> mBlockedApps;
     private final ConsentManager mConsentManager;
+    private final MutableLiveData<Boolean> mAppsConsent;
 
     /** UI event triggered by view model */
     public enum AppsViewModelUiEvent {
+        SWITCH_ON_APPS,
+        SWITCH_OFF_APPS,
         BLOCK_APP,
         RESET_APPS,
         DISPLAY_BLOCKED_APPS_FRAGMENT,
@@ -58,6 +69,10 @@ public class AppsViewModel extends AndroidViewModel {
         mConsentManager = ConsentManager.getInstance(application);
         mApps = new MutableLiveData<>(getAppsFromConsentManager());
         mBlockedApps = new MutableLiveData<>(getBlockedAppsFromConsentManager());
+        mAppsConsent =
+                FlagsFactory.getFlags().getGaUxFeatureEnabled()
+                        ? new MutableLiveData<>(getAppsConsentFromConsentManager())
+                        : null;
     }
 
     @VisibleForTesting
@@ -67,6 +82,7 @@ public class AppsViewModel extends AndroidViewModel {
         mConsentManager = consentManager;
         mApps = new MutableLiveData<>(getAppsFromConsentManager());
         mBlockedApps = new MutableLiveData<>(getBlockedAppsFromConsentManager());
+        mAppsConsent = new MutableLiveData<>(true);
     }
 
     /**
@@ -157,5 +173,46 @@ public class AppsViewModel extends AndroidViewModel {
 
     private ImmutableList<App> getBlockedAppsFromConsentManager() {
         return mConsentManager.getAppsWithRevokedConsent();
+    }
+
+    /**
+     * Provides {@link AdServicesApiConsent} displayed in {@link AdServicesSettingsAppsFragment} as
+     * a Switch value.
+     *
+     * @return mAppsConsent indicates if user has consented to Apps Api usage.
+     */
+    public MutableLiveData<Boolean> getAppsConsent() {
+        return mAppsConsent;
+    }
+
+    /**
+     * Sets the user consent for PP APIs.
+     *
+     * @param newAppsConsentValue the new value that user consent should be set to for Apps PP APIs.
+     */
+    public void setAppsConsent(Boolean newAppsConsentValue) {
+        if (newAppsConsentValue) {
+            mConsentManager.enable(getApplication(), AdServicesApiType.FLEDGE);
+        } else {
+            mConsentManager.disable(getApplication(), AdServicesApiType.FLEDGE);
+        }
+        mAppsConsent.postValue(getAppsConsentFromConsentManager());
+    }
+    /**
+     * Triggers opt out process for Privacy Sandbox. Also reverts the switch state, since
+     * confirmation dialog will handle switch change.
+     */
+    public void consentSwitchClickHandler(MainSwitchBar appsSwitchBar) {
+        if (appsSwitchBar.isChecked()) {
+            appsSwitchBar.setChecked(false);
+            mEventTrigger.postValue(new Pair<>(AppsViewModelUiEvent.SWITCH_ON_APPS, null));
+        } else {
+            appsSwitchBar.setChecked(true);
+            mEventTrigger.postValue(new Pair<>(AppsViewModelUiEvent.SWITCH_OFF_APPS, null));
+        }
+    }
+
+    private boolean getAppsConsentFromConsentManager() {
+        return mConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven();
     }
 }

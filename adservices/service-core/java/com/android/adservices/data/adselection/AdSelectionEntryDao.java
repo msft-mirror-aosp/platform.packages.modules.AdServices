@@ -16,6 +16,7 @@
 
 package com.android.adservices.data.adselection;
 
+import android.adservices.adselection.ReportInteractionRequest;
 import android.net.Uri;
 
 import androidx.annotation.Nullable;
@@ -63,6 +64,16 @@ public interface AdSelectionEntryDao {
     void persistAdSelectionOverride(DBAdSelectionOverride adSelectionOverride);
 
     /**
+     * Adds a list of registered ad interactions to the table registered_ad_interactions
+     *
+     * @param registeredAdInteractions is the list of {@link DBRegisteredAdInteraction} objects to
+     *     write to the table registered_ad_interactions.
+     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void persistDBRegisteredAdInteractions(
+            List<DBRegisteredAdInteraction> registeredAdInteractions);
+
+    /**
      * Checks if there is a row in the ad selection data with the unique key ad_selection_id
      *
      * @param adSelectionId which is the key to query the corresponding ad selection data.
@@ -98,6 +109,24 @@ public interface AdSelectionEntryDao {
                     + " :adSelectionConfigId AND app_package_name = :appPackageName LIMIT 1)")
     boolean doesAdSelectionOverrideExistForPackageName(
             String adSelectionConfigId, String appPackageName);
+
+    /**
+     * Checks if there is a row in the registered_ad_interactions table that matches the primary key
+     * combination of adSelectionId, interactionKey, and destination
+     *
+     * @param adSelectionId serves as the primary key denoting the ad selection process this entry
+     *     id associated with
+     * @param interactionKey the interaction key
+     * @param destination denotes buyer, seller, etc.
+     */
+    @Query(
+            "SELECT EXISTS(SELECT 1 FROM registered_ad_interactions WHERE ad_selection_id ="
+                    + " :adSelectionId AND interaction_key = :interactionKey AND destination"
+                    + " = :destination LIMIT 1)")
+    boolean doesRegisteredAdInteractionExist(
+            long adSelectionId,
+            String interactionKey,
+            @ReportInteractionRequest.ReportingDestination int destination);
 
     /**
      * Get the ad selection entry by its unique key ad_selection_id.
@@ -153,6 +182,34 @@ public interface AdSelectionEntryDao {
     List<DBAdSelectionEntry> getAdSelectionEntities(List<Long> adSelectionIds);
 
     /**
+     * Get the ad selection entries with a batch of ad_selection_ids.
+     *
+     * @param adSelectionIds are the list of keys to query the corresponding ad selection entries.
+     * @return ad selection entries if exists.
+     */
+    @Query(
+            "SELECT ad_selection.ad_selection_id AS"
+                + " ad_selection_id,ad_selection.custom_audience_signals_owner as"
+                + " custom_audience_signals_owner, ad_selection.custom_audience_signals_buyer as"
+                + " custom_audience_signals_buyer, ad_selection.custom_audience_signals_name as"
+                + " custom_audience_signals_name,"
+                + " ad_selection.custom_audience_signals_activation_time as"
+                + " custom_audience_signals_activation_time,"
+                + " ad_selection.custom_audience_signals_expiration_time as"
+                + " custom_audience_signals_expiration_time,"
+                + " ad_selection.custom_audience_signals_user_bidding_signals as"
+                + " custom_audience_signals_user_bidding_signals, ad_selection.contextual_signals"
+                + " AS contextual_signals,ad_selection.winning_ad_render_uri AS"
+                + " winning_ad_render_uri,ad_selection.winning_ad_bid AS winning_ad_bid,"
+                + " ad_selection.creation_timestamp as creation_timestamp,"
+                + " buyer_decision_logic.buyer_decision_logic_js AS buyer_decision_logic_js FROM"
+                + " ad_selection LEFT JOIN buyer_decision_logic ON ad_selection.bidding_logic_uri"
+                + " = buyer_decision_logic.bidding_logic_uri WHERE ad_selection.ad_selection_id IN"
+                + " (:adSelectionIds) AND ad_selection.caller_package_name = :callerPackageName")
+    List<DBAdSelectionEntry> getAdSelectionEntities(
+            List<Long> adSelectionIds, String callerPackageName);
+
+    /**
      * Get ad selection JS override by its unique key and the package name of the app that created
      * the override.
      *
@@ -176,6 +233,22 @@ public interface AdSelectionEntryDao {
                     + " :appPackageName")
     @Nullable
     String getTrustedScoringSignalsOverride(String adSelectionConfigId, String appPackageName);
+
+    /**
+     * Gets the interaction reporting uri that was registered with the primary key combination of
+     * {@code adSelectionId}, {@code interactionKey}, and {@code destination}.
+     *
+     * @return interaction reporting uri if exists.
+     */
+    @Query(
+            "SELECT interaction_reporting_uri FROM registered_ad_interactions WHERE"
+                    + " ad_selection_id = :adSelectionId AND interaction_key = :interactionKey AND"
+                    + " destination = :destination")
+    @Nullable
+    Uri getRegisteredAdInteractionUri(
+            long adSelectionId,
+            String interactionKey,
+            @ReportInteractionRequest.ReportingDestination int destination);
 
     /**
      * Clean up expired adSelection entries if it is older than the given timestamp. If
@@ -238,4 +311,91 @@ public interface AdSelectionEntryDao {
                     + " 1)")
     boolean doesAdSelectionMatchingCallerPackageNameExist(
             long adSelectionId, String callerPackageName);
+
+    /**
+     * Add an ad selection from outcomes override into the table
+     * ad_selection_from_outcomes_overrides
+     *
+     * @param adSelectionFromOutcomesOverride is the AdSelectionFromOutcomesOverride to add to table
+     *     ad_selection_overrides. If a {@link DBAdSelectionFromOutcomesOverride} object with the
+     *     {@code adSelectionConfigFromOutcomesId} already exists, this will replace the existing
+     *     object.
+     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void persistAdSelectionFromOutcomesOverride(
+            DBAdSelectionFromOutcomesOverride adSelectionFromOutcomesOverride);
+
+    /**
+     * Checks if there is a row in the ad selection override data with the unique key
+     * ad_selection_from_outcomes_config_id
+     *
+     * @param adSelectionFromOutcomesConfigId which is the key to query the corresponding ad
+     *     selection override data.
+     * @return true if row exists, false otherwise
+     */
+    @Query(
+            "SELECT EXISTS(SELECT 1 FROM ad_selection_from_outcomes_overrides WHERE "
+                    + "ad_selection_from_outcomes_config_id = "
+                    + ":adSelectionFromOutcomesConfigId AND app_package_name = :appPackageName "
+                    + "LIMIT 1)")
+    boolean doesAdSelectionFromOutcomesOverrideExistForPackageName(
+            String adSelectionFromOutcomesConfigId, String appPackageName);
+
+    /**
+     * Get ad selection from outcomes selection logic JS override by its unique key and the package
+     * name of the app that created the override.
+     *
+     * @return ad selection override result if exists.
+     */
+    @Query(
+            "SELECT selection_logic_js FROM ad_selection_from_outcomes_overrides WHERE "
+                    + "ad_selection_from_outcomes_config_id = :adSelectionFromOutcomesConfigId "
+                    + "AND app_package_name = :appPackageName")
+    @Nullable
+    String getSelectionLogicOverride(String adSelectionFromOutcomesConfigId, String appPackageName);
+
+    /**
+     * Get ad selection from outcomes signals override by its unique key and the package name of the
+     * app that created the override.
+     *
+     * @return ad selection from outcomes override result if exists.
+     */
+    @Query(
+            "SELECT selection_signals FROM ad_selection_from_outcomes_overrides WHERE"
+                    + " ad_selection_from_outcomes_config_id = :adSelectionFromOutcomesConfigId "
+                    + "AND app_package_name = :appPackageName")
+    @Nullable
+    String getSelectionSignalsOverride(
+            String adSelectionFromOutcomesConfigId, String appPackageName);
+
+    /**
+     * Clean up selected ad selection from outcomes override data by its {@code
+     * adSelectionFromOutcomesConfigId}
+     *
+     * @param adSelectionFromOutcomesConfigId is to identify the data entries to be removed from the
+     *     ad_selection_overrides table.
+     */
+    @Query(
+            "DELETE FROM ad_selection_from_outcomes_overrides WHERE "
+                    + "ad_selection_from_outcomes_config_id = :adSelectionFromOutcomesConfigId AND "
+                    + "app_package_name = :appPackageName")
+    void removeAdSelectionFromOutcomesOverrideByIdAndPackageName(
+            String adSelectionFromOutcomesConfigId, String appPackageName);
+
+    /** Clean up all ad selection from outcomes override data */
+    @Query(
+            "DELETE FROM ad_selection_from_outcomes_overrides WHERE app_package_name = "
+                    + ":appPackageName")
+    void removeAllAdSelectionFromOutcomesOverrides(String appPackageName);
+
+    /**
+     * Clean up registered_ad_interaction entries in batch if the {@code adSelectionId} no longer
+     * exists in the table ad_selection.
+     */
+    @Query(
+            "DELETE FROM registered_ad_interactions WHERE ad_selection_id NOT IN "
+                    + "( SELECT DISTINCT ad_selection_id "
+                    + "FROM ad_selection "
+                    + "WHERE ad_selection_id is NOT NULL)")
+    void removeExpiredRegisteredAdInteractions();
 }

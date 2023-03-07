@@ -18,14 +18,14 @@ package com.android.server.sdksandbox;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import android.app.sdksandbox.testutils.FakeSdkSandboxManagerLocal;
+import android.app.sdksandbox.testutils.SdkSandboxStorageManagerUtility;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.FileUtils;
 import android.os.UserHandle;
 
-import androidx.annotation.NonNull;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.server.pm.PackageManagerLocal;
@@ -41,6 +41,7 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -56,6 +57,8 @@ public class SdkSandboxStorageManagerUnitTest {
     private static final String CLIENT_PKG_NAME = "client";
     private static final String SDK_NAME = "sdk";
     private static final String SDK2_NAME = "sdk2";
+    private static final String STORAGE_UUID = "41217664-9172-527a-b3d5-edabb50a7d69";
+    private static final int USER_ID = 0;
 
     // Use the test app's private storage as mount point for sdk storage testing
     private SdkSandboxStorageManager mSdkSandboxStorageManager;
@@ -64,11 +67,12 @@ public class SdkSandboxStorageManagerUnitTest {
     private FakeSdkSandboxManagerLocal mSdkSandboxManagerLocal;
     private PackageManager mPmMock;
     private Context mSpyContext;
+    private SdkSandboxStorageManagerUtility mSdkSandboxStorageManagerUtility;
 
     @Before
     public void setup() throws Exception {
         Context context = InstrumentationRegistry.getInstrumentation().getContext();
-        mTestDir = context.getDataDir().getPath();
+        mTestDir = context.getDir("test_dir", Context.MODE_PRIVATE).getPath();
         mSpyContext = Mockito.spy(context);
 
         mPmMock = Mockito.mock(PackageManager.class);
@@ -91,11 +95,8 @@ public class SdkSandboxStorageManagerUnitTest {
         mSdkSandboxStorageManager =
                 new SdkSandboxStorageManager(
                         mSpyContext, mSdkSandboxManagerLocal, packageManagerLocal, mTestDir);
-    }
-
-    @After
-    public void teardown() throws Exception {
-        FileUtils.deleteContents(new File(mTestDir));
+        mSdkSandboxStorageManagerUtility =
+                new SdkSandboxStorageManagerUtility(mSdkSandboxStorageManager);
     }
 
     @After
@@ -105,19 +106,23 @@ public class SdkSandboxStorageManagerUnitTest {
 
     @Test
     public void test_GetSdkDataPackageDirectory() throws Exception {
-        assertThat(mSdkSandboxStorageManager.getSdkDataPackageDirectory(null, 0, "foo", true))
+        assertThat(mSdkSandboxStorageManager.getSdkDataPackageDirectory(null, USER_ID, "foo", true))
                 .isEqualTo(mTestDir + "/data/misc_ce/0/sdksandbox/foo");
         // Build DE path
-        assertThat(mSdkSandboxStorageManager.getSdkDataPackageDirectory(null, 0, "foo", false))
+        assertThat(
+                        mSdkSandboxStorageManager.getSdkDataPackageDirectory(
+                                null, USER_ID, "foo", false))
                 .isEqualTo(mTestDir + "/data/misc_de/0/sdksandbox/foo");
         // Build with different package name
-        assertThat(mSdkSandboxStorageManager.getSdkDataPackageDirectory(null, 0, "bar", true))
+        assertThat(mSdkSandboxStorageManager.getSdkDataPackageDirectory(null, USER_ID, "bar", true))
                 .isEqualTo(mTestDir + "/data/misc_ce/0/sdksandbox/bar");
         // Build with different user
         assertThat(mSdkSandboxStorageManager.getSdkDataPackageDirectory(null, 10, "foo", true))
                 .isEqualTo(mTestDir + "/data/misc_ce/10/sdksandbox/foo");
         // Build with different volume
-        assertThat(mSdkSandboxStorageManager.getSdkDataPackageDirectory("hello", 0, "foo", true))
+        assertThat(
+                        mSdkSandboxStorageManager.getSdkDataPackageDirectory(
+                                "hello", USER_ID, "foo", true))
                 .isEqualTo(mTestDir + "/mnt/expand/hello/misc_ce/0/sdksandbox/foo");
     }
 
@@ -141,10 +146,11 @@ public class SdkSandboxStorageManagerUnitTest {
 
     @Test
     public void test_getSdkStorageDirInfo_storageExists() throws Exception {
-        createSdkStorageForTest(Arrays.asList(SDK_NAME), Collections.emptyList());
+        mSdkSandboxStorageManagerUtility.createSdkStorageForTest(
+                USER_ID, CLIENT_PKG_NAME, Arrays.asList(SDK_NAME), Collections.emptyList());
 
         final ApplicationInfo info = new ApplicationInfo();
-        info.storageUuid = UUID.fromString("41217664-9172-527a-b3d5-edabb50a7d69");
+        info.storageUuid = UUID.fromString(STORAGE_UUID);
         Mockito.doReturn(info)
                 .when(mPmMock)
                 .getApplicationInfo(Mockito.any(String.class), Mockito.anyInt());
@@ -172,10 +178,14 @@ public class SdkSandboxStorageManagerUnitTest {
 
     @Test
     public void test_getInternalStorageDirInfo_storageExists() throws Exception {
-        createSdkStorageForTest(Collections.emptyList(), Arrays.asList(SubDirectories.SANDBOX_DIR));
+        mSdkSandboxStorageManagerUtility.createSdkStorageForTest(
+                USER_ID,
+                CLIENT_PKG_NAME,
+                Collections.emptyList(),
+                Arrays.asList(SubDirectories.SANDBOX_DIR));
 
         final ApplicationInfo info = new ApplicationInfo();
-        info.storageUuid = UUID.fromString("41217664-9172-527a-b3d5-edabb50a7d69");
+        info.storageUuid = UUID.fromString(STORAGE_UUID);
         Mockito.doReturn(info)
                 .when(mPmMock)
                 .getApplicationInfo(Mockito.any(String.class), Mockito.anyInt());
@@ -193,13 +203,13 @@ public class SdkSandboxStorageManagerUnitTest {
 
     @Test
     public void test_getMountedVolumes_newVolumeExists() throws Exception {
-        createSdkStorageForTest(
+        mSdkSandboxStorageManagerUtility.createSdkStorageForTest(
                 /*volumeUuid=*/ null,
-                /*userId=*/ 0,
+                USER_ID,
                 CLIENT_PKG_NAME,
                 Arrays.asList(SDK_NAME),
                 Collections.emptyList());
-        createSdkStorageForTest(
+        mSdkSandboxStorageManagerUtility.createSdkStorageForTest(
                 "newVolume",
                 /*userId=*/ 0,
                 CLIENT_PKG_NAME,
@@ -213,9 +223,9 @@ public class SdkSandboxStorageManagerUnitTest {
 
     @Test
     public void test_GetMountedVolumes_NewVolumeDoesNotExist() throws Exception {
-        createSdkStorageForTest(
+        mSdkSandboxStorageManagerUtility.createSdkStorageForTest(
                 /*volumeUuid=*/ null,
-                /*userId=*/ 0,
+                USER_ID,
                 CLIENT_PKG_NAME,
                 Arrays.asList(SDK_NAME),
                 Collections.emptyList());
@@ -227,9 +237,9 @@ public class SdkSandboxStorageManagerUnitTest {
 
     @Test
     public void test_onUserUnlocking_Instrumentation_NoSdk_PackageDirNotRemoved() throws Exception {
-        createSdkStorageForTest(
+        mSdkSandboxStorageManagerUtility.createSdkStorageForTest(
                 /*volumeUuid=*/ null,
-                /*userId=*/ 0,
+                USER_ID,
                 CLIENT_PKG_NAME,
                 Collections.emptyList(),
                 Collections.emptyList());
@@ -242,12 +252,12 @@ public class SdkSandboxStorageManagerUnitTest {
         final Path ceDataPackageDirectory =
                 Paths.get(
                         mSdkSandboxStorageManager.getSdkDataPackageDirectory(
-                                null, 0, CLIENT_PKG_NAME, true));
+                                null, USER_ID, CLIENT_PKG_NAME, true));
 
         final Path deDataPackageDirectory =
                 Paths.get(
                         mSdkSandboxStorageManager.getSdkDataPackageDirectory(
-                                null, 0, CLIENT_PKG_NAME, false));
+                                null, USER_ID, CLIENT_PKG_NAME, false));
 
         assertThat(Files.exists(ceDataPackageDirectory)).isTrue();
         assertThat(Files.exists(deDataPackageDirectory)).isTrue();
@@ -255,24 +265,24 @@ public class SdkSandboxStorageManagerUnitTest {
 
     @Test
     public void test_onUserUnlocking_NoInstrumentation_NoSdk_PackageDirRemoved() throws Exception {
-        createSdkStorageForTest(
+        mSdkSandboxStorageManagerUtility.createSdkStorageForTest(
                 /*volumeUuid=*/ null,
-                /*userId=*/ 0,
+                USER_ID,
                 CLIENT_PKG_NAME,
                 Collections.emptyList(),
                 Collections.emptyList());
 
-        mSdkSandboxStorageManager.onUserUnlocking(0);
+        mSdkSandboxStorageManager.onUserUnlocking(USER_ID);
 
         final Path ceDataPackageDirectory =
                 Paths.get(
                         mSdkSandboxStorageManager.getSdkDataPackageDirectory(
-                                null, 0, CLIENT_PKG_NAME, true));
+                                null, USER_ID, CLIENT_PKG_NAME, true));
 
         final Path deDataPackageDirectory =
                 Paths.get(
                         mSdkSandboxStorageManager.getSdkDataPackageDirectory(
-                                null, 0, CLIENT_PKG_NAME, false));
+                                null, USER_ID, CLIENT_PKG_NAME, false));
 
         assertThat(Files.exists(ceDataPackageDirectory)).isFalse();
         assertThat(Files.exists(deDataPackageDirectory)).isFalse();
@@ -280,7 +290,8 @@ public class SdkSandboxStorageManagerUnitTest {
 
     @Test
     public void test_SdkSubDirectories_NonExistingParentPath() throws Exception {
-        createSdkStorageForTest(Arrays.asList(SDK_NAME), Collections.emptyList());
+        mSdkSandboxStorageManagerUtility.createSdkStorageForTest(
+                USER_ID, CLIENT_PKG_NAME, Arrays.asList(SDK_NAME), Collections.emptyList());
 
         final SubDirectories subDirs = new SubDirectories("/does/not/exist");
 
@@ -290,11 +301,12 @@ public class SdkSandboxStorageManagerUnitTest {
 
     @Test
     public void test_SdkSubDirectories_GetSdkSubDir() throws Exception {
-        createSdkStorageForTest(Arrays.asList(SDK_NAME), Collections.emptyList());
+        mSdkSandboxStorageManagerUtility.createSdkStorageForTest(
+                USER_ID, CLIENT_PKG_NAME, Arrays.asList(SDK_NAME), Collections.emptyList());
 
         final String packageDir =
                 mSdkSandboxStorageManager.getSdkDataPackageDirectory(
-                        /*volumeUuid=*/ null, /*userId=*/ 0, CLIENT_PKG_NAME, /*isCeData=*/ true);
+                        /*volumeUuid=*/ null, USER_ID, CLIENT_PKG_NAME, /*isCeData=*/ true);
 
         final SubDirectories subDirs = new SubDirectories(packageDir);
 
@@ -309,13 +321,15 @@ public class SdkSandboxStorageManagerUnitTest {
 
     @Test
     public void test_SdkSubDirectories_IsValid() throws Exception {
-        createSdkStorageForTest(
+        mSdkSandboxStorageManagerUtility.createSdkStorageForTest(
+                USER_ID,
+                CLIENT_PKG_NAME,
                 Arrays.asList(SDK_NAME, SDK2_NAME),
                 Arrays.asList(SubDirectories.SHARED_DIR, SubDirectories.SANDBOX_DIR));
 
         final String packageDir =
                 mSdkSandboxStorageManager.getSdkDataPackageDirectory(
-                        /*volumeUuid=*/ null, /*userId=*/ 0, CLIENT_PKG_NAME, /*isCeData=*/ true);
+                        /*volumeUuid=*/ null, USER_ID, CLIENT_PKG_NAME, /*isCeData=*/ true);
 
         final SubDirectories subDirs = new SubDirectories(packageDir);
 
@@ -327,11 +341,12 @@ public class SdkSandboxStorageManagerUnitTest {
     @Test
     public void test_SdkSubDirectories_IsValid_MissingNonSdkStorage() throws Exception {
         // Avoid creating "shared" storage
-        createSdkStorageForTest(Arrays.asList(SDK_NAME), Collections.emptyList());
+        mSdkSandboxStorageManagerUtility.createSdkStorageForTest(
+                USER_ID, CLIENT_PKG_NAME, Arrays.asList(SDK_NAME), Collections.emptyList());
 
         final String packageDir =
                 mSdkSandboxStorageManager.getSdkDataPackageDirectory(
-                        /*volumeUuid=*/ null, /*userId=*/ 0, CLIENT_PKG_NAME, /*isCeData=*/ true);
+                        /*volumeUuid=*/ null, USER_ID, CLIENT_PKG_NAME, /*isCeData=*/ true);
 
         final SubDirectories subDirs = new SubDirectories(packageDir);
 
@@ -340,12 +355,16 @@ public class SdkSandboxStorageManagerUnitTest {
 
     @Test
     public void test_SdkSubDirectories_IsValid_HasUnknownSubDir() throws Exception {
-        createSdkStorageForTest(Arrays.asList(SDK_NAME), Arrays.asList(SubDirectories.SHARED_DIR));
+        mSdkSandboxStorageManagerUtility.createSdkStorageForTest(
+                USER_ID,
+                CLIENT_PKG_NAME,
+                Arrays.asList(SDK_NAME),
+                Arrays.asList(SubDirectories.SHARED_DIR));
 
         // Create a random subdir not following our format
         final String packageDir =
                 mSdkSandboxStorageManager.getSdkDataPackageDirectory(
-                        /*volumeUuid=*/ null, /*userId=*/ 0, CLIENT_PKG_NAME, /*isCeData=*/ true);
+                        /*volumeUuid=*/ null, USER_ID, CLIENT_PKG_NAME, /*isCeData=*/ true);
         Path invalidSubDir = Paths.get(packageDir, "invalid");
         Files.createDirectories(invalidSubDir);
 
@@ -373,13 +392,15 @@ public class SdkSandboxStorageManagerUnitTest {
     @Test
     public void test_SdkSubDirectories_GenerateSubDirNames_InternalOnly_Existing()
             throws Exception {
-        createSdkStorageForTest(
+        mSdkSandboxStorageManagerUtility.createSdkStorageForTest(
+                USER_ID,
+                CLIENT_PKG_NAME,
                 Collections.emptyList(),
                 Arrays.asList(SubDirectories.SHARED_DIR, SubDirectories.SANDBOX_DIR));
 
         final String packageDir =
                 mSdkSandboxStorageManager.getSdkDataPackageDirectory(
-                        /*volumeUuid=*/ null, /*userId=*/ 0, CLIENT_PKG_NAME, /*isCeData=*/ true);
+                        /*volumeUuid=*/ null, USER_ID, CLIENT_PKG_NAME, /*isCeData=*/ true);
         final SubDirectories subDirs = new SubDirectories(packageDir);
 
         final List<String> internalSubDirs = subDirs.generateSubDirNames(Collections.emptyList());
@@ -390,13 +411,15 @@ public class SdkSandboxStorageManagerUnitTest {
 
     @Test
     public void test_SdkSubDirectories_GenerateSubDirNames_WithSdkNames() throws Exception {
-        createSdkStorageForTest(
+        mSdkSandboxStorageManagerUtility.createSdkStorageForTest(
+                USER_ID,
+                CLIENT_PKG_NAME,
                 Arrays.asList(SDK_NAME),
                 Arrays.asList(SubDirectories.SHARED_DIR, SubDirectories.SANDBOX_DIR));
 
         final String packageDir =
                 mSdkSandboxStorageManager.getSdkDataPackageDirectory(
-                        /*volumeUuid=*/ null, /*userId=*/ 0, CLIENT_PKG_NAME, /*isCeData=*/ true);
+                        /*volumeUuid=*/ null, USER_ID, CLIENT_PKG_NAME, /*isCeData=*/ true);
         final SubDirectories subDirs = new SubDirectories(packageDir);
 
         final List<String> allSubDirNames =
@@ -416,84 +439,51 @@ public class SdkSandboxStorageManagerUnitTest {
         assertThat(foundFoo).isTrue();
     }
 
-    /**
-     * A helper method for create sdk storage for test purpose.
-     *
-     * <p>It creates <volume>/misc_ce/<userId>/sdksandbox/<packageName>/<name>[@,#]<name>
-     *
-     * <p>We are reusing the name of directory as random suffix for simplicity.
-     */
-    private void createSdkStorageForTest(
-            String volumeUuid,
-            int userId,
-            String packageName,
-            List<String> sdkNames,
-            List<String> nonSdkDirectories)
-            throws Exception {
-        for (int i = 0; i < 2; i++) {
-            final boolean isCeData = (i == 0);
-            final String packageDir =
-                    mSdkSandboxStorageManager.getSdkDataPackageDirectory(
-                            volumeUuid, userId, packageName, isCeData);
-            final Path packagePath = Paths.get(packageDir);
-            Files.createDirectories(packagePath);
-            for (String sdkName : sdkNames) {
-                final Path perSdkPath = Paths.get(packageDir, sdkName + "@" + sdkName);
-                Files.createDirectories(perSdkPath);
-            }
+    @Test
+    public void test_getSdkStorageDirInfo() throws Exception {
+        final List<String> sdkNames = Arrays.asList(SDK_NAME);
+        mSdkSandboxStorageManagerUtility.createSdkStorageForTest(
+                USER_ID, CLIENT_PKG_NAME, sdkNames, new ArrayList<>());
 
-            for (String dir : nonSdkDirectories) {
-                final Path subDir =
-                        Paths.get(
-                                packageDir,
-                                dir.equals(SubDirectories.SHARED_DIR) ? dir : dir + "#" + dir);
-                Files.createDirectories(subDir);
-            }
-        }
+        final ApplicationInfo info = new ApplicationInfo();
+        info.storageUuid = UUID.fromString(STORAGE_UUID);
+        Mockito.doReturn(info)
+                .when(mPmMock)
+                .getApplicationInfo(Mockito.any(String.class), Mockito.anyInt());
+
+        final CallingInfo callingInfo = new CallingInfo(CLIENT_UID, CLIENT_PKG_NAME);
+
+        List<StorageDirInfo> sdkStorageDirInfo =
+                mSdkSandboxStorageManager.getSdkStorageDirInfo(callingInfo);
+        List<StorageDirInfo> expectedSdkStorageDirInfo =
+                mSdkSandboxStorageManagerUtility.getSdkStorageDirInfoForTest(
+                        /*volumeUuid=*/ null, USER_ID, CLIENT_PKG_NAME, sdkNames);
+
+        assertThat(sdkStorageDirInfo).containsExactlyElementsIn(expectedSdkStorageDirInfo);
     }
 
-    private void createSdkStorageForTest(List<String> sdkNames, List<String> nonSdkDirectories)
-            throws Exception {
-        createSdkStorageForTest(
-                /*volumeUuid=*/ null, /*userId=*/ 0, CLIENT_PKG_NAME, sdkNames, nonSdkDirectories);
-    }
+    @Test
+    public void test_getInternalStorageDirInfo() throws Exception {
+        final List<String> nonSdkDirectories =
+                Arrays.asList(SubDirectories.SHARED_DIR, SubDirectories.SANDBOX_DIR);
+        mSdkSandboxStorageManagerUtility.createSdkStorageForTest(
+                USER_ID, CLIENT_PKG_NAME, new ArrayList<>(), nonSdkDirectories);
 
-    private static class FakeSdkSandboxManagerLocal implements SdkSandboxManagerLocal {
+        final ApplicationInfo info = new ApplicationInfo();
+        info.storageUuid = UUID.fromString(STORAGE_UUID);
+        Mockito.doReturn(info)
+                .when(mPmMock)
+                .getApplicationInfo(Mockito.any(String.class), Mockito.anyInt());
 
-        private boolean mInstrumentationRunning = false;
+        final CallingInfo callingInfo = new CallingInfo(CLIENT_UID, CLIENT_PKG_NAME);
 
-        @Override
-        public void enforceAllowedToSendBroadcast(@NonNull Intent intent) {}
+        List<StorageDirInfo> internalStorageDirInfo =
+                mSdkSandboxStorageManager.getInternalStorageDirInfo(callingInfo);
+        List<StorageDirInfo> expectedInternalStorageDirInfo =
+                mSdkSandboxStorageManagerUtility.getInternalStorageDirInfoForTest(
+                        /*volumeUuid=*/ null, USER_ID, CLIENT_PKG_NAME, nonSdkDirectories);
 
-        @Override
-        public void enforceAllowedToStartActivity(@NonNull Intent intent) {}
-
-        @Override
-        public void enforceAllowedToStartOrBindService(@NonNull Intent intent) {}
-
-        @NonNull
-        @Override
-        public String getSdkSandboxProcessNameForInstrumentation(
-                @NonNull ApplicationInfo clientAppInfo) {
-            return clientAppInfo.processName + "_sdk_sandbox_instr";
-        }
-
-        @Override
-        public void notifyInstrumentationStarted(
-                @NonNull String clientAppPackageName, int clientAppUid) {
-            mInstrumentationRunning = true;
-        }
-
-        @Override
-        public void notifyInstrumentationFinished(
-                @NonNull String clientAppPackageName, int clientAppUid) {
-            mInstrumentationRunning = false;
-        }
-
-        @Override
-        public boolean isInstrumentationRunning(
-                @NonNull String clientAppPackageName, int clientAppUid) {
-            return mInstrumentationRunning;
-        }
+        assertThat(internalStorageDirInfo)
+                .containsExactlyElementsIn(expectedInternalStorageDirInfo);
     }
 }

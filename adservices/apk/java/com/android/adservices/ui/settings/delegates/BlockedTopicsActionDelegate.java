@@ -15,13 +15,16 @@
  */
 package com.android.adservices.ui.settings.delegates;
 
+import android.os.Build;
 import android.util.Log;
 import android.util.Pair;
 
+import androidx.annotation.RequiresApi;
 import androidx.lifecycle.Observer;
 
 import com.android.adservices.api.R;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.PhFlags;
 import com.android.adservices.ui.settings.DialogManager;
 import com.android.adservices.ui.settings.activities.BlockedTopicsActivity;
@@ -32,6 +35,8 @@ import com.android.adservices.ui.settings.viewmodels.BlockedTopicsViewModel.Bloc
 /**
  * Delegate class that helps AdServices Settings fragments to respond to all view model/user events.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class BlockedTopicsActionDelegate extends BaseActionDelegate {
     private final BlockedTopicsActivity mBlockedTopicsActivity;
     private final BlockedTopicsViewModel mBlockedTopicsViewModel;
@@ -78,6 +83,10 @@ public class BlockedTopicsActionDelegate extends BaseActionDelegate {
      * AdServicesSettingsBlockedTopicsFragment} to handle user actions.
      */
     public void initBlockedTopicsFragment() {
-        mBlockedTopicsActivity.setTitle(R.string.settingsUI_blocked_topics_title);
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            mBlockedTopicsActivity.setTitle(R.string.settingsUI_blocked_topics_ga_title);
+        } else {
+            mBlockedTopicsActivity.setTitle(R.string.settingsUI_blocked_topics_title);
+        }
     }
 }

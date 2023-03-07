@@ -382,11 +382,15 @@ public final class EpochManagerTest {
 
     @Test
     public void testGarbageCollectOutdatedEpochData() {
+        final long currentEpoch = 7L;
+        final int epochLookBackNumberForGarbageCollection = 3;
+        final String appName = "app";
+
         // Mock the flag to make test result deterministic
-        Flags mockedFlags = Mockito.mock(Flags.class);
-        when(mockedFlags.getNumberOfEpochsToKeepInHistory()).thenReturn(3);
-        when(mockedFlags.getEnableDatabaseSchemaVersion3()).thenReturn(true);
-        when(mockedFlags.getEnableTopicContributorsCheck()).thenReturn(false);
+        when(mMockFlag.getNumberOfEpochsToKeepInHistory())
+                .thenReturn(epochLookBackNumberForGarbageCollection);
+        when(mMockFlag.getEnableTopicMigration()).thenReturn(true);
+        when(mMockFlag.getEnableTopicContributorsCheck()).thenReturn(false);
 
         EpochManager epochManager =
                 new EpochManager(
@@ -394,13 +398,13 @@ public final class EpochManagerTest {
                         mDbHelper,
                         new Random(),
                         mMockClassifier,
-                        mockedFlags,
+                        mMockFlag,
                         mMockClock);
 
-        final long currentEpoch = 6L;
-        final int epochLookBackNumberForGarbageCollection = 3;
-        // The epoch that is outdated starts from 6-1-3 = 2
+        // For table except CallerCanLearnTopicsContract, epoch to delete from is 7-3-1 = epoch 3
         final long epochToDeleteFrom = currentEpoch - epochLookBackNumberForGarbageCollection - 1;
+        final long epochToDeleteFromForCallerCanLearn =
+                currentEpoch - epochLookBackNumberForGarbageCollection * 2 - 1;
 
         // Save data in TopTopics Table and AppUsage table for gc testing
         Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
@@ -410,18 +414,20 @@ public final class EpochManagerTest {
         Topic topic5 = Topic.create(/* topic */ 5, TAXONOMY_VERSION, MODEL_VERSION);
         Topic topic6 = Topic.create(/* topic */ 6, TAXONOMY_VERSION, MODEL_VERSION);
         List<Topic> topTopics = Arrays.asList(topic1, topic2, topic3, topic4, topic5, topic6);
+        Map<Topic, Set<String>> callerCanLearnTopics = Map.of(topic1, Set.of(appName));
 
-        final String appName = "app";
-        // The epoch range for testing is [1, currentEpoch].
-        for (long epoch = 1L; epoch <= currentEpoch; epoch++) {
+        // To persist data in epoch [0, 7] for table TopTopics, AppUsageHistory and CallerCanLearn.
+        for (long epoch = 0L; epoch <= currentEpoch; epoch++) {
             mTopicsDao.persistTopTopics(epoch, topTopics);
             mTopicsDao.recordAppUsageHistory(epoch, appName);
+            mTopicsDao.persistCallerCanLearnTopics(epoch, callerCanLearnTopics);
         }
 
         epochManager.garbageCollectOutdatedEpochData(currentEpoch);
 
-        verify(mockedFlags).getNumberOfEpochsToKeepInHistory();
+        verify(mMockFlag).getNumberOfEpochsToKeepInHistory();
 
+        // Verify TopTopics and AppUsageHistory Tables.
         for (long epoch = currentEpoch; epoch > epochToDeleteFrom; epoch--) {
             assertThat(mTopicsDao.retrieveTopTopics(epoch)).isEqualTo(topTopics);
 
@@ -432,10 +438,26 @@ public final class EpochManagerTest {
             assertThat(appUsageMap).isEqualTo(expectedAppUsageMap);
         }
 
-        // Epoch [1, epochToDeleteFrom] have been garbage collected.
-        for (long epoch = epochToDeleteFrom; epoch >= 1; epoch--) {
+        // Epoch [0, epochToDeleteFrom] have been garbage collected.
+        for (long epoch = epochToDeleteFrom; epoch >= 0; epoch--) {
             assertThat(mTopicsDao.retrieveTopTopics(epoch)).isEmpty();
             assertThat(mTopicsDao.retrieveAppUsageMap(epoch)).isEmpty();
+        }
+
+        // Verify CallerCanLearn Table.
+        for (long epoch = currentEpoch; epoch > epochToDeleteFromForCallerCanLearn; epoch--) {
+            assertThat(
+                            mTopicsDao.retrieveCallerCanLearnTopicsMap(
+                                    epoch, /* numberOfLookBackEpochs */ 1))
+                    .isEqualTo(callerCanLearnTopics);
+        }
+
+        // Epoch [0, epochToDeleteFromForCallerCanLearn] have been garbage collected.
+        for (long epoch = epochToDeleteFromForCallerCanLearn; epoch >= 0; epoch--) {
+            assertThat(
+                            mTopicsDao.retrieveCallerCanLearnTopicsMap(
+                                    epoch, /* numberOfLookBackEpochs */ 1))
+                    .isEmpty();
         }
     }
 
@@ -1109,21 +1131,21 @@ public final class EpochManagerTest {
                         mMockClock);
 
         // Both on
-        when(dbHelper.supportsTopContributorsTable()).thenReturn(true);
+        when(dbHelper.supportsTopicContributorsTable()).thenReturn(true);
         when(mMockFlag.getEnableTopicContributorsCheck()).thenReturn(true);
         assertThat(epochManager.supportsTopicContributorFeature()).isTrue();
 
         // On and Off
-        when(dbHelper.supportsTopContributorsTable()).thenReturn(true);
+        when(dbHelper.supportsTopicContributorsTable()).thenReturn(true);
         when(mMockFlag.getEnableTopicContributorsCheck()).thenReturn(false);
         assertThat(epochManager.supportsTopicContributorFeature()).isFalse();
 
-        when(dbHelper.supportsTopContributorsTable()).thenReturn(false);
+        when(dbHelper.supportsTopicContributorsTable()).thenReturn(false);
         when(mMockFlag.getEnableTopicContributorsCheck()).thenReturn(true);
         assertThat(epochManager.supportsTopicContributorFeature()).isFalse();
 
         // Both off
-        when(dbHelper.supportsTopContributorsTable()).thenReturn(false);
+        when(dbHelper.supportsTopicContributorsTable()).thenReturn(false);
         when(mMockFlag.getEnableTopicContributorsCheck()).thenReturn(false);
         assertThat(epochManager.supportsTopicContributorFeature()).isFalse();
     }

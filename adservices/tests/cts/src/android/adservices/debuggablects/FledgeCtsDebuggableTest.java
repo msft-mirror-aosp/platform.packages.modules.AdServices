@@ -60,6 +60,7 @@ import org.junit.Test;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
@@ -182,7 +183,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     private String mAccessStatus;
 
     @Before
-    public void setup() {
+    public void setup() throws InterruptedException {
         assertForegroundActivityStarted();
 
         mAdSelectionClient =
@@ -222,6 +223,9 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Enable CTS to be run with versions of WebView < M105
         PhFlagsFixture.overrideEnforceIsolateMaxHeapSize(false);
         PhFlagsFixture.overrideIsolateMaxHeapSizeBytes(0);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
     }
 
     @After
@@ -231,7 +235,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     }
 
     @Test
-    public void testFledgeFlow_overall_Success() throws Exception {
+    public void testFledgeAuctionSelectionFlow_overall_Success() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
 
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
@@ -246,6 +250,10 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         mCustomAudienceClient
                 .joinCustomAudience(customAudience1)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
         mCustomAudienceClient
                 .joinCustomAudience(customAudience2)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -326,6 +334,10 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         mCustomAudienceClient
                 .joinCustomAudience(customAudience)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
         mCustomAudienceClient
                 .joinCustomAudience(customAudienceUpdate)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -415,6 +427,10 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         mCustomAudienceClient
                 .joinCustomAudience(customAudience1)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
         mCustomAudienceClient
                 .joinCustomAudience(customAudience2)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -500,6 +516,10 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         mCustomAudienceClient
                 .joinCustomAudience(customAudience1)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
         mCustomAudienceClient
                 .joinCustomAudience(customAudience2)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -582,6 +602,10 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         mCustomAudienceClient
                 .joinCustomAudience(customAudience1)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
         mCustomAudienceClient
                 .joinCustomAudience(customAudience2)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -657,6 +681,10 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         mCustomAudienceClient
                 .joinCustomAudience(customAudience1)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
         mCustomAudienceClient
                 .joinCustomAudience(customAudience2)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -725,6 +753,10 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         mCustomAudienceClient
                 .joinCustomAudience(customAudience1)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
         mCustomAudienceClient
                 .joinCustomAudience(customAudience2)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -791,6 +823,10 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         mCustomAudienceClient
                 .joinCustomAudience(customAudience1)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
         mCustomAudienceClient
                 .joinCustomAudience(customAudience2)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -862,6 +898,10 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         mCustomAudienceClient
                 .joinCustomAudience(customAudience1)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
         mCustomAudienceClient
                 .joinCustomAudience(customAudience2)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -946,6 +986,10 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         mCustomAudienceClient
                 .joinCustomAudience(customAudience1)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
         mCustomAudienceClient
                 .joinCustomAudience(customAudience2)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -1023,6 +1067,10 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         mCustomAudienceClient
                 .joinCustomAudience(customAudience1)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
         mCustomAudienceClient
                 .joinCustomAudience(customAudience2)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -1107,6 +1155,10 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         mCustomAudienceClient
                 .joinCustomAudience(customAudience1)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
         mCustomAudienceClient
                 .joinCustomAudience(customAudience2)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -1221,5 +1273,60 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .setBiddingLogicUri(CommonFixture.getUri(buyer, BUYER_BIDDING_LOGIC_URI_PATH))
                 .setAds(ads)
                 .build();
+    }
+
+    private AdSelectionOutcome runAdSelectionAsPreSteps(
+            double bid, AdTechIdentifier buyer, String buyerDecisionLogic) throws Exception {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+
+        List<Double> bidsForBuyer = ImmutableList.of(bid);
+        CustomAudience customAudience1 = createCustomAudience(buyer, bidsForBuyer);
+
+        // Joining custom audiences
+        mCustomAudienceClient
+                .joinCustomAudience(customAudience1)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest1 =
+                new AddCustomAudienceOverrideRequest.Builder()
+                        .setBuyer(customAudience1.getBuyer())
+                        .setName(customAudience1.getName())
+                        .setBiddingLogicJs(buyerDecisionLogic)
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
+                        .build();
+
+        // Adding Custom audience override
+        mTestCustomAudienceClient
+                .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest1)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        AdSelectionConfig adSelectionConfigBuyer1 =
+                AdSelectionConfigFixture.anAdSelectionConfigBuilder()
+                        .setDecisionLogicUri(
+                                Uri.parse(
+                                        String.format(
+                                                "https://%s%s",
+                                                AdSelectionConfigFixture.SELLER,
+                                                SELLER_DECISION_LOGIC_URI_PATH)))
+                        .setTrustedScoringSignalsUri(
+                                Uri.parse(
+                                        String.format(
+                                                "https://%s%s",
+                                                AdSelectionConfigFixture.SELLER,
+                                                SELLER_TRUSTED_SIGNAL_URI_PATH)))
+                        .setCustomAudienceBuyers(Collections.singletonList(buyer))
+                        .build();
+
+        // Adding AdSelection override
+        mTestAdSelectionClient
+                .overrideAdSelectionConfigRemoteInfo(
+                        new AddAdSelectionOverrideRequest(
+                                adSelectionConfigBuyer1,
+                                DEFAULT_DECISION_LOGIC_JS,
+                                TRUSTED_SCORING_SIGNALS))
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Running ad selection and asserting that the outcome is returned in < 10 seconds
+        return mAdSelectionClient
+                .selectAds(adSelectionConfigBuyer1)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     }
 }

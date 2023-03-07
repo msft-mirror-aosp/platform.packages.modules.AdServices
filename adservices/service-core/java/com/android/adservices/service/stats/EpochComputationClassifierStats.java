@@ -16,10 +16,40 @@
 
 package com.android.adservices.service.stats;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACK_COMPAT_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__ON_DEVICE_CLASSIFIER;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACK_COMPAT_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__PRECOMPUTED_CLASSIFIER;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACK_COMPAT_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__PRECOMPUTED_THEN_ON_DEVICE_CLASSIFIER;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACK_COMPAT_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__UNKNOWN_CLASSIFIER;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACK_COMPAT_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACK_COMPAT_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_NOT_INVOKED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACK_COMPAT_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_SUCCESS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACK_COMPAT_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_UNSPECIFIED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACK_COMPAT_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACK_COMPAT_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACK_COMPAT_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_SUCCESS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACK_COMPAT_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_UNSPECIFIED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__ON_DEVICE_CLASSIFIER;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__PRECOMPUTED_CLASSIFIER;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__PRECOMPUTED_THEN_ON_DEVICE_CLASSIFIER;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__UNKNOWN_CLASSIFIER;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_NOT_INVOKED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_SUCCESS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_UNSPECIFIED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_SUCCESS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_UNSPECIFIED;
+
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
 
-/** Class for AdServicesEpochComputationClassifierReported atom. */
+/**
+ * Class for AdServicesEpochComputationClassifierReported atom (for T+ logging) and
+ * AdServicesBackCompatEpochComputationClassifierReported atom (for R+ logging).
+ *
+ * <p>See go/rbc-ww-logging for more details.
+ */
 @AutoValue
 public abstract class EpochComputationClassifierStats {
 
@@ -33,13 +63,13 @@ public abstract class EpochComputationClassifierStats {
     public abstract String getAssetVersion();
 
     /** @return type of the classifier used for classification. */
-    public abstract int getClassifierType();
+    public abstract ClassifierType getClassifierType();
 
     /** @return on-device classifier status. */
-    public abstract int getOnDeviceClassifierStatus();
+    public abstract OnDeviceClassifierStatus getOnDeviceClassifierStatus();
 
     /** @return pre-computed classifier status. */
-    public abstract int getPrecomputedClassifierStatus();
+    public abstract PrecomputedClassifierStatus getPrecomputedClassifierStatus();
 
     /** @return generic builder. */
     public static EpochComputationClassifierStats.Builder builder() {
@@ -60,17 +90,138 @@ public abstract class EpochComputationClassifierStats {
         public abstract EpochComputationClassifierStats.Builder setAssetVersion(String value);
 
         /** Set type of the classifier used for classification. */
-        public abstract EpochComputationClassifierStats.Builder setClassifierType(int value);
+        public abstract EpochComputationClassifierStats.Builder setClassifierType(
+                ClassifierType value);
 
         /** Set on-device classifier status. */
         public abstract EpochComputationClassifierStats.Builder setOnDeviceClassifierStatus(
-                int value);
+                OnDeviceClassifierStatus value);
 
         /** Set pre-computed classifier status. */
         public abstract EpochComputationClassifierStats.Builder setPrecomputedClassifierStatus(
-                int value);
+                PrecomputedClassifierStatus value);
 
         /** build for {@link EpochComputationClassifierStats}. */
         public abstract EpochComputationClassifierStats build();
+    }
+
+    /** Type of the classifier used for classifying apps. */
+    public enum ClassifierType {
+        UNKNOWN_CLASSIFIER(
+                AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__UNKNOWN_CLASSIFIER,
+                AD_SERVICES_BACK_COMPAT_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__UNKNOWN_CLASSIFIER),
+        ON_DEVICE_CLASSIFIER(
+                AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__ON_DEVICE_CLASSIFIER,
+                AD_SERVICES_BACK_COMPAT_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__ON_DEVICE_CLASSIFIER),
+        PRECOMPUTED_CLASSIFIER(
+                AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__PRECOMPUTED_CLASSIFIER,
+                AD_SERVICES_BACK_COMPAT_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__PRECOMPUTED_CLASSIFIER),
+        PRECOMPUTED_THEN_ON_DEVICE_CLASSIFIER(
+                AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__PRECOMPUTED_THEN_ON_DEVICE_CLASSIFIER,
+                AD_SERVICES_BACK_COMPAT_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__PRECOMPUTED_THEN_ON_DEVICE_CLASSIFIER);
+
+        private final int mLoggingValue;
+        private final int mCompatLoggingValue;
+
+        ClassifierType(int mLoggingValue, int mCompatLoggingValue) {
+            this.mLoggingValue = mLoggingValue;
+            this.mCompatLoggingValue = mCompatLoggingValue;
+        }
+
+        /**
+         * @return Autogen enum logging value for AdServicesEpochComputationClassifierReported atom
+         *     used for T+ logging.
+         */
+        public int getLoggingValue() {
+            return mLoggingValue;
+        }
+
+        /**
+         * @return Autogen enum logging value for AdServicesEpochComputationClassifierReported atom
+         *     used for R+ logging.
+         */
+        public int getCompatLoggingValue() {
+            return mCompatLoggingValue;
+        }
+    }
+
+    /** On Device classifier status. */
+    public enum OnDeviceClassifierStatus {
+        ON_DEVICE_CLASSIFIER_STATUS_UNSPECIFIED(
+                AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_UNSPECIFIED,
+                AD_SERVICES_BACK_COMPAT_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_UNSPECIFIED),
+        ON_DEVICE_CLASSIFIER_STATUS_NOT_INVOKED(
+                AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_NOT_INVOKED,
+                AD_SERVICES_BACK_COMPAT_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_NOT_INVOKED),
+        ON_DEVICE_CLASSIFIER_STATUS_SUCCESS(
+                AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_SUCCESS,
+                AD_SERVICES_BACK_COMPAT_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_SUCCESS),
+        ON_DEVICE_CLASSIFIER_STATUS_FAILURE(
+                AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_FAILURE,
+                AD_SERVICES_BACK_COMPAT_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_FAILURE);
+
+        private final int mLoggingValue;
+        private final int mCompatLoggingValue;
+
+        OnDeviceClassifierStatus(int mLoggingValue, int mCompatLoggingValue) {
+            this.mLoggingValue = mLoggingValue;
+            this.mCompatLoggingValue = mCompatLoggingValue;
+        }
+
+        /**
+         * @return Autogen enum logging value for AdServicesEpochComputationClassifierReported atom
+         *     used for T+ logging.
+         */
+        public int getLoggingValue() {
+            return mLoggingValue;
+        }
+
+        /**
+         * @return Autogen enum logging value for AdServicesEpochComputationClassifierReported atom
+         *     used for R+ logging.
+         */
+        public int getCompatLoggingValue() {
+            return mCompatLoggingValue;
+        }
+    }
+
+    /** Precomputed classifier status. */
+    public enum PrecomputedClassifierStatus {
+        PRECOMPUTED_CLASSIFIER_STATUS_UNSPECIFIED(
+                AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_UNSPECIFIED,
+                AD_SERVICES_BACK_COMPAT_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_UNSPECIFIED),
+        PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED(
+                AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED,
+                AD_SERVICES_BACK_COMPAT_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED),
+        PRECOMPUTED_CLASSIFIER_STATUS_SUCCESS(
+                AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_SUCCESS,
+                AD_SERVICES_BACK_COMPAT_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_SUCCESS),
+        PRECOMPUTED_CLASSIFIER_STATUS_FAILURE(
+                AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_FAILURE,
+                AD_SERVICES_BACK_COMPAT_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_FAILURE);
+
+        private final int mLoggingValue;
+        private final int mCompatLoggingValue;
+
+        PrecomputedClassifierStatus(int mLoggingValue, int mCompatLoggingValue) {
+            this.mLoggingValue = mLoggingValue;
+            this.mCompatLoggingValue = mCompatLoggingValue;
+        }
+
+        /**
+         * @return Autogen enum logging value for AdServicesEpochComputationClassifierReported atom
+         *     used for T+ logging.
+         */
+        public int getLoggingValue() {
+            return mLoggingValue;
+        }
+
+        /**
+         * @return Autogen enum logging value for AdServicesEpochComputationClassifierReported atom
+         *     used for R+ logging.
+         */
+        public int getCompatLoggingValue() {
+            return mCompatLoggingValue;
+        }
     }
 }

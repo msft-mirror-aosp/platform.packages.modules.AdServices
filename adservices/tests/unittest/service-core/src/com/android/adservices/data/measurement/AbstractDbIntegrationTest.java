@@ -79,14 +79,14 @@ public abstract class AbstractDbIntegrationTest {
                         .startMocking();
         ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
 
-        SQLiteDatabase db = DbTestUtil.getDbHelperForTest().getWritableDatabase();
+        SQLiteDatabase db = DbTestUtil.getMeasurementDbHelperForTest().getWritableDatabase();
         emptyTables(db);
         seedTables(db, mInput);
     }
 
     @After
     public void after() {
-        SQLiteDatabase db = DbTestUtil.getDbHelperForTest().getWritableDatabase();
+        SQLiteDatabase db = DbTestUtil.getMeasurementDbHelperForTest().getWritableDatabase();
         emptyTables(db);
 
         mStaticMockSession.finishMocking();
@@ -105,18 +105,13 @@ public abstract class AbstractDbIntegrationTest {
     @Test
     public void runTest() throws DatastoreException, JSONException {
         runActionToTest();
-        SQLiteDatabase readerDb = DbTestUtil.getDbHelperForTest().getReadableDatabase();
+        SQLiteDatabase readerDb = DbTestUtil.getMeasurementDbHelperForTest().getReadableDatabase();
         DbState dbState = new DbState(readerDb);
         mOutput.sortAll();
         dbState.sortAll();
-        Assert.assertTrue("Source mismatch",
-                areEqual(mOutput.mSourceList, dbState.mSourceList));
-        Assert.assertTrue("Trigger mismatch",
-                areEqual(mOutput.mTriggerList, dbState.mTriggerList));
-        Assert.assertTrue(
-                "Report mismatch", areEqual(mOutput.mEventReportList, dbState.mEventReportList));
-        Assert.assertTrue("Attribution mismatch",
-                areEqual(mOutput.mAttrRateLimitList, dbState.mAttrRateLimitList));
+
+        Assert.assertTrue("Event report mismatch",
+                areEqual(mOutput.mEventReportList, dbState.mEventReportList));
         // Custom matching for AggregateReport due to non-deterministic reporting random number
         // TODO: Remove custom matching using DI for Random class
         Assert.assertEquals(
@@ -132,6 +127,12 @@ public abstract class AbstractDbIntegrationTest {
         }
         Assert.assertTrue("AggregateEncryptionKey mismatch",
                 areEqual(mOutput.mAggregateEncryptionKeyList, dbState.mAggregateEncryptionKeyList));
+        Assert.assertTrue("Attribution mismatch",
+                areEqual(mOutput.mAttrRateLimitList, dbState.mAttrRateLimitList));
+        Assert.assertTrue("Source mismatch",
+                areEqual(mOutput.mSourceList, dbState.mSourceList));
+        Assert.assertTrue("Trigger mismatch",
+                areEqual(mOutput.mTriggerList, dbState.mTriggerList));
     }
 
     private boolean fuzzyCompareAggregateReport(
@@ -190,7 +191,7 @@ public abstract class AbstractDbIntegrationTest {
         if (json.length() <= 10) {
             throw new IOException("json length less than 11 characters.");
         }
-        JSONObject obj = new JSONObject(json);
+        JSONObject obj = new JSONObject(json.replaceAll("\\.test(?=[\"\\/])", ".com"));
         JSONArray testArray = obj.getJSONArray("testCases");
 
         List<Object[]> testCases = new ArrayList<>();
@@ -300,15 +301,23 @@ public abstract class AbstractDbIntegrationTest {
                 source.getPublisherType());
         values.put(
                 MeasurementTables.SourceContract.APP_DESTINATION,
-                source.getAppDestination() == null ? null : source.getAppDestination().toString());
+                source.getAppDestinations() == null
+                ? null
+                : source.getAppDestinations().get(0).toString());
         values.put(
                 MeasurementTables.SourceContract.WEB_DESTINATION,
-                source.getWebDestination() == null ? null : source.getWebDestination().toString());
+                source.getWebDestinations() == null
+                ? null
+                : source.getWebDestinations().get(0).toString());
         values.put(MeasurementTables.SourceContract.AGGREGATE_SOURCE, source.getAggregateSource());
         values.put(MeasurementTables.SourceContract.ENROLLMENT_ID, source.getEnrollmentId());
         values.put(MeasurementTables.SourceContract.STATUS, source.getStatus());
         values.put(MeasurementTables.SourceContract.EVENT_TIME, source.getEventTime());
         values.put(MeasurementTables.SourceContract.EXPIRY_TIME, source.getExpiryTime());
+        values.put(MeasurementTables.SourceContract.EVENT_REPORT_WINDOW,
+                source.getEventReportWindow());
+        values.put(MeasurementTables.SourceContract.AGGREGATABLE_REPORT_WINDOW,
+                source.getAggregatableReportWindow());
         values.put(MeasurementTables.SourceContract.PRIORITY, source.getPriority());
         values.put(MeasurementTables.SourceContract.REGISTRANT, source.getRegistrant().toString());
         values.put(MeasurementTables.SourceContract.INSTALL_ATTRIBUTION_WINDOW,
@@ -321,7 +330,14 @@ public abstract class AbstractDbIntegrationTest {
         values.put(
                 MeasurementTables.SourceContract.AGGREGATE_CONTRIBUTIONS,
                 source.getAggregateContributions());
-        values.put(MeasurementTables.SourceContract.FILTER_DATA, source.getFilterData());
+        values.put(MeasurementTables.SourceContract.FILTER_DATA, source.getFilterDataString());
+        values.put(MeasurementTables.SourceContract.DEBUG_REPORTING, source.isDebugReporting());
+        values.put(MeasurementTables.SourceContract.INSTALL_TIME, source.getInstallTime());
+        values.put(MeasurementTables.SourceContract.REGISTRATION_ID, source.getRegistrationId());
+        values.put(
+                MeasurementTables.SourceContract.SHARED_AGGREGATION_KEYS,
+                source.getSharedAggregationKeys());
+
         long row = db.insert(MeasurementTables.SourceContract.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("Source insertion failed");
@@ -349,6 +365,12 @@ public abstract class AbstractDbIntegrationTest {
                 trigger.getRegistrant().toString());
         values.put(MeasurementTables.TriggerContract.FILTERS, trigger.getFilters());
         values.put(MeasurementTables.TriggerContract.NOT_FILTERS, trigger.getNotFilters());
+        values.put(
+                MeasurementTables.TriggerContract.ATTRIBUTION_CONFIG,
+                trigger.getAttributionConfig());
+        values.put(
+                MeasurementTables.TriggerContract.X_NETWORK_KEY_MAPPING,
+                trigger.getAdtechKeyMapping());
         long row = db.insert(MeasurementTables.TriggerContract.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("Trigger insertion failed");
@@ -364,7 +386,7 @@ public abstract class AbstractDbIntegrationTest {
                 report.getSourceEventId().getValue());
         values.put(MeasurementTables.EventReportContract.ENROLLMENT_ID, report.getEnrollmentId());
         values.put(MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
-                report.getAttributionDestination().toString());
+                report.getAttributionDestinations().get(0).toString());
         values.put(MeasurementTables.EventReportContract.REPORT_TIME, report.getReportTime());
         values.put(MeasurementTables.EventReportContract.TRIGGER_DATA,
                 report.getTriggerData().getValue());

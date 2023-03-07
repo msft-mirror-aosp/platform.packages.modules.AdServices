@@ -37,7 +37,18 @@
       ]
     },
     {
+      "name": "CtsSdkSandboxWebkitTestCases[com.google.android.adservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
       "name": "SdkSandboxManagerDisabledTests[com.google.android.adservices.apex]"
+    },
+    {
+     "name": "SdkSandboxPerfScenarioTests[com.google.android.adservices.apex]"
     }
   ],
   "mainline-postsubmit": [
@@ -52,6 +63,14 @@
     },
     {
       "name": "CtsSdkSandboxInprocessTests"
+    },
+    {
+      "name": "CtsSdkSandboxWebkitTestCases",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
     },
     {
       "name": "SdkSandboxManagerServiceUnitTests"
@@ -75,6 +94,9 @@
       "name": "SdkSandboxRestrictionsHostTest"
     },
     {
+      "name": "BroadcastRestrictionsHostTest"
+    },
+    {
       "name": "SdkSandboxStorageHostTest",
       "options": [
         {
@@ -84,6 +106,12 @@
     },
     {
       "name": "SdkSandboxManagerDisabledTests"
+    },
+    {
+      "name": "SdkSandboxPerfScenarioTests"
+    },
+    {
+      "name": "SdkSandboxTestUtilsExampleTest"
     }
   ],
   "postsubmit": [

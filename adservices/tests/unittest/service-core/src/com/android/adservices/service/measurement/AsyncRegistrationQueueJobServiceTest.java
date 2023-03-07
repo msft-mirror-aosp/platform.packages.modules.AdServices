@@ -55,7 +55,7 @@ import java.util.Optional;
 
 public class AsyncRegistrationQueueJobServiceTest {
 
-    private static final long WAIT_IN_MILLIS = 50L;
+    private static final long WAIT_IN_MILLIS = 1_000L;
     private JobScheduler mMockJobScheduler;
     private AsyncRegistrationQueueJobService mSpyService;
     private DatastoreManager mMockDatastoreManager;
@@ -130,8 +130,6 @@ public class AsyncRegistrationQueueJobServiceTest {
                             mockContext, /* forceSchedule = */ false);
 
                     // Validate
-                    // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
                     ExtendedMockito.verify(
                             () -> AsyncRegistrationQueueJobService.schedule(any(), any()), never());
                     verify(mMockJobScheduler, never())
@@ -161,8 +159,6 @@ public class AsyncRegistrationQueueJobServiceTest {
                             mockContext, /* forceSchedule = */ false);
 
                     // Validate
-                    // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
                     ExtendedMockito.verify(
                             () -> AsyncRegistrationQueueJobService.schedule(any(), any()), never());
                     verify(mMockJobScheduler, times(1))
@@ -192,8 +188,6 @@ public class AsyncRegistrationQueueJobServiceTest {
                             mockContext, /* forceSchedule = */ true);
 
                     // Validate
-                    // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
                     ExtendedMockito.verify(
                             () -> AsyncRegistrationQueueJobService.schedule(any(), any()),
                             times(1));
@@ -222,8 +216,6 @@ public class AsyncRegistrationQueueJobServiceTest {
                     AsyncRegistrationQueueJobService.scheduleIfNeeded(mockContext, false);
 
                     // Validate
-                    // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
                     ExtendedMockito.verify(
                             () -> AsyncRegistrationQueueJobService.schedule(any(), any()),
                             times(1));
@@ -278,6 +270,6 @@ public class AsyncRegistrationQueueJobServiceTest {
     private void toggleKillSwitch(boolean value) {
         Flags mockFlags = Mockito.mock(Flags.class);
         ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
-        ExtendedMockito.doReturn(value).when(mockFlags).getRegistrationJobQueueKillSwitch();
+        ExtendedMockito.doReturn(value).when(mockFlags).getAsyncRegistrationJobQueueKillSwitch();
     }
 }

@@ -31,6 +31,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 
 import android.app.job.JobInfo;
@@ -68,6 +69,7 @@ public class MaintenanceJobServiceTest {
     private static final int BACKGROUND_THREAD_TIMEOUT_MS = 5_000;
     private static final long MAINTENANCE_JOB_PERIOD_MS = 10_000L;
     private static final long MAINTENANCE_JOB_FLEX_MS = 1_000L;
+    private static final long CURRENT_EPOCH_ID = 1L;
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final JobScheduler JOB_SCHEDULER = CONTEXT.getSystemService(JobScheduler.class);
     private static final Flags TEST_FLAGS = FlagsFactory.getFlagsForTest();
@@ -135,6 +137,7 @@ public class MaintenanceJobServiceTest {
         // Killswitch is off.
         doReturn(false).when(mMockFlags).getTopicsKillSwitch();
         doReturn(false).when(mMockFlags).getFledgeSelectAdsKillSwitch();
+        doReturn(CURRENT_EPOCH_ID).when(mMockEpochManager).getCurrentEpochId();
         doReturn(TEST_FLAGS.getAdSelectionExpirationWindowS())
                 .when(mMockFlags)
                 .getAdSelectionExpirationWindowS();
@@ -156,7 +159,8 @@ public class MaintenanceJobServiceTest {
         Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
 
         ExtendedMockito.verify(() -> TopicsWorker.getInstance(any(Context.class)));
-        verify(mMockAppUpdateManager).reconcileUninstalledApps(any(Context.class));
+        verify(mMockAppUpdateManager)
+                .reconcileUninstalledApps(any(Context.class), eq(CURRENT_EPOCH_ID));
         verify(mMockAppUpdateManager)
                 .reconcileInstalledApps(any(Context.class), /* currentEpochId */ anyLong());
 
@@ -169,6 +173,7 @@ public class MaintenanceJobServiceTest {
         // Killswitch is off.
         doReturn(true).when(mMockFlags).getTopicsKillSwitch();
         doReturn(false).when(mMockFlags).getFledgeSelectAdsKillSwitch();
+        doReturn(CURRENT_EPOCH_ID).when(mMockEpochManager).getCurrentEpochId();
 
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
@@ -187,7 +192,8 @@ public class MaintenanceJobServiceTest {
 
         // Verify that topics job is not done
         ExtendedMockito.verify(() -> TopicsWorker.getInstance(any(Context.class)), never());
-        verify(mMockAppUpdateManager, never()).reconcileUninstalledApps(any(Context.class));
+        verify(mMockAppUpdateManager, never())
+                .reconcileUninstalledApps(any(Context.class), eq(CURRENT_EPOCH_ID));
         verify(mMockAppUpdateManager, never())
                 .reconcileInstalledApps(any(Context.class), /* currentEpochId */ anyLong());
 
@@ -207,6 +213,7 @@ public class MaintenanceJobServiceTest {
         // Killswitch is off.
         doReturn(false).when(mMockFlags).getTopicsKillSwitch();
         doReturn(true).when(mMockFlags).getFledgeSelectAdsKillSwitch();
+        doReturn(CURRENT_EPOCH_ID).when(mMockEpochManager).getCurrentEpochId();
 
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
@@ -222,7 +229,8 @@ public class MaintenanceJobServiceTest {
         Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
 
         ExtendedMockito.verify(() -> TopicsWorker.getInstance(any(Context.class)));
-        verify(mMockAppUpdateManager).reconcileUninstalledApps(any(Context.class));
+        verify(mMockAppUpdateManager)
+                .reconcileUninstalledApps(any(Context.class), eq(CURRENT_EPOCH_ID));
         verify(mMockAppUpdateManager)
                 .reconcileInstalledApps(any(Context.class), /* currentEpochId */ anyLong());
         verify(mFledgeMaintenanceTasksWorkerSpy, never()).clearExpiredAdSelectionData();
@@ -278,6 +286,7 @@ public class MaintenanceJobServiceTest {
         // Killswitch is off.
         doReturn(false).when(mMockFlags).getTopicsKillSwitch();
         doReturn(false).when(mMockFlags).getFledgeSelectAdsKillSwitch();
+        doReturn(CURRENT_EPOCH_ID).when(mMockEpochManager).getCurrentEpochId();
         doReturn(TEST_FLAGS.getAdSelectionExpirationWindowS())
                 .when(mMockFlags)
                 .getAdSelectionExpirationWindowS();
@@ -297,7 +306,7 @@ public class MaintenanceJobServiceTest {
         // Simulating a failure in Topics job
         ExtendedMockito.doThrow(new IllegalStateException())
                 .when(mMockAppUpdateManager)
-                .reconcileUninstalledApps(any(Context.class));
+                .reconcileUninstalledApps(any(Context.class), eq(CURRENT_EPOCH_ID));
 
         mSpyMaintenanceJobService.onStartJob(mMockJobParameters);
 
@@ -305,7 +314,8 @@ public class MaintenanceJobServiceTest {
         Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
 
         ExtendedMockito.verify(() -> TopicsWorker.getInstance(any(Context.class)));
-        verify(mMockAppUpdateManager).reconcileUninstalledApps(any(Context.class));
+        verify(mMockAppUpdateManager)
+                .reconcileUninstalledApps(any(Context.class), eq(CURRENT_EPOCH_ID));
         // Verify that this is not called because we threw an exception
         verify(mMockAppUpdateManager, never())
                 .reconcileInstalledApps(any(Context.class), /* currentEpochId */ anyLong());
@@ -327,6 +337,7 @@ public class MaintenanceJobServiceTest {
         // Killswitch is off.
         doReturn(false).when(mMockFlags).getTopicsKillSwitch();
         doReturn(false).when(mMockFlags).getFledgeSelectAdsKillSwitch();
+        doReturn(CURRENT_EPOCH_ID).when(mMockEpochManager).getCurrentEpochId();
 
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
@@ -351,7 +362,8 @@ public class MaintenanceJobServiceTest {
         Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
 
         ExtendedMockito.verify(() -> TopicsWorker.getInstance(any(Context.class)));
-        verify(mMockAppUpdateManager).reconcileUninstalledApps(any(Context.class));
+        verify(mMockAppUpdateManager)
+                .reconcileUninstalledApps(any(Context.class), eq(CURRENT_EPOCH_ID));
         verify(mMockAppUpdateManager)
                 .reconcileInstalledApps(any(Context.class), /* currentEpochId */ anyLong());
 
@@ -375,6 +387,7 @@ public class MaintenanceJobServiceTest {
         doReturn(flagsGlobalKillSwitchOn.getTopicsKillSwitch())
                 .when(mMockFlags)
                 .getFledgeSelectAdsKillSwitch();
+        doReturn(CURRENT_EPOCH_ID).when(mMockEpochManager).getCurrentEpochId();
 
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
@@ -389,7 +402,8 @@ public class MaintenanceJobServiceTest {
         Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
 
         verify(() -> TopicsWorker.getInstance(any(Context.class)), never());
-        verify(mMockAppUpdateManager, never()).reconcileUninstalledApps(any(Context.class));
+        verify(mMockAppUpdateManager, never())
+                .reconcileUninstalledApps(any(Context.class), eq(CURRENT_EPOCH_ID));
         verify(mMockAppUpdateManager, never())
                 .reconcileInstalledApps(any(Context.class), /* currentEpochId */ anyLong());
 
@@ -405,8 +419,10 @@ public class MaintenanceJobServiceTest {
 
     @Test
     public void testScheduleIfNeeded_Success() {
-        // Mock static method FlagsFactory.getFlags() to return test Flags.
-        ExtendedMockito.doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
+        doReturn(false).when(mMockFlags).getGlobalKillSwitch();
+
+        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
         // The first invocation of scheduleIfNeeded() schedules the job.
         assertThat(MaintenanceJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false))
@@ -415,8 +431,15 @@ public class MaintenanceJobServiceTest {
 
     @Test
     public void testScheduleIfNeeded_ScheduledWithSameParameters() {
-        // Mock static method FlagsFactory.getFlags() to return test Flags.
-        ExtendedMockito.doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
+        // Mock Flags in order to change values within this test
+        doReturn(TEST_FLAGS.getMaintenanceJobPeriodMs())
+                .when(mMockFlags)
+                .getMaintenanceJobPeriodMs();
+        doReturn(TEST_FLAGS.getMaintenanceJobFlexMs()).when(mMockFlags).getMaintenanceJobFlexMs();
+        doReturn(false).when(mMockFlags).getGlobalKillSwitch();
+
+        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
         // The first invocation of scheduleIfNeeded() schedules the job.
         assertThat(MaintenanceJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false))
@@ -453,8 +476,15 @@ public class MaintenanceJobServiceTest {
 
     @Test
     public void testScheduleIfNeeded_forceRun() {
-        // Mock static method FlagsFactory.getFlags() to return test Flags.
-        ExtendedMockito.doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
+        // Mock Flags in order to change values within this test
+        doReturn(TEST_FLAGS.getMaintenanceJobPeriodMs())
+                .when(mMockFlags)
+                .getMaintenanceJobPeriodMs();
+        doReturn(TEST_FLAGS.getMaintenanceJobFlexMs()).when(mMockFlags).getMaintenanceJobFlexMs();
+        doReturn(false).when(mMockFlags).getGlobalKillSwitch();
+
+        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
         // The first invocation of scheduleIfNeeded() schedules the job.
         assertThat(MaintenanceJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false))

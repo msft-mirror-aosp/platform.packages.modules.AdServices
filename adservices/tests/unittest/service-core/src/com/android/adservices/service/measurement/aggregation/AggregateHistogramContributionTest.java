@@ -21,6 +21,8 @@ import static org.junit.Assert.assertNotEquals;
 
 import androidx.test.filters.SmallTest;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.Test;
 
 import java.math.BigInteger;
@@ -75,5 +77,42 @@ public final class AggregateHistogramContributionTest {
         assertNotEquals(contribution1.hashCode(), contribution2.hashCode());
         assertNotEquals(contribution1, contribution2);
         assertNotEquals(contributionSet1, contributionSet2);
+    }
+
+    @Test
+    public void storesBucketAsStringInJson() throws JSONException {
+        String largeIntegerStr = "334864848949865686038563574111108070905";
+        AggregateHistogramContribution contribution =
+                new AggregateHistogramContribution.Builder()
+                        .setKey(new BigInteger(largeIntegerStr))
+                        .setValue(1)
+                        .build();
+        JSONObject jsonObj = contribution.toJSONObject();
+        // Convert the JSONObject to string and use the JSON parser to confirm the large integer is
+        // correctly set in a string, rather than a value in scientific notation, which can happen
+        // with a large integer type.
+        String jsonStr = jsonObj.toString();
+        JSONObject parsedJson = new JSONObject(jsonStr);
+        assertEquals(
+                largeIntegerStr,
+                parsedJson.getString(AggregateHistogramContribution.BUCKET));
+    }
+
+    @Test
+    public void fromJsonObject_createsAggregateHistogramContribution() throws JSONException {
+        // Setup
+        JSONObject jsonObject = new JSONObject();
+        BigInteger key = new BigInteger("1234");
+        jsonObject.put(AggregateHistogramContribution.BUCKET, key);
+        int value = 54645;
+        jsonObject.put(AggregateHistogramContribution.VALUE, value);
+
+        AggregateHistogramContribution expected =
+                new AggregateHistogramContribution.Builder().setKey(key).setValue(value).build();
+
+        // Assertion
+        AggregateHistogramContribution actual =
+                new AggregateHistogramContribution.Builder().fromJsonObject(jsonObject);
+        assertEquals(expected, actual);
     }
 }

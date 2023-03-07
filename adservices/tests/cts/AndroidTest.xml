@@ -38,19 +38,25 @@
         <option name="run-command" value="setprop debug.adservices.disable_fledge_enrollment_check false" />
 
         <!-- Increase the allowed API queries per second -->
-        <option name="run-command" value="setprop debug.adservices.sdk_request_permits_per_second 1000" />
+        <option name="run-command" value="setprop debug.adservices.sdk_request_permits_per_second 100000" />
         <option name="teardown-command" value="setprop debug.adservices.sdk_request_permits_per_second 1" />
+
+        <!-- Temporarily disable Device Config sync -->
+        <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />
+        <option name="teardown-command" value="device_config set_sync_disabled_for_tests none" />
+
+        <!-- Disable Register Ad Beacon Feature -->
+        <option name="run-command" value="setprop debug.adservices.fledge_register_ad_beacon_enabled false" />
     </target_preparer>
 
     <target_preparer class="com.android.tradefed.targetprep.DeviceSetup" >
         <option name="force-skip-system-props" value="true" />
-        <option name="disable-device-config-sync" value="true" />
     </target_preparer>
 
     <test class="com.android.tradefed.testtype.AndroidJUnitTest" >
         <option name="package" value="android.adservices.cts" />
-        <option name="hidden-api-checks" value="false" />
     </test>
+
     <object type="module_controller"
             class="com.android.tradefed.testtype.suite.module.MainlineTestModuleController" >
         <option name="mainline-module-package-name" value="com.google.android.adservices" />

@@ -18,6 +18,7 @@ package com.android.adservices.ui.notifications;
 import static com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity.FROM_NOTIFICATION_KEY;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,15 +26,19 @@ import android.view.ViewGroup;
 import android.widget.Button;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
 
 /**
  * Fragment for the confirmation view after accepting or rejecting to be part of Privacy Sandbox
  * Beta.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class ConsentNotificationConfirmationFragment extends Fragment {
     public static final String IS_CONSENT_GIVEN_ARGUMENT_KEY = "isConsentGiven";
 
@@ -51,6 +56,7 @@ public class ConsentNotificationConfirmationFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
+        UiStatsLogger.logConfirmationPageDisplayed(getContext());
         setupListeners();
     }
 

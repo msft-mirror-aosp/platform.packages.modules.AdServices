@@ -16,9 +16,6 @@
 
 package com.android.adservices.service.measurement;
 
-import static com.android.adservices.service.measurement.PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
-import static com.android.adservices.service.measurement.PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
-
 import android.adservices.measurement.RegistrationRequest;
 import android.net.Uri;
 import android.util.Log;
@@ -29,10 +26,7 @@ import com.android.adservices.service.measurement.actions.RegisterSource;
 import com.android.adservices.service.measurement.actions.RegisterTrigger;
 import com.android.adservices.service.measurement.actions.ReportObjects;
 import com.android.adservices.service.measurement.util.Enrollment;
-import com.android.adservices.service.measurement.util.UnsignedLong;
-import com.android.adservices.service.measurement.util.Web;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Assert;
@@ -40,40 +34,48 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
+import java.util.UUID;
 
 /**
  * End-to-end test from source and trigger registration to attribution reporting, using mocked HTTP
  * requests.
  *
- * Tests in assets/msmt_interop_tests/ directory were copied from
- * https://source.chromium.org/chromium/chromium/src/+/main:content/test/data/attribution_reporting/interop/
- * on October 15, 2022
+ * Tests in assets/msmt_interop_tests/ directory were copied from Chromium
+ * src/content/test/data/attribution_reporting/interop
+ * Friday February 17, 2023
  */
 @RunWith(Parameterized.class)
 public class E2EInteropMockTest extends E2EMockTest {
     private static final String LOG_TAG = "msmt_e2e_interop_mock_test";
     private static final String TEST_DIR_NAME = "msmt_interop_tests";
     private static final String ANDROID_APP_SCHEME = "android-app";
+    private static final String DEFAULT_EVENT_TRIGGER_DATA = "[]";
+
+    private static String preprocessor(String json) {
+        return json
+                .replaceAll("\\.test(?=[\"\\/])", ".com")
+                // Remove comments
+                .replaceAll("^\\s*\\/\\/.+\\n", "")
+                .replaceAll("\"destination\":", "\"web_destination\":");
+    }
 
     @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> getData() throws IOException, JSONException {
-        return data(TEST_DIR_NAME);
+        return data(TEST_DIR_NAME, E2EInteropMockTest::preprocessor);
     }
 
     public E2EInteropMockTest(Collection<Action> actions, ReportObjects expectedOutput,
-            PrivacyParamsProvider privacyParamsProvider, String name) throws DatastoreException {
-        super(actions, expectedOutput, privacyParamsProvider, name);
-        mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager);
+            ParamsProvider paramsProvider, String name) throws DatastoreException {
+        super(actions, expectedOutput, paramsProvider, name);
+        mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager, mFlags);
         mMeasurementImpl =
                 TestObjectProvider.getMeasurementImpl(
                         sDatastoreManager,
                         mClickVerifier,
-                        mFlags,
                         mMeasurementDataDeleter,
                         sEnrollmentDao);
         mAsyncRegistrationQueueRunner =
@@ -82,7 +84,8 @@ public class E2EInteropMockTest extends E2EMockTest {
                         sDatastoreManager,
                         mAsyncSourceFetcher,
                         mAsyncTriggerFetcher,
-                        sEnrollmentDao);
+                        sEnrollmentDao,
+                        mDebugReportApi);
     }
 
     @Override
@@ -106,7 +109,8 @@ public class E2EInteropMockTest extends E2EMockTest {
                                         source,
                                         source.getPublisher(),
                                         EventSurfaceType.WEB,
-                                        measurementDao)) {
+                                        measurementDao,
+                                        mDebugReportApi)) {
                                     measurementDao.insertSource(source);
                                 }
                             }));
@@ -136,96 +140,59 @@ public class E2EInteropMockTest extends E2EMockTest {
                 mAttributionHelper.performPendingAttributions());
     }
 
-    private static Source getSource(String publisher, long timestamp, String uri,
+    private Source getSource(String publisher, long timestamp, String uri,
             RegistrationRequest request, Map<String, List<String>> headers) {
+        String enrollmentId = Enrollment.maybeGetEnrollmentId(Uri.parse(uri), sEnrollmentDao).get();
+        // The Source parser compares the destination from the web request to the one provided in
+        // the headers in order to allow either a web or app destination (otherwise, only an app
+        // destination would be allowed). Since the test runner interprets the test JSON as an app
+        // request, not web, we need to get the destination from the JSON, not from the request
+        // object.
+        List<String> field = headers.get("Attribution-Reporting-Register-Source");
+        JSONObject json;
+        Uri webDestination;
         try {
-            Source.Builder sourceBuilder = new Source.Builder();
-            String enrollmentId =
-                    Enrollment.maybeGetEnrollmentId(Uri.parse(uri), sEnrollmentDao).get();
-            sourceBuilder.setEnrollmentId(enrollmentId);
-            sourceBuilder.setPublisher(Uri.parse(publisher));
-            sourceBuilder.setPublisherType(EventSurfaceType.WEB);
-            sourceBuilder.setEventTime(timestamp);
-            sourceBuilder.setSourceType(getSourceType(request));
-            sourceBuilder.setAttributionMode(Source.AttributionMode.TRUTHFULLY);
-            sourceBuilder.setRegistrant(getRegistrant(request.getPackageName()));
-            List<String> field = headers.get("Attribution-Reporting-Register-Source");
-            JSONObject json = new JSONObject(field.get(0));
-            sourceBuilder.setEventId(new UnsignedLong(json.getString("source_event_id")));
-            if (!json.isNull("expiry")) {
-                long offset =
-                        TimeUnit.SECONDS.toMillis(
-                                extractValidNumberInRange(
-                                        json.getLong("expiry"),
-                                        MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
-                                        MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS));
-                sourceBuilder.setExpiryTime(timestamp + offset);
-            } else {
-                sourceBuilder.setExpiryTime(
-                        timestamp
-                                + TimeUnit.SECONDS.toMillis(
-                                        MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS));
-            }
-            if (!json.isNull("priority")) {
-                sourceBuilder.setPriority(json.getLong("priority"));
-            }
-            if (!json.isNull("debug_key")) {
-                sourceBuilder.setDebugKey(new UnsignedLong(json.getString("debug_key")));
-            }
-            if (!json.isNull("filter_data")) {
-                sourceBuilder.setFilterData(json.getJSONObject("filter_data").toString());
-            }
-            sourceBuilder.setWebDestination(Web.topPrivateDomainAndScheme(
-                    Uri.parse(json.getString("destination"))).get());
-            if (!json.isNull("aggregation_keys")) {
-                sourceBuilder.setAggregateSource(mapAggregationKeys(
-                        json.getJSONObject("aggregation_keys")));
-            }
-            return sourceBuilder.build();
+            json = new JSONObject(field.get(0));
+            webDestination = Uri.parse(json.getString("web_destination"));
         } catch (JSONException e) {
-            Log.e(LOG_TAG, "Failed to parse source registration. %s", e);
+            Log.e(LOG_TAG, "Failed to parse source header. %s", e);
             return null;
         }
+        List<Source> sourceWrapper = new ArrayList<>();
+        mAsyncSourceFetcher.parseSource(
+                UUID.randomUUID().toString(),
+                Uri.parse(publisher),
+                enrollmentId,
+                /* appDestination */ null,
+                webDestination,
+                getRegistrant(request.getAppPackageName()),
+                timestamp,
+                getSourceType(request),
+                /* shouldValidateDestinationWebSource */ true,
+                /* shouldOverrideDestinationAppSource */ false,
+                headers,
+                sourceWrapper,
+                /* isWebSource */ true,
+                /* adIdPermission */ true,
+                /* arDebugPermission */ true);
+        return sourceWrapper.get(0);
     }
 
-    private static Trigger getTrigger(String destination, long timestamp, String uri,
+    private Trigger getTrigger(String destination, long timestamp, String uri,
             RegistrationRequest request, Map<String, List<String>> headers) {
-        try {
-            Trigger.Builder triggerBuilder = new Trigger.Builder();
-            String enrollmentId =
-                    Enrollment.maybeGetEnrollmentId(Uri.parse(uri), sEnrollmentDao).get();
-            triggerBuilder.setEnrollmentId(enrollmentId);
-            triggerBuilder.setAttributionDestination(Uri.parse(destination));
-            triggerBuilder.setDestinationType(EventSurfaceType.WEB);
-            triggerBuilder.setTriggerTime(timestamp);
-            triggerBuilder.setRegistrant(getRegistrant(request.getPackageName()));
-            List<String> field = headers.get("Attribution-Reporting-Register-Trigger");
-            JSONObject json = new JSONObject(field.get(0));
-            if (!json.isNull("event_trigger_data")) {
-                triggerBuilder.setEventTriggers(json.getJSONArray("event_trigger_data").toString());
-            }
-            if (!json.isNull("aggregatable_trigger_data")) {
-                triggerBuilder.setAggregateTriggerData(
-                        json.getJSONArray("aggregatable_trigger_data").toString());
-            }
-            if (!json.isNull("aggregatable_values")) {
-                triggerBuilder.setAggregateValues(
-                        json.getJSONObject("aggregatable_values").toString());
-            }
-            if (!json.isNull("filters")) {
-                triggerBuilder.setFilters(json.getString("filters"));
-            }
-            if (!json.isNull("not_filters")) {
-                triggerBuilder.setNotFilters(json.getString("not_filters"));
-            }
-            if (!json.isNull("debug_key")) {
-                triggerBuilder.setDebugKey(new UnsignedLong(json.getString("debug_key")));
-            }
-            return triggerBuilder.build();
-        } catch (JSONException e) {
-            Log.e(LOG_TAG, "Failed to parse trigger registration. %s", e);
-            return null;
-        }
+        String enrollmentId = Enrollment.maybeGetEnrollmentId(Uri.parse(uri), sEnrollmentDao).get();
+        List<Trigger> triggerWrapper = new ArrayList<>();
+        mAsyncTriggerFetcher.parseTrigger(
+                Uri.parse(destination),
+                getRegistrant(request.getAppPackageName()),
+                enrollmentId,
+                timestamp,
+                headers,
+                triggerWrapper,
+                AsyncRegistration.RegistrationType.WEB_TRIGGER,
+                /* adIdPermission */ true,
+                /* arDebugPermission */ true);
+        return triggerWrapper.get(0);
     }
 
     private static Source.SourceType getSourceType(RegistrationRequest request) {
@@ -236,28 +203,5 @@ public class E2EInteropMockTest extends E2EMockTest {
 
     private static Uri getRegistrant(String packageName) {
         return Uri.parse(ANDROID_APP_SCHEME + "://" + packageName);
-    }
-
-    private static long extractValidNumberInRange(long value, long lowerLimit, long upperLimit) {
-        if (value < lowerLimit) {
-            return lowerLimit;
-        } else if (value > upperLimit) {
-            return upperLimit;
-        }
-
-        return value;
-    }
-
-    private static String mapAggregationKeys(JSONObject json) throws JSONException {
-        JSONArray result = new JSONArray();
-        Iterator<String> keys = json.keys();
-        while (keys.hasNext()) {
-            String key = keys.next();
-            JSONObject obj = new JSONObject()
-                    .put("id", key)
-                    .put("key_piece", json.getString(key));
-            result.put(obj);
-        }
-        return result.toString();
     }
 }

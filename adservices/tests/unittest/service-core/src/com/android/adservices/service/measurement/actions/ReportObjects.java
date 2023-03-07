@@ -27,15 +27,28 @@ import java.util.List;
 public final class ReportObjects {
     public final List<JSONObject> mEventReportObjects;
     public final List<JSONObject> mAggregateReportObjects;
+    public final List<JSONObject> mDebugEventReportObjects;
+    public final List<JSONObject> mDebugAggregateReportObjects;
+    public final List<JSONObject> mDebugReportObjects;
 
     public ReportObjects() {
         mEventReportObjects = new ArrayList<>();
         mAggregateReportObjects = new ArrayList<>();
+        mDebugEventReportObjects = new ArrayList<>();
+        mDebugAggregateReportObjects = new ArrayList<>();
+        mDebugReportObjects = new ArrayList<>();
     }
 
-    public ReportObjects(List<JSONObject> eventReportObjects,
-            List<JSONObject> aggregateReportObjects) {
+    public ReportObjects(
+            List<JSONObject> eventReportObjects,
+            List<JSONObject> aggregateReportObjects,
+            List<JSONObject> debugEventReportObjects,
+            List<JSONObject> debugAggregateReportObjects,
+            List<JSONObject> debugReportObjects) {
         mEventReportObjects = eventReportObjects;
         mAggregateReportObjects = aggregateReportObjects;
+        mDebugEventReportObjects = debugEventReportObjects;
+        mDebugAggregateReportObjects = debugAggregateReportObjects;
+        mDebugReportObjects = debugReportObjects;
     }
 }

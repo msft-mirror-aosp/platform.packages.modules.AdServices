@@ -52,7 +52,6 @@ public class AdServicesConfig {
     public static final int MEASUREMENT_DELETE_EXPIRED_JOB_ID = 4;
 
     public static long MEASUREMENT_DELETE_EXPIRED_JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(24);
-    public static long MEASUREMENT_DELETE_EXPIRED_WINDOW_MS = TimeUnit.DAYS.toMillis(37);
 
     /**
      * Returns the min time period (in millis) between each expired-record deletion maintenance job
@@ -168,4 +167,10 @@ public class AdServicesConfig {
      * com.android.adservices.service.measurement.reporting.DebugReportingJobService})
      */
     public static final int MEASUREMENT_DEBUG_REPORT_JOB_ID = 17;
+
+    /**
+     * Job ID for Measurement Debug Report API JobService ({@link
+     * com.android.adservices.service.measurement.reporting.DebugReportingJobService})
+     */
+    public static final int MEASUREMENT_DEBUG_REPORT_API_JOB_ID = 18;
 }

@@ -25,7 +25,8 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.common.AdData;
-import android.net.Uri;
+import android.adservices.common.AdDataFixture;
+import android.adservices.common.CommonFixture;
 
 import androidx.test.filters.SmallTest;
 
@@ -35,14 +36,13 @@ import org.junit.Test;
 
 @SmallTest
 public class AdDataArgumentTest {
-    public static final String RENDER_URI = "http://test.com/fetch";
-    public static final String METADATA = "{\"field1\":1}";
-    public static final AdData AD_DATA = new AdData(Uri.parse(RENDER_URI), METADATA);
+    public static final AdData AD_DATA =
+            AdDataFixture.getValidAdDataByBuyer(CommonFixture.VALID_BUYER_1, 0);
 
     public static JSONObject aValidAdDataJson() throws JSONException {
         return new JSONObject()
-                .put(AdDataArgument.RENDER_URI_FIELD_NAME, RENDER_URI)
-                .put(AdDataArgument.METADATA_FIELD_NAME, new JSONObject(METADATA));
+                .put(AdDataArgument.RENDER_URI_FIELD_NAME, AD_DATA.getRenderUri())
+                .put(AdDataArgument.METADATA_FIELD_NAME, new JSONObject(AD_DATA.getMetadata()));
     }
 
     @Test

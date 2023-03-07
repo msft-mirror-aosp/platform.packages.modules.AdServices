@@ -33,4 +33,6 @@ android_test_helper_app {
         "android.test.base",
     ],
     platform_apis: true,
+    min_sdk_version: "33",
+    target_sdk_version: "33",
 }

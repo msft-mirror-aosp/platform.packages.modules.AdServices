@@ -18,6 +18,7 @@ package android.adservices.measurement;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 
@@ -84,17 +85,14 @@ public class WebSourceRegistrationRequestTest {
     }
 
     @Test
-    public void build_withMissingOsAndWebDestination_throwsException() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        new WebSourceRegistrationRequest.Builder(
-                                        SOURCE_REGISTRATIONS, TOP_ORIGIN_URI)
-                                .setInputEvent(INPUT_KEY_EVENT)
-                                .setVerifiedDestination(VERIFIED_DESTINATION)
-                                .setAppDestination(null)
-                                .setWebDestination(null)
-                                .build());
+    public void build_withMissingOsAndWebDestination_DoesNotThrowException() {
+        assertNotNull(
+                new WebSourceRegistrationRequest.Builder(SOURCE_REGISTRATIONS, TOP_ORIGIN_URI)
+                        .setInputEvent(INPUT_KEY_EVENT)
+                        .setVerifiedDestination(VERIFIED_DESTINATION)
+                        .setAppDestination(null)
+                        .setWebDestination(null)
+                        .build());
     }
 
     @Test

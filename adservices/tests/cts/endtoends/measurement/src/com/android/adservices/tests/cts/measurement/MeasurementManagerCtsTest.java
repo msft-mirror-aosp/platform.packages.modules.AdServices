@@ -18,6 +18,7 @@ package com.android.adservices.tests.cts.measurement;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -31,6 +32,7 @@ import android.adservices.measurement.WebTriggerParams;
 import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.content.Context;
 import android.net.Uri;
+import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
 import android.test.suitebuilder.annotation.SmallTest;
 
@@ -38,12 +40,14 @@ import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.runner.AndroidJUnit4;
 
+import com.android.adservices.common.AdservicesCtsHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -59,6 +63,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @SmallTest
 @RunWith(AndroidJUnit4.class)
@@ -82,6 +87,9 @@ public class MeasurementManagerCtsTest {
 
     @Before
     public void setup() {
+        // Skip the test if it runs on unsupported platforms.
+        Assume.assumeTrue(AdservicesCtsHelper.isDeviceSupported());
+
         // To grant access to all pp api app
         allowAllPackageNamesAccessMeasurementApis();
 
@@ -103,6 +111,7 @@ public class MeasurementManagerCtsTest {
         resetOverrideConsentManagerDebugMode();
         resetOverrideDisableMeasurementEnrollmentCheck();
         overrideMeasurementKillSwitches(false);
+        // Cool-off rate limiter
         TimeUnit.SECONDS.sleep(1);
     }
 
@@ -112,6 +121,28 @@ public class MeasurementManagerCtsTest {
         ListenableFuture<Void> result =
                 mMeasurementClient.registerSource(SOURCE_REGISTRATION_URI, /* inputEvent = */ null);
         assertThat(result.get()).isNull();
+        overrideDisableMeasurementEnrollmentCheck("0");
+    }
+
+    @Test
+    public void testRegisterSource_verifyRateLimitReached() throws Exception {
+        overrideDisableMeasurementEnrollmentCheck("1");
+        final MeasurementManager manager = MeasurementManager.get(sContext);
+
+        // Rate limit hasn't reached yet
+        assertFalse(registerSourceAndVerifyRateLimitReached(manager));
+        assertFalse(registerSourceAndVerifyRateLimitReached(manager));
+        assertFalse(registerSourceAndVerifyRateLimitReached(manager));
+        assertFalse(registerSourceAndVerifyRateLimitReached(manager));
+        assertFalse(registerSourceAndVerifyRateLimitReached(manager));
+
+        // Due to bursting, we could reach the limit at the exact limit or limit + 1. Therefore,
+        // triggering one more call without checking the outcome.
+        registerSourceAndVerifyRateLimitReached(manager);
+
+        // Verify limit reached
+        assertTrue(registerSourceAndVerifyRateLimitReached(manager));
+
         overrideDisableMeasurementEnrollmentCheck("0");
     }
 
@@ -144,6 +175,28 @@ public class MeasurementManagerCtsTest {
         ListenableFuture<Void> result =
                 mMeasurementClient.registerWebSource(webSourceRegistrationRequest);
         assertThat(result.get()).isNull();
+        overrideDisableMeasurementEnrollmentCheck("0");
+    }
+
+    @Test
+    public void testRegisterWebSource_verifyRateLimitReached() throws Exception {
+        overrideDisableMeasurementEnrollmentCheck("1");
+        final MeasurementManager manager = MeasurementManager.get(sContext);
+
+        // Rate limit hasn't reached yet
+        assertFalse(registerWebSourceAndVerifyRateLimitReached(manager));
+        assertFalse(registerWebSourceAndVerifyRateLimitReached(manager));
+        assertFalse(registerWebSourceAndVerifyRateLimitReached(manager));
+        assertFalse(registerWebSourceAndVerifyRateLimitReached(manager));
+        assertFalse(registerWebSourceAndVerifyRateLimitReached(manager));
+
+        // Due to bursting, we could reach the limit at the exact limit or limit + 1. Therefore,
+        // triggering one more call without checking the outcome.
+        registerWebSourceAndVerifyRateLimitReached(manager);
+
+        // Verify limit reached
+        assertTrue(registerWebSourceAndVerifyRateLimitReached(manager));
+
         overrideDisableMeasurementEnrollmentCheck("0");
     }
 
@@ -223,7 +276,7 @@ public class MeasurementManagerCtsTest {
     public void testDeleteRegistrations_withRequest_withInvalidArguments_withCallback_hasError()
             throws Exception {
         overrideDisableMeasurementEnrollmentCheck("1");
-        final MeasurementManager manager = sContext.getSystemService(MeasurementManager.class);
+        final MeasurementManager manager = MeasurementManager.get(sContext);
         Objects.requireNonNull(manager);
 
         CompletableFuture<Void> future = new CompletableFuture<>();
@@ -258,7 +311,7 @@ public class MeasurementManagerCtsTest {
     public void testMeasurementApiStatus_returnResultStatus() throws Exception {
         overrideDisableMeasurementEnrollmentCheck("1");
         CountDownLatch countDownLatch = new CountDownLatch(1);
-        final MeasurementManager manager = sContext.getSystemService(MeasurementManager.class);
+        final MeasurementManager manager = MeasurementManager.get(sContext);
         List<Integer> resultCodes = new ArrayList<>();
 
         manager.getMeasurementApiStatus(
@@ -334,5 +387,66 @@ public class MeasurementManagerCtsTest {
                         + overrideString);
         ShellUtils.runShellCommand(
                 "setprop debug.adservices.measurement_api_status_kill_switch " + overrideString);
+    }
+
+    private boolean registerSourceAndVerifyRateLimitReached(MeasurementManager manager)
+            throws InterruptedException {
+        final AtomicBoolean reachedLimit = new AtomicBoolean(false);
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+
+        manager.registerSource(
+                SOURCE_REGISTRATION_URI,
+                null,
+                CALLBACK_EXECUTOR,
+                createCallbackWithCountdownOnLimitExceeded(countDownLatch, reachedLimit));
+
+        countDownLatch.await();
+        return reachedLimit.get();
+    }
+
+    private boolean registerWebSourceAndVerifyRateLimitReached(MeasurementManager manager)
+            throws InterruptedException {
+        final AtomicBoolean reachedLimit = new AtomicBoolean(false);
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+
+        WebSourceParams webSourceParams =
+                new WebSourceParams.Builder(SOURCE_REGISTRATION_URI)
+                        .setDebugKeyAllowed(false)
+                        .build();
+
+        WebSourceRegistrationRequest webSourceRegistrationRequest =
+                new WebSourceRegistrationRequest.Builder(
+                                Collections.singletonList(webSourceParams), SOURCE_REGISTRATION_URI)
+                        .setInputEvent(null)
+                        .setAppDestination(OS_DESTINATION)
+                        .setWebDestination(WEB_DESTINATION)
+                        .setVerifiedDestination(null)
+                        .build();
+
+        manager.registerWebSource(
+                webSourceRegistrationRequest,
+                CALLBACK_EXECUTOR,
+                createCallbackWithCountdownOnLimitExceeded(countDownLatch, reachedLimit));
+
+        countDownLatch.await();
+        return reachedLimit.get();
+    }
+
+    private OutcomeReceiver<Object, Exception> createCallbackWithCountdownOnLimitExceeded(
+            CountDownLatch countDownLatch, AtomicBoolean reachedLimit) {
+        return new OutcomeReceiver<Object, Exception>() {
+            @Override
+            public void onResult(@NonNull Object result) {
+                countDownLatch.countDown();
+            }
+
+            @Override
+            public void onError(@NonNull Exception error) {
+                if (error instanceof LimitExceededException) {
+                    reachedLimit.set(true);
+                }
+                countDownLatch.countDown();
+            }
+        };
     }
 }

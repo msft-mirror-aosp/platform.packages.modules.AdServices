@@ -19,8 +19,8 @@ package com.android.adservices.service.common;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyLong;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyString;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.doCallRealMethod;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
@@ -35,16 +35,18 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
 import android.net.Uri;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
-import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.topics.AppUpdateManager;
 import com.android.adservices.service.topics.BlockedTopicsManager;
@@ -62,6 +64,8 @@ import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -72,15 +76,15 @@ public class PackageChangedReceiverTest {
     private static final String SAMPLE_PACKAGE = "com.example.measurement.sampleapp";
     private static final String PACKAGE_SCHEME = "package:";
     private static final int BACKGROUND_THREAD_TIMEOUT_MS = 50;
+    private static final int DEFAULT_PACKAGE_UID = -1;
 
-    @Mock PackageChangedReceiver mMockPackageChangedReceiver;
     @Mock EpochManager mMockEpochManager;
     @Mock CacheManager mMockCacheManager;
     @Mock BlockedTopicsManager mBlockedTopicsManager;
     @Mock AppUpdateManager mMockAppUpdateManager;
     @Mock CustomAudienceDatabase mCustomAudienceDatabaseMock;
     @Mock CustomAudienceDao mCustomAudienceDaoMock;
-    @Mock AppConsentDao mAppConsentDaoMock;
+    @Mock ConsentManager mConsentManager;
     @Mock Flags mMockFlags;
 
     private TopicsWorker mSpyTopicsWorker;
@@ -88,11 +92,8 @@ public class PackageChangedReceiverTest {
     @Before
     public void before() {
         MockitoAnnotations.initMocks(this);
-        doCallRealMethod()
-                .when(mMockPackageChangedReceiver)
-                .onReceive(any(Context.class), any(Intent.class));
+
         // Mock TopicsWorker to test app update flow in topics API.
-        // Start a mockitoSession to mock static method
         mSpyTopicsWorker =
                 Mockito.spy(
                         new TopicsWorker(
@@ -159,6 +160,8 @@ public class PackageChangedReceiverTest {
         intent.setAction(PackageChangedReceiver.PACKAGE_CHANGED_BROADCAST);
         intent.setData(Uri.parse(PACKAGE_SCHEME + SAMPLE_PACKAGE));
         intent.putExtra(PackageChangedReceiver.ACTION_KEY, value);
+        intent.putExtra(Intent.EXTRA_UID, 0);
+
         return intent;
     }
 
@@ -174,14 +177,20 @@ public class PackageChangedReceiverTest {
                         .strictness(Strictness.LENIENT)
                         .startMocking();
         try {
+            long epochId = 1;
+
             // Kill switch is off.
             doReturn(false).when(mMockFlags).getTopicsKillSwitch();
 
             // Mock static method FlagsFactory.getFlags() to return Mock Flags.
             when(FlagsFactory.getFlags()).thenReturn(mMockFlags);
 
+            // Enable TopicContributors feature
+            when(mMockEpochManager.supportsTopicContributorFeature()).thenReturn(true);
+
             // Stubbing TopicsWorker.getInstance() to return mocked TopicsWorker instance
             doReturn(mSpyTopicsWorker).when(() -> TopicsWorker.getInstance(any()));
+            doReturn(epochId).when(mMockEpochManager).getCurrentEpochId();
 
             // Initialize package receiver meant for Topics
             PackageChangedReceiver spyReceiver = createSpyPackageReceiverForTopics();
@@ -191,8 +200,11 @@ public class PackageChangedReceiverTest {
             Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
 
             // Verify method in AppUpdateManager is invoked
+            // getCurrentEpochId() is invoked twice: handleAppUninstallation() + loadCache()
             // Note that only package name is passed into following methods.
-            verify(mMockAppUpdateManager).deleteAppDataByUri(eq(Uri.parse(SAMPLE_PACKAGE)));
+            verify(mMockEpochManager, times(2)).getCurrentEpochId();
+            verify(mMockAppUpdateManager)
+                    .handleAppUninstallationInRealTime(Uri.parse(SAMPLE_PACKAGE), epochId);
         } finally {
             session.finishMocking();
         }
@@ -223,7 +235,7 @@ public class PackageChangedReceiverTest {
             Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
 
             // When the kill switch is on, there is no Topics related work.
-            verify(mSpyTopicsWorker, never()).deletePackageData(any());
+            verify(mSpyTopicsWorker, never()).handleAppUninstallation(any());
         } finally {
             session.finishMocking();
         }
@@ -396,13 +408,13 @@ public class PackageChangedReceiverTest {
         // Lenient added to allow easy disabling of other APIs' methods
         MockitoSession session =
                 ExtendedMockito.mockitoSession()
-                        .mockStatic(AppConsentDao.class)
+                        .mockStatic(ConsentManager.class)
                         .strictness(Strictness.LENIENT)
                         .initMocks(this)
                         .startMocking();
         try {
             // Mock static method AppConsentDao.getInstance() executed on a separate thread
-            doReturn(mAppConsentDaoMock).when(() -> AppConsentDao.getInstance(any()));
+            doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any()));
 
             CountDownLatch completionLatch = new CountDownLatch(1);
             doAnswer(
@@ -410,7 +422,7 @@ public class PackageChangedReceiverTest {
                                 completionLatch.countDown();
                                 return null;
                             })
-                    .when(mAppConsentDaoMock)
+                    .when(mConsentManager)
                     .clearConsentForUninstalledApp(any(), anyInt());
 
             // Initialize package receiver meant for Consent
@@ -421,7 +433,81 @@ public class PackageChangedReceiverTest {
 
             // Verify method inside background thread executes
             assertThat(completionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
-            verify(mAppConsentDaoMock).clearConsentForUninstalledApp(any(), anyInt());
+            verify(mConsentManager).clearConsentForUninstalledApp(any(), anyInt());
+        } finally {
+            session.finishMocking();
+        }
+    }
+
+    /**
+     * Tests that when no packageUid is present via the Intent Extra, consent data for this app is
+     * cleared when the app is removed.
+     */
+    @Test
+    public void testReceivePackageFullyRemoved_consent_noPackageUid()
+            throws InterruptedException, IOException {
+        Intent intent = createDefaultIntentWithAction(PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
+        intent.removeExtra(Intent.EXTRA_UID);
+
+        validateConsentWhenPackageUidAbsent(intent, false);
+        validateConsentWhenPackageUidAbsent(intent, true);
+    }
+
+    /**
+     * Tests that when packageUid is explicitly set to the default value via the Intent Extra,
+     * consent data for this app is cleared when the app is removed.
+     */
+    @Test
+    public void testReceivePackageFullyRemoved_consent_packageUidIsExplicitlyDefault()
+            throws InterruptedException, IOException {
+        Intent intent = createDefaultIntentWithAction(PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
+        intent.putExtra(Intent.EXTRA_UID, DEFAULT_PACKAGE_UID);
+
+        validateConsentWhenPackageUidAbsent(intent, false);
+        validateConsentWhenPackageUidAbsent(intent, true);
+    }
+
+    private void validateConsentWhenPackageUidAbsent(Intent intent, boolean isPackageStillInstalled)
+            throws IOException, InterruptedException {
+        // Start a mockitoSession to mock static method
+        // Lenient added to allow easy disabling of other APIs' methods
+        MockitoSession session =
+                ExtendedMockito.mockitoSession()
+                        .mockStatic(ConsentManager.class)
+                        .strictness(Strictness.LENIENT)
+                        .initMocks(this)
+                        .startMocking();
+        try {
+            // Mock static method AppConsentDao.getInstance() executed on a separate thread
+            doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any()));
+
+            // Track whether the clearConsentForUninstalledApp was ever invoked.
+            // Use a CountDownLatch since this invocation happens on a background thread.
+            CountDownLatch completionLatch = new CountDownLatch(1);
+            doAnswer(
+                            unusedInvocation -> {
+                                completionLatch.countDown();
+                                return null;
+                            })
+                    .when(mConsentManager)
+                    .clearConsentForUninstalledApp(anyString());
+
+            // Initialize package receiver meant for Consent
+            PackageChangedReceiver spyReceiver = createSpyPackageReceiverForConsent();
+            doReturn(isPackageStillInstalled)
+                    .when(spyReceiver)
+                    .isPackageStillInstalled(any(), anyString());
+
+            // Invoke the onReceive method to test the behavior
+            spyReceiver.onReceive(sContext, intent);
+
+            // Package UID is expected to be -1 if there is no EXTRA_UID in the Intent's Extra.
+            verify(spyReceiver).consentOnPackageFullyRemoved(any(), any(), eq(DEFAULT_PACKAGE_UID));
+
+            // Verify method inside background thread executes if package is no longer installed
+            // and that it does not execute if the package is still installed.
+            assertThat(completionLatch.await(500, TimeUnit.MILLISECONDS))
+                    .isEqualTo(!isPackageStillInstalled);
         } finally {
             session.finishMocking();
         }
@@ -429,34 +515,35 @@ public class PackageChangedReceiverTest {
 
     @Test
     public void testReceivePackageAdded_topics() throws InterruptedException {
-        final long epochId = 1;
-
         Intent intent = createDefaultIntentWithAction(PackageChangedReceiver.PACKAGE_ADDED);
 
         // Start a mockitoSession to mock static method
         MockitoSession session =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(TopicsWorker.class)
-                        .spyStatic(FlagsFactory.class)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
 
         try {
             // Stubbing TopicsWorker.getInstance() to return mocked TopicsWorker instance
             doReturn(mSpyTopicsWorker).when(() -> TopicsWorker.getInstance(eq(sContext)));
-            when(mMockEpochManager.getCurrentEpochId()).thenReturn(epochId);
+
+            // Track whether the TopicsWorker.handleAppInstallation was ever invoked.
+            // Use a CountDownLatch since this invocation happens on a background thread.
+            CountDownLatch completionLatch = new CountDownLatch(1);
+            doAnswer(
+                            unusedInvocation -> {
+                                completionLatch.countDown();
+                                return null;
+                            })
+                    .when(mSpyTopicsWorker)
+                    .handleAppInstallation(Uri.parse(SAMPLE_PACKAGE));
 
             // Initialize package receiver meant for Topics and execute
             createSpyPackageReceiverForTopics().onReceive(sContext, intent);
 
-            // Grant some time to allow background thread to execute
-            Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
-
-            // Verify method in AppUpdateManager is invoked
-            // Note that only package name is passed into following methods.
-            verify(mMockEpochManager).getCurrentEpochId();
-            verify(mMockAppUpdateManager)
-                    .assignTopicsToNewlyInstalledApps(eq(Uri.parse(SAMPLE_PACKAGE)), eq(epochId));
+            // Verify the execution in background thread has occurred.
+            assertThat(completionLatch.await(/* timeout */ 500, TimeUnit.MILLISECONDS)).isTrue();
         } finally {
             session.finishMocking();
         }
@@ -698,6 +785,41 @@ public class PackageChangedReceiverTest {
             // Verify no executions
             verify(spyReceiver, never()).getCustomAudienceDatabase(any());
             verifyZeroInteractions(mCustomAudienceDatabaseMock, mCustomAudienceDaoMock);
+        } finally {
+            session.finishMocking();
+        }
+    }
+
+    @Test
+    public void testIsPackageStillInstalled() {
+        // Start a mockitoSession to mock static method
+        // Lenient added to allow easy disabling of other APIs' methods
+        MockitoSession session =
+                ExtendedMockito.mockitoSession()
+                        .mockStatic(PackageManagerCompatUtils.class)
+                        .strictness(Strictness.LENIENT)
+                        .initMocks(this)
+                        .startMocking();
+
+        try {
+            final String packageNamePrefix = "com.example.package";
+            final int count = 4;
+            final List<PackageInfo> packages = new ArrayList<>();
+            for (int i = 0; i < count; i++) {
+                PackageInfo packageInfo = new PackageInfo();
+                packageInfo.packageName = packageNamePrefix + i;
+                packages.add(packageInfo);
+            }
+
+            doReturn(packages)
+                    .when(() -> PackageManagerCompatUtils.getInstalledPackages(any(), anyInt()));
+
+            // Initialize package receiver
+            final Context context = ApplicationProvider.getApplicationContext();
+            PackageChangedReceiver receiver = createSpyPackageReceiverForConsent();
+            assertThat(receiver.isPackageStillInstalled(context, packageNamePrefix + 0)).isTrue();
+            assertThat(receiver.isPackageStillInstalled(context, packageNamePrefix + count))
+                    .isFalse();
         } finally {
             session.finishMocking();
         }

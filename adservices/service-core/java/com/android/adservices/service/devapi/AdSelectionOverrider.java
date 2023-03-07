@@ -16,24 +16,31 @@
 
 package com.android.adservices.service.devapi;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_AD_SELECTION_CONFIG_REMOTE_OVERRIDES;
 
 import android.adservices.adselection.AdSelectionConfig;
+import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.adservices.adselection.AdSelectionOverrideCallback;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
 import android.annotation.NonNull;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.RemoteException;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
+import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLogger;
 
@@ -46,6 +53,8 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
 /** Encapsulates the AdSelection Override Logic */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class AdSelectionOverrider {
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
@@ -134,13 +143,13 @@ public class AdSelectionOverrider {
                         new FutureCallback<Integer>() {
                             @Override
                             public void onSuccess(Integer result) {
-                                LogUtil.d("Add dev override succeeded!");
+                                LogUtil.d("Add dev override for ad selection config succeeded!");
                                 invokeSuccess(callback, shortApiName, result);
                             }
 
                             @Override
                             public void onFailure(Throwable t) {
-                                LogUtil.e(t, "Add dev override failed!");
+                                LogUtil.e(t, "Add dev override for ad selection config failed!");
                                 notifyFailureToCaller(callback, t, shortApiName);
                             }
                         },
@@ -179,13 +188,15 @@ public class AdSelectionOverrider {
                         new FutureCallback<Integer>() {
                             @Override
                             public void onSuccess(Integer result) {
-                                LogUtil.d("Removing dev override succeeded!");
+                                LogUtil.d(
+                                        "Removing dev override for ad selection config succeeded!");
                                 invokeSuccess(callback, shortApiName, result);
                             }
 
                             @Override
                             public void onFailure(Throwable t) {
-                                LogUtil.e(t, "Removing dev override failed!");
+                                LogUtil.e(
+                                        t, "Removing dev override for ad selection config failed!");
                                 notifyFailureToCaller(callback, t, shortApiName);
                             }
                         },
@@ -197,7 +208,8 @@ public class AdSelectionOverrider {
      *
      * @param callback callback function to be called in case of success or failure
      */
-    public void removeAllOverrides(@NonNull AdSelectionOverrideCallback callback) {
+    public void removeAllOverridesForAdSelectionConfig(
+            @NonNull AdSelectionOverrideCallback callback) {
         // Auto-generated variable name is too long for lint check
         int shortApiName =
                 AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_AD_SELECTION_CONFIG_REMOTE_OVERRIDES;
@@ -220,13 +232,162 @@ public class AdSelectionOverrider {
                         new FutureCallback<Integer>() {
                             @Override
                             public void onSuccess(Integer result) {
-                                LogUtil.d("Removing all dev overrides succeeded!");
+                                LogUtil.d(
+                                        "Removing all dev overrides for ad selection config"
+                                                + " succeeded!");
                                 invokeSuccess(callback, shortApiName, result);
                             }
 
                             @Override
                             public void onFailure(Throwable t) {
-                                LogUtil.e(t, "Removing all dev overrides failed!");
+                                LogUtil.e(
+                                        t,
+                                        "Removing all dev overrides for ad selection config"
+                                                + " failed!");
+                                notifyFailureToCaller(callback, t, shortApiName);
+                            }
+                        },
+                        mLightweightExecutorService);
+    }
+
+    /**
+     * Configures our fetching logic relating to {@code config} to use {@code selectionLogicJs}
+     * instead of fetching from remote servers
+     *
+     * @param callback callback function to be called in case of success or failure
+     */
+    public void addOverride(
+            @NonNull AdSelectionFromOutcomesConfig config,
+            @NonNull String selectionLogicJs,
+            @NonNull AdSelectionSignals selectionSignals,
+            @NonNull AdSelectionOverrideCallback callback) {
+        // Auto-generated variable name is too long for lint check
+        int shortApiName = AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
+
+        FluentFuture.from(
+                        mLightweightExecutorService.submit(
+                                () -> {
+                                    // Cannot read pH flags in the binder thread so this
+                                    // checks will be done in a spawn thread.
+                                    if (mFlags.getEnforceForegroundStatusForFledgeOverrides()) {
+                                        mAppImportanceFilter.assertCallerIsInForeground(
+                                                mCallerUid, shortApiName, null);
+                                    }
+                                    return null;
+                                }))
+                .transformAsync(
+                        ignoredVoid -> callAddOverride(config, selectionLogicJs, selectionSignals),
+                        mLightweightExecutorService)
+                .addCallback(
+                        new FutureCallback<Integer>() {
+                            @Override
+                            public void onSuccess(Integer result) {
+                                LogUtil.d(
+                                        "Add dev override for ad selection config from outcomes"
+                                                + " succeeded!");
+                                invokeSuccess(callback, shortApiName, result);
+                            }
+
+                            @Override
+                            public void onFailure(Throwable t) {
+                                LogUtil.e(
+                                        t,
+                                        "Add dev override for ad selection config from outcomes"
+                                                + " failed!");
+                                notifyFailureToCaller(callback, t, shortApiName);
+                            }
+                        },
+                        mLightweightExecutorService);
+    }
+
+    /**
+     * Removes a decision logic override matching this {@code config} and {@code appPackageName}
+     *
+     * @param callback callback function to be called in case of success or failure
+     */
+    public void removeOverride(
+            @NonNull AdSelectionFromOutcomesConfig config,
+            @NonNull AdSelectionOverrideCallback callback) {
+        // Auto-generated variable name is too long for lint check
+        int shortApiName = AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
+
+        FluentFuture.from(
+                        mLightweightExecutorService.submit(
+                                () -> {
+                                    // Cannot read pH flags in the binder thread so this
+                                    // checks will be done in a spawn thread.
+                                    if (mFlags.getEnforceForegroundStatusForFledgeOverrides()) {
+                                        mAppImportanceFilter.assertCallerIsInForeground(
+                                                mCallerUid, shortApiName, null);
+                                    }
+
+                                    return null;
+                                }))
+                .transformAsync(
+                        ignoredVoid -> callRemoveOverride(config), mLightweightExecutorService)
+                .addCallback(
+                        new FutureCallback<Integer>() {
+                            @Override
+                            public void onSuccess(Integer result) {
+                                LogUtil.d(
+                                        "Removing dev override for ad selection config from"
+                                                + " outcomes succeeded!");
+                                invokeSuccess(callback, shortApiName, result);
+                            }
+
+                            @Override
+                            public void onFailure(Throwable t) {
+                                LogUtil.e(
+                                        t,
+                                        "Removing dev override for ad selection config from"
+                                                + " outcomes failed!");
+                                notifyFailureToCaller(callback, t, shortApiName);
+                            }
+                        },
+                        mLightweightExecutorService);
+    }
+
+    /**
+     * Removes all ad selection overrides matching the {@code appPackageName}
+     *
+     * @param callback callback function to be called in case of success or failure
+     */
+    public void removeAllOverridesForAdSelectionFromOutcomes(
+            @NonNull AdSelectionOverrideCallback callback) {
+        // Auto-generated variable name is too long for lint check
+        int shortApiName = AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
+
+        FluentFuture.from(
+                        mLightweightExecutorService.submit(
+                                () -> {
+                                    // Cannot read pH flags in the binder thread so this
+                                    // checks will be done in a spawn thread.
+                                    if (mFlags.getEnforceForegroundStatusForFledgeOverrides()) {
+                                        mAppImportanceFilter.assertCallerIsInForeground(
+                                                mCallerUid, shortApiName, null);
+                                    }
+
+                                    return null;
+                                }))
+                .transformAsync(
+                        ignoredVoid -> callRemoveAllSelectionLogicOverrides(),
+                        mLightweightExecutorService)
+                .addCallback(
+                        new FutureCallback<Integer>() {
+                            @Override
+                            public void onSuccess(Integer result) {
+                                LogUtil.d(
+                                        "Removing all dev overrides for ad selection config from"
+                                                + " outcomes succeeded!");
+                                invokeSuccess(callback, shortApiName, result);
+                            }
+
+                            @Override
+                            public void onFailure(Throwable t) {
+                                LogUtil.e(
+                                        t,
+                                        "Removing all dev overrides for ad selection config from"
+                                                + " outcomes failed!");
                                 notifyFailureToCaller(callback, t, shortApiName);
                             }
                         },
@@ -240,7 +401,9 @@ public class AdSelectionOverrider {
         return FluentFuture.from(
                 mBackgroundExecutorService.submit(
                         () -> {
-                            if (!mConsentManager.getConsent().isGiven()) {
+                            AdServicesApiConsent userConsent = getAdServicesApiConsent();
+
+                            if (!userConsent.isGiven()) {
                                 return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
                             }
 
@@ -254,7 +417,9 @@ public class AdSelectionOverrider {
         return FluentFuture.from(
                 mBackgroundExecutorService.submit(
                         () -> {
-                            if (!mConsentManager.getConsent().isGiven()) {
+                            AdServicesApiConsent userConsent = getAdServicesApiConsent();
+
+                            if (!userConsent.isGiven()) {
                                 return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
                             }
 
@@ -268,13 +433,76 @@ public class AdSelectionOverrider {
         return FluentFuture.from(
                 mBackgroundExecutorService.submit(
                         () -> {
-                            if (!mConsentManager.getConsent().isGiven()) {
+                            AdServicesApiConsent userConsent = getAdServicesApiConsent();
+
+                            if (!userConsent.isGiven()) {
                                 return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
                             }
 
                             mAdSelectionDevOverridesHelper.removeAllDecisionLogicOverrides();
                             return AdServicesStatusUtils.STATUS_SUCCESS;
                         }));
+    }
+
+    private FluentFuture<Integer> callAddOverride(
+            @NonNull AdSelectionFromOutcomesConfig config,
+            @NonNull String selectionLogicJs,
+            @NonNull AdSelectionSignals selectionSignals) {
+        return FluentFuture.from(
+                mBackgroundExecutorService.submit(
+                        () -> {
+                            AdServicesApiConsent userConsent = getAdServicesApiConsent();
+
+                            if (!userConsent.isGiven()) {
+                                return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
+                            }
+
+                            mAdSelectionDevOverridesHelper.addAdSelectionOutcomeSelectorOverride(
+                                    config, selectionLogicJs, selectionSignals);
+                            return AdServicesStatusUtils.STATUS_SUCCESS;
+                        }));
+    }
+
+    private FluentFuture<Integer> callRemoveOverride(
+            @NonNull AdSelectionFromOutcomesConfig config) {
+        return FluentFuture.from(
+                mBackgroundExecutorService.submit(
+                        () -> {
+                            AdServicesApiConsent userConsent = getAdServicesApiConsent();
+
+                            if (!userConsent.isGiven()) {
+                                return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
+                            }
+
+                            mAdSelectionDevOverridesHelper.removeAdSelectionOutcomeSelectorOverride(
+                                    config);
+                            return AdServicesStatusUtils.STATUS_SUCCESS;
+                        }));
+    }
+
+    private FluentFuture<Integer> callRemoveAllSelectionLogicOverrides() {
+        return FluentFuture.from(
+                mBackgroundExecutorService.submit(
+                        () -> {
+                            AdServicesApiConsent userConsent = getAdServicesApiConsent();
+
+                            if (!userConsent.isGiven()) {
+                                return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
+                            }
+
+                            mAdSelectionDevOverridesHelper.removeAllSelectionLogicOverrides();
+                            return AdServicesStatusUtils.STATUS_SUCCESS;
+                        }));
+    }
+
+    private AdServicesApiConsent getAdServicesApiConsent() {
+        AdServicesApiConsent userConsent;
+        if (mFlags.getGaUxFeatureEnabled()) {
+            userConsent = mConsentManager.getConsent(AdServicesApiType.FLEDGE);
+        } else {
+            userConsent = mConsentManager.getConsent();
+        }
+        return userConsent;
     }
 
     /** Invokes the onFailure function from the callback and handles the exception. */

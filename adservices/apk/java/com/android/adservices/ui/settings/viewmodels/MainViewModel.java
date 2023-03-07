@@ -16,24 +16,31 @@
 package com.android.adservices.ui.settings.viewmodels;
 
 import android.app.Application;
+import android.os.Build;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.annotation.VisibleForTesting;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsAppsFragment;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragment;
+import com.android.adservices.ui.settings.fragments.AdServicesSettingsMeasurementFragment;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsTopicsFragment;
 import com.android.settingslib.widget.MainSwitchBar;
 
 /**
- * View model for the main view of the AdServices Settings App. This view model is responsible
- * for serving consent to the main view, and interacting with the {@link ConsentManager} that
- * persists the user consent data in a storage.
+ * View model for the main view of the AdServices Settings App. This view model is responsible for
+ * serving consent to the main view, and interacting with the {@link ConsentManager} that persists
+ * the user consent data in a storage.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class MainViewModel extends AndroidViewModel {
     private final MutableLiveData<MainViewModelUiEvent> mEventTrigger = new MutableLiveData<>();
     private final MutableLiveData<Boolean> mAdServicesConsent;
@@ -45,6 +52,7 @@ public class MainViewModel extends AndroidViewModel {
         SWITCH_OFF_PRIVACY_SANDBOX_BETA,
         DISPLAY_TOPICS_FRAGMENT,
         DISPLAY_APPS_FRAGMENT,
+        DISPLAY_MEASUREMENT_FRAGMENT,
     }
 
     public MainViewModel(@NonNull Application application) {
@@ -105,6 +113,11 @@ public class MainViewModel extends AndroidViewModel {
         mEventTrigger.postValue(MainViewModelUiEvent.DISPLAY_APPS_FRAGMENT);
     }
 
+    /** Triggers {@link AdServicesSettingsMeasurementFragment} */
+    public void measurementClickHandler() {
+        mEventTrigger.postValue(MainViewModelUiEvent.DISPLAY_MEASUREMENT_FRAGMENT);
+    }
+
     /**
      * Triggers opt out process for Privacy Sandbox. Also reverts the switch state, since
      * confirmation dialog will handle switch change.
@@ -121,5 +134,25 @@ public class MainViewModel extends AndroidViewModel {
 
     private boolean getConsentFromConsentManager() {
         return mConsentManager.getConsent().isGiven();
+    }
+
+    public boolean getMeasurementConsentFromConsentManager() {
+        return mConsentManager.getConsent(AdServicesApiType.MEASUREMENTS).isGiven();
+    }
+
+    public boolean getTopicsConsentFromConsentManager() {
+        return mConsentManager.getConsent(AdServicesApiType.TOPICS).isGiven();
+    }
+
+    public boolean getAppsConsentFromConsentManager() {
+        return mConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven();
+    }
+
+    public int getCountOfTopics() {
+        return mConsentManager.getKnownTopicsWithConsent().size();
+    }
+
+    public int getCountOfApps() {
+        return mConsentManager.getKnownAppsWithConsent().size();
     }
 }

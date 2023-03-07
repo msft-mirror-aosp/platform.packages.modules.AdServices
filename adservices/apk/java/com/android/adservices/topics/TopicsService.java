@@ -22,6 +22,8 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.IBinder;
 
+import androidx.annotation.RequiresApi;
+
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.download.MddJobService;
@@ -31,6 +33,7 @@ import com.android.adservices.service.MaintenanceJobService;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.common.Throttler;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.Clock;
@@ -45,6 +48,8 @@ import java.io.PrintWriter;
 import java.util.Objects;
 
 /** Topics Service */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class TopicsService extends Service {
 
     /** The binder service. This field must only be accessed on the main thread. */
@@ -74,8 +79,7 @@ public class TopicsService extends Service {
                             AdServicesLoggerImpl.getInstance(),
                             Clock.SYSTEM_CLOCK,
                             FlagsFactory.getFlags(),
-                            Throttler.getInstance(
-                                    FlagsFactory.getFlags().getSdkRequestPermitsPerSecond()),
+                            Throttler.getInstance(FlagsFactory.getFlags()),
                             EnrollmentDao.getInstance(this),
                             appImportanceFilter);
             mTopicsService.init();
@@ -93,7 +97,11 @@ public class TopicsService extends Service {
     }
 
     private boolean hasUserConsent() {
-        return ConsentManager.getInstance(this).getConsent().isGiven();
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            return ConsentManager.getInstance(this).getConsent(AdServicesApiType.TOPICS).isGiven();
+        } else {
+            return ConsentManager.getInstance(this).getConsent().isGiven();
+        }
     }
 
     @Override
