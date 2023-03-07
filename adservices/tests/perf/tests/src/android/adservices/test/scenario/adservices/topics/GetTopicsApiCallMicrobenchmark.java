@@ -16,6 +16,7 @@
 
 package android.adservices.test.scenario.adservices.topics;
 
+import android.adservices.test.scenario.adservices.utils.CompatTestUtils;
 import android.platform.test.microbenchmark.Microbenchmark;
 import android.platform.test.microbenchmark.Microbenchmark.NoMetricAfter;
 import android.platform.test.microbenchmark.Microbenchmark.NoMetricBefore;
@@ -28,11 +29,10 @@ import org.junit.runner.RunWith;
 
 @RunWith(Microbenchmark.class)
 public class GetTopicsApiCallMicrobenchmark extends GetTopicsApiCall {
-    private static final String ADSERVICES_PROCESS = "com.google.android.adservices.api";
-
     @Rule
     public RuleChain rules =
-            RuleChain.outerRule(new KillAppsRule(ADSERVICES_PROCESS)).around(new DropCachesRule());
+            RuleChain.outerRule(new KillAppsRule(CompatTestUtils.getAdServicesPackageName()))
+                    .around(new DropCachesRule());
 
     @NoMetricBefore
     public void setup() {
