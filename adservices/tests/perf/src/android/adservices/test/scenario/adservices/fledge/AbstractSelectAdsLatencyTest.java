@@ -76,7 +76,6 @@ public class AbstractSelectAdsLatencyTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
-    private static final String PPAPI_PACKAGE = "com.google.android.adservices.api";
     protected static final int API_RESPONSE_TIMEOUT_SECONDS = 100;
     protected static final AdSelectionClient AD_SELECTION_CLIENT =
             new AdSelectionClient.Builder()
@@ -99,8 +98,8 @@ public class AbstractSelectAdsLatencyTest {
     // Per-test method rules, run in the given order.
     @Rule
     public RuleChain rules =
-            RuleChain.outerRule(new CleanPackageRule(PPAPI_PACKAGE))
-                    .around(new KillAppsRule(PPAPI_PACKAGE))
+            RuleChain.outerRule(new CleanPackageRule(CompatTestUtils.getAdServicesPackageName()))
+                    .around(new KillAppsRule(CompatTestUtils.getAdServicesPackageName()))
                     .around(new SelectAdsFlagRule());
 
     @BeforeClass
