@@ -343,7 +343,7 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
-    public void testReportImpressionSuccessWithRegisterAdBeaconEnabled() throws Exception {
+    public void testReportImpressionSuccessWithRegisterAdBeaconDisabled() throws Exception {
         // Re init flags with registerAdBeaconDisabled
         mFlags =
                 new FlagsWithEnrollmentCheckEnabledSwitch(false) {
@@ -449,7 +449,7 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
-    public void testReportImpressionSuccessWithRegisterAdBeaconDisabled() throws Exception {
+    public void testReportImpressionSuccessWithRegisterAdBeaconEnabled() throws Exception {
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -6747,7 +6747,7 @@ public class AdSelectionServiceImplTest {
 
         @Override
         public long getReportImpressionOverallTimeoutMs() {
-            return 500;
+            return 700;
         }
 
         @Override
