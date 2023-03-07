@@ -18,7 +18,6 @@ package com.android.adservices.service.adselection;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
@@ -27,6 +26,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.atMost;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
@@ -58,13 +59,12 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.mockito.stubbing.Answer;
+import org.mockito.verification.VerificationMode;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -178,6 +178,9 @@ public class AppInstallAdvertisersSetterTest {
                 .filterRequest(any(), any(), anyBoolean(), anyBoolean(), anyInt(), anyInt(), any());
         SetAppInstallAdvertisersTestCallback callback = callSetAppInstallAdvertisers(SAMPLE_INPUT);
 
+        // Confirm a duplicate log entry does not exist.
+        // AdSelectionServiceFilter ensures the failing assertion is logged internally.
+        verifyLog(AdServicesStatusUtils.STATUS_BACKGROUND_CALLER, never());
         assertFalse(callback.mIsSuccess);
         verifyLog(AdServicesStatusUtils.STATUS_BACKGROUND_CALLER);
         verifyNoMoreInteractions(mAppInstallDaoMock);
@@ -192,6 +195,9 @@ public class AppInstallAdvertisersSetterTest {
                 .filterRequest(any(), any(), anyBoolean(), anyBoolean(), anyInt(), anyInt(), any());
         SetAppInstallAdvertisersTestCallback callback = callSetAppInstallAdvertisers(SAMPLE_INPUT);
 
+        // Confirm a duplicate log entry does not exist.
+        // AdSelectionServiceFilter ensures the failing assertion is logged internally.
+        verifyLog(AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED, never());
         assertFalse(callback.mIsSuccess);
         verifyLog(AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED);
         verifyNoMoreInteractions(mAppInstallDaoMock);
@@ -206,6 +212,9 @@ public class AppInstallAdvertisersSetterTest {
                 .filterRequest(any(), any(), anyBoolean(), anyBoolean(), anyInt(), anyInt(), any());
         SetAppInstallAdvertisersTestCallback callback = callSetAppInstallAdvertisers(SAMPLE_INPUT);
 
+        // Confirm a duplicate log entry does not exist.
+        // AdSelectionServiceFilter ensures the failing assertion is logged internally.
+        verifyLog(AdServicesStatusUtils.STATUS_UNAUTHORIZED, never());
         assertFalse(callback.mIsSuccess);
         verifyLog(AdServicesStatusUtils.STATUS_UNAUTHORIZED);
         verifyNoMoreInteractions(mAppInstallDaoMock);
@@ -220,6 +229,9 @@ public class AppInstallAdvertisersSetterTest {
                 .filterRequest(any(), any(), anyBoolean(), anyBoolean(), anyInt(), anyInt(), any());
         SetAppInstallAdvertisersTestCallback callback = callSetAppInstallAdvertisers(SAMPLE_INPUT);
 
+        // Confirm a duplicate log entry does not exist.
+        // AdSelectionServiceFilter ensures the failing assertion is logged internally.
+        verifyLog(AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED, never());
         assertFalse(callback.mIsSuccess);
         verifyLog(AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED);
         verifyNoMoreInteractions(mAppInstallDaoMock);
@@ -228,41 +240,26 @@ public class AppInstallAdvertisersSetterTest {
     }
 
     private void verifyLog(int status) {
-        verify(mAdServicesLogger)
+        verify(mAdServicesLogger, atMost(1))
+                .logFledgeApiCallStats(
+                        AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS, status, 0);
+    }
+
+    private void verifyLog(int status, VerificationMode verificationMode) {
+        verify(mAdServicesLogger, verificationMode)
                 .logFledgeApiCallStats(
                         AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS, status, 0);
     }
 
     private SetAppInstallAdvertisersTestCallback callSetAppInstallAdvertisers(
             SetAppInstallAdvertisersInput request) throws Exception {
-        CountDownLatch logLatch = new CountDownLatch(1);
         CountDownLatch callbackLatch = new CountDownLatch(1);
         SetAppInstallAdvertisersTestCallback callback =
                 new SetAppInstallAdvertisersTestCallback(callbackLatch);
-        callSetAppInstallAdvertisers(request, callback, callbackLatch, logLatch);
-        return callback;
-    }
-
-    private void callSetAppInstallAdvertisers(
-            SetAppInstallAdvertisersInput request,
-            SetAppInstallAdvertisersCallback.Stub callback,
-            CountDownLatch callbackLatch,
-            CountDownLatch logLatch)
-            throws Exception {
-
-        // Wait for the logging call, which happens after the callback
-        Answer<Void> countDownAnswer =
-                unused -> {
-                    logLatch.countDown();
-                    return null;
-                };
-        doAnswer(countDownAnswer)
-                .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
 
         mAppInstallAdvertisersSetter.setAppInstallAdvertisers(request, callback);
-        callbackLatch.await(5, TimeUnit.SECONDS);
-        logLatch.await(5, TimeUnit.SECONDS);
+        callbackLatch.await();
+        return callback;
     }
 
     private static SetAppInstallAdvertisersInput.Builder
