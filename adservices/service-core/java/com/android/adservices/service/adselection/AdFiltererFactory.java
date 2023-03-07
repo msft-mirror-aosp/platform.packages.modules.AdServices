@@ -20,18 +20,21 @@ import android.content.Context;
 
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.common.BinderFlagReader;
+
 /** Factory for implementations of the {@link AdFilterer} interface */
 public final class AdFiltererFactory {
     /**
-     * Returns the correct {@link AdFilterer} implementation to use based on the given flags.
+     * Returns the correct {@link AdFilterer} implementation to use based on the given {@link
+     * Flags}.
      *
-     * @param context The application context.
-     * @param flags The current Adservices flags.
-     * @return An instance of {@link AdFiltererImpl} if flags.getFledgeAdSelectionFilteringEnabled()
-     *     is true and on instance of {@link AdFiltererNoOpImpl} otherwise.
+     * @param context the application context
+     * @param flags the current AdServices {@link Flags}
+     * @return an instance of {@link AdFiltererImpl} if ad selection filtering is enabled and an
+     *     instance of {@link AdFiltererNoOpImpl} otherwise
      */
     public static AdFilterer getAdFilterer(Context context, Flags flags) {
-        if (flags.getFledgeAdSelectionFilteringEnabled()) {
+        if (BinderFlagReader.readFlag(flags::getFledgeAdSelectionFilteringEnabled)) {
             return new AdFiltererImpl(SharedStorageDatabase.getInstance(context).appInstallDao());
         } else {
             return new AdFiltererNoOpImpl();
