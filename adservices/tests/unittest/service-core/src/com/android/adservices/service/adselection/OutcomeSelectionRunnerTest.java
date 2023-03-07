@@ -64,6 +64,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
@@ -80,7 +81,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
-import org.mockito.stubbing.Answer;
 
 import java.time.Instant;
 import java.util.HashSet;
@@ -234,7 +234,7 @@ public class OutcomeSelectionRunnerTest {
 
     @Test
     public void testRunOutcomeSelectionRevokedUserConsentEmptyResult() {
-        doThrow(new ConsentManager.RevokedConsentException())
+        doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
                 .when(mAdSelectionServiceFilter)
                 .filterRequest(
                         SAMPLE_SELLER,
@@ -267,7 +267,10 @@ public class OutcomeSelectionRunnerTest {
         verify(mAdOutcomeSelectorMock, never()).runAdOutcomeSelector(any(), any());
         assertTrue(resultsCallback.mIsSuccess);
         assertNull(resultsCallback.mAdSelectionResponse);
-        verify(mAdServicesLoggerMock)
+
+        // Confirm a duplicate log entry does not exist.
+        // AdSelectionServiceFilter ensures the failing assertion is logged internally.
+        verify(mAdServicesLoggerMock, never())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
                         eq(STATUS_USER_CONSENT_REVOKED),
@@ -369,20 +372,10 @@ public class OutcomeSelectionRunnerTest {
             AdSelectionFromOutcomesConfig config,
             String callerPackageName) {
 
-        // Counted down in 1) callback and 2) logApiCall
-        CountDownLatch countDownLatch = new CountDownLatch(2);
+        // Counted down in the callback
+        CountDownLatch countDownLatch = new CountDownLatch(1);
         OutcomeSelectionRunnerTest.AdSelectionTestCallback adSelectionTestCallback =
                 new OutcomeSelectionRunnerTest.AdSelectionTestCallback(countDownLatch);
-
-        // Wait for the logging call, which happens after the callback
-        Answer<Void> countDownAnswer =
-                unused -> {
-                    countDownLatch.countDown();
-                    return null;
-                };
-        doAnswer(countDownAnswer)
-                .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
 
         AdSelectionFromOutcomesInput input =
                 new AdSelectionFromOutcomesInput.Builder()
