@@ -88,7 +88,7 @@ public class AppInstallAdvertisersSetterTest {
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
     private final ListeningExecutorService mExecutorService =
             AdServicesExecutors.getBackgroundExecutor();
-    @Mock private AppInstallDao mAppInstallDao;
+    @Mock private AppInstallDao mAppInstallDaoMock;
     @Mock private AdServicesLogger mAdServicesLogger;
     @Mock private Flags mFlags;
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilter;
@@ -101,7 +101,7 @@ public class AppInstallAdvertisersSetterTest {
     public void setup() {
         mAppInstallAdvertisersSetter =
                 new AppInstallAdvertisersSetter(
-                        mAppInstallDao,
+                        mAppInstallDaoMock,
                         mExecutorService,
                         mAdServicesLogger,
                         mFlags,
@@ -127,14 +127,14 @@ public class AppInstallAdvertisersSetterTest {
                         Throttler.ApiKey.FLEDGE_API_SET_APP_INSTALL_ADVERTISERS);
         assertTrue(callback.mIsSuccess);
         verifyLog(AdServicesStatusUtils.STATUS_SUCCESS);
-        verify(mAppInstallDao)
+        verify(mAppInstallDaoMock)
                 .setAdTechsForPackage(
                         eq(CommonFixture.TEST_PACKAGE_NAME_1), eq(DB_WRITE_FOR_SAMPLE_INPUT));
     }
 
     @Test
     public void testSetAppInstallAdvertisersFailure() throws Exception {
-        doThrow(new RuntimeException()).when(mAppInstallDao).setAdTechsForPackage(any(), any());
+        doThrow(new RuntimeException()).when(mAppInstallDaoMock).setAdTechsForPackage(any(), any());
         SetAppInstallAdvertisersTestCallback callback = callSetAppInstallAdvertisers(SAMPLE_INPUT);
 
         assertFalse(callback.mIsSuccess);
@@ -152,7 +152,7 @@ public class AppInstallAdvertisersSetterTest {
                         SAMPLE_INPUT.getCallerPackageName());
         assertTrue(callback.mIsSuccess);
         verifyLog(AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED);
-        verifyNoMoreInteractions(mAppInstallDao);
+        verifyNoMoreInteractions(mAppInstallDaoMock);
     }
 
     @Test
@@ -166,7 +166,7 @@ public class AppInstallAdvertisersSetterTest {
 
         assertFalse(callback.mIsSuccess);
         verifyLog(AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
-        verifyNoMoreInteractions(mAppInstallDao);
+        verifyNoMoreInteractions(mAppInstallDaoMock);
         // Consent should be checked after validations are run
         verifyNoMoreInteractions(mConsentManager);
     }
@@ -180,7 +180,7 @@ public class AppInstallAdvertisersSetterTest {
 
         assertFalse(callback.mIsSuccess);
         verifyLog(AdServicesStatusUtils.STATUS_BACKGROUND_CALLER);
-        verifyNoMoreInteractions(mAppInstallDao);
+        verifyNoMoreInteractions(mAppInstallDaoMock);
         // Consent should be checked after foreground check
         verifyNoMoreInteractions(mConsentManager);
     }
@@ -194,7 +194,7 @@ public class AppInstallAdvertisersSetterTest {
 
         assertFalse(callback.mIsSuccess);
         verifyLog(AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED);
-        verifyNoMoreInteractions(mAppInstallDao);
+        verifyNoMoreInteractions(mAppInstallDaoMock);
         // Consent should be checked after app permissions check
         verifyNoMoreInteractions(mConsentManager);
     }
@@ -208,7 +208,7 @@ public class AppInstallAdvertisersSetterTest {
 
         assertFalse(callback.mIsSuccess);
         verifyLog(AdServicesStatusUtils.STATUS_UNAUTHORIZED);
-        verifyNoMoreInteractions(mAppInstallDao);
+        verifyNoMoreInteractions(mAppInstallDaoMock);
         // Consent should be checked after package name check
         verifyNoMoreInteractions(mConsentManager);
     }
@@ -222,7 +222,7 @@ public class AppInstallAdvertisersSetterTest {
 
         assertFalse(callback.mIsSuccess);
         verifyLog(AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED);
-        verifyNoMoreInteractions(mAppInstallDao);
+        verifyNoMoreInteractions(mAppInstallDaoMock);
         // Consent should be checked after throttling
         verifyNoMoreInteractions(mConsentManager);
     }
