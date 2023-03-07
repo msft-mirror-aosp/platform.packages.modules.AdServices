@@ -27,6 +27,7 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.common.BooleanFileDatastore;
 import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
@@ -49,8 +50,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 /**
@@ -81,7 +80,6 @@ public class ConsentManager {
     private final EnrollmentDao mEnrollmentDao;
     private final MeasurementImpl mMeasurementImpl;
     private final CustomAudienceDao mCustomAudienceDao;
-    private final ExecutorService mExecutor;
     private final AdServicesManager mAdServicesManager;
     private final int mConsentSourceOfTruth;
 
@@ -117,7 +115,6 @@ public class ConsentManager {
         mEnrollmentDao = enrollmentDao;
         mMeasurementImpl = measurementImpl;
         mCustomAudienceDao = customAudienceDao;
-        mExecutor = Executors.newSingleThreadExecutor();
         mFlags = flags;
         mConsentSourceOfTruth = consentSourceOfTruth;
     }
@@ -1694,6 +1691,6 @@ public class ConsentManager {
     }
 
     private void asyncExecute(Runnable runnable) {
-        mExecutor.execute(runnable);
+        AdServicesExecutors.getBackgroundExecutor().execute(runnable);
     }
 }
