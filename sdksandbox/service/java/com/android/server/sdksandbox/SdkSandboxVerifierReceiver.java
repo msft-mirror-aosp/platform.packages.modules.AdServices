@@ -24,15 +24,12 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
-import com.android.internal.annotations.Keep;
-
 /**
  * Broadcast Receiver for receiving new Sdk install requests and verifying Sdk code before running
  * it in Sandbox.
  *
  * @hide
  */
-@Keep // See b/255754931. Explicitly keep SdkSandboxVerifierReceiver for reflection.
 public class SdkSandboxVerifierReceiver extends BroadcastReceiver {
 
     private static final String TAG = "SdkSandboxManager";
